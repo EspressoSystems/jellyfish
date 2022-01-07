@@ -1,0 +1,10 @@
+.*.sw*
+.DS_Store
+.idea
+/target
+cargo-system-config.toml
+Cargo.lock
+
+# Test coverage (grcov)
+default.profraw
+/.pre-commit-config.yaml

@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Outdated Builds
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          all_but_latest: true
+          access_token: ${{ github.token }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: default
+          toolchain: stable
+          override: true
+          default: true
+          components: rustfmt, clippy
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: false
+          default: false
+          components: rustfmt
+
+      - uses: Swatinem/rust-cache@v1
+        name: Enable Rust Caching
+
+      - name: Format Check
+        run: cargo +nightly fmt -- --check
+
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ github.token }}
+
+      - name: Audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ github.token }}
+
+      - name: Check Bench
+        run: cargo bench --no-run
+
+      - name: Check Ignored Tests
+        run: cargo test --no-run -- --ignored
+
+      - name: Test
+        run: bash ./scripts/run_tests.sh
+
+      - name: Generate Documentation
+        run: |
+          cargo doc --no-deps --lib --release
+          cp -R target/doc public
+          echo '<meta http-equiv="refresh" content="0; url=jf_plonk">' > public/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          cname: jellyfish.docs.spectrum.xyz

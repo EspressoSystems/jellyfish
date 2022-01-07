@@ -1,0 +1,5 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash -p nix-prefetch-github
+set -exo pipefail
+
+nix-prefetch-github oxalica rust-overlay | tee nix/oxalica_rust_overlay.json

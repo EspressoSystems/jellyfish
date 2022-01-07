@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+# vagrant "ssh + command" does not source, adding -- -t does not help
+. $HOME/.nix-profile/etc/profile.d/nix.sh
+if [ -f $HOME/.carg/env ]; then
+    source $HOME/.cargo/env
+fi
+
+ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+ssh -T git@gitlab.com
+
+cd /jellyfish
+
+nix-shell --run "cargo-clippy"
+nix-shell --run "cargo fmt -- --check"
+nix-shell --run "cargo test --doc"
+nix-shell --run "cargo test --release"
+
+echo "Ok!"
