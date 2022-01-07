@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "plonk",
+  "rescue",
+  "primitives",
+  "utilities",
+  "utilities_derive",
+]

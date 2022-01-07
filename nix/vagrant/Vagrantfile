@@ -1,0 +1,36 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "ubuntu" do |ubuntu|
+    ubuntu.vm.box = "generic/ubuntu2004"
+    $script = <<~SCRIPT
+      set -euxo pipefail
+      curl -L https://nixos.org/nix/install | sh
+    SCRIPT
+    ubuntu.vm.provision "shell", inline: $script, privileged: false
+  end
+
+  config.vm.define "ubuntu_rustup" do |ubuntu|
+    ubuntu.vm.box = "generic/ubuntu2004"
+    $script = <<~SCRIPT
+      set -euxo pipefail
+      curl -L https://nixos.org/nix/install | sh
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      source $HOME/.cargo/env
+      rustup default stable-2021-06-17
+    SCRIPT
+    ubuntu.vm.provision "shell", inline: $script, privileged: false
+  end
+
+  config.ssh.forward_agent = true
+  config.vm.synced_folder  ".", "/vagrant", disabled: false
+  config.vm.synced_folder  "../..", "/jellyfish", disabled: false, rsync__exclude: [".git/", "target"]
+
+
+  config.vm.provider "libvirt" do |v|
+    v.cpus = 4
+  end
+
+end

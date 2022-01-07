@@ -1,0 +1,27 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash -p curl jq nix
+#
+#   Updates nixpkgs.json to the latest or chosen nixpkgs revision
+#
+#   Usage: ./update-nix
+#          ./update-nix $rev
+#          ./update-nix $owner $rev
+#
+#   Arguments default to owner=nixos and rev=master and refer
+#   to the github owner of a nixpkgs fork and a git revision.
+#
+set -exo pipefail
+
+owner="nixos"
+
+if [ ! -z "$2" ]; then
+    owner="$1"
+    rev="$2"
+else
+    rev="${1:-master}"
+fi
+
+resolved_rev=$(curl "https://api.github.com/repos/${owner}/nixpkgs/commits?sha=${rev}" | jq -r 'first.sha')
+url="https://github.com/${owner}/nixpkgs/archive/${resolved_rev}.tar.gz"
+digest=$(nix-prefetch-url --unpack "$url")
+echo "{\"url\": \"${url}\", \"sha256\": \"${digest}\"}" | jq '.' > nix/nixpkgs.json

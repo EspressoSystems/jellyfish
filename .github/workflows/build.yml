@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    container:
+      image: registry.gitlab.com/asuran-rs/containers/rust-sccache-docker:1.56
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+        name: Cancel Outdated Builds
+        with:
+          all_but_latest: true
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+        name: Checkout Repository
+
+      - name: Configure Git
+        run: |
+          git config --global url."https://ancient123:${{ secrets.ORG_GITHUB_PAT }}@github.com".insteadOf git://github.com
+          git config --global url."https://ancient123:${{ secrets.ORG_GITHUB_PAT }}@github.com".insteadOf ssh://git@github.com
+          git config --global url."https://dl.cloudsmith.io/${{ secrets.CLOUDSMITH_ENTITLEMENT }}/".insteadOf https://dl.cloudsmith.io/basic/
+
+      - uses: Swatinem/rust-cache@v1
+        name: Enable Rust Caching
+
+      - name: Install Nightly rustfmt
+        run: |
+          rustup toolchain install nightly --allow-downgrade --profile minimal --component rustfmt || true
+          rustup show
+
+      - name: Format Check
+        run: cargo +nightly fmt -- --check
+
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+
+      - name: Audit
+        run: cargo audit
+
+      - name: Check Bench
+        run: cargo bench --no-run
+
+      - name: Check Ignored Tests
+        run: cargo test --no-run -- --ignored
+
+      - name: Test
+        run: bash ./scripts/run_tests.sh
+
+      - name: Generate Documentation
+        run: |
+          cargo doc --no-deps --lib --release
+          cp -R target/doc public
+          echo '<meta http-equiv="refresh" content="0; url=jf_plonk">' > public/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          cname: jellyfish.docs.translucence.net
