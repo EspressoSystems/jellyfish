@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["MergeableCircuitType","Enum for each type of mergeable circuit"],["PlonkType","Enum for each type of Plonk scheme"]],"macro":[["fq_to_big_int",""],["int_to_fq",""]],"mod":[["circuit","Interfaces for Plonk-based constraint systems"],["constants",""],["errors",""],["proof_system","Interfaces for Plonk-based proof systems"],["transcript",""]]});

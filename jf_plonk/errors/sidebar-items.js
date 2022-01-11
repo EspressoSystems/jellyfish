@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["CircuitError",""],["PlonkError","A `enum` specifying the possible failure modes of the Plonk-based SNARKs."],["SnarkError",""]]});

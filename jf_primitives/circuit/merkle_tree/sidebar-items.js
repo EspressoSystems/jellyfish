@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["gen_merkle_path_for_test","Create a merkle path for position `uid` and element `comm`. Only used for testing"]],"struct":[["AccElemVars",""],["AccMemberWitnessVar",""],["MerkleNodeVars",""],["MerklePathVars",""]],"trait":[["MerkleTreeGadget",""]]});

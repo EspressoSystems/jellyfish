@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["RescueStateVar","Array of variables representing a Rescue state (4 field elements)"]],"trait":[["RescueGadget",""],["RescueNonNativeGadget",""]]});

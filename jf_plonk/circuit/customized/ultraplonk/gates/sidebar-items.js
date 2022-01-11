@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["LookupGate","An UltraPlonk lookup gate"]]});

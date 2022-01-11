@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["batch_arg","An argument system that proves/verifies multiple instances in a batch."],["structs","Data structures used in Plonk proof systems"]],"struct":[["PlonkKzgSnark","A Plonk instantiated with KZG PCS"]],"trait":[["Snark","An interface for SNARKs."]]});

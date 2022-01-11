@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Commitment","Commitment instance for user defined input size (in scalar elements)"]]});

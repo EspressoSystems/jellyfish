@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Ciphertext","Public encryption cipher text"],["EncKey","Encryption key for encryption scheme"],["KeyPair","KeyPair structure for encryption scheme"]]});
