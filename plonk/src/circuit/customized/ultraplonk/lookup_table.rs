@@ -1,7 +1,7 @@
 //! Lookup gates over variable tables.
 
 use crate::{
-    circuit::{customized::ultraplonk::gates::LookupGate, Circuit, PlonkCircuit, Variable},
+    circuit::{customized::gates::LookupGate, Circuit, PlonkCircuit, Variable},
     errors::PlonkError,
 };
 use ark_ff::PrimeField;

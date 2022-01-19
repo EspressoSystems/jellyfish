@@ -2,12 +2,12 @@
 //! - short Weierstrass form
 //! - twisted Edwards form
 //!
-//! Note that we should not really need to use this circuit though.
+//! Note that the APIs below create no circuits.
 //! An entity should either know both the SW and TE form of a
 //! point; or know none of the two. There is no need to generate
 //! a circuit for arguing secret knowledge of one form while
-//! the other form is public. In practice this means that we
-//! will always be working on the TE forms.
+//! the other form is public. In practice a prover will convert all of the
+//! points to the TE form and work on the TE form inside the circuits.
 
 use super::Point;
 use ark_ec::{short_weierstrass_jacobian::GroupAffine as SWAffine, SWModelParameters as SWParam};
@@ -30,8 +30,6 @@ where
 
         // we need to firstly convert this point into
         // TE form, and then build the point
-        // more details on the conversion:
-        // https://www.notion.so/translucence/BLS12-377-Twisted-Edwards-parameters-47d988917fd540049ebb9e88b3b31d62#90838d24be764728a6dae1edf7d32c20
 
         // safe unwrap
         let s = F::from_repr(F::S).unwrap();
@@ -55,103 +53,11 @@ pub trait SWToTEConParam: PrimeField {
     const BETA: Self::BigInt;
 }
 
-// impl<F> PlonkCircuit<F>
-// where
-//     F: PrimeField + SWToTEConParam,
-// {
-//     // Input an affine curve point in the short Weierstrass form,
-//     // generate the circuit that converts this point into twisted
-//     // Edwards form, and return the variables for the tE point.
-//     // Cost: 2 constraints.
-//     // Note that we should not really need to use this circuit though.
-//     // An entity should either know both the SW and TE form of a
-//     // point; or know none of the two. There is no need to generate
-//     // a circuit for arguing secret knowledge of one form while
-//     // the other form is public. In practice this means that we
-//     // will always be working on the TE forms.
-//     pub fn point_from_sw_form<P>(
-//         &mut self,
-//         sw_point: &SWAffine<P>,
-//     ) -> Result<PointVariable, PlonkError>
-//     where
-//         P: SWParam<BaseField = F> + Clone,
-//     {
-//         let te_point: Point<F> = Point::from(sw_point);
-
-//         // Case 1 if the point is the infinity point
-//         let is_infinity = self.create_variable(F::from(sw_point.infinity))?;
-
-//         // Case 2 if the point is not the infinity point
-//         // We need to show
-//         // 1. ex * py - beta * px + beta * alpha = 0
-//         // 2. s * px * ey + (1-alpha*s) * ey - s * px + s*alpha + 1 = 0
-
-//         // ================================================
-//         // constants
-//         // ================================================
-//         // TODO(ZZ): pre-compute some of the data
-//         // safe unwrap
-//         let s = F::from_repr(F::S).unwrap();
-//         let neg_alpha = F::from_repr(F::NEG_ALPHA).unwrap();
-//         let alpha = -neg_alpha;
-//         let beta = F::from_repr(F::BETA).unwrap();
-//         let beta_alpha = beta * alpha;
-//         let s_alpha_1 = s * alpha + F::one();
-//         let one_alpha_s = F::one() + neg_alpha * s;
-
-//         // ================================================
-//         // variables
-//         // ================================================
-//         let ex = self.create_variable(te_point.0)?;
-//         let ey = self.create_variable(te_point.1)?;
-//         let px = self.create_variable(sw_point.x)?;
-//         let py = self.create_variable(sw_point.y)?;
-
-//         // ================================================
-//         // Eq.1 ex * py - beta * px + beta_alpha = 0
-//         // ================================================
-//         let wires = [ex, py, px, self.zero()];
-//         let eq_1_output = self.gen_quad_poly(
-//             &wires,
-//             &[F::zero(), F::zero(), -beta, F::zero()],
-//             &[F::one(), F::zero()],
-//             beta_alpha,
-//         )?;
-//         let eq_1_output_is_zero = self.is_zero(eq_1_output)?;
-
-//         // ================================================
-//         // Eq.2 s * px * ey + one_alpha_s * ey - s * px + s_alpha_1 = 0
-//         // ================================================
-//         let wires = [px, ey, self.zero(), self.zero()];
-//         let eq_2_output = self.gen_quad_poly(
-//             &wires,
-//             &[-s, one_alpha_s, F::zero(), F::zero()],
-//             &[s, F::zero()],
-//             s_alpha_1,
-//         )?;
-//         let eq_2_output_is_zero = self.is_zero(eq_2_output)?;
-
-//         // Final step, either case 1 or case 2 holds
-//         // either
-//         //  is_infinity = true
-//         // or
-//         //  eq_1_output_is_zero = true && eq_2_output_is_zero = true
-//         let eq_1_and_eq_2 = self.logic_and(eq_1_output_is_zero,
-// eq_2_output_is_zero)?;         self.logic_or_gate(eq_1_and_eq_2,
-// is_infinity)?;
-
-//         Ok(PointVariable(ex, ey))
-//     }
-// }
-
 // ================================================
 // BLS12-377::Fq specific implementations
 // ================================================
 use ark_bls12_377::Fq as Fq377;
 impl SWToTEConParam for Fq377 {
-    // constants obtained from:
-    // https://www.notion.so/translucence/BLS12-377-Twisted-Edwards-parameters-47d988917fd540049ebb9e88b3b31d62#90838d24be764728a6dae1edf7d32c20
-
     // s = 10189023633222963290707194929886294091415157242906428298294512798502806398782149227503530278436336312243746741931
     const S: Self::BigInt = BigInteger384([
         0x3401d618f0339eab,
@@ -255,50 +161,4 @@ mod test {
         let p: Point<Fq377> = g1.into();
         assert!(is_on_bls12_377_ed_curve(&p));
     }
-
-    // #[allow(non_snake_case)]
-    // #[test]
-    // fn test_SW_to_TE_circuit() {
-    //     let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new(TurboPlonk);
-    //     let mut rng = test_rng();
-
-    //     // test generator
-    //     let g1 = &G1Affine::prime_subgroup_generator();
-    //     let p: Point<Fq> = g1.into();
-    //     let p_var = circuit.point_from_sw_form(g1).unwrap();
-
-    //     assert!(is_on_bls12_377_ed_curve(&p));
-    //     assert_eq!(circuit.witness(p_var.0).unwrap(), p.0);
-    //     assert_eq!(circuit.witness(p_var.1).unwrap(), p.1);
-    //     assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-    //     // test zero point
-    //     let g1 = &G1Affine::zero();
-    //     let p: Point<Fq> = g1.into();
-    //     assert_eq!(p.0, Fq::zero());
-    //     assert_eq!(p.1, Fq::one());
-    //     let p_var = circuit.point_from_sw_form(g1).unwrap();
-
-    //     assert!(is_on_bls12_377_ed_curve(&p));
-    //     assert_eq!(circuit.witness(p_var.0).unwrap(), p.0);
-    //     assert_eq!(circuit.witness(p_var.1).unwrap(), p.1);
-    //     assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-    //     // test a random group element
-    //     let g1 = &G1Projective::rand(&mut rng).into_affine();
-    //     let p: Point<Fq> = g1.into();
-    //     let p_var = circuit.point_from_sw_form(g1).unwrap();
-
-    //     // good path
-    //     assert!(is_on_bls12_377_ed_curve(&p));
-    //     assert_eq!(circuit.witness(p_var.0).unwrap(), p.0);
-    //     assert_eq!(circuit.witness(p_var.1).unwrap(), p.1);
-    //     assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-    //     // bad path: wrong witness should fail
-    //     let witness = circuit.witness(p_var.0).unwrap();
-    //     *circuit.witness_mut(p_var.0) = Fq::rand(&mut rng);
-    //     assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-    //     *circuit.witness_mut(p_var.0) = witness;
-    // }
 }

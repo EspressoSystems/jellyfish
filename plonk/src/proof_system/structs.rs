@@ -19,7 +19,7 @@ use crate::{
 use ark_ec::{
     msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters,
 };
-use ark_ff::{FftField, Field, PrimeField, ToConstraintField, Zero};
+use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
@@ -154,25 +154,20 @@ where
 fn group1_to_fields<E, P>(p: GroupAffine<P>) -> Vec<E::Fq>
 where
     E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
-    E::G1Affine: ToConstraintField<<E::Fq as Field>::BasePrimeField>,
+    P: SWModelParameters<BaseField = E::Fq>,
 {
-    // contains x, y, infinity_flag, only need the first 2 fields
-    let mut fields = p.to_field_elements().unwrap();
-    fields.pop();
-    fields
+    // contains x, y, infinity_flag, only need the first 2 field elements
+    vec![p.x, p.y]
 }
 
-fn group2_to_fields<E, P>(p: GroupAffine<P>) -> Vec<E::Fq>
+fn group2_to_fields<E, F, P>(p: GroupAffine<P>) -> Vec<E::Fq>
 where
-    E: PairingEngine<G2Affine = GroupAffine<P>>,
-    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
-    E::G2Affine: ToConstraintField<<E::Fq as Field>::BasePrimeField>,
+    E: PairingEngine<G2Affine = GroupAffine<P>, Fqe = Fp2<F>>,
+    F: Fp2Parameters<Fp = E::Fq>,
+    P: SWModelParameters<BaseField = E::Fqe>,
 {
-    // contains x, y, infinity_flag, only need the first 2 fields
-    let mut fields = p.to_field_elements().unwrap();
-    fields.pop();
-    fields
+    // contains x, y, infinity_flag, only need the first 2 field elements
+    vec![p.x.c0, p.x.c1, p.y.c0, p.y.c1]
 }
 
 impl<E, P> From<Proof<E>> for Vec<E::Fq>
@@ -662,11 +657,12 @@ pub struct VerifyingKey<E: PairingEngine> {
     pub(crate) plookup_vk: Option<PlookupVerifyingKey<E>>,
 }
 
-impl<E, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
+impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
 where
-    E: PairingEngine<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>>,
+    E: PairingEngine<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>, Fqe = Fp2<F>>,
+    F: Fp2Parameters<Fp = E::Fq>,
     P1: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
-    P2: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
+    P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr> + Clone,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
         if vk.plookup_vk.is_some() {
@@ -688,9 +684,9 @@ where
                 .concat(),
             vk.k.iter().map(|fr| fr_to_fq::<E::Fq, P1>(fr)).collect(),
             // NOTE: only adding g, h, beta_h since only these are used.
-            group1_to_fields::<E, _>(vk.open_key.g),
-            group2_to_fields::<E, _>(vk.open_key.h),
-            group2_to_fields::<E, _>(vk.open_key.beta_h),
+            group1_to_fields::<E, P1>(vk.open_key.g),
+            group2_to_fields::<E, F, P2>(vk.open_key.h),
+            group2_to_fields::<E, F, P2>(vk.open_key.beta_h),
         ]
         .concat()
     }
@@ -926,4 +922,21 @@ pub(crate) fn eval_merged_lookup_witness<E: PairingEngine>(
     q_lookup_eval: E::Fr,
 ) -> E::Fr {
     w_range_eval + q_lookup_eval * tau * (w_0_eval + tau * (w_1_eval + tau * w_2_eval))
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use ark_bn254::{g1::Parameters, Bn254, Fq};
+    use ark_ec::AffineCurve;
+
+    #[test]
+    fn test_group_to_field() {
+        let g1 = <Bn254 as PairingEngine>::G1Affine::prime_subgroup_generator();
+        let f1: Vec<Fq> = group1_to_fields::<Bn254, Parameters>(g1);
+        assert_eq!(f1.len(), 2);
+        let g2 = <Bn254 as PairingEngine>::G2Affine::prime_subgroup_generator();
+        let f2: Vec<Fq> = group2_to_fields::<Bn254, _, _>(g2);
+        assert_eq!(f2.len(), 4);
+    }
 }
