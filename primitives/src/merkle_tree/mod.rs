@@ -1,17 +1,12 @@
 #![deny(warnings)]
-/// ! Implementation of the Merkle tree data structure used to store the coin
-/// ! commitments  in the Auditable Anonymous Transfer (AAT) scheme.
-/// ! This data structure is specified in the document
-/// !  https://gitlab.com/translucence/crypto/AT-spec/-/commit/3dabe0e38e06d3448f03fcba67ab57e0e2585e5c
-/// !  (see Section 3.1.6) and appendix B for a security proof.
+/// ! Implementation of the Merkle tree data structure.
 /// ! At a high level the Merkle tree is a ternary tree and the hash function H
 /// ! used is the rescue hash function. The node values are BlsScalar and each
 /// ! internal node value is obtained by computing v:=H(a,b,c) where a,b,c are
 /// ! the values of the left,middle and right child respectively. Leaf values
 /// ! for an element (uid,elem) is obtained as H(0,uid,elem).
 /// ! The tree height is fixed during initial instantiation and a new leaf will
-/// ! be inserted at the leftmost available slot in the tree. This
-/// ! implementation is compatible with the AAT circuit.
+/// ! be inserted at the leftmost available slot in the tree.
 use crate::errors::PrimitivesError;
 use ark_ff::{BigInteger, Field, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
@@ -1401,7 +1396,7 @@ impl<F: RescueParameter> From<FilledMTBuilder<F>> for MerkleTree<F> {
     }
 }
 
-/// The proof of membership in an accumulator (Merkle tree) for an asset record
+/// The proof of membership in an accumulator (Merkle tree) for an element
 #[derive(
     Clone,
     Debug,
@@ -1422,7 +1417,7 @@ pub struct AccMemberWitness<F: PrimeField> {
 }
 
 impl<F: RescueParameter> AccMemberWitness<F> {
-    /// Create a fake proof/witness for a dummy record
+    /// Create a fake proof/witness for a dummy element
     pub fn dummy(tree_depth: u8) -> Self {
         let mut witness = Self::default();
         let path = vec![MerklePathNode::default(); tree_depth as usize];

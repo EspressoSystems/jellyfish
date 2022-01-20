@@ -81,7 +81,7 @@ where
     // this circuit should still be cheaper than non-native circuit.
     //
     //
-    // Question(ZZ): second thought, this should be fine size we know that
+    // Question(ZZ): second thought, this should be fine since we know that
     // zeta !=0 mod fr with 1 - 1/|Fr| probability as zeta is a output from
     // RO. Nonetheless, I am implementing it with non-native field first.
     // We may switch to native field if this is fine...

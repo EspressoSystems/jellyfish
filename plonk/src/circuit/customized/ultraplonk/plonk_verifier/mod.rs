@@ -180,8 +180,10 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
             }
         }
 
-        // FIXME(ZZ): temporarily let m = 128; should be derived from Fr::size_in_bits()
-        let m = 128;
+        let range_bit_len = circuit.range_bit_len()?;
+        let m2 = (<E::Fr as PrimeField>::size_in_bits() + 1) >> 1;
+        // m should be a multiple of `range_bit_len`
+        let m = (m2 - 1) / range_bit_len * range_bit_len + range_bit_len;
 
         // constants
         let two_power_m = Some(E::Fq::from(2u8).pow(&[m as u64]));
