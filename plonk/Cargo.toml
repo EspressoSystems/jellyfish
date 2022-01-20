@@ -46,5 +46,11 @@ ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "67
 ark-ed-on-bn254 = { version = "0.3.0", default-features = false }
 hex = "^0.4.3"
 
+# Benchmarks
+[[bench]]
+name = "plonk-benches"
+path = "benches/bench.rs"
+harness = false
+
 [features]
 std = []
