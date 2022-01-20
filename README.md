@@ -84,37 +84,45 @@ The additional flags allow using assembly implementation of `square_in_place` an
 ```
 
 
-#### Transactions generation/verification
-
-Running the benchmarks produces a csv file containing the information about the note being benched 
-(type, number of inputs/outputs, number of constraints, size in KB etc...) as well as the running time.
-
-Benchmarks can be run 
-  * with or without [asm optimization](https://github.com/arkworks-rs/algebra#assembly-backend-for-field-arithmetic)
-  * using all cores or a single core
-
+#### Plonk proof generation/verification
+For benchmark, run:
 ```
->./scripts/run_benchmarks.sh --help
-Jellyfish benchmarks
-Usage: ./scripts/run_benchmarks.sh [--(no-)asm] [--(no-)multi_threads] [-h|--help]
-	-h, --help: Prints help
-
-# By default no asm and no multicore
-> ./scripts/run_benchmarks.sh                         
-Multi-threads: OFF
-Asm feature: OFF
-...
-
-# Activate asm and multicore
-> ./scripts/run_benchmarks.sh --asm --multi_threads 
-Multi-threads: ON
-Asm feature: ON
+RAYON_NUM_THREADS=N cargo bench
 ```
+where N is the number of threads you want to use (N = 1 for single-thread).
 
-The csv files can be found at `/tmp/{note_description}_jellyfish_benchmark.csv`, 
-    e.g. `/tmp/transfer_note_jellyfish_benchmark.csv`. 
+##### Environment
+- MacBoo Pro (16-inch, 2019)
+- Processor: 2.3 GHz 8-Core Intel Core i9
+- Memory: 16 GB 2667 MHz DDR4
 
-The criterion report can be found at `target/criterion/report/index.html`.
+##### TurboPlonk
+- BLS12-381
+  - Proving time: 59317 ns/constraint
+  - Verifying time: 3.207 ms
+  - Batch verifying time for 1000 proofs: 17.683 ms
+- BN-254
+  - Proving time: 44857 ns/constraint
+  - Verifying time: 2.364 ms
+  - Batch verifying time for 1000 proofs: 14.803 ms
+- BW6-761
+  - Proving time: 271828 ns/constraint
+  - Verifying time: 12.504 ms
+  - Batch verifying time for 1000 proofs: 37.909 ms
+
+##### UltraPlonk
+- BLS12-381
+  - Proving time: 89593 ns/constraint
+  - Verifying time: 3.549 ms
+  - Batch verifying time for 1000 proofs: 20.784 ms
+- BN-254
+  - Proving time: 70383 ns/constraint
+  - Verifying time: 2.390 ms
+  - Batch verifying time for 1000 proofs: 17.173 ms
+- BW6-761
+  - Proving time: 373141 ns/constraint
+  - Verifying time: 13.656 ms
+  - Batch verifying time for 1000 proofs: 44.023 ms
 
 
 
