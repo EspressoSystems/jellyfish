@@ -119,7 +119,60 @@ fn bench_verify() {
     plonk_verify_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, NUM_GATES_SMALL);
 }
 
+macro_rules! plonk_batch_verify_bench {
+    ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_proofs:expr) => {
+        let rng = &mut ark_std::test_rng();
+        let cs = gen_circuit_for_bench::<$bench_field>(1024, $bench_plonk_type).unwrap();
+
+        let max_degree = 1026;
+        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+
+        let (pk, vk) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
+
+        let proof =
+            PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk, None)
+                .unwrap();
+
+        let vks = vec![&vk; $num_proofs];
+        let pub_input = vec![];
+        let public_inputs_ref = vec![&pub_input[..]; $num_proofs];
+        let proofs_ref = vec![&proof; $num_proofs];
+
+        let start = ark_std::time::Instant::now();
+
+        for _ in 0..NUM_REPETITIONS {
+            let _ = PlonkKzgSnark::<$bench_curve>::batch_verify::<StandardTranscript>(
+                &vks,
+                &public_inputs_ref[..],
+                &proofs_ref,
+                &vec![None; vks.len()],
+            )
+            .unwrap();
+        }
+
+        println!(
+            "batch verifying time for {}, {}, {} proofs: {} ns/proof",
+            stringify!($bench_curve),
+            stringify!($bench_plonk_type),
+            stringify!($num_proofs),
+            start.elapsed().as_nanos() / NUM_REPETITIONS as u128 / $num_proofs as u128
+        );
+    };
+}
+
+fn bench_batch_verify() {
+    plonk_batch_verify_bench!(Bls12_381, Fr381, PlonkType::TurboPlonk, 1000);
+    plonk_batch_verify_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, 1000);
+    plonk_batch_verify_bench!(Bn254, Fr254, PlonkType::TurboPlonk, 1000);
+    plonk_batch_verify_bench!(BW6_761, Fr761, PlonkType::TurboPlonk, 1000);
+    plonk_batch_verify_bench!(Bls12_381, Fr381, PlonkType::UltraPlonk, 1000);
+    plonk_batch_verify_bench!(Bls12_377, Fr377, PlonkType::UltraPlonk, 1000);
+    plonk_batch_verify_bench!(Bn254, Fr254, PlonkType::UltraPlonk, 1000);
+    plonk_batch_verify_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, 1000);
+}
+
 fn main() {
     bench_prove();
     bench_verify();
+    bench_batch_verify();
 }
