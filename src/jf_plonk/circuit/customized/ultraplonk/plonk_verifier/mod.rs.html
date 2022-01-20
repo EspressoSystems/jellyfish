@@ -822,6 +822,8 @@
 <span id="822">822</span>
 <span id="823">823</span>
 <span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Circuits for Plonk verifiers.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{
@@ -1004,8 +1006,10 @@
             }
         }
 
-        <span class="comment">// FIXME(ZZ): temporarily let m = 128; should be derived from Fr::size_in_bits()</span>
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">128</span>;
+        <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">m2</span> <span class="op">=</span> (<span class="op">&lt;</span><span class="ident">E::Fr</span> <span class="kw">as</span> <span class="ident">PrimeField</span><span class="op">&gt;</span><span class="ident">::size_in_bits</span>() <span class="op">+</span> <span class="number">1</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>;
+        <span class="comment">// m should be a multiple of `range_bit_len`</span>
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="ident">m2</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">/</span> <span class="ident">range_bit_len</span> <span class="op">*</span> <span class="ident">range_bit_len</span> <span class="op">+</span> <span class="ident">range_bit_len</span>;
 
         <span class="comment">// constants</span>
         <span class="kw">let</span> <span class="ident">two_power_m</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">E::Fq::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]));

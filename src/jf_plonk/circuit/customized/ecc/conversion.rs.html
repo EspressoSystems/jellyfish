@@ -168,150 +168,16 @@
 <span id="168">168</span>
 <span id="169">169</span>
 <span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-<span id="173">173</span>
-<span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
-<span id="181">181</span>
-<span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
-<span id="247">247</span>
-<span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
-<span id="297">297</span>
-<span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
 </pre><pre class="rust"><code><span class="doccomment">//! this file implements the conversion logic for elliptic curve point between</span>
 <span class="doccomment">//! - short Weierstrass form</span>
 <span class="doccomment">//! - twisted Edwards form</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Note that we should not really need to use this circuit though.</span>
+<span class="doccomment">//! Note that the APIs below create no circuits.</span>
 <span class="doccomment">//! An entity should either know both the SW and TE form of a</span>
 <span class="doccomment">//! point; or know none of the two. There is no need to generate</span>
 <span class="doccomment">//! a circuit for arguing secret knowledge of one form while</span>
-<span class="doccomment">//! the other form is public. In practice this means that we</span>
-<span class="doccomment">//! will always be working on the TE forms.</span>
+<span class="doccomment">//! the other form is public. In practice a prover will convert all of the</span>
+<span class="doccomment">//! points to the TE form and work on the TE form inside the circuits.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Point</span>;
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">short_weierstrass_jacobian::GroupAffine</span> <span class="kw">as</span> <span class="ident">SWAffine</span>, <span class="ident">SWModelParameters</span> <span class="kw">as</span> <span class="ident">SWParam</span>};
@@ -334,16 +200,20 @@
 
         <span class="comment">// we need to firstly convert this point into</span>
         <span class="comment">// TE form, and then build the point</span>
-        <span class="comment">// more details on the conversion:</span>
-        <span class="comment">// https://www.notion.so/translucence/BLS12-377-Twisted-Edwards-parameters-47d988917fd540049ebb9e88b3b31d62#90838d24be764728a6dae1edf7d32c20</span>
 
         <span class="comment">// safe unwrap</span>
         <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">F::from_repr</span>(<span class="ident">F::S</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">neg_alpha</span> <span class="op">=</span> <span class="ident">F::from_repr</span>(<span class="ident">F::NEG_ALPHA</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">F::from_repr</span>(<span class="ident">F::BETA</span>).<span class="ident">unwrap</span>();
 
+        <span class="comment">// we first transform the Weierstrass point (px, py) to Montgomery point (mx,</span>
+        <span class="comment">// my) where mx = s * (px - alpha)</span>
+        <span class="comment">// my = s * py</span>
         <span class="kw">let</span> <span class="ident">montgomery_x</span> <span class="op">=</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">p</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">neg_alpha</span>);
         <span class="kw">let</span> <span class="ident">montgomery_y</span> <span class="op">=</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">p</span>.<span class="ident">y</span>;
+        <span class="comment">// then we transform the Montgomery point (mx, my) to TE point (ex, ey) where</span>
+        <span class="comment">// ex = beta * mx / my</span>
+        <span class="comment">// ey = (mx - 1) / (mx + 1)</span>
         <span class="kw">let</span> <span class="ident">edwards_x</span> <span class="op">=</span> <span class="ident">beta</span> <span class="op">*</span> <span class="ident">montgomery_x</span> <span class="op">/</span> <span class="ident">montgomery_y</span>;
         <span class="kw">let</span> <span class="ident">edwards_y</span> <span class="op">=</span> (<span class="ident">montgomery_x</span> <span class="op">-</span> <span class="ident">F::one</span>()) <span class="op">/</span> (<span class="ident">montgomery_x</span> <span class="op">+</span> <span class="ident">F::one</span>());
 
@@ -359,103 +229,11 @@
     <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
 }
 
-<span class="comment">// impl&lt;F&gt; PlonkCircuit&lt;F&gt;</span>
-<span class="comment">// where</span>
-<span class="comment">//     F: PrimeField + SWToTEConParam,</span>
-<span class="comment">// {</span>
-<span class="comment">//     // Input an affine curve point in the short Weierstrass form,</span>
-<span class="comment">//     // generate the circuit that converts this point into twisted</span>
-<span class="comment">//     // Edwards form, and return the variables for the tE point.</span>
-<span class="comment">//     // Cost: 2 constraints.</span>
-<span class="comment">//     // Note that we should not really need to use this circuit though.</span>
-<span class="comment">//     // An entity should either know both the SW and TE form of a</span>
-<span class="comment">//     // point; or know none of the two. There is no need to generate</span>
-<span class="comment">//     // a circuit for arguing secret knowledge of one form while</span>
-<span class="comment">//     // the other form is public. In practice this means that we</span>
-<span class="comment">//     // will always be working on the TE forms.</span>
-<span class="comment">//     pub fn point_from_sw_form&lt;P&gt;(</span>
-<span class="comment">//         &amp;mut self,</span>
-<span class="comment">//         sw_point: &amp;SWAffine&lt;P&gt;,</span>
-<span class="comment">//     ) -&gt; Result&lt;PointVariable, PlonkError&gt;</span>
-<span class="comment">//     where</span>
-<span class="comment">//         P: SWParam&lt;BaseField = F&gt; + Clone,</span>
-<span class="comment">//     {</span>
-<span class="comment">//         let te_point: Point&lt;F&gt; = Point::from(sw_point);</span>
-
-<span class="comment">//         // Case 1 if the point is the infinity point</span>
-<span class="comment">//         let is_infinity = self.create_variable(F::from(sw_point.infinity))?;</span>
-
-<span class="comment">//         // Case 2 if the point is not the infinity point</span>
-<span class="comment">//         // We need to show</span>
-<span class="comment">//         // 1. ex * py - beta * px + beta * alpha = 0</span>
-<span class="comment">//         // 2. s * px * ey + (1-alpha*s) * ey - s * px + s*alpha + 1 = 0</span>
-
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         // constants</span>
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         // TODO(ZZ): pre-compute some of the data</span>
-<span class="comment">//         // safe unwrap</span>
-<span class="comment">//         let s = F::from_repr(F::S).unwrap();</span>
-<span class="comment">//         let neg_alpha = F::from_repr(F::NEG_ALPHA).unwrap();</span>
-<span class="comment">//         let alpha = -neg_alpha;</span>
-<span class="comment">//         let beta = F::from_repr(F::BETA).unwrap();</span>
-<span class="comment">//         let beta_alpha = beta * alpha;</span>
-<span class="comment">//         let s_alpha_1 = s * alpha + F::one();</span>
-<span class="comment">//         let one_alpha_s = F::one() + neg_alpha * s;</span>
-
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         // variables</span>
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         let ex = self.create_variable(te_point.0)?;</span>
-<span class="comment">//         let ey = self.create_variable(te_point.1)?;</span>
-<span class="comment">//         let px = self.create_variable(sw_point.x)?;</span>
-<span class="comment">//         let py = self.create_variable(sw_point.y)?;</span>
-
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         // Eq.1 ex * py - beta * px + beta_alpha = 0</span>
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         let wires = [ex, py, px, self.zero()];</span>
-<span class="comment">//         let eq_1_output = self.gen_quad_poly(</span>
-<span class="comment">//             &amp;wires,</span>
-<span class="comment">//             &amp;[F::zero(), F::zero(), -beta, F::zero()],</span>
-<span class="comment">//             &amp;[F::one(), F::zero()],</span>
-<span class="comment">//             beta_alpha,</span>
-<span class="comment">//         )?;</span>
-<span class="comment">//         let eq_1_output_is_zero = self.is_zero(eq_1_output)?;</span>
-
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         // Eq.2 s * px * ey + one_alpha_s * ey - s * px + s_alpha_1 = 0</span>
-<span class="comment">//         // ================================================</span>
-<span class="comment">//         let wires = [px, ey, self.zero(), self.zero()];</span>
-<span class="comment">//         let eq_2_output = self.gen_quad_poly(</span>
-<span class="comment">//             &amp;wires,</span>
-<span class="comment">//             &amp;[-s, one_alpha_s, F::zero(), F::zero()],</span>
-<span class="comment">//             &amp;[s, F::zero()],</span>
-<span class="comment">//             s_alpha_1,</span>
-<span class="comment">//         )?;</span>
-<span class="comment">//         let eq_2_output_is_zero = self.is_zero(eq_2_output)?;</span>
-
-<span class="comment">//         // Final step, either case 1 or case 2 holds</span>
-<span class="comment">//         // either</span>
-<span class="comment">//         //  is_infinity = true</span>
-<span class="comment">//         // or</span>
-<span class="comment">//         //  eq_1_output_is_zero = true &amp;&amp; eq_2_output_is_zero = true</span>
-<span class="comment">//         let eq_1_and_eq_2 = self.logic_and(eq_1_output_is_zero,</span>
-<span class="comment">// eq_2_output_is_zero)?;         self.logic_or_gate(eq_1_and_eq_2,</span>
-<span class="comment">// is_infinity)?;</span>
-
-<span class="comment">//         Ok(PointVariable(ex, ey))</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
-
 <span class="comment">// ================================================</span>
 <span class="comment">// BLS12-377::Fq specific implementations</span>
 <span class="comment">// ================================================</span>
 <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
 <span class="kw">impl</span> <span class="ident">SWToTEConParam</span> <span class="kw">for</span> <span class="ident">Fq377</span> {
-    <span class="comment">// constants obtained from:</span>
-    <span class="comment">// https://www.notion.so/translucence/BLS12-377-Twisted-Edwards-parameters-47d988917fd540049ebb9e88b3b31d62#90838d24be764728a6dae1edf7d32c20</span>
-
     <span class="comment">// s = 10189023633222963290707194929886294091415157242906428298294512798502806398782149227503530278436336312243746741931</span>
     <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([
         <span class="number">0x3401d618f0339eab</span>,
@@ -559,52 +337,6 @@
         <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">g1</span>.<span class="ident">into</span>();
         <span class="macro">assert!</span>(<span class="ident">is_on_bls12_377_ed_curve</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>));
     }
-
-    <span class="comment">// #[allow(non_snake_case)]</span>
-    <span class="comment">// #[test]</span>
-    <span class="comment">// fn test_SW_to_TE_circuit() {</span>
-    <span class="comment">//     let mut circuit: PlonkCircuit&lt;Fq&gt; = PlonkCircuit::new(TurboPlonk);</span>
-    <span class="comment">//     let mut rng = test_rng();</span>
-
-    <span class="comment">//     // test generator</span>
-    <span class="comment">//     let g1 = &amp;G1Affine::prime_subgroup_generator();</span>
-    <span class="comment">//     let p: Point&lt;Fq&gt; = g1.into();</span>
-    <span class="comment">//     let p_var = circuit.point_from_sw_form(g1).unwrap();</span>
-
-    <span class="comment">//     assert!(is_on_bls12_377_ed_curve(&amp;p));</span>
-    <span class="comment">//     assert_eq!(circuit.witness(p_var.0).unwrap(), p.0);</span>
-    <span class="comment">//     assert_eq!(circuit.witness(p_var.1).unwrap(), p.1);</span>
-    <span class="comment">//     assert!(circuit.check_circuit_satisfiability(&amp;[]).is_ok());</span>
-
-    <span class="comment">//     // test zero point</span>
-    <span class="comment">//     let g1 = &amp;G1Affine::zero();</span>
-    <span class="comment">//     let p: Point&lt;Fq&gt; = g1.into();</span>
-    <span class="comment">//     assert_eq!(p.0, Fq::zero());</span>
-    <span class="comment">//     assert_eq!(p.1, Fq::one());</span>
-    <span class="comment">//     let p_var = circuit.point_from_sw_form(g1).unwrap();</span>
-
-    <span class="comment">//     assert!(is_on_bls12_377_ed_curve(&amp;p));</span>
-    <span class="comment">//     assert_eq!(circuit.witness(p_var.0).unwrap(), p.0);</span>
-    <span class="comment">//     assert_eq!(circuit.witness(p_var.1).unwrap(), p.1);</span>
-    <span class="comment">//     assert!(circuit.check_circuit_satisfiability(&amp;[]).is_ok());</span>
-
-    <span class="comment">//     // test a random group element</span>
-    <span class="comment">//     let g1 = &amp;G1Projective::rand(&amp;mut rng).into_affine();</span>
-    <span class="comment">//     let p: Point&lt;Fq&gt; = g1.into();</span>
-    <span class="comment">//     let p_var = circuit.point_from_sw_form(g1).unwrap();</span>
-
-    <span class="comment">//     // good path</span>
-    <span class="comment">//     assert!(is_on_bls12_377_ed_curve(&amp;p));</span>
-    <span class="comment">//     assert_eq!(circuit.witness(p_var.0).unwrap(), p.0);</span>
-    <span class="comment">//     assert_eq!(circuit.witness(p_var.1).unwrap(), p.1);</span>
-    <span class="comment">//     assert!(circuit.check_circuit_satisfiability(&amp;[]).is_ok());</span>
-
-    <span class="comment">//     // bad path: wrong witness should fail</span>
-    <span class="comment">//     let witness = circuit.witness(p_var.0).unwrap();</span>
-    <span class="comment">//     *circuit.witness_mut(p_var.0) = Fq::rand(&amp;mut rng);</span>
-    <span class="comment">//     assert!(circuit.check_circuit_satisfiability(&amp;[]).is_err());</span>
-    <span class="comment">//     *circuit.witness_mut(p_var.0) = witness;</span>
-    <span class="comment">// }</span>
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="jf_plonk" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>

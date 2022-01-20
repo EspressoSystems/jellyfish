@@ -927,6 +927,19 @@
 <span id="927">927</span>
 <span id="928">928</span>
 <span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Data structures used in Plonk proof systems</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{
@@ -948,7 +961,7 @@
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{
     <span class="ident">msm::VariableBaseMSM</span>, <span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span>,
 };
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftField</span>, <span class="ident">Field</span>, <span class="ident">PrimeField</span>, <span class="ident">ToConstraintField</span>, <span class="ident">Zero</span>};
+<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftField</span>, <span class="ident">Field</span>, <span class="ident">Fp2</span>, <span class="ident">Fp2Parameters</span>, <span class="ident">PrimeField</span>, <span class="ident">Zero</span>};
 <span class="kw">use</span> <span class="ident">ark_poly::univariate::DensePolynomial</span>;
 <span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10</span>::{<span class="ident">Commitment</span>, <span class="ident">Powers</span>, <span class="ident">UniversalParams</span>, <span class="ident">VerifierKey</span>};
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
@@ -1083,25 +1096,20 @@
 <span class="kw">fn</span> <span class="ident">group1_to_fields</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">E::G1Affine</span>: <span class="ident">ToConstraintField</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">E::Fq</span> <span class="kw">as</span> <span class="ident">Field</span><span class="op">&gt;</span><span class="ident">::BasePrimeField</span><span class="op">&gt;</span>,
+    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span><span class="op">&gt;</span>,
 {
-    <span class="comment">// contains x, y, infinity_flag, only need the first 2 fields</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fields</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">to_field_elements</span>().<span class="ident">unwrap</span>();
-    <span class="ident">fields</span>.<span class="ident">pop</span>();
-    <span class="ident">fields</span>
+    <span class="comment">// contains x, y, infinity_flag, only need the first 2 field elements</span>
+    <span class="macro">vec!</span>[<span class="ident">p</span>.<span class="ident">x</span>, <span class="ident">p</span>.<span class="ident">y</span>]
 }
 
-<span class="kw">fn</span> <span class="ident">group2_to_fields</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
+<span class="kw">fn</span> <span class="ident">group2_to_fields</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G2Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">E::G2Affine</span>: <span class="ident">ToConstraintField</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">E::Fq</span> <span class="kw">as</span> <span class="ident">Field</span><span class="op">&gt;</span><span class="ident">::BasePrimeField</span><span class="op">&gt;</span>,
+    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G2Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>, <span class="ident">Fqe</span> <span class="op">=</span> <span class="ident">Fp2</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">F</span>: <span class="ident">Fp2Parameters</span><span class="op">&lt;</span><span class="ident">Fp</span> <span class="op">=</span> <span class="ident">E::Fq</span><span class="op">&gt;</span>,
+    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fqe</span><span class="op">&gt;</span>,
 {
-    <span class="comment">// contains x, y, infinity_flag, only need the first 2 fields</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fields</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">to_field_elements</span>().<span class="ident">unwrap</span>();
-    <span class="ident">fields</span>.<span class="ident">pop</span>();
-    <span class="ident">fields</span>
+    <span class="comment">// contains x, y, infinity_flag, only need the first 2 field elements</span>
+    <span class="macro">vec!</span>[<span class="ident">p</span>.<span class="ident">x</span>.<span class="ident">c0</span>, <span class="ident">p</span>.<span class="ident">x</span>.<span class="ident">c1</span>, <span class="ident">p</span>.<span class="ident">y</span>.<span class="ident">c0</span>, <span class="ident">p</span>.<span class="ident">y</span>.<span class="ident">c1</span>]
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
@@ -1591,11 +1599,12 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">plookup_vk</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PlookupVerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P1</span>, <span class="ident">P2</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P1</span>, <span class="ident">P2</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P1</span><span class="op">&gt;</span>, <span class="ident">G2Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P2</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P1</span><span class="op">&gt;</span>, <span class="ident">G2Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P2</span><span class="op">&gt;</span>, <span class="ident">Fqe</span> <span class="op">=</span> <span class="ident">Fp2</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">F</span>: <span class="ident">Fp2Parameters</span><span class="op">&lt;</span><span class="ident">Fp</span> <span class="op">=</span> <span class="ident">E::Fq</span><span class="op">&gt;</span>,
     <span class="ident">P1</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">P2</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P2</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fqe</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vk</span>: <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="ident">vk</span>.<span class="ident">plookup_vk</span>.<span class="ident">is_some</span>() {
@@ -1617,9 +1626,9 @@
                 .<span class="ident">concat</span>(),
             <span class="ident">vk</span>.<span class="ident">k</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">fr</span><span class="op">|</span> <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">E::Fq</span>, <span class="ident">P1</span><span class="op">&gt;</span>(<span class="ident">fr</span>)).<span class="ident">collect</span>(),
             <span class="comment">// NOTE: only adding g, h, beta_h since only these are used.</span>
-            <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">g</span>),
-            <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">h</span>),
-            <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">beta_h</span>),
+            <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P1</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">g</span>),
+            <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P2</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">h</span>),
+            <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P2</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">beta_h</span>),
         ]
         .<span class="ident">concat</span>()
     }
@@ -1855,6 +1864,23 @@
     <span class="ident">q_lookup_eval</span>: <span class="ident">E::Fr</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">E::Fr</span> {
     <span class="ident">w_range_eval</span> <span class="op">+</span> <span class="ident">q_lookup_eval</span> <span class="op">*</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w_0_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w_1_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">w_2_eval</span>))
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">test</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">ark_bn254</span>::{<span class="ident">g1::Parameters</span>, <span class="ident">Bn254</span>, <span class="ident">Fq</span>};
+    <span class="kw">use</span> <span class="ident">ark_ec::AffineCurve</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_group_to_field</span>() {
+        <span class="kw">let</span> <span class="ident">g1</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Bn254</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::prime_subgroup_generator</span>();
+        <span class="kw">let</span> <span class="ident">f1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Parameters</span><span class="op">&gt;</span>(<span class="ident">g1</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">f1</span>.<span class="ident">len</span>(), <span class="number">2</span>);
+        <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Bn254</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G2Affine::prime_subgroup_generator</span>();
+        <span class="kw">let</span> <span class="ident">f2</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">g2</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">f2</span>.<span class="ident">len</span>(), <span class="number">4</span>);
+    }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
