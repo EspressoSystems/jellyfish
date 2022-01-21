@@ -26,7 +26,7 @@ pub(crate) struct ChallengesVar {
 /// Plonk IOP verifier challenges.
 #[derive(Debug, Default)]
 pub(crate) struct ChallengesFpElemVar<F: PrimeField> {
-    pub(crate) tau: FpElemVar<F>,
+    pub(crate) _tau: FpElemVar<F>,
     pub(crate) alphas: [FpElemVar<F>; 3],
     pub(crate) beta: FpElemVar<F>,
     pub(crate) gamma: FpElemVar<F>,
@@ -58,7 +58,7 @@ pub(crate) fn challenge_var_to_fp_elem_var<F: PrimeField>(
     )?;
 
     Ok(ChallengesFpElemVar {
-        tau: FpElemVar::new_unchecked(
+        _tau: FpElemVar::new_unchecked(
             circuit,
             challenge_var.tau,
             non_native_field_info.m,

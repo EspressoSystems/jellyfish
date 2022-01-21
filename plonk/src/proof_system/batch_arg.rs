@@ -33,7 +33,7 @@ pub struct Instance<'a, E: PairingEngine> {
     // TODO: considering giving instance an ID
     prove_key: ProvingKey<'a, E>, // the verification key can be obtained inside the proving key.
     circuit: PlonkCircuit<E::Fr>,
-    circuit_type: MergeableCircuitType,
+    _circuit_type: MergeableCircuitType,
 }
 
 impl<'a, E: PairingEngine> Instance<'a, E> {
@@ -63,7 +63,7 @@ where
         Ok(Instance {
             prove_key,
             circuit,
-            circuit_type,
+            _circuit_type: circuit_type,
         })
     }
 
