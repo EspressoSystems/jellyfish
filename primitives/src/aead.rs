@@ -299,6 +299,25 @@ mod test {
     }
 
     #[test]
+    fn test_conversion() {
+        let mut rng = ark_std::test_rng();
+        let mut rand_bytes = [0u8; 32];
+        rng.fill_bytes(&mut rand_bytes[..]);
+        let enc_key = EncKey::from(rand_bytes);
+        let bytes: [u8; 32] = enc_key.into();
+        assert_eq!(bytes, rand_bytes);
+
+        rng.fill_bytes(&mut rand_bytes[..]);
+        let dec_key = DecKey::from(rand_bytes);
+        let bytes: [u8; 32] = dec_key.into();
+        assert_eq!(bytes, rand_bytes);
+
+        let keypair = KeyPair::generate(&mut rng);
+        let enc_key = EncKey::from(&keypair.dec_key);
+        assert_eq!(enc_key, keypair.enc_key());
+    }
+
+    #[test]
     fn test_serde() {
         let mut rng = ark_std::test_rng();
         let keypair = KeyPair::generate(&mut rng);
