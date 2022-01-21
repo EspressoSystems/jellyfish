@@ -330,23 +330,31 @@ mod test {
         keypair.serialize(&mut keypair_bytes).unwrap();
         let keypair_de = KeyPair::deserialize(&keypair_bytes[..]).unwrap();
         assert_eq!(keypair, keypair_de);
+        // wrong byte length
+        assert!(KeyPair::deserialize(&keypair_bytes[1..]).is_err());
 
         // serde for EncKey
         let mut enc_key_bytes = Vec::new();
         keypair.enc_key.serialize(&mut enc_key_bytes).unwrap();
         let enc_key_de = EncKey::deserialize(&enc_key_bytes[..]).unwrap();
         assert_eq!(enc_key_de, keypair.enc_key);
+        // wrong byte length
+        assert!(EncKey::deserialize(&enc_key_bytes[1..]).is_err());
 
         // serde for DecKey
         let mut dec_key_bytes = Vec::new();
         keypair.dec_key.serialize(&mut dec_key_bytes).unwrap();
         let dec_key_de = DecKey::deserialize(&dec_key_bytes[..]).unwrap();
         assert_eq!(dec_key_de.0.to_bytes(), keypair.dec_key.0.to_bytes());
+        // wrong byte length
+        assert!(DecKey::deserialize(&dec_key_bytes[1..]).is_err());
 
         // serde for Ciphertext
         let mut ciphertext_bytes = Vec::new();
         ciphertext.serialize(&mut ciphertext_bytes).unwrap();
         let ciphertext_de = Ciphertext::deserialize(&ciphertext_bytes[..]).unwrap();
         assert_eq!(ciphertext_de, ciphertext);
+        // wrong byte length
+        assert!(Ciphertext::deserialize(&ciphertext_bytes[1..]).is_err());
     }
 }
