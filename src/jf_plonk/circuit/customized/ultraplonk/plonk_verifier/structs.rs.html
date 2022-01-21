@@ -221,7 +221,7 @@
 <span class="doccomment">/// Plonk IOP verifier challenges.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">ChallengesFpElemVar</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">tau</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_tau</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">alphas</span>: [<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>],
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">beta</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">gamma</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
@@ -253,7 +253,7 @@
     )<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">ChallengesFpElemVar</span> {
-        <span class="ident">tau</span>: <span class="ident">FpElemVar::new_unchecked</span>(
+        <span class="ident">_tau</span>: <span class="ident">FpElemVar::new_unchecked</span>(
             <span class="ident">circuit</span>,
             <span class="ident">challenge_var</span>.<span class="ident">tau</span>,
             <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,

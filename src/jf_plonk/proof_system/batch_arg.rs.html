@@ -429,7 +429,7 @@
     <span class="comment">// TODO: considering giving instance an ID</span>
     <span class="ident">prove_key</span>: <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>, <span class="comment">// the verification key can be obtained inside the proving key.</span>
     <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    <span class="ident">circuit_type</span>: <span class="ident">MergeableCircuitType</span>,
+    <span class="ident">_circuit_type</span>: <span class="ident">MergeableCircuitType</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span> {
@@ -459,7 +459,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">Instance</span> {
             <span class="ident">prove_key</span>,
             <span class="ident">circuit</span>,
-            <span class="ident">circuit_type</span>,
+            <span class="ident">_circuit_type</span>: <span class="ident">circuit_type</span>,
         })
     }
 
