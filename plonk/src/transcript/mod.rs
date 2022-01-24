@@ -54,22 +54,39 @@ pub trait PlonkTranscript<F> {
             b"input size",
             vk.num_inputs.to_le_bytes().as_ref(),
         )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"wire subsets separators",
-            &to_bytes!(&vk.k)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"selector commitments",
-            &to_bytes!(&vk.selector_comms)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"sigma commitments",
-            &to_bytes!(&vk.sigma_comms)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(self, b"public input", &to_bytes!(pub_input)?)
+
+        for ki in vk.k.iter() {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"wire subsets separators",
+                &to_bytes!(ki)?,
+            )?;
+        }
+        for selector_com in vk.selector_comms.iter() {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"selector commitments",
+                &to_bytes!(selector_com)?,
+            )?;
+        }
+
+        for sigma_comms in vk.sigma_comms.iter() {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"sigma commitments",
+                &to_bytes!(sigma_comms)?,
+            )?;
+        }
+
+        for input in pub_input.iter() {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"public input",
+                &to_bytes!(input)?,
+            )?;
+        }
+
+        Ok(())
     }
 
     // append the message to the transcript

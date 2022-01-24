@@ -246,56 +246,11 @@ where
         // Check e(A, [x]2) ?= e(B, [1]2)
         Ok(multi_pairing::<E>(&g1_elems, &g2_elems) == E::Fqk::one())
     }
-}
-
-/// Private helper methods
-impl<E, F, P> Verifier<E>
-where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-    F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
-{
-    /// Merge a polynomial commitment into the aggregated polynomial commitment
-    /// (in the ScalarAndBases form), update the random combiner afterward.
-    #[inline]
-    fn add_poly_comm(
-        scalar_and_bases: &mut ScalarsAndBases<E>,
-        random_combiner: &mut E::Fr,
-        comm: E::G1Affine,
-        r: E::Fr,
-    ) {
-        scalar_and_bases.push(*random_combiner, comm);
-        *random_combiner *= r;
-    }
-
-    /// Add a polynomial commitment evaluation value to the aggregated
-    /// polynomial evaluation, update the random combiner afterward.
-    #[inline]
-    fn add_pcs_eval(result: &mut E::Fr, random_combiner: &E::Fr, eval: E::Fr) {
-        *result += eval * (*random_combiner);
-    }
-
-    /// Evaluate vanishing polynomial at point `zeta`
-    #[inline]
-    fn evaluate_vanishing_poly(&self, zeta: &E::Fr) -> E::Fr {
-        self.domain.evaluate_vanishing_polynomial(*zeta)
-    }
-
-    /// Evaluate the first and the last lagrange polynomial at point `zeta`
-    /// given the vanishing polynomial evaluation `vanish_eval`.
-    #[inline]
-    fn evaluate_lagrange_1_and_n(&self, zeta: &E::Fr, vanish_eval: &E::Fr) -> (E::Fr, E::Fr) {
-        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - E::Fr::one());
-        let lagrange_1_eval = *vanish_eval / divisor;
-        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
-        let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
-        (lagrange_1_eval, lagrange_n_eval)
-    }
 
     /// Compute verifier challenges `tau`, `beta`, `gamma`, `alpha`, `zeta`,
     /// 'v', 'u'.
     #[inline]
-    fn compute_challenges<T>(
+    pub(crate) fn compute_challenges<T>(
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::Fr]],
         batch_proof: &BatchProof<E>,
@@ -387,7 +342,7 @@ where
     /// where m is the number of instances, and k_j is the number of alpha power
     /// terms added to the first j-1 instances.
     #[allow(clippy::too_many_arguments)]
-    fn compute_lin_poly_constant_term(
+    pub(crate) fn compute_lin_poly_constant_term(
         &self,
         challenges: &Challenges<E::Fr>,
         verify_keys: &[&VerifyingKey<E>],
@@ -468,7 +423,7 @@ where
     /// The verification key type is guaranteed to match the Plonk proof type.
     /// The returned commitment is a generalization of `[F]1` described in Sec 8.4, step 10 of https://eprint.iacr.org/2019/953.pdf
     #[allow(clippy::too_many_arguments)]
-    fn aggregate_poly_commitments(
+    pub(crate) fn aggregate_poly_commitments(
         &self,
         vks: &[&VerifyingKey<E>],
         challenges: &Challenges<E::Fr>,
@@ -564,6 +519,225 @@ where
         }
 
         Ok((scalars_and_bases, buffer_v_and_uv_basis))
+    }
+
+    /// Compute the bases and scalars in the batched polynomial commitment,
+    /// which is a generalization of `[D]1` specified in Sec 8.3, Verifier
+    /// algorithm step 9 of https://eprint.iacr.org/2019/953.pdf.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn linearization_scalars_and_bases(
+        &self,
+        vks: &[&VerifyingKey<E>],
+        challenges: &Challenges<E::Fr>,
+        vanish_eval: &E::Fr,
+        lagrange_1_eval: &E::Fr,
+        lagrange_n_eval: &E::Fr,
+        batch_proof: &BatchProof<E>,
+        alpha_powers: &[E::Fr],
+        alpha_bases: &[E::Fr],
+    ) -> Result<ScalarsAndBases<E>, PlonkError> {
+        if vks.len() != batch_proof.len() || alpha_bases.len() != vks.len() {
+            return Err(ParameterError(format!(
+                "the number of verification keys {} != the number of instances {} or alpha bases {}",
+                vks.len(),
+                batch_proof.len(),
+                alpha_bases.len()
+            ))
+            .into());
+        }
+
+        // compute constants that are being reused
+        let beta_plus_one = E::Fr::one() + challenges.beta;
+        let gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
+
+        let mut scalars_and_bases = ScalarsAndBases::new();
+
+        for (i, (vk, &current_alpha_bases)) in vks.iter().zip(alpha_bases).enumerate() {
+            // Compute coefficient for the permutation product polynomial commitment.
+            // coeff = L1(zeta) * alpha^2
+            //       + alpha
+            //       * (beta * zeta      + a_bar + gamma)
+            //       * (beta * k1 * zeta + b_bar + gamma)
+            //       * (beta * k2 * zeta + c_bar + gamma)
+            // where a_bar, b_bar and c_bar are in w_evals
+            let mut coeff = alpha_powers[0] * lagrange_1_eval;
+            let w_evals = &batch_proof.poly_evals_vec[i].wires_evals;
+            coeff += w_evals
+                .iter()
+                .zip(vk.k.iter())
+                .fold(challenges.alpha, |acc, (w_eval, k)| {
+                    acc * (challenges.beta * k * challenges.zeta + challenges.gamma + w_eval)
+                });
+            coeff *= current_alpha_bases;
+            // Add permutation product polynomial commitment.
+            scalars_and_bases.push(coeff, batch_proof.prod_perm_poly_comms_vec[i].0);
+
+            // Compute coefficient for the last wire sigma polynomial commitment.
+            let num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
+            let sigma_evals = &batch_proof.poly_evals_vec[i].wire_sigma_evals;
+            let coeff = w_evals
+                .iter()
+                .take(num_wire_types - 1)
+                .zip(sigma_evals.iter())
+                .fold(
+                    challenges.alpha
+                        * challenges.beta
+                        * batch_proof.poly_evals_vec[i].perm_next_eval,
+                    |acc, (w_eval, sigma_eval)| {
+                        acc * (challenges.beta * sigma_eval + challenges.gamma + w_eval)
+                    },
+                )
+                * current_alpha_bases;
+            // Add output wire sigma polynomial commitment.
+            scalars_and_bases.push(
+                -coeff,
+                vk.sigma_comms.last().ok_or(PlonkError::IndexError)?.0,
+            );
+
+            // Add selector polynomial commitments.
+            // Compute coefficients for selector polynomial commitments.
+            // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
+            // TODO(binyi): get the order from a function.
+            let mut q_scalars = vec![E::Fr::zero(); 2 * GATE_WIDTH + 5];
+            q_scalars[0] = w_evals[0];
+            q_scalars[1] = w_evals[1];
+            q_scalars[2] = w_evals[2];
+            q_scalars[3] = w_evals[3];
+            q_scalars[4] = w_evals[0] * w_evals[1];
+            q_scalars[5] = w_evals[2] * w_evals[3];
+            q_scalars[6] = w_evals[0].pow([5]);
+            q_scalars[7] = w_evals[1].pow([5]);
+            q_scalars[8] = w_evals[2].pow([5]);
+            q_scalars[9] = w_evals[3].pow([5]);
+            q_scalars[10] = -w_evals[4];
+            q_scalars[11] = E::Fr::one();
+            q_scalars[12] = w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4];
+            for (&s, poly) in q_scalars.iter().zip(vk.selector_comms.iter()) {
+                scalars_and_bases.push(s * current_alpha_bases, poly.0);
+            }
+
+            // Add Plookup related commitments
+            if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
+                let lookup_evals = &lookup_proof.poly_evals;
+                let merged_lookup_x = eval_merged_lookup_witness::<E>(
+                    challenges.tau,
+                    w_evals[5],
+                    w_evals[0],
+                    w_evals[1],
+                    w_evals[2],
+                    lookup_evals.q_lookup_eval,
+                );
+                let merged_table_x = eval_merged_table::<E>(
+                    challenges.tau,
+                    lookup_evals.range_table_eval,
+                    lookup_evals.key_table_eval,
+                    lookup_evals.q_lookup_eval,
+                    w_evals[3],
+                    w_evals[4],
+                );
+                let merged_table_xw = eval_merged_table::<E>(
+                    challenges.tau,
+                    lookup_evals.range_table_next_eval,
+                    lookup_evals.key_table_next_eval,
+                    lookup_evals.q_lookup_next_eval,
+                    lookup_evals.w_3_next_eval,
+                    lookup_evals.w_4_next_eval,
+                );
+
+                // coefficient for prod_lookup_poly(X):
+                // coeff_lin_poly = alpha^4 * L1(x) +
+                //                  alpha^5 * Ln(x) +
+                //                  alpha^6 * (x - w^{n-1}) * (1+beta) * (gamma + lookup_w_eval)
+                //                  * (gamma(1+beta) + table_x + beta * table_xw),
+                let mut coeff = alpha_powers[2] * lagrange_1_eval
+                    + alpha_powers[3] * lagrange_n_eval
+                    + alpha_powers[4]
+                        * (challenges.zeta - self.domain.group_gen_inv)
+                        * beta_plus_one
+                        * (challenges.gamma + merged_lookup_x)
+                        * (gamma_mul_beta_plus_one
+                            + merged_table_x
+                            + challenges.beta * merged_table_xw);
+                coeff = current_alpha_bases * coeff;
+                scalars_and_bases.push(coeff, lookup_proof.prod_lookup_poly_comm.0);
+
+                // coefficient for h2(X):
+                // coeff_lin_poly = alpha_base * alpha^6 * (w^{n-1} - x)
+                //                  * prod_lookup_poly_xw
+                //                  * [gamma(1+beta) + h1_x + beta * h1_xw]
+                let coeff = current_alpha_bases
+                    * alpha_powers[4]
+                    * (self.domain.group_gen_inv - challenges.zeta)
+                    * lookup_evals.prod_next_eval
+                    * (gamma_mul_beta_plus_one
+                        + lookup_evals.h_1_eval
+                        + challenges.beta * lookup_evals.h_1_next_eval);
+                scalars_and_bases.push(coeff, lookup_proof.h_poly_comms[1].0);
+            }
+        }
+
+        // Add splitted quotient commitments
+        let zeta_to_n_plus_2 = (E::Fr::one() + vanish_eval) * challenges.zeta * challenges.zeta;
+        let mut coeff = vanish_eval.neg();
+        scalars_and_bases.push(
+            coeff,
+            batch_proof
+                .split_quot_poly_comms
+                .first()
+                .ok_or(PlonkError::IndexError)?
+                .0,
+        );
+        for poly in batch_proof.split_quot_poly_comms.iter().skip(1) {
+            coeff *= zeta_to_n_plus_2;
+            scalars_and_bases.push(coeff, poly.0);
+        }
+
+        Ok(scalars_and_bases)
+    }
+}
+
+/// Private helper methods
+impl<E, F, P> Verifier<E>
+where
+    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    F: RescueParameter + SWToTEConParam,
+    P: SWModelParameters<BaseField = F> + Clone,
+{
+    /// Merge a polynomial commitment into the aggregated polynomial commitment
+    /// (in the ScalarAndBases form), update the random combiner afterward.
+    #[inline]
+    fn add_poly_comm(
+        scalar_and_bases: &mut ScalarsAndBases<E>,
+        random_combiner: &mut E::Fr,
+        comm: E::G1Affine,
+        r: E::Fr,
+    ) {
+        scalar_and_bases.push(*random_combiner, comm);
+        *random_combiner *= r;
+    }
+
+    /// Add a polynomial commitment evaluation value to the aggregated
+    /// polynomial evaluation, update the random combiner afterward.
+    #[inline]
+    fn add_pcs_eval(result: &mut E::Fr, random_combiner: &E::Fr, eval: E::Fr) {
+        *result += eval * (*random_combiner);
+    }
+
+    /// Evaluate vanishing polynomial at point `zeta`
+    #[inline]
+    fn evaluate_vanishing_poly(&self, zeta: &E::Fr) -> E::Fr {
+        self.domain.evaluate_vanishing_polynomial(*zeta)
+    }
+
+    /// Evaluate the first and the last lagrange polynomial at point `zeta`
+    /// given the vanishing polynomial evaluation `vanish_eval`.
+    #[inline]
+    fn evaluate_lagrange_1_and_n(&self, zeta: &E::Fr, vanish_eval: &E::Fr) -> (E::Fr, E::Fr) {
+        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - E::Fr::one());
+        let lagrange_1_eval = *vanish_eval / divisor;
+        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
+        let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
+        (lagrange_1_eval, lagrange_n_eval)
     }
 
     #[inline]
@@ -733,179 +907,5 @@ where
             }
         }
         Ok(result)
-    }
-
-    /// Compute the bases and scalars in the batched polynomial commitment,
-    /// which is a generalization of `[D]1` specified in Sec 8.3, Verifier
-    /// algorithm step 9 of https://eprint.iacr.org/2019/953.pdf.
-    #[allow(clippy::too_many_arguments)]
-    fn linearization_scalars_and_bases(
-        &self,
-        vks: &[&VerifyingKey<E>],
-        challenges: &Challenges<E::Fr>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
-        batch_proof: &BatchProof<E>,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
-    ) -> Result<ScalarsAndBases<E>, PlonkError> {
-        if vks.len() != batch_proof.len() || alpha_bases.len() != vks.len() {
-            return Err(ParameterError(format!(
-                "the number of verification keys {} != the number of instances {} or alpha bases {}",
-                vks.len(),
-                batch_proof.len(),
-                alpha_bases.len()
-            ))
-            .into());
-        }
-
-        // compute constants that are being reused
-        let beta_plus_one = E::Fr::one() + challenges.beta;
-        let gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
-
-        let mut scalars_and_bases = ScalarsAndBases::new();
-
-        for (i, (vk, &current_alpha_bases)) in vks.iter().zip(alpha_bases).enumerate() {
-            // Compute coefficient for the permutation product polynomial commitment.
-            // coeff = L1(zeta) * alpha^2
-            //       + alpha
-            //       * (beta * zeta      + a_bar + gamma)
-            //       * (beta * k1 * zeta + b_bar + gamma)
-            //       * (beta * k2 * zeta + c_bar + gamma)
-            // where a_bar, b_bar and c_bar are in w_evals
-            let mut coeff = alpha_powers[0] * lagrange_1_eval;
-            let w_evals = &batch_proof.poly_evals_vec[i].wires_evals;
-            coeff += w_evals
-                .iter()
-                .zip(vk.k.iter())
-                .fold(challenges.alpha, |acc, (w_eval, k)| {
-                    acc * (challenges.beta * k * challenges.zeta + challenges.gamma + w_eval)
-                });
-            coeff *= current_alpha_bases;
-            // Add permutation product polynomial commitment.
-            scalars_and_bases.push(coeff, batch_proof.prod_perm_poly_comms_vec[i].0);
-
-            // Compute coefficient for the last wire sigma polynomial commitment.
-            let num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
-            let sigma_evals = &batch_proof.poly_evals_vec[i].wire_sigma_evals;
-            let coeff = w_evals
-                .iter()
-                .take(num_wire_types - 1)
-                .zip(sigma_evals.iter())
-                .fold(
-                    challenges.alpha
-                        * challenges.beta
-                        * batch_proof.poly_evals_vec[i].perm_next_eval,
-                    |acc, (w_eval, sigma_eval)| {
-                        acc * (challenges.beta * sigma_eval + challenges.gamma + w_eval)
-                    },
-                )
-                * current_alpha_bases;
-            // Add output wire sigma polynomial commitment.
-            scalars_and_bases.push(
-                -coeff,
-                vk.sigma_comms.last().ok_or(PlonkError::IndexError)?.0,
-            );
-
-            // Add selector polynomial commitments.
-            // Compute coefficients for selector polynomial commitments.
-            // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
-            // TODO(binyi): get the order from a function.
-            let mut q_scalars = vec![E::Fr::zero(); 2 * GATE_WIDTH + 5];
-            q_scalars[0] = w_evals[0];
-            q_scalars[1] = w_evals[1];
-            q_scalars[2] = w_evals[2];
-            q_scalars[3] = w_evals[3];
-            q_scalars[4] = w_evals[0] * w_evals[1];
-            q_scalars[5] = w_evals[2] * w_evals[3];
-            q_scalars[6] = w_evals[0].pow([5]);
-            q_scalars[7] = w_evals[1].pow([5]);
-            q_scalars[8] = w_evals[2].pow([5]);
-            q_scalars[9] = w_evals[3].pow([5]);
-            q_scalars[10] = -w_evals[4];
-            q_scalars[11] = E::Fr::one();
-            q_scalars[12] = w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4];
-            for (&s, poly) in q_scalars.iter().zip(vk.selector_comms.iter()) {
-                scalars_and_bases.push(s * current_alpha_bases, poly.0);
-            }
-
-            // Add Plookup related commitments
-            if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
-                let lookup_evals = &lookup_proof.poly_evals;
-                let merged_lookup_x = eval_merged_lookup_witness::<E>(
-                    challenges.tau,
-                    w_evals[5],
-                    w_evals[0],
-                    w_evals[1],
-                    w_evals[2],
-                    lookup_evals.q_lookup_eval,
-                );
-                let merged_table_x = eval_merged_table::<E>(
-                    challenges.tau,
-                    lookup_evals.range_table_eval,
-                    lookup_evals.key_table_eval,
-                    lookup_evals.q_lookup_eval,
-                    w_evals[3],
-                    w_evals[4],
-                );
-                let merged_table_xw = eval_merged_table::<E>(
-                    challenges.tau,
-                    lookup_evals.range_table_next_eval,
-                    lookup_evals.key_table_next_eval,
-                    lookup_evals.q_lookup_next_eval,
-                    lookup_evals.w_3_next_eval,
-                    lookup_evals.w_4_next_eval,
-                );
-
-                // coefficient for prod_lookup_poly(X):
-                // coeff_lin_poly = alpha^4 * L1(x) +
-                //                  alpha^5 * Ln(x) +
-                //                  alpha^6 * (x - w^{n-1}) * (1+beta) * (gamma + lookup_w_eval)
-                //                  * (gamma(1+beta) + table_x + beta * table_xw),
-                let mut coeff = alpha_powers[2] * lagrange_1_eval
-                    + alpha_powers[3] * lagrange_n_eval
-                    + alpha_powers[4]
-                        * (challenges.zeta - self.domain.group_gen_inv)
-                        * beta_plus_one
-                        * (challenges.gamma + merged_lookup_x)
-                        * (gamma_mul_beta_plus_one
-                            + merged_table_x
-                            + challenges.beta * merged_table_xw);
-                coeff = current_alpha_bases * coeff;
-                scalars_and_bases.push(coeff, lookup_proof.prod_lookup_poly_comm.0);
-
-                // coefficient for h2(X):
-                // coeff_lin_poly = alpha_base * alpha^6 * (w^{n-1} - x)
-                //                  * prod_lookup_poly_xw
-                //                  * [gamma(1+beta) + h1_x + beta * h1_xw]
-                let coeff = current_alpha_bases
-                    * alpha_powers[4]
-                    * (self.domain.group_gen_inv - challenges.zeta)
-                    * lookup_evals.prod_next_eval
-                    * (gamma_mul_beta_plus_one
-                        + lookup_evals.h_1_eval
-                        + challenges.beta * lookup_evals.h_1_next_eval);
-                scalars_and_bases.push(coeff, lookup_proof.h_poly_comms[1].0);
-            }
-        }
-
-        // Add splitted quotient commitments
-        let zeta_to_n_plus_2 = (E::Fr::one() + vanish_eval) * challenges.zeta * challenges.zeta;
-        let mut coeff = vanish_eval.neg();
-        scalars_and_bases.push(
-            coeff,
-            batch_proof
-                .split_quot_poly_comms
-                .first()
-                .ok_or(PlonkError::IndexError)?
-                .0,
-        );
-        for poly in batch_proof.split_quot_poly_comms.iter().skip(1) {
-            coeff *= zeta_to_n_plus_2;
-            scalars_and_bases.push(coeff, poly.0);
-        }
-
-        Ok(scalars_and_bases)
     }
 }

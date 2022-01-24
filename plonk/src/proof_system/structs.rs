@@ -834,7 +834,7 @@ pub(crate) struct PlookupOracles<F: FftField> {
 /// The vector representation of bases and corresponding scalars.
 #[derive(Debug)]
 pub(crate) struct ScalarsAndBases<E: PairingEngine> {
-    base_scalar_map: HashMap<E::G1Affine, E::Fr>,
+    pub(crate) base_scalar_map: HashMap<E::G1Affine, E::Fr>,
 }
 
 impl<E: PairingEngine> ScalarsAndBases<E> {

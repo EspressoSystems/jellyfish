@@ -54,3 +54,5 @@ harness = false
 
 [features]
 std = []
+# exposing apis for testing purpose
+test_apis = []
