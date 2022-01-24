@@ -31,7 +31,7 @@ displaydoc = { version = "0.2.3", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
 num-bigint = { version = "0.4", default-features = false}
 rand_chacha = { version = "0.3.1" }
-sha3 = "^0.9"
+sha3 = "^0.10"
 
 
 [dependencies.ark-poly-commit]
