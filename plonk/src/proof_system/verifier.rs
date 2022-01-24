@@ -694,6 +694,86 @@ where
 
         Ok(scalars_and_bases)
     }
+
+    /// Combine the polynomial evaluations into a single evaluation. Useful in
+    /// batch opening.
+    /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
+    pub(crate) fn aggregate_evaluations(
+        lin_poly_constant: &E::Fr,
+        poly_evals_vec: &[ProofEvaluations<E::Fr>],
+        plookup_proofs_vec: &[Option<PlookupProof<E>>],
+        buffer_v_and_uv_basis: &[E::Fr],
+    ) -> Result<E::Fr, PlonkError> {
+        assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
+
+        let mut result: E::Fr = lin_poly_constant.neg();
+        let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
+
+        for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
+            // evaluations at point `zeta`
+            for &wire_eval in poly_evals.wires_evals.iter() {
+                Self::add_pcs_eval(
+                    &mut result,
+                    match v_and_uv_basis.next() {
+                        Some(p) => p,
+                        None => return Err(PlonkError::IteratorOutOfRange),
+                    },
+                    wire_eval,
+                );
+            }
+            for &sigma_eval in poly_evals.wire_sigma_evals.iter() {
+                Self::add_pcs_eval(
+                    &mut result,
+                    match v_and_uv_basis.next() {
+                        Some(p) => p,
+                        None => return Err(PlonkError::IteratorOutOfRange),
+                    },
+                    sigma_eval,
+                );
+            }
+            // evaluations at point `zeta * g`
+            Self::add_pcs_eval(
+                &mut result,
+                match v_and_uv_basis.next() {
+                    Some(p) => p,
+                    None => return Err(PlonkError::IteratorOutOfRange),
+                },
+                poly_evals.perm_next_eval,
+            );
+
+            // add Plookup related polynomial evaluations
+            if let Some(proof_lk) = plookup_proof {
+                let evals = &proof_lk.poly_evals;
+                // evaluations at point `zeta`
+                for &eval in evals.evals_vec().iter() {
+                    Self::add_pcs_eval(
+                        &mut result,
+                        match v_and_uv_basis.next() {
+                            Some(p) => p,
+                            None => return Err(PlonkError::IteratorOutOfRange),
+                        },
+                        eval,
+                    );
+                }
+                // evaluations at point `zeta * g`
+                for &next_eval in evals.next_evals_vec().iter() {
+                    Self::add_pcs_eval(
+                        &mut result,
+                        match v_and_uv_basis.next() {
+                            Some(p) => p,
+                            None => return Err(PlonkError::IteratorOutOfRange),
+                        },
+                        next_eval,
+                    );
+                }
+            }
+        }
+        // ensure all the buffer has been consumed
+        if v_and_uv_basis.next().is_some() {
+            return Err(PlonkError::IteratorOutOfRange);
+        }
+        Ok(result)
+    }
 }
 
 /// Private helper methods
@@ -773,86 +853,6 @@ where
             wires_poly_comms[3],
             wires_poly_comms[4],
         ])
-    }
-
-    /// Combine the polynomial evaluations into a single evaluation. Useful in
-    /// batch opening.
-    /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
-    fn aggregate_evaluations(
-        lin_poly_constant: &E::Fr,
-        poly_evals_vec: &[ProofEvaluations<E::Fr>],
-        plookup_proofs_vec: &[Option<PlookupProof<E>>],
-        buffer_v_and_uv_basis: &[E::Fr],
-    ) -> Result<E::Fr, PlonkError> {
-        assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
-
-        let mut result: E::Fr = lin_poly_constant.neg();
-        let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
-
-        for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
-            // evaluations at point `zeta`
-            for &wire_eval in poly_evals.wires_evals.iter() {
-                Self::add_pcs_eval(
-                    &mut result,
-                    match v_and_uv_basis.next() {
-                        Some(p) => p,
-                        None => return Err(PlonkError::IteratorOutOfRange),
-                    },
-                    wire_eval,
-                );
-            }
-            for &sigma_eval in poly_evals.wire_sigma_evals.iter() {
-                Self::add_pcs_eval(
-                    &mut result,
-                    match v_and_uv_basis.next() {
-                        Some(p) => p,
-                        None => return Err(PlonkError::IteratorOutOfRange),
-                    },
-                    sigma_eval,
-                );
-            }
-            // evaluations at point `zeta * g`
-            Self::add_pcs_eval(
-                &mut result,
-                match v_and_uv_basis.next() {
-                    Some(p) => p,
-                    None => return Err(PlonkError::IteratorOutOfRange),
-                },
-                poly_evals.perm_next_eval,
-            );
-
-            // add Plookup related polynomial evaluations
-            if let Some(proof_lk) = plookup_proof {
-                let evals = &proof_lk.poly_evals;
-                // evaluations at point `zeta`
-                for &eval in evals.evals_vec().iter() {
-                    Self::add_pcs_eval(
-                        &mut result,
-                        match v_and_uv_basis.next() {
-                            Some(p) => p,
-                            None => return Err(PlonkError::IteratorOutOfRange),
-                        },
-                        eval,
-                    );
-                }
-                // evaluations at point `zeta * g`
-                for &next_eval in evals.next_evals_vec().iter() {
-                    Self::add_pcs_eval(
-                        &mut result,
-                        match v_and_uv_basis.next() {
-                            Some(p) => p,
-                            None => return Err(PlonkError::IteratorOutOfRange),
-                        },
-                        next_eval,
-                    );
-                }
-            }
-        }
-        // ensure all the buffer has been consumed
-        if v_and_uv_basis.next().is_some() {
-            return Err(PlonkError::IteratorOutOfRange);
-        }
-        Ok(result)
     }
 
     /// Evaluate public input polynomial at point `z`.

@@ -2,7 +2,7 @@ use crate::{
     circuit::customized::ecc::SWToTEConParam,
     errors::PlonkError,
     proof_system::{
-        structs::{self, BatchProof, VerifyingKey},
+        structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
         verifier,
     },
     transcript::PlonkTranscript,
@@ -308,5 +308,22 @@ where
                 alpha_bases,
             )?
             .into())
+    }
+
+    /// Combine the polynomial evaluations into a single evaluation. Useful in
+    /// batch opening.
+    /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
+    pub fn aggregate_evaluations(
+        lin_poly_constant: &E::Fr,
+        poly_evals_vec: &[ProofEvaluations<E::Fr>],
+        plookup_proofs_vec: &[Option<PlookupProof<E>>],
+        buffer_v_and_uv_basis: &[E::Fr],
+    ) -> Result<E::Fr, PlonkError> {
+        verifier::Verifier::<E>::aggregate_evaluations(
+            lin_poly_constant,
+            poly_evals_vec,
+            plookup_proofs_vec,
+            buffer_v_and_uv_basis,
+        )
     }
 }
