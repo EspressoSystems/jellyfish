@@ -246,56 +246,11 @@ where
         // Check e(A, [x]2) ?= e(B, [1]2)
         Ok(multi_pairing::<E>(&g1_elems, &g2_elems) == E::Fqk::one())
     }
-}
-
-/// Private helper methods
-impl<E, F, P> Verifier<E>
-where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-    F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
-{
-    /// Merge a polynomial commitment into the aggregated polynomial commitment
-    /// (in the ScalarAndBases form), update the random combiner afterward.
-    #[inline]
-    fn add_poly_comm(
-        scalar_and_bases: &mut ScalarsAndBases<E>,
-        random_combiner: &mut E::Fr,
-        comm: E::G1Affine,
-        r: E::Fr,
-    ) {
-        scalar_and_bases.push(*random_combiner, comm);
-        *random_combiner *= r;
-    }
-
-    /// Add a polynomial commitment evaluation value to the aggregated
-    /// polynomial evaluation, update the random combiner afterward.
-    #[inline]
-    fn add_pcs_eval(result: &mut E::Fr, random_combiner: &E::Fr, eval: E::Fr) {
-        *result += eval * (*random_combiner);
-    }
-
-    /// Evaluate vanishing polynomial at point `zeta`
-    #[inline]
-    fn evaluate_vanishing_poly(&self, zeta: &E::Fr) -> E::Fr {
-        self.domain.evaluate_vanishing_polynomial(*zeta)
-    }
-
-    /// Evaluate the first and the last lagrange polynomial at point `zeta`
-    /// given the vanishing polynomial evaluation `vanish_eval`.
-    #[inline]
-    fn evaluate_lagrange_1_and_n(&self, zeta: &E::Fr, vanish_eval: &E::Fr) -> (E::Fr, E::Fr) {
-        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - E::Fr::one());
-        let lagrange_1_eval = *vanish_eval / divisor;
-        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
-        let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
-        (lagrange_1_eval, lagrange_n_eval)
-    }
 
     /// Compute verifier challenges `tau`, `beta`, `gamma`, `alpha`, `zeta`,
     /// 'v', 'u'.
     #[inline]
-    fn compute_challenges<T>(
+    pub(crate) fn compute_challenges<T>(
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::Fr]],
         batch_proof: &BatchProof<E>,
@@ -387,7 +342,7 @@ where
     /// where m is the number of instances, and k_j is the number of alpha power
     /// terms added to the first j-1 instances.
     #[allow(clippy::too_many_arguments)]
-    fn compute_lin_poly_constant_term(
+    pub(crate) fn compute_lin_poly_constant_term(
         &self,
         challenges: &Challenges<E::Fr>,
         verify_keys: &[&VerifyingKey<E>],
@@ -468,7 +423,7 @@ where
     /// The verification key type is guaranteed to match the Plonk proof type.
     /// The returned commitment is a generalization of `[F]1` described in Sec 8.4, step 10 of https://eprint.iacr.org/2019/953.pdf
     #[allow(clippy::too_many_arguments)]
-    fn aggregate_poly_commitments(
+    pub(crate) fn aggregate_poly_commitments(
         &self,
         vks: &[&VerifyingKey<E>],
         challenges: &Challenges<E::Fr>,
@@ -566,180 +521,11 @@ where
         Ok((scalars_and_bases, buffer_v_and_uv_basis))
     }
 
-    #[inline]
-    /// Return the list of polynomial commitments to be opened at point `zeta`.
-    /// The order should be consistent with the prover side.
-    fn plookup_open_poly_comms(
-        proof: &PlookupProof<E>,
-        vk: &VerifyingKey<E>,
-    ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        Ok(vec![
-            vk.plookup_vk.as_ref().unwrap().range_table_comm,
-            vk.plookup_vk.as_ref().unwrap().key_table_comm,
-            proof.h_poly_comms[0],
-            *vk.q_lookup_comm()?,
-        ])
-    }
-
-    #[inline]
-    /// Return the list of polynomial commitments to be opened at point `zeta *
-    /// g`. The order should be consistent with the prover side.
-    fn plookup_shifted_open_poly_comms(
-        proof: &PlookupProof<E>,
-        vk: &VerifyingKey<E>,
-        wires_poly_comms: &[Commitment<E>],
-    ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        Ok(vec![
-            proof.prod_lookup_poly_comm,
-            vk.plookup_vk.as_ref().unwrap().range_table_comm,
-            vk.plookup_vk.as_ref().unwrap().key_table_comm,
-            proof.h_poly_comms[0],
-            proof.h_poly_comms[1],
-            *vk.q_lookup_comm()?,
-            wires_poly_comms[3],
-            wires_poly_comms[4],
-        ])
-    }
-
-    /// Combine the polynomial evaluations into a single evaluation. Useful in
-    /// batch opening.
-    /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
-    fn aggregate_evaluations(
-        lin_poly_constant: &E::Fr,
-        poly_evals_vec: &[ProofEvaluations<E::Fr>],
-        plookup_proofs_vec: &[Option<PlookupProof<E>>],
-        buffer_v_and_uv_basis: &[E::Fr],
-    ) -> Result<E::Fr, PlonkError> {
-        assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
-
-        let mut result: E::Fr = lin_poly_constant.neg();
-        let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
-
-        for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
-            // evaluations at point `zeta`
-            for &wire_eval in poly_evals.wires_evals.iter() {
-                Self::add_pcs_eval(
-                    &mut result,
-                    match v_and_uv_basis.next() {
-                        Some(p) => p,
-                        None => return Err(PlonkError::IteratorOutOfRange),
-                    },
-                    wire_eval,
-                );
-            }
-            for &sigma_eval in poly_evals.wire_sigma_evals.iter() {
-                Self::add_pcs_eval(
-                    &mut result,
-                    match v_and_uv_basis.next() {
-                        Some(p) => p,
-                        None => return Err(PlonkError::IteratorOutOfRange),
-                    },
-                    sigma_eval,
-                );
-            }
-            // evaluations at point `zeta * g`
-            Self::add_pcs_eval(
-                &mut result,
-                match v_and_uv_basis.next() {
-                    Some(p) => p,
-                    None => return Err(PlonkError::IteratorOutOfRange),
-                },
-                poly_evals.perm_next_eval,
-            );
-
-            // add Plookup related polynomial evaluations
-            if let Some(proof_lk) = plookup_proof {
-                let evals = &proof_lk.poly_evals;
-                // evaluations at point `zeta`
-                for &eval in evals.evals_vec().iter() {
-                    Self::add_pcs_eval(
-                        &mut result,
-                        match v_and_uv_basis.next() {
-                            Some(p) => p,
-                            None => return Err(PlonkError::IteratorOutOfRange),
-                        },
-                        eval,
-                    );
-                }
-                // evaluations at point `zeta * g`
-                for &next_eval in evals.next_evals_vec().iter() {
-                    Self::add_pcs_eval(
-                        &mut result,
-                        match v_and_uv_basis.next() {
-                            Some(p) => p,
-                            None => return Err(PlonkError::IteratorOutOfRange),
-                        },
-                        next_eval,
-                    );
-                }
-            }
-        }
-        // ensure all the buffer has been consumed
-        if v_and_uv_basis.next().is_some() {
-            return Err(PlonkError::IteratorOutOfRange);
-        }
-        Ok(result)
-    }
-
-    /// Evaluate public input polynomial at point `z`.
-    /// Define the following as
-    /// - H: The domain with generator g
-    /// - n: The size of the domain H
-    /// - Z_H: The vanishing polynomial for H.
-    /// - v_i: A sequence of values, where v_i = g^i / n
-    ///
-    /// We then compute L_{i,H}(z) as `L_{i,H}(z) = Z_H(z) * v_i / (z - g^i)`
-    /// The public input polynomial evaluation is:
-    ///
-    /// \sum_{i=0..l} L_{i,H}(z) * pub_input[i].
-    ///
-    /// For merged circuits, the evaluation is:
-    /// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] + \sum_{i=0..l/2} L_{n-i,H}(z)
-    /// * pub_input[l/2+i]
-    ///
-    /// TODO: reuse the lagrange values
-    fn evaluate_pi_poly(
-        &self,
-        pub_input: &[E::Fr],
-        z: &E::Fr,
-        vanish_eval: &E::Fr,
-        circuit_is_merged: bool,
-    ) -> Result<E::Fr, PlonkError> {
-        // If z is a root of the vanishing polynomial, directly return zero.
-        if vanish_eval.is_zero() {
-            return Ok(E::Fr::zero());
-        }
-        let len = match circuit_is_merged {
-            false => pub_input.len(),
-            true => pub_input.len() / 2,
-        };
-
-        let vanish_eval_div_n = E::Fr::from(self.domain.size() as u32)
-            .inverse()
-            .ok_or(PlonkError::DivisionError)?
-            * (*vanish_eval);
-        let mut result = E::Fr::zero();
-        for (i, val) in pub_input.iter().take(len).enumerate() {
-            let lagrange_i =
-                vanish_eval_div_n * self.domain.element(i) / (*z - self.domain.element(i));
-            result += lagrange_i * val;
-        }
-        if circuit_is_merged {
-            let n = self.domain.size();
-            for (i, val) in pub_input.iter().skip(len).enumerate() {
-                let lagrange_n_minus_i = vanish_eval_div_n * self.domain.element(n - i - 1)
-                    / (*z - self.domain.element(n - i - 1));
-                result += lagrange_n_minus_i * val;
-            }
-        }
-        Ok(result)
-    }
-
     /// Compute the bases and scalars in the batched polynomial commitment,
     /// which is a generalization of `[D]1` specified in Sec 8.3, Verifier
     /// algorithm step 9 of https://eprint.iacr.org/2019/953.pdf.
     #[allow(clippy::too_many_arguments)]
-    fn linearization_scalars_and_bases(
+    pub(crate) fn linearization_scalars_and_bases(
         &self,
         vks: &[&VerifyingKey<E>],
         challenges: &Challenges<E::Fr>,
@@ -907,5 +693,219 @@ where
         }
 
         Ok(scalars_and_bases)
+    }
+
+    /// Combine the polynomial evaluations into a single evaluation. Useful in
+    /// batch opening.
+    /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
+    pub(crate) fn aggregate_evaluations(
+        lin_poly_constant: &E::Fr,
+        poly_evals_vec: &[ProofEvaluations<E::Fr>],
+        plookup_proofs_vec: &[Option<PlookupProof<E>>],
+        buffer_v_and_uv_basis: &[E::Fr],
+    ) -> Result<E::Fr, PlonkError> {
+        assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
+
+        let mut result: E::Fr = lin_poly_constant.neg();
+        let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
+
+        for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
+            // evaluations at point `zeta`
+            for &wire_eval in poly_evals.wires_evals.iter() {
+                Self::add_pcs_eval(
+                    &mut result,
+                    match v_and_uv_basis.next() {
+                        Some(p) => p,
+                        None => return Err(PlonkError::IteratorOutOfRange),
+                    },
+                    wire_eval,
+                );
+            }
+            for &sigma_eval in poly_evals.wire_sigma_evals.iter() {
+                Self::add_pcs_eval(
+                    &mut result,
+                    match v_and_uv_basis.next() {
+                        Some(p) => p,
+                        None => return Err(PlonkError::IteratorOutOfRange),
+                    },
+                    sigma_eval,
+                );
+            }
+            // evaluations at point `zeta * g`
+            Self::add_pcs_eval(
+                &mut result,
+                match v_and_uv_basis.next() {
+                    Some(p) => p,
+                    None => return Err(PlonkError::IteratorOutOfRange),
+                },
+                poly_evals.perm_next_eval,
+            );
+
+            // add Plookup related polynomial evaluations
+            if let Some(proof_lk) = plookup_proof {
+                let evals = &proof_lk.poly_evals;
+                // evaluations at point `zeta`
+                for &eval in evals.evals_vec().iter() {
+                    Self::add_pcs_eval(
+                        &mut result,
+                        match v_and_uv_basis.next() {
+                            Some(p) => p,
+                            None => return Err(PlonkError::IteratorOutOfRange),
+                        },
+                        eval,
+                    );
+                }
+                // evaluations at point `zeta * g`
+                for &next_eval in evals.next_evals_vec().iter() {
+                    Self::add_pcs_eval(
+                        &mut result,
+                        match v_and_uv_basis.next() {
+                            Some(p) => p,
+                            None => return Err(PlonkError::IteratorOutOfRange),
+                        },
+                        next_eval,
+                    );
+                }
+            }
+        }
+        // ensure all the buffer has been consumed
+        if v_and_uv_basis.next().is_some() {
+            return Err(PlonkError::IteratorOutOfRange);
+        }
+        Ok(result)
+    }
+}
+
+/// Private helper methods
+impl<E, F, P> Verifier<E>
+where
+    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    F: RescueParameter + SWToTEConParam,
+    P: SWModelParameters<BaseField = F> + Clone,
+{
+    /// Merge a polynomial commitment into the aggregated polynomial commitment
+    /// (in the ScalarAndBases form), update the random combiner afterward.
+    #[inline]
+    fn add_poly_comm(
+        scalar_and_bases: &mut ScalarsAndBases<E>,
+        random_combiner: &mut E::Fr,
+        comm: E::G1Affine,
+        r: E::Fr,
+    ) {
+        scalar_and_bases.push(*random_combiner, comm);
+        *random_combiner *= r;
+    }
+
+    /// Add a polynomial commitment evaluation value to the aggregated
+    /// polynomial evaluation, update the random combiner afterward.
+    #[inline]
+    fn add_pcs_eval(result: &mut E::Fr, random_combiner: &E::Fr, eval: E::Fr) {
+        *result += eval * (*random_combiner);
+    }
+
+    /// Evaluate vanishing polynomial at point `zeta`
+    #[inline]
+    fn evaluate_vanishing_poly(&self, zeta: &E::Fr) -> E::Fr {
+        self.domain.evaluate_vanishing_polynomial(*zeta)
+    }
+
+    /// Evaluate the first and the last lagrange polynomial at point `zeta`
+    /// given the vanishing polynomial evaluation `vanish_eval`.
+    #[inline]
+    fn evaluate_lagrange_1_and_n(&self, zeta: &E::Fr, vanish_eval: &E::Fr) -> (E::Fr, E::Fr) {
+        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - E::Fr::one());
+        let lagrange_1_eval = *vanish_eval / divisor;
+        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
+        let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
+        (lagrange_1_eval, lagrange_n_eval)
+    }
+
+    #[inline]
+    /// Return the list of polynomial commitments to be opened at point `zeta`.
+    /// The order should be consistent with the prover side.
+    fn plookup_open_poly_comms(
+        proof: &PlookupProof<E>,
+        vk: &VerifyingKey<E>,
+    ) -> Result<Vec<Commitment<E>>, PlonkError> {
+        Ok(vec![
+            vk.plookup_vk.as_ref().unwrap().range_table_comm,
+            vk.plookup_vk.as_ref().unwrap().key_table_comm,
+            proof.h_poly_comms[0],
+            *vk.q_lookup_comm()?,
+        ])
+    }
+
+    #[inline]
+    /// Return the list of polynomial commitments to be opened at point `zeta *
+    /// g`. The order should be consistent with the prover side.
+    fn plookup_shifted_open_poly_comms(
+        proof: &PlookupProof<E>,
+        vk: &VerifyingKey<E>,
+        wires_poly_comms: &[Commitment<E>],
+    ) -> Result<Vec<Commitment<E>>, PlonkError> {
+        Ok(vec![
+            proof.prod_lookup_poly_comm,
+            vk.plookup_vk.as_ref().unwrap().range_table_comm,
+            vk.plookup_vk.as_ref().unwrap().key_table_comm,
+            proof.h_poly_comms[0],
+            proof.h_poly_comms[1],
+            *vk.q_lookup_comm()?,
+            wires_poly_comms[3],
+            wires_poly_comms[4],
+        ])
+    }
+
+    /// Evaluate public input polynomial at point `z`.
+    /// Define the following as
+    /// - H: The domain with generator g
+    /// - n: The size of the domain H
+    /// - Z_H: The vanishing polynomial for H.
+    /// - v_i: A sequence of values, where v_i = g^i / n
+    ///
+    /// We then compute L_{i,H}(z) as `L_{i,H}(z) = Z_H(z) * v_i / (z - g^i)`
+    /// The public input polynomial evaluation is:
+    ///
+    /// \sum_{i=0..l} L_{i,H}(z) * pub_input[i].
+    ///
+    /// For merged circuits, the evaluation is:
+    /// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] + \sum_{i=0..l/2} L_{n-i,H}(z)
+    /// * pub_input[l/2+i]
+    ///
+    /// TODO: reuse the lagrange values
+    fn evaluate_pi_poly(
+        &self,
+        pub_input: &[E::Fr],
+        z: &E::Fr,
+        vanish_eval: &E::Fr,
+        circuit_is_merged: bool,
+    ) -> Result<E::Fr, PlonkError> {
+        // If z is a root of the vanishing polynomial, directly return zero.
+        if vanish_eval.is_zero() {
+            return Ok(E::Fr::zero());
+        }
+        let len = match circuit_is_merged {
+            false => pub_input.len(),
+            true => pub_input.len() / 2,
+        };
+
+        let vanish_eval_div_n = E::Fr::from(self.domain.size() as u32)
+            .inverse()
+            .ok_or(PlonkError::DivisionError)?
+            * (*vanish_eval);
+        let mut result = E::Fr::zero();
+        for (i, val) in pub_input.iter().take(len).enumerate() {
+            let lagrange_i =
+                vanish_eval_div_n * self.domain.element(i) / (*z - self.domain.element(i));
+            result += lagrange_i * val;
+        }
+        if circuit_is_merged {
+            let n = self.domain.size();
+            for (i, val) in pub_input.iter().skip(len).enumerate() {
+                let lagrange_n_minus_i = vanish_eval_div_n * self.domain.element(n - i - 1)
+                    / (*z - self.domain.element(n - i - 1));
+                result += lagrange_n_minus_i * val;
+            }
+        }
+        Ok(result)
     }
 }

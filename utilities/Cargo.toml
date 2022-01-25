@@ -13,8 +13,8 @@ ark-serialize = { version = "0.3.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 tagged-base64 = { git = "ssh://git@github.com/SpectrumXYZ/tagged-base64.git", branch = "main"}
 jf-utils-derive = { path = "../utilities_derive" }
-sha2 = { version = "0.9.5", default-features = false }
-digest = { version = "0.9.0", default-features = false }
+sha2 = { version = "0.10.1", default-features = false }
+digest = { version = "0.10.1", default-features = false }
 anyhow = { version = "^1.0", default-features = false }
 
 [dev-dependencies]

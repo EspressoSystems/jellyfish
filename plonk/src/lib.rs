@@ -15,6 +15,9 @@ pub mod errors;
 pub mod proof_system;
 pub mod transcript;
 
+#[cfg(feature = "test_apis")]
+pub mod testing_apis;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 /// Enum for each type of Plonk scheme
 pub enum PlonkType {
