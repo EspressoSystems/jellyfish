@@ -1,3 +1,8 @@
+//! This file implements various wrappers of internal functions and structs.
+//! It exposes those APIs under `test_apis` feature.
+//! The functions and structs in this file should not be used for other
+//! purposes.
+
 use crate::{
     circuit::customized::ecc::SWToTEConParam,
     errors::PlonkError,
@@ -14,6 +19,7 @@ use ark_poly_commit::kzg10::Commitment;
 use ark_std::{collections::HashMap, vec::Vec};
 use jf_rescue::RescueParameter;
 
+/// A wrapper of crate::proof_system::structs::Challenges
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub struct Challenges<F: Field> {
     pub tau: F,
@@ -53,6 +59,7 @@ impl<F: Field> From<Challenges<F>> for structs::Challenges<F> {
     }
 }
 
+/// A wrapper of crate::proof_system::structs::ScalarsAndBases
 #[derive(Debug, Clone)]
 pub struct ScalarsAndBases<E: PairingEngine> {
     pub base_scalar_map: HashMap<E::G1Affine, E::Fr>,
@@ -82,6 +89,7 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
     }
 }
 
+/// A wrapper of crate::proof_system::verifier::PcsInfo
 #[derive(Debug, Clone)]
 pub struct PcsInfo<E: PairingEngine> {
     /// TODO: change back these visibilities
@@ -128,6 +136,7 @@ impl<E: PairingEngine> From<verifier::PcsInfo<E>> for PcsInfo<E> {
     }
 }
 
+/// A wrapper of crate::proof_system::verifier::Verifier
 #[derive(Debug, Clone)]
 pub struct Verifier<E: PairingEngine> {
     pub(crate) domain: Radix2EvaluationDomain<E::Fr>,
