@@ -1776,7 +1776,7 @@
 <span class="doccomment">/// The vector representation of bases and corresponding scalars.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">ScalarsAndBases</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="ident">base_scalar_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">base_scalar_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">ScalarsAndBases</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
