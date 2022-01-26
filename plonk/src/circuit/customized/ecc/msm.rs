@@ -12,6 +12,8 @@ use ark_ec::{
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, vec, vec::Vec};
 use jf_utils::fq_to_fr;
+
+/// Compute the multi-scalar-multiplications in circuit.
 pub trait MultiScalarMultiplicationCircuit<F, P>
 where
     F: PrimeField,

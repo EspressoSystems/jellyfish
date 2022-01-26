@@ -1,3 +1,5 @@
+//! Implements a rescue hash based commitment scheme.
+
 use crate::errors::PrimitivesError;
 use ark_std::{format, string::String, vec};
 use jf_rescue::{Permutation, RescueParameter, RATE};

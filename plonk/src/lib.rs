@@ -1,4 +1,8 @@
+//! This crate is Translucence's implementation of Plonk zero-knowledge proof
+//! system.
+
 #![cfg_attr(not(feature = "std"), no_std)]
+#![warn(missing_docs)]
 #![allow(clippy::derive_hash_xor_eq)]
 #[cfg(test)]
 extern crate std;
@@ -19,7 +23,7 @@ pub mod transcript;
 pub mod testing_apis;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Enum for each type of Plonk scheme
+/// Enum for each type of Plonk scheme.
 pub enum PlonkType {
     /// TurboPlonk
     TurboPlonk,
@@ -28,8 +32,11 @@ pub enum PlonkType {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Enum for each type of mergeable circuit
+/// Enum for each type of mergeable circuit. We can only merge circuits from
+/// different types.
 pub enum MergeableCircuitType {
+    /// First type
     TypeA,
+    /// Second type
     TypeB,
 }

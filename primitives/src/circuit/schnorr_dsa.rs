@@ -1,3 +1,5 @@
+//! Circuit implementation of a Schnorr signature scheme.
+
 use crate::{
     constants::{challenge_bit_len, field_bit_len},
     schnorr_dsa::{Signature, VerKey, DOMAIN_SEPARATION},
@@ -26,15 +28,18 @@ pub struct VerKeyVar(pub PointVariable);
 #[allow(non_snake_case)]
 /// Signature variable
 pub struct SignatureVar {
+    /// s component.
     pub s: Variable,
+    /// R component.
     pub R: PointVariable,
 }
 
 /// Plonk circuit gadget for EdDSA signatures.
-/// TODO: check the parameters and the security level of the signature scheme.
+// FIXME -- clear this todo
+// TODO: check the parameters and the security level of the signature scheme.
 pub trait SignatureGadget<F, P>
 where
-    F: PrimeField,
+    F: RescueParameter,
     P: Parameters<BaseField = F> + Clone,
 {
     /// Signature verification circuit
@@ -66,12 +71,20 @@ where
 
     /// Create a signature verification key variable from a key `vk`.
     fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, PlonkError>;
+
+    /// Compute the two point variables to be compared in the signature
+    /// verification circuit.
+    fn verify_sig_core(
+        &mut self,
+        vk: &VerKeyVar,
+        msg: &[Variable],
+        sig: &SignatureVar,
+    ) -> Result<(PointVariable, PointVariable), PlonkError>;
 }
 
 impl<F, P> SignatureGadget<F, P> for PlonkCircuit<F>
 where
-    Self: SignatureHelperGadget<F, P>,
-    F: PrimeField,
+    F: RescueParameter,
     P: Parameters<BaseField = F> + Clone,
 {
     fn verify_signature(
@@ -81,7 +94,7 @@ where
         sig: &SignatureVar,
     ) -> Result<(), PlonkError> {
         // p1 = s * G, p2 = sig.R + c * VK
-        let (p1, p2) = self.verify_sig_internal(vk, msg, sig)?;
+        let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
         self.point_equal_gate(&p1, &p2)?;
         Ok(())
     }
@@ -92,7 +105,7 @@ where
         msg: &[Variable],
         sig: &SignatureVar,
     ) -> Result<Variable, PlonkError> {
-        let (p1, p2) = self.verify_sig_internal(vk, msg, sig)?;
+        let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
         self.is_equal_point(&p1, &p2)
     }
 
@@ -111,36 +124,8 @@ where
         let vk_var = VerKeyVar(self.create_point_variable(Point::from(vk.0))?);
         Ok(vk_var)
     }
-}
-pub trait SignatureHelperGadget<F, P>
-where
-    F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
-{
-    // Compute the two point variables to be compared in the signature verification
-    // circuit.
-    fn verify_sig_internal(
-        &mut self,
-        vk: &VerKeyVar,
-        msg: &[Variable],
-        sig: &SignatureVar,
-    ) -> Result<(PointVariable, PointVariable), PlonkError>;
 
-    // Return signature hash challenge in little-endian binary form.
-    fn challenge_bits(
-        &mut self,
-        vk: &VerKeyVar,
-        sig_point: &PointVariable,
-        msg: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError>;
-}
-
-impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
-where
-    F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
-{
-    fn verify_sig_internal(
+    fn verify_sig_core(
         &mut self,
         vk: &VerKeyVar,
         msg: &[Variable],
@@ -155,7 +140,26 @@ where
 
         Ok((x, y))
     }
+}
+trait SignatureHelperGadget<F, P>
+where
+    F: PrimeField,
+    P: Parameters<BaseField = F> + Clone,
+{
+    // Return signature hash challenge in little-endian binary form.
+    fn challenge_bits(
+        &mut self,
+        vk: &VerKeyVar,
+        sig_point: &PointVariable,
+        msg: &[Variable],
+    ) -> Result<Vec<Variable>, PlonkError>;
+}
 
+impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
+where
+    F: RescueParameter,
+    P: Parameters<BaseField = F> + Clone,
+{
     fn challenge_bits(
         &mut self,
         vk: &VerKeyVar,

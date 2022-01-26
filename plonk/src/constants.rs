@@ -1,9 +1,13 @@
+//! Crate wide constants.
+
 use ark_ff::{FftParameters, PrimeField};
 use ark_std::{rand::SeedableRng, vec, vec::Vec};
 use rand_chacha::ChaChaRng;
 
-/// Circuit-related constants.
-///
+// ==========================
+// Circuit-related constants.
+// ==========================
+
 /// The number of input wires.
 pub const GATE_WIDTH: usize = 4;
 /// The number of multiplication selectors.

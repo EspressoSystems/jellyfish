@@ -6,15 +6,29 @@ use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use sha3::{Digest, Keccak256};
 
-/// Almost the same as `RescueTranscript` except using Solidity's `keccak256`
-/// instead of rescue permutation for Solidity-friendly protocols.
+/// Transcript with `keccak256` hash function.
+///
+/// It is almost identical to `RescueTranscript` except using Solidity's
+/// `keccak256` for Solidity-friendly protocols.
+///
+/// It is currently implemented simply as
+/// - an append only vector of field elements
+/// - a state that is initialized with 0
+///
+/// We keep appending new elements to the transcript vector,
+/// and when a challenge is to be generated,
+/// we reset the state with the fresh challenge.
+///
+/// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)
+/// 2. challenge = state\[0\]
+/// 3. transcript = vec!\[challenge\]
 pub struct SolidityTranscript {
     transcript: Vec<u8>,
     state: [u8; KECCAK256_STATE_SIZE], // 64 bytes state size
 }
 
 impl<F> PlonkTranscript<F> for SolidityTranscript {
-    /// create a new plonk transcript
+    /// Create a new plonk transcript. `label` is omitted for efficiency.
     fn new(_label: &'static [u8]) -> Self {
         SolidityTranscript {
             transcript: Vec::new(),
@@ -22,15 +36,17 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
         }
     }
 
-    // append the message to the transcript
+    /// Append the message to the transcript. `_label` is omitted for
+    /// efficiency.
     fn append_message(&mut self, _label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
         // We remove the labels for better efficiency
         self.transcript.extend_from_slice(msg);
         Ok(())
     }
 
-    // generate the challenge for the current transcript
-    // and append it to the transcript
+    /// Generate the challenge for the current transcript,
+    /// and then append it to the transcript. `_label` is omitted for
+    /// efficiency.
     fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine,

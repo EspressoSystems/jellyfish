@@ -18,14 +18,15 @@ use jf_rescue::{
 };
 use jf_utils::{compute_len_to_next_multiple, field_switching};
 
+/// Array of variables representing a Rescue state (4 field elements), and also
+/// the modulus of the non-native evaluating field.
 #[derive(Clone, Debug)]
-/// Array of variables representing a Rescue state (4 field elements)
-/// and also the modulus of the evaluating field
 pub struct RescueNonNativeStateVar<F: PrimeField> {
     pub(crate) state: [FpElemVar<F>; STATE_SIZE],
     pub(crate) modulus: FpElem<F>,
 }
 
+/// Trait for rescue circuit over non-native field.
 pub trait RescueNonNativeGadget<F: PrimeField> {
     /// Given an input state st_0 and an output state st_1, ensure that st_1 =
     /// rescue_permutation(st_0)  where rescue_permutation is the instance

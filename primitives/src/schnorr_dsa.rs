@@ -1,4 +1,5 @@
-//! This module implements the Schnorr signature over the various Edwards curves
+//! This module implements the Schnorr signature over the various Edwards
+//! curves.
 
 use crate::{constants::*, errors::PrimitivesError};
 use ark_ec::{
@@ -55,7 +56,7 @@ where
     P: Parameters + Clone;
 
 impl<P: Parameters + Clone> VerKey<P> {
-    // return randomized verification key
+    /// Return a randomized verification key.
     pub fn randomize_with<F>(&self, randomizer: &F) -> Self
     where
         F: PrimeField,
@@ -99,6 +100,7 @@ where
 }
 
 impl<P: Parameters + Clone> VerKey<P> {
+    /// Convert the verification key into the affine form.
     pub fn to_affine(&self) -> GroupAffine<P> {
         self.0.into_affine()
     }

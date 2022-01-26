@@ -15,7 +15,7 @@ use jf_rescue::{
 use jf_utils::compute_len_to_next_multiple;
 
 #[derive(Clone, Debug)]
-/// Array of variables representing a Rescue state (4 field elements)
+/// Array of variables representing a Rescue state (4 field elements).
 pub struct RescueStateVar(pub(crate) [Variable; STATE_SIZE]);
 
 impl From<[Variable; STATE_SIZE]> for RescueStateVar {
@@ -25,10 +25,11 @@ impl From<[Variable; STATE_SIZE]> for RescueStateVar {
 }
 
 impl RescueStateVar {
+    /// Expose the state array.
     pub fn array(&self) -> &[Variable; STATE_SIZE] {
         &self.0
     }
-
+    /// Expose the mutable state array.
     pub fn array_mut(&mut self) -> &mut [Variable; STATE_SIZE] {
         &mut self.0
     }
@@ -92,6 +93,7 @@ impl<F: PrimeField> Gate<F> for Power5NonLinearGate<F> {
     }
 }
 
+/// Trait for rescue circuit over native field.
 pub trait RescueGadget<F: RescueParameter> {
     /// Given an input state st_0 and an output state st_1, ensure that st_1 =
     /// rescue_permutation(st_0)  where rescue_permutation is the instance

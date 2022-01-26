@@ -1,4 +1,4 @@
-//! Range proof gates
+//! Range proof gates.
 use crate::{
     circuit::{Circuit, PlonkCircuit, Variable},
     errors::{PlonkError, SnarkError::ParameterError},

@@ -18,6 +18,9 @@ use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
 use jf_rescue::{RescueParameter, STATE_SIZE};
 
+/// Struct of variables representing a Rescue transcript type, including
+/// `STATE_SIZE` variables for the state, and a vector of variables for
+/// the transcript.
 pub struct RescueTranscriptVar<F: RescueParameter> {
     transcript_var: Vec<Variable>,
     state_var: [Variable; STATE_SIZE],

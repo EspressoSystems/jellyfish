@@ -91,38 +91,5 @@ RAYON_NUM_THREADS=N cargo bench
 ```
 where N is the number of threads you want to use (N = 1 for single-thread).
 
-##### Environment
-- MacBoo Pro (16-inch, 2019)
-- Processor: 2.3 GHz 8-Core Intel Core i9
-- Memory: 16 GB 2667 MHz DDR4
-
-##### TurboPlonk
-- BLS12-381
-  - Proving time: 59317 ns/constraint
-  - Verifying time: 3.207 ms
-  - Batch verifying time for 1000 proofs: 17.683 ms
-- BN-254
-  - Proving time: 44857 ns/constraint
-  - Verifying time: 2.364 ms
-  - Batch verifying time for 1000 proofs: 14.803 ms
-- BW6-761
-  - Proving time: 271828 ns/constraint
-  - Verifying time: 12.504 ms
-  - Batch verifying time for 1000 proofs: 37.909 ms
-
-##### UltraPlonk
-- BLS12-381
-  - Proving time: 89593 ns/constraint
-  - Verifying time: 3.549 ms
-  - Batch verifying time for 1000 proofs: 20.784 ms
-- BN-254
-  - Proving time: 70383 ns/constraint
-  - Verifying time: 2.390 ms
-  - Batch verifying time for 1000 proofs: 17.173 ms
-- BW6-761
-  - Proving time: 373141 ns/constraint
-  - Verifying time: 13.656 ms
-  - Batch verifying time for 1000 proofs: 44.023 ms
-
-
+A sample benchmark result is available under `bench.md`
 

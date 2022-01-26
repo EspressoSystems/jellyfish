@@ -1,3 +1,5 @@
+//! Various serialization functions.
+
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{marker::PhantomData, string::String, vec::Vec};
 use serde::{Deserialize, Serialize};

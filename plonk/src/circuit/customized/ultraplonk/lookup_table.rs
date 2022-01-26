@@ -10,9 +10,9 @@ use ark_std::{boxed::Box, cmp::max, vec::Vec};
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Create a table with keys/values
     ///     [table_id, ..., table_id + n - 1] and
-    ///     [table_vars[0], ..., table_vars[n - 1]];
+    ///     [table_vars\[0\], ..., table_vars[n - 1]];
     /// and create a list of variable tuples to be looked up:
-    ///     [lookup_vars[0], ..., lookup_vars[m - 1]];
+    ///     [lookup_vars\[0\], ..., lookup_vars[m - 1]];
     ///
     /// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m
     pub fn create_table_and_lookup_variables(

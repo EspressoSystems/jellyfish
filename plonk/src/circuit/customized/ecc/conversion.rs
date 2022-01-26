@@ -51,11 +51,14 @@ where
     }
 }
 
-/// constants that are used during the conversion from
-/// short Weierstrass form to twisted Edwards form
+/// This trait holds constants that are used for curve conversion from
+/// short Weierstrass form to twisted Edwards form.
 pub trait SWToTEConParam: PrimeField {
+    /// Parameter S.
     const S: Self::BigInt;
+    /// Parameter 1/alpha.
     const NEG_ALPHA: Self::BigInt;
+    /// Parameter beta.
     const BETA: Self::BigInt;
 }
 

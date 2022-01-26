@@ -1,3 +1,6 @@
+//! Elliptic curve related gates and gadgets. Including both native and
+//! non-native fields.
+
 use super::gates::*;
 use crate::{
     circuit::{gates::Gate, Circuit, PlonkCircuit, Variable},
@@ -21,7 +24,7 @@ pub use conversion::*;
 pub use msm::*;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-/// An elliptic curve point in twisted Edwards affine form (x, y)
+/// An elliptic curve point in twisted Edwards affine form (x, y).
 pub struct Point<F: PrimeField>(F, F);
 
 impl<F, P> From<GroupAffine<P>> for Point<F>
@@ -59,15 +62,17 @@ where
 }
 
 impl<F: PrimeField> Point<F> {
+    /// Get the x coordinate of the point.
     pub fn get_x(&self) -> F {
         self.0
     }
 
+    /// Get the y coordinate of the point.
     pub fn get_y(&self) -> F {
         self.1
     }
 
-    // The inverse point for the edward form.
+    /// The inverse point for the edward form.
     pub fn inverse(&self) -> Self {
         Self(-self.0, self.1)
     }
@@ -106,14 +111,16 @@ where
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-/// Represent variable of a EC point
+/// Represent variable of a EC point.
 pub struct PointVariable(Variable, Variable);
 
 impl PointVariable {
+    /// Get the variable representing the x coordinate of the point.
     pub fn get_x(&self) -> Variable {
         self.0
     }
 
+    /// Get the variable representing the y coordinate of the point.
     pub fn get_y(&self) -> Variable {
         self.1
     }

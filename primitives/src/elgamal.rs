@@ -1,3 +1,5 @@
+//! Implements the ElGamal encryption scheme.
+
 use crate::{
     elgamal::Direction::{Decrypt, Encrypt},
     errors::PrimitivesError,

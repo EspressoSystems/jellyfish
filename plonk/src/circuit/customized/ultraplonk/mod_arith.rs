@@ -214,7 +214,7 @@ impl<F: PrimeField> FpElemVar<F> {
         }
     }
 
-    // enforce self == other
+    /// Enforce self == other.
     pub fn enforce_equal(
         &self,
         circuit: &mut PlonkCircuit<F>,
@@ -436,7 +436,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     /// Modular addition gate:
-    /// Given Fp elements &[x] and modulus p, compute z = \sum x mod p
+    /// Given Fp elements &\[x\] and modulus p, compute z = \sum x mod p
     pub fn mod_add_vec(
         &mut self,
         x: &[FpElemVar<F>],

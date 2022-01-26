@@ -1,3 +1,5 @@
+//! Wraps crypto_box's AEAD encryption scheme.
+
 use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
