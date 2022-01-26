@@ -1,5 +1,9 @@
-#![cfg_attr(not(feature = "std"), no_std)]
+//! This is Translucence's implementation of various cryptography primitives, as
+//! well as the plonk circuit implementation of those primitives.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(warnings)]
+#![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
 

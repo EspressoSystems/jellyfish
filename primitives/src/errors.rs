@@ -1,11 +1,10 @@
-// using `displaydoc` instead of `thiserror`, see
-// https://github.com/dtolnay/thiserror/pull/64#issuecomment-735805334
-// `thiserror` does not support #![no_std]
+//! Error types.
 
 use ark_std::string::String;
 use displaydoc::Display;
 use jf_rescue::errors::RescueError;
 
+/// A `enum` specifying the possible failure modes of the primitives.
 #[derive(Debug, Display)]
 pub enum PrimitivesError {
     /// Unsuccessful verification for proof or signature, {0}

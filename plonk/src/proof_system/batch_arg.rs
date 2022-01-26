@@ -37,10 +37,12 @@ pub struct Instance<'a, E: PairingEngine> {
 }
 
 impl<'a, E: PairingEngine> Instance<'a, E> {
+    /// Get verification key by reference.
     pub fn verify_key_ref(&self) -> &VerifyingKey<E> {
         &self.prove_key.vk
     }
 
+    /// Get mutable circuit by reference.
     pub fn circuit_mut_ref(&mut self) -> &mut PlonkCircuit<E::Fr> {
         &mut self.circuit
     }

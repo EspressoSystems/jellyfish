@@ -77,6 +77,8 @@ impl<F> PlonkCircuit<F>
 where
     F: PrimeField,
 {
+    /// Perform GLV multiplication in circuit (which costs a few less
+    /// constraints).
     pub fn glv_mul<P: TEModelParameters<BaseField = F> + Clone>(
         &mut self,
         scalar: Variable,
@@ -239,14 +241,12 @@ fn scalar_decomposition<F: PrimeField>(scalar: &F) -> (F, F, bool) {
     (k1, k2, is_k2_pos)
 }
 
-#[macro_export]
 macro_rules! fq_to_big_int {
     ($fq: expr) => {
         <BigInt as From<BigUint>>::from($fq.into_repr().into())
     };
 }
 
-#[macro_export]
 macro_rules! int_to_fq {
     ($in: expr) => {
         F::from_le_bytes_mod_order(&$in.to_bytes_le().1)

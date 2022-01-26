@@ -1,3 +1,7 @@
+#![allow(missing_docs)]
+
+//! Circuit implementation of a Merkle tree.
+
 use crate::merkle_tree::{AccMemberWitness, MerklePath, MerkleTree, NodePos, NodeValue};
 use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
@@ -67,7 +71,7 @@ impl<F: PrimeField> From<&MerklePath<F>> for MerklePathBooleanEncoding<F> {
 }
 
 #[derive(Debug)]
-// Circuit variables for a Merkle node
+/// Circuit variables for a Merkle node
 pub struct MerkleNodeVars {
     pub sibling1: Variable,
     pub sibling2: Variable,
@@ -76,17 +80,18 @@ pub struct MerkleNodeVars {
 }
 
 #[derive(Debug)]
-// Circuit variables for a Merkle authentication path
+/// Circuit variables for a Merkle authentication path
 pub struct MerklePathVars {
     pub nodes: Vec<MerkleNodeVars>,
 }
 
-// Circuit variables for an accumulated element
+/// Circuit variables for an accumulated element
 pub struct AccElemVars {
     pub uid: Variable,
     pub elem: Variable,
 }
 
+/// Circuit variables for membership proof.
 #[derive(Debug)]
 pub struct AccMemberWitnessVar {
     pub uid: Variable,
@@ -108,7 +113,6 @@ impl AccMemberWitnessVar {
         })
     }
 }
-
 trait MerkleTreeHelperGadget<F: PrimeField> {
     /// Produces an ordered list of variables based on the relative position of
     /// a node and its siblings.
@@ -138,6 +142,7 @@ trait MerkleTreeHelperGadget<F: PrimeField> {
     ) -> Result<MerklePathVars, PlonkError>;
 }
 
+/// Circuit implementation of a Merkle tree.
 pub trait MerkleTreeGadget<F: PrimeField> {
     /// Wrapper around Circuit.constrain_merkle_path. Adds and checks the
     /// variables related to the Merkle path.

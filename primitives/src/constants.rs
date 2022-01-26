@@ -1,4 +1,4 @@
-//! Constants for curve specific parameters
+//! Constants for curve specific parameters.
 
 use ark_ec::models::TEModelParameters;
 use ark_ff::{FpParameters, PrimeField};

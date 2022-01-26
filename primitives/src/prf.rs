@@ -12,7 +12,9 @@ use zeroize::Zeroize;
 #[allow(clippy::upper_case_acronyms)]
 /// Pseudo-random function (PRF) instance for user defined input and output size
 pub struct PRF<F: RescueParameter> {
+    /// Length of the input.
     pub input_len: usize,
+    /// Length of the output.
     pub output_len: usize,
     permutation: Permutation<F>,
 }

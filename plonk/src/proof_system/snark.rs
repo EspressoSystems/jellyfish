@@ -60,6 +60,8 @@ where
 
     // TODO: (alex) move back to Snark trait when `trait PolynomialCommitment` is
     // implemented for KZG10
+    /// Input a circuit and the SRS, precompute the proving key and verification
+    /// key.
     pub fn preprocess<C: Arithmetization<E::Fr>>(
         srs: &'a UniversalSrs<E>,
         circuit: &C,
@@ -525,7 +527,7 @@ where
     type VerifyingKey = VerifyingKey<E>;
 
     /// Compute a Plonk proof.
-    /// Refer to Sec 8.4 of https://eprint.iacr.org/2019/953.pdf
+    /// Refer to Sec 8.4 of <https://eprint.iacr.org/2019/953.pdf>
     ///
     /// `circuit` and `prove_key` has to be consistent (with the same evaluation
     /// domain etc.), otherwise return error.

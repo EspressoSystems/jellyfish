@@ -13,14 +13,19 @@ use ark_std::vec::Vec;
 use jf_rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
-/// Rescue transcript is currently implemented simply as
+/// Transcript with rescue hash function.
+///
+/// It is currently implemented simply as
 /// - an append only vector of field elements
 /// - a state that is initialized with 0
-/// we keep appending new elements to the transcript vector,
-/// and when a challenge is to be generated:
-/// 1. state: [F: STATE_SIZE] = hash(state|transcript)
-/// 2. challenge = state[0]
-/// 3. transcript = vec![challenge]
+///
+/// We keep appending new elements to the transcript vector,
+/// and when a challenge is to be generated,
+/// we reset the state with the fresh challenge.
+///
+/// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)
+/// 2. challenge = state\[0\]
+/// 3. transcript = vec!\[challenge\]
 pub struct RescueTranscript<F>
 where
     F: RescueParameter,
@@ -33,7 +38,7 @@ impl<F> PlonkTranscript<F> for RescueTranscript<F>
 where
     F: RescueParameter + SWToTEConParam,
 {
-    /// create a new plonk transcript
+    /// Create a new plonk transcript. `_label` is omitted for efficiency.
     fn new(_label: &'static [u8]) -> Self {
         RescueTranscript {
             transcript: Vec::new(),
@@ -41,7 +46,6 @@ where
         }
     }
 
-    // append the verification key and the public input
     fn append_vk_and_pub_input<E, P>(
         &mut self,
         vk: &VerifyingKey<E>,
@@ -80,7 +84,8 @@ where
         Ok(())
     }
 
-    // append the message to the transcript
+    /// Append the message to the transcript. `_label` is omitted for
+    /// efficiency.
     fn append_message(&mut self, _label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
         // We remove the labels for better efficiency
 
@@ -89,7 +94,8 @@ where
         Ok(())
     }
 
-    // append a commitment to the transcript
+    /// Append a single commitment to the transcript. `_label` is omitted for
+    /// efficiency.
     fn append_commitment<E, P>(
         &mut self,
         _label: &'static [u8],
@@ -109,7 +115,8 @@ where
         Ok(())
     }
 
-    // append a challenge to the transcript
+    /// Append a challenge to the transcript. `_label` is omitted for
+    /// efficiency.
     fn append_challenge<E>(
         &mut self,
         _label: &'static [u8],
@@ -122,7 +129,6 @@ where
         Ok(())
     }
 
-    // append the proof evaluation to the transcript
     fn append_proof_evaluations<E: PairingEngine>(
         &mut self,
         evals: &ProofEvaluations<E::Fr>,
@@ -137,7 +143,6 @@ where
         Ok(())
     }
 
-    // append the plookup evaluation to the transcript
     fn append_plookup_evaluations<E: PairingEngine>(
         &mut self,
         evals: &PlookupEvaluations<E::Fr>,
@@ -151,8 +156,9 @@ where
         Ok(())
     }
 
-    // generate the challenge for the current transcript
-    // and append it to the transcript
+    /// Generate the challenge for the current transcript,
+    /// and then append it to the transcript. `_label` is omitted for
+    /// efficiency.
     fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine,

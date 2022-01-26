@@ -1,3 +1,5 @@
+//! Customized gates and gadgets.
+
 use self::gates::*;
 use super::{Circuit, PlonkCircuit, PlonkError, Variable};
 use crate::{

@@ -3,6 +3,7 @@
 use ark_ec::PairingEngine;
 use ark_std::vec::Vec;
 
+/// A simple wrapper of multi-pairing function.
 pub fn multi_pairing<E>(g1_elems: &[E::G1Affine], g2_elems: &[E::G2Affine]) -> E::Fqk
 where
     E: PairingEngine,

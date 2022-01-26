@@ -1,11 +1,9 @@
-// using `displaydoc` instead of `thiserror`, see
-// https://github.com/dtolnay/thiserror/pull/64#issuecomment-735805334
-// `thiserror` does not support #![no_std]
+//! Error module.
 
 use ark_std::string::String;
 use displaydoc::Display;
 
-/// A `enum` specifying the possible failure modes of the Plonk-based SNARKs.
+/// A `enum` specifying the possible failure modes of the Plonk.
 #[derive(Display, Debug)]
 pub enum PlonkError {
     /// The index is too large for the universal public parameters
@@ -67,6 +65,7 @@ impl From<jf_rescue::errors::RescueError> for PlonkError {
     }
 }
 
+/// A `enum` specifying the possible failure modes of the underlying SNARK.
 #[derive(Display, Debug)]
 pub enum SnarkError {
     #[rustfmt::skip]
@@ -87,6 +86,7 @@ impl From<SnarkError> for PlonkError {
     }
 }
 
+/// A `enum` specifying the possible failure modes of the circuit.
 #[derive(Display, Debug)]
 pub enum CircuitError {
     /// Variable index {0} is larger than the bound {1}.

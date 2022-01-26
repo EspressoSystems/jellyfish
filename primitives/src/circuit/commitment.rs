@@ -1,4 +1,6 @@
-use crate::circuit::pad_with;
+//! Circuit implementation of the commitment scheme.
+
+use crate::utils::pad_with;
 use ark_std::vec;
 use jf_plonk::{
     circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
@@ -6,6 +8,7 @@ use jf_plonk::{
 };
 use jf_rescue::{RescueParameter, RATE};
 
+/// Circuit implementation of the commitment scheme.
 pub trait CommitmentGadget {
     // Commitment scheme
     /// Commitment function.

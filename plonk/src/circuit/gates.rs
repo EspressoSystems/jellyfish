@@ -1,3 +1,4 @@
+//! Implementations of various Gates.
 use ark_ff::Field;
 use ark_std::{boxed::Box, string::ToString};
 use core::fmt;
@@ -7,6 +8,7 @@ use crate::constants::{GATE_WIDTH, N_MUL_SELECTORS};
 
 /// Describes a gate with getter for all selectors configuration
 pub trait Gate<F: Field>: Downcast + GateClone<F> {
+    /// Get the name of a gate.
     fn name(&self) -> &'static str;
     /// Selectors for linear combination.
     fn q_lc(&self) -> [F; GATE_WIDTH] {
@@ -39,7 +41,9 @@ pub trait Gate<F: Field>: Downcast + GateClone<F> {
 }
 impl_downcast!(Gate<F> where F: Field);
 
+/// Clone a Gate.
 pub trait GateClone<F: Field> {
+    /// Clone a Gate.
     fn clone_box(&self) -> Box<dyn Gate<F>>;
 }
 
@@ -116,6 +120,7 @@ where
     }
 }
 
+/// Adding a variable by a constant.
 #[derive(Debug, Clone)]
 pub struct ConstantAdditionGate<F: Field>(pub(crate) F);
 

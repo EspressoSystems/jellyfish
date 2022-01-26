@@ -39,12 +39,15 @@ use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 pub struct UniversalSrs<E: PairingEngine>(pub(crate) UniversalParams<E>);
 
 impl<E: PairingEngine> UniversalSrs<E> {
+    /// Expose powers of g via reference.
     pub fn powers_of_g_ref(&self) -> &[E::G1Affine] {
         &self.0.powers_of_g
     }
 }
 
 pub(crate) type CommitKey<'a, E> = Powers<'a, E>;
+
+/// Alias of VerifierKey.
 pub type OpenKey<E> = VerifierKey<E>;
 
 /// A Plonk SNARK proof.

@@ -194,9 +194,9 @@ impl<F: FftField> PlonkCircuit<F> {
     }
 
     #[inline]
-    /// Checks if a variable is strictly less than the number of variables
+    /// Checks if a variable is strictly less than the number of variables.
     /// This function must be invoked for each gate as this check is not applied
-    /// in the function insert_gate
+    /// in the function `insert_gate`
     /// * `var` - variable to check
     /// * `returns` - Error if the variable is out of bound (i.e. >= number of
     ///   variables)
@@ -207,6 +207,11 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
+    /// Check if a list of variables are strictly less than the number of
+    /// variables.
+    /// * `vars` - variables to check
+    /// * `returns` - Error if the variable is out of bound (i.e. >= number of
+    ///   variables)
     pub fn check_vars_bound(&self, vars: &[Variable]) -> Result<(), PlonkError> {
         for &var in vars {
             self.check_var_bound(var)?
@@ -214,27 +219,28 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
-    // Change the value of a variable. Only used for testing.
+    /// Change the value of a variable. Only used for testing.
+    // TODO: make this function test only.
     pub fn witness_mut(&mut self, idx: Variable) -> &mut F {
         &mut self.witness[idx]
     }
 
-    // Get the mutable reference of the inserted table ids.
+    /// Get the mutable reference of the inserted table ids.
     pub(crate) fn table_gate_ids_mut(&mut self) -> &mut Vec<(GateId, usize)> {
         &mut self.table_gate_ids
     }
 
-    // Get the mutable reference of the number of inserted table elements.
+    /// Get the mutable reference of the number of inserted table elements.
     pub(crate) fn num_table_elems_mut(&mut self) -> &mut usize {
         &mut self.num_table_elems
     }
 
-    // Get the number of inserted table elements.
+    /// Get the number of inserted table elements.
     pub(crate) fn num_table_elems(&self) -> usize {
         self.num_table_elems
     }
 
-    // The bit length of UltraPlonk range gates.
+    /// The bit length of UltraPlonk range gates.
     pub fn range_bit_len(&self) -> Result<usize, PlonkError> {
         if self.plonk_params.plonk_type != PlonkType::UltraPlonk {
             return Err(ParameterError(
@@ -245,7 +251,7 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(self.plonk_params.range_bit_len.unwrap()) // safe unwrap
     }
 
-    // The range size of UltraPlonk range gates.
+    /// The range size of UltraPlonk range gates.
     pub fn range_size(&self) -> Result<usize, PlonkError> {
         Ok(1 << self.range_bit_len()?)
     }

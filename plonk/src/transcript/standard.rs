@@ -6,7 +6,7 @@ use ark_ff::PrimeField;
 use jf_utils::to_bytes;
 use merlin::Transcript;
 
-/// StandardTranscript is a wrapper of merlin::Transcript
+/// A wrapper of `merlin::Transcript`.
 pub struct StandardTranscript(Transcript);
 
 impl<F> PlonkTranscript<F> for StandardTranscript {

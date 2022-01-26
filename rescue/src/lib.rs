@@ -1,8 +1,16 @@
+#![deny(missing_docs)]
 //! This module implements Rescue hash function over the following fields
 //! - bls12_377 base field
 //! - ed_on_bls12_377 base field
 //! - ed_on_bls12_381 base field
 //! - ed_on_bn254 base field
+//!
+//! It also has place holders for
+//! - bls12_381 base field
+//! - bn254 base field
+//! - bw6_761 base field
+//!
+//! Those three place holders should never be used.
 
 #![deny(warnings)]
 pub mod errors;
@@ -61,12 +69,19 @@ pub const RATE: usize = 3;
 // We may consider to use ROUNDS = 10 for BLS12-377 (alpha = 11) in futures.
 pub const ROUNDS: usize = 12;
 
+/// This trait defines constants that are used for rescue hash functions.
 pub trait RescueParameter: PrimeField {
+    /// parameter A, a.k.a., alpha
     const A: u64;
+    /// parameter A^-1
     const A_INV: &'static [u64];
+    /// MDS matrix
     const MDS_LE: [[&'static [u8]; STATE_SIZE]; STATE_SIZE];
+    /// Initial vector.
     const INIT_VEC_LE: [&'static [u8]; STATE_SIZE];
+    /// Injected keys for each round.
     const KEY_INJECTION_LE: [[&'static [u8]; 4]; 2 * ROUNDS];
+    /// Permutation keys.
     const PERMUTATION_ROUND_KEYS: [[&'static [u8]; 4]; 25];
 }
 
@@ -189,6 +204,7 @@ impl<F: Copy> From<&[F; STATE_SIZE]> for RescueVector<F> {
     }
 }
 
+/// A matrix that consists of `STATE_SIZE` number of rescue vectors.
 #[derive(Clone)]
 pub struct RescueMatrix<F> {
     matrix: [RescueVector<F>; STATE_SIZE],

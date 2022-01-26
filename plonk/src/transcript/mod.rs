@@ -1,3 +1,6 @@
+//! This module implements three different types of transcripts that are
+//! supported.
+
 pub(crate) mod rescue;
 pub(crate) mod solidity;
 pub(crate) mod standard;
@@ -17,19 +20,21 @@ use ark_ff::PrimeField;
 use ark_poly_commit::kzg10::Commitment;
 use jf_utils::to_bytes;
 
-/// A Plonk transcript has an associated type F which defines the native
+/// Defines transcript APIs.
+///
+/// It has an associated type `F` which defines the native
 /// field for the snark circuit.
 ///
 /// The transcript can be either a Merlin transcript
-/// (instantiated with Sha-3/keccak) or a Rescue transcript
-/// (instantiated with Rescue hash) or a Solidity-friendly transcript
+/// (instantiated with Sha-3/keccak), or a Rescue transcript
+/// (instantiated with Rescue hash), or a Solidity-friendly transcript
 /// (instantiated with Keccak256 hash).
 /// The second is only used for recursive snarks.
 pub trait PlonkTranscript<F> {
-    /// create a new plonk transcript
+    /// Create a new plonk transcript.
     fn new(label: &'static [u8]) -> Self;
 
-    // append the verification key and the public input
+    /// Append the verification key and the public input to the transcript.
     fn append_vk_and_pub_input<E, P>(
         &mut self,
         vk: &VerifyingKey<E>,
@@ -89,10 +94,10 @@ pub trait PlonkTranscript<F> {
         Ok(())
     }
 
-    // append the message to the transcript
+    /// Append the message to the transcript.
     fn append_message(&mut self, label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError>;
 
-    // append a slice of commitments to the transcript
+    /// Append a slice of commitments to the transcript.
     fn append_commitments<E, P>(
         &mut self,
         label: &'static [u8],
@@ -108,7 +113,7 @@ pub trait PlonkTranscript<F> {
         Ok(())
     }
 
-    // append a commitment to the transcript
+    /// Append a single commitment to the transcript.
     fn append_commitment<E, P>(
         &mut self,
         label: &'static [u8],
@@ -121,7 +126,7 @@ pub trait PlonkTranscript<F> {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
     }
 
-    // append a challenge to the transcript
+    /// Append a challenge to the transcript.
     fn append_challenge<E>(
         &mut self,
         label: &'static [u8],
@@ -133,7 +138,7 @@ pub trait PlonkTranscript<F> {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(challenge)?)
     }
 
-    // append the proof evaluation to the transcript
+    /// Append a proof evaluation to the transcript.
     fn append_proof_evaluations<E: PairingEngine>(
         &mut self,
         evals: &ProofEvaluations<E::Fr>,
@@ -155,7 +160,7 @@ pub trait PlonkTranscript<F> {
         )
     }
 
-    // append the plookup evaluation to the transcript
+    /// Append the plookup evaluation to the transcript.
     fn append_plookup_evaluations<E: PairingEngine>(
         &mut self,
         evals: &PlookupEvaluations<E::Fr>,
@@ -192,8 +197,8 @@ pub trait PlonkTranscript<F> {
         )
     }
 
-    // generate the challenge for the current transcript
-    // and append it to the transcript
+    /// Generate the challenge for the current transcript,
+    /// and then append it to the transcript.
     fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine;

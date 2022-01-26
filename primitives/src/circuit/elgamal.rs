@@ -1,3 +1,5 @@
+//! Circuit implementation of the ElGamal scheme.
+
 use crate::elgamal::{Ciphertext, EncKey};
 use ark_ec::{
     twisted_edwards_extended::GroupAffine, AffineCurve, ProjectiveCurve, TEModelParameters,
@@ -17,11 +19,16 @@ use jf_plonk::{
 use jf_rescue::{RescueParameter, PRP, STATE_SIZE};
 use jf_utils::compute_len_to_next_multiple;
 
+/// Variables holding an encryption key.
 #[derive(Debug)]
 pub struct EncKeyVars(pub PointVariable);
+
+/// Variables holding a ciphertext.
 #[derive(Debug)]
 pub struct ElGamalHybridCtxtVars {
-    pub ephemeral: PointVariable, // r*G
+    /// r*G component
+    pub ephemeral: PointVariable,
+    /// Ciphertext under hybrid encryption.
     pub symm_ctxts: Vec<Variable>,
 }
 
@@ -150,6 +157,7 @@ where
     }
 }
 
+/// Circuit implementation of the ElGamal scheme.
 pub trait ElGamalEncryptionGadget<F, P>
 where
     F: PrimeField,

@@ -1,12 +1,13 @@
-#![deny(warnings)]
-/// ! Implementation of the Merkle tree data structure.
-/// ! At a high level the Merkle tree is a ternary tree and the hash function H
-/// ! used is the rescue hash function. The node values are BlsScalar and each
-/// ! internal node value is obtained by computing v:=H(a,b,c) where a,b,c are
-/// ! the values of the left,middle and right child respectively. Leaf values
-/// ! for an element (uid,elem) is obtained as H(0,uid,elem).
-/// ! The tree height is fixed during initial instantiation and a new leaf will
-/// ! be inserted at the leftmost available slot in the tree.
+#![allow(missing_docs)]
+//! Implementation of the Merkle tree data structure.
+//!
+//! At a high level the Merkle tree is a ternary tree and the hash function H
+//! used is the rescue hash function. The node values are BlsScalar and each
+//! internal node value is obtained by computing v:=H(a,b,c) where a,b,c are
+//! the values of the left,middle and right child respectively. Leaf values
+//! for an element (uid,elem) is obtained as H(0,uid,elem).
+//! The tree height is fixed during initial instantiation and a new leaf will
+//! be inserted at the leftmost available slot in the tree.
 use crate::errors::PrimitivesError;
 use ark_ff::{BigInteger, Field, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
@@ -29,8 +30,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Deserialize, Serialize)]
 /// Enum for identifying a position of a node (left, middle or right).
 pub enum NodePos {
+    /// Left.
     Left,
+    /// Middle.
     Middle,
+    /// Right.
     Right,
 }
 
@@ -101,7 +105,9 @@ impl Default for NodePos {
     }
 }
 
-/// A 3-ary Merkle tree node which consists of the following:
+/// A 3-ary Merkle tree node.
+///
+/// It consists of the following:
 /// * `sibling1` - the 1st sibling of the tree node
 /// * `sibling2` - the 2nd sibling of the tree node
 /// * `is_left_child` - indicates whether the tree node is the left child of its
@@ -122,8 +128,11 @@ impl Default for NodePos {
 )]
 #[serde(bound = "")]
 pub struct MerklePathNode<F: PrimeField> {
+    /// First sibling.
     pub sibling1: NodeValue<F>,
+    /// Second sibling.
     pub sibling2: NodeValue<F>,
+    /// Position.
     pub pos: NodePos,
 }
 
@@ -160,6 +169,7 @@ impl<F: PrimeField> MerklePathNode<F> {
 )]
 #[serde(bound = "")]
 pub struct MerklePath<F: PrimeField> {
+    /// Nodes along the path.
     pub nodes: Vec<MerklePathNode<F>>,
 }
 
@@ -172,7 +182,7 @@ impl<F: PrimeField> MerklePath<F> {
     }
 }
 
-/// Represents the value for a node in the merkle tree
+/// Represents the value for a node in the merkle tree.
 #[tagged_blob("NODE")]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
@@ -194,11 +204,14 @@ impl<F: PrimeField> From<u64> for NodeValue<F> {
     }
 }
 
+// TODO: those APIs can be replaced with From/Into and Default?
 impl<F: PrimeField> NodeValue<F> {
+    /// Convert a node into a scalar field element.
     pub fn to_scalar(self) -> F {
         self.0
     }
 
+    /// Convert a scalar field element into anode.
     pub fn from_scalar(scalar: F) -> Self {
         Self(scalar)
     }
@@ -208,6 +221,7 @@ impl<F: PrimeField> NodeValue<F> {
         self.0.into_repr().to_bytes_le()
     }
 
+    /// Empty node.
     pub fn empty_node_value() -> Self {
         Self(F::zero())
     }
@@ -253,6 +267,7 @@ pub enum LookupResult<F, P> {
 }
 
 impl<F, P> LookupResult<F, P> {
+    /// Assert the lookup result is Ok.
     pub fn expect_ok(self) -> Result<(F, P), PrimitivesError> {
         match self {
             LookupResult::Ok(x, proof) => Ok((x, proof)),
@@ -265,6 +280,7 @@ impl<F, P> LookupResult<F, P> {
         }
     }
 
+    /// FIXME: Not sure what this function does :-(.
     pub fn map<Fn, T2, P2>(self, f: Fn) -> LookupResult<T2, P2>
     where
         Fn: FnOnce(F, P) -> (T2, P2),
@@ -768,6 +784,7 @@ where
     }
 }
 
+/// A wrapper of the merkle root, together with the tree information.
 #[derive(
     Debug,
     Copy,
@@ -785,17 +802,22 @@ pub struct MerkleCommitment<F>
 where
     F: PrimeField,
 {
+    /// Root of the tree.
     pub root_value: NodeValue<F>,
+    /// Height of the tree.
     pub height: u8,
+    /// #leaves of the tree.
     pub num_leaves: u64,
 }
 
+/// Data struct for a merkle leaf.
 #[tagged_blob("LEAF")]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]
 pub struct MerkleLeaf<F: Field>(pub F);
 
+/// Inclusive proof of a merkle leaf.
 #[derive(
     Clone,
     Debug,
@@ -810,7 +832,9 @@ pub struct MerkleLeaf<F: Field>(pub F);
 )]
 #[serde(bound = "")]
 pub struct MerkleLeafProof<F: PrimeField> {
+    /// The leaf node.
     pub leaf: MerkleLeaf<F>,
+    /// The path.
     pub path: MerklePath<F>,
 }
 
@@ -818,6 +842,7 @@ impl<F> MerkleLeafProof<F>
 where
     F: PrimeField,
 {
+    /// Input a leaf and the path, build a proof.
     pub fn new(leaf: F, path: MerklePath<F>) -> MerkleLeafProof<F> {
         MerkleLeafProof {
             leaf: MerkleLeaf(leaf),
@@ -826,13 +851,19 @@ where
     }
 }
 
+/// A wrapper of the merkle membership proof.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(bound = "")]
 pub enum MerkleFrontier<F>
 where
     F: PrimeField,
 {
-    Empty { height: u8 },
+    /// Without proof.
+    Empty {
+        /// Height of the tree.
+        height: u8,
+    },
+    /// With proof.
     Proof(MerkleLeafProof<F>),
 }
 
@@ -840,6 +871,7 @@ impl<F> MerkleFrontier<F>
 where
     F: PrimeField,
 {
+    /// If the merkle frontier is empty or not.
     pub fn non_empty(&self) -> Option<&MerkleLeafProof<F>> {
         match self {
             MerkleFrontier::Proof(lap) => Some(lap),
@@ -848,6 +880,7 @@ where
     }
 }
 
+/// Data struct of a merkle tree.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(bound = "")]
 pub struct MerkleTree<F>
