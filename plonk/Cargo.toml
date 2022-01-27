@@ -17,12 +17,10 @@ ark-poly = { version = "0.3.0", default-features = false,  features = ["parallel
 ark-bn254 = { version = "0.3.0", default-features = false, features = ["curve"] }
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", features = ["curve"], rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
-ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 # it is a bit weird that bw761 doesn't have a `curve` feature
 ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 
 merlin = { version = "3.0.0", default-features = false }
-thiserror = { version = "1.0.24", default-features = false }
 rayon = { version = "1.5.0", default-features = false }
 itertools = { version = "0.10.1", default-features = false }
 downcast-rs = { version = "1.2.0", default-features = false }
