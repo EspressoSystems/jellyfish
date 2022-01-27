@@ -19,7 +19,6 @@ jf-rescue = { path = "../rescue" }
 jf-utils = { path = "../utilities" }
 
 # others
-thiserror = { version = "1.0.24", default-features = false }
 rayon = { version = "1.5.0", default-features = false }
 zeroize = { version = "1.3", default-features = false }
 itertools = { version = "0.10.1", default-features = false, features = [ "use_alloc" ] }
