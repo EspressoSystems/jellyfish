@@ -1,4 +1,5 @@
-//! Customized gates and gadgets.
+//! Customized gates and gadgets for rescue hash related, elliptic curve
+//! related, rescue-based transcript and lookup table etc.
 
 use self::gates::*;
 use super::{Circuit, PlonkCircuit, PlonkError, Variable};

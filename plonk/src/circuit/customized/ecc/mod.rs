@@ -111,7 +111,7 @@ where
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-/// Represent variable of a EC point.
+/// Represent variable of an EC point.
 pub struct PointVariable(Variable, Variable);
 
 impl PointVariable {

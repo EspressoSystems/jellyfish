@@ -47,7 +47,7 @@ impl<E: PairingEngine> UniversalSrs<E> {
 
 pub(crate) type CommitKey<'a, E> = Powers<'a, E>;
 
-/// Alias of VerifierKey.
+/// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
 pub type OpenKey<E> = VerifierKey<E>;
 
 /// A Plonk SNARK proof.
