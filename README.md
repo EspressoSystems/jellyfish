@@ -91,5 +91,5 @@ RAYON_NUM_THREADS=N cargo bench
 ```
 where N is the number of threads you want to use (N = 1 for single-thread).
 
-A sample benchmark result is available under `bench.md`
+A sample benchmark result is available under [`bench.md`](./bench.md).
 
