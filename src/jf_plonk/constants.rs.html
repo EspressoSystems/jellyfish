@@ -88,12 +88,20 @@
 <span id="88">88</span>
 <span id="89">89</span>
 <span id="90">90</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftParameters</span>, <span class="ident">PrimeField</span>};
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Crate wide constants.</span>
+
+<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftParameters</span>, <span class="ident">PrimeField</span>};
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">rand::SeedableRng</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
 <span class="kw">use</span> <span class="ident">rand_chacha::ChaChaRng</span>;
 
-<span class="doccomment">/// Circuit-related constants.</span>
-<span class="doccomment">///</span>
+<span class="comment">// ==========================</span>
+<span class="comment">// Circuit-related constants.</span>
+<span class="comment">// ==========================</span>
+
 <span class="doccomment">/// The number of input wires.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GATE_WIDTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
 <span class="doccomment">/// The number of multiplication selectors.</span>

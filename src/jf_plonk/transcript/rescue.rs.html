@@ -173,6 +173,12 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module is a defines rescue transcript.</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::PlonkTranscript</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -188,14 +194,19 @@
 <span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span> <span class="kw">as</span> <span class="ident">RescueHash</span>, <span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>};
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">bytes_to_field_elements</span>, <span class="ident">field_switching</span>, <span class="ident">fq_to_fr_with_mask</span>};
 
-<span class="doccomment">/// Rescue transcript is currently implemented simply as</span>
+<span class="doccomment">/// Transcript with rescue hash function.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// It is currently implemented simply as</span>
 <span class="doccomment">/// - an append only vector of field elements</span>
 <span class="doccomment">/// - a state that is initialized with 0</span>
-<span class="doccomment">/// we keep appending new elements to the transcript vector,</span>
-<span class="doccomment">/// and when a challenge is to be generated:</span>
-<span class="doccomment">/// 1. state: [F: STATE_SIZE] = hash(state|transcript)</span>
-<span class="doccomment">/// 2. challenge = state[0]</span>
-<span class="doccomment">/// 3. transcript = vec![challenge]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// We keep appending new elements to the transcript vector,</span>
+<span class="doccomment">/// and when a challenge is to be generated,</span>
+<span class="doccomment">/// we reset the state with the fresh challenge.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)</span>
+<span class="doccomment">/// 2. challenge = state\[0\]</span>
+<span class="doccomment">/// 3. transcript = vec!\[challenge\]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
@@ -208,7 +219,7 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
 {
-    <span class="doccomment">/// create a new plonk transcript</span>
+    <span class="doccomment">/// Create a new plonk transcript. `_label` is omitted for efficiency.</span>
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">RescueTranscript</span> {
             <span class="ident">transcript</span>: <span class="ident">Vec::new</span>(),
@@ -216,7 +227,6 @@
         }
     }
 
-    <span class="comment">// append the verification key and the public input</span>
     <span class="kw">fn</span> <span class="ident">append_vk_and_pub_input</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
@@ -255,7 +265,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append the message to the transcript</span>
+    <span class="doccomment">/// Append the message to the transcript. `_label` is omitted for</span>
+    <span class="doccomment">/// efficiency.</span>
     <span class="kw">fn</span> <span class="ident">append_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>], <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// We remove the labels for better efficiency</span>
 
@@ -264,7 +275,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append a commitment to the transcript</span>
+    <span class="doccomment">/// Append a single commitment to the transcript. `_label` is omitted for</span>
+    <span class="doccomment">/// efficiency.</span>
     <span class="kw">fn</span> <span class="ident">append_commitment</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
@@ -284,7 +296,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append a challenge to the transcript</span>
+    <span class="doccomment">/// Append a challenge to the transcript. `_label` is omitted for</span>
+    <span class="doccomment">/// efficiency.</span>
     <span class="kw">fn</span> <span class="ident">append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
@@ -297,7 +310,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append the proof evaluation to the transcript</span>
     <span class="kw">fn</span> <span class="ident">append_proof_evaluations</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
@@ -312,7 +324,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append the plookup evaluation to the transcript</span>
     <span class="kw">fn</span> <span class="ident">append_plookup_evaluations</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
@@ -326,8 +337,9 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// generate the challenge for the current transcript</span>
-    <span class="comment">// and append it to the transcript</span>
+    <span class="doccomment">/// Generate the challenge for the current transcript,</span>
+    <span class="doccomment">/// and then append it to the transcript. `_label` is omitted for</span>
+    <span class="doccomment">/// efficiency.</span>
     <span class="kw">fn</span> <span class="ident">get_and_append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">E::Fr</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span>,

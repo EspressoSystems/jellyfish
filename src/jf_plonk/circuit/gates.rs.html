@@ -268,7 +268,13 @@
 <span id="268">268</span>
 <span id="269">269</span>
 <span id="270">270</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">ark_ff::Field</span>;
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Implementations of various Gates.</span>
+<span class="kw">use</span> <span class="ident">ark_ff::Field</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">boxed::Box</span>, <span class="ident">string::ToString</span>};
 <span class="kw">use</span> <span class="ident">core::fmt</span>;
 <span class="kw">use</span> <span class="ident">downcast_rs::Downcast</span>;
@@ -277,6 +283,7 @@
 
 <span class="doccomment">/// Describes a gate with getter for all selectors configuration</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span>: <span class="ident">Downcast</span> <span class="op">+</span> <span class="ident">GateClone</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Get the name of a gate.</span>
     <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
     <span class="doccomment">/// Selectors for linear combination.</span>
     <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
@@ -309,7 +316,9 @@
 }
 <span class="macro">impl_downcast!</span>(<span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">F</span>: <span class="ident">Field</span>);
 
+<span class="doccomment">/// Clone a Gate.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">GateClone</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Clone a Gate.</span>
     <span class="kw">fn</span> <span class="ident">clone_box</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 }
 
@@ -386,6 +395,7 @@
     }
 }
 
+<span class="doccomment">/// Adding a variable by a constant.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ConstantAdditionGate</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">F</span>);
 

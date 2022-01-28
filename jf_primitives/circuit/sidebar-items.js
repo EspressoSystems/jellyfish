@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["commitment",""],["elgamal",""],["merkle_tree",""],["prf",""],["schnorr_dsa",""]]});
+initSidebarItems({"mod":[["commitment","Circuit implementation of the commitment scheme."],["elgamal","Circuit implementation of the ElGamal scheme."],["merkle_tree","Circuit implementation of a Merkle tree."],["prf","Circuit implementation of a PRF."],["schnorr_dsa","Circuit implementation of a Schnorr signature scheme."]]});

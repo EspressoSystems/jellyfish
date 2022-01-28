@@ -32,15 +32,13 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
-<span id="35">35</span>
-</pre><pre class="rust"><code><span class="comment">// using `displaydoc` instead of `thiserror`, see</span>
-<span class="comment">// https://github.com/dtolnay/thiserror/pull/64#issuecomment-735805334</span>
-<span class="comment">// `thiserror` does not support #![no_std]</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Error types.</span>
 
 <span class="kw">use</span> <span class="ident">ark_std::string::String</span>;
 <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
 <span class="kw">use</span> <span class="ident">jf_rescue::errors::RescueError</span>;
 
+<span class="doccomment">/// A `enum` specifying the possible failure modes of the primitives.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PrimitivesError</span> {
     <span class="doccomment">/// Unsuccessful verification for proof or signature, {0}</span>

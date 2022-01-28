@@ -431,7 +431,17 @@
 <span id="431">431</span>
 <span id="432">432</span>
 <span id="433">433</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::elgamal</span>::{<span class="ident">Ciphertext</span>, <span class="ident">EncKey</span>};
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Circuit implementation of the ElGamal scheme.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::elgamal</span>::{<span class="ident">Ciphertext</span>, <span class="ident">EncKey</span>};
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{
     <span class="ident">twisted_edwards_extended::GroupAffine</span>, <span class="ident">AffineCurve</span>, <span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span>,
 };
@@ -450,11 +460,16 @@
 <span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">PRP</span>, <span class="ident">STATE_SIZE</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::compute_len_to_next_multiple</span>;
 
+<span class="doccomment">/// Variables holding an encryption key.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncKeyVars</span>(<span class="kw">pub</span> <span class="ident">PointVariable</span>);
+
+<span class="doccomment">/// Variables holding a ciphertext.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ElGamalHybridCtxtVars</span> {
-    <span class="kw">pub</span> <span class="ident">ephemeral</span>: <span class="ident">PointVariable</span>, <span class="comment">// r*G</span>
+    <span class="doccomment">/// r*G component</span>
+    <span class="kw">pub</span> <span class="ident">ephemeral</span>: <span class="ident">PointVariable</span>,
+    <span class="doccomment">/// Ciphertext under hybrid encryption.</span>
     <span class="kw">pub</span> <span class="ident">symm_ctxts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>,
 }
 
@@ -583,6 +598,7 @@
     }
 }
 
+<span class="doccomment">/// Circuit implementation of the ElGamal scheme.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ElGamalEncryptionGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,

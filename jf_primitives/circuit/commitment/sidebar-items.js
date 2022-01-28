@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["CommitmentGadget",""]]});
+initSidebarItems({"trait":[["CommitmentGadget","Circuit implementation of the commitment scheme."]]});

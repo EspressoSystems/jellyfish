@@ -1349,7 +1349,17 @@
 <span id="1349">1349</span>
 <span id="1350">1350</span>
 <span id="1351">1351</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::gates</span>::<span class="kw-2">*</span>;
+<span id="1352">1352</span>
+<span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
+<span id="1356">1356</span>
+<span id="1357">1357</span>
+<span id="1358">1358</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Elliptic curve related gates and gadgets. Including both native and</span>
+<span class="doccomment">//! non-native fields.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::gates</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{<span class="ident">gates::Gate</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
     <span class="ident">errors</span>::{<span class="ident">CircuitError</span>, <span class="ident">PlonkError</span>},
@@ -1372,7 +1382,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">msm</span>::<span class="kw-2">*</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="doccomment">/// An elliptic curve point in twisted Edwards affine form (x, y)</span>
+<span class="doccomment">/// An elliptic curve point in twisted Edwards affine form (x, y).</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">F</span>, <span class="ident">F</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -1410,15 +1420,17 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Get the x coordinate of the point.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 
+    <span class="doccomment">/// Get the y coordinate of the point.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
         <span class="self">self</span>.<span class="number">1</span>
     }
 
-    <span class="comment">// The inverse point for the edward form.</span>
+    <span class="doccomment">/// The inverse point for the edward form.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="op">-</span><span class="self">self</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="number">1</span>)
     }
@@ -1457,14 +1469,16 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="doccomment">/// Represent variable of a EC point</span>
+<span class="doccomment">/// Represent variable of an EC point.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PointVariable</span>(<span class="ident">Variable</span>, <span class="ident">Variable</span>);
 
 <span class="kw">impl</span> <span class="ident">PointVariable</span> {
+    <span class="doccomment">/// Get the variable representing the x coordinate of the point.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Variable</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 
+    <span class="doccomment">/// Get the variable representing the y coordinate of the point.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Variable</span> {
         <span class="self">self</span>.<span class="number">1</span>
     }

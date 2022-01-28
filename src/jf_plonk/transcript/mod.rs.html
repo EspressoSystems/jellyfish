@@ -198,7 +198,15 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
-</pre><pre class="rust"><code><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">rescue</span>;
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This module implements three different types of transcripts that are</span>
+<span class="doccomment">//! supported.</span>
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">rescue</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">solidity</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">standard</span>;
 
@@ -217,19 +225,21 @@
 <span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10::Commitment</span>;
 <span class="kw">use</span> <span class="ident">jf_utils::to_bytes</span>;
 
-<span class="doccomment">/// A Plonk transcript has an associated type F which defines the native</span>
+<span class="doccomment">/// Defines transcript APIs.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// It has an associated type `F` which defines the native</span>
 <span class="doccomment">/// field for the snark circuit.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// The transcript can be either a Merlin transcript</span>
-<span class="doccomment">/// (instantiated with Sha-3/keccak) or a Rescue transcript</span>
-<span class="doccomment">/// (instantiated with Rescue hash) or a Solidity-friendly transcript</span>
+<span class="doccomment">/// (instantiated with Sha-3/keccak), or a Rescue transcript</span>
+<span class="doccomment">/// (instantiated with Rescue hash), or a Solidity-friendly transcript</span>
 <span class="doccomment">/// (instantiated with Keccak256 hash).</span>
 <span class="doccomment">/// The second is only used for recursive snarks.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// create a new plonk transcript</span>
+    <span class="doccomment">/// Create a new plonk transcript.</span>
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
 
-    <span class="comment">// append the verification key and the public input</span>
+    <span class="doccomment">/// Append the verification key and the public input to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_vk_and_pub_input</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
@@ -289,10 +299,10 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append the message to the transcript</span>
+    <span class="doccomment">/// Append the message to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>], <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
-    <span class="comment">// append a slice of commitments to the transcript</span>
+    <span class="doccomment">/// Append a slice of commitments to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_commitments</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
@@ -308,7 +318,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// append a commitment to the transcript</span>
+    <span class="doccomment">/// Append a single commitment to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_commitment</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
@@ -321,7 +331,7 @@
         <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(<span class="self">self</span>, <span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">comm</span>)<span class="question-mark">?</span>)
     }
 
-    <span class="comment">// append a challenge to the transcript</span>
+    <span class="doccomment">/// Append a challenge to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
@@ -333,7 +343,7 @@
         <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(<span class="self">self</span>, <span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">challenge</span>)<span class="question-mark">?</span>)
     }
 
-    <span class="comment">// append the proof evaluation to the transcript</span>
+    <span class="doccomment">/// Append a proof evaluation to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_proof_evaluations</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
@@ -355,7 +365,7 @@
         )
     }
 
-    <span class="comment">// append the plookup evaluation to the transcript</span>
+    <span class="doccomment">/// Append the plookup evaluation to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">append_plookup_evaluations</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
@@ -392,8 +402,8 @@
         )
     }
 
-    <span class="comment">// generate the challenge for the current transcript</span>
-    <span class="comment">// and append it to the transcript</span>
+    <span class="doccomment">/// Generate the challenge for the current transcript,</span>
+    <span class="doccomment">/// and then append it to the transcript.</span>
     <span class="kw">fn</span> <span class="ident">get_and_append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">E::Fr</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span>;

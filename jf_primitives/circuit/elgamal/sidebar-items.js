@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ElGamalHybridCtxtVars",""],["EncKeyVars",""]],"trait":[["ElGamalEncryptionGadget",""]]});
+initSidebarItems({"struct":[["ElGamalHybridCtxtVars","Variables holding a ciphertext."],["EncKeyVars","Variables holding an encryption key."]],"trait":[["ElGamalEncryptionGadget","Circuit implementation of the ElGamal scheme."]]});

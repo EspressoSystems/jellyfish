@@ -1094,11 +1094,35 @@
 <span id="1094">1094</span>
 <span id="1095">1095</span>
 <span id="1096">1096</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This module implements Rescue hash function over the following fields</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="doccomment">//! This module implements Rescue hash function over the following fields</span>
 <span class="doccomment">//! - bls12_377 base field</span>
 <span class="doccomment">//! - ed_on_bls12_377 base field</span>
 <span class="doccomment">//! - ed_on_bls12_381 base field</span>
 <span class="doccomment">//! - ed_on_bn254 base field</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! It also has place holders for</span>
+<span class="doccomment">//! - bls12_381 base field</span>
+<span class="doccomment">//! - bn254 base field</span>
+<span class="doccomment">//! - bw6_761 base field</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Those three place holders should never be used.</span>
 
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">warnings</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
@@ -1157,12 +1181,19 @@
 <span class="comment">// We may consider to use ROUNDS = 10 for BLS12-377 (alpha = 11) in futures.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ROUNDS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">12</span>;
 
+<span class="doccomment">/// This trait defines constants that are used for rescue hash functions.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RescueParameter</span>: <span class="ident">PrimeField</span> {
+    <span class="doccomment">/// parameter A, a.k.a., alpha</span>
     <span class="kw">const</span> <span class="ident">A</span>: <span class="ident">u64</span>;
+    <span class="doccomment">/// parameter A^-1</span>
     <span class="kw">const</span> <span class="ident">A_INV</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u64</span>];
+    <span class="doccomment">/// MDS matrix</span>
     <span class="kw">const</span> <span class="ident">MDS_LE</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="ident">STATE_SIZE</span>]; <span class="ident">STATE_SIZE</span>];
+    <span class="doccomment">/// Initial vector.</span>
     <span class="kw">const</span> <span class="ident">INIT_VEC_LE</span>: [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="ident">STATE_SIZE</span>];
+    <span class="doccomment">/// Injected keys for each round.</span>
     <span class="kw">const</span> <span class="ident">KEY_INJECTION_LE</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="number">4</span>]; <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>];
+    <span class="doccomment">/// Permutation keys.</span>
     <span class="kw">const</span> <span class="ident">PERMUTATION_ROUND_KEYS</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="number">4</span>]; <span class="number">25</span>];
 }
 
@@ -1285,6 +1316,7 @@
     }
 }
 
+<span class="doccomment">/// A matrix that consists of `STATE_SIZE` number of rescue vectors.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="ident">matrix</span>: [<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>],

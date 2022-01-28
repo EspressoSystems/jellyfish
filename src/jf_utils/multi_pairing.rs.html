@@ -59,11 +59,13 @@
 <span id="59">59</span>
 <span id="60">60</span>
 <span id="61">61</span>
+<span id="62">62</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements a simple wrapper of multi-pairing function</span>
 
 <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
 <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
 
+<span class="doccomment">/// A simple wrapper of multi-pairing function.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">multi_pairing</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">g1_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::G1Affine</span>], <span class="ident">g2_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::G2Affine</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">E::Fqk</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span>,

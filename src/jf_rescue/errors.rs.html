@@ -10,13 +10,19 @@
 <span id="10">10</span>
 <span id="11">11</span>
 <span id="12">12</span>
-</pre><pre class="rust"><code><span class="comment">// using `displaydoc` instead of `thiserror`, see</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Error types.</span>
+
+<span class="comment">// using `displaydoc` instead of `thiserror`, see</span>
 <span class="comment">// https://github.com/dtolnay/thiserror/pull/64#issuecomment-735805334</span>
 <span class="comment">// `thiserror` does not support #![no_std]</span>
 
 <span class="kw">use</span> <span class="ident">ark_std::string::String</span>;
 <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
 
+<span class="doccomment">/// Various error modes.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RescueError</span> {
     <span class="doccomment">/// Bad parameter in function call, {0}</span>

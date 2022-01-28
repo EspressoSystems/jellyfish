@@ -1304,6 +1304,7 @@
 <span id="1304">1304</span>
 <span id="1305">1305</span>
 <span id="1306">1306</span>
+<span id="1307">1307</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements rescue circuit with non-native arithmetics.</span>
 <span class="doccomment">//! The overall structure of the module mimics what is in rescue.rs</span>
 <span class="doccomment">//! The major adjustment is to move from `Variable`s (that are native to</span>
@@ -1324,14 +1325,15 @@
 };
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">compute_len_to_next_multiple</span>, <span class="ident">field_switching</span>};
 
+<span class="doccomment">/// Array of variables representing a Rescue state (4 field elements), and also</span>
+<span class="doccomment">/// the modulus of the non-native evaluating field.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="doccomment">/// Array of variables representing a Rescue state (4 field elements)</span>
-<span class="doccomment">/// and also the modulus of the evaluating field</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">state</span>: [<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>],
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">modulus</span>: <span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// Trait for rescue circuit over non-native field.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RescueNonNativeGadget</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 =</span>
     <span class="doccomment">/// rescue_permutation(st_0)  where rescue_permutation is the instance</span>

@@ -105,7 +105,11 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
+<span id="108">108</span>
+<span id="109">109</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Implements a rescue hash based commitment scheme.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::String</span>, <span class="ident">vec</span>};
 <span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RATE</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;

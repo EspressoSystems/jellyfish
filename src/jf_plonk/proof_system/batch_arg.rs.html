@@ -394,6 +394,8 @@
 <span id="394">394</span>
 <span id="395">395</span>
 <span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
 </pre><pre class="rust"><code><span class="doccomment">//! An argument system that proves/verifies multiple instances in a batch.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{<span class="ident">customized::ecc::SWToTEConParam</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>},
@@ -433,10 +435,12 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">Instance</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Get verification key by reference.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_key_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">prove_key</span>.<span class="ident">vk</span>
     }
 
+    <span class="doccomment">/// Get mutable circuit by reference.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">circuit_mut_ref</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">circuit</span>
     }

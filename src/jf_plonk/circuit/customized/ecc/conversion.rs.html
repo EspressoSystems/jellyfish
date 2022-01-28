@@ -168,6 +168,9 @@
 <span id="168">168</span>
 <span id="169">169</span>
 <span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
 </pre><pre class="rust"><code><span class="doccomment">//! this file implements the conversion logic for elliptic curve point between</span>
 <span class="doccomment">//! - short Weierstrass form</span>
 <span class="doccomment">//! - twisted Edwards form</span>
@@ -221,11 +224,14 @@
     }
 }
 
-<span class="doccomment">/// constants that are used during the conversion from</span>
-<span class="doccomment">/// short Weierstrass form to twisted Edwards form</span>
+<span class="doccomment">/// This trait holds constants that are used for curve conversion from</span>
+<span class="doccomment">/// short Weierstrass form to twisted Edwards form.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SWToTEConParam</span>: <span class="ident">PrimeField</span> {
+    <span class="doccomment">/// Parameter S.</span>
     <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
+    <span class="doccomment">/// Parameter 1/alpha.</span>
     <span class="kw">const</span> <span class="ident">NEG_ALPHA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
+    <span class="doccomment">/// Parameter beta.</span>
     <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
 }
 

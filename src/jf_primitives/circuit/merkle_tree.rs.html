@@ -511,7 +511,16 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::merkle_tree</span>::{<span class="ident">AccMemberWitness</span>, <span class="ident">MerklePath</span>, <span class="ident">MerkleTree</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>};
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+
+<span class="doccomment">//! Circuit implementation of a Merkle tree.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::merkle_tree</span>::{<span class="ident">AccMemberWitness</span>, <span class="ident">MerklePath</span>, <span class="ident">MerkleTree</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>};
 <span class="kw">use</span> <span class="ident">ark_ec::TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>;
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
@@ -580,7 +589,7 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="comment">// Circuit variables for a Merkle node</span>
+<span class="doccomment">/// Circuit variables for a Merkle node</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MerkleNodeVars</span> {
     <span class="kw">pub</span> <span class="ident">sibling1</span>: <span class="ident">Variable</span>,
     <span class="kw">pub</span> <span class="ident">sibling2</span>: <span class="ident">Variable</span>,
@@ -589,17 +598,18 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="comment">// Circuit variables for a Merkle authentication path</span>
+<span class="doccomment">/// Circuit variables for a Merkle authentication path</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MerklePathVars</span> {
     <span class="kw">pub</span> <span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span><span class="op">&gt;</span>,
 }
 
-<span class="comment">// Circuit variables for an accumulated element</span>
+<span class="doccomment">/// Circuit variables for an accumulated element</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccElemVars</span> {
     <span class="kw">pub</span> <span class="ident">uid</span>: <span class="ident">Variable</span>,
     <span class="kw">pub</span> <span class="ident">elem</span>: <span class="ident">Variable</span>,
 }
 
+<span class="doccomment">/// Circuit variables for membership proof.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccMemberWitnessVar</span> {
     <span class="kw">pub</span> <span class="ident">uid</span>: <span class="ident">Variable</span>,
@@ -621,7 +631,6 @@
         })
     }
 }
-
 <span class="kw">trait</span> <span class="ident">MerkleTreeHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Produces an ordered list of variables based on the relative position of</span>
     <span class="doccomment">/// a node and its siblings.</span>
@@ -651,6 +660,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 }
 
+<span class="doccomment">/// Circuit implementation of a Merkle tree.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MerkleTreeGadget</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Wrapper around Circuit.constrain_merkle_path. Adds and checks the</span>
     <span class="doccomment">/// variables related to the Merkle path.</span>

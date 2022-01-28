@@ -43,7 +43,7 @@
 <span class="kw">use</span> <span class="ident">jf_utils::to_bytes</span>;
 <span class="kw">use</span> <span class="ident">merlin::Transcript</span>;
 
-<span class="doccomment">/// StandardTranscript is a wrapper of merlin::Transcript</span>
+<span class="doccomment">/// A wrapper of `merlin::Transcript`.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StandardTranscript</span>(<span class="ident">Transcript</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StandardTranscript</span> {

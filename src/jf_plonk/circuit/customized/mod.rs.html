@@ -1627,7 +1627,13 @@
 <span id="1627">1627</span>
 <span id="1628">1628</span>
 <span id="1629">1629</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="self">self</span>::gates</span>::<span class="kw-2">*</span>;
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Customized gates and gadgets for rescue hash related, elliptic curve</span>
+<span class="doccomment">//! related, rescue-based transcript and lookup table etc.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="self">self</span>::gates</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">PlonkError</span>, <span class="ident">Variable</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit::gates</span>::{<span class="ident">ConstantAdditionGate</span>, <span class="ident">ConstantMultiplicationGate</span>, <span class="ident">FifthRootGate</span>},

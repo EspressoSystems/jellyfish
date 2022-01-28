@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["PrimitivesError",""]]});
+initSidebarItems({"enum":[["PrimitivesError","A `enum` specifying the possible failure modes of the primitives."]]});

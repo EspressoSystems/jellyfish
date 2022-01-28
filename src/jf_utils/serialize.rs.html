@@ -242,7 +242,11 @@
 <span id="242">242</span>
 <span id="243">243</span>
 <span id="244">244</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
+<span id="245">245</span>
+<span id="246">246</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Various serialization functions.</span>
+
+<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">string::String</span>, <span class="ident">vec::Vec</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">tagged_base64</span>::{<span class="ident">TaggedBase64</span>, <span class="ident">Tb64Error</span>};

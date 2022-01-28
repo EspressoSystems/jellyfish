@@ -83,7 +83,12 @@
 <span id="83">83</span>
 <span id="84">84</span>
 <span id="85">85</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::circuit::pad_with</span>;
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Circuit implementation of the commitment scheme.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::pad_with</span>;
 <span class="kw">use</span> <span class="ident">ark_std::vec</span>;
 <span class="kw">use</span> <span class="ident">jf_plonk</span>::{
     <span class="ident">circuit</span>::{<span class="ident">customized::rescue::RescueGadget</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
@@ -91,6 +96,7 @@
 };
 <span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">RATE</span>};
 
+<span class="doccomment">/// Circuit implementation of the commitment scheme.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">CommitmentGadget</span> {
     <span class="comment">// Commitment scheme</span>
     <span class="doccomment">/// Commitment function.</span>

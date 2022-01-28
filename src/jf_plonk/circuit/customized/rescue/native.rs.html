@@ -1153,6 +1153,8 @@
 <span id="1153">1153</span>
 <span id="1154">1154</span>
 <span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{
         <span class="ident">gates</span>::{<span class="ident">FifthRootGate</span>, <span class="ident">Gate</span>},
@@ -1170,7 +1172,7 @@
 <span class="kw">use</span> <span class="ident">jf_utils::compute_len_to_next_multiple</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="doccomment">/// Array of variables representing a Rescue state (4 field elements)</span>
+<span class="doccomment">/// Array of variables representing a Rescue state (4 field elements).</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueStateVar</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) [<span class="ident">Variable</span>; <span class="ident">STATE_SIZE</span>]);
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="ident">STATE_SIZE</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueStateVar</span> {
@@ -1180,10 +1182,11 @@
 }
 
 <span class="kw">impl</span> <span class="ident">RescueStateVar</span> {
+    <span class="doccomment">/// Expose the state array.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>; <span class="ident">STATE_SIZE</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>
     }
-
+    <span class="doccomment">/// Expose the mutable state array.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">array_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Variable</span>; <span class="ident">STATE_SIZE</span>] {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>
     }
@@ -1247,6 +1250,7 @@
     }
 }
 
+<span class="doccomment">/// Trait for rescue circuit over native field.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RescueGadget</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 =</span>
     <span class="doccomment">/// rescue_permutation(st_0)  where rescue_permutation is the instance</span>

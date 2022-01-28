@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["PrfGadget",""]]});
+initSidebarItems({"trait":[["PrfGadget","Circuit implementation of a PRF."]]});

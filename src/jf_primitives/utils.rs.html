@@ -22,9 +22,24 @@
 <span id="22">22</span>
 <span id="23">23</span>
 <span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">elgamal</span>, <span class="ident">schnorr_dsa</span>};
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
+<span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
+<span class="kw">use</span> <span class="ident">jf_plonk::circuit::Variable</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">schnorr_dsa::VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">F</span>, <span class="ident">F</span>)
 <span class="kw">where</span>
@@ -45,6 +60,17 @@
         <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">pk</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>();
         (<span class="ident">point</span>.<span class="ident">x</span>, <span class="ident">point</span>.<span class="ident">y</span>)
     }
+}
+
+<span class="attribute">#[<span class="ident">inline</span>]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">pad_with</span>(<span class="ident">vec</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">multiple</span>: <span class="ident">usize</span>, <span class="ident">var</span>: <span class="ident">Variable</span>) {
+    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">vec</span>.<span class="ident">len</span>();
+    <span class="kw">let</span> <span class="ident">new_len</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">len</span> <span class="op">%</span> <span class="ident">multiple</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="ident">len</span>
+    } <span class="kw">else</span> {
+        <span class="ident">len</span> <span class="op">+</span> <span class="ident">multiple</span> <span class="op">-</span> <span class="ident">len</span> <span class="op">%</span> <span class="ident">multiple</span>
+    };
+    <span class="ident">vec</span>.<span class="ident">resize</span>(<span class="ident">new_len</span>, <span class="ident">var</span>);
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>

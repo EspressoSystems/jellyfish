@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["CircuitError",""],["PlonkError","A `enum` specifying the possible failure modes of the Plonk-based SNARKs."],["SnarkError",""]]});
+initSidebarItems({"enum":[["CircuitError","A `enum` specifying the possible failure modes of the circuit."],["PlonkError","A `enum` specifying the possible failure modes of the Plonk."],["SnarkError","A `enum` specifying the possible failure modes of the underlying SNARK."]]});

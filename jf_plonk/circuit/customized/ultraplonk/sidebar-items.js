@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["lookup_table","Lookup gates over variable tables."],["mod_arith","Modular arithmetic gates"],["non_native_gates","This module implements non-native circuits that are mainly useful for rescue hash function."],["plonk_verifier","Circuits for Plonk verifiers."],["range","Range proof gates"]]});
+initSidebarItems({"mod":[["mod_arith","Modular arithmetic gates"],["plonk_verifier","Circuits for Plonk verifiers."]]});

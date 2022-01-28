@@ -33,7 +33,18 @@
 <span id="33">33</span>
 <span id="34">34</span>
 <span id="35">35</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This crate is Translucence&#39;s implementation of Plonk zero-knowledge proof</span>
+<span class="doccomment">//! system.</span>
+
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::derive_hash_xor_eq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">std</span>;
@@ -54,7 +65,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing_apis</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="doccomment">/// Enum for each type of Plonk scheme</span>
+<span class="doccomment">/// Enum for each type of Plonk scheme.</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PlonkType</span> {
     <span class="doccomment">/// TurboPlonk</span>
     <span class="ident">TurboPlonk</span>,
@@ -63,9 +74,12 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="doccomment">/// Enum for each type of mergeable circuit</span>
+<span class="doccomment">/// Enum for each type of mergeable circuit. We can only merge circuits from</span>
+<span class="doccomment">/// different types.</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MergeableCircuitType</span> {
+    <span class="doccomment">/// First type</span>
     <span class="ident">TypeA</span>,
+    <span class="doccomment">/// Second type</span>
     <span class="ident">TypeB</span>,
 }
 </code></pre></div>

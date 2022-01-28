@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["RescueError",""]]});
+initSidebarItems({"enum":[["RescueError","Various error modes."]]});
