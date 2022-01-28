@@ -1,7 +1,7 @@
 #![no_std]
 
 mod conversion;
-mod hash_to_curve;
+mod hash_to_group;
 mod macros;
 mod multi_pairing;
 mod serialize;
@@ -10,7 +10,7 @@ use ark_ff::Field;
 pub use ark_std::vec::Vec;
 
 pub use conversion::*;
-pub use hash_to_curve::*;
+pub use hash_to_group::*;
 pub use macros::*;
 pub use multi_pairing::*;
 pub use serialize::*;
