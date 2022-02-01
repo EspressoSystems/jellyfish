@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;ultraplonk&#x2F;mod_arith.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod_arith.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;ultraplonk&#x2F;mod_arith.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod_arith.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1600,7 +1601,7 @@
 <span class="kw">use</span> <span class="ident">num_bigint::BigUint</span>;
 
 <span class="macro">macro_rules!</span> <span class="ident">to_big_int</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">expr</span>) =&gt; {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>).<span class="ident">into_repr</span>().<span class="ident">into</span>()
     };
 }
@@ -1625,7 +1626,7 @@
 {
     <span class="doccomment">/// Create a FpElem struct from field element `p` and split parameter `m`,</span>
     <span class="doccomment">/// where `m` &lt;= F::size_in_bits() / 2</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">m</span>: <span class="ident">usize</span>, <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">m</span>: <span class="ident">usize</span>, <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">m</span> <span class="op">&gt;</span> <span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;field split parameter ({}) larger than half of the field size ({}) in bits&quot;</span>,
@@ -1635,8 +1636,8 @@
             .<span class="ident">into</span>());
         }
         <span class="kw">let</span> <span class="ident">two_power_m</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">two_power_m</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
+            <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
         };
         <span class="kw">let</span> (<span class="ident">p1</span>, <span class="ident">p0</span>) <span class="op">=</span> <span class="ident">div_rem</span>(<span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">two_power_m</span>);
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
@@ -1647,22 +1648,22 @@
     }
 
     <span class="doccomment">/// Convert into a single field element.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">field_elem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">field_elem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="ident">p</span>.<span class="number">0</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">two_power_m</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">p</span>.<span class="number">1</span>
     }
 
     <span class="doccomment">/// Expose the field element components</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">components</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">F</span>, <span class="ident">F</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">components</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">F</span>, <span class="ident">F</span>) {
         <span class="self">self</span>.<span class="ident">p</span>
     }
 
     <span class="doccomment">/// Expose the m parameter</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">param_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">param_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">m</span>
     }
 
     <span class="doccomment">/// Expose 2^m parameter</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">two_power_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">two_power_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="ident">two_power_m</span>
     }
 }
@@ -1685,11 +1686,11 @@
     <span class="doccomment">/// use `new_from_field_element` instead (which comes with</span>
     <span class="doccomment">/// a range proof for the field element).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_unchecked</span>(
-        <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+        <span class="ident">cs</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">var</span>: <span class="ident">Variable</span>,
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">fp_elem</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">cs</span>.<span class="ident">witness</span>(<span class="ident">var</span>)<span class="question-mark">?</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">var0</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">create_variable</span>(<span class="ident">fp_elem</span>.<span class="ident">p</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">var1</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">create_variable</span>(<span class="ident">fp_elem</span>.<span class="ident">p</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -1707,7 +1708,7 @@
 
     <span class="doccomment">/// Convert into a single variable with value `witness[vars.0] + 2^m *</span>
     <span class="doccomment">/// witness[vars.1]`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cs</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">cs</span>.<span class="ident">lc</span>(
             <span class="kw-2">&amp;</span>[<span class="self">self</span>.<span class="ident">vars</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="ident">vars</span>.<span class="number">1</span>, <span class="ident">cs</span>.<span class="ident">zero</span>(), <span class="ident">cs</span>.<span class="ident">zero</span>()],
             <span class="kw-2">&amp;</span>[<span class="ident">F::one</span>(), <span class="self">self</span>.<span class="ident">two_power_m</span>, <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()],
@@ -1718,11 +1719,11 @@
     <span class="doccomment">/// This function is built with range-check proofs.</span>
     <span class="doccomment">/// requires lookup table.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_field_element</span>(
-        <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+        <span class="ident">cs</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">fp_elem</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="ident">f</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
         <span class="ident"><span class="self">Self</span>::new_from_fp_elem</span>(<span class="ident">cs</span>, <span class="kw-2">&amp;</span><span class="ident">fp_elem</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>)
     }
@@ -1731,11 +1732,11 @@
     <span class="doccomment">/// This function is built with range-check proofs.</span>
     <span class="doccomment">/// requires lookup table.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_fp_elem</span>(
-        <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+        <span class="ident">cs</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">fp_elem</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">var0</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">create_variable</span>(<span class="ident">fp_elem</span>.<span class="ident">p</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">var1</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">create_variable</span>(<span class="ident">fp_elem</span>.<span class="ident">p</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
 
@@ -1746,14 +1747,14 @@
             <span class="ident">vars</span>: (<span class="ident">var0</span>, <span class="ident">var1</span>),
             <span class="ident">m</span>,
             <span class="ident">two_power_m</span>: <span class="kw">match</span> <span class="ident">two_power_m</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
+                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
             },
         })
     }
 
     <span class="doccomment">/// Get the witness in FpElem form from the variables</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">witness_fp_elem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">witness_fp_elem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">FpElem</span> {
             <span class="ident">p</span>: (<span class="ident">cs</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">vars</span>.<span class="number">0</span>)<span class="question-mark">?</span>, <span class="ident">cs</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">vars</span>.<span class="number">1</span>)<span class="question-mark">?</span>),
             <span class="ident">m</span>: <span class="self">self</span>.<span class="ident">m</span>,
@@ -1762,45 +1763,45 @@
     }
 
     <span class="doccomment">/// Get the witness from the variables</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">witness</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">witness</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">cs</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">vars</span>.<span class="number">0</span>)<span class="question-mark">?</span> <span class="op">+</span> <span class="ident">cs</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">vars</span>.<span class="number">1</span>)<span class="question-mark">?</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">two_power_m</span>)
     }
 
     <span class="doccomment">/// Expose the field element variables components</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">components</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Variable</span>, <span class="ident">Variable</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">components</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">Variable</span>, <span class="ident">Variable</span>) {
         <span class="self">self</span>.<span class="ident">vars</span>
     }
 
     <span class="doccomment">/// Expose the m parameter</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">param_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">param_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">m</span>
     }
 
     <span class="doccomment">/// Expose 2^m parameter</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">two_power_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">two_power_m</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="ident">two_power_m</span>
     }
 
     <span class="doccomment">/// An FpElemVar that represents a 0</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">m</span>: <span class="ident">usize</span>, <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">m</span>: <span class="ident">usize</span>, <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">FpElemVar</span> {
             <span class="ident">vars</span>: (<span class="ident">cs</span>.<span class="ident">zero</span>(), <span class="ident">cs</span>.<span class="ident">zero</span>()),
             <span class="ident">m</span>,
             <span class="ident">two_power_m</span>: <span class="kw">match</span> <span class="ident">two_power_m</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
+                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
             },
         }
     }
 
     <span class="doccomment">/// An FpElemVar that represents a 1</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">one</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">m</span>: <span class="ident">usize</span>, <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">one</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">m</span>: <span class="ident">usize</span>, <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">FpElemVar</span> {
             <span class="ident">vars</span>: (<span class="ident">cs</span>.<span class="ident">one</span>(), <span class="ident">cs</span>.<span class="ident">zero</span>()),
             <span class="ident">m</span>,
             <span class="ident">two_power_m</span>: <span class="kw">match</span> <span class="ident">two_power_m</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
+                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="ident">F::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]),
             },
         }
     }
@@ -1808,9 +1809,9 @@
     <span class="doccomment">/// Enforce self == other.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_equal</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">m</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">two_power_m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">two_power_m</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::InvalidParameters</span>(
                 <span class="string">&quot;m or two_power_m do not match&quot;</span>.<span class="ident">to_string</span>(),
@@ -1830,11 +1831,11 @@
     <span class="doccomment">/// witness[var_1], ..., witness[var_k] are guaranteed to be in [0,</span>
     <span class="doccomment">/// range_size^l_p). Return error if any variables are invalid.</span>
     <span class="kw">fn</span> <span class="ident">mod_add_internal</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">p</span>: <span class="ident">F</span>,
         <span class="ident">l_p</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">range_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_size</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sum_x</span> <span class="op">=</span> <span class="ident">F::zero</span>();
@@ -1891,11 +1892,11 @@
     <span class="doccomment">/// Modular addition gate:</span>
     <span class="doccomment">/// Given Fp elements x, y and modulus p, compute z = x + y mod p</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_add</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x</span>.<span class="ident">vars</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x</span>.<span class="ident">vars</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -1941,11 +1942,11 @@
     <span class="doccomment">/// use y as a constant and</span>
     <span class="doccomment">/// compute z = x + y mod p</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_add_constant</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">range_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_size</span>()<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x</span>.<span class="ident">vars</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
@@ -2029,10 +2030,10 @@
     <span class="doccomment">/// Modular addition gate:</span>
     <span class="doccomment">/// Given Fp elements &amp;\[x\] and modulus p, compute z = \sum x mod p</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_add_vec</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">x</span> {
             <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p</span>.<span class="ident">m</span> {
@@ -2075,11 +2076,11 @@
     <span class="doccomment">/// Given Fp elements x, y and modulus p, compute z = x * y mod p.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::many_single_char_names</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p</span>.<span class="ident">m</span> <span class="op">|</span><span class="op">|</span> <span class="ident">y</span>.<span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p</span>.<span class="ident">m</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
@@ -2260,11 +2261,11 @@
     <span class="doccomment">/// compute z = x * y mod p</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::many_single_char_names</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_mul_constant</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p</span>.<span class="ident">m</span> <span class="op">|</span><span class="op">|</span> <span class="ident">y</span>.<span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p</span>.<span class="ident">m</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
@@ -2434,7 +2435,7 @@
 
     <span class="doccomment">/// Negate an FpElemVar mod p where p is a public variable which is</span>
     <span class="doccomment">/// also the modulus for the FpElem element.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_negate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mod_negate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">m</span> <span class="op">%</span> <span class="ident">range_bit_len</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
@@ -2469,14 +2470,14 @@
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="comment">// Integer division: c = a / b</span>
-<span class="kw">fn</span> <span class="ident">int_div</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+<span class="kw">fn</span> <span class="ident">int_div</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="ident">F</span> {
     <span class="kw">let</span> <span class="ident">c_big_int</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">into_repr</span>().<span class="ident">into</span>() <span class="op">/</span> <span class="ident">b</span>.<span class="ident">into_repr</span>().<span class="ident">into</span>();
     <span class="ident">F::from</span>(<span class="ident">c_big_int</span>)
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="comment">// Return (a / b, a % b)</span>
-<span class="kw">fn</span> <span class="ident">div_rem</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">F</span>, <span class="ident">F</span>) {
+<span class="kw">fn</span> <span class="ident">div_rem</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; (<span class="ident">F</span>, <span class="ident">F</span>) {
     <span class="kw">let</span> <span class="ident">div</span> <span class="op">=</span> <span class="ident">int_div</span>(<span class="ident">a</span>, <span class="ident">b</span>);
     <span class="kw">let</span> <span class="ident">rem</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">a</span> <span class="op">-</span> <span class="kw-2">*</span><span class="ident">b</span> <span class="op">*</span> <span class="ident">div</span>;
     (<span class="ident">div</span>, <span class="ident">rem</span>)
@@ -2498,16 +2499,16 @@
     <span class="kw">const</span> <span class="ident">RANGE_SIZE_FOR_TEST</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">65536</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fp_elem</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_fp_elem</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_fp_elem_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fp_elem_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fp_elem_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fp_elem_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
     <span class="comment">// Test FpElem creation and conversion</span>
-    <span class="kw">fn</span> <span class="ident">test_fp_elem_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_fp_elem_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">int_div</span>(<span class="kw-2">&amp;</span><span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>), <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="number">4u8</span>));
+        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">int_div</span>(<span class="kw-2">&amp;</span><span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>), <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="number">4u8</span>));
 
         <span class="comment">// case 1: m = len(|F|) / 2</span>
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span>;
@@ -2531,23 +2532,23 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fp_elem_var</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_fp_elem_var</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_fp_elem_var_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fp_elem_var_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fp_elem_var_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fp_elem_var_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
     <span class="comment">// Test FpElemVar variables creation and conversion</span>
-    <span class="kw">fn</span> <span class="ident">test_fp_elem_var_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_fp_elem_var_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
 
         <span class="comment">// Good path</span>
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">p_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">p_var</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">q_var</span> <span class="op">=</span> <span class="ident">fp_elem_var</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">p_var</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">q_var</span> <span class="op">=</span> <span class="ident">fp_elem_var</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">equal_gate</span>(<span class="ident">p_var</span>, <span class="ident">q_var</span>)<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
 
@@ -2556,8 +2557,8 @@
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
 
         <span class="comment">// check that circuit config is independent of witness values</span>
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">circuit_1</span> <span class="op">=</span> <span class="ident">build_fp_elem_var_circuit</span>(<span class="ident">p1</span>, <span class="ident">m</span>, <span class="ident">fp_elem_var</span>.<span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">circuit_2</span> <span class="op">=</span> <span class="ident">build_fp_elem_var_circuit</span>(<span class="ident">p2</span>, <span class="ident">m</span>, <span class="ident">fp_elem_var</span>.<span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
         <span class="ident">test_variable_independence_for_circuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">circuit_1</span>, <span class="ident">circuit_2</span>)<span class="question-mark">?</span>;
@@ -2568,11 +2569,11 @@
         <span class="ident">p</span>: <span class="ident">F</span>,
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">two_power_m</span>: <span class="ident">F</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">2</span>);
         <span class="kw">let</span> <span class="ident">p_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">p_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">fp_elem_var</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">p_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">fp_elem_var</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
     }
@@ -2582,13 +2583,13 @@
     <span class="comment">// ========================================</span>
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_mod_add_internal</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_add_internal</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_mod_add_internal_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_internal_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_internal_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_internal_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_mod_add_internal_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_add_internal_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
 
         <span class="comment">// Good paths</span>
@@ -2655,7 +2656,7 @@
         <span class="ident">elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">p</span>: <span class="ident">F</span>,
         <span class="ident">l_p</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">3</span>);
         <span class="kw">let</span> <span class="ident">vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">elems</span>
             .<span class="ident">iter</span>()
@@ -2670,13 +2671,13 @@
     <span class="comment">//  mod mul</span>
     <span class="comment">// ========================================</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_mod_mul</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_mul</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_mod_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_mul_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_mod_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">RANGE_SIZE_FOR_TEST</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">10u64</span>]);
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">80</span>;
         <span class="kw">let</span> <span class="ident">p_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
@@ -2686,10 +2687,10 @@
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
             <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">z_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split</span>)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
 
@@ -2702,7 +2703,7 @@
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">z_split_vars</span>.<span class="ident">vars</span>.<span class="number">1</span>) <span class="op">-</span><span class="op">=</span> <span class="ident">p_split</span>.<span class="ident">two_power_m</span>;
 
-            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
             <span class="ident">check_mod_mul</span>(
                 <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">z_var</span>)<span class="question-mark">?</span>,
                 <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">x_var</span>)<span class="question-mark">?</span>,
@@ -2717,18 +2718,18 @@
         <span class="comment">// mismatched splitting parameters</span>
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">zero</span>();
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
             .<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split</span>)
             .<span class="ident">is_err</span>());
         <span class="comment">// p.m is not a multiple of RANGE_BIT_LEN_FOR_TEST</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
             .<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split_bad</span>)
             .<span class="ident">is_err</span>());
@@ -2736,9 +2737,9 @@
         <span class="comment">// p.two_power_m is not  2^m</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span> <span class="op">+</span> <span class="ident">F::one</span>()))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
             .<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split_bad</span>)
             .<span class="ident">is_err</span>());
@@ -2768,12 +2769,12 @@
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">5</span>);
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">y</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="ident">p</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
@@ -2783,13 +2784,13 @@
     <span class="comment">//  mod mul constant</span>
     <span class="comment">// ========================================</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_mod_mul_constant</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_mul_constant</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_mod_mul_constant_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_mul_constant_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_mul_constant_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_mul_constant_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_mod_mul_constant_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_mul_constant_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">RANGE_SIZE_FOR_TEST</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">10u64</span>]);
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">80</span>;
         <span class="kw">let</span> <span class="ident">p_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
@@ -2799,7 +2800,7 @@
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
             <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>));
             <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">z_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul_constant</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split</span>, <span class="kw-2">&amp;</span><span class="ident">p_split</span>)<span class="question-mark">?</span>;
@@ -2814,7 +2815,7 @@
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">z_split_vars</span>.<span class="ident">vars</span>.<span class="number">1</span>) <span class="op">-</span><span class="op">=</span> <span class="ident">p_split</span>.<span class="ident">two_power_m</span>;
 
-            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
             <span class="ident">check_mod_mul</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">z_var</span>)<span class="question-mark">?</span>, <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">x_var</span>)<span class="question-mark">?</span>, <span class="ident">y</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>);
         }
 
@@ -2824,7 +2825,7 @@
         <span class="comment">// mismatched splitting parameters</span>
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">zero</span>();
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>));
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2833,7 +2834,7 @@
         <span class="comment">// p.m is not a multiple of RANGE_BIT_LEN_FOR_TEST</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>));
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2843,7 +2844,7 @@
         <span class="comment">// p.two_power_m is not  2^m</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span> <span class="op">+</span> <span class="ident">F::one</span>()))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>));
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2865,10 +2866,10 @@
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">5</span>);
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="ident">y</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">mod_mul_constant</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split</span>, <span class="ident">p</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
@@ -2879,13 +2880,13 @@
     <span class="comment">//  mod add</span>
     <span class="comment">// ========================================</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_mod_add</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_add</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_mod_add_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_mod_add_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_add_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">RANGE_SIZE_FOR_TEST</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">10u64</span>]);
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">80</span>;
         <span class="kw">let</span> <span class="ident">p_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
@@ -2895,10 +2896,10 @@
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
             <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">z_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split</span>)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
 
@@ -2911,7 +2912,7 @@
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">z_split_vars</span>.<span class="ident">vars</span>.<span class="number">1</span>) <span class="op">-</span><span class="op">=</span> <span class="ident">p_split</span>.<span class="ident">two_power_m</span>;
 
-            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
             <span class="ident">check_mod_add</span>(
                 <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">z_var</span>)<span class="question-mark">?</span>,
                 <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">x_var</span>)<span class="question-mark">?</span>,
@@ -2926,27 +2927,27 @@
         <span class="comment">// mismatched splitting parameters</span>
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">zero</span>();
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
             .<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split</span>)
             .<span class="ident">is_err</span>());
         <span class="comment">// p.m is not a multiple of RANGE_BIT_LEN_FOR_TEST</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
             .<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split_bad</span>)
             .<span class="ident">is_err</span>());
         <span class="comment">// p.two_power_m is not 2^m</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span> <span class="op">+</span> <span class="ident">F::one</span>()))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
             .<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p_split_bad</span>)
             .<span class="ident">is_err</span>());
@@ -2976,12 +2977,12 @@
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">5</span>);
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">y</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>, <span class="ident">p</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
@@ -2991,13 +2992,13 @@
     <span class="comment">//  mod add constant</span>
     <span class="comment">// ========================================</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_mod_add_constant</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_add_constant</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_mod_add_constant_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_constant_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_constant_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_mod_add_constant_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_mod_add_constant_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_add_constant_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">RANGE_SIZE_FOR_TEST</span> <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">10u64</span>]);
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">80</span>;
         <span class="kw">let</span> <span class="ident">p_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
@@ -3011,7 +3012,7 @@
 
             <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">x</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">z_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_constant</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split</span>, <span class="kw-2">&amp;</span><span class="ident">p_split</span>)<span class="question-mark">?</span>;
@@ -3026,7 +3027,7 @@
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">z_split_vars</span>.<span class="ident">vars</span>.<span class="number">1</span>) <span class="op">-</span><span class="op">=</span> <span class="ident">p_split</span>.<span class="ident">two_power_m</span>;
 
-            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
 
             <span class="ident">check_mod_add_constant</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">z_var</span>)<span class="question-mark">?</span>, <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">x_var</span>)<span class="question-mark">?</span>, <span class="ident">y</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>);
         }
@@ -3035,7 +3036,7 @@
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
             <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>));
             <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
 
@@ -3051,7 +3052,7 @@
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">z_split_vars</span>.<span class="ident">vars</span>.<span class="number">1</span>) <span class="op">-</span><span class="op">=</span> <span class="ident">p_split</span>.<span class="ident">two_power_m</span>;
 
-            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">z_var</span> <span class="op">=</span> <span class="ident">z_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
             <span class="ident">check_mod_add_constant</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">z_var</span>)<span class="question-mark">?</span>, <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">x_var</span>)<span class="question-mark">?</span>, <span class="ident">y</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>);
         }
 
@@ -3061,7 +3062,7 @@
         <span class="comment">// mismatched splitting parameters</span>
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">zero</span>();
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(
             <span class="kw-2">&amp;</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>))),
             <span class="ident">m</span>,
@@ -3074,7 +3075,7 @@
         <span class="comment">// p.m is not a multiple of RANGE_BIT_LEN_FOR_TEST</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(
             <span class="kw-2">&amp;</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>))),
             <span class="ident">m</span> <span class="op">+</span> <span class="number">1</span>,
@@ -3086,7 +3087,7 @@
         <span class="comment">// p.two_power_m is not 2^m</span>
         <span class="kw">let</span> <span class="ident">p_split_bad</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span> <span class="op">+</span> <span class="ident">F::one</span>()))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zero_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(
             <span class="kw-2">&amp;</span>(<span class="ident">p</span> <span class="op">-</span> <span class="ident">F::from</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">1</span>..<span class="ident">u128::MAX</span>))),
             <span class="ident">m</span>,
@@ -3121,10 +3122,10 @@
         <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">5</span>);
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="ident">y</span>, <span class="ident">p</span>.<span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">mod_add_constant</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split</span>, <span class="ident">p</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
@@ -3135,7 +3136,7 @@
     <span class="comment">//  mod negation</span>
     <span class="comment">// ========================================</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_mod_negation</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_mod_negation</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_mod_negation_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span>, <span class="ident">FrEd254</span><span class="op">&gt;</span>(<span class="number">126</span>, <span class="number">9</span>)<span class="question-mark">?</span>;
         <span class="ident">test_mod_negation_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">FrEd377</span><span class="op">&gt;</span>(<span class="number">126</span>, <span class="number">9</span>)<span class="question-mark">?</span>;
         <span class="ident">test_mod_negation_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Fr377</span><span class="op">&gt;</span>(<span class="number">128</span>, <span class="number">16</span>)
@@ -3146,17 +3147,17 @@
     <span class="kw">fn</span> <span class="ident">test_mod_negation_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span>, <span class="ident">T</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">range_bit_len</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">T::Params::MODULUS</span>.<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
         <span class="kw">let</span> <span class="ident">p_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">range_bit_len</span>);
 
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-            <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
+                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">p_split</span>.<span class="ident">two_power_m</span>))<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_negate</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
 
@@ -3172,7 +3173,7 @@
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_split_vars</span>.<span class="ident">vars</span>.<span class="number">1</span>) <span class="op">-</span><span class="op">=</span> <span class="ident">p_split</span>.<span class="ident">two_power_m</span>;
 
-            <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">y_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">y_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">y_var</span>)<span class="question-mark">?</span>;
             <span class="macro">assert_eq!</span>(<span class="ident">T::zero</span>(), <span class="ident">x</span> <span class="op">+</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>))
         }
@@ -3182,5 +3183,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="jf_plonk" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

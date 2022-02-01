@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;rescue&#x2F;non_native.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>non_native.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;rescue&#x2F;non_native.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>non_native.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1341,19 +1342,19 @@
     <span class="doccomment">/// * `input_var` - variables corresponding to the input state</span>
     <span class="doccomment">/// * `returns` - variables corresponding to the output state</span>
     <span class="kw">fn</span> <span class="ident">rescue_permutation</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Rescue based Pseudo Random Permutation (PRP)</span>
     <span class="doccomment">/// * `key_var` - rescue state variable corresponding to the cipher key</span>
     <span class="doccomment">/// * `input_var` - rescue state variable corresponding to the plaintext</span>
     <span class="doccomment">/// * `returns` - state variable corresponding to the cipher text</span>
     <span class="kw">fn</span> <span class="ident">prp</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Sponge-based hashes from Rescue permutations</span>
     <span class="doccomment">/// * `data_vars` - sponge input variables, `data_vars.len()` should be a</span>
@@ -1362,10 +1363,10 @@
     <span class="doccomment">/// * `returns` - a vector of variables that refers to the sponge hash</span>
     <span class="doccomment">///   output</span>
     <span class="kw">fn</span> <span class="ident">rescue_sponge_no_padding</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">num_output</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Sponge-based hashes from Rescue permutations</span>
     <span class="doccomment">/// * `data_vars` - sponge input variables,</span>
@@ -1373,20 +1374,20 @@
     <span class="doccomment">/// * `returns` - a vector of variables that refers to the sponge hash</span>
     <span class="doccomment">///   output</span>
     <span class="kw">fn</span> <span class="ident">rescue_sponge_with_padding</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">num_output</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Full-State-Keyed-Sponge with a single output</span>
     <span class="doccomment">/// * `key` - key variable</span>
     <span class="doccomment">/// * `input` - input variables,</span>
     <span class="doccomment">/// * `returns` a variable that refers to the output</span>
     <span class="kw">fn</span> <span class="ident">rescue_full_state_keyed_sponge_no_padding</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">RescueNonNativeGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -1394,9 +1395,9 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
     <span class="kw">fn</span> <span class="ident">rescue_permutation</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">permutation</span> <span class="op">=</span> <span class="ident">Permutation</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">permutation</span>.<span class="ident">round_keys_ref</span>();
         <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">keys</span>
@@ -1409,10 +1410,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">prp</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prp_instance</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="ident">mds_states</span> <span class="op">=</span> <span class="ident">prp_instance</span>.<span class="ident">mds_matrix_ref</span>();
         <span class="kw">let</span> <span class="ident">keys_vars</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">key_schedule</span>(<span class="ident">mds_states</span>, <span class="ident">key_var</span>, <span class="kw-2">&amp;</span><span class="ident">prp_instance</span>)<span class="question-mark">?</span>;
@@ -1420,10 +1421,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">rescue_sponge_with_padding</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">num_output</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">data_vars</span>.<span class="ident">is_empty</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="string">&quot;empty data vars&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>());
         }
@@ -1447,10 +1448,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">rescue_sponge_no_padding</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">num_output</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> (<span class="ident">data_vars</span>.<span class="ident">is_empty</span>()) <span class="op">|</span><span class="op">|</span> (<span class="ident">data_vars</span>.<span class="ident">len</span>() <span class="op">%</span> (<span class="ident">STATE_SIZE</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="string">&quot;data_vars&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>());
         }
@@ -1494,7 +1495,7 @@
             <span class="kw">let</span> <span class="ident">extract</span> <span class="op">=</span> <span class="ident">remaining</span>.<span class="ident">min</span>(<span class="ident">rate</span>);
             <span class="ident">result</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">state_var</span>.<span class="ident">state</span>[<span class="number">0</span>..<span class="ident">extract</span>]);
             <span class="ident">remaining</span> <span class="op">-</span><span class="op">=</span> <span class="ident">extract</span>;
-            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">break</span>;
             }
             <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rescue_permutation</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">state_var</span>)<span class="question-mark">?</span>;
@@ -1504,10 +1505,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">rescue_full_state_keyed_sponge_no_padding</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">data_vars</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">STATE_SIZE</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Bad input length for FSKS circuit: {:}, it must be multiple of STATE_SIZE&quot;</span>,
@@ -1553,24 +1554,24 @@
     <span class="kw">fn</span> <span class="ident">check_var_bound_rescue_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">rescue_state</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">create_rescue_state_variable</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">add_constant_state</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">add_state</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">left_state_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">right_state_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Given a state st_0=(x_1,...,x_w) and st_1=(y_1,...,y_w),</span>
     <span class="doccomment">/// add the constraints that ensure we have y_i=x_i ^{1/11} for i in</span>
@@ -1578,9 +1579,9 @@
     <span class="doccomment">/// * `input_var` - rescue state variables st_0</span>
     <span class="doccomment">/// * `returns` - rescue state variables st_1</span>
     <span class="kw">fn</span> <span class="ident">pow_alpha_inv_state</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 = M</span>
     <span class="doccomment">/// st_0 + C where M is a Rescue matrix and c is a constant vector</span>
@@ -1589,11 +1590,11 @@
     <span class="doccomment">/// * `constant` - constant c in the description above</span>
     <span class="doccomment">/// * `returns` - variables corresponding to the output state</span>
     <span class="kw">fn</span> <span class="ident">affine_transform</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Given an input state st_0=(x_1,...,x_w) and an output state</span>
     <span class="doccomment">/// st_1=(y_1,...,y_m) y_i = \sum_{j=1}^w M_{i,j}x_j^alpha+c_i for all i in</span>
@@ -1604,31 +1605,31 @@
     <span class="doccomment">/// * `constant` - constant c in the description above</span>
     <span class="doccomment">/// * `returns` - variables corresponding to the output state</span>
     <span class="kw">fn</span> <span class="ident">non_linear_transform</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Define a constraint such that y = x^(1/alpha).</span>
     <span class="doccomment">/// It is implemented by setting q_{H1} y^alpha = q_O x</span>
     <span class="doccomment">/// * `input_var`  - variable id corresponding to x in the equation above</span>
     <span class="doccomment">/// * `returns` - the variable id corresponding to y</span>
     <span class="kw">fn</span> <span class="ident">pow_alpha_inv</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Return the round keys variables for the Rescue block cipher</span>
     <span class="doccomment">/// * `mds_states` - Rescue MDS matrix</span>
     <span class="doccomment">/// * `key_var` - state variable representing the cipher key</span>
     <span class="doccomment">/// * `returns` - state variables corresponding to the scheduled keys</span>
     <span class="kw">fn</span> <span class="ident">key_schedule</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">mds_states</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">prp_instance</span>: <span class="kw-2">&amp;</span><span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Return the variable corresponding to the output of the of the Rescue</span>
     <span class="doccomment">/// PRP where the rounds keys have already been computed &quot;dynamically&quot;</span>
@@ -1637,11 +1638,11 @@
     <span class="doccomment">/// * `key_vars` - variables corresponding to the scheduled keys</span>
     <span class="doccomment">/// * `returns` -</span>
     <span class="kw">fn</span> <span class="ident">prp_with_round_keys</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">mds</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">keys_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> (<span class="ident">keys_vars</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">mds</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">STATE_SIZE</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::CircuitError</span>(<span class="ident">ParameterError</span>(
                 <span class="string">&quot;data_vars&quot;</span>.<span class="ident">to_string</span>(),
@@ -1651,7 +1652,7 @@
         <span class="kw">let</span> <span class="ident">zero_state</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[<span class="ident">T::zero</span>(); <span class="ident">STATE_SIZE</span>]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_state</span>(<span class="ident">input_var</span>, <span class="kw-2">&amp;</span><span class="ident">keys_vars</span>[<span class="number">0</span>])<span class="question-mark">?</span>;
         <span class="kw">for</span> (<span class="ident">r</span>, <span class="ident">key_var</span>) <span class="kw">in</span> <span class="ident">keys_vars</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">r</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">r</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pow_alpha_inv_state</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">state_var</span>)<span class="question-mark">?</span>;
                 <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">affine_transform</span>(<span class="kw-2">&amp;</span><span class="ident">state_var</span>, <span class="ident">mds</span>, <span class="kw-2">&amp;</span><span class="ident">zero_state</span>)<span class="question-mark">?</span>;
             } <span class="kw">else</span> {
@@ -1671,11 +1672,11 @@
     <span class="doccomment">/// * `round_keys` - list of round keys</span>
     <span class="doccomment">/// * `returns` - variables corresponding to the output state</span>
     <span class="kw">fn</span> <span class="ident">permutation_with_const_round_keys</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">mds</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">round_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> (<span class="ident">round_keys</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">mds</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">STATE_SIZE</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::CircuitError</span>(<span class="ident">ParameterError</span>(
                 <span class="string">&quot;data_vars&quot;</span>.<span class="ident">to_string</span>(),
@@ -1684,7 +1685,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_constant_state</span>(<span class="kw-2">&amp;</span><span class="ident">input_var</span>, <span class="kw-2">&amp;</span><span class="ident">round_keys</span>[<span class="number">0</span>])<span class="question-mark">?</span>;
         <span class="kw">for</span> (<span class="ident">r</span>, <span class="ident">key</span>) <span class="kw">in</span> <span class="ident">round_keys</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">r</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">r</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pow_alpha_inv_state</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">state_var</span>)<span class="question-mark">?</span>;
                 <span class="ident">state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">affine_transform</span>(<span class="kw-2">&amp;</span><span class="ident">state_var</span>, <span class="ident">mds</span>, <span class="ident">key</span>)<span class="question-mark">?</span>;
             } <span class="kw">else</span> {
@@ -1702,7 +1703,7 @@
     <span class="kw">fn</span> <span class="ident">check_var_bound_rescue_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">non_native_rescue_state</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">elem_var</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">non_native_rescue_state</span>.<span class="ident">state</span> {
             <span class="kw">let</span> <span class="ident">vars</span> <span class="op">=</span> <span class="ident">elem_var</span>.<span class="ident">components</span>();
             <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">vars</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
@@ -1712,10 +1713,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">add_constant_state</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// Check bounds for every variable</span>
         <span class="self">self</span>.<span class="ident">check_var_bound_rescue_state</span>(<span class="ident">input_var</span>)<span class="question-mark">?</span>;
 
@@ -1753,9 +1754,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">pow_alpha_inv_state</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// Check bounds for every variable</span>
         <span class="self">self</span>.<span class="ident">check_var_bound_rescue_state</span>(<span class="ident">input_var</span>)<span class="question-mark">?</span>;
 
@@ -1771,11 +1772,11 @@
     }
 
     <span class="kw">fn</span> <span class="ident">affine_transform</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// Check bounds for every variable</span>
         <span class="self">self</span>.<span class="ident">check_var_bound_rescue_state</span>(<span class="ident">input_var</span>)<span class="question-mark">?</span>;
 
@@ -1857,11 +1858,11 @@
     }
 
     <span class="kw">fn</span> <span class="ident">non_linear_transform</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">input_var</span>.<span class="ident">modulus</span>.<span class="ident">param_m</span>();
 
         <span class="comment">// Check bounds for every variable</span>
@@ -1880,7 +1881,7 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">x</span>))
             .<span class="ident">collect</span>();
 
-        <span class="kw">if</span> <span class="ident">T::A</span> <span class="op">=</span><span class="op">=</span> <span class="number">11</span> {
+        <span class="kw">if</span> <span class="ident">T::A</span> <span class="op">==</span> <span class="number">11</span> {
             <span class="comment">// generate the `power 11 vector` and its wires</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_power_11_vars</span> <span class="op">=</span> <span class="ident">RescueNonNativeStateVar</span> {
                 <span class="ident">state</span>: [<span class="ident">FpElemVar::default</span>(); <span class="ident">STATE_SIZE</span>],
@@ -1916,13 +1917,13 @@
     }
 
     <span class="kw">fn</span> <span class="ident">pow_alpha_inv</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">input_var</span>: <span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">input_var</span>.<span class="ident">components</span>().<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">input_var</span>.<span class="ident">components</span>().<span class="number">1</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">T::A</span> <span class="op">=</span><span class="op">=</span> <span class="number">11</span> {
+        <span class="kw">if</span> <span class="ident">T::A</span> <span class="op">==</span> <span class="number">11</span> {
             <span class="comment">// recover the field element y and compute y^-11</span>
             <span class="kw">let</span> <span class="ident">input_f</span> <span class="op">=</span> <span class="ident">input_var</span>.<span class="ident">witness</span>(<span class="self">self</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">input_t</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">input_f</span>);
@@ -1952,9 +1953,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">create_rescue_state_variable</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// parameter m</span>
         <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="ident">T::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>;
 
@@ -1982,10 +1983,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">add_state</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">left_state_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">right_state_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound_rescue_state</span>(<span class="ident">left_state_var</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound_rescue_state</span>(<span class="ident">right_state_var</span>)<span class="question-mark">?</span>;
 
@@ -2000,7 +2001,7 @@
             .<span class="ident">state</span>
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">right_state_var</span>.<span class="ident">state</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">left_var</span>, <span class="kw-2">&amp;</span><span class="ident">right_var</span>)<span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">left_var</span>, <span class="kw-2">&amp;</span><span class="ident">right_var</span>)<span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">left_var</span>, <span class="kw-2">&amp;</span><span class="ident">right_var</span>, <span class="kw-2">&amp;</span><span class="ident">modulus</span>)
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2012,11 +2013,11 @@
     }
 
     <span class="kw">fn</span> <span class="ident">key_schedule</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">mds</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">prp_instance</span>: <span class="kw-2">&amp;</span><span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">prp_instance</span>.<span class="ident">init_vec_ref</span>();
         <span class="kw">let</span> <span class="ident">key_injection_vec</span> <span class="op">=</span> <span class="ident">prp_instance</span>.<span class="ident">key_injection_vec_ref</span>();
 
@@ -2025,7 +2026,7 @@
 
         <span class="kw">for</span> (<span class="ident">r</span>, <span class="ident">key_injection_item</span>) <span class="kw">in</span> <span class="ident">key_injection_vec</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="ident">aux</span>.<span class="ident">linear</span>(<span class="ident">mds</span>, <span class="ident">key_injection_item</span>);
-            <span class="kw">if</span> <span class="ident">r</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">r</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">key_state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pow_alpha_inv_state</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key_state_var</span>)<span class="question-mark">?</span>;
                 <span class="ident">key_state_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">affine_transform</span>(<span class="kw-2">&amp;</span><span class="ident">key_state_var</span>, <span class="ident">mds</span>, <span class="ident">key_injection_item</span>)<span class="question-mark">?</span>;
             } <span class="kw">else</span> {
@@ -2060,7 +2061,7 @@
     <span class="kw">const</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
 
     <span class="kw">fn</span> <span class="ident">gen_state_matrix_constant</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">state_in</span> <span class="op">=</span>
             <span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[<span class="ident">T::from</span>(<span class="number">12u32</span>), <span class="ident">T::from</span>(<span class="number">2u32</span>), <span class="ident">T::from</span>(<span class="number">8u32</span>), <span class="ident">T::from</span>(<span class="number">9u32</span>)]);
 
@@ -2094,7 +2095,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">check_circuit_satisfiability</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RescueParameter</span>, <span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">out_value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
         <span class="ident">out_var</span>: <span class="ident">RescueNonNativeStateVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     ) {
@@ -2172,7 +2173,7 @@
             <span class="kw-2">&amp;</span><span class="ident">RescueVector::from</span>(<span class="ident">out_value</span>.<span class="ident">as_slice</span>()),
         );
 
-        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">out_value</span>, <span class="ident">out_var</span>);
+        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">out_value</span>, <span class="ident">out_var</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -2196,7 +2197,7 @@
 
         <span class="ident">check_state</span>(<span class="kw-2">&amp;</span><span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">out_var</span>, <span class="kw-2">&amp;</span><span class="ident">out_value</span>);
 
-        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">out_value</span>.<span class="ident">elems</span>(), <span class="ident">out_var</span>);
+        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">out_value</span>.<span class="ident">elems</span>(), <span class="ident">out_var</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -2219,7 +2220,7 @@
 
         <span class="ident">check_state</span>(<span class="kw-2">&amp;</span><span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">out_var</span>, <span class="kw-2">&amp;</span><span class="ident">out_value</span>);
 
-        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">out_value</span>.<span class="ident">elems</span>(), <span class="ident">out_var</span>);
+        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">out_value</span>.<span class="ident">elems</span>(), <span class="ident">out_var</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -2241,7 +2242,7 @@
 
         <span class="ident">check_state</span>(<span class="kw-2">&amp;</span><span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">out_var</span>, <span class="kw-2">&amp;</span><span class="ident">state_out</span>);
 
-        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">state_out</span>.<span class="ident">elems</span>(), <span class="ident">out_var</span>);
+        <span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">state_out</span>.<span class="ident">elems</span>(), <span class="ident">out_var</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -2316,16 +2317,16 @@
         <span class="kw">let</span> <span class="ident">prp</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">key_vec</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
         ]);
         <span class="kw">let</span> <span class="ident">input_vec</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
         ]);
         <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_rescue_state_variable</span>(<span class="kw-2">&amp;</span><span class="ident">key_vec</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">input_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_rescue_state_variable</span>(<span class="kw-2">&amp;</span><span class="ident">input_vec</span>).<span class="ident">unwrap</span>();
@@ -2371,11 +2372,11 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
 
         <span class="comment">// setup the inputs</span>
-        <span class="kw">let</span> <span class="ident">data_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">2</span> <span class="op">*</span> <span class="ident">RATE</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
+        <span class="kw">let</span> <span class="ident">data_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">2</span> <span class="op">*</span> <span class="ident">RATE</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
         <span class="kw">let</span> <span class="ident">data_f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_t</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">field_switching</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_f</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
             .<span class="ident">collect</span>();
 
         <span class="comment">// sponge no padding with output length 1</span>
@@ -2420,11 +2421,11 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
 
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">RATE</span> <span class="op">+</span> <span class="number">1</span>; <span class="comment">// Non multiple of RATE</span>
-        <span class="kw">let</span> <span class="ident">data_t</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">size</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
+        <span class="kw">let</span> <span class="ident">data_t</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">size</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
         <span class="kw">let</span> <span class="ident">data_f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_t</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">field_switching</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_f</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
             .<span class="ident">collect</span>();
 
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2454,11 +2455,11 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
 
             <span class="comment">// setup the inputs</span>
-            <span class="kw">let</span> <span class="ident">data_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
+            <span class="kw">let</span> <span class="ident">data_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
             <span class="kw">let</span> <span class="ident">data_f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_t</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">field_switching</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
             <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_f</span>
                 .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
                 .<span class="ident">collect</span>();
 
             <span class="kw">let</span> <span class="ident">rescue_perm</span> <span class="op">=</span> <span class="ident">Permutation</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::default</span>();
@@ -2520,9 +2521,9 @@
         <span class="kw">let</span> <span class="ident">input_vec_f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input_vec_t</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">field_switching</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
 
         <span class="kw">let</span> <span class="ident">input_var</span> <span class="op">=</span> [
-            <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec_f</span>[<span class="number">0</span>], <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec_f</span>[<span class="number">1</span>], <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec_f</span>[<span class="number">2</span>], <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>(),
+            <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec_f</span>[<span class="number">0</span>], <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>(),
+            <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec_f</span>[<span class="number">1</span>], <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>(),
+            <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec_f</span>[<span class="number">2</span>], <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>(),
         ];
         <span class="kw">let</span> <span class="ident">out_var</span> <span class="op">=</span> <span class="ident">circuit</span>
             .<span class="ident">rescue_sponge_no_padding</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">input_var</span>, <span class="number">1</span>)
@@ -2563,18 +2564,18 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
 
         <span class="comment">// keys</span>
-        <span class="kw">let</span> <span class="ident">key_t</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">key_t</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
         <span class="kw">let</span> <span class="ident">key_f</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key_t</span>);
-        <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">key_f</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">key_f</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// data</span>
         <span class="kw">let</span> <span class="ident">input_len</span> <span class="op">=</span> <span class="number">8</span>;
-        <span class="kw">let</span> <span class="ident">data_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
+        <span class="kw">let</span> <span class="ident">data_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">collect_vec</span>();
         <span class="kw">let</span> <span class="ident">data_f</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_t</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">field_switching</span>(<span class="ident">x</span>)).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data_f</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
-                <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">key_var</span>.<span class="ident">two_power_m</span>()))
+                <span class="ident">FpElemVar::new_from_field_element</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">key_var</span>.<span class="ident">two_power_m</span>()))
                     .<span class="ident">unwrap</span>()
             })
             .<span class="ident">collect</span>();
@@ -2614,5 +2615,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="jf_plonk" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

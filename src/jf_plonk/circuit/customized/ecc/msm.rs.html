@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;ecc&#x2F;msm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>msm.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;ecc&#x2F;msm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>msm.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -505,19 +506,19 @@
     <span class="doccomment">/// Use naive method otherwise.</span>
     <span class="doccomment">/// Return error if the number bases does not match the number of scalars.</span>
     <span class="kw">fn</span> <span class="ident">msm</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
         <span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Compute the multi-scalar-multiplications where each scalar has at most</span>
     <span class="doccomment">/// `scalar_bit_length` bits.</span>
     <span class="kw">fn</span> <span class="ident">msm_with_var_scalar_length</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
         <span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">scalar_bit_length</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">MultiScalarMultiplicationCircuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -526,10 +527,10 @@
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="kw">fn</span> <span class="ident">msm</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
         <span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">scalar_bit_length</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::ScalarField::size_in_bits</span>();
         <span class="ident">MultiScalarMultiplicationCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::msm_with_var_scalar_length</span>(
             <span class="self">self</span>,
@@ -540,11 +541,11 @@
     }
 
     <span class="kw">fn</span> <span class="ident">msm_with_var_scalar_length</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
         <span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">scalar_bit_length</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">bases</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">scalars</span>.<span class="ident">len</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::InvalidParameters</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;bases length ({}) does not match scalar length ({})&quot;</span>,
@@ -601,11 +602,11 @@
 <span class="comment">// #variables: 238976</span>
 <span class="comment">// #constraints: 238720</span>
 <span class="kw">fn</span> <span class="ident">msm_naive</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
     <span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
     <span class="ident">scalar_bit_length</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -665,11 +666,11 @@
 <span class="comment">// #variables: 49782</span>
 <span class="comment">// #constraints: 36470</span>
 <span class="kw">fn</span> <span class="ident">msm_pippenger</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
     <span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
     <span class="ident">scalar_bit_length</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -762,11 +763,11 @@
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">fn</span> <span class="ident">create_point_lookup_gates</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">table_point_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
     <span class="ident">lookup_scalar_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
     <span class="ident">lookup_point_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
@@ -786,11 +787,11 @@
 <span class="doccomment">/// Decompose a `scalar_bit_length`-bit scalar `s` into many c-bit scalar</span>
 <span class="doccomment">/// variables `{s0, ..., s_m}` such that `s = \sum_{j=0..m} 2^{cj} * s_j`</span>
 <span class="kw">fn</span> <span class="ident">decompose_scalar_var</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">scalar_var</span>: <span class="ident">Variable</span>,
     <span class="ident">c</span>: <span class="ident">usize</span>,
     <span class="ident">scalar_bit_length</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
@@ -822,7 +823,7 @@
     <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">scalar_var</span>: <span class="ident">Variable</span>,
     <span class="ident">base_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -837,7 +838,7 @@
 <span class="doccomment">/// [`Explanation of usage`]</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Explanation of usage`]: https://github.com/scipr-lab/zexe/issues/79#issue-556220473</span>
-<span class="kw">fn</span> <span class="ident">ln_without_floats</span>(<span class="ident">a</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">fn</span> <span class="ident">ln_without_floats</span>(<span class="ident">a</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
     <span class="comment">// log2(a) * ln(2)</span>
     (<span class="ident">ark_std::log2</span>(<span class="ident">a</span>) <span class="op">*</span> <span class="number">69</span> <span class="op">/</span> <span class="number">100</span>) <span class="kw">as</span> <span class="ident">usize</span>
 }
@@ -865,7 +866,7 @@
     <span class="kw">const</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_variable_base_multi_scalar_mul</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_variable_base_multi_scalar_mul</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_variable_base_multi_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span>, <span class="ident">ParamEd254</span><span class="op">&gt;</span>(<span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_multi_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span>, <span class="ident">ParamEd254</span><span class="op">&gt;</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_multi_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">ParamEd377</span><span class="op">&gt;</span>(<span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
@@ -883,7 +884,7 @@
 
     <span class="kw">fn</span> <span class="ident">test_variable_base_multi_scalar_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -892,15 +893,15 @@
 
         <span class="kw">for</span> <span class="ident">dim</span> <span class="kw">in</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">16</span>, <span class="number">32</span>, <span class="number">64</span>, <span class="number">128</span>] {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">plonk_type</span> {
-                <span class="ident">PlonkType::TurboPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
-                <span class="ident">PlonkType::UltraPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>),
+                <span class="ident">PlonkType::TurboPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
+                <span class="ident">PlonkType::UltraPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>),
             };
 
             <span class="comment">// bases and scalars</span>
             <span class="kw">let</span> <span class="ident">bases</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-                (<span class="number">0</span>..<span class="ident">dim</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
+                (<span class="number">0</span>..<span class="ident">dim</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
             <span class="kw">let</span> <span class="ident">scalars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">P::ScalarField</span><span class="op">&gt;</span> <span class="op">=</span>
-                (<span class="number">0</span>..<span class="ident">dim</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
+                (<span class="number">0</span>..<span class="ident">dim</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
             <span class="kw">let</span> <span class="ident">scalar_reprs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">P::ScalarField</span> <span class="kw">as</span> <span class="ident">PrimeField</span><span class="op">&gt;</span><span class="ident">::BigInt</span><span class="op">&gt;</span> <span class="op">=</span>
                 <span class="ident">scalars</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">into_repr</span>()).<span class="ident">collect</span>();
             <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">VariableBaseMSM::multi_scalar_mul</span>(<span class="kw-2">&amp;</span><span class="ident">bases</span>, <span class="kw-2">&amp;</span><span class="ident">scalar_reprs</span>);
@@ -919,7 +920,7 @@
 
             <span class="comment">// compute circuit</span>
             <span class="kw">let</span> <span class="ident">res_var</span> <span class="op">=</span> <span class="ident">MultiScalarMultiplicationCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::msm</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
                 <span class="kw-2">&amp;</span><span class="ident">bases_vars</span>,
                 <span class="kw-2">&amp;</span><span class="ident">scalar_vars</span>,
             )<span class="question-mark">?</span>;
@@ -932,11 +933,11 @@
             <span class="comment">// ark_std::println!(&quot;#constraints: {}\n&quot;, circuit.num_gates(),);</span>
 
             <span class="comment">// wrong witness should fail</span>
-            <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="number">2</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="number">2</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
             <span class="comment">// un-matching basis &amp; scalars</span>
             <span class="macro">assert!</span>(<span class="ident">MultiScalarMultiplicationCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::msm</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
                 <span class="kw-2">&amp;</span><span class="ident">bases_vars</span>[<span class="number">0</span>..<span class="ident">dim</span> <span class="op">-</span> <span class="number">1</span>],
                 <span class="kw-2">&amp;</span><span class="ident">scalar_vars</span>
             )
@@ -945,13 +946,13 @@
             <span class="comment">// Check variable out of bound error.</span>
             <span class="kw">let</span> <span class="ident">var_number</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">num_vars</span>();
             <span class="macro">assert!</span>(<span class="ident">MultiScalarMultiplicationCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::msm</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
                 <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>(<span class="ident">var_number</span>, <span class="ident">var_number</span>)],
                 <span class="kw-2">&amp;</span><span class="ident">scalar_vars</span>
             )
             .<span class="ident">is_err</span>());
             <span class="macro">assert!</span>(<span class="ident">MultiScalarMultiplicationCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::msm</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
                 <span class="kw-2">&amp;</span><span class="ident">bases_vars</span>,
                 <span class="kw-2">&amp;</span>[<span class="ident">var_number</span>]
             )
@@ -962,5 +963,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="jf_plonk" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

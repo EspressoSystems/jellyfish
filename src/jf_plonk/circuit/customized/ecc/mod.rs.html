@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;ecc&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;ecc&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1390,7 +1391,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">is_zero</span>() {
             <span class="comment">// separately treat point of infinity since maliciously constructed GroupAffine</span>
             <span class="comment">// could be (0,0,true) which is still a valid infinity point but would result in</span>
@@ -1409,7 +1410,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">SWGroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">SWGroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">is_zero</span>() {
             <span class="kw">let</span> <span class="ident">inf</span> <span class="op">=</span> <span class="ident">SWGroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::zero</span>();
             <span class="ident">Point</span>(<span class="ident">inf</span>.<span class="ident">x</span>, <span class="ident">inf</span>.<span class="ident">y</span>)
@@ -1421,17 +1422,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Get the x coordinate of the point.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 
     <span class="doccomment">/// Get the y coordinate of the point.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="number">1</span>
     }
 
     <span class="doccomment">/// The inverse point for the edward form.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="op">-</span><span class="self">self</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="number">1</span>)
     }
 }
@@ -1441,7 +1442,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">GroupProjective</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">GroupProjective</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">affine_repr</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">into_affine</span>();
         <span class="ident">Point</span>(<span class="ident">affine_repr</span>.<span class="ident">x</span>, <span class="ident">affine_repr</span>.<span class="ident">y</span>)
     }
@@ -1452,7 +1453,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">p</span>.<span class="number">0</span>, <span class="ident">p</span>.<span class="number">1</span>)
     }
 }
@@ -1462,7 +1463,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">affine_point</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">into</span>();
         <span class="ident">affine_point</span>.<span class="ident">into_projective</span>()
     }
@@ -1474,12 +1475,12 @@
 
 <span class="kw">impl</span> <span class="ident">PointVariable</span> {
     <span class="doccomment">/// Get the variable representing the x coordinate of the point.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Variable</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Variable</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 
     <span class="doccomment">/// Get the variable representing the y coordinate of the point.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Variable</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Variable</span> {
         <span class="self">self</span>.<span class="number">1</span>
     }
 }
@@ -1490,7 +1491,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
     <span class="doccomment">/// Return the witness point for the circuit</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">point_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">point_var</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -1498,7 +1499,7 @@
     }
 
     <span class="doccomment">/// Add a new EC point (as witness) to the circuit</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_point_variable</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_point_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">point</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">point</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">PointVariable</span>(<span class="ident">x_var</span>, <span class="ident">y_var</span>))
@@ -1506,9 +1507,9 @@
 
     <span class="doccomment">/// Add a new EC point (as a constant) to the circuit</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_constant_point_variable</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">point</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">point</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">PointVariable</span>(<span class="ident">x_var</span>, <span class="ident">y_var</span>))
@@ -1516,9 +1517,9 @@
 
     <span class="doccomment">/// Add a new EC point (as public input) to the circuit</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_public_point_variable</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_public_variable</span>(<span class="ident">point</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_public_variable</span>(<span class="ident">point</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">PointVariable</span>(<span class="ident">x_var</span>, <span class="ident">y_var</span>))
@@ -1531,24 +1532,24 @@
     <span class="doccomment">/// A bad PointVariable would be returned if (b0, b1) are not boolean</span>
     <span class="doccomment">/// variables, that would ultimately failed to build a correct circuit.</span>
     <span class="kw">fn</span> <span class="ident">quaternary_point_select</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">b0</span>: <span class="ident">Variable</span>,
         <span class="ident">b1</span>: <span class="ident">Variable</span>,
         <span class="ident">point1</span>: <span class="kw-2">&amp;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">point2</span>: <span class="kw-2">&amp;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">point3</span>: <span class="kw-2">&amp;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b1</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_bool</span>(<span class="ident">b0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_bool</span>(<span class="ident">b1</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">selected_point</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">b0</span>)<span class="question-mark">?</span> <span class="op">=</span><span class="op">=</span> <span class="ident">F::one</span>(), <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">b1</span>)<span class="question-mark">?</span> <span class="op">=</span><span class="op">=</span> <span class="ident">F::one</span>()) {
-                (<span class="bool-val">false</span>, <span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Point::from</span>(<span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::zero</span>()),
-                (<span class="bool-val">true</span>, <span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">point1</span>.<span class="ident">to_owned</span>(),
-                (<span class="bool-val">false</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">point2</span>.<span class="ident">to_owned</span>(),
-                (<span class="bool-val">true</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">point3</span>.<span class="ident">to_owned</span>(),
+            <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">b0</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="ident">F::one</span>(), <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">b1</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="ident">F::one</span>()) {
+                (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">Point::from</span>(<span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::zero</span>()),
+                (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">point1</span>.<span class="ident">to_owned</span>(),
+                (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; <span class="ident">point2</span>.<span class="ident">to_owned</span>(),
+                (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="ident">point3</span>.<span class="ident">to_owned</span>(),
             };
             <span class="comment">// create new point with the same (x, y) coordinates</span>
             <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">selected</span>)<span class="question-mark">?</span>
@@ -1580,11 +1581,11 @@
     <span class="doccomment">/// from (P0, P1).</span>
     <span class="doccomment">/// Return error if invalid input parameters are provided.</span>
     <span class="kw">fn</span> <span class="ident">binary_point_vars_select</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">b</span>: <span class="ident">Variable</span>,
         <span class="ident">point0</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">point1</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point1</span>)<span class="question-mark">?</span>;
@@ -1598,10 +1599,10 @@
     <span class="doccomment">/// Constrain two point variables to be the same.</span>
     <span class="doccomment">/// Return error if the input point variables are invalid.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_equal_gate</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point0</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">point1</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point1</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">equal_gate</span>(<span class="ident">point0</span>.<span class="number">0</span>, <span class="ident">point1</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
@@ -1612,10 +1613,10 @@
     <span class="doccomment">/// Obtain a bool variable representing whether two point variables are</span>
     <span class="doccomment">/// equal. Return error if point variables are invalid.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_equal_point</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point0</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">point1</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point1</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">x_eq</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_equal</span>(<span class="ident">point0</span>.<span class="number">0</span>, <span class="ident">point1</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
@@ -1630,16 +1631,16 @@
 {
     <span class="doccomment">/// Inverse a point variable</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inverse_point</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">x_neg</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="self">self</span>.<span class="ident">zero</span>(), <span class="ident">point_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">PointVariable</span>(<span class="ident">x_neg</span>, <span class="ident">point_var</span>.<span class="number">1</span>))
     }
 
     <span class="doccomment">/// Return the point variable for the infinity point</span>
     <span class="doccomment">/// in the TE form: (0, 1)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">neutral_point_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PointVariable</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">neutral_point_variable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PointVariable</span> {
         <span class="ident">PointVariable</span>(<span class="self">self</span>.<span class="ident">zero</span>(), <span class="self">self</span>.<span class="ident">one</span>())
     }
 
@@ -1649,10 +1650,10 @@
     <span class="doccomment">/// `expected_neutral` == 0</span>
     <span class="doccomment">/// Note that `expected_neutral` is already constrained as a bool variable</span>
     <span class="kw">fn</span> <span class="ident">neutral_point_gate</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">expected_neutral</span>: <span class="ident">Variable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">expected_neutral</span>)<span class="question-mark">?</span>;
 
@@ -1668,14 +1669,14 @@
     <span class="doccomment">/// Obtain a boolean variable indicating whether a point is the neutral</span>
     <span class="doccomment">/// point (0, 1) Return variable with value 1 if it is, or 0 otherwise</span>
     <span class="doccomment">/// Return error if input variables are invalid</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_neutral_point</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_neutral_point</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">point_witness</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Point::from</span>(<span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::zero</span>()) {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">point_witness</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="ident">Point::from</span>(<span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::zero</span>()) {
                 <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">F::one</span>())<span class="question-mark">?</span>
             } <span class="kw">else</span> {
                 <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">F::zero</span>())<span class="question-mark">?</span>
@@ -1692,9 +1693,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns error if input variables are invalid</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">on_curve_gate</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> (<span class="ident">point_var</span>.<span class="number">0</span>, <span class="ident">point_var</span>.<span class="number">1</span>);
@@ -1714,11 +1715,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns error if the input variables are invalid.</span>
     <span class="kw">fn</span> <span class="ident">ecc_add_gate</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point_a</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">point_b</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">point_c</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_a</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_b</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">point_c</span>)<span class="question-mark">?</span>;
@@ -1750,10 +1751,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns error if inputs are invalid</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ecc_add</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">point_a</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">point_b</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">x_1</span>, <span class="ident">y_1</span>) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">point_a</span>.<span class="number">0</span>)<span class="question-mark">?</span>, <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">point_a</span>.<span class="number">1</span>)<span class="question-mark">?</span>);
         <span class="kw">let</span> (<span class="ident">x_2</span>, <span class="ident">y_2</span>) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">point_b</span>.<span class="number">0</span>)<span class="question-mark">?</span>, <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">point_b</span>.<span class="number">1</span>)<span class="question-mark">?</span>);
         <span class="kw">let</span> <span class="ident">eq_gate</span> <span class="op">=</span> <span class="ident">EdwardsCurveEquationGate</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
@@ -1773,10 +1774,10 @@
     <span class="doccomment">/// Obtain the fixed-based scalar multiplication result of `scalar` * `Base`</span>
     <span class="doccomment">/// Currently only supports GroupAffine::&lt;P&gt; scalar multiplication.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fixed_base_scalar_mul</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">scalar</span>: <span class="ident">Variable</span>,
         <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">scalar</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_bits</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::ScalarField::size_in_bits</span>();
@@ -1822,16 +1823,16 @@
     <span class="doccomment">/// Currently only supports GroupAffine::&lt;P&gt;.</span>
     <span class="doccomment">/// If the parameter is bandersnatch, we will use GLV multiplication.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">variable_base_scalar_mul</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">scalar</span>: <span class="ident">Variable</span>,
         <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">scalar</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">base</span>)<span class="question-mark">?</span>;
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">support_lookup</span>()
-            <span class="op">&amp;&amp;</span> <span class="ident">P::ScalarField::size_in_bits</span>() <span class="op">=</span><span class="op">=</span> <span class="number">253</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">P::BaseField::size_in_bits</span>() <span class="op">=</span><span class="op">=</span> <span class="number">255</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">P::ScalarField::size_in_bits</span>() <span class="op">==</span> <span class="number">253</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">P::BaseField::size_in_bits</span>() <span class="op">==</span> <span class="number">255</span>
         {
             <span class="comment">// bandersnatch glv multiplication</span>
             <span class="comment">// FIXME: we do not have an easier flag to tell if a parameter</span>
@@ -1848,10 +1849,10 @@
     <span class="doccomment">/// where `scalar_bits_le` is the little-endian form of the scalar.</span>
     <span class="doccomment">/// Currently only supports GroupAffine::&lt;P&gt;.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">variable_base_binary_scalar_mul</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">scalar_bits_le</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">bit</span> <span class="kw">in</span> <span class="ident">scalar_bits_le</span> {
             <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">bit</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">check_bool</span>(<span class="ident">bit</span>)<span class="question-mark">?</span>;
@@ -1874,7 +1875,7 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
-    <span class="kw">fn</span> <span class="ident">check_point_var_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">check_point_var_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">point_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">point_var</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -1889,14 +1890,14 @@
 <span class="kw">fn</span> <span class="ident">compute_base_points</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">AffineCurve</span> <span class="op">+</span> <span class="ident">Group</span><span class="op">&gt;</span>(
     <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">E</span>,
     <span class="ident">len</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>; <span class="number">3</span>], <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>; <span class="number">3</span>], <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">len</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::InternalError</span>(
             <span class="string">&quot;compute base points length input parameter must be positive&quot;</span>.<span class="ident">to_string</span>(),
         )
         .<span class="ident">into</span>());
     }
-    <span class="kw">fn</span> <span class="ident">next_base</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">AffineCurve</span> <span class="op">+</span> <span class="ident">Group</span><span class="op">&gt;</span>(<span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">E</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next_base</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">AffineCurve</span> <span class="op">+</span> <span class="ident">Group</span><span class="op">&gt;</span>(<span class="ident">bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">E</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">bases</span>.<span class="ident">last</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="ident">CircuitError::InternalError</span>(
                 <span class="string">&quot;Initialize the fixed base vector before calling this function&quot;</span>.<span class="ident">to_string</span>(),
@@ -1905,9 +1906,9 @@
         <span class="prelude-val">Ok</span>(<span class="ident">last</span>.<span class="ident">double</span>().<span class="ident">double</span>())
     }
     <span class="kw">fn</span> <span class="ident">fill_bases</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">AffineCurve</span> <span class="op">+</span> <span class="ident">Group</span><span class="op">&gt;</span>(
-        <span class="ident">bases</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+        <span class="ident">bases</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">len</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">len</span> {
             <span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">next_base</span>(<span class="ident">bases</span>)<span class="question-mark">?</span>);
         }
@@ -1927,11 +1928,11 @@
     <span class="ident">rayon::join</span>(
         <span class="op">|</span><span class="op">|</span> {
             <span class="ident">rayon::join</span>(
-                <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bases1</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
-                <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bases2</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
+                <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases1</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
+                <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases2</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
             )
         },
-        <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bases3</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
+        <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases3</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
     );
 
     <span class="comment">// converting GroupAffine -&gt; Points here.</span>
@@ -1960,7 +1961,7 @@
     <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_is_neutral</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_is_neutral</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_is_neutral_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_is_neutral_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_is_neutral_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -1968,7 +1969,7 @@
         <span class="ident">test_is_neutral_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_is_neutral_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_is_neutral_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -1996,7 +1997,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">build_is_neutral_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">build_is_neutral_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2009,7 +2010,7 @@
     }
 
     <span class="macro">macro_rules!</span> <span class="ident">test_on_curve_gate</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pt</span>:<span class="ident">tt</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">pt</span>:<span class="ident">tt</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
             <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq::zero</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq::one</span>()))<span class="question-mark">?</span>;
             <span class="ident">circuit</span>.<span class="ident">on_curve_gate</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>)<span class="question-mark">?</span>;
@@ -2034,7 +2035,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_on_curve_gate</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_on_curve_gate</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// generator for ed_on_bn254 curve</span>
         <span class="kw">let</span> <span class="ident">ed_on_254_gen</span> <span class="op">=</span> <span class="ident">Point</span>(
             <span class="ident">FqEd354::from_str</span>(
@@ -2099,7 +2100,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">build_on_curve_gate_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">build_on_curve_gate_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2112,7 +2113,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_curve_point_addition</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_curve_point_addition</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_curve_point_addition_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_curve_point_addition_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_curve_point_addition_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2120,14 +2121,14 @@
         <span class="ident">test_curve_point_addition_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_curve_point_addition_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_curve_point_addition_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">p1</span> <span class="op">+</span> <span class="ident">p2</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
@@ -2145,10 +2146,10 @@
             .<span class="ident">ecc_add</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">PointVariable</span>(<span class="number">0</span>, <span class="number">0</span>), <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>(<span class="number">1</span>, <span class="ident">circuit</span>.<span class="ident">num_vars</span>()))
             .<span class="ident">is_err</span>());
 
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p4</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p4</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">circuit_1</span> <span class="op">=</span>
             <span class="ident">build_curve_point_addition_circuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">Point::from</span>(<span class="ident">p1</span>), <span class="ident">Point::from</span>(<span class="ident">p2</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">circuit_2</span> <span class="op">=</span>
@@ -2161,7 +2162,7 @@
     <span class="kw">fn</span> <span class="ident">build_curve_point_addition_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="ident">p1</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p2</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2175,7 +2176,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_quaternary_point_select</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_quaternary_point_select</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_quaternary_point_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_quaternary_point_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_quaternary_point_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2183,15 +2184,15 @@
         <span class="ident">test_quaternary_point_select_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_quaternary_point_select_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_quaternary_point_select_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
 
@@ -2274,7 +2275,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">build_quaternary_select_gate</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">b0</span>: <span class="ident">F</span>, <span class="ident">b1</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">build_quaternary_select_gate</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">b0</span>: <span class="ident">F</span>, <span class="ident">b1</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2284,9 +2285,9 @@
         <span class="kw">let</span> <span class="ident">b1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">b1</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="ident">circuit</span>.<span class="ident">quaternary_point_select</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(
             <span class="ident">b0_var</span>,
             <span class="ident">b1_var</span>,
@@ -2299,7 +2300,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_point_equal_gate</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_point_equal_gate</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_point_equal_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_point_equal_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_point_equal_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2307,13 +2308,13 @@
         <span class="ident">test_point_equal_gate_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_point_equal_gate_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_point_equal_gate_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">p1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">p</span>))<span class="question-mark">?</span>;
@@ -2328,7 +2329,7 @@
             .<span class="ident">point_equal_gate</span>(<span class="kw-2">&amp;</span><span class="ident">PointVariable</span>(<span class="number">0</span>, <span class="number">0</span>), <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>(<span class="number">1</span>, <span class="ident">circuit</span>.<span class="ident">num_vars</span>()))
             .<span class="ident">is_err</span>());
 
-        <span class="kw">let</span> <span class="ident">new_p</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">new_p</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">circuit_1</span> <span class="op">=</span> <span class="ident">build_point_equal_circuit</span>(<span class="ident">Point::from</span>(<span class="ident">p</span>), <span class="ident">Point::from</span>(<span class="ident">p</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">circuit_2</span> <span class="op">=</span> <span class="ident">build_point_equal_circuit</span>(<span class="ident">Point::from</span>(<span class="ident">new_p</span>), <span class="ident">Point::from</span>(<span class="ident">new_p</span>))<span class="question-mark">?</span>;
         <span class="ident">customized::test::test_variable_independence_for_circuit</span>(<span class="ident">circuit_1</span>, <span class="ident">circuit_2</span>)<span class="question-mark">?</span>;
@@ -2339,7 +2340,7 @@
     <span class="kw">fn</span> <span class="ident">build_point_equal_circuit</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
         <span class="ident">p1</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p2</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">p1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p1</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">p2_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p2</span>)<span class="question-mark">?</span>;
@@ -2349,7 +2350,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_is_equal_point</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_is_equal_point</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_is_equal_point_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_is_equal_point_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_is_equal_point_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2357,15 +2358,15 @@
         <span class="ident">test_is_equal_point_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_is_equal_point_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_is_equal_point_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">p1</span>;
-        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p3</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">p1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">p1</span>))<span class="question-mark">?</span>;
@@ -2397,7 +2398,7 @@
         <span class="ident">p1</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p2</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p3</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">p1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">p1</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">p2_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">p2</span>))<span class="question-mark">?</span>;
@@ -2409,7 +2410,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_compute_fixed_bases</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_compute_fixed_bases</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_compute_fixed_bases_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_compute_fixed_bases_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_compute_fixed_bases_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2417,7 +2418,7 @@
         <span class="ident">test_compute_fixed_bases_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_compute_fixed_bases_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_compute_fixed_bases_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2429,11 +2430,11 @@
         {
             <span class="ident">bases</span>
                 .<span class="ident">windows</span>(<span class="number">2</span>)
-                .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">neighbors</span><span class="op">|</span> <span class="macro">assert!</span>(<span class="ident">neighbors</span>[<span class="number">1</span>] <span class="op">=</span><span class="op">=</span> <span class="ident">neighbors</span>[<span class="number">0</span>].<span class="ident">double</span>().<span class="ident">double</span>()));
+                .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">neighbors</span><span class="op">|</span> <span class="macro">assert!</span>(<span class="ident">neighbors</span>[<span class="number">1</span>] <span class="op">==</span> <span class="ident">neighbors</span>[<span class="number">0</span>].<span class="ident">double</span>().<span class="ident">double</span>()));
         }
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
 
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">base2</span> <span class="op">=</span> <span class="ident">base</span>.<span class="ident">double</span>();
         <span class="kw">let</span> <span class="ident">base3</span> <span class="op">=</span> <span class="ident">base</span> <span class="op">+</span> <span class="ident">base2</span>;
 
@@ -2457,15 +2458,15 @@
             .<span class="ident">zip</span>(<span class="ident">bases2</span>.<span class="ident">iter</span>())
             .<span class="ident">zip</span>(<span class="ident">bases3</span>.<span class="ident">iter</span>())
             .<span class="ident">for_each</span>(<span class="op">|</span>((<span class="kw-2">&amp;</span><span class="ident">b1</span>, <span class="kw-2">&amp;</span><span class="ident">b2</span>), <span class="kw-2">&amp;</span><span class="ident">b3</span>)<span class="op">|</span> {
-                <span class="macro">assert!</span>(<span class="ident">b2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b1</span>.<span class="ident">double</span>());
-                <span class="macro">assert!</span>(<span class="ident">b3</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b1</span> <span class="op">+</span> <span class="ident">b2</span>);
+                <span class="macro">assert!</span>(<span class="ident">b2</span> <span class="op">==</span> <span class="ident">b1</span>.<span class="ident">double</span>());
+                <span class="macro">assert!</span>(<span class="ident">b3</span> <span class="op">==</span> <span class="ident">b1</span> <span class="op">+</span> <span class="ident">b2</span>);
             });
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fixed_based_scalar_mul</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_fixed_based_scalar_mul</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_fixed_based_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fixed_based_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_fixed_based_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2473,7 +2474,7 @@
         <span class="ident">test_fixed_based_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_fixed_based_scalar_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_fixed_based_scalar_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2482,8 +2483,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
 
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="kw">let</span> <span class="ident">scalar</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">fixed_base_scalar_mul</span>(<span class="ident">scalar</span>, <span class="kw-2">&amp;</span><span class="ident">base</span>)<span class="question-mark">?</span>;
             <span class="ident">base</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">s</span>;
@@ -2492,11 +2493,11 @@
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
 
         <span class="comment">// wrong witness should fail</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="number">2</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="number">2</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
         <span class="comment">// Check variable out of bound error.</span>
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
-            .<span class="ident">fixed_base_scalar_mul</span>(<span class="ident">circuit</span>.<span class="ident">num_vars</span>(), <span class="kw-2">&amp;</span><span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>))
+            .<span class="ident">fixed_base_scalar_mul</span>(<span class="ident">circuit</span>.<span class="ident">num_vars</span>(), <span class="kw-2">&amp;</span><span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))
             .<span class="ident">is_err</span>());
 
         <span class="kw">let</span> <span class="ident">circuit_1</span> <span class="op">=</span> <span class="ident">build_fixed_based_scalar_mul_circuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">F::from</span>(<span class="number">87u32</span>))<span class="question-mark">?</span>;
@@ -2505,14 +2506,14 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">build_fixed_based_scalar_mul_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">scalar</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">build_fixed_based_scalar_mul_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">scalar</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">scalar_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">scalar</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">fixed_base_scalar_mul</span>(<span class="ident">scalar_var</span>, <span class="kw-2">&amp;</span><span class="ident">base</span>)<span class="question-mark">?</span>;
         <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
@@ -2520,22 +2521,22 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_binary_point_vars_select</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_binary_point_vars_select</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_binary_point_vars_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_binary_point_vars_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_binary_point_vars_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_binary_point_vars_select_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span>, <span class="ident">Param381b</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_binary_point_vars_select_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_binary_point_vars_select_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_binary_point_vars_select_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">p0</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p0</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">p0_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">p0</span>))<span class="question-mark">?</span>;
@@ -2552,7 +2553,7 @@
             .<span class="ident">binary_point_vars_select</span>(<span class="ident">two</span>, <span class="kw-2">&amp;</span><span class="ident">p0_var</span>, <span class="kw-2">&amp;</span><span class="ident">p1_var</span>)
             .<span class="ident">is_err</span>());
         <span class="comment">// wrong witness should fail</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">p1_var</span>.<span class="number">0</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">p1_var</span>.<span class="number">0</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
         <span class="comment">// Check variable out of bound error.</span>
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2589,7 +2590,7 @@
         <span class="ident">b</span>: <span class="ident">F</span>,
         <span class="ident">p0</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">p1</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2604,14 +2605,14 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_variable_base_scalar_mul</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_variable_base_scalar_mul</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_variable_base_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span>, <span class="ident">Param381b</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_scalar_mul_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_variable_base_scalar_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_variable_base_scalar_mul_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2620,8 +2621,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
 
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="kw">let</span> <span class="ident">s_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>)))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
             <span class="ident">base</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">s</span>;
@@ -2630,12 +2631,12 @@
         }
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
 
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">s_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>)))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
         <span class="comment">// wrong witness should fail</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="number">2</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="number">2</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
         <span class="comment">// Check variable out of bound error.</span>
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2652,7 +2653,7 @@
             <span class="ident">build_variable_base_scalar_mul_circuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">F::zero</span>(), <span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">circuit_2</span> <span class="op">=</span> <span class="ident">build_variable_base_scalar_mul_circuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
             <span class="ident">F::from</span>(<span class="number">314u32</span>),
-            <span class="ident">Point::from</span>(<span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>)),
+            <span class="ident">Point::from</span>(<span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)),
         )<span class="question-mark">?</span>;
         <span class="ident">customized::test::test_variable_independence_for_circuit</span>(<span class="ident">circuit_1</span>, <span class="ident">circuit_2</span>)<span class="question-mark">?</span>;
 
@@ -2662,14 +2663,14 @@
     <span class="comment">// Given `test_variable_base_scalar_mul`, we don&#39;t need to further test</span>
     <span class="comment">// `variable_base_binary_scalar_mul`&#39;s good paths.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_variable_base_binary_scalar_mul_errors</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_variable_base_binary_scalar_mul_errors</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd354</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span>, <span class="ident">Param381b</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span>, <span class="ident">Param761</span><span class="op">&gt;</span>()
     }
-    <span class="kw">fn</span> <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_variable_base_binary_scalar_mul_errors_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2677,7 +2678,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">non_bit_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="number">2u8</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
         <span class="comment">// Binary scalar variables out of bound</span>
         <span class="macro">assert!</span>(<span class="ident">circuit</span>
@@ -2701,7 +2702,7 @@
     <span class="kw">fn</span> <span class="ident">build_variable_base_scalar_mul_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="ident">scalar</span>: <span class="ident">F</span>,
         <span class="ident">base</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -2716,5 +2717,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="jf_plonk" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

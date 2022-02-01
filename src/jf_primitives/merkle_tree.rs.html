@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives&#x2F;src&#x2F;merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>merkle_tree.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../jf_primitives/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives&#x2F;src&#x2F;merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>merkle_tree.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../jf_primitives/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -2330,23 +2331,23 @@
 <span class="kw">where</span>
     <span class="ident">u8</span>: <span class="ident">From</span><span class="op">&lt;</span><span class="ident">NodePos</span><span class="op">&gt;</span>,
 {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">writer</span>: <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">writer</span>: <span class="ident">W</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">ark_serialize::Write</span>,
     {
-        <span class="ident">CanonicalSerialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">u8::from</span>(<span class="kw-2">*</span><span class="self">self</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">writer</span>)
+        <span class="ident">CanonicalSerialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">u8::from</span>(<span class="kw-2">*</span><span class="self">self</span>), <span class="kw-2">&amp;mut</span> <span class="ident">writer</span>)
     }
-    <span class="kw">fn</span> <span class="ident">serialized_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">fn</span> <span class="ident">serialized_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="number">1</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">CanonicalDeserialize</span> <span class="kw">for</span> <span class="ident">NodePos</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">reader</span>: <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">reader</span>: <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="ident">ark_serialize::Read</span>,
     {
-        <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">u8</span> <span class="kw">as</span> <span class="ident">CanonicalDeserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">u8</span> <span class="kw">as</span> <span class="ident">CanonicalDeserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">buf</span> <span class="op">&gt;</span> <span class="number">2</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SerializationError::InvalidData</span>);
         }
@@ -2355,40 +2356,40 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">NodePos</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">usize</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pos</span>: <span class="ident">NodePos</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pos</span>: <span class="ident">NodePos</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">NodePos</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">pos</span> {
-            <span class="ident">Left</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="ident">Middle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Right</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="ident">Left</span> =&gt; <span class="number">0</span>,
+            <span class="ident">Middle</span> =&gt; <span class="number">1</span>,
+            <span class="ident">Right</span> =&gt; <span class="number">2</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">NodePos</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u8</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pos</span>: <span class="ident">NodePos</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pos</span>: <span class="ident">NodePos</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">NodePos</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="ident">pos</span> {
-            <span class="ident">Left</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-            <span class="ident">Middle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">Right</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="ident">Left</span> =&gt; <span class="number">0</span>,
+            <span class="ident">Middle</span> =&gt; <span class="number">1</span>,
+            <span class="ident">Right</span> =&gt; <span class="number">2</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NodePos</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pos</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pos</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">pos</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NodePos::Left</span>,
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NodePos::Middle</span>,
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NodePos::Right</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unable to cast an u8 ({}) to node position&quot;</span>, <span class="ident">pos</span>),
+            <span class="number">0</span> =&gt; <span class="ident">NodePos::Left</span>,
+            <span class="number">1</span> =&gt; <span class="ident">NodePos::Middle</span>,
+            <span class="number">2</span> =&gt; <span class="ident">NodePos::Right</span>,
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unable to cast an u8 ({}) to node position&quot;</span>, <span class="ident">pos</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">NodePos</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::Left</span>
     }
 }
@@ -2431,7 +2432,7 @@
     <span class="doccomment">/// * `sibling1` - first sibling value</span>
     <span class="doccomment">/// * `sibling2` - second sibling value</span>
     <span class="doccomment">/// * `returns` - Merkle path node</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">pos</span>: <span class="ident">NodePos</span>, <span class="ident">sibling1</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">sibling2</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">pos</span>: <span class="ident">NodePos</span>, <span class="ident">sibling1</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">sibling2</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">MerklePathNode</span> {
             <span class="ident">sibling1</span>,
             <span class="ident">sibling2</span>,
@@ -2465,7 +2466,7 @@
     <span class="doccomment">/// Create a Merkle path from the list of nodes</span>
     <span class="doccomment">/// * `nodes` - ordered list of Merkle path nodes</span>
     <span class="doccomment">/// * `returns - Merkle path</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">nodes</span> }
     }
 }
@@ -2481,13 +2482,13 @@
 <span class="kw">where</span>
     <span class="ident">Standard</span>: <span class="ident">Distribution</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
 {
-    <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">sample</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="ident">NodeValue</span>(<span class="ident">rng</span>.<span class="ident">gen</span>())
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">F::from</span>(<span class="ident">s</span>))
     }
 }
@@ -2495,22 +2496,22 @@
 <span class="comment">// TODO: those APIs can be replaced with From/Into and Default?</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Convert a node into a scalar field element.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_scalar</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_scalar</span>(<span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 
     <span class="doccomment">/// Convert a scalar field element into anode.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scalar</span>(<span class="ident">scalar</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scalar</span>(<span class="ident">scalar</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">scalar</span>)
     }
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>()
     }
 
     <span class="doccomment">/// Empty node.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty_node_value</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty_node_value</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">F::zero</span>())
     }
 }
@@ -2518,12 +2519,12 @@
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NodePos</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">v</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">v</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">v</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">NodePos::Left</span>),
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">NodePos::Middle</span>),
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">NodePos::Right</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(()),
+            <span class="number">0</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">NodePos::Left</span>),
+            <span class="number">1</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">NodePos::Middle</span>),
+            <span class="number">2</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">NodePos::Right</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(()),
         }
     }
 }
@@ -2537,7 +2538,7 @@
     <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">c</span>: <span class="kw-2">&amp;</span><span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
     <span class="kw">let</span> <span class="ident">digest</span> <span class="op">=</span> <span class="ident">perm</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span>[<span class="ident">a</span>.<span class="number">0</span>, <span class="ident">b</span>.<span class="number">0</span>, <span class="ident">c</span>.<span class="number">0</span>], <span class="number">1</span>).<span class="ident">unwrap</span>()[<span class="number">0</span>];
     <span class="ident">NodeValue</span>(<span class="ident">digest</span>)
@@ -2556,40 +2557,40 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Assert the lookup result is Ok.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expect_ok</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">F</span>, <span class="ident">P</span>), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expect_ok</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">F</span>, <span class="ident">P</span>), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((<span class="ident">x</span>, <span class="ident">proof</span>)),
-            <span class="ident">LookupResult::NotInMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::InternalError</span>(
+            <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>) =&gt; <span class="prelude-val">Ok</span>((<span class="ident">x</span>, <span class="ident">proof</span>)),
+            <span class="ident">LookupResult::NotInMemory</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::InternalError</span>(
                 <span class="string">&quot;Expected Ok, found NotInMemory&quot;</span>.<span class="ident">to_string</span>(),
             )),
-            <span class="ident">LookupResult::EmptyLeaf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::InternalError</span>(
+            <span class="ident">LookupResult::EmptyLeaf</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::InternalError</span>(
                 <span class="string">&quot;Expected Ok, found EmptyLeaf&quot;</span>.<span class="ident">to_string</span>(),
             )),
         }
     }
 
     <span class="doccomment">/// FIXME: Not sure what this function does :-(.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">Fn</span>, <span class="ident">T2</span>, <span class="ident">P2</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="ident">Fn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">T2</span>, <span class="ident">P2</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">Fn</span>, <span class="ident">T2</span>, <span class="ident">P2</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="ident">Fn</span>) -&gt; <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">T2</span>, <span class="ident">P2</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">Fn</span>: <span class="ident">FnOnce</span>(<span class="ident">F</span>, <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">T2</span>, <span class="ident">P2</span>),
+        <span class="ident">Fn</span>: <span class="ident">FnOnce</span>(<span class="ident">F</span>, <span class="ident">P</span>) -&gt; (<span class="ident">T2</span>, <span class="ident">P2</span>),
     {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>) =&gt; {
                 <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">proof</span>) <span class="op">=</span> <span class="ident">f</span>(<span class="ident">x</span>, <span class="ident">proof</span>);
                 <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>)
             },
-            <span class="ident">LookupResult::NotInMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupResult::NotInMemory</span>,
-            <span class="ident">LookupResult::EmptyLeaf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupResult::EmptyLeaf</span>,
+            <span class="ident">LookupResult::NotInMemory</span> =&gt; <span class="ident">LookupResult::NotInMemory</span>,
+            <span class="ident">LookupResult::EmptyLeaf</span> =&gt; <span class="ident">LookupResult::EmptyLeaf</span>,
         }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">F</span>, <span class="ident">P</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">v</span> {
-            <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>((<span class="ident">x</span>, <span class="ident">proof</span>))),
-            <span class="ident">LookupResult::NotInMemory</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="ident">LookupResult::EmptyLeaf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="prelude-val">None</span>),
+            <span class="ident">LookupResult::Ok</span>(<span class="ident">x</span>, <span class="ident">proof</span>) =&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>((<span class="ident">x</span>, <span class="ident">proof</span>))),
+            <span class="ident">LookupResult::NotInMemory</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="ident">LookupResult::EmptyLeaf</span> =&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">None</span>),
         }
     }
 }
@@ -2625,7 +2626,7 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
 {
-    <span class="kw">fn</span> <span class="ident">new_leaf</span>(<span class="ident">uid</span>: <span class="ident">u64</span>, <span class="ident">elem</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new_leaf</span>(<span class="ident">uid</span>: <span class="ident">u64</span>, <span class="ident">elem</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">hash</span>(
             <span class="kw-2">&amp;</span><span class="ident">NodeValue::empty_node_value</span>(),
             <span class="kw-2">&amp;</span><span class="ident">NodeValue::from</span>(<span class="ident">uid</span>),
@@ -2634,9 +2635,9 @@
         <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, <span class="ident">uid</span>, <span class="ident">elem</span> }
     }
 
-    <span class="kw">fn</span> <span class="ident">new_branch</span>(<span class="ident">l</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">m</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">new_branch</span>(<span class="ident">l</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">m</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// Required to prevent tree extension attacks</span>
-        <span class="kw">if</span> <span class="ident">l</span>.<span class="ident">value</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">NodeValue::empty_node_value</span>() {
+        <span class="kw">if</span> <span class="ident">l</span>.<span class="ident">value</span>() <span class="op">==</span> <span class="ident">NodeValue::empty_node_value</span>() {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="ident">l</span>.<span class="ident">value</span>(), <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">value</span>(), <span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">value</span>());
@@ -2645,28 +2646,28 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">is_empty_subtree</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_empty_subtree</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="macro">matches!</span>(<span class="self">self</span>, <span class="ident">MerkleNode::EmptySubtree</span>)
     }
 
     <span class="comment">// Getter for the value of the MerkleNode</span>
-    <span class="kw">fn</span> <span class="ident">value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NodeValue::empty_node_value</span>(),
-            <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">value</span>,
-            <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">value</span>,
-            <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">value</span>,
+            <span class="ident">MerkleNode::EmptySubtree</span> =&gt; <span class="ident">NodeValue::empty_node_value</span>(),
+            <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, .. } =&gt; <span class="kw-2">*</span><span class="ident">value</span>,
+            <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } =&gt; <span class="kw-2">*</span><span class="ident">value</span>,
+            <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, .. } =&gt; <span class="kw-2">*</span><span class="ident">value</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">insert_at_right</span>(<span class="self">self</span>, <span class="ident">capacity</span>: <span class="ident">u64</span>, <span class="ident">ix</span>: <span class="ident">u64</span>, <span class="ident">elem</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">insert_at_right</span>(<span class="self">self</span>, <span class="ident">capacity</span>: <span class="ident">u64</span>, <span class="ident">ix</span>: <span class="ident">u64</span>, <span class="ident">elem</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">if</span> <span class="ident">capacity</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
             <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">is_empty_subtree</span>());
             <span class="ident"><span class="self">Self</span>::new_leaf</span>(<span class="ident">ix</span>, <span class="ident">elem</span>)
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">next_capacity</span> <span class="op">=</span> <span class="ident">capacity</span> <span class="op">/</span> <span class="number">3</span>;
             <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MerkleNode::EmptySubtree</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">child</span> <span class="op">=</span> (<span class="ident">MerkleNode::EmptySubtree</span>).<span class="ident">insert_at_right</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>, <span class="ident">elem</span>);
                     <span class="ident"><span class="self">Self</span>::new_branch</span>(
                         <span class="ident">Box::new</span>(<span class="ident">child</span>),
@@ -2677,19 +2678,19 @@
                               <span class="comment">// EMPTY_LEAF_VALUE</span>
                 },
 
-                <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } =&gt; {
                     <span class="kw">let</span> [<span class="kw-2">mut</span> <span class="ident">l</span>, <span class="kw-2">mut</span> <span class="ident">m</span>, <span class="kw-2">mut</span> <span class="ident">r</span>] <span class="op">=</span> <span class="ident">children</span>;
                     <span class="kw">match</span> (<span class="ident">ix</span> <span class="op">/</span> <span class="ident">next_capacity</span>) <span class="op">%</span> <span class="number">3</span> {
-                        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="number">0</span> =&gt; {
                             <span class="ident">l</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">l</span>.<span class="ident">insert_at_right</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>, <span class="ident">elem</span>));
                         },
-                        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="number">1</span> =&gt; {
                             <span class="ident">m</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">m</span>.<span class="ident">insert_at_right</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>, <span class="ident">elem</span>));
                         },
-                        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="number">2</span> =&gt; {
                             <span class="ident">r</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">r</span>.<span class="ident">insert_at_right</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>, <span class="ident">elem</span>));
                         },
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">_</span> =&gt; {
                             <span class="macro">unreachable!</span>();
                         },
                     }
@@ -2697,33 +2698,33 @@
                     <span class="ident"><span class="self">Self</span>::new_branch</span>(<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>).<span class="ident">unwrap</span>()
                 },
 
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_leaf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">capacity</span>: <span class="ident">u64</span>, <span class="ident">ix</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_leaf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">capacity</span>: <span class="ident">u64</span>, <span class="ident">ix</span>: <span class="ident">u64</span>) -&gt; <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">capacity</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
             <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">MerkleNode::Leaf</span> { <span class="ident">uid</span>, <span class="ident">elem</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MerkleNode::Leaf</span> { <span class="ident">uid</span>, <span class="ident">elem</span>, .. } =&gt; {
                     <span class="macro">debug_assert_eq!</span>(<span class="kw-2">*</span><span class="ident">uid</span>, <span class="ident">ix</span>);
                     <span class="ident">LookupResult::Ok</span>(<span class="kw-2">*</span><span class="ident">elem</span>, <span class="macro">vec!</span>[])
                 },
-                <span class="ident">MerkleNode::ForgottenSubtree</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupResult::NotInMemory</span>,
-                <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupResult::EmptyLeaf</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="ident">MerkleNode::ForgottenSubtree</span> { .. } =&gt; <span class="ident">LookupResult::NotInMemory</span>,
+                <span class="ident">MerkleNode::EmptySubtree</span> =&gt; <span class="ident">LookupResult::EmptyLeaf</span>,
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             }
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">next_capacity</span> <span class="op">=</span> <span class="ident">capacity</span> <span class="op">/</span> <span class="number">3</span>;
             <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupResult::EmptyLeaf</span>,
-                <span class="ident">MerkleNode::ForgottenSubtree</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupResult::NotInMemory</span>,
-                <span class="ident">MerkleNode::Leaf</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="ident">MerkleNode::EmptySubtree</span> =&gt; <span class="ident">LookupResult::EmptyLeaf</span>,
+                <span class="ident">MerkleNode::ForgottenSubtree</span> { .. } =&gt; <span class="ident">LookupResult::NotInMemory</span>,
+                <span class="ident">MerkleNode::Leaf</span> { .. } =&gt; <span class="macro">unreachable!</span>(),
 
-                <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } =&gt; {
                     <span class="kw">let</span> [<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>] <span class="op">=</span> <span class="ident">children</span>;
                     <span class="kw">let</span> (<span class="ident">node</span>, <span class="ident">child</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">ix</span> <span class="op">/</span> <span class="ident">next_capacity</span>) <span class="op">%</span> <span class="number">3</span> {
-                        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> (
+                        <span class="number">0</span> =&gt; (
                             <span class="ident">MerklePathNode</span> {
                                 <span class="ident">sibling1</span>: <span class="ident">m</span>.<span class="ident">value</span>(),
                                 <span class="ident">sibling2</span>: <span class="ident">r</span>.<span class="ident">value</span>(),
@@ -2731,7 +2732,7 @@
                             },
                             <span class="kw-2">&amp;</span><span class="ident">l</span>,
                         ),
-                        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> (
+                        <span class="number">1</span> =&gt; (
                             <span class="ident">MerklePathNode</span> {
                                 <span class="ident">sibling1</span>: <span class="ident">l</span>.<span class="ident">value</span>(),
                                 <span class="ident">sibling2</span>: <span class="ident">r</span>.<span class="ident">value</span>(),
@@ -2739,7 +2740,7 @@
                             },
                             <span class="kw-2">&amp;</span><span class="ident">m</span>,
                         ),
-                        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> (
+                        <span class="number">2</span> =&gt; (
                             <span class="ident">MerklePathNode</span> {
                                 <span class="ident">sibling1</span>: <span class="ident">l</span>.<span class="ident">value</span>(),
                                 <span class="ident">sibling2</span>: <span class="ident">m</span>.<span class="ident">value</span>(),
@@ -2747,7 +2748,7 @@
                             },
                             <span class="kw-2">&amp;</span><span class="ident">r</span>,
                         ),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                     };
 
                     <span class="comment">// Add nodes to the end of the subtree&#39;s path (paths are leaf -&gt; root)</span>
@@ -2766,7 +2767,7 @@
         <span class="ident">path</span>: <span class="kw-2">&amp;</span>[<span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">uid</span>: <span class="ident">u64</span>,
         <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// requires match between capacity and path length</span>
         <span class="kw">if</span> <span class="ident">capacity</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
             <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">is_empty</span>() {
@@ -2791,23 +2792,23 @@
             <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="kw">match</span> (
                 <span class="ident">pos</span>,
                 <span class="ident">branching_pos</span>,
-                <span class="kw-2">*</span><span class="ident">sibling1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">NodeValue::empty_node_value</span>(),
-                <span class="kw-2">*</span><span class="ident">sibling2</span> <span class="op">=</span><span class="op">=</span> <span class="ident">NodeValue::empty_node_value</span>(),
+                <span class="kw-2">*</span><span class="ident">sibling1</span> <span class="op">==</span> <span class="ident">NodeValue::empty_node_value</span>(),
+                <span class="kw-2">*</span><span class="ident">sibling2</span> <span class="op">==</span> <span class="ident">NodeValue::empty_node_value</span>(),
             ) {
-                (<span class="ident">NodePos::Left</span>, <span class="number">0</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NodePos::Left</span>, <span class="number">0</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; {
                     (<span class="ident">built_child</span>, <span class="ident"><span class="self">Self</span>::EmptySubtree</span>, <span class="ident"><span class="self">Self</span>::EmptySubtree</span>)
                 },
-                (<span class="ident">NodePos::Middle</span>, <span class="number">1</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> (
+                (<span class="ident">NodePos::Middle</span>, <span class="number">1</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; (
                     <span class="ident"><span class="self">Self</span>::ForgottenSubtree</span> { <span class="ident">value</span>: <span class="kw-2">*</span><span class="ident">sibling1</span> },
                     <span class="ident">built_child</span>,
                     <span class="ident"><span class="self">Self</span>::EmptySubtree</span>,
                 ),
-                (<span class="ident">NodePos::Right</span>, <span class="number">2</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> (
+                (<span class="ident">NodePos::Right</span>, <span class="number">2</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; (
                     <span class="ident"><span class="self">Self</span>::ForgottenSubtree</span> { <span class="ident">value</span>: <span class="kw-2">*</span><span class="ident">sibling1</span> },
                     <span class="ident"><span class="self">Self</span>::ForgottenSubtree</span> { <span class="ident">value</span>: <span class="kw-2">*</span><span class="ident">sibling2</span> },
                     <span class="ident">built_child</span>,
                 ),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">_</span> =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">None</span>;
                 },
             };
@@ -2820,11 +2821,11 @@
         <span class="self">self</span>,
         <span class="ident">capacity</span>: <span class="ident">u64</span>,
         <span class="ident">ix</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="self">Self</span>, <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
         <span class="kw">if</span> <span class="ident">capacity</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
             <span class="kw">match</span> <span class="self">self</span> {
                 <span class="comment">// Forgetting a leaf removes its `elem` from the tree</span>
-                <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, <span class="ident">uid</span>, <span class="ident">elem</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, <span class="ident">uid</span>, <span class="ident">elem</span> } =&gt; {
                     <span class="macro">debug_assert_eq!</span>(<span class="ident">uid</span>, <span class="ident">ix</span>);
                     (
                         <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
@@ -2832,34 +2833,34 @@
                     )
                 },
                 <span class="comment">// The index is already forgotten</span>
-                <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> (
+                <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } =&gt; (
                     <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
                     <span class="ident">LookupResult::NotInMemory</span>,
                 ),
                 <span class="comment">// The index is out of range</span>
-                <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">LookupResult::EmptyLeaf</span>),
+                <span class="ident">MerkleNode::EmptySubtree</span> =&gt; (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">LookupResult::EmptyLeaf</span>),
                 <span class="comment">// A branch in a leaf position</span>
-                <span class="ident">MerkleNode::Branch</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="ident">MerkleNode::Branch</span> { .. } =&gt; <span class="macro">unreachable!</span>(),
             }
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">next_capacity</span> <span class="op">=</span> <span class="ident">capacity</span> <span class="op">/</span> <span class="number">3</span>;
             <span class="kw">match</span> <span class="self">self</span> {
                 <span class="comment">// The index is out of range</span>
-                <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">LookupResult::EmptyLeaf</span>),
+                <span class="ident">MerkleNode::EmptySubtree</span> =&gt; (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">LookupResult::EmptyLeaf</span>),
                 <span class="comment">// The index is already forgotten</span>
-                <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> (
+                <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } =&gt; (
                     <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
                     <span class="ident">LookupResult::NotInMemory</span>,
                 ),
                 <span class="comment">// A leaf in a branch position</span>
-                <span class="ident">MerkleNode::Leaf</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="ident">MerkleNode::Leaf</span> { .. } =&gt; <span class="macro">unreachable!</span>(),
 
-                <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, <span class="ident">children</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, <span class="ident">children</span> } =&gt; {
                     <span class="kw">let</span> [<span class="kw-2">mut</span> <span class="ident">l</span>, <span class="kw-2">mut</span> <span class="ident">m</span>, <span class="kw-2">mut</span> <span class="ident">r</span>] <span class="op">=</span> <span class="ident">children</span>;
 
                     <span class="comment">// Add nodes to the end of the subtree&#39;s path (paths are leaf -&gt; root)</span>
                     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">ix</span> <span class="op">/</span> <span class="ident">next_capacity</span>) <span class="op">%</span> <span class="number">3</span> {
-                        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="number">0</span> =&gt; {
                             <span class="kw">let</span> (<span class="ident">new_l</span>, <span class="ident">res</span>) <span class="op">=</span> <span class="ident">l</span>.<span class="ident">internal_forget</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>);
                             <span class="ident">l</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">new_l</span>);
                             <span class="ident">res</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span>, <span class="kw-2">mut</span> <span class="ident">path</span><span class="op">|</span> {
@@ -2872,7 +2873,7 @@
                             })
                         },
 
-                        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="number">1</span> =&gt; {
                             <span class="kw">let</span> (<span class="ident">new_m</span>, <span class="ident">res</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">internal_forget</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>);
                             <span class="ident">m</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">new_m</span>);
                             <span class="ident">res</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span>, <span class="kw-2">mut</span> <span class="ident">path</span><span class="op">|</span> {
@@ -2885,7 +2886,7 @@
                             })
                         },
 
-                        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="number">2</span> =&gt; {
                             <span class="kw">let</span> (<span class="ident">new_r</span>, <span class="ident">res</span>) <span class="op">=</span> <span class="ident">r</span>.<span class="ident">internal_forget</span>(<span class="ident">next_capacity</span>, <span class="ident">ix</span>);
                             <span class="ident">r</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">new_r</span>);
                             <span class="ident">res</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span>, <span class="kw-2">mut</span> <span class="ident">path</span><span class="op">|</span> {
@@ -2899,7 +2900,7 @@
                         },
 
                         <span class="comment">// (x%3) other than 0, 1, 2</span>
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                     };
 
                     <span class="kw">match</span> (<span class="kw-2">*</span><span class="ident">l</span>, <span class="kw-2">*</span><span class="ident">m</span>, <span class="kw-2">*</span><span class="ident">r</span>) {
@@ -2908,10 +2909,10 @@
                             <span class="ident">MerkleNode::ForgottenSubtree</span> { .. },
                             <span class="ident">MerkleNode::ForgottenSubtree</span> { .. },
                             <span class="ident">MerkleNode::ForgottenSubtree</span> { .. },
-                        ) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> }, <span class="ident">res</span>),
+                        ) =&gt; (<span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> }, <span class="ident">res</span>),
                         <span class="comment">// Otherwise, some leaf below this branch is either live or empty, so we</span>
                         <span class="comment">// can&#39;t forget it.</span>
-                        (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) =&gt; {
                             <span class="macro">debug_assert_eq!</span>(
                                 <span class="ident"><span class="self">Self</span>::new_branch</span>(
                                     <span class="ident">Box::new</span>(<span class="ident">l</span>.<span class="ident">clone</span>()),
@@ -2950,9 +2951,9 @@
         <span class="ident">base_ix</span>: <span class="ident">u64</span>,
         <span class="ident">elem</span>: <span class="ident">F</span>,
         <span class="ident">path</span>: <span class="kw-2">&amp;</span>[(<span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerklePathNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="self">Self</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="ident">path</span>.<span class="ident">last</span>() {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">new_leaf</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new_leaf</span>(<span class="ident">base_ix</span>, <span class="ident">elem</span>);
                 <span class="kw">let</span> <span class="ident">self_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value</span>();
                 <span class="kw">if</span> <span class="ident">self_val</span> <span class="op">!</span><span class="op">=</span> <span class="ident">new_leaf</span>.<span class="ident">value</span>() {
@@ -2961,30 +2962,30 @@
                     <span class="kw">match</span> <span class="self">self</span> {
                         <span class="ident">MerkleNode::Leaf</span> {
                             <span class="ident">uid</span>, <span class="ident">elem</span>: <span class="ident">lelem</span>, ..
-                        } <span class="op">=</span><span class="op">&gt;</span> {
+                        } =&gt; {
                             <span class="macro">debug_assert_eq!</span>(<span class="ident">lelem</span>, <span class="ident">elem</span>);
                             <span class="macro">debug_assert_eq!</span>(<span class="ident">uid</span>, <span class="ident">base_ix</span>);
                             (<span class="ident">new_leaf</span>, <span class="prelude-val">Ok</span>(()))
                         },
-                        <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">new_leaf</span>, <span class="prelude-val">Ok</span>(())),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                        <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span>: <span class="kw">_</span> } =&gt; (<span class="ident">new_leaf</span>, <span class="prelude-val">Ok</span>(())),
+                        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                     }
                 }
             },
 
-            <span class="prelude-val">Some</span>((<span class="ident">child_val</span>, <span class="ident">last_node</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>((<span class="ident">child_val</span>, <span class="ident">last_node</span>)) =&gt; {
                 <span class="kw">let</span> <span class="ident">child_val</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">child_val</span>;
 
                 <span class="kw">let</span> <span class="ident">this_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">value</span>();
                 <span class="kw">match</span> <span class="self">self</span> {
-                    <span class="ident">MerkleNode::EmptySubtree</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">MerkleNode::EmptySubtree</span> =&gt; {
                         (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="prelude-val">Err</span>(<span class="prelude-val">Some</span>((<span class="ident">path</span>.<span class="ident">len</span>(), <span class="ident">this_val</span>))))
                     },
-                    <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> } =&gt; {
                         <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">last_node</span>.<span class="ident">pos</span> {
-                            <span class="ident">NodePos::Left</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
-                            <span class="ident">NodePos::Middle</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
-                            <span class="ident">NodePos::Right</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>, <span class="ident">child_val</span>),
+                            <span class="ident">NodePos::Left</span> =&gt; (<span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
+                            <span class="ident">NodePos::Middle</span> =&gt; (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
+                            <span class="ident">NodePos::Right</span> =&gt; (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>, <span class="ident">child_val</span>),
                         };
 
                         <span class="kw">let</span> <span class="ident">new_node</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new_branch</span>(
@@ -2993,8 +2994,8 @@
                             <span class="ident">Box::new</span>(<span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span>: <span class="ident">r</span> }),
                         );
                         <span class="kw">match</span> <span class="ident">new_node</span> {
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="self">self</span>, <span class="prelude-val">Err</span>(<span class="prelude-val">None</span>)),
-                            <span class="prelude-val">Some</span>(<span class="ident">new_node</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">None</span> =&gt; (<span class="self">self</span>, <span class="prelude-val">Err</span>(<span class="prelude-val">None</span>)),
+                            <span class="prelude-val">Some</span>(<span class="ident">new_node</span>) =&gt; {
                                 <span class="kw">if</span> <span class="ident">new_node</span>.<span class="ident">value</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">value</span> {
                                     (<span class="self">self</span>, <span class="prelude-val">Err</span>(<span class="prelude-val">Some</span>((<span class="ident">path</span>.<span class="ident">len</span>(), <span class="ident">value</span>))))
                                 } <span class="kw">else</span> {
@@ -3003,15 +3004,15 @@
                             },
                         }
                     },
-                    <span class="ident">MerkleNode::Leaf</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                    <span class="ident">MerkleNode::Leaf</span> { .. } =&gt; <span class="macro">unreachable!</span>(),
 
-                    <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, <span class="ident">children</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, <span class="ident">children</span> } =&gt; {
                         <span class="kw">let</span> [<span class="kw-2">mut</span> <span class="ident">l</span>, <span class="kw-2">mut</span> <span class="ident">m</span>, <span class="kw-2">mut</span> <span class="ident">r</span>] <span class="op">=</span> <span class="ident">children</span>;
 
                         <span class="kw">let</span> (<span class="ident">path_l</span>, <span class="ident">path_m</span>, <span class="ident">path_r</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">last_node</span>.<span class="ident">pos</span> {
-                            <span class="ident">NodePos::Left</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
-                            <span class="ident">NodePos::Middle</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
-                            <span class="ident">NodePos::Right</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>, <span class="ident">child_val</span>),
+                            <span class="ident">NodePos::Left</span> =&gt; (<span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
+                            <span class="ident">NodePos::Middle</span> =&gt; (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">child_val</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>),
+                            <span class="ident">NodePos::Right</span> =&gt; (<span class="ident">last_node</span>.<span class="ident">sibling1</span>, <span class="ident">last_node</span>.<span class="ident">sibling2</span>, <span class="ident">child_val</span>),
                         };
                         <span class="kw">if</span> <span class="ident">path_l</span> <span class="op">!</span><span class="op">=</span> <span class="ident">l</span>.<span class="ident">value</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">path_m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">m</span>.<span class="ident">value</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">path_r</span> <span class="op">!</span><span class="op">=</span> <span class="ident">r</span>.<span class="ident">value</span>() {
                             (
@@ -3023,7 +3024,7 @@
                             )
                         } <span class="kw">else</span> {
                             <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">last_node</span>.<span class="ident">pos</span> {
-                                <span class="ident">NodePos::Left</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">NodePos::Left</span> =&gt; {
                                     <span class="kw">let</span> (<span class="ident">new_l</span>, <span class="ident">res</span>) <span class="op">=</span> <span class="ident">l</span>.<span class="ident">internal_remember</span>(
                                         <span class="number">3</span> <span class="op">*</span> <span class="ident">base_ix</span>,
                                         <span class="ident">elem</span>,
@@ -3032,7 +3033,7 @@
                                     <span class="ident">l</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">new_l</span>);
                                     <span class="ident">res</span>
                                 },
-                                <span class="ident">NodePos::Middle</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">NodePos::Middle</span> =&gt; {
                                     <span class="kw">let</span> (<span class="ident">new_m</span>, <span class="ident">res</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">internal_remember</span>(
                                         <span class="number">3</span> <span class="op">*</span> <span class="ident">base_ix</span> <span class="op">+</span> <span class="number">1</span>,
                                         <span class="ident">elem</span>,
@@ -3041,7 +3042,7 @@
                                     <span class="ident">m</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">new_m</span>);
                                     <span class="ident">res</span>
                                 },
-                                <span class="ident">NodePos::Right</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">NodePos::Right</span> =&gt; {
                                     <span class="kw">let</span> (<span class="ident">new_r</span>, <span class="ident">res</span>) <span class="op">=</span> <span class="ident">r</span>.<span class="ident">internal_remember</span>(
                                         <span class="number">3</span> <span class="op">*</span> <span class="ident">base_ix</span> <span class="op">+</span> <span class="number">2</span>,
                                         <span class="ident">elem</span>,
@@ -3131,7 +3132,7 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
     <span class="doccomment">/// Input a leaf and the path, build a proof.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">leaf</span>: <span class="ident">F</span>, <span class="ident">path</span>: <span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">leaf</span>: <span class="ident">F</span>, <span class="ident">path</span>: <span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="ident">MerkleLeafProof</span> {
             <span class="ident">leaf</span>: <span class="ident">MerkleLeaf</span>(<span class="ident">leaf</span>),
             <span class="ident">path</span>,
@@ -3160,10 +3161,10 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
     <span class="doccomment">/// If the merkle frontier is empty or not.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">MerkleFrontier::Proof</span>(<span class="ident">lap</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">lap</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">MerkleFrontier::Proof</span>(<span class="ident">lap</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">lap</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
         }
     }
 }
@@ -3189,7 +3190,7 @@
     <span class="doccomment">/// * `height` - height of the tree (number of hops from the root to a</span>
     <span class="doccomment">///   leaf).</span>
     <span class="doccomment">/// Returns `None` if the capacity of the tree overflows a u64</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">height</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">height</span>: <span class="ident">u8</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">MerkleNode::EmptySubtree</span>;
         <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> (<span class="number">3_u64</span>).<span class="ident">checked_pow</span>(<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(<span class="ident">MerkleTree</span> {
@@ -3205,20 +3206,20 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">restore_from_frontier</span>(
         <span class="ident">commitment</span>: <span class="ident">MerkleCommitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleFrontier</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">proof</span> {
-            <span class="ident">MerkleFrontier::Empty</span> { <span class="ident">height</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">height</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">height</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> <span class="op">=</span><span class="op">=</span> <span class="ident">NodeValue::empty_node_value</span>()
+            <span class="ident">MerkleFrontier::Empty</span> { <span class="ident">height</span> } =&gt; {
+                <span class="kw">if</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span> <span class="op">==</span> <span class="number">0</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">height</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">height</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> <span class="op">==</span> <span class="ident">NodeValue::empty_node_value</span>()
                 {
                     <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">commitment</span>.<span class="ident">height</span>)
                 } <span class="kw">else</span> {
                     <span class="prelude-val">None</span>
                 }
             },
-            <span class="ident">MerkleFrontier::Proof</span>(<span class="ident">MerkleLeafProof</span> { <span class="ident">leaf</span>, <span class="ident">path</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">commitment</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">path</span>.<span class="ident">nodes</span>.<span class="ident">len</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="ident">MerkleFrontier::Proof</span>(<span class="ident">MerkleLeafProof</span> { <span class="ident">leaf</span>, <span class="ident">path</span> }) =&gt; {
+                <span class="kw">if</span> <span class="ident">commitment</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">path</span>.<span class="ident">nodes</span>.<span class="ident">len</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span> <span class="op">==</span> <span class="number">0</span> {
                     <span class="prelude-val">None</span>
                 } <span class="kw">else</span> {
                     <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> (<span class="number">3_u64</span>).<span class="ident">checked_pow</span>(<span class="ident">commitment</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>)<span class="question-mark">?</span>;
@@ -3226,7 +3227,7 @@
                     <span class="kw">let</span> <span class="ident">uid</span> <span class="op">=</span> <span class="ident">num_leaves</span> <span class="op">-</span> <span class="number">1</span>;
                     <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span>
                         <span class="ident">MerkleNode::rebuild_to_root</span>(<span class="ident">capacity</span>, <span class="ident">uid</span>, <span class="kw-2">&amp;</span><span class="ident">path</span>.<span class="ident">nodes</span>, <span class="ident">uid</span>, <span class="kw-2">&amp;</span><span class="ident">leaf</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-                    <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">value</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> {
+                    <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">value</span>() <span class="op">==</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> {
                         <span class="prelude-val">Some</span>(<span class="ident">MerkleTree</span> {
                             <span class="ident">root</span>,
                             <span class="ident">height</span>: <span class="ident">commitment</span>.<span class="ident">height</span>,
@@ -3242,7 +3243,7 @@
     }
 
     <span class="doccomment">/// get the collected commitment</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleCommitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">MerkleCommitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="ident">MerkleCommitment</span> {
             <span class="ident">root_value</span>: <span class="self">self</span>.<span class="ident">root</span>.<span class="ident">value</span>(),
             <span class="ident">height</span>: <span class="self">self</span>.<span class="ident">height</span>,
@@ -3250,7 +3251,7 @@
         }
     }
     <span class="doccomment">/// get the frontier</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">frontier</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleFrontier</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">frontier</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">MerkleFrontier</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="ident">MerkleFrontier::Proof</span>(<span class="self">self</span>.<span class="ident">get_leaf</span>(<span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">-</span> <span class="number">1</span>).<span class="ident">expect_ok</span>().<span class="ident">unwrap</span>().<span class="number">1</span>)
         } <span class="kw">else</span> {
@@ -3261,20 +3262,20 @@
     }
 
     <span class="doccomment">/// get the height</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u8</span> {
         <span class="self">self</span>.<span class="ident">height</span>
     }
 
     <span class="doccomment">/// Get the number of leaves</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">num_leaves</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">num_leaves</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="ident">num_leaves</span>
     }
 
     <span class="doccomment">/// Insert a new value at the leftmost available slot</span>
     <span class="doccomment">/// * `elem` - element to insert in the tree</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="ident">F</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="ident">F</span>) {
         <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">num_leaves</span>;
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">root</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
+        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">root</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
         <span class="self">self</span>.<span class="ident">root</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">insert_at_right</span>(<span class="self">self</span>.<span class="ident">capacity</span>, <span class="ident">pos</span>, <span class="ident">elem</span>);
 
         <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -3285,7 +3286,7 @@
     <span class="doccomment">/// * `returns` - Leaf value at the position. LookupResult::EmptyLeaf if the</span>
     <span class="doccomment">///   leaf position is empty or invalid, None if the leaf position has been</span>
     <span class="doccomment">///   forgotten.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_leaf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LookupResult</span><span class="op">&lt;</span>(), <span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_leaf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">u64</span>) -&gt; <span class="ident">LookupResult</span><span class="op">&lt;</span>(), <span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">pos</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span> {
             <span class="ident">LookupResult::EmptyLeaf</span>
         } <span class="kw">else</span> {
@@ -3307,7 +3308,7 @@
         <span class="ident">root_value</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">pos</span>: <span class="ident">u64</span>,
         <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_val</span> <span class="op">=</span> <span class="ident">MerkleNode::new_leaf</span>(<span class="ident">pos</span>, <span class="ident">proof</span>.<span class="ident">leaf</span>.<span class="number">0</span>).<span class="ident">value</span>();
         <span class="kw">for</span> <span class="ident">mt_node</span> <span class="kw">in</span> <span class="ident">proof</span>.<span class="ident">path</span>.<span class="ident">nodes</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">mt_node</span>.<span class="ident">pos</span>;
@@ -3315,9 +3316,9 @@
             <span class="kw">let</span> <span class="ident">sibling2_value</span> <span class="op">=</span> <span class="ident">mt_node</span>.<span class="ident">sibling2</span>;
 
             <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">pos</span> {
-                <span class="ident">NodePos::Left</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">current_val</span>, <span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>),
-                <span class="ident">NodePos::Middle</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">sibling1_value</span>, <span class="ident">current_val</span>, <span class="ident">sibling2_value</span>),
-                <span class="ident">NodePos::Right</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>, <span class="ident">current_val</span>),
+                <span class="ident">NodePos::Left</span> =&gt; (<span class="ident">current_val</span>, <span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>),
+                <span class="ident">NodePos::Middle</span> =&gt; (<span class="ident">sibling1_value</span>, <span class="ident">current_val</span>, <span class="ident">sibling2_value</span>),
+                <span class="ident">NodePos::Right</span> =&gt; (<span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>, <span class="ident">current_val</span>),
             };
 
             <span class="ident">current_val</span> <span class="op">=</span> <span class="ident">MerkleNode</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_branch</span>(
@@ -3329,7 +3330,7 @@
             .<span class="ident">value</span>()
         }
 
-        <span class="kw">if</span> <span class="ident">root_value</span> <span class="op">=</span><span class="op">=</span> <span class="ident">current_val</span> {
+        <span class="kw">if</span> <span class="ident">root_value</span> <span class="op">==</span> <span class="ident">current_val</span> {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="prelude-val">Some</span>(<span class="ident">current_val</span>))
@@ -3340,11 +3341,11 @@
     <span class="doccomment">/// Will not trim if position `i` is the last inserted leaf position.</span>
     <span class="doccomment">/// Return is identical to result if `get_leaf(pos)` were called before this</span>
     <span class="doccomment">/// call.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">forget</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LookupResult</span><span class="op">&lt;</span>(), <span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">pos</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">-</span> <span class="number">1</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">forget</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">u64</span>) -&gt; <span class="ident">LookupResult</span><span class="op">&lt;</span>(), <span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">pos</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">-</span> <span class="number">1</span> {
             <span class="self">self</span>.<span class="ident">get_leaf</span>(<span class="ident">pos</span>)
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">root</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
+            <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">root</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
             <span class="kw">let</span> (<span class="ident">root</span>, <span class="ident">pf</span>) <span class="op">=</span> <span class="ident">root</span>.<span class="ident">internal_forget</span>(<span class="self">self</span>.<span class="ident">capacity</span>, <span class="ident">pos</span>);
             <span class="self">self</span>.<span class="ident">root</span> <span class="op">=</span> <span class="ident">root</span>;
             <span class="ident">pf</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">elem</span>, <span class="ident">nodes</span><span class="op">|</span> ((), <span class="ident">MerkleLeafProof::new</span>(<span class="ident">elem</span>, <span class="ident">MerklePath</span> { <span class="ident">nodes</span> })))
@@ -3356,11 +3357,11 @@
     <span class="doccomment">/// proof disagrees with the correct node value `val` at position `ix`</span>
     <span class="doccomment">/// in the proof.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remember</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">pos</span>: <span class="ident">u64</span>,
         <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleLeafProof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">root</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">core::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">root</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="macro">vec!</span>[];
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">MerkleNode::new_leaf</span>(<span class="ident">pos</span>, <span class="ident">proof</span>.<span class="ident">leaf</span>.<span class="number">0</span>).<span class="ident">value</span>();
@@ -3371,9 +3372,9 @@
                 <span class="kw">let</span> <span class="ident">sibling2_value</span> <span class="op">=</span> <span class="ident">mt_node</span>.<span class="ident">sibling2</span>;
 
                 <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">pos</span> {
-                    <span class="ident">NodePos::Left</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">val</span>, <span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>),
-                    <span class="ident">NodePos::Middle</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">sibling1_value</span>, <span class="ident">val</span>, <span class="ident">sibling2_value</span>),
-                    <span class="ident">NodePos::Right</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>, <span class="ident">val</span>),
+                    <span class="ident">NodePos::Left</span> =&gt; (<span class="ident">val</span>, <span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>),
+                    <span class="ident">NodePos::Middle</span> =&gt; (<span class="ident">sibling1_value</span>, <span class="ident">val</span>, <span class="ident">sibling2_value</span>),
+                    <span class="ident">NodePos::Right</span> =&gt; (<span class="ident">sibling1_value</span>, <span class="ident">sibling2_value</span>, <span class="ident">val</span>),
                 };
 
                 <span class="ident">val</span> <span class="op">=</span> <span class="ident">MerkleNode</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_branch</span>(
@@ -3401,7 +3402,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">FilledMTBuilder</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">height</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">height</span>: <span class="ident">u8</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> (<span class="number">3_u64</span>).<span class="ident">checked_pow</span>(<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">peak_positions</span> <span class="op">=</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peaks</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">peak_positions</span>);
@@ -3421,7 +3422,7 @@
 
     <span class="comment">// consumes an existing tree, claiming ownership of the frontier peaks, and will</span>
     <span class="comment">// build the new tree from there after batch updates</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_existing</span>(<span class="ident">tree</span>: <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_existing</span>(<span class="ident">tree</span>: <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">tree</span>.<span class="ident">height</span>;
         <span class="kw">let</span> <span class="ident">peak_positions</span> <span class="op">=</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="ident">tree</span>.<span class="ident">capacity</span>;
@@ -3431,7 +3432,7 @@
             <span class="ident">peak_positions</span>,
             (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">MerkleNode::EmptySubtree</span>),
         );
-        <span class="kw">if</span> <span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">num_leaves</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="prelude-val">Some</span>(<span class="ident">FilledMTBuilder</span> {
                 <span class="ident">peaks</span>,
                 <span class="ident">filled_root</span>: <span class="prelude-val">None</span>,
@@ -3439,7 +3440,7 @@
                 <span class="ident">capacity</span>,
                 <span class="ident">num_leaves</span>,
             })
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="ident">capacity</span> {
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">num_leaves</span> <span class="op">==</span> <span class="ident">capacity</span> {
             <span class="prelude-val">Some</span>(<span class="ident">FilledMTBuilder</span> {
                 <span class="ident">peaks</span>,
                 <span class="ident">filled_root</span>: <span class="prelude-val">Some</span>(<span class="ident">tree</span>.<span class="ident">root</span>),
@@ -3448,7 +3449,7 @@
                 <span class="ident">num_leaves</span>,
             })
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">tree</span>.<span class="ident">root</span> {
-            <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::take_frontiers</span>(<span class="ident">children</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">peaks</span>, <span class="ident">num_leaves</span>, <span class="ident">capacity</span>) {
+            <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::take_frontiers</span>(<span class="ident">children</span>, <span class="kw-2">&amp;mut</span> <span class="ident">peaks</span>, <span class="ident">num_leaves</span>, <span class="ident">capacity</span>) {
                 <span class="prelude-val">Some</span>(<span class="ident">FilledMTBuilder</span> {
                     <span class="ident">peaks</span>,
                     <span class="ident">filled_root</span>: <span class="prelude-val">None</span>,
@@ -3468,19 +3469,19 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_frontier</span>(
         <span class="ident">commitment</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleCommitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">frontier</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleFrontier</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">frontier</span> {
-            <span class="ident">MerkleFrontier::Empty</span> { <span class="ident">height</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">height</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">height</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> <span class="op">=</span><span class="op">=</span> <span class="ident">NodeValue::empty_node_value</span>()
+            <span class="ident">MerkleFrontier::Empty</span> { <span class="ident">height</span> } =&gt; {
+                <span class="kw">if</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span> <span class="op">==</span> <span class="number">0</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">height</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">height</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> <span class="op">==</span> <span class="ident">NodeValue::empty_node_value</span>()
                 {
                     <span class="kw">return</span> <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">commitment</span>.<span class="ident">height</span>);
                 }
             },
-            <span class="ident">MerkleFrontier::Proof</span>(<span class="ident">MerkleLeafProof</span> { <span class="ident">leaf</span>, <span class="ident">path</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MerkleFrontier::Proof</span>(<span class="ident">MerkleLeafProof</span> { <span class="ident">leaf</span>, <span class="ident">path</span> }) =&gt; {
                 <span class="kw">let</span> <span class="ident">num_leaves</span> <span class="op">=</span> <span class="ident">commitment</span>.<span class="ident">num_leaves</span>;
-                <span class="kw">if</span> <span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">if</span> <span class="ident">num_leaves</span> <span class="op">==</span> <span class="number">0</span> {
                     <span class="macro">debug_assert!</span>(<span class="ident">num_leaves</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
                     <span class="kw">return</span> <span class="prelude-val">None</span>;
                 }
@@ -3488,7 +3489,7 @@
                 <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> (<span class="number">3_u64</span>).<span class="ident">checked_pow</span>(<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">uid</span> <span class="op">=</span> <span class="ident">num_leaves</span> <span class="op">-</span> <span class="number">1</span>;
                 <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">MerkleNode::rebuild_to_root</span>(<span class="ident">capacity</span>, <span class="ident">uid</span>, <span class="kw-2">&amp;</span><span class="ident">path</span>.<span class="ident">nodes</span>, <span class="ident">uid</span>, <span class="kw-2">&amp;</span><span class="ident">leaf</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">value</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> {
+                <span class="kw">if</span> <span class="ident">root</span>.<span class="ident">value</span>() <span class="op">==</span> <span class="ident">commitment</span>.<span class="ident">root_value</span> {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } <span class="op">=</span> <span class="ident">root</span> {
                         <span class="kw">let</span> <span class="ident">peak_positions</span> <span class="op">=</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span>;
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peaks</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">peak_positions</span>);
@@ -3496,7 +3497,7 @@
                             <span class="ident">peak_positions</span>,
                             (<span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">MerkleNode::EmptySubtree</span>),
                         );
-                        <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::take_frontiers</span>(<span class="ident">children</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">peaks</span>, <span class="ident">num_leaves</span>, <span class="ident">capacity</span>) {
+                        <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::take_frontiers</span>(<span class="ident">children</span>, <span class="kw-2">&amp;mut</span> <span class="ident">peaks</span>, <span class="ident">num_leaves</span>, <span class="ident">capacity</span>) {
                             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">FilledMTBuilder</span> {
                                 <span class="ident">peaks</span>,
                                 <span class="ident">filled_root</span>: <span class="prelude-val">None</span>,
@@ -3514,36 +3515,36 @@
 
     <span class="kw">fn</span> <span class="ident">take_frontiers</span>(
         <span class="ident">children</span>: [<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>; <span class="number">3</span>],
-        <span class="ident">level_array</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [(<span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
+        <span class="ident">level_array</span>: <span class="kw-2">&amp;mut</span> [(<span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
         <span class="ident">contained_leaves</span>: <span class="ident">u64</span>,
         <span class="ident">level_capacity</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="ident">contained_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">level_array</span>.<span class="ident">is_empty</span>() {
+    ) -&gt; <span class="ident">bool</span> {
+        <span class="kw">if</span> <span class="ident">contained_leaves</span> <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">level_array</span>.<span class="ident">is_empty</span>() {
             <span class="bool-val">false</span>
         } <span class="kw">else</span> {
             <span class="kw">let</span> (<span class="ident">siblings</span>, <span class="ident">lower_levels</span>) <span class="op">=</span> <span class="ident">level_array</span>.<span class="ident">split_last_mut</span>().<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">node_capacity</span> <span class="op">=</span> <span class="ident">level_capacity</span> <span class="op">/</span> <span class="number">3</span>;
             <span class="kw">let</span> [<span class="ident">child0</span>, <span class="ident">child1</span>, <span class="ident">child2</span>] <span class="op">=</span> <span class="ident">children</span>;
             <span class="kw">let</span> (<span class="ident">remainder</span>, <span class="ident">branch_node</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">contained_leaves</span> <span class="op">/</span> <span class="ident">node_capacity</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">contained_leaves</span>, <span class="kw-2">*</span><span class="ident">child0</span>),
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="number">0</span> =&gt; (<span class="ident">contained_leaves</span>, <span class="kw-2">*</span><span class="ident">child0</span>),
+                <span class="number">1</span> =&gt; {
                     <span class="ident">siblings</span>.<span class="number">0</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">child0</span>;
                     (<span class="ident">contained_leaves</span> <span class="op">-</span> <span class="ident">node_capacity</span>, <span class="kw-2">*</span><span class="ident">child1</span>)
                 },
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="number">2</span> =&gt; {
                     <span class="ident">siblings</span>.<span class="number">0</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">child0</span>;
                     <span class="ident">siblings</span>.<span class="number">1</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">child1</span>;
                     (<span class="ident">contained_leaves</span> <span class="op">-</span> (<span class="number">2</span> <span class="op">*</span> <span class="ident">node_capacity</span>), <span class="kw-2">*</span><span class="ident">child2</span>)
                 },
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             };
 
             <span class="kw">if</span> <span class="ident">remainder</span> <span class="op">&gt;</span> <span class="number">0</span> {
                 <span class="kw">match</span> <span class="ident">branch_node</span> {
-                    <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">MerkleNode::Branch</span> { <span class="ident">children</span>, .. } =&gt; {
                         <span class="ident"><span class="self">Self</span>::take_frontiers</span>(<span class="ident">children</span>, <span class="ident">lower_levels</span>, <span class="ident">remainder</span>, <span class="ident">node_capacity</span>)
                     },
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                    <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                 }
             } <span class="kw">else</span> {
                 <span class="bool-val">true</span>
@@ -3553,11 +3554,11 @@
 
     <span class="comment">// internal because this should only be used when forgetting all children is</span>
     <span class="comment">// implicitly okay</span>
-    <span class="kw">fn</span> <span class="ident">prune_node</span>(<span class="ident">node_in</span>: <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">prune_node</span>(<span class="ident">node_in</span>: <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">node_in</span> {
-            <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
-            <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
-            <span class="ident">node</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">node</span>, <span class="comment">// empty and forgotten are unchanged</span>
+            <span class="ident">MerkleNode::Leaf</span> { <span class="ident">value</span>, .. } =&gt; <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
+            <span class="ident">MerkleNode::Branch</span> { <span class="ident">value</span>, .. } =&gt; <span class="ident">MerkleNode::ForgottenSubtree</span> { <span class="ident">value</span> },
+            <span class="ident">node</span> =&gt; <span class="ident">node</span>, <span class="comment">// empty and forgotten are unchanged</span>
         }
     }
 
@@ -3567,8 +3568,8 @@
     <span class="comment">// into the new branch. When the peak is reached, inserts the newly-filled</span>
     <span class="comment">// `node` at `level_index`</span>
     <span class="kw">fn</span> <span class="ident">roll_up</span>(
-        <span class="ident">peaks_from_level</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [(<span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
-        <span class="ident">filled_root</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">peaks_from_level</span>: <span class="kw-2">&amp;mut</span> [(<span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
+        <span class="ident">filled_root</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">node</span>: <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">level_index</span>: <span class="ident">u64</span>,
     ) {
@@ -3579,9 +3580,9 @@
             <span class="kw">return</span>;
         }
         <span class="kw">match</span> <span class="ident">level_index</span> <span class="op">%</span> <span class="number">3</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">peaks_from_level</span>[<span class="number">0</span>].<span class="number">0</span> <span class="op">=</span> <span class="ident">node</span>,
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">peaks_from_level</span>[<span class="number">0</span>].<span class="number">1</span> <span class="op">=</span> <span class="ident">node</span>,
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="number">0</span> =&gt; <span class="ident">peaks_from_level</span>[<span class="number">0</span>].<span class="number">0</span> <span class="op">=</span> <span class="ident">node</span>,
+            <span class="number">1</span> =&gt; <span class="ident">peaks_from_level</span>[<span class="number">0</span>].<span class="number">1</span> <span class="op">=</span> <span class="ident">node</span>,
+            <span class="number">2</span> =&gt; {
                 <span class="kw">let</span> (<span class="ident">level_peaks</span>, <span class="ident">higher_peaks</span>) <span class="op">=</span> <span class="ident">peaks_from_level</span>.<span class="ident">split_first_mut</span>().<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">level_peaks</span> <span class="op">=</span> <span class="ident">mem::replace</span>(
                     <span class="ident">level_peaks</span>,
@@ -3599,19 +3600,19 @@
                     <span class="ident">level_index</span> <span class="op">/</span> <span class="number">3</span>,
                 );
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
     <span class="comment">// creates the non-filled branch nodes from the array of filled peaks, up to the</span>
     <span class="comment">// root</span>
     <span class="kw">fn</span> <span class="ident">build_up</span>(
-        <span class="ident">level_array</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [(<span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
+        <span class="ident">level_array</span>: <span class="kw-2">&amp;mut</span> [(<span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>)],
         <span class="ident">contained_leaves</span>: <span class="ident">u64</span>,
         <span class="ident">level_capacity</span>: <span class="ident">u64</span>,
         <span class="ident">prune</span>: <span class="ident">bool</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">contained_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    ) -&gt; <span class="ident">MerkleNode</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">contained_leaves</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="ident">MerkleNode::EmptySubtree</span>
         } <span class="kw">else</span> {
             <span class="kw">if</span> <span class="ident">level_array</span>.<span class="ident">is_empty</span>() {
@@ -3627,8 +3628,8 @@
             <span class="kw">let</span> <span class="ident">new_node</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::build_up</span>(<span class="ident">lower_levels</span>, <span class="ident">new_contained_leaves</span>, <span class="ident">node_capacity</span>, <span class="ident">prune</span>);
             <span class="kw">let</span> <span class="ident">has_empty_child</span> <span class="op">=</span> <span class="macro">matches!</span>(<span class="ident">new_node</span>, <span class="ident">MerkleNode::EmptySubtree</span>);
             <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">m</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">contained_leaves</span> <span class="op">/</span> <span class="ident">node_capacity</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">new_node</span>, <span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">MerkleNode::EmptySubtree</span>),
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="number">0</span> =&gt; (<span class="ident">new_node</span>, <span class="ident">MerkleNode::EmptySubtree</span>, <span class="ident">MerkleNode::EmptySubtree</span>),
+                <span class="number">1</span> =&gt; {
                     <span class="kw">if</span> <span class="ident">prune</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">has_empty_child</span> {
                         (
                             <span class="ident"><span class="self">Self</span>::prune_node</span>(<span class="ident">siblings</span>.<span class="number">0</span>),
@@ -3639,7 +3640,7 @@
                         (<span class="ident">siblings</span>.<span class="number">0</span>, <span class="ident">new_node</span>, <span class="ident">MerkleNode::EmptySubtree</span>)
                     }
                 },
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="number">2</span> =&gt; {
                     <span class="kw">if</span> <span class="ident">prune</span> {
                         <span class="kw">if</span> <span class="ident">has_empty_child</span> {
                             (<span class="ident"><span class="self">Self</span>::prune_node</span>(<span class="ident">siblings</span>.<span class="number">0</span>), <span class="ident">siblings</span>.<span class="number">1</span>, <span class="ident">new_node</span>)
@@ -3654,33 +3655,33 @@
                         (<span class="ident">siblings</span>.<span class="number">0</span>, <span class="ident">siblings</span>.<span class="number">1</span>, <span class="ident">new_node</span>)
                     }
                 },
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             };
             <span class="ident">MerkleNode::new_branch</span>(<span class="ident">Box::new</span>(<span class="ident">l</span>), <span class="ident">Box::new</span>(<span class="ident">m</span>), <span class="ident">Box::new</span>(<span class="ident">r</span>))
                 .<span class="ident">unwrap_or</span>(<span class="ident">MerkleNode::EmptySubtree</span>)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="ident">F</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">capacity</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elem</span>: <span class="ident">F</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">capacity</span> {
             <span class="kw">return</span>;
         }
 
         <span class="kw">let</span> <span class="ident">leaf_node</span> <span class="op">=</span> <span class="ident">MerkleNode::new_leaf</span>(<span class="self">self</span>.<span class="ident">num_leaves</span>, <span class="ident">elem</span>);
         <span class="ident"><span class="self">Self</span>::roll_up</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">peaks</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">filled_root</span>,
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">peaks</span>,
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">filled_root</span>,
             <span class="ident">leaf_node</span>,
             <span class="self">self</span>.<span class="ident">num_leaves</span>,
         );
         <span class="self">self</span>.<span class="ident">num_leaves</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">filled_root</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">filled_root</span> {
             <span class="ident">filled_root</span>
         } <span class="kw">else</span> {
-            <span class="ident"><span class="self">Self</span>::build_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">peaks</span>, <span class="self">self</span>.<span class="ident">num_leaves</span>, <span class="self">self</span>.<span class="ident">capacity</span>, <span class="bool-val">false</span>)
+            <span class="ident"><span class="self">Self</span>::build_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">peaks</span>, <span class="self">self</span>.<span class="ident">num_leaves</span>, <span class="self">self</span>.<span class="ident">capacity</span>, <span class="bool-val">false</span>)
         };
         <span class="ident">MerkleTree</span> {
             <span class="ident">root</span>,
@@ -3690,11 +3691,11 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_pruned</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_pruned</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">filled_root</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">filled_root</span> {
             <span class="ident">filled_root</span>
         } <span class="kw">else</span> {
-            <span class="ident"><span class="self">Self</span>::build_up</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">peaks</span>, <span class="self">self</span>.<span class="ident">num_leaves</span>, <span class="self">self</span>.<span class="ident">capacity</span>, <span class="bool-val">true</span>)
+            <span class="ident"><span class="self">Self</span>::build_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">peaks</span>, <span class="self">self</span>.<span class="ident">num_leaves</span>, <span class="self">self</span>.<span class="ident">capacity</span>, <span class="bool-val">true</span>)
         };
         <span class="ident">MerkleTree</span> {
             <span class="ident">root</span>,
@@ -3704,7 +3705,7 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_frontier_and_commitment</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">MerkleFrontier</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleCommitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_frontier_and_commitment</span>(<span class="self">self</span>) -&gt; (<span class="ident">MerkleFrontier</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">MerkleCommitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
         <span class="comment">// TODO: more efficient implementation</span>
         <span class="kw">let</span> <span class="ident">mt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">build</span>();
         (<span class="ident">mt</span>.<span class="ident">frontier</span>(), <span class="ident">mt</span>.<span class="ident">commitment</span>())
@@ -3712,7 +3713,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FilledMTBuilder</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">builder</span>: <span class="ident">FilledMTBuilder</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">builder</span>: <span class="ident">FilledMTBuilder</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">builder</span>.<span class="ident">build</span>()
     }
 }
@@ -3739,7 +3740,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">AccMemberWitness</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Create a fake proof/witness for a dummy element</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dummy</span>(<span class="ident">tree_depth</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dummy</span>(<span class="ident">tree_depth</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">witness</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::default</span>();
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">MerklePathNode::default</span>(); <span class="ident">tree_depth</span> <span class="kw">as</span> <span class="ident">usize</span>];
         <span class="ident">witness</span>.<span class="ident">merkle_path</span> <span class="op">=</span> <span class="ident">MerklePath::new</span>(<span class="ident">path</span>);
@@ -3748,7 +3749,7 @@
 
     <span class="doccomment">/// Create a proof/witness for an accumulated ARC in the Merkle tree with</span>
     <span class="doccomment">/// leaf position `uid`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_from_tree</span>(<span class="ident">mt</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">uid</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_from_tree</span>(<span class="ident">mt</span>: <span class="kw-2">&amp;</span><span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">uid</span>: <span class="ident">u64</span>) -&gt; <span class="ident">LookupResult</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">mt</span>.<span class="ident">get_leaf</span>(<span class="ident">uid</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span>, <span class="ident">MerkleLeafProof</span> { <span class="ident">leaf</span>, <span class="ident">path</span> }<span class="op">|</span> {
             (
                 <span class="ident">leaf</span>.<span class="number">0</span>,
@@ -3780,7 +3781,7 @@
     }
 
     <span class="kw">impl</span> <span class="ident">quickcheck::Arbitrary</span> <span class="kw">for</span> <span class="ident">ArrayOp</span> {
-        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Gen</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Gen</span>) -&gt; <span class="self">Self</span> {
             <span class="kw">use</span> <span class="ident">ArrayOp</span>::<span class="kw-2">*</span>;
             <span class="kw">let</span> <span class="ident">choices</span> <span class="op">=</span> [
                 <span class="ident">Push</span>(<span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="ident">::arbitrary</span>(<span class="ident">g</span>)),
@@ -3790,12 +3791,12 @@
             <span class="ident">g</span>.<span class="ident">choose</span>(<span class="kw-2">&amp;</span><span class="ident">choices</span>).<span class="ident">unwrap</span>().<span class="ident">clone</span>()
         }
 
-        <span class="kw">fn</span> <span class="ident">shrink</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">shrink</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
             <span class="kw">use</span> <span class="ident">ArrayOp</span>::<span class="kw-2">*</span>;
             <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">Push</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Box::new</span>(<span class="ident">x</span>.<span class="ident">shrink</span>().<span class="ident">map</span>(<span class="ident">Push</span>)),
-                <span class="ident">Swap</span>(<span class="ident">ix</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Box::new</span>(<span class="ident">core::iter::once</span>(<span class="ident">Challenge</span>(<span class="kw-2">*</span><span class="ident">ix</span>)).<span class="ident">chain</span>(<span class="ident">ix</span>.<span class="ident">shrink</span>().<span class="ident">map</span>(<span class="ident">Swap</span>))),
-                <span class="ident">Challenge</span>(<span class="ident">ix</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Box::new</span>(<span class="ident">ix</span>.<span class="ident">shrink</span>().<span class="ident">map</span>(<span class="ident">Challenge</span>)),
+                <span class="ident">Push</span>(<span class="ident">x</span>) =&gt; <span class="ident">Box::new</span>(<span class="ident">x</span>.<span class="ident">shrink</span>().<span class="ident">map</span>(<span class="ident">Push</span>)),
+                <span class="ident">Swap</span>(<span class="ident">ix</span>) =&gt; <span class="ident">Box::new</span>(<span class="ident">core::iter::once</span>(<span class="ident">Challenge</span>(<span class="kw-2">*</span><span class="ident">ix</span>)).<span class="ident">chain</span>(<span class="ident">ix</span>.<span class="ident">shrink</span>().<span class="ident">map</span>(<span class="ident">Swap</span>))),
+                <span class="ident">Challenge</span>(<span class="ident">ix</span>) =&gt; <span class="ident">Box::new</span>(<span class="ident">ix</span>.<span class="ident">shrink</span>().<span class="ident">map</span>(<span class="ident">Challenge</span>)),
             }
         }
     }
@@ -3804,15 +3805,15 @@
     <span class="kw">fn</span> <span class="ident">quickcheck_mt_test_against_array</span>() {
         <span class="ident">QuickCheck::new</span>()
             .<span class="ident">tests</span>(<span class="number">10</span>)
-            .<span class="ident">quickcheck</span>(<span class="ident">mt_test_against_array_helper</span>::<span class="op">&lt;</span><span class="ident">Fq254</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> ());
+            .<span class="ident">quickcheck</span>(<span class="ident">mt_test_against_array_helper</span>::<span class="op">&lt;</span><span class="ident">Fq254</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>) -&gt; ());
 
         <span class="ident">QuickCheck::new</span>()
             .<span class="ident">tests</span>(<span class="number">10</span>)
-            .<span class="ident">quickcheck</span>(<span class="ident">mt_test_against_array_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> ());
+            .<span class="ident">quickcheck</span>(<span class="ident">mt_test_against_array_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>) -&gt; ());
 
         <span class="ident">QuickCheck::new</span>()
             .<span class="ident">tests</span>(<span class="number">10</span>)
-            .<span class="ident">quickcheck</span>(<span class="ident">mt_test_against_array_helper</span>::<span class="op">&lt;</span><span class="ident">Fq381</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> ());
+            .<span class="ident">quickcheck</span>(<span class="ident">mt_test_against_array_helper</span>::<span class="op">&lt;</span><span class="ident">Fq381</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="kw">_</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>) -&gt; ());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -3842,8 +3843,8 @@
             <span class="macro">assert_eq!</span>(<span class="ident">full</span>.<span class="ident">num_leaves</span>(), <span class="ident">sparse_r</span>.<span class="ident">num_leaves</span>());
 
             <span class="kw">match</span> <span class="ident">op</span> {
-                <span class="ident">ArrayOp::Push</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="ident">full</span>.<span class="ident">num_leaves</span> <span class="op">=</span><span class="op">=</span> <span class="ident">full</span>.<span class="ident">capacity</span> {
+                <span class="ident">ArrayOp::Push</span>(<span class="ident">val</span>) =&gt; {
+                    <span class="kw">if</span> <span class="ident">full</span>.<span class="ident">num_leaves</span> <span class="op">==</span> <span class="ident">full</span>.<span class="ident">capacity</span> {
                         <span class="kw">continue</span>;
                     }
                     <span class="kw">let</span> <span class="ident">val_v</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">val</span>);
@@ -3898,7 +3899,7 @@
                     <span class="macro">assert_eq!</span>(<span class="ident">pruned</span>.<span class="ident">root</span>.<span class="ident">value</span>(), <span class="ident">built_fr</span>.<span class="ident">root</span>.<span class="ident">value</span>());
                 },
 
-                <span class="ident">ArrayOp::Swap</span>(<span class="ident">ix</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ArrayOp::Swap</span>(<span class="ident">ix</span>) =&gt; {
                     <span class="kw">if</span> <span class="ident">full</span>.<span class="ident">num_leaves</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
                         <span class="kw">continue</span>;
                     }
@@ -3927,7 +3928,7 @@
                     }
                 },
 
-                <span class="ident">ArrayOp::Challenge</span>(<span class="ident">ix</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ArrayOp::Challenge</span>(<span class="ident">ix</span>) =&gt; {
                     <span class="kw">let</span> <span class="ident">ix</span> <span class="op">=</span> <span class="ident">ix</span> <span class="kw">as</span> <span class="ident">u64</span>;
                     <span class="macro">assert_eq!</span>(
                         <span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="ident">full</span>.<span class="ident">get_leaf</span>(<span class="ident">ix</span>)),
@@ -4033,7 +4034,7 @@
         <span class="ident">expected_num_leaves</span>: <span class="ident">u64</span>,
         <span class="ident">expected_root_value</span>: <span class="ident">F</span>,
         <span class="ident">elem</span>: <span class="ident">F</span>,
-        <span class="ident">mt_state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+        <span class="ident">mt_state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MerkleTree</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     ) <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
     {
@@ -4055,49 +4056,49 @@
             <span class="string">&quot;6315802240857098026471408427875093424014875175276849904481286814739245367585&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">1</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">14u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">1</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">14u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq377</span>,
             <span class="string">&quot;5667892118047049739799520263316921516906768781979656516556299791745277441924&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">2</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">1u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">2</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">1u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq377</span>,
             <span class="string">&quot;6647035245650485645973868479866915331877247637739179578040373840151756330269&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">3</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">3</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq377</span>,
             <span class="string">&quot;8118751992167130154473837652124407028702774033612167776964560053443435356349&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">4</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">4</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq377</span>,
             <span class="string">&quot;1206473552337297350582613502814851495338920004803208938535072547977097566382&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">5</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">9u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">5</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">9u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq377</span>,
             <span class="string">&quot;2920147224190455791027037134100604018887322602008672374231496857119372658207&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">6</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">6</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq377</span>,
             <span class="string">&quot;210322276709335655995543096332051934652998856107004204533316622140744532303&quot;</span>
         );
 
-        <span class="ident">check_insert</span>(<span class="number">7</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">7</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq377::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">mt_insert_381</span>() {
@@ -4107,43 +4108,43 @@
             <span class="ident">Fq381</span>,
             <span class="string">&quot;7081746562927615832554718398136664278839060637885555651210011123028338406517&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">1</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">14u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">1</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">14u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq381</span>,
             <span class="string">&quot;18953992772659389170207216511756697948140968060778451061047576615653376873195&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">2</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">1u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">2</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">1u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq381</span>,
             <span class="string">&quot;48837637449461760066242782416226916390320337952762913310014866629892409771893&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">3</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">3</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq381</span>,
             <span class="string">&quot;52067967291723322908553827930013847265114075700290837834627105117605186185206&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">4</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">4</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq381</span>,
             <span class="string">&quot;46694038687200106981630417704049332460846970884710385420102061857311492462382&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">5</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">9u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">5</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">9u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq381</span>,
             <span class="string">&quot;46972149924452771097664193486415717147949569921437059075599195504242552479824&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">6</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">6</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">5u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
 
         <span class="kw">let</span> <span class="ident">expected_root_value</span> <span class="op">=</span> <span class="macro">field_new!</span>(
             <span class="ident">Fq381</span>,
             <span class="string">&quot;19765563469931108618505653127604511343263393959241748271595767956528328819849&quot;</span>
         );
-        <span class="ident">check_insert</span>(<span class="number">7</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">mt_state</span>);
+        <span class="ident">check_insert</span>(<span class="number">7</span>, <span class="ident">expected_root_value</span>, <span class="ident">Fq381::from</span>(<span class="number">3u64</span>), <span class="kw-2">&amp;mut</span> <span class="ident">mt_state</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">check_proof</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
@@ -4273,7 +4274,7 @@
 
     <span class="kw">fn</span> <span class="ident">test_tree_extension_attack_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">evil_val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">evil_val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="ident">evil_subtree</span> <span class="op">=</span> <span class="ident">MerkleNode::new_branch</span>(
             <span class="ident">Box::new</span>(<span class="ident">MerkleNode::new_leaf</span>(<span class="number">5000</span>, <span class="ident">evil_val</span>)),
             <span class="ident">Box::new</span>(<span class="ident">MerkleNode::new_leaf</span>(<span class="number">25</span>, <span class="ident">evil_val</span>)),
@@ -4281,7 +4282,7 @@
         )
         .<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">good_val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">good_val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mt</span> <span class="op">=</span> <span class="ident">MerkleTree</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="number">1</span>).<span class="ident">unwrap</span>();
         <span class="ident">mt</span>.<span class="ident">push</span>(<span class="ident">good_val</span>);
         <span class="ident">mt</span>.<span class="ident">push</span>(<span class="ident">good_val</span>);
@@ -4356,7 +4357,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pruned_tree</span> <span class="op">=</span> <span class="ident">MerkleTree</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">height</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">for</span> <span class="ident">idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="ident">full_tree</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="ident">pruned_tree</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="kw">if</span> <span class="ident">idx</span> <span class="op">&gt;</span> <span class="number">0</span> {
@@ -4383,7 +4384,7 @@
         <span class="kw">let</span> <span class="ident">empty_frontier_h4</span> <span class="op">=</span> <span class="ident">pruned_tree_h4</span>.<span class="ident">frontier</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">for</span> <span class="ident">idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">7</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="ident">pruned_tree_h3</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="ident">pruned_tree_h4</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="kw">if</span> <span class="ident">idx</span> <span class="op">&gt;</span> <span class="number">0</span> {
@@ -4473,7 +4474,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">full_array</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">count</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="ident">full_tree</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="ident">full_array</span>.<span class="ident">push</span>(<span class="ident">val</span>);
         }
@@ -4504,7 +4505,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">full_tree</span> <span class="op">=</span> <span class="ident">MerkleTree</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">height</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">initial_count</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="ident">full_tree</span>.<span class="ident">push</span>(<span class="ident">val</span>);
         }
 
@@ -4521,7 +4522,7 @@
             <span class="ident">FilledMTBuilder::from_frontier</span>(<span class="kw-2">&amp;</span><span class="ident">commitment</span>, <span class="kw-2">&amp;</span><span class="ident">frontier</span>).<span class="ident">unwrap</span>();
 
         <span class="kw">for</span> <span class="ident">ix</span> <span class="kw">in</span> <span class="ident">initial_count</span>..<span class="ident">initial_count</span> <span class="op">+</span> <span class="ident">batch_count</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
             <span class="ident">full_tree</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="ident">sparse_tree</span>.<span class="ident">push</span>(<span class="ident">val</span>);
             <span class="kw">if</span> <span class="ident">ix</span> <span class="op">&gt;</span> <span class="number">0</span> {
@@ -4576,5 +4577,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

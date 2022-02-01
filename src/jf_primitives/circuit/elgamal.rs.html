@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives&#x2F;src&#x2F;circuit&#x2F;elgamal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elgamal.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../jf_primitives/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives&#x2F;src&#x2F;circuit&#x2F;elgamal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elgamal.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../jf_primitives/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -485,10 +486,10 @@
     <span class="doccomment">///   of this input is a list of rescue states.</span>
     <span class="doccomment">/// * `returns` - the variables that map to the ciphertext contents</span>
     <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueStateVar</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueStateVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueStateVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Rescue counter mode encryption with padding</span>
     <span class="doccomment">/// The function pads the input data and then calls</span>
@@ -500,10 +501,10 @@
     <span class="doccomment">/// * `returns` - the variables that map to the ciphertext contents. The</span>
     <span class="doccomment">///   output size is the same as the length of data_vars</span>
     <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">ElGamalEncryptionHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -511,10 +512,10 @@
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
 {
     <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueStateVar</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueStateVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueStateVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_vars</span> <span class="op">=</span> <span class="ident">data_vars</span>.<span class="ident">to_vec</span>();
@@ -531,7 +532,7 @@
 
         <span class="ident">output_vars</span>
             .<span class="ident">iter_mut</span>()
-            .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">output_chunk_vars</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+            .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">output_chunk_vars</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">stream_chunk_vars</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prp_with_round_keys</span>(
                     <span class="kw-2">&amp;</span><span class="ident">RescueStateVar::from</span>([<span class="ident">counter_var</span>, <span class="ident">zero_var</span>, <span class="ident">zero_var</span>, <span class="ident">zero_var</span>]),
                     <span class="ident">mds_states</span>,
@@ -555,10 +556,10 @@
     }
 
     <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
 
         <span class="comment">// Compute the length of padded input</span>
@@ -586,7 +587,7 @@
         <span class="kw">for</span> <span class="ident">state</span> <span class="kw">in</span> <span class="ident">encrypted_output_var_states</span> {
             <span class="kw">let</span> <span class="ident">state_array</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">array</span>();
             <span class="kw">for</span> <span class="ident">variable</span> <span class="kw">in</span> <span class="ident">state_array</span>.<span class="ident">iter</span>().<span class="ident">take</span>(<span class="ident">STATE_SIZE</span>) {
-                <span class="kw">if</span> <span class="ident">num_vars</span> <span class="op">=</span><span class="op">=</span> <span class="ident">len</span> {
+                <span class="kw">if</span> <span class="ident">num_vars</span> <span class="op">==</span> <span class="ident">len</span> {
                     <span class="comment">// We are not interested in the padding variables</span>
                     <span class="kw">break</span>;
                 }
@@ -611,22 +612,22 @@
     <span class="doccomment">/// * `r` - variable corresponding to the encryption randomness</span>
     <span class="doccomment">/// * `returns` - variables corresponding to the ciphertext</span>
     <span class="kw">fn</span> <span class="ident">elgamal_encrypt</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">pk_vars</span>: <span class="kw-2">&amp;</span><span class="ident">EncKeyVars</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">r</span>: <span class="ident">Variable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Helper function to create encryption key variables struct</span>
     <span class="doccomment">/// * `pk` - encryption public key</span>
     <span class="doccomment">/// * `returns` - struct containing the variables corresponding to `p`</span>
-    <span class="kw">fn</span> <span class="ident">create_enc_key_variable</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncKeyVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">create_enc_key_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncKeyVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Helper function to create a ciphertext variable</span>
     <span class="kw">fn</span> <span class="ident">create_ciphertext_variable</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">ctxts</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">ElGamalEncryptionGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -635,11 +636,11 @@
     <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="kw">fn</span> <span class="ident">elgamal_encrypt</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">pk_var</span>: <span class="kw-2">&amp;</span><span class="ident">EncKeyVars</span>,
         <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">r</span>: <span class="ident">Variable</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">shared_pk_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">variable_base_scalar_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">r</span>, <span class="kw-2">&amp;</span><span class="ident">pk_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
         <span class="kw">let</span> <span class="ident">key_perm_input_var</span> <span class="op">=</span> <span class="ident">RescueStateVar::from</span>([
@@ -659,16 +660,16 @@
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">create_enc_key_variable</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncKeyVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">create_enc_key_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncKeyVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">Point::from</span>(<span class="ident">pk</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>());
         <span class="kw">let</span> <span class="ident">point_variable</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">point</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">EncKeyVars</span>(<span class="ident">point_variable</span>))
     }
 
     <span class="kw">fn</span> <span class="ident">create_ciphertext_variable</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">ctxts</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ephemeral</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">ctxts</span>.<span class="ident">ephemeral</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>()))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">symm_ctxts</span> <span class="op">=</span> <span class="ident">ctxts</span>
@@ -719,10 +720,10 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>),
+            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
         ]);
 
         <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_rescue_state_variable</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">unwrap</span>();
@@ -784,7 +785,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
 
         <span class="comment">// Prepare data and keys</span>
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
         <span class="kw">let</span> <span class="ident">pub_key</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">enc_key_ref</span>();
         <span class="kw">let</span> <span class="ident">pk_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_enc_key_variable</span>(<span class="ident">pub_key</span>).<span class="ident">unwrap</span>();
 
@@ -796,7 +797,7 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">unwrap</span>())
             .<span class="ident">collect</span>();
 
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
         <span class="kw">let</span> <span class="ident">enc_rand_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>)).<span class="ident">unwrap</span>();
 
         <span class="comment">// Encrypt</span>
@@ -804,7 +805,7 @@
         <span class="kw">let</span> <span class="ident">ctxts</span> <span class="op">=</span> <span class="ident">pub_key</span>.<span class="ident">deterministic_encrypt</span>(<span class="ident">r</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
 
         <span class="kw">let</span> <span class="ident">ctxts_vars</span> <span class="op">=</span> <span class="ident">ElGamalEncryptionGadget</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::elgamal_encrypt</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">circuit</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
             <span class="kw-2">&amp;</span><span class="ident">pk_var</span>,
             <span class="ident">data_vars</span>.<span class="ident">as_slice</span>(),
             <span class="ident">enc_rand_var</span>,
@@ -860,7 +861,7 @@
         <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
         <span class="comment">// Prepare ciphertext</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ark_std::test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">5</span> <span class="op">*</span> <span class="ident">STATE_SIZE</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>)).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">ctxts</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="ident">rng</span>)
             .<span class="ident">enc_key_ref</span>()
@@ -882,5 +883,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

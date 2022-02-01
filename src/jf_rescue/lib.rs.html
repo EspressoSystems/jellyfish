@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `rescue&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../jf_rescue/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `rescue&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../jf_rescue/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1206,7 +1207,7 @@
 <span class="comment">// Public functions</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="doccomment">/// zero vector</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>() -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="ident">RescueVector</span> {
             <span class="ident">vec</span>: [<span class="ident">F::zero</span>(); <span class="ident">STATE_SIZE</span>],
         }
@@ -1214,13 +1215,13 @@
 
     <span class="doccomment">/// Return vector of the field elements</span>
     <span class="doccomment">/// WARNING: may expose the internal state.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">elems</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">elems</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">to_vec</span>()
     }
 
     <span class="doccomment">/// Perform a linear transform of the vector.</span>
     <span class="doccomment">/// Function needs to be public for circuits generation..</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">linear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">linear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">matrix</span>.<span class="ident">mul_vec</span>(<span class="self">self</span>);
         <span class="ident">aux</span>.<span class="ident">add_assign</span>(<span class="ident">vector</span>);
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident">aux</span>
@@ -1229,7 +1230,7 @@
 
 <span class="comment">// Private functions</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from_elems_le_bytes</span>(<span class="ident">e0</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e1</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e2</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e3</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_elems_le_bytes</span>(<span class="ident">e0</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e1</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e2</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e3</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="ident">RescueVector</span> {
             <span class="ident">vec</span>: [
                 <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">e0</span>),
@@ -1240,7 +1241,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">pad_smaller_chunk</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pad_smaller_chunk</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="macro">assert!</span>(<span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::zero</span>().<span class="ident">vec</span>;
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">elem</span>) <span class="kw">in</span> <span class="ident">input</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
@@ -1249,25 +1250,25 @@
         <span class="ident">RescueVector</span> { <span class="ident">vec</span> }
     }
 
-    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>]) {
+    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>]) {
         <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">elem</span><span class="op">|</span> {
             <span class="kw-2">*</span><span class="ident">elem</span> <span class="op">=</span> <span class="ident">elem</span>.<span class="ident">pow</span>(<span class="ident">exp</span>);
         });
     }
 
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
         <span class="kw">for</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">vector</span>.<span class="ident">vec</span>.<span class="ident">iter</span>()) {
             <span class="ident">a</span>.<span class="ident">add_assign</span>(<span class="ident">b</span>);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
         <span class="ident">aux</span>.<span class="ident">add_assign</span>(<span class="ident">vector</span>);
         <span class="ident">aux</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">add_assign_elems</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) {
+    <span class="kw">fn</span> <span class="ident">add_assign_elems</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) {
         <span class="macro">assert_eq!</span>(<span class="ident">elems</span>.<span class="ident">len</span>(), <span class="ident">STATE_SIZE</span>);
         <span class="self">self</span>.<span class="ident">vec</span>
             .<span class="ident">iter_mut</span>()
@@ -1275,7 +1276,7 @@
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="op">|</span> <span class="ident">a</span>.<span class="ident">add_assign</span>(<span class="ident">b</span>));
     }
 
-    <span class="kw">fn</span> <span class="ident">dot_product</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">dot_product</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">F</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">F::zero</span>();
         <span class="kw">for</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">vector</span>.<span class="ident">vec</span>.<span class="ident">iter</span>()) {
             <span class="ident">r</span>.<span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">mul</span>(<span class="ident">b</span>));
@@ -1287,7 +1288,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Helper function to compute f(M,x,c) = Mx^a + c.</span>
     <span class="doccomment">/// Function needs to be public for circuits generation..</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_linear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_linear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">self_aux</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
         <span class="ident">self_aux</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">F::A</span>]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">matrix</span>.<span class="ident">mul_vec</span>(<span class="kw-2">&amp;</span><span class="ident">self_aux</span>);
@@ -1297,7 +1298,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">F</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">field_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">field_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="macro">assert_eq!</span>(<span class="ident">field_elems</span>.<span class="ident">len</span>(), <span class="ident">STATE_SIZE</span>);
         <span class="ident">RescueVector</span> {
             <span class="ident">vec</span>: [
@@ -1311,7 +1312,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">STATE_SIZE</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">field_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">STATE_SIZE</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">field_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">STATE_SIZE</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="ident">RescueVector</span> { <span class="ident">vec</span>: <span class="kw-2">*</span><span class="ident">field_elems</span> }
     }
 }
@@ -1323,13 +1324,13 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vectors</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vectors</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>]) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">matrix</span>: <span class="kw-2">*</span><span class="ident">vectors</span> }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">mul_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">mul_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> [<span class="ident">F::zero</span>(); <span class="ident">STATE_SIZE</span>];
         <span class="self">self</span>.<span class="ident">matrix</span>
             .<span class="ident">iter</span>()
@@ -1341,17 +1342,17 @@
     <span class="doccomment">/// Accessing the i-th vector of the matrix.    </span>
     <span class="doccomment">/// Function needs to be public for circuits generation..</span>
     <span class="doccomment">/// WARNING: may expose the internal state.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">matrix</span>[<span class="ident">i</span>]
     }
 
     <span class="doccomment">/// Check if the matrix is empty.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">matrix</span>.<span class="ident">is_empty</span>()
     }
 
     <span class="doccomment">/// Return the number of columns of the matrix.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">matrix</span>.<span class="ident">len</span>()
     }
 }
@@ -1375,7 +1376,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_injection</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>);
         <span class="kw">for</span> <span class="ident">bytes</span> <span class="kw">in</span> <span class="ident">F::KEY_INJECTION_LE</span>.<span class="ident">iter</span>() {
             <span class="ident">key_injection</span>.<span class="ident">push</span>(<span class="ident">RescueVector::from_elems_le_bytes</span>(
@@ -1423,7 +1424,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4</span>
     <span class="doccomment">/// without key scheduled keys (scheduling occurs online)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">key_schedule</span>(<span class="ident">key</span>);
         <span class="self">self</span>.<span class="ident">prp_with_round_keys</span>(<span class="ident">round_keys</span>.<span class="ident">as_slice</span>(), <span class="ident">input</span>)
     }
@@ -1434,7 +1435,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">round_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
         <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="macro">assert_eq!</span>(<span class="ident">round_keys</span>.<span class="ident">len</span>(), <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">perm_state</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="ident">round_keys</span>[<span class="number">0</span>]);
         <span class="ident">round_keys</span>[<span class="number">1</span>..].<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">round</span>, <span class="ident">key</span>)<span class="op">|</span> {
@@ -1450,7 +1451,7 @@
 
     <span class="doccomment">/// Key scheduling for rescue based PRP for Bls12_381 scalars vector of size</span>
     <span class="doccomment">/// 4</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">init_vec</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">aux</span>];
         (<span class="number">0</span>..<span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>).<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> {
@@ -1465,7 +1466,7 @@
     <span class="doccomment">/// Return a pointer to the mds matrix.</span>
     <span class="doccomment">/// Does not expose secret states.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mds_matrix_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mds_matrix_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mds</span>
     }
 
@@ -1473,14 +1474,14 @@
     <span class="doccomment">/// Function needs to be public for circuits generation..</span>
     <span class="doccomment">/// WARNING!!! May expose secret state if keys are supposed to be secret.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_injection_vec_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_injection_vec_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key_injection</span>
     }
 
     <span class="doccomment">/// Return a pointer to the initial vectors.</span>
     <span class="doccomment">/// Does not expose secret states.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vec_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vec_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">init_vec</span>
     }
 }
@@ -1493,7 +1494,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">rescue</span>: <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">rescue</span>: <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">F::PERMUTATION_ROUND_KEYS</span>.<span class="ident">iter</span>() {
             <span class="ident">keys</span>.<span class="ident">push</span>(<span class="ident">RescueVector::from_elems_le_bytes</span>(
@@ -1508,7 +1509,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Permutation::from</span>(<span class="ident">PRP::default</span>())
     }
 }
@@ -1517,18 +1518,18 @@
     <span class="doccomment">/// Return a pointer to the round key.</span>
     <span class="doccomment">/// Does not expose secret states.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">round_keys_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">round_keys_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>] {
         <span class="self">self</span>.<span class="ident">round_keys</span>.<span class="ident">as_slice</span>()
     }
 
     <span class="doccomment">/// Return a pointer to the mds matrix.</span>
     <span class="doccomment">/// Does not expose secret states.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mds_matrix_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mds_matrix_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">rescue_prp</span>.<span class="ident">mds_matrix_ref</span>()
     }
     <span class="doccomment">/// Compute the permutation on RescueVector `input`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">rescue_prp</span>
             .<span class="ident">prp_with_round_keys</span>(<span class="self">self</span>.<span class="ident">round_keys</span>.<span class="ident">as_slice</span>(), <span class="ident">input</span>)
     }
@@ -1539,12 +1540,12 @@
     <span class="doccomment">/// Sponge hashing based on rescue permutation for Bls12_381 scalar field</span>
     <span class="doccomment">/// for RATE 3 and CAPACITY 1. It allows unrestricted variable length</span>
     <span class="doccomment">/// input and number of output elements</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">num_output</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">num_output</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="comment">// Pad input as follows: append a One, then pad with 0 until length is multiple</span>
         <span class="comment">// of RATE</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">to_vec</span>();
         <span class="ident">padded</span>.<span class="ident">push</span>(<span class="ident">F::one</span>());
-        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">padded</span>, <span class="ident">RATE</span>);
+        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">padded</span>, <span class="ident">RATE</span>);
         <span class="self">self</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">padded</span>.<span class="ident">as_slice</span>(), <span class="ident">num_output</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
     }
@@ -1552,7 +1553,7 @@
     <span class="doccomment">/// Sponge hashing based on rescue permutation for Bls12_381 scalar field</span>
     <span class="doccomment">/// for RATE 3 and CAPACITY 1. It allows input length multiple of the</span>
     <span class="doccomment">/// RATE and variable output length</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">num_output</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">RescueError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">num_output</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">RescueError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">RATE</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RescueError::ParameterError</span>(
                 <span class="string">&quot;Rescue sponge Error : input to sponge hashing function is not multiple of RATE.&quot;</span>
@@ -1575,7 +1576,7 @@
             <span class="kw">let</span> <span class="ident">extract</span> <span class="op">=</span> <span class="ident">remaining</span>.<span class="ident">min</span>(<span class="ident">RATE</span>);
             <span class="ident">result</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">vec</span>[<span class="number">0</span>..<span class="ident">extract</span>]);
             <span class="ident">remaining</span> <span class="op">-</span><span class="op">=</span> <span class="ident">extract</span>;
-            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">break</span>;
             }
             <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)
@@ -1586,7 +1587,7 @@
     <span class="doccomment">/// Compute the 3-to-1 rescue based hash function</span>
     <span class="doccomment">/// * `input` - input of size RATE</span>
     <span class="doccomment">/// * `returns` - hash value (single field element)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_3_to_1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">RATE</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_3_to_1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">RATE</span>]) -&gt; <span class="ident">F</span> {
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">input</span>[<span class="number">0</span>], <span class="ident">input</span>[<span class="number">1</span>], <span class="ident">input</span>[<span class="number">2</span>], <span class="ident">F::zero</span>()];
         <span class="kw">let</span> <span class="ident">res_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>));
         <span class="ident">res_vec</span>.<span class="ident">elems</span>()[<span class="number">0</span>]
@@ -1601,10 +1602,10 @@
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">num_outputs</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded_input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">to_vec</span>();
         <span class="ident">padded_input</span>.<span class="ident">push</span>(<span class="ident">F::one</span>());
-        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">padded_input</span>, <span class="ident">STATE_SIZE</span>);
+        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">padded_input</span>, <span class="ident">STATE_SIZE</span>);
         <span class="self">self</span>.<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="ident">key</span>, <span class="ident">padded_input</span>.<span class="ident">as_slice</span>(), <span class="ident">num_outputs</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
     }
@@ -1617,7 +1618,7 @@
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
         <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">num_outputs</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">RescueError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">RescueError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">STATE_SIZE</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RescueError::ParameterError</span>(
                 <span class="string">&quot;Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE.&quot;</span>
@@ -1639,7 +1640,7 @@
             <span class="kw">let</span> <span class="ident">extract</span> <span class="op">=</span> <span class="ident">remaining</span>.<span class="ident">min</span>(<span class="ident">RATE</span>);
             <span class="ident">result</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">vec</span>[<span class="number">0</span>..<span class="ident">extract</span>]);
             <span class="ident">remaining</span> <span class="op">-</span><span class="op">=</span> <span class="ident">extract</span>;
-            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">break</span>;
             }
             <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)
@@ -1989,12 +1990,12 @@
         <span class="kw">let</span> <span class="ident">rescue_prp</span> <span class="op">=</span> <span class="ident">PRP::default</span>();
         <span class="kw">let</span> <span class="ident">rescue_permutation</span> <span class="op">=</span> <span class="ident">Permutation::from</span>(<span class="ident">rescue_prp</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">e0</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e3</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e4</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e5</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">e0</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">e3</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">e4</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
+        <span class="kw">let</span> <span class="ident">e5</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
 
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">e0</span>, <span class="ident">e1</span>, <span class="ident">e2</span>, <span class="ident">e3</span>, <span class="ident">e4</span>, <span class="ident">e5</span>];
 
@@ -2105,7 +2106,7 @@
     }
     <span class="kw">fn</span> <span class="ident">test_fsks_no_padding_errors_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
         <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ark_std::test_rng</span>());
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>());
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">4</span>];
         <span class="macro">assert!</span>(<span class="ident">rescue</span>
             .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)
@@ -2153,7 +2154,7 @@
         <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">3</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">10</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">10</span>);
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ark_std::test_rng</span>());
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>());
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">F::zero</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
         <span class="macro">assert_eq!</span>(
             <span class="ident">rescue</span>
@@ -2224,5 +2225,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_rescue" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

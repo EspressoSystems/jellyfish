@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;proof_system&#x2F;snark.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>snark.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;proof_system&#x2F;snark.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>snark.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1726,7 +1727,7 @@
 {
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::new_without_default</span>)]</span>
     <span class="doccomment">/// A new Plonk KZG SNARK</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">PhantomData</span>)
     }
 
@@ -1737,8 +1738,8 @@
     <span class="doccomment">/// away to ensure soundness of the argument system.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">universal_setup</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="ident">max_degree</span>: <span class="ident">usize</span>,
-        <span class="ident">rng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">KZG10</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::setup</span>(<span class="ident">max_degree</span>, <span class="bool-val">false</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">UniversalSrs</span>(<span class="ident">srs</span>))
     }
@@ -1750,7 +1751,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">preprocess</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="ident">srs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// Make sure the SRS can support the circuit (with hiding degree of 2 for zk)</span>
         <span class="kw">let</span> <span class="ident">domain_size</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">eval_domain_size</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">num_inputs</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">num_inputs</span>();
@@ -1796,8 +1797,8 @@
             .<span class="ident">collect</span>();
         <span class="comment">// Compute Plookup verifying key if support lookup.</span>
         <span class="kw">let</span> <span class="ident">plookup_vk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">circuit</span>.<span class="ident">support_lookup</span>() {
-            <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-            <span class="bool-val">true</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">PlookupVerifyingKey</span> {
+            <span class="bool-val">false</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="bool-val">true</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">PlookupVerifyingKey</span> {
                 <span class="ident">range_table_comm</span>: <span class="ident">KZG10::commit</span>(
                     <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
                     <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
@@ -1840,10 +1841,10 @@
 
     <span class="doccomment">/// Generate an aggregated Plonk proof for multiple instances.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">batch_prove</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuits</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">C</span>],
         <span class="ident">prove_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
@@ -1859,7 +1860,7 @@
         <span class="ident">verify_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
         <span class="ident">public_inputs</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>]],
         <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
@@ -1884,7 +1885,7 @@
         <span class="ident">public_inputs</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>]],
         <span class="ident">proofs</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
         <span class="ident">extra_transcript_init_msgs</span>: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
@@ -1943,11 +1944,11 @@
     <span class="doccomment">/// domain etc.), otherwise return error.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">batch_prove_internal</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuits</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">C</span>],
         <span class="ident">prove_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>],
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
@@ -2217,11 +2218,11 @@
     <span class="doccomment">/// `circuit` and `prove_key` has to be consistent (with the same evaluation</span>
     <span class="doccomment">/// domain etc.), otherwise return error.</span>
     <span class="kw">fn</span> <span class="ident">prove</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
         <span class="ident">prove_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::ProvingKey</span>,
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
@@ -2249,7 +2250,7 @@
         <span class="ident">public_input</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Proof</span>,
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
@@ -2311,11 +2312,11 @@
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">a0</span>: <span class="ident">usize</span>,
         <span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_bit_len</span> <span class="op">=</span> <span class="number">5</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cs</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">plonk_type</span> {
-            <span class="ident">PlonkType::TurboPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
-            <span class="ident">PlonkType::UltraPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">range_bit_len</span>),
+            <span class="ident">PlonkType::TurboPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
+            <span class="ident">PlonkType::UltraPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">range_bit_len</span>),
         };
         <span class="comment">// Create variables</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -2343,7 +2344,7 @@
         <span class="ident">cs</span>.<span class="ident">mul_gate</span>(<span class="ident">b1_plus_a0</span>, <span class="ident">b1_minus_a0</span>, <span class="ident">c</span>)<span class="question-mark">?</span>;
         <span class="ident">cs</span>.<span class="ident">constant_gate</span>(<span class="ident">b</span>[<span class="number">0</span>], <span class="ident">F::from</span>(<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="number">2</span>))<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">PlonkType::UltraPlonk</span> {
+        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">==</span> <span class="ident">PlonkType::UltraPlonk</span> {
             <span class="comment">// Create range gates</span>
             <span class="comment">// 1. range_table = {0, 1, ..., 31}</span>
             <span class="comment">// 2. a_i \in range_table for i = 0..m-1</span>
@@ -2373,7 +2374,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_preprocessing</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_preprocessing</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_preprocessing_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
         <span class="ident">test_preprocessing_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
         <span class="ident">test_preprocessing_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span>, <span class="ident">Fq377</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
@@ -2383,13 +2384,13 @@
         <span class="ident">test_preprocessing_helper</span>::<span class="op">&lt;</span><span class="ident">BW6_761</span>, <span class="ident">Fq761</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
         <span class="ident">test_preprocessing_helper</span>::<span class="op">&lt;</span><span class="ident">BW6_761</span>, <span class="ident">Fq761</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">PlonkType::UltraPlonk</span>)
     }
-    <span class="kw">fn</span> <span class="ident">test_preprocessing_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_preprocessing_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
         <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ark_std::test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">gen_circuit_for_test</span>(<span class="number">5</span>, <span class="number">6</span>, <span class="ident">plonk_type</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">domain_size</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">eval_domain_size</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">num_inputs</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">num_inputs</span>();
@@ -2408,12 +2409,12 @@
         <span class="kw">let</span> <span class="ident">num_wire_types</span> <span class="op">=</span> <span class="ident">GATE_WIDTH</span>
             <span class="op">+</span> <span class="number">1</span>
             <span class="op">+</span> <span class="kw">match</span> <span class="ident">plonk_type</span> {
-                <span class="ident">PlonkType::TurboPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-                <span class="ident">PlonkType::UltraPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+                <span class="ident">PlonkType::TurboPlonk</span> =&gt; <span class="number">0</span>,
+                <span class="ident">PlonkType::UltraPlonk</span> =&gt; <span class="number">1</span>,
             };
         <span class="macro">assert_eq!</span>(<span class="ident">pk</span>.<span class="ident">sigmas</span>.<span class="ident">len</span>(), <span class="ident">num_wire_types</span>);
         <span class="comment">// check plookup proving key</span>
-        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">PlonkType::UltraPlonk</span> {
+        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">==</span> <span class="ident">PlonkType::UltraPlonk</span> {
             <span class="kw">let</span> <span class="ident">range_table_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_range_table_polynomial</span>()<span class="question-mark">?</span>;
             <span class="macro">assert_eq!</span>(
                 <span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
@@ -2448,7 +2449,7 @@
                 <span class="macro">assert_eq!</span>(<span class="ident">expected_comm</span>, <span class="ident">p_comm</span>);
             });
         <span class="comment">// check plookup verification key</span>
-        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">PlonkType::UltraPlonk</span> {
+        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">==</span> <span class="ident">PlonkType::UltraPlonk</span> {
             <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(
                 <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>,
                 <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
@@ -2478,7 +2479,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_plonk_proof_system</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_plonk_proof_system</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// merlin transcripts</span>
         <span class="ident">test_plonk_proof_system_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span>, <span class="ident">StandardTranscript</span><span class="op">&gt;</span>(
             <span class="ident">PlonkType::TurboPlonk</span>,
@@ -2522,7 +2523,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">test_plonk_proof_system_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_plonk_proof_system_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
@@ -2530,7 +2531,7 @@
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">64</span>;
         <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">+</span> <span class="number">2</span>;
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
@@ -2551,7 +2552,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extra_msgs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">cs</span>) <span class="kw">in</span> <span class="ident">circuits</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="kw">let</span> <span class="ident">pk_ref</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="number">3</span> { <span class="kw-2">&amp;</span><span class="ident">pk1</span> } <span class="kw">else</span> { <span class="kw-2">&amp;</span><span class="ident">pk2</span> };
-            <span class="kw">let</span> <span class="ident">extra_msg</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">let</span> <span class="ident">extra_msg</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="prelude-val">None</span>
             } <span class="kw">else</span> {
                 <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;extra message: {}&quot;</span>, <span class="ident">i</span>).<span class="ident">into_bytes</span>())
@@ -2696,7 +2697,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_inconsistent_pub_input_len</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_inconsistent_pub_input_len</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// merlin transcripts</span>
         <span class="ident">test_inconsistent_pub_input_len_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span>, <span class="ident">StandardTranscript</span><span class="op">&gt;</span>(
             <span class="ident">PlonkType::TurboPlonk</span>,
@@ -2742,7 +2743,7 @@
 
     <span class="kw">fn</span> <span class="ident">test_inconsistent_pub_input_len_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
@@ -2750,22 +2751,22 @@
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">8</span>;
         <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">+</span> <span class="number">2</span>;
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Create circuits</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cs1</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">plonk_type</span> {
-            <span class="ident">PlonkType::TurboPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
-            <span class="ident">PlonkType::UltraPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">2</span>),
+            <span class="ident">PlonkType::TurboPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
+            <span class="ident">PlonkType::UltraPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">2</span>),
         };
         <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">cs1</span>.<span class="ident">create_variable</span>(<span class="ident">E::Fr::from</span>(<span class="number">1u8</span>))<span class="question-mark">?</span>;
         <span class="ident">cs1</span>.<span class="ident">constant_gate</span>(<span class="ident">var</span>, <span class="ident">E::Fr::from</span>(<span class="number">1u8</span>))<span class="question-mark">?</span>;
         <span class="ident">cs1</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cs2</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">plonk_type</span> {
-            <span class="ident">PlonkType::TurboPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
-            <span class="ident">PlonkType::UltraPlonk</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">2</span>),
+            <span class="ident">PlonkType::TurboPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_turbo_plonk</span>(),
+            <span class="ident">PlonkType::UltraPlonk</span> =&gt; <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">2</span>),
         };
         <span class="ident">cs2</span>.<span class="ident">create_public_variable</span>(<span class="ident">E::Fr::from</span>(<span class="number">1u8</span>))<span class="question-mark">?</span>;
         <span class="ident">cs2</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
@@ -2791,7 +2792,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_plonk_prover_polynomials</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_plonk_prover_polynomials</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// merlin transcripts</span>
         <span class="ident">test_plonk_prover_polynomials_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span>, <span class="ident">StandardTranscript</span><span class="op">&gt;</span>(
             <span class="ident">PlonkType::TurboPlonk</span>,
@@ -2837,7 +2838,7 @@
 
     <span class="kw">fn</span> <span class="ident">test_plonk_prover_polynomials_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
@@ -2845,7 +2846,7 @@
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">64</span>;
         <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">+</span> <span class="number">2</span>;
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
@@ -2872,10 +2873,10 @@
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">check_circuit_polynomial_on_vanishing_set</span>(<span class="kw-2">&amp;</span><span class="ident">oracles</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>)<span class="question-mark">?</span>;
         <span class="ident">check_perm_polynomials_on_vanishing_set</span>(<span class="kw-2">&amp;</span><span class="ident">oracles</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">challenges</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">PlonkType::UltraPlonk</span> {
+        <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">==</span> <span class="ident">PlonkType::UltraPlonk</span> {
             <span class="ident">check_lookup_polynomials_on_vanishing_set</span>(<span class="kw-2">&amp;</span><span class="ident">oracles</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">challenges</span>)<span class="question-mark">?</span>;
         }
 
@@ -2885,7 +2886,7 @@
     <span class="kw">fn</span> <span class="ident">check_circuit_polynomial_on_vanishing_set</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">q_lc</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
             (<span class="number">0</span>..<span class="ident">GATE_WIDTH</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">j</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">selectors</span>[<span class="ident">j</span>]).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">q_mul</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="ident">GATE_WIDTH</span>..<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">2</span>)
@@ -2955,7 +2956,7 @@
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">beta</span>;
         <span class="kw">let</span> <span class="ident">gamma</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">gamma</span>;
 
@@ -3006,7 +3007,7 @@
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">beta</span>;
         <span class="kw">let</span> <span class="ident">gamma</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">gamma</span>;
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">pk</span>.<span class="ident">domain_size</span>();
@@ -3084,7 +3085,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_proof_from_to_fields</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_proof_from_to_fields</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_proof_from_to_fields_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="kw">_</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_proof_from_to_fields_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_381</span>, <span class="kw">_</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_proof_from_to_fields_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span>, <span class="kw">_</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -3092,13 +3093,13 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">test_proof_from_to_fields_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_proof_from_to_fields_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">E::Fq</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
         <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ark_std::test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">gen_circuit_for_test</span>(<span class="number">3</span>, <span class="number">4</span>, <span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="number">80</span>;
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
@@ -3115,7 +3116,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_serde</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_serde</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// merlin transcripts</span>
         <span class="ident">test_serde_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span>, <span class="ident">StandardTranscript</span><span class="op">&gt;</span>(<span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
         <span class="ident">test_serde_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span>, <span class="ident">StandardTranscript</span><span class="op">&gt;</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
@@ -3137,14 +3138,14 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">test_serde_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_serde_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
         <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ark_std::test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">gen_circuit_for_test</span>(<span class="number">3</span>, <span class="number">4</span>, <span class="ident">plonk_type</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="number">80</span>;
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
@@ -3153,22 +3154,22 @@
         <span class="kw">let</span> <span class="ident">proof</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::prove</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">srs</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
+        <span class="ident">srs</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">de</span> <span class="op">=</span> <span class="ident">UniversalSrs</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">de</span>, <span class="ident">srs</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">pk</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
+        <span class="ident">pk</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">de</span> <span class="op">=</span> <span class="ident">ProvingKey</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">de</span>, <span class="ident">pk</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">vk</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
+        <span class="ident">vk</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">de</span> <span class="op">=</span> <span class="ident">VerifyingKey</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">de</span>, <span class="ident">vk</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">proof</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
+        <span class="ident">proof</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">de</span> <span class="op">=</span> <span class="ident">Proof</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">de</span>, <span class="ident">proof</span>);
 
@@ -3176,7 +3177,7 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_key_aggregation_and_batch_prove</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_key_aggregation_and_batch_prove</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// merlin transcripts</span>
         <span class="ident">test_key_aggregation_and_batch_prove_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Fq254</span>, <span class="kw">_</span>, <span class="ident">StandardTranscript</span><span class="op">&gt;</span>(
             <span class="ident">PlonkType::TurboPlonk</span>,
@@ -3200,7 +3201,7 @@
 
     <span class="kw">fn</span> <span class="ident">test_key_aggregation_and_batch_prove_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="ident">plonk_type</span>: <span class="ident">PlonkType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
@@ -3208,7 +3209,7 @@
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">128</span>;
         <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">+</span> <span class="number">2</span>;
         <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
@@ -3294,11 +3295,11 @@
     }
 
     <span class="kw">fn</span> <span class="ident">check_batch_prove_and_verify</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">rng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">cs_ref</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
         <span class="ident">pks_ref</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
         <span class="ident">vks_ref</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
@@ -3335,7 +3336,7 @@
         <span class="ident">m</span>: <span class="ident">usize</span>,
         <span class="ident">a0</span>: <span class="ident">usize</span>,
         <span class="ident">circuit_type</span>: <span class="ident">MergeableCircuitType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cs</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
         <span class="comment">// Create variables</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -3370,5 +3371,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

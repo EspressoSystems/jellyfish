@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;gates.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gates.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;customized&#x2F;gates.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gates.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -326,7 +327,7 @@
 <span class="comment">////////////////////////////////////////////////////////////</span>
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">edwards_coeff_d</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">P::BaseField</span> {
+<span class="kw">fn</span> <span class="ident">edwards_coeff_d</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span>() -&gt; <span class="ident">P::BaseField</span> {
     <span class="ident">P::COEFF_D</span>
 }
 
@@ -341,19 +342,19 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Curve Equation Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         <span class="comment">// edwards equation: ax^2 + y^2 =1 + dx^2y^2</span>
         <span class="comment">// for ed_on_bn curves, we have a = 1</span>
         <span class="comment">// for ed_on_bls curves, we have a = -1</span>
         [<span class="op">-</span><span class="ident">P::COEFF_A</span>, <span class="op">-</span><span class="ident">F::one</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
-    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">edwards_coeff_d</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>()
     }
 }
@@ -369,16 +370,16 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Point Addition X-coordinate Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="ident">F::one</span>(), <span class="ident">F::one</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
-    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="kw">let</span> <span class="ident">d</span>: <span class="ident">F</span> <span class="op">=</span> <span class="ident">edwards_coeff_d</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>();
         <span class="op">-</span><span class="ident">d</span>
     }
@@ -395,16 +396,16 @@
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Point Addition Y-coordinate Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="op">-</span><span class="ident">P::COEFF_A</span>, <span class="ident">F::one</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
-    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">edwards_coeff_d</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>()
     }
 }
@@ -423,16 +424,16 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;4-ary Point Selection X-coordinate Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         [<span class="self">self</span>.<span class="ident">x1</span>, <span class="self">self</span>.<span class="ident">x2</span>, <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="self">self</span>.<span class="ident">x3</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">x2</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">x1</span>, <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
@@ -451,19 +452,19 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;4-ary Point Selection Y-coordinate Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         [<span class="self">self</span>.<span class="ident">y1</span> <span class="op">-</span> <span class="ident">F::one</span>(), <span class="self">self</span>.<span class="ident">y2</span> <span class="op">-</span> <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="self">self</span>.<span class="ident">y3</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">y2</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">y1</span> <span class="op">+</span> <span class="ident">F::one</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
@@ -484,19 +485,19 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Deg-2 Polynomial Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         <span class="self">self</span>.<span class="ident">q_lc</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         <span class="self">self</span>.<span class="ident">q_mul</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="ident">q_o</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="self">self</span>.<span class="ident">q_c</span>
     }
 }
@@ -510,13 +511,13 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Linear Combination Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         <span class="self">self</span>.<span class="ident">coeffs</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
@@ -530,13 +531,13 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Multiplication-then-addition Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         <span class="self">self</span>.<span class="ident">coeffs</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
@@ -549,16 +550,16 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Conditional Selection Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         [<span class="ident">F::zero</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="op">-</span><span class="ident">F::one</span>(), <span class="ident">F::one</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
@@ -571,16 +572,16 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Logic OR Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         [<span class="ident">F::one</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="op">-</span><span class="ident">F::one</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="op">-</span><span class="ident">F::one</span>()
     }
 }
@@ -593,16 +594,16 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;Logic OR Value Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
+    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
         [<span class="ident">F::one</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
+    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
         [<span class="op">-</span><span class="ident">F::one</span>(), <span class="ident">F::zero</span>()]
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
@@ -619,14 +620,13 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Field</span>,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;UltraPlonk Lookup Gate&quot;</span>
     }
-    <span class="kw">fn</span> <span class="ident">q_lookup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span> {
+    <span class="kw">fn</span> <span class="ident">q_lookup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
         <span class="ident">F::one</span>()
     }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_plonk" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

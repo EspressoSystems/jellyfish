@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;proof_system&#x2F;prover.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prover.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;proof_system&#x2F;prover.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prover.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../jf_plonk/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1118,7 +1119,7 @@
     <span class="doccomment">/// the quotient polynomial.</span>
     <span class="doccomment">/// * `num_wire_types` - number of wire types in the corresponding</span>
     <span class="doccomment">///   constraint system.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">domain_size</span>: <span class="ident">usize</span>, <span class="ident">num_wire_types</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">domain_size</span>: <span class="ident">usize</span>, <span class="ident">num_wire_types</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="ident">Radix2EvaluationDomain</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">domain_size</span>)
             .<span class="ident">ok_or</span>(<span class="ident">PlonkError::DomainCreationError</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">quot_domain</span> <span class="op">=</span> <span class="ident">GeneralEvaluationDomain</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="ident">::new</span>(
@@ -1138,10 +1139,10 @@
     <span class="doccomment">/// also return the public input polynomial.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_1st_round</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">CommitmentsAndPolys</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">CommitmentsAndPolys</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">wire_polys</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">cs</span>
             .<span class="ident">compute_wire_polynomials</span>()<span class="question-mark">?</span>
             .<span class="ident">into_iter</span>()
@@ -1160,11 +1161,11 @@
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_plookup_1st_round</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
         <span class="ident">tau</span>: <span class="ident">E::Fr</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">CommitmentsAndPolys</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">CommitmentsAndPolys</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">merged_lookup_table</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">compute_merged_lookup_table</span>(<span class="ident">tau</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">sorted_vec</span>, <span class="ident">h_1_poly</span>, <span class="ident">h_2_poly</span>) <span class="op">=</span>
             <span class="ident">cs</span>.<span class="ident">compute_lookup_sorted_vec_polynomials</span>(<span class="ident">tau</span>, <span class="kw-2">&amp;</span><span class="ident">merged_lookup_table</span>)<span class="question-mark">?</span>;
@@ -1179,11 +1180,11 @@
     <span class="doccomment">/// Return the grand product polynomial and its commitment.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_2nd_round</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prod_perm_poly</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mask_polynomial</span>(
             <span class="ident">prng</span>,
             <span class="ident">cs</span>.<span class="ident">compute_prod_permutation_polynomial</span>(<span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">beta</span>, <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">gamma</span>)<span class="question-mark">?</span>,
@@ -1198,13 +1199,13 @@
     <span class="doccomment">/// `cs` is guaranteed to support lookup</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_plookup_2nd_round</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">merged_lookup_table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">sorted_vec</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">sorted_vec</span>.<span class="ident">is_none</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(
                 <span class="ident">ParameterError</span>(<span class="string">&quot;Run Plookup with empty sorted lookup vectors&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>(),
@@ -1236,7 +1237,7 @@
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">online_oracles</span>: <span class="kw-2">&amp;</span>[<span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
         <span class="ident">num_wire_types</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CommitmentsAndPolys</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CommitmentsAndPolys</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">quot_poly</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">compute_quotient_polynomial</span>(<span class="ident">challenges</span>, <span class="ident">pks</span>, <span class="ident">online_oracles</span>, <span class="ident">num_wire_types</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">split_quot_polys</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">split_quotient_polynomial</span>(<span class="kw-2">&amp;</span><span class="ident">quot_poly</span>, <span class="ident">num_wire_types</span>)<span class="question-mark">?</span>;
@@ -1256,7 +1257,7 @@
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">online_oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">num_wire_types</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">wires_evals</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">online_oracles</span>
             .<span class="ident">wire_polys</span>
             .<span class="ident">par_iter</span>()
@@ -1286,7 +1287,7 @@
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">online_oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_none</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
                 <span class="string">&quot;Evaluate Plookup polynomials without supporting lookup&quot;</span>.<span class="ident">to_string</span>(),
@@ -1346,7 +1347,7 @@
         <span class="ident">online_oracles</span>: <span class="kw-2">&amp;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">poly_evals</span>: <span class="kw-2">&amp;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">plookup_evals</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">r_circ</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::compute_lin_poly_circuit_contribution</span>(<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">poly_evals</span>.<span class="ident">wires_evals</span>);
         <span class="kw">let</span> <span class="ident">r_perm</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::compute_lin_poly_copy_constraint_contribution</span>(
             <span class="ident">pk</span>,
@@ -1383,7 +1384,7 @@
         <span class="ident">domain_size</span>: <span class="ident">usize</span>,
         <span class="ident">zeta</span>: <span class="ident">E::Fr</span>,
         <span class="ident">quot_polys</span>: <span class="kw-2">&amp;</span>[<span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vanish_eval</span> <span class="op">=</span> <span class="ident">zeta</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">domain_size</span> <span class="kw">as</span> <span class="ident">u64</span>]) <span class="op">-</span> <span class="ident">E::Fr::one</span>();
         <span class="kw">let</span> <span class="ident">zeta_to_n_plus_2</span> <span class="op">=</span> (<span class="ident">vanish_eval</span> <span class="op">+</span> <span class="ident">E::Fr::one</span>()) <span class="op">*</span> <span class="ident">zeta</span> <span class="op">*</span> <span class="ident">zeta</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r_quot</span> <span class="op">=</span> <span class="ident">quot_polys</span>.<span class="ident">first</span>().<span class="ident">ok_or</span>(<span class="ident">PlonkError::IndexError</span>)<span class="question-mark">?</span>.<span class="ident">clone</span>();
@@ -1406,7 +1407,7 @@
         <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
         <span class="ident">online_oracles</span>: <span class="kw-2">&amp;</span>[<span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
         <span class="ident">lin_poly</span>: <span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">pks</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">pks</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">online_oracles</span>.<span class="ident">len</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
                 <span class="string">&quot;inconsistent pks/online oracles when computing opening proofs&quot;</span>.<span class="ident">to_string</span>(),
@@ -1426,7 +1427,7 @@
 
             <span class="comment">// Add Plookup related polynomials if support lookup.</span>
             <span class="kw">let</span> <span class="ident">lookup_flag</span> <span class="op">=</span>
-                <span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> (<span class="ident">oracles</span>.<span class="ident">plookup_oracles</span>.<span class="ident">h_polys</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">2</span>);
+                <span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> (<span class="ident">oracles</span>.<span class="ident">plookup_oracles</span>.<span class="ident">h_polys</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span>);
             <span class="kw">if</span> <span class="ident">lookup_flag</span> {
                 <span class="ident">polys_ref</span>.<span class="ident">extend</span>(<span class="ident"><span class="self">Self</span>::plookup_open_polys_ref</span>(<span class="ident">oracles</span>, <span class="ident">pk</span>)<span class="question-mark">?</span>);
             }
@@ -1441,7 +1442,7 @@
             <span class="ident">polys_ref</span>.<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">oracles</span>.<span class="ident">prod_perm_poly</span>);
             <span class="comment">// Add Plookup related polynomials if support lookup</span>
             <span class="kw">let</span> <span class="ident">lookup_flag</span> <span class="op">=</span>
-                <span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> (<span class="ident">oracles</span>.<span class="ident">plookup_oracles</span>.<span class="ident">h_polys</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">2</span>);
+                <span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> (<span class="ident">oracles</span>.<span class="ident">plookup_oracles</span>.<span class="ident">h_polys</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span>);
             <span class="kw">if</span> <span class="ident">lookup_flag</span> {
                 <span class="ident">polys_ref</span>.<span class="ident">extend</span>(<span class="ident"><span class="self">Self</span>::plookup_shifted_open_polys_ref</span>(<span class="ident">oracles</span>, <span class="ident">pk</span>)<span class="question-mark">?</span>);
             }
@@ -1466,7 +1467,7 @@
     <span class="kw">fn</span> <span class="ident">plookup_open_polys_ref</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[
             <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
             <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">key_table_poly</span>,
@@ -1481,7 +1482,7 @@
     <span class="kw">fn</span> <span class="ident">plookup_shifted_open_polys_ref</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[
             <span class="kw-2">&amp;</span><span class="ident">oracles</span>.<span class="ident">plookup_oracles</span>.<span class="ident">prod_lookup_poly</span>,
             <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
@@ -1498,10 +1499,10 @@
     <span class="doccomment">/// `hiding_bound` evaluations.</span>
     <span class="kw">fn</span> <span class="ident">mask_polynomial</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">hiding_bound</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">mask_poly</span> <span class="op">=</span>
             <span class="ident">DensePolynomial::rand</span>(<span class="ident">hiding_bound</span>, <span class="ident">prng</span>).<span class="ident">mul_by_vanishing_poly</span>(<span class="self">self</span>.<span class="ident">domain</span>);
         <span class="ident">mask_poly</span> <span class="op">+</span> <span class="ident">poly</span>
@@ -1511,7 +1512,7 @@
     <span class="kw">fn</span> <span class="ident">commit_polynomials</span>(
         <span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">polys</span>: <span class="kw-2">&amp;</span>[<span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">poly_comms</span> <span class="op">=</span> <span class="ident">polys</span>
             .<span class="ident">par_iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::commit_polynomial</span>(<span class="ident">ck</span>, <span class="ident">poly</span>))
@@ -1524,7 +1525,7 @@
     <span class="kw">fn</span> <span class="ident">commit_polynomial</span>(
         <span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">poly</span>: <span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">poly_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="ident">ck</span>, <span class="ident">poly</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).<span class="ident">map_err</span>(<span class="ident">PlonkError::PcsError</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">poly_comm</span>)
     }
@@ -1536,7 +1537,7 @@
         <span class="ident">polys_ref</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
         <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
         <span class="ident">eval_point</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="comment">// Compute the aggregated polynomial</span>
         <span class="kw">let</span> (<span class="ident">batch_poly</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">polys_ref</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(
             (<span class="ident">DensePolynomial::zero</span>(), <span class="ident">E::Fr::one</span>()),
@@ -1561,7 +1562,7 @@
         <span class="ident">pks</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
         <span class="ident">online_oracles</span>: <span class="kw-2">&amp;</span>[<span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
         <span class="ident">num_wire_types</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">pks</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">pks</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">online_oracles</span>.<span class="ident">len</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
                 <span class="string">&quot;inconsistent pks/online oracles when computing quotient polys&quot;</span>.<span class="ident">to_string</span>(),
@@ -1725,7 +1726,7 @@
         <span class="ident">w</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">pi</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
         <span class="ident">selectors_coset_fft</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">E::Fr</span> {
+    ) -&gt; <span class="ident">E::Fr</span> {
         <span class="comment">// Selectors</span>
         <span class="comment">// The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc</span>
         <span class="comment">// TODO: (binyi) get the order from a function.</span>
@@ -1772,7 +1773,7 @@
         <span class="ident">z_xw</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">sigmas_coset_fft</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">E::Fr</span>, <span class="ident">E::Fr</span>) {
+    ) -&gt; (<span class="ident">E::Fr</span>, <span class="ident">E::Fr</span>) {
         <span class="kw">let</span> <span class="ident">num_wire_types</span> <span class="op">=</span> <span class="ident">w</span>.<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">pk</span>.<span class="ident">domain_size</span>();
 
@@ -1833,7 +1834,7 @@
         <span class="ident">key_table_coset_fft</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">q_lookup_coset_fft</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">E::Fr</span>, <span class="ident">E::Fr</span>) {
+    ) -&gt; (<span class="ident">E::Fr</span>, <span class="ident">E::Fr</span>) {
         <span class="macro">assert!</span>(<span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>());
         <span class="macro">assert_eq!</span>(<span class="ident">h_coset_ffts</span>.<span class="ident">len</span>(), <span class="number">2</span>);
 
@@ -1933,7 +1934,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">quot_poly</span>: <span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">num_wire_types</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">expected_degree</span> <span class="op">=</span> <span class="ident">quotient_polynomial_degree</span>(<span class="self">self</span>.<span class="ident">domain</span>.<span class="ident">size</span>(), <span class="ident">num_wire_types</span>);
         <span class="kw">if</span> <span class="ident">quot_poly</span>.<span class="ident">degree</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">expected_degree</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WrongQuotientPolyDegree</span>(<span class="ident">quot_poly</span>.<span class="ident">degree</span>(), <span class="ident">expected_degree</span>).<span class="ident">into</span>());
@@ -1960,7 +1961,7 @@
     <span class="kw">fn</span> <span class="ident">compute_lin_poly_circuit_contribution</span>(
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
         <span class="ident">w_evals</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="comment">// The selectors order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc</span>
         <span class="comment">// TODO: (binyi) get the order from a function.</span>
         <span class="kw">let</span> <span class="ident">q_lc</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">selectors</span>[..<span class="ident">GATE_WIDTH</span>];
@@ -1996,7 +1997,7 @@
         <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">poly_evals</span>: <span class="kw-2">&amp;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">prod_perm_poly</span>: <span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">dividend</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">zeta</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">pk</span>.<span class="ident">domain_size</span>() <span class="kw">as</span> <span class="ident">u64</span>]) <span class="op">-</span> <span class="ident">E::Fr::one</span>();
         <span class="kw">let</span> <span class="ident">divisor</span> <span class="op">=</span> <span class="ident">E::Fr::from</span>(<span class="ident">pk</span>.<span class="ident">domain_size</span>() <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">*</span> (<span class="ident">challenges</span>.<span class="ident">zeta</span> <span class="op">-</span> <span class="ident">E::Fr::one</span>());
         <span class="kw">let</span> <span class="ident">lagrange_1_eval</span> <span class="op">=</span> <span class="ident">dividend</span> <span class="op">/</span> <span class="ident">divisor</span>;
@@ -2037,7 +2038,7 @@
         <span class="ident">w_evals</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">plookup_evals</span>: <span class="kw-2">&amp;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">oracles</span>: <span class="kw-2">&amp;</span><span class="ident">PlookupOracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">alpha_2</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">alpha</span>.<span class="ident">square</span>();
         <span class="kw">let</span> <span class="ident">alpha_4</span> <span class="op">=</span> <span class="ident">alpha_2</span>.<span class="ident">square</span>();
         <span class="kw">let</span> <span class="ident">alpha_5</span> <span class="op">=</span> <span class="ident">alpha_4</span> <span class="op">*</span> <span class="ident">challenges</span>.<span class="ident">alpha</span>;
@@ -2104,7 +2105,7 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mul_poly</span>(<span class="ident">poly</span>: <span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">coeff</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">mul_poly</span>(<span class="ident">poly</span>: <span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">coeff</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>) -&gt; <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
         <span class="ident">DensePolynomial</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="ident">::from_coefficients_vec</span>(
             <span class="ident">poly</span>.<span class="ident">coeffs</span>.<span class="ident">par_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">coeff</span> <span class="op">*</span> <span class="ident">c</span>).<span class="ident">collect</span>(),
         )
@@ -2112,7 +2113,7 @@
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">quotient_polynomial_degree</span>(<span class="ident">domain_size</span>: <span class="ident">usize</span>, <span class="ident">num_wire_types</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">fn</span> <span class="ident">quotient_polynomial_degree</span>(<span class="ident">domain_size</span>: <span class="ident">usize</span>, <span class="ident">num_wire_types</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
     <span class="ident">num_wire_types</span> <span class="op">*</span> (<span class="ident">domain_size</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">+</span> <span class="number">2</span>
 }
 
@@ -2126,7 +2127,7 @@
     <span class="kw">use</span> <span class="ident">ark_std::test_rng</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_split_quotient_polynomial_wrong_degree</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_split_quotient_polynomial_wrong_degree</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="ident">test_split_quotient_polynomial_wrong_degree_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_split_quotient_polynomial_wrong_degree_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_split_quotient_polynomial_wrong_degree_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -2134,9 +2135,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">test_split_quotient_polynomial_wrong_degree_helper</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prover</span> <span class="op">=</span> <span class="ident">Prover</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="number">4</span>, <span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">test_rng</span>();
+        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">bad_quot_poly</span> <span class="op">=</span> <span class="ident">DensePolynomial</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="number">25</span>, <span class="ident">rng</span>);
         <span class="macro">assert!</span>(<span class="ident">prover</span>
             .<span class="ident">split_quotient_polynomial</span>(<span class="kw-2">&amp;</span><span class="ident">bad_quot_poly</span>, <span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>)
@@ -2146,5 +2147,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>
