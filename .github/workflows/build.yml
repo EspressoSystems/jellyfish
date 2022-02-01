@@ -2,22 +2,45 @@ name: Build
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * 1'
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: self-hosted
-    container:
-      image: registry.gitlab.com/asuran-rs/containers/rust-sccache-docker:1.56
+    runs-on: ubuntu-latest
     steps:
-      - uses: styfle/cancel-workflow-action@0.9.1
-        name: Cancel Outdated Builds
+      - name: Cancel Outdated Builds
+        uses: styfle/cancel-workflow-action@0.9.1
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
-        name: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: default
+          toolchain: stable
+          override: true
+          default: true
+          components: rustfmt, clippy
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: false
+          default: false
+          components: rustfmt
 
       - name: Configure Git
         run: |
@@ -28,19 +51,18 @@ jobs:
       - uses: Swatinem/rust-cache@v1
         name: Enable Rust Caching
 
-      - name: Install Nightly rustfmt
-        run: |
-          rustup toolchain install nightly --allow-downgrade --profile minimal --component rustfmt || true
-          rustup show
-
       - name: Format Check
         run: cargo +nightly fmt -- --check
 
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ github.token }}
 
       - name: Audit
-        run: cargo audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ github.token }}
 
       - name: Check Bench
         run: cargo bench --no-run
