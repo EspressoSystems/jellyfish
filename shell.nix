@@ -13,6 +13,8 @@ let
   stableToolchain = pkgs.rust-bin.stable."1.56.1".minimal.override {
     extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
   };
+
+  pre-commit-check = pkgs.callPackage ./nix/pre-commit.nix { };
 in
 with pkgs;
 
@@ -21,6 +23,7 @@ mkShell {
     argbash
     openssl
     pkgconfig
+    git
 
     stableToolchain
     nightlyToolchain
@@ -35,5 +38,8 @@ mkShell {
 
     # Ensure `cargo fmt` uses `rustfmt` from nightly.
     export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
+
+    # install pre-commit hooks
+    ${pre-commit-check.shellHook}
   '';
 }
