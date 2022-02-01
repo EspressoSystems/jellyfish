@@ -24,7 +24,7 @@ additional libraries:
 To avoid manually activating the nix shell each time the
 [direnv](https://direnv.net/) shell extension can be used to activate the
 environment when entering the local directory with the checkout of this repo.
-Note that direnv needs to be [hooked](https://direnv.net/docs/hook.html) into
+Note that direnv needs to be [installed](https://direnv.net/docs/installation.html) first, and to be [hooked](https://direnv.net/docs/hook.html) into
 the shell to function.
 
 To allow `direnv` for this repo run
