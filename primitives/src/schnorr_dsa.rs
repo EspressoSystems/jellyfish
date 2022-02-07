@@ -130,7 +130,6 @@ where
 #[tagged_blob("SIG")]
 #[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
-#[derivative(Hash(bound = "P: Parameters"))]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
@@ -140,12 +139,22 @@ where
     pub(crate) R: GroupProjective<P>,
 }
 
+impl<P> Hash for Signature<P>
+where
+    P: Parameters + Clone,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        Hash::hash(&self.s, state);
+        Hash::hash(&self.R.into_affine(), state);
+    }
+}
+
 impl<P> PartialEq for Signature<P>
 where
     P: Parameters + Clone,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.s == other.s && self.R == other.R
+        self.s == other.s && self.R.into_affine() == other.R.into_affine()
     }
 }
 // =====================================================

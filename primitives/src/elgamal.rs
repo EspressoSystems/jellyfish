@@ -12,6 +12,7 @@ use ark_ec::{
 use ark_ff::UniformRand;
 use ark_serialize::*;
 use ark_std::{
+    hash::{Hash, Hasher},
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec,
@@ -30,13 +31,24 @@ use zeroize::Zeroize;
 // =====================================================
 /// Encryption key for encryption scheme
 #[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Default, Zeroize, Derivative)]
-#[derivative(Hash(bound = "P: Parameters"), PartialEq)]
 #[derivative(Debug(bound = "P: Parameters"))]
 pub struct EncKey<P>
 where
     P: Parameters + Clone,
 {
     pub(crate) key: GroupProjective<P>,
+}
+
+impl<P: Parameters + Clone> Hash for EncKey<P> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        Hash::hash(&self.key.into_affine(), state)
+    }
+}
+
+impl<P: Parameters + Clone> PartialEq for EncKey<P> {
+    fn eq(&self, other: &Self) -> bool {
+        self.key.into_affine() == other.key.into_affine()
+    }
 }
 
 // =====================================================
