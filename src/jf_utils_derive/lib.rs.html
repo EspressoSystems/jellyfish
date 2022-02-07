@@ -190,9 +190,9 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// The type Nullifier can now be serialized as binary:</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// # #[macro_use] extern crate jf_utils_derive;</span>
 <span class="doccomment">/// # use ark_serialize::*;</span>
 <span class="doccomment">/// # use ark_std::UniformRand;</span>
+<span class="doccomment">/// # use jf_utils_derive::tagged_blob;</span>
 <span class="doccomment">/// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};</span>
 <span class="doccomment">/// # #[tagged_blob(&quot;NUL&quot;)]</span>
 <span class="doccomment">/// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]</span>
@@ -202,9 +202,9 @@
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// or as base64:</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// # #[macro_use] extern crate jf_utils_derive;</span>
 <span class="doccomment">/// # use ark_serialize::*;</span>
 <span class="doccomment">/// # use ark_std::UniformRand;</span>
+<span class="doccomment">/// # use jf_utils_derive::tagged_blob;</span>
 <span class="doccomment">/// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};</span>
 <span class="doccomment">/// # #[tagged_blob(&quot;NUL&quot;)]</span>
 <span class="doccomment">/// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]</span>

@@ -500,6 +500,15 @@
 <span id="499">499</span>
 <span id="500">500</span>
 <span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the Schnorr signature over the various Edwards</span>
 <span class="doccomment">//! curves.</span>
 
@@ -632,7 +641,6 @@
 <span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;SIG&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -642,12 +650,22 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">R</span>: <span class="ident">GroupProjective</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
 }
 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">P</span>: <span class="ident">Parameters</span> <span class="op">+</span> <span class="ident">Clone</span>,
+{
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) {
+        <span class="ident">Hash::hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">s</span>, <span class="ident">state</span>);
+        <span class="ident">Hash::hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">R</span>.<span class="ident">into_affine</span>(), <span class="ident">state</span>);
+    }
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">P</span>: <span class="ident">Parameters</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">s</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">s</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">R</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">R</span>
+        <span class="self">self</span>.<span class="ident">s</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">s</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">R</span>.<span class="ident">into_affine</span>() <span class="op">==</span> <span class="ident">other</span>.<span class="ident">R</span>.<span class="ident">into_affine</span>()
     }
 }
 <span class="comment">// =====================================================</span>
