@@ -49,9 +49,9 @@ use syn::{parse_macro_input, AttributeArgs, Item, NestedMeta};
 ///
 /// The type Nullifier can now be serialized as binary:
 /// ```
-/// # #[macro_use] extern crate jf_utils_derive;
 /// # use ark_serialize::*;
 /// # use ark_std::UniformRand;
+/// # use jf_utils_derive::tagged_blob;
 /// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};
 /// # #[tagged_blob("NUL")]
 /// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]
@@ -61,9 +61,9 @@ use syn::{parse_macro_input, AttributeArgs, Item, NestedMeta};
 /// ```
 /// or as base64:
 /// ```
-/// # #[macro_use] extern crate jf_utils_derive;
 /// # use ark_serialize::*;
 /// # use ark_std::UniformRand;
+/// # use jf_utils_derive::tagged_blob;
 /// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};
 /// # #[tagged_blob("NUL")]
 /// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]
