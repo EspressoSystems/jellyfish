@@ -2,7 +2,7 @@
 name = "jf-utils"
 description = "Utilities for Jellyfish cryptographic library"
 version = "0.1.0"
-authors = ["Translucence Research <engineering@translucence.net>"]
+authors = ["Translucence Research <hello@translucence.net>"]
 edition = "2018"
 
 [dependencies]
