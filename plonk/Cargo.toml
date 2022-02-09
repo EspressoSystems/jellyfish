@@ -1,8 +1,8 @@
 [package]
 name = "jf-plonk"
 description = "UltraPlonk implementation"
-version = "0.0.1"
-authors = ["Translucence Research <hello@translucence.net>"]
+version = "0.1.0"
+authors = ["Translucence Research <engineering@translucence.net>"]
 edition = "2018"
 
 [dependencies]
