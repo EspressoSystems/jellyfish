@@ -397,7 +397,19 @@
 <span id="396">396</span>
 <span id="397">397</span>
 <span id="398">398</span>
-</pre><pre class="rust"><code><span class="doccomment">//! An argument system that proves/verifies multiple instances in a batch.</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
+<span class="comment">// This file is part of the Jellyfish library.</span>
+
+<span class="comment">// You should have received a copy of the MIT License</span>
+<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+
+<span class="doccomment">//! An argument system that proves/verifies multiple instances in a batch.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{<span class="ident">customized::ecc::SWToTEConParam</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>},
     <span class="ident">errors</span>::{<span class="ident">PlonkError</span>, <span class="ident">SnarkError::ParameterError</span>},

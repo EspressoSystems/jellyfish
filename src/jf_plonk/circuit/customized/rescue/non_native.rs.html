@@ -1306,7 +1306,19 @@
 <span id="1305">1305</span>
 <span id="1306">1306</span>
 <span id="1307">1307</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This module implements rescue circuit with non-native arithmetics.</span>
+<span id="1308">1308</span>
+<span id="1309">1309</span>
+<span id="1310">1310</span>
+<span id="1311">1311</span>
+<span id="1312">1312</span>
+<span id="1313">1313</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
+<span class="comment">// This file is part of the Jellyfish library.</span>
+
+<span class="comment">// You should have received a copy of the MIT License</span>
+<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+
+<span class="doccomment">//! This module implements rescue circuit with non-native arithmetics.</span>
 <span class="doccomment">//! The overall structure of the module mimics what is in rescue.rs</span>
 <span class="doccomment">//! The major adjustment is to move from `Variable`s (that are native to</span>
 <span class="doccomment">//! a plonk circuit) to `FpElemVar`s that are non-native to the circuit.</span>

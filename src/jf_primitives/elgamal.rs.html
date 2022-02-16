@@ -418,7 +418,19 @@
 <span id="417">417</span>
 <span id="418">418</span>
 <span id="419">419</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Implements the ElGamal encryption scheme.</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
+<span class="comment">// This file is part of the Jellyfish library.</span>
+
+<span class="comment">// You should have received a copy of the MIT License</span>
+<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+
+<span class="doccomment">//! Implements the ElGamal encryption scheme.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">elgamal::Direction</span>::{<span class="ident">Decrypt</span>, <span class="ident">Encrypt</span>},

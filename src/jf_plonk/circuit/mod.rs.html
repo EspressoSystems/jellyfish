@@ -215,7 +215,19 @@
 <span id="214">214</span>
 <span id="215">215</span>
 <span id="216">216</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Interfaces for Plonk-based constraint systems</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
+<span class="comment">// This file is part of the Jellyfish library.</span>
+
+<span class="comment">// You should have received a copy of the MIT License</span>
+<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+
+<span class="doccomment">//! Interfaces for Plonk-based constraint systems</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors</span>::{<span class="ident">CircuitError::LookupUnsupported</span>, <span class="ident">PlonkError</span>};
 <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftField</span>, <span class="ident">Field</span>};
 <span class="kw">use</span> <span class="ident">ark_poly::univariate::DensePolynomial</span>;

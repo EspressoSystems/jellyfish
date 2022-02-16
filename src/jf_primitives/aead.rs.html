@@ -361,7 +361,19 @@
 <span id="360">360</span>
 <span id="361">361</span>
 <span id="362">362</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Wraps crypto_box&#39;s AEAD encryption scheme.</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
+<span class="comment">// This file is part of the Jellyfish library.</span>
+
+<span class="comment">// You should have received a copy of the MIT License</span>
+<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+
+<span class="doccomment">//! Wraps crypto_box&#39;s AEAD encryption scheme.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">Read</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
