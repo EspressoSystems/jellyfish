@@ -36,24 +36,27 @@ fn main() -> Result<(), PlonkError> {
     let G = EdwardsAffine::prime_subgroup_generator();
     let X = G.mul(x).into_affine();
 
-    // Our first step is to build a circuit for the above statements.
+    // Our first step is to build a circuit for the following statements.
+    // - secret input `x`;
+    // - public generator `G`;
+    // - public group element `X := xG`
     // This circuit does not need to have real inputs.
     // We can simply use a dummy data set.
     let circuit = proof_of_exponent_circuit(x, X)?;
 
-    // Knowing the circuit size, we are able to call the simulate the universal
+    // Knowing the circuit size, we are able to simulate the universal
     // setup and obtain the structured reference string (SRS).
     //
     let circuit_size = circuit.num_gates() + 100; // adding 100 as a buffer
     let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(circuit_size, &mut rng)?;
 
     // Then, we generate the proving key and verification key from the SRS and
-    // circuit
+    // circuit.
     let (pk, vk) = PlonkKzgSnark::<Bls12_381>::preprocess(&srs, &circuit)?;
 
     // Next, we generate the proof.
     // The proof generation will need an internal transcript for Fiat-Shamir
-    // transformation. For this example we use a `StandardTranscript`
+    // transformation. For this example we use a `StandardTranscript`.
     let proof = PlonkKzgSnark::<Bls12_381>::prove::<_, _, StandardTranscript>(
         &mut rng, &circuit, &pk, None,
     )?;
@@ -71,10 +74,11 @@ fn main() -> Result<(), PlonkError> {
 }
 
 // This function build the PoE circuit.
+//
 // We write the code with generics so that is can be adapted to
 // multiple curves.
 // Specifically, the PoE is associated with an embedded curve with param `P`,
-// i.e., `Jubjub`.
+// that defined twisted-edwards parameters for a curve.
 #[allow(non_snake_case)]
 fn proof_of_exponent_circuit<P>(
     x: P::ScalarField,
@@ -84,7 +88,7 @@ where
     P: TEModelParameters + Clone,
     <P as ModelParameters>::BaseField: PrimeField,
 {
-    // Let's check that the inputs are indeed correct before we build a circuit
+    // Let's check that the inputs are indeed correct before we build a circuit.
     let G = TEAffine::<P>::prime_subgroup_generator();
     assert_eq!(X, G.mul(x), "the inputs are incorrect: X != xG");
 
@@ -95,33 +99,33 @@ where
     let mut circuit = PlonkCircuit::<P::BaseField>::new_turbo_plonk();
 
     // Step 2:
-    // now we create variables for each input to the circuit
+    // now we create variables for each input to the circuit.
 
-    // First variable is x which is an field element over P::ScalarField
-    // We will need to lift it to P::BaseField
+    // First variable is x which is an field element over P::ScalarField.
+    // We will need to lift it to P::BaseField.
     let x_fq = fr_to_fq::<_, P>(&x);
     let x_var = circuit.create_variable(x_fq)?;
 
-    // The next variable is a public constant: generator G
+    // The next variable is a public constant: generator `G`.
     // We need to convert the point to Jellyfish's own `Point` struct.
     let G_jf: Point<P::BaseField> = G.into();
     let G_var = circuit.create_constant_point_variable(G_jf)?;
 
-    // the last variable is a public variable X
+    // The last variable is a public variable `X`.
     let X_jf: Point<P::BaseField> = X.into();
     let X_var = circuit.create_public_point_variable(X_jf)?;
 
     // Step 3:
-    // Connect the wires
+    // Connect the wires.
     let X_var_computed = circuit.variable_base_scalar_mul::<P>(x_var, &G_var)?;
     circuit.point_equal_gate(&X_var_computed, &X_var)?;
 
-    // sanity check: the circuit must be satisfied
+    // Sanity check: the circuit must be satisfied.
     assert!(circuit
         .check_circuit_satisfiability(&[X_jf.get_x(), X_jf.get_y()])
         .is_ok());
 
-    // And we are done
+    // And we are done!
     circuit.finalize_for_arithmetization()?;
 
     Ok(circuit)
