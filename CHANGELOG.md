@@ -6,6 +6,8 @@
 
 ### Features
 
+- Introducing an example for proving knowledge of exponent
+
 ### Improvements
 
 ### Bugfixes
