@@ -20,7 +20,7 @@ use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
 use ark_ff::PrimeField;
 use ark_std::{rand::SeedableRng, UniformRand};
 use jf_plonk::{
-    circuit::{customized::ecc::Point, Arithmetization, Circuit, PlonkCircuit},
+    circuit::{customized::ecc::Point, Circuit, PlonkCircuit},
     errors::PlonkError,
     proof_system::{PlonkKzgSnark, Snark},
     transcript::StandardTranscript,
@@ -49,7 +49,7 @@ fn main() -> Result<(), PlonkError> {
     // setup and obtain the structured reference string (SRS).
     //
     // The required SRS size can be obtained from the circuit.
-    let srs_size = circuit.eval_domain_size()?;
+    let srs_size = circuit.srs_size()?;
     let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut rng)?;
 
     // Then, we generate the proving key and verification key from the SRS and
