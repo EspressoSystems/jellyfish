@@ -48,7 +48,7 @@ fn main() -> Result<(), PlonkError> {
     // Knowing the circuit size, we are able to simulate the universal
     // setup and obtain the structured reference string (SRS).
     //
-    let circuit_size = circuit.num_gates() + 2; // adding 100 as a buffer
+    let circuit_size = circuit.num_gates() + 2; // extra 2 degree for masking polynomial to make snark zero-knowledge
     let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(circuit_size, &mut rng)?;
 
     // Then, we generate the proving key and verification key from the SRS and
