@@ -13,8 +13,8 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, PairingEngine, ProjectiveCurve,
-    TEModelParameters,
+    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, ModelParameters, PairingEngine,
+    ProjectiveCurve, TEModelParameters,
 };
 use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
 use ark_ff::PrimeField;
@@ -43,7 +43,7 @@ fn main() -> Result<(), PlonkError> {
     // - public group element `X := xG`
     // This circuit does not need to have real inputs.
     // We can simply use a dummy data set.
-    let circuit = proof_of_exponent_circuit::<EdwardsParameters, Bls12_381, _>(x, X)?;
+    let circuit = proof_of_exponent_circuit::<EdwardsParameters, Bls12_381>(x, X)?;
 
     // Knowing the circuit size, we are able to simulate the universal
     // setup and obtain the structured reference string (SRS).
@@ -89,14 +89,14 @@ fn main() -> Result<(), PlonkError> {
 // - a pairing engine
 // - the native field F for the prove system
 #[allow(non_snake_case)]
-fn proof_of_exponent_circuit<EmbedCurve, PairingCurve, F>(
+fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
     x: EmbedCurve::ScalarField,
     X: TEAffine<EmbedCurve>,
 ) -> Result<PlonkCircuit<EmbedCurve::BaseField>, PlonkError>
 where
-    F: PrimeField,
-    EmbedCurve: TEModelParameters<BaseField = F> + Clone,
-    PairingCurve: PairingEngine<Fr = F>,
+    EmbedCurve: TEModelParameters + Clone,
+    <EmbedCurve as ModelParameters>::BaseField: PrimeField,
+    PairingCurve: PairingEngine,
 {
     // Let's check that the inputs are indeed correct before we build a circuit.
     let G = TEAffine::<EmbedCurve>::prime_subgroup_generator();
@@ -106,7 +106,7 @@ where
     // We instantiate a turbo plonk circuit.
     //
     // Here we only need turbo plonk since we are not using plookups.
-    let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+    let mut circuit = PlonkCircuit::<EmbedCurve::BaseField>::new_turbo_plonk();
 
     // Step 2:
     // now we create variables for each input to the circuit.
@@ -118,11 +118,11 @@ where
 
     // The next variable is a public constant: generator `G`.
     // We need to convert the point to Jellyfish's own `Point` struct.
-    let G_jf: Point<F> = G.into();
+    let G_jf: Point<EmbedCurve::BaseField> = G.into();
     let G_var = circuit.create_constant_point_variable(G_jf)?;
 
     // The last variable is a public variable `X`.
-    let X_jf: Point<F> = X.into();
+    let X_jf: Point<EmbedCurve::BaseField> = X.into();
     let X_var = circuit.create_public_point_variable(X_jf)?;
 
     // Step 3:
