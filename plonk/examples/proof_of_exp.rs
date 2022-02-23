@@ -62,11 +62,14 @@ fn main() -> Result<(), PlonkError> {
     )?;
 
     // Last step, verify the proof against the public inputs.
+    let public_inputs = circuit.public_input().unwrap();
+    // extra messages to bound to proof by appending in its transcripts, not used here.
+    let extra_transcript_init_msg = None;
     assert!(PlonkKzgSnark::<Bls12_381>::verify::<StandardTranscript>(
         &vk,
-        &[X.x, X.y],
+        &public_inputs,
         &proof,
-        None,
+        extra_transcript_init_msg,
     )
     .is_ok());
 
