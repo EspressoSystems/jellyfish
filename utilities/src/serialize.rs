@@ -115,6 +115,7 @@ impl<T: Tagged + CanonicalSerialize + CanonicalDeserialize> From<&T> for TaggedB
     }
 }
 
+#[derive(Debug)]
 pub enum TaggedBlobError {
     Base64Error {
         source: Tb64Error,
