@@ -8,7 +8,7 @@
 
 ### Improvements
 
-- Derive `Debug` on `enum TaggedBlobError`
+- Derive `Debug`, `Snafu` on `enum TaggedBlobError`
 
 ### Bugfixes
 
