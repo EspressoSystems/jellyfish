@@ -2,6 +2,8 @@
 
 ## Pending
 
+- Updated `tagged-base64` reference url to reflect the Espresso Systems name change
+
 ### Breaking changes
 
 ### Features
