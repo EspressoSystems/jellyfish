@@ -2,8 +2,6 @@
 
 ## Pending
 
-- Updated `tagged-base64` reference url to reflect the Espresso Systems name change
-
 ### Breaking changes
 
 ### Features
@@ -11,6 +9,7 @@
 ### Improvements
 
 - Derive `Debug`, `Snafu` on `enum TaggedBlobError`
+- Updated `tagged-base64` reference url to reflect the Espresso Systems name change
 
 ### Bugfixes
 
