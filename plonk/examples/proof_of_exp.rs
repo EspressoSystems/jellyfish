@@ -49,7 +49,7 @@ fn main() -> Result<(), PlonkError> {
     // setup and obtain the structured reference string (SRS).
     //
     // The required SRS size can be obtained from the circuit.
-    let srs_size = circuit.eval_domain_size()?;
+    let srs_size = circuit.srs_size()?;
     let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut rng)?;
 
     // Then, we generate the proving key and verification key from the SRS and

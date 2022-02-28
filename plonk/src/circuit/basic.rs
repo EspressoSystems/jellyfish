@@ -1048,6 +1048,11 @@ impl<F> Arithmetization<F> for PlonkCircuit<F>
 where
     F: PrimeField,
 {
+    fn srs_size(&self) -> Result<usize, PlonkError> {
+        // extra 2 degree for masking polynomial to make snark zero-knowledge
+        Ok(self.eval_domain_size()? + 2)
+    }
+
     fn eval_domain_size(&self) -> Result<usize, PlonkError> {
         self.check_finalize_flag(true)?;
         Ok(self.eval_domain.size())

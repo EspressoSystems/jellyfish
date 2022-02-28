@@ -76,7 +76,7 @@ where
         let domain_size = circuit.eval_domain_size()?;
         let num_inputs = circuit.num_inputs();
         let supported_hiding_bound = 2;
-        if srs.0.max_degree() < domain_size + supported_hiding_bound {
+        if srs.0.max_degree() < circuit.srs_size()? {
             return Err(PlonkError::IndexTooLarge);
         }
         // 1. Compute selector and permutation polynomials.
