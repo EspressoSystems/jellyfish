@@ -261,12 +261,6 @@ impl<F: FftField> PlonkCircuit<F> {
     pub fn range_size(&self) -> Result<usize, PlonkError> {
         Ok(1 << self.range_bit_len()?)
     }
-
-    /// The required SRS size for the circuit.
-    pub fn srs_size(&self) -> Result<usize, PlonkError> {
-        // extra 2 degree for masking polynomial to make snark zero-knowledge
-        Ok(self.num_gates() + 2)
-    }
 }
 
 impl<F: FftField> Circuit<F> for PlonkCircuit<F> {

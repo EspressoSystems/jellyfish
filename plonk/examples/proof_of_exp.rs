@@ -20,7 +20,7 @@ use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
 use ark_ff::PrimeField;
 use ark_std::{rand::SeedableRng, UniformRand};
 use jf_plonk::{
-    circuit::{customized::ecc::Point, Circuit, PlonkCircuit},
+    circuit::{customized::ecc::Point, Arithmetization, Circuit, PlonkCircuit},
     errors::PlonkError,
     proof_system::{PlonkKzgSnark, Snark},
     transcript::StandardTranscript,
