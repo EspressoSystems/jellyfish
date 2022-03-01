@@ -81,7 +81,9 @@ impl<E: PairingEngine> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
+        msm_start();
         let wires_poly_comms = Self::commit_polynomials(ck, &wire_polys)?;
+        msm_end();
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -105,7 +107,9 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
+        msm_start();
         let h_poly_comms = Self::commit_polynomials(ck, &h_polys)?;
+        msm_end();
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -123,7 +127,9 @@ impl<E: PairingEngine> Prover<E> {
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
             2,
         );
+        msm_start();
         let prod_perm_comm = Self::commit_polynomial(ck, &prod_perm_poly)?;
+        msm_end();
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
@@ -156,7 +162,9 @@ impl<E: PairingEngine> Prover<E> {
             )?,
             2,
         );
+        msm_start();
         let prod_lookup_comm = Self::commit_polynomial(ck, &prod_lookup_poly)?;
+        msm_end();
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
@@ -174,8 +182,9 @@ impl<E: PairingEngine> Prover<E> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
         let split_quot_polys = self.split_quotient_polynomial(&quot_poly, num_wire_types)?;
+        msm_start();
         let split_quot_poly_comms = Self::commit_polynomials(ck, &split_quot_polys)?;
-
+        msm_end();
         Ok((split_quot_poly_comms, split_quot_polys))
     }
 
@@ -468,9 +477,7 @@ impl<E: PairingEngine> Prover<E> {
         ck: &CommitKey<E>,
         poly: &DensePolynomial<E::Fr>,
     ) -> Result<Commitment<E>, PlonkError> {
-        msm_start();
         let (poly_comm, _) = KZG10::commit(ck, poly, None, None).map_err(PlonkError::PcsError)?;
-        msm_end();
         Ok(poly_comm)
     }
 
@@ -495,8 +502,10 @@ impl<E: PairingEngine> Prover<E> {
             *eval_point,
             &empty_rand,
         )?;
-
-        Self::commit_polynomial(ck, &witness_poly)
+        msm_start();
+        let res = Self::commit_polynomial(ck, &witness_poly);
+        msm_end();
+        res
     }
 
     /// Compute the quotient polynomial via (i)FFTs.

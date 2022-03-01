@@ -209,12 +209,14 @@ macro_rules! plonk_batch_verify_bench {
             start.elapsed().as_nanos() / NUM_REPETITIONS as u128
         );
         println!(
-            "time spend on FFT:  {} ns",
-            total_fft_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on FFT:  {} ns, or {}%",
+            total_fft_time().as_nanos() / NUM_REPETITIONS as u128,
+            100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!(
-            "time spend on MSM:  {} ns",
-            total_msm_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on MSM:  {} ns, or {}%",
+            total_msm_time().as_nanos() / NUM_REPETITIONS as u128,
+            100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
     };
 }
@@ -233,6 +235,7 @@ fn bench_batch_verify() {
 fn bench_intense() {
     for i in 10..=30 {
         let dim = 1 << i;
+        println!("bench with log(dim) =  {}", i);
         plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
         plonk_verify_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
     }
