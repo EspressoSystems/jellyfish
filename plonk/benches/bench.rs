@@ -13,6 +13,7 @@ use ark_bls12_381::{Bls12_381, Fr as Fr381};
 use ark_bn254::{Bn254, Fr as Fr254};
 use ark_bw6_761::{Fr as Fr761, BW6_761};
 use ark_ff::PrimeField;
+use ark_std::{fs::File, io::Write};
 use jf_plonk::{
     bencher::{init_timers, total_fft_time, total_msm_time, total_poly_eval_time},
     circuit::{Circuit, PlonkCircuit},
@@ -47,8 +48,6 @@ fn gen_circuit_for_bench<F: PrimeField>(
 
 macro_rules! plonk_prove_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr) => {
-        init_timers();
-
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
@@ -57,6 +56,7 @@ macro_rules! plonk_prove_bench {
 
         let (pk, _) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
+        init_timers();
         let start = ark_std::time::Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
@@ -93,6 +93,70 @@ macro_rules! plonk_prove_bench {
             100f64 * total_poly_eval_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!("=====================================");
+    };
+}
+
+macro_rules! plonk_prove_mt_bench {
+    ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr, $file:expr) => {
+        let rng = &mut ark_std::test_rng();
+        let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
+
+        let max_degree = $num_gates + 2;
+        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+
+        let (pk, _) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
+
+        init_timers();
+        let start = ark_std::time::Instant::now();
+
+        for _ in 0..NUM_REPETITIONS {
+            let _ = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(
+                rng, &cs, &pk, None,
+            )
+            .unwrap();
+        }
+        println!("=====================================");
+        println!(
+            "proving time for {}, {} with dim {}: {} ns/gate",
+            stringify!($bench_curve),
+            stringify!($bench_plonk_type),
+            $num_gates,
+            start.elapsed().as_nanos() / NUM_REPETITIONS as u128 / $num_gates as u128
+        );
+        println!(
+            "total batch verify time: {:.2} ms",
+            start.elapsed().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64
+        );
+        println!(
+            "time spend on FFT:  {:.2} ms, or {:.2}%",
+            total_fft_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
+        );
+        println!(
+            "time spend on MSM:  {:.2} ms, or {:.2}%",
+            total_msm_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_msm_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
+        );
+        println!(
+            "time spend on poly evaluation: {:.2} ms, or {:.2}%",
+            total_poly_eval_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_poly_eval_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
+        );
+        println!("=====================================");
+        $file
+            .write_all(
+                format!(
+                    "{}     {:.2}   {:.2}   {:.2}   {:.2}   {:.2}\n",
+                    $num_gates,
+                    start.elapsed().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+                    total_fft_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+                    100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64,
+                    total_msm_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+                    100f64 * total_msm_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64,
+                )
+                .as_ref(),
+            )
+            .expect("Unable to write data");
     };
 }
 
@@ -169,8 +233,6 @@ fn bench_verify() {
 
 macro_rules! plonk_batch_verify_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_proofs:expr) => {
-        init_timers();
-
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>(1024, $bench_plonk_type).unwrap();
 
@@ -188,6 +250,7 @@ macro_rules! plonk_batch_verify_bench {
         let public_inputs_ref = vec![&pub_input[..]; $num_proofs];
         let proofs_ref = vec![&proof; $num_proofs];
 
+        init_timers();
         let start = ark_std::time::Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
@@ -237,10 +300,16 @@ fn bench_batch_verify() {
 }
 
 fn bench_intense() {
+    let mut f = File::create(format!(
+        "../target/{}-threads.txt",
+        rayon::current_num_threads()
+    ))
+    .expect("Unable to create file");
+
     for i in 10..=30 {
         let dim = 1 << i;
         println!("bench with log(dim) =  {}", i);
-        plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
+        plonk_prove_mt_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim, f);
     }
 
     for i in 10..=30 {
@@ -251,9 +320,8 @@ fn bench_intense() {
 }
 
 fn main() {
-    // temporarily disable the first three benches for cloud bench
+    bench_intense();
     // bench_prove();
     // bench_verify();
     // bench_batch_verify();
-    bench_intense();
 }
