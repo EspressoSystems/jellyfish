@@ -222,6 +222,9 @@
 <span id="220">220</span>
 <span id="221">221</span>
 <span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -360,6 +363,9 @@
 <span class="doccomment">/// An interface that transforms Plonk circuits to polynomial used by</span>
 <span class="doccomment">/// Plonk-based SNARKs.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FftField</span><span class="op">&gt;</span>: <span class="ident">Circuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The required SRS size for the circuit.</span>
+    <span class="kw">fn</span> <span class="ident">srs_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+
     <span class="doccomment">/// Get the size of the evaluation domain for arithmetization (after circuit</span>
     <span class="doccomment">/// has been finalized).</span>
     <span class="kw">fn</span> <span class="ident">eval_domain_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;

@@ -2103,6 +2103,11 @@
 <span id="2101">2101</span>
 <span id="2102">2102</span>
 <span id="2103">2103</span>
+<span id="2104">2104</span>
+<span id="2105">2105</span>
+<span id="2106">2106</span>
+<span id="2107">2107</span>
+<span id="2108">2108</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 TRI (spectrum.xyz)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -3153,6 +3158,11 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
+    <span class="kw">fn</span> <span class="ident">srs_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+        <span class="comment">// extra 2 degree for masking polynomial to make snark zero-knowledge</span>
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">eval_domain_size</span>()<span class="question-mark">?</span> <span class="op">+</span> <span class="number">2</span>)
+    }
+
     <span class="kw">fn</span> <span class="ident">eval_domain_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_finalize_flag</span>(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">eval_domain</span>.<span class="ident">size</span>())
