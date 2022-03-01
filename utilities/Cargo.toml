@@ -11,11 +11,12 @@ ark-ff = { version = "0.3.0", default-features = false, features = ["asm", "para
 ark-ec = { version = "0.3.0", default-features = false, features = ["parallel"] }
 ark-serialize = { version = "0.3.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
-tagged-base64 = { git = "https://github.com/SpectrumXYZ/tagged-base64", branch = "main"}
+tagged-base64 = { git = "https://github.com/EspressoSystems/tagged-base64", branch = "main"}
 jf-utils-derive = { path = "../utilities_derive" }
 sha2 = { version = "0.10.1", default-features = false }
 digest = { version = "0.10.1", default-features = false }
 anyhow = { version = "^1.0", default-features = false }
+snafu = { version = "0.7", features = ["backtraces"] }
 
 [dev-dependencies]
 ark-ed-on-bn254 = { version = "0.3.0", default-features = false }

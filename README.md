@@ -1,7 +1,7 @@
 # Jellyfish cryptographic library
-![example workflow](https://github.com/SpectrumXYZ/jellyfish/actions/workflows/build.yml/badge.svg)
+![example workflow](https://github.com/EspressoSystems/jellyfish/actions/workflows/build.yml/badge.svg)
 ![Crates.io (version)](https://img.shields.io/crates/dv/jf-plonk/0.1.0)
-![GitHub](https://img.shields.io/github/license/SpectrumXYZ/jellyfish)
+![GitHub](https://img.shields.io/github/license/EspressoSystems/jellyfish)
 
 ## Development environment setup
 

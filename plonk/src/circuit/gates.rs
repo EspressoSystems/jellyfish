@@ -6,7 +6,7 @@
 
 //! Implementations of various Gates.
 use ark_ff::Field;
-use ark_std::{boxed::Box, string::ToString};
+use ark_std::boxed::Box;
 use core::fmt;
 use downcast_rs::Downcast;
 
@@ -71,7 +71,7 @@ impl<F: Field> Clone for Box<dyn Gate<F>> {
 impl<F: Field> fmt::Debug for (dyn Gate<F> + 'static) {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // TODO: (alex) add more context for debug
-        f.write_str(&self.name().to_string())
+        f.write_str(self.name())
     }
 }
 
