@@ -533,12 +533,12 @@ impl<E: PairingEngine> Prover<E> {
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
         // enumerate proving instances
-
+        fft_start();
         for (oracles, pk) in online_oracles.iter().zip(pks.iter()) {
             // lookup_flag = 1 if support Plookup argument.
             let lookup_flag = pk.plookup_pk.is_some();
 
-            fft_start();
+            // fft_start();
             // Compute coset evaluations.
             let selectors_coset_fft: Vec<Vec<E::Fr>> = pk
                 .selectors
@@ -595,7 +595,7 @@ impl<E: PairingEngine> Prover<E> {
                 (None, None, None, None)
             };
 
-            fft_end();
+            // fft_end();
 
             // Compute coset evaluations of the quotient polynomial.
             let quot_poly_coset_evals: Vec<E::Fr> = (0..m)
@@ -662,7 +662,7 @@ impl<E: PairingEngine> Prover<E> {
             }
         }
         // Compute the coefficient form of the quotient polynomial
-        fft_start();
+        // fft_start();
         let res = DensePolynomial::from_coefficients_vec(
             self.quot_domain.coset_ifft(&quot_poly_coset_evals_sum),
         );
