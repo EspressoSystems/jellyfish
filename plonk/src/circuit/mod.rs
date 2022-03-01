@@ -136,6 +136,9 @@ pub(crate) type SortedLookupVecAndPolys<F> = (Vec<F>, DensePolynomial<F>, DenseP
 /// An interface that transforms Plonk circuits to polynomial used by
 /// Plonk-based SNARKs.
 pub trait Arithmetization<F: FftField>: Circuit<F> {
+    /// The required SRS size for the circuit.
+    fn srs_size(&self) -> Result<usize, PlonkError>;
+
     /// Get the size of the evaluation domain for arithmetization (after circuit
     /// has been finalized).
     fn eval_domain_size(&self) -> Result<usize, PlonkError>;

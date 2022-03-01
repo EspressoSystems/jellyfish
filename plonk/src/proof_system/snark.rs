@@ -74,9 +74,9 @@ where
     ) -> Result<(ProvingKey<'a, E>, VerifyingKey<E>), PlonkError> {
         // Make sure the SRS can support the circuit (with hiding degree of 2 for zk)
         let domain_size = circuit.eval_domain_size()?;
+        let srs_size = circuit.srs_size()?;
         let num_inputs = circuit.num_inputs();
-        let supported_hiding_bound = 2;
-        if srs.0.max_degree() < domain_size + supported_hiding_bound {
+        if srs.0.max_degree() < circuit.srs_size()? {
             return Err(PlonkError::IndexTooLarge);
         }
         // 1. Compute selector and permutation polynomials.
@@ -96,7 +96,7 @@ where
         };
 
         // 2. Compute VerifyingKey
-        let (commit_key, open_key) = trim(&srs.0, domain_size + supported_hiding_bound);
+        let (commit_key, open_key) = trim(&srs.0, srs_size);
         let selector_comms: Vec<_> = selectors_polys
             .par_iter()
             .map(|poly| {

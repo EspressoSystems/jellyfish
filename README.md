@@ -44,6 +44,15 @@ The pre-commit hooks are installed via the nix shell. To run them on all files u
 > pre-commit run --all-files
 ```
 
+### Get start
+
+```
+> cargo run --release --example proof_of_exp
+```
+
+This is a simple example to prove and verify knowledge of exponent.
+It shows how one may compose a circuit, and then build a proof for the circuit.
+
 ### Tests
 
 ```
