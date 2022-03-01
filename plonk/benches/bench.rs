@@ -74,20 +74,23 @@ macro_rules! plonk_prove_bench {
             start.elapsed().as_nanos() / NUM_REPETITIONS as u128 / $num_gates as u128
         );
         println!(
-            "total proving time:            {} ns",
-            start.elapsed().as_nanos() / NUM_REPETITIONS as u128
+            "total batch verify time: {:.2} ms",
+            start.elapsed().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64
         );
         println!(
-            "time spend on FFT:             {} ns",
-            total_fft_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on FFT:  {:.2} ms, or {:.2}%",
+            total_fft_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!(
-            "time spend on MSM:             {} ns",
-            total_msm_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on MSM:  {:.2} ms, or {:.2}%",
+            total_msm_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_msm_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!(
-            "time spend on poly evaluation: {} ns",
-            total_poly_eval_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on poly evaluation: {:.2} ms, or {:.2}%",
+            total_poly_eval_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_poly_eval_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!("=====================================");
     };
@@ -106,8 +109,6 @@ fn bench_prove() {
 
 macro_rules! plonk_verify_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr) => {
-        init_timers();
-
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
@@ -120,6 +121,7 @@ macro_rules! plonk_verify_bench {
             PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk, None)
                 .unwrap();
 
+        init_timers();
         let start = ark_std::time::Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
@@ -136,16 +138,18 @@ macro_rules! plonk_verify_bench {
             start.elapsed().as_nanos() / NUM_REPETITIONS as u128
         );
         println!(
-            "total verify time: {} ns",
-            start.elapsed().as_nanos() / NUM_REPETITIONS as u128
+            "total batch verify time: {:.2} ms",
+            start.elapsed().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64
         );
         println!(
-            "time spend on FFT:  {} ns",
-            total_fft_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on FFT:  {:.2} ms, or {:.2}%",
+            total_fft_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!(
-            "time spend on MSM:  {} ns",
-            total_msm_time().as_nanos() / NUM_REPETITIONS as u128
+            "time spend on MSM:  {:.2} ms, or {:.2}%",
+            total_msm_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_msm_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
 
         println!("=====================================");
@@ -205,18 +209,18 @@ macro_rules! plonk_batch_verify_bench {
         );
 
         println!(
-            "total batch verify time: {} ns",
-            start.elapsed().as_nanos() / NUM_REPETITIONS as u128
+            "total batch verify time: {:.2} ms",
+            start.elapsed().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64
         );
         println!(
-            "time spend on FFT:  {} ns, or {}%",
-            total_fft_time().as_nanos() / NUM_REPETITIONS as u128,
+            "time spend on FFT:  {:.2} ms, or {:.2}%",
+            total_fft_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
             100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
         println!(
-            "time spend on MSM:  {} ns, or {}%",
-            total_msm_time().as_nanos() / NUM_REPETITIONS as u128,
-            100f64 * total_fft_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
+            "time spend on MSM:  {:.2} ms, or {:.2}%",
+            total_msm_time().as_nanos() as f64 / NUM_REPETITIONS as f64 / 1_000_000f64,
+            100f64 * total_msm_time().as_nanos() as f64 / start.elapsed().as_nanos() as f64
         );
     };
 }
@@ -237,13 +241,19 @@ fn bench_intense() {
         let dim = 1 << i;
         println!("bench with log(dim) =  {}", i);
         plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
+    }
+
+    for i in 10..=30 {
+        let dim = 1 << i;
+        println!("bench with log(dim) =  {}", i);
         plonk_verify_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
     }
 }
 
 fn main() {
-    bench_prove();
-    bench_verify();
-    bench_batch_verify();
+    // temporarily disable the first three benches for cloud bench
+    // bench_prove();
+    // bench_verify();
+    // bench_batch_verify();
     bench_intense();
 }
