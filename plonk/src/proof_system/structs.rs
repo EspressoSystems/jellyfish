@@ -6,6 +6,7 @@
 
 //! Data structures used in Plonk proof systems
 use crate::{
+    bencher::{msm_end, msm_start},
     circuit::{
         customized::{
             ecc::{Point, SWToTEConParam},
@@ -866,13 +867,16 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
     }
     /// Compute the multi-scalar multiplication.
     pub(crate) fn multi_scalar_mul(&self) -> E::G1Projective {
+        msm_start();
         let mut bases = vec![];
         let mut scalars = vec![];
         for (&base, scalar) in &self.base_scalar_map {
             bases.push(base);
             scalars.push(scalar.into_repr());
         }
-        VariableBaseMSM::multi_scalar_mul(&bases, &scalars)
+        let res = VariableBaseMSM::multi_scalar_mul(&bases, &scalars);
+        msm_end();
+        res
     }
 }
 

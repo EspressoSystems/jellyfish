@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 // For benchmark, run:
-//     RAYON_NUM_THREADS=N cargo bench
+//     RAYON_NUM_THREADS=N cargo bench --features bench
 // where N is the number of threads you want to use (N = 1 for single-thread).
 
 use ark_bls12_377::{Bls12_377, Fr as Fr377};
@@ -14,6 +14,7 @@ use ark_bn254::{Bn254, Fr as Fr254};
 use ark_bw6_761::{Fr as Fr761, BW6_761};
 use ark_ff::PrimeField;
 use jf_plonk::{
+    bencher::{init_timers, total_fft_time, total_msm_time, total_poly_eval_time},
     circuit::{Circuit, PlonkCircuit},
     errors::PlonkError,
     proof_system::{PlonkKzgSnark, Snark},
@@ -46,6 +47,8 @@ fn gen_circuit_for_bench<F: PrimeField>(
 
 macro_rules! plonk_prove_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr) => {
+        init_timers();
+
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
@@ -62,13 +65,31 @@ macro_rules! plonk_prove_bench {
             )
             .unwrap();
         }
-
+        println!("=====================================");
         println!(
-            "proving time for {}, {}: {} ns/gate",
+            "proving time for {}, {} with dim {}: {} ns/gate",
             stringify!($bench_curve),
             stringify!($bench_plonk_type),
+            $num_gates,
             start.elapsed().as_nanos() / NUM_REPETITIONS as u128 / $num_gates as u128
         );
+        println!(
+            "total proving time:            {} ns",
+            start.elapsed().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on FFT:             {} ns",
+            total_fft_time().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on MSM:             {} ns",
+            total_msm_time().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on poly evaluation: {} ns",
+            total_poly_eval_time().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!("=====================================");
     };
 }
 
@@ -85,6 +106,8 @@ fn bench_prove() {
 
 macro_rules! plonk_verify_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr) => {
+        init_timers();
+
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
@@ -104,13 +127,28 @@ macro_rules! plonk_verify_bench {
                 PlonkKzgSnark::<$bench_curve>::verify::<StandardTranscript>(&vk, &[], &proof, None)
                     .unwrap();
         }
-
+        println!("=====================================");
         println!(
-            "verifying time for {}, {}: {} ns",
+            "verifying time for {}, {} with dim {}: {} ns",
             stringify!($bench_curve),
             stringify!($bench_plonk_type),
+            $num_gates,
             start.elapsed().as_nanos() / NUM_REPETITIONS as u128
         );
+        println!(
+            "total verify time: {} ns",
+            start.elapsed().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on FFT:  {} ns",
+            total_fft_time().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on MSM:  {} ns",
+            total_msm_time().as_nanos() / NUM_REPETITIONS as u128
+        );
+
+        println!("=====================================");
     };
 }
 
@@ -127,6 +165,8 @@ fn bench_verify() {
 
 macro_rules! plonk_batch_verify_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_proofs:expr) => {
+        init_timers();
+
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>(1024, $bench_plonk_type).unwrap();
 
@@ -163,6 +203,19 @@ macro_rules! plonk_batch_verify_bench {
             stringify!($num_proofs),
             start.elapsed().as_nanos() / NUM_REPETITIONS as u128 / $num_proofs as u128
         );
+
+        println!(
+            "total batch verify time: {} ns",
+            start.elapsed().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on FFT:  {} ns",
+            total_fft_time().as_nanos() / NUM_REPETITIONS as u128
+        );
+        println!(
+            "time spend on MSM:  {} ns",
+            total_msm_time().as_nanos() / NUM_REPETITIONS as u128
+        );
     };
 }
 
@@ -177,8 +230,17 @@ fn bench_batch_verify() {
     plonk_batch_verify_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, 1000);
 }
 
+fn bench_intense() {
+    for i in 10..=30 {
+        let dim = 1 << i;
+        plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
+        plonk_verify_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, dim);
+    }
+}
+
 fn main() {
     bench_prove();
     bench_verify();
     bench_batch_verify();
+    bench_intense();
 }

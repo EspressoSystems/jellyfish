@@ -18,6 +18,7 @@ extern crate downcast_rs;
 #[macro_use]
 extern crate derivative;
 
+pub mod bencher;
 pub mod circuit;
 pub mod constants;
 pub mod errors;

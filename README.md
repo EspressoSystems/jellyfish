@@ -118,7 +118,7 @@ The additional flags allow using assembly implementation of `square_in_place` an
 For benchmark, run:
 
 ```
-RAYON_NUM_THREADS=N cargo bench
+RAYON_NUM_THREADS=N cargo bench --features bench
 ```
 
 where N is the number of threads you want to use (N = 1 for single-thread).
