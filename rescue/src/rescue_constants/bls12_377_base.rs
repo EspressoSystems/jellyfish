@@ -1,4 +1,4 @@
-// Copyright (c) 2022 TRI (spectrum.xyz)
+// Copyright (c) 2022 Espresso Systems (goespresso.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License

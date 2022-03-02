@@ -2,7 +2,7 @@
 name = "jf-utils-derive"
 description = "Procedural macros for deriving serialization code for Jellyfish types"
 version = "0.1.0"
-authors = ["Spectrum Ecosystem <hello@spectrum.xyz>"]
+authors = ["Esoresso Ecosystems <hello@espressosys.com>"]
 edition = "2018"
 
 [lib]
