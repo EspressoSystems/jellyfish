@@ -2,7 +2,7 @@
 name = "jf-rescue"
 description = "Rescue hash function"
 version = "0.1.0"
-authors = ["Espresso Ecosystems <hello@espressosys.com>"]
+authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2018"
 
 [dependencies]
