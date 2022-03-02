@@ -2,7 +2,7 @@
 name = "jf-utils"
 description = "Utilities for Jellyfish cryptographic library"
 version = "0.1.0"
-authors = ["Spectrum Ecosystem <hello@spectrum.xyz>"]
+authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2018"
 
 [dependencies]
