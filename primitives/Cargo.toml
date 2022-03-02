@@ -2,7 +2,7 @@
 name = "jf-primitives"
 description = "Cryptographic primitives"
 version = "0.1.0"
-authors = ["Esoresso Ecosystems <hello@espressosys.com>"]
+authors = ["Espresso Ecosystems <hello@espressosys.com>"]
 edition = "2018"
 
 [dependencies]
