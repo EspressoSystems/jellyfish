@@ -321,7 +321,7 @@ fn bench_intense() {
 
 fn main() {
     bench_intense();
-    // bench_prove();
-    // bench_verify();
-    // bench_batch_verify();
+    bench_prove();
+    bench_verify();
+    bench_batch_verify();
 }
