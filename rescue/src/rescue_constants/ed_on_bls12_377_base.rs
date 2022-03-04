@@ -8,7 +8,7 @@ use crate::{RescueParameter, ROUNDS, STATE_SIZE};
 use ark_ed_on_bls12_377::Fq;
 
 // the constants in this file are generated with
-// https://github.com/EspressoSystems/Marvellous/blob/master/rescue377.sage
+// // https://github.com/EspressoSystems/Marvellous/blob/fcd4c41672f485ac2f62526bc87a16789d4d0459/rescue377.sage
 
 // q377 = 0x12ab655e9a2ca55660b44d1e5c37b00159aa76fed00000010a11800000000001
 // rescue377 = Rescue(128, q377, 4, 5)
