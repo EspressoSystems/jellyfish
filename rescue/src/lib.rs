@@ -58,7 +58,7 @@ pub const RATE: usize = 3;
 // means round = 10 gives 160 bits security
 //
 // There is also the script from
-//  https://github.com/KULeuven-COSIC/Marvellous
+//  https://github.com/EspressoSystems/Marvellous
 //
 // For unknown reasons, for all alpha >=5, the ROUND number is taken as if alpha
 // = 5. This parameter choice does not seem to be optimal
