@@ -3,6 +3,10 @@
 ![Crates.io (version)](https://img.shields.io/crates/dv/jf-plonk/0.1.0)
 ![GitHub](https://img.shields.io/github/license/EspressoSystems/jellyfish)
 
+## Disclaimer
+
+__This code has not been external audited. Use at your own risk.__
+
 ## Chatroom
  
 For general discussions on Jellyfish plonk, please join our [Discord channel](https://discord.gg/GJa4gznGfU).
