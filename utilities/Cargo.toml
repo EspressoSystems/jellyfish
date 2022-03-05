@@ -4,6 +4,7 @@ description = "Utilities for Jellyfish cryptographic library"
 version = "0.1.0"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2018"
+license = "MIT"
 
 [dependencies]
 ark-std = { version = "0.3.0", default-features = false }

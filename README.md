@@ -5,7 +5,7 @@
 
 ## Chatroom
  
-For general discussions on Jellyfish plonk, please join our [Discord channel](https://discord.gg/GJa4gznGfU).
+For general discussions on Jellyfish PLONK, please join our [Discord channel](https://discord.gg/GJa4gznGfU).
 
 ## Development environment setup
 
@@ -117,7 +117,7 @@ The additional flags allow using assembly implementation of `square_in_place` an
 > RUSTFLAGS='-Ctarget-cpu=native -Ctarget-feature=+bmi2,+adx' cargo bench --bench=merkle_path
 ```
 
-#### Plonk proof generation/verification
+#### PLONK proof generation/verification
 
 For benchmark, run:
 

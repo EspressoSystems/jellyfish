@@ -4,6 +4,7 @@ description = "Procedural macros for deriving serialization code for Jellyfish t
 version = "0.1.0"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2018"
+license = "MIT"
 
 [lib]
 proc-macro = true
