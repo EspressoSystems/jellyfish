@@ -5,7 +5,7 @@
 
 ## Disclaimer
 
-_**This code has not been external audited. Use at your own risk.**_
+**DISCLAIMER:** This software is provided "as is" and its security has not been externally audited. Use at your own risk.
 
 ## Chatroom
  
