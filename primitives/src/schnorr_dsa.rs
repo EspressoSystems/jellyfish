@@ -118,6 +118,7 @@ impl<P: Parameters + Clone> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
+#[tagged_blob("SIGNKEYPAIR")]
 #[derive(Clone, Default, CanonicalSerialize, CanonicalDeserialize, PartialEq, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
 pub struct KeyPair<P>
