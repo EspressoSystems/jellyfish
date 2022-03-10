@@ -516,6 +516,7 @@
 <span id="514">514</span>
 <span id="515">515</span>
 <span id="516">516</span>
+<span id="517">517</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -636,6 +637,7 @@
 
 <span class="doccomment">/// Signature secret key pair used to sign messages</span>
 <span class="comment">// make sure sk can be zeroized</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;SIGNKEYPAIR&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">PartialEq</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
