@@ -720,30 +720,27 @@ where
             for &wire_eval in poly_evals.wires_evals.iter() {
                 Self::add_pcs_eval(
                     &mut result,
-                    match v_and_uv_basis.next() {
-                        Some(p) => p,
-                        None => return Err(PlonkError::IteratorOutOfRange),
-                    },
+                    v_and_uv_basis
+                        .next()
+                        .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                     wire_eval,
                 );
             }
             for &sigma_eval in poly_evals.wire_sigma_evals.iter() {
                 Self::add_pcs_eval(
                     &mut result,
-                    match v_and_uv_basis.next() {
-                        Some(p) => p,
-                        None => return Err(PlonkError::IteratorOutOfRange),
-                    },
+                    v_and_uv_basis
+                        .next()
+                        .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                     sigma_eval,
                 );
             }
             // evaluations at point `zeta * g`
             Self::add_pcs_eval(
                 &mut result,
-                match v_and_uv_basis.next() {
-                    Some(p) => p,
-                    None => return Err(PlonkError::IteratorOutOfRange),
-                },
+                v_and_uv_basis
+                    .next()
+                    .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                 poly_evals.perm_next_eval,
             );
 
@@ -754,10 +751,9 @@ where
                 for &eval in evals.evals_vec().iter() {
                     Self::add_pcs_eval(
                         &mut result,
-                        match v_and_uv_basis.next() {
-                            Some(p) => p,
-                            None => return Err(PlonkError::IteratorOutOfRange),
-                        },
+                        v_and_uv_basis
+                            .next()
+                            .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                         eval,
                     );
                 }
@@ -765,10 +761,9 @@ where
                 for &next_eval in evals.next_evals_vec().iter() {
                     Self::add_pcs_eval(
                         &mut result,
-                        match v_and_uv_basis.next() {
-                            Some(p) => p,
-                            None => return Err(PlonkError::IteratorOutOfRange),
-                        },
+                        v_and_uv_basis
+                            .next()
+                            .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                         next_eval,
                     );
                 }
