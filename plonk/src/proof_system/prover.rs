@@ -11,6 +11,7 @@ use super::structs::{
     PlookupOracles, ProofEvaluations, ProvingKey,
 };
 use crate::{
+    bencher::{fft_end, fft_start, msm_end, msm_start, poly_eval_end, poly_eval_start},
     circuit::Arithmetization,
     constants::{domain_size_ratio, GATE_WIDTH},
     errors::{PlonkError, SnarkError::*},
@@ -80,7 +81,9 @@ impl<E: PairingEngine> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
+        msm_start();
         let wires_poly_comms = Self::commit_polynomials(ck, &wire_polys)?;
+        msm_end();
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -104,7 +107,9 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
+        msm_start();
         let h_poly_comms = Self::commit_polynomials(ck, &h_polys)?;
+        msm_end();
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -122,7 +127,9 @@ impl<E: PairingEngine> Prover<E> {
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
             2,
         );
+        msm_start();
         let prod_perm_comm = Self::commit_polynomial(ck, &prod_perm_poly)?;
+        msm_end();
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
@@ -155,7 +162,9 @@ impl<E: PairingEngine> Prover<E> {
             )?,
             2,
         );
+        msm_start();
         let prod_lookup_comm = Self::commit_polynomial(ck, &prod_lookup_poly)?;
+        msm_end();
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
@@ -173,8 +182,9 @@ impl<E: PairingEngine> Prover<E> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
         let split_quot_polys = self.split_quotient_polynomial(&quot_poly, num_wire_types)?;
+        msm_start();
         let split_quot_poly_comms = Self::commit_polynomials(ck, &split_quot_polys)?;
-
+        msm_end();
         Ok((split_quot_poly_comms, split_quot_polys))
     }
 
@@ -190,6 +200,9 @@ impl<E: PairingEngine> Prover<E> {
         online_oracles: &Oracles<E::Fr>,
         num_wire_types: usize,
     ) -> ProofEvaluations<E::Fr> {
+        // TODO: a potential optimization -- dense polynomial evaluations re-computed
+        // powers-of-zetas consider pre-compute them and pass them in
+        poly_eval_start();
         let wires_evals: Vec<E::Fr> = online_oracles
             .wire_polys
             .par_iter()
@@ -205,6 +218,7 @@ impl<E: PairingEngine> Prover<E> {
             .prod_perm_poly
             .evaluate(&(challenges.zeta * self.domain.group_gen));
 
+        poly_eval_end();
         ProofEvaluations {
             wires_evals,
             wire_sigma_evals,
@@ -220,6 +234,8 @@ impl<E: PairingEngine> Prover<E> {
         challenges: &Challenges<E::Fr>,
         online_oracles: &Oracles<E::Fr>,
     ) -> Result<PlookupEvaluations<E::Fr>, PlonkError> {
+        poly_eval_start();
+
         if pk.plookup_pk.is_none() {
             return Err(ParameterError(
                 "Evaluate Plookup polynomials without supporting lookup".to_string(),
@@ -241,6 +257,8 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_eval = online_oracles.plookup_oracles.h_polys[0].evaluate(&challenges.zeta);
         let q_lookup_eval = pk.q_lookup_poly()?.evaluate(&challenges.zeta);
 
+        // TODO: a potential optimization -- dense polynomial evaluations re-computed
+        // powers-of-gs consider pre-compute them and pass them in
         let zeta_mul_g = challenges.zeta * self.domain.group_gen;
         let prod_next_eval = online_oracles
             .plookup_oracles
@@ -254,6 +272,7 @@ impl<E: PairingEngine> Prover<E> {
         let w_3_next_eval = online_oracles.wire_polys[3].evaluate(&zeta_mul_g);
         let w_4_next_eval = online_oracles.wire_polys[4].evaluate(&zeta_mul_g);
 
+        poly_eval_end();
         Ok(PlookupEvaluations {
             range_table_eval,
             key_table_eval,
@@ -483,8 +502,10 @@ impl<E: PairingEngine> Prover<E> {
             *eval_point,
             &empty_rand,
         )?;
-
-        Self::commit_polynomial(ck, &witness_poly)
+        msm_start();
+        let res = Self::commit_polynomial(ck, &witness_poly);
+        msm_end();
+        res
     }
 
     /// Compute the quotient polynomial via (i)FFTs.
@@ -521,10 +542,12 @@ impl<E: PairingEngine> Prover<E> {
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
         // enumerate proving instances
+        fft_start();
         for (oracles, pk) in online_oracles.iter().zip(pks.iter()) {
             // lookup_flag = 1 if support Plookup argument.
             let lookup_flag = pk.plookup_pk.is_some();
 
+            // fft_start();
             // Compute coset evaluations.
             let selectors_coset_fft: Vec<Vec<E::Fr>> = pk
                 .selectors
@@ -580,6 +603,8 @@ impl<E: PairingEngine> Prover<E> {
             } else {
                 (None, None, None, None)
             };
+
+            // fft_end();
 
             // Compute coset evaluations of the quotient polynomial.
             let quot_poly_coset_evals: Vec<E::Fr> = (0..m)
@@ -646,9 +671,12 @@ impl<E: PairingEngine> Prover<E> {
             }
         }
         // Compute the coefficient form of the quotient polynomial
-        Ok(DensePolynomial::from_coefficients_vec(
+        // fft_start();
+        let res = DensePolynomial::from_coefficients_vec(
             self.quot_domain.coset_ifft(&quot_poly_coset_evals_sum),
-        ))
+        );
+        fft_end();
+        Ok(res)
     }
 
     // Compute the i-th coset evaluation of the circuit part of the quotient

@@ -7,6 +7,7 @@
 //! Basic instantiations of Plonk-based constraint systems
 use super::{Arithmetization, Circuit, GateId, Variable, WireId};
 use crate::{
+    bencher::{fft_end, fft_start},
     circuit::{gates::*, SortedLookupVecAndPolys},
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
     errors::{CircuitError::*, PlonkError},
@@ -1059,6 +1060,8 @@ where
     }
 
     fn compute_selector_polynomials(&self) -> Result<Vec<DensePolynomial<F>>, PlonkError> {
+        fft_start();
+
         self.check_finalize_flag(true)?;
         let domain = &self.eval_domain;
         if domain.size() < self.num_gates() {
@@ -1074,12 +1077,16 @@ where
             .map(|selector| DensePolynomial::from_coefficients_vec(domain.ifft(selector)))
             .collect();
 
+        fft_end();
+
         Ok(selector_polys)
     }
 
     fn compute_extended_permutation_polynomials(
         &self,
     ) -> Result<Vec<DensePolynomial<F>>, PlonkError> {
+        fft_start();
+
         self.check_finalize_flag(true)?;
         let domain = &self.eval_domain;
         let n = domain.size();
@@ -1092,6 +1099,8 @@ where
                 )
             })
             .collect();
+        fft_end();
+
         Ok(extended_perm_polys)
     }
 
@@ -1100,6 +1109,8 @@ where
         beta: &F,
         gamma: &F,
     ) -> Result<DensePolynomial<F>, PlonkError> {
+        fft_start();
+
         self.check_finalize_flag(true)?;
         let mut product_vec = vec![F::one()];
         let domain = &self.eval_domain;
@@ -1119,10 +1130,14 @@ where
             product_vec.push(prev_prod * a / b);
         }
         domain.ifft_in_place(&mut product_vec);
-        Ok(DensePolynomial::from_coefficients_vec(product_vec))
+
+        let res = DensePolynomial::from_coefficients_vec(product_vec);
+        fft_end();
+        Ok(res)
     }
 
     fn compute_wire_polynomials(&self) -> Result<Vec<DensePolynomial<F>>, PlonkError> {
+        fft_start();
         self.check_finalize_flag(true)?;
         let domain = &self.eval_domain;
         if domain.size() < self.num_gates() {
@@ -1145,10 +1160,13 @@ where
             })
             .collect();
         assert_eq!(wire_polys.len(), self.num_wire_types());
+        fft_end();
         Ok(wire_polys)
     }
 
     fn compute_pub_input_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        fft_start();
+
         self.check_finalize_flag(true)?;
         let domain = &self.eval_domain;
         let mut pub_input_vec = vec![F::zero(); domain.size()];
@@ -1157,25 +1175,31 @@ where
             pub_input_vec[io_gate_id] = self.witness[var];
         });
         domain.ifft_in_place(&mut pub_input_vec);
-        Ok(DensePolynomial::from_coefficients_vec(pub_input_vec))
+        let res = DensePolynomial::from_coefficients_vec(pub_input_vec);
+        fft_end();
+        Ok(res)
     }
 
     // Plookup-related methods
     //
     fn compute_range_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        fft_start();
         let range_table = self.compute_range_table()?;
         let domain = &self.eval_domain;
-        Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&range_table),
-        ))
+
+        let res = DensePolynomial::from_coefficients_vec(domain.ifft(&range_table));
+        fft_end();
+        Ok(res)
     }
 
     fn compute_key_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        fft_start();
         let key_table = self.compute_key_table()?;
         let domain = &self.eval_domain;
-        Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&key_table),
-        ))
+
+        let res = DensePolynomial::from_coefficients_vec(domain.ifft(&key_table));
+        fft_end();
+        Ok(res)
     }
 
     fn compute_merged_lookup_table(&self, tau: F) -> Result<Vec<F>, PlonkError> {
@@ -1252,8 +1276,12 @@ where
             product_vec.push(prev_prod * a / b);
         }
         product_vec.push(F::one());
+
+        fft_start();
         domain.ifft_in_place(&mut product_vec);
-        Ok(DensePolynomial::from_coefficients_vec(product_vec))
+        let res = DensePolynomial::from_coefficients_vec(product_vec);
+        fft_end();
+        Ok(res)
     }
 
     fn compute_lookup_sorted_vec_polynomials(
@@ -1301,8 +1329,11 @@ where
         if sorted_vec.len() != 2 * n - 1 {
             return Err(ParameterError("The sorted vector has wrong length, some lookup variables might be outside the table".to_string()).into());
         }
+
+        fft_start();
         let h1_poly = DensePolynomial::from_coefficients_vec(domain.ifft(&sorted_vec[..n]));
         let h2_poly = DensePolynomial::from_coefficients_vec(domain.ifft(&sorted_vec[n - 1..]));
+        fft_end();
         Ok((sorted_vec, h1_poly, h2_poly))
     }
 }

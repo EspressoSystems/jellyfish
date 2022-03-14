@@ -8,6 +8,7 @@
 
 - Introducing an example for proving knowledge of exponent
 - Add api to get SRS size.
+- Adding micro benchmarks for MSM, FFT and Poly Evaluation.
 
 ### Improvements
 

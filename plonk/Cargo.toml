@@ -52,6 +52,8 @@ path = "benches/bench.rs"
 harness = false
 
 [features]
-std = []
+std = [ ]
 # exposing apis for testing purpose
 test_apis = []
+# enabling mircobench
+bench = []
