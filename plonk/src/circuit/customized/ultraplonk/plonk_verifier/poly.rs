@@ -455,10 +455,9 @@ where
 
         // preparing data for second statement
         let r_0_component = circuit.mod_mul(
-            match alpha_bases_elem_var.next() {
-                Some(p) => p,
-                None => return Err(PlonkError::IteratorOutOfRange),
-            },
+            alpha_bases_elem_var
+                .next()
+                .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
             &r_plonk_j_fp_elem_var,
             &non_native_field_info.modulus_fp_elem,
         )?;
@@ -532,10 +531,9 @@ where
         // where a_bar, b_bar and c_bar are in w_evals
         // ============================================
 
-        let current_alpha_bases = match alpha_bases_elem_var.next() {
-            Some(p) => p,
-            None => return Err(PlonkError::IteratorOutOfRange),
-        };
+        let current_alpha_bases = alpha_bases_elem_var
+            .next()
+            .ok_or_else(|| PlonkError::IteratorOutOfRange)?;
 
         let mut coeff_fp_elem_var = alpha_2_mul_l1;
         let w_evals = &batch_proof.poly_evals_vec[i].wires_evals;

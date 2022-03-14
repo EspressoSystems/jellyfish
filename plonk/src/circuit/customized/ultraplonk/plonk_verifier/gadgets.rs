@@ -148,10 +148,9 @@ where
             add_pcs_eval_circuit(
                 circuit,
                 &mut result,
-                match v_and_uv_basis.next() {
-                    Some(p) => p,
-                    None => return Err(PlonkError::IteratorOutOfRange),
-                },
+                v_and_uv_basis
+                    .next()
+                    .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                 wire_eval,
                 &non_native_field_info.modulus_fp_elem,
             )?;
@@ -160,10 +159,9 @@ where
             add_pcs_eval_circuit(
                 circuit,
                 &mut result,
-                match v_and_uv_basis.next() {
-                    Some(p) => p,
-                    None => return Err(PlonkError::IteratorOutOfRange),
-                },
+                v_and_uv_basis
+                    .next()
+                    .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
                 sigma_eval,
                 &non_native_field_info.modulus_fp_elem,
             )?;
@@ -172,10 +170,9 @@ where
         add_pcs_eval_circuit(
             circuit,
             &mut result,
-            match v_and_uv_basis.next() {
-                Some(p) => p,
-                None => return Err(PlonkError::IteratorOutOfRange),
-            },
+            v_and_uv_basis
+                .next()
+                .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
             &poly_evals.perm_next_eval,
             &non_native_field_info.modulus_fp_elem,
         )?;
