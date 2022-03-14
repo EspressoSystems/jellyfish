@@ -607,9 +607,6 @@
 <span id="605">605</span>
 <span id="606">606</span>
 <span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -760,10 +757,9 @@
             <span class="ident">add_pcs_eval_circuit</span>(
                 <span class="ident">circuit</span>,
                 <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                },
+                <span class="ident">v_and_uv_basis</span>
+                    .<span class="ident">next</span>()
+                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                 <span class="ident">wire_eval</span>,
                 <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
             )<span class="question-mark">?</span>;
@@ -772,10 +768,9 @@
             <span class="ident">add_pcs_eval_circuit</span>(
                 <span class="ident">circuit</span>,
                 <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                },
+                <span class="ident">v_and_uv_basis</span>
+                    .<span class="ident">next</span>()
+                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                 <span class="ident">sigma_eval</span>,
                 <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
             )<span class="question-mark">?</span>;
@@ -784,10 +779,9 @@
         <span class="ident">add_pcs_eval_circuit</span>(
             <span class="ident">circuit</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-            <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-            },
+            <span class="ident">v_and_uv_basis</span>
+                .<span class="ident">next</span>()
+                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
             <span class="kw-2">&amp;</span><span class="ident">poly_evals</span>.<span class="ident">perm_next_eval</span>,
             <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
         )<span class="question-mark">?</span>;

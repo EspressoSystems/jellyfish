@@ -912,11 +912,6 @@
 <span id="910">910</span>
 <span id="911">911</span>
 <span id="912">912</span>
-<span id="913">913</span>
-<span id="914">914</span>
-<span id="915">915</span>
-<span id="916">916</span>
-<span id="917">917</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1639,30 +1634,27 @@
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">wire_eval</span> <span class="kw">in</span> <span class="ident">poly_evals</span>.<span class="ident">wires_evals</span>.<span class="ident">iter</span>() {
                 <span class="ident"><span class="self">Self</span>::add_pcs_eval</span>(
                     <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                    <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                    },
+                    <span class="ident">v_and_uv_basis</span>
+                        .<span class="ident">next</span>()
+                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                     <span class="ident">wire_eval</span>,
                 );
             }
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">sigma_eval</span> <span class="kw">in</span> <span class="ident">poly_evals</span>.<span class="ident">wire_sigma_evals</span>.<span class="ident">iter</span>() {
                 <span class="ident"><span class="self">Self</span>::add_pcs_eval</span>(
                     <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                    <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                    },
+                    <span class="ident">v_and_uv_basis</span>
+                        .<span class="ident">next</span>()
+                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                     <span class="ident">sigma_eval</span>,
                 );
             }
             <span class="comment">// evaluations at point `zeta * g`</span>
             <span class="ident"><span class="self">Self</span>::add_pcs_eval</span>(
                 <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                },
+                <span class="ident">v_and_uv_basis</span>
+                    .<span class="ident">next</span>()
+                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                 <span class="ident">poly_evals</span>.<span class="ident">perm_next_eval</span>,
             );
 
@@ -1673,10 +1665,9 @@
                 <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">eval</span> <span class="kw">in</span> <span class="ident">evals</span>.<span class="ident">evals_vec</span>().<span class="ident">iter</span>() {
                     <span class="ident"><span class="self">Self</span>::add_pcs_eval</span>(
                         <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                        <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                            <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                        },
+                        <span class="ident">v_and_uv_basis</span>
+                            .<span class="ident">next</span>()
+                            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                         <span class="ident">eval</span>,
                     );
                 }
@@ -1684,10 +1675,9 @@
                 <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">next_eval</span> <span class="kw">in</span> <span class="ident">evals</span>.<span class="ident">next_evals_vec</span>().<span class="ident">iter</span>() {
                     <span class="ident"><span class="self">Self</span>::add_pcs_eval</span>(
                         <span class="kw-2">&amp;mut</span> <span class="ident">result</span>,
-                        <span class="kw">match</span> <span class="ident">v_and_uv_basis</span>.<span class="ident">next</span>() {
-                            <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; <span class="ident">p</span>,
-                            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>),
-                        },
+                        <span class="ident">v_and_uv_basis</span>
+                            .<span class="ident">next</span>()
+                            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
                         <span class="ident">next_eval</span>,
                     );
                 }
