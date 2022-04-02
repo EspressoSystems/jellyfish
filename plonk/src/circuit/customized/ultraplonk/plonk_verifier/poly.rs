@@ -457,7 +457,7 @@ where
         let r_0_component = circuit.mod_mul(
             alpha_bases_elem_var
                 .next()
-                .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                .ok_or(PlonkError::IteratorOutOfRange)?,
             &r_plonk_j_fp_elem_var,
             &non_native_field_info.modulus_fp_elem,
         )?;
@@ -533,7 +533,7 @@ where
 
         let current_alpha_bases = alpha_bases_elem_var
             .next()
-            .ok_or_else(|| PlonkError::IteratorOutOfRange)?;
+            .ok_or(PlonkError::IteratorOutOfRange)?;
 
         let mut coeff_fp_elem_var = alpha_2_mul_l1;
         let w_evals = &batch_proof.poly_evals_vec[i].wires_evals;

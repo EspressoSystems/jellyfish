@@ -722,7 +722,7 @@ where
                     &mut result,
                     v_and_uv_basis
                         .next()
-                        .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                        .ok_or(PlonkError::IteratorOutOfRange)?,
                     wire_eval,
                 );
             }
@@ -731,7 +731,7 @@ where
                     &mut result,
                     v_and_uv_basis
                         .next()
-                        .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                        .ok_or(PlonkError::IteratorOutOfRange)?,
                     sigma_eval,
                 );
             }
@@ -740,7 +740,7 @@ where
                 &mut result,
                 v_and_uv_basis
                     .next()
-                    .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                    .ok_or(PlonkError::IteratorOutOfRange)?,
                 poly_evals.perm_next_eval,
             );
 
@@ -753,7 +753,7 @@ where
                         &mut result,
                         v_and_uv_basis
                             .next()
-                            .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                            .ok_or(PlonkError::IteratorOutOfRange)?,
                         eval,
                     );
                 }
@@ -763,7 +763,7 @@ where
                         &mut result,
                         v_and_uv_basis
                             .next()
-                            .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                            .ok_or(PlonkError::IteratorOutOfRange)?,
                         next_eval,
                     );
                 }
