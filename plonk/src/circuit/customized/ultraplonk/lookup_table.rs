@@ -20,9 +20,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// and create a list of variable tuples to be looked up:
     ///     [lookup_vars\[0\], ..., lookup_vars[m - 1]];
     ///
-    /// **For each input lookup variable tuple `(lookup_var.0, lookup_var.1,
-    /// lookup_var.2)`, we require the key index `lookup_var.0` to be
-    /// range-checked before so that it doesn't exceed the table size.**
+    /// **For each variable tuple `(lookup_var.0, lookup_var.1, lookup_var.2)`
+    /// to be looked up, the index variable `lookup_var.0` is required to be
+    /// in range [0, n) (either constrained by a range-check gate or other
+    /// circuits), so that one can't set it out of bounds and thus do a
+    /// lookup into one of the *other* tables. **
     ///
     /// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m
     pub fn create_table_and_lookup_variables(
