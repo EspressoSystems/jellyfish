@@ -150,7 +150,7 @@ where
                 &mut result,
                 v_and_uv_basis
                     .next()
-                    .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                    .ok_or(PlonkError::IteratorOutOfRange)?,
                 wire_eval,
                 &non_native_field_info.modulus_fp_elem,
             )?;
@@ -161,7 +161,7 @@ where
                 &mut result,
                 v_and_uv_basis
                     .next()
-                    .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                    .ok_or(PlonkError::IteratorOutOfRange)?,
                 sigma_eval,
                 &non_native_field_info.modulus_fp_elem,
             )?;
@@ -172,7 +172,7 @@ where
             &mut result,
             v_and_uv_basis
                 .next()
-                .ok_or_else(|| PlonkError::IteratorOutOfRange)?,
+                .ok_or(PlonkError::IteratorOutOfRange)?,
             &poly_evals.perm_next_eval,
             &non_native_field_info.modulus_fp_elem,
         )?;
