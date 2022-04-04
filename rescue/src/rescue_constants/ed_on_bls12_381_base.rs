@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use crate::{RescueParameter, ROUNDS, STATE_SIZE};
+use crate::param::{RescueParameter, ROUNDS, STATE_SIZE};
 use ark_ed_on_bls12_381::Fq;
 
 // the constants in this file are generated with

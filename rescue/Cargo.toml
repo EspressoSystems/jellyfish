@@ -13,6 +13,8 @@ ark-ff = { version = "0.3.0", default-features = false }
 ark-std = { version = "0.3.0", default-features = false }
 ark-ec = { version = "0.3.0", default-features = false }
 ark-serialize = { version = "0.3.0", default-features = false }
+ark-sponge = { version = "0.3.0", default-features = false }
+# ark-sponge = { git = "https://github.com/arkworks-rs/sponge/" }
 
 # ark cruves
 ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
@@ -25,6 +27,7 @@ ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", default-features 
 
 # jellyfish
 jf-utils = { path = "../utilities" }
+commit = { git = "https://github.com/EspressoSystems/commit/" }
 
 # others
 rayon = { version = "1.5.0", default-features = false }
@@ -33,6 +36,7 @@ serde = { version = "1.0", features = ["derive"] }
 generic-array = { version = "^0.14", default-features = false }
 displaydoc = { version = "0.2.3", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
+num-bigint = { version = "0.4.3", default-features = false }
 
 [dev-dependencies]
 rand_chacha = "^0.3"

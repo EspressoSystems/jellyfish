@@ -101,22 +101,22 @@ where
     B: AsRef<[u8]> + Clone,
     F: PrimeField,
 {
-    // segment the bytes into trunks of bytes, each trunk is of size
-    // that is floor(F::size_in_bits/8). then, cast each trunk
+    // segment the bytes into chunks of bytes, each chunk is of size
+    // that is floor(F::size_in_bits/8). then, cast each chunk
     // into F via F::from_le_bytes_mod_order
     // note that mod_reduction is guaranteed to not occur
 
     // Field order is never a multiple of 8
-    let trunk_length = F::size_in_bits() / 8;
+    let chunk_length = F::size_in_bits() / 8;
 
-    // pad the input to a multiple of trunk_length
-    let padded_length = (bytes.as_ref().len() + trunk_length - 1) / trunk_length * trunk_length;
+    // pad the input to a multiple of chunk_length
+    let padded_length = (bytes.as_ref().len() + chunk_length - 1) / chunk_length * chunk_length;
     let mut padded_bytes: Vec<u8> = bytes.as_ref().to_vec();
     padded_bytes.resize(padded_length, 0u8);
-    assert!(padded_bytes.len() % trunk_length == 0);
+    assert!(padded_bytes.len() % chunk_length == 0);
 
     let mut result = Vec::new();
-    for chunk in padded_bytes.chunks(trunk_length) {
+    for chunk in padded_bytes.chunks(chunk_length) {
         result.push(F::from_le_bytes_mod_order(chunk));
     }
     result
