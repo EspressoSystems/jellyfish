@@ -135,6 +135,12 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -156,6 +162,12 @@
     <span class="doccomment">///     [table_vars\[0\], ..., table_vars[n - 1]];</span>
     <span class="doccomment">/// and create a list of variable tuples to be looked up:</span>
     <span class="doccomment">///     [lookup_vars\[0\], ..., lookup_vars[m - 1]];</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// **For each variable tuple `(lookup_var.0, lookup_var.1, lookup_var.2)`</span>
+    <span class="doccomment">/// to be looked up, the index variable `lookup_var.0` is required to be</span>
+    <span class="doccomment">/// in range [0, n) (either constrained by a range-check gate or other</span>
+    <span class="doccomment">/// circuits), so that one can&#39;t set it out of bounds and thus do a</span>
+    <span class="doccomment">/// lookup into one of the *other* tables. **</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_table_and_lookup_variables</span>(
