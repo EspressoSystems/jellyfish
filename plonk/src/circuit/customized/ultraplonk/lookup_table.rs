@@ -16,15 +16,9 @@ use ark_std::{boxed::Box, cmp::max, vec::Vec};
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Create a table with keys/values
     ///     [table_id, ..., table_id + n - 1] and
-    ///     [table_vars\[0\], ..., table_vars[n - 1]];
+    ///     [table_vars\[0\], ..., table_vars\[n - 1\]];
     /// and create a list of variable tuples to be looked up:
-    ///     [lookup_vars\[0\], ..., lookup_vars[m - 1]];
-    ///
-    /// **For each variable tuple `(lookup_var.0, lookup_var.1, lookup_var.2)`
-    /// to be looked up, the index variable `lookup_var.0` is required to be
-    /// in range [0, n) (either constrained by a range-check gate or other
-    /// circuits), so that one can't set it out of bounds and thus do a
-    /// lookup into one of the *other* tables. **
+    ///     [lookup_vars\[0\], ..., lookup_vars\[m - 1\]];
     ///
     /// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m
     pub fn create_table_and_lookup_variables(
