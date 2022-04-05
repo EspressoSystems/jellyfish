@@ -7,7 +7,7 @@ use crate::{
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_sponge::{Absorb, CryptographicSponge, FieldBasedCryptographicSponge, FieldElementSize};
-use jf_utils::pad_with_zeros;
+use jf_utils::{field_switching, pad_with_zeros};
 use num_bigint::BigUint;
 
 impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
@@ -56,9 +56,8 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
         // T::size_in_bits() - 129
         // ```
         // number of bits that is computational uniform.
-        // For simplicity, we will extract 120 bits
         #[cfg(debug_assertions)]
-        assert!(T::size_in_bits() > 248);
+        assert!(T::size_in_bits() > 129);
 
         let mut result = Vec::new();
         let mut remaining = num_bits;
@@ -66,9 +65,9 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
         // we extract 3 elements with a hash call
         let extracted_bits_per_elem = T::size_in_bits() - 129;
         let mut elem_ctr = 0;
-        // let extracted_bits_per_hash = 3*extracted_bits_per_elem;
         let mut extracted = self.state.vec;
         self.state = self.permutation.eval(&self.state);
+
         // modulus is 2^extracted_bits_per_elem
         let modulus: BigUint = T::from(2u64).pow(&[extracted_bits_per_elem as u64]).into();
 
@@ -110,10 +109,10 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
         sizes: &[FieldElementSize],
     ) -> Vec<F> {
         if T::size_in_bits() == F::size_in_bits() {
-            let mut res_f = Vec::with_capacity(sizes.len());
-            let res_t = RescueHash::<T>::squeeze_native_field_elements_with_sizes(self, sizes);
-            batch_field_cast(&res_t, &mut res_f).unwrap();
-            res_f
+            RescueHash::<T>::squeeze_native_field_elements_with_sizes(self, sizes)
+                .iter()
+                .map(|x| field_switching(x))
+                .collect::<Vec<F>>()
         } else {
             // currently we do not support hashing into a non-native field
             unimplemented!()
@@ -195,27 +194,6 @@ fn bools_to_u8(input: &[bool]) -> u8 {
         }
     }
     res
-}
-
-/// If `F1` equals to `F2`, add all elements of `x` as `F2` to `dest` and
-/// returns `dest` pointer.
-///
-/// This function will return None and no-op if `F1` is not equal to `F2`.
-pub(crate) fn batch_field_cast<'a, F1: PrimeField, F2: PrimeField>(
-    x: &[F1],
-    dest: &'a mut Vec<F2>,
-) -> Option<&'a mut Vec<F2>> {
-    if F1::characteristic() != F2::characteristic() {
-        // "Trying to absorb non-native field elements."
-        None
-    } else {
-        x.iter().for_each(|item| {
-            let mut buf = Vec::new();
-            item.serialize(&mut buf).unwrap();
-            dest.push(F2::from_le_bytes_mod_order(&buf))
-        });
-        Some(dest)
-    }
 }
 
 #[cfg(test)]

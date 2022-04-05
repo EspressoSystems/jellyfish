@@ -79,14 +79,14 @@ impl<F: RescueParameter> Default for PRP<F> {
 }
 
 impl<F: RescueParameter> PRP<F> {
-    /// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4
+    /// Rescue pseudorandom permutation for field element vectors of size 4
     /// without key scheduled keys (scheduling occurs online)
     pub fn prp(&self, key: &RescueVector<F>, input: &RescueVector<F>) -> RescueVector<F> {
         let round_keys = self.key_schedule(key);
         self.prp_with_round_keys(round_keys.as_slice(), input)
     }
 
-    /// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4
+    /// Rescue pseudorandom permutation for field element vectors of size 4
     /// using scheduled keys
     pub fn prp_with_round_keys(
         &self,
@@ -106,7 +106,7 @@ impl<F: RescueParameter> PRP<F> {
         perm_state
     }
 
-    /// Key scheduling for rescue based PRP for Bls12_381 scalars vector of size
+    /// Key scheduling for rescue based PRP for field element vector of size
     /// 4
     pub fn key_schedule(&self, key: &RescueVector<F>) -> Vec<RescueVector<F>> {
         let mut aux = key.add(&self.init_vec);
@@ -245,7 +245,7 @@ impl<F: RescueParameter> Permutation<F> {
 }
 
 impl<F: RescueParameter> Permutation<F> {
-    /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
+    /// Pseudorandom function for the field. It allows unrestricted
     /// variable length input and number of output elements
     pub fn full_state_keyed_sponge_with_padding(
         &self,
@@ -260,7 +260,7 @@ impl<F: RescueParameter> Permutation<F> {
             .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
     }
 
-    /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
+    /// Pseudorandom function for the field. It allows unrestricted
     /// variable length input and number of output elements. Return error if
     /// input is not multiple of STATE_SIZE = 4
     pub fn full_state_keyed_sponge_no_padding(

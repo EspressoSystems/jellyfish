@@ -14,7 +14,6 @@ ark-std = { version = "0.3.0", default-features = false }
 ark-ec = { version = "0.3.0", default-features = false }
 ark-serialize = { version = "0.3.0", default-features = false }
 ark-sponge = { version = "0.3.0", default-features = false }
-# ark-sponge = { git = "https://github.com/arkworks-rs/sponge/" }
 
 # ark cruves
 ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
