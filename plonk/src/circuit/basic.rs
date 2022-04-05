@@ -314,29 +314,38 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
             }
             // key-value map lookup gates
             let mut key_val_table = HashSet::new();
-            key_val_table.insert((F::zero(), F::zero(), F::zero()));
-            let mut num_table_elems: u32 = 0;
+            key_val_table.insert((F::zero(), F::zero(), F::zero(), F::zero()));
             let q_lookup_vec = self.q_lookup();
-            for (gate_id, &q_lookup) in q_lookup_vec.iter().enumerate() {
+            let q_dom_sep_vec = self.q_dom_sep();
+            let table_key_vec = self.table_key_vec();
+            let table_dom_sep_vec = self.table_dom_sep_vec();
+            // insert table elements
+            for (gate_id, ((&q_lookup, &table_dom_sep), &table_key)) in q_lookup_vec
+                .iter()
+                .zip(table_dom_sep_vec.iter())
+                .zip(table_key_vec.iter())
+                .enumerate()
+            {
                 if q_lookup != F::zero() {
-                    let key = F::from(num_table_elems);
                     let val0 = self.witness(self.wire_variable(3, gate_id))?;
                     let val1 = self.witness(self.wire_variable(4, gate_id))?;
-                    key_val_table.insert((key, val0, val1));
-                    num_table_elems += 1;
+                    key_val_table.insert((table_dom_sep, table_key, val0, val1));
                 }
             }
-            for (gate_id, &q_lookup) in q_lookup_vec.iter().enumerate() {
+            // check lookups
+            for (gate_id, (&q_lookup, &q_dom_sep)) in
+                q_lookup_vec.iter().zip(q_dom_sep_vec.iter()).enumerate()
+            {
                 if q_lookup != F::zero() {
                     let key = self.witness(self.wire_variable(0, gate_id))?;
                     let val0 = self.witness(self.wire_variable(1, gate_id))?;
                     let val1 = self.witness(self.wire_variable(2, gate_id))?;
-                    if !key_val_table.contains(&(key, val0, val1)) {
+                    if !key_val_table.contains(&(q_dom_sep, key, val0, val1)) {
                         return Err(GateCheckFailure(
                             gate_id,
                             format!(
-                                "Lookup gate failed: ({}, {}, {}) not in the table",
-                                key, val0, val1
+                                "Lookup gate failed: ({}, {}, {}, {}) not in the table",
+                                q_dom_sep, key, val0, val1
                             ),
                         )
                         .into());
@@ -788,6 +797,21 @@ impl<F: FftField> PlonkCircuit<F> {
     fn q_lookup(&self) -> Vec<F> {
         self.gates.iter().map(|g| g.q_lookup()).collect()
     }
+    // getter for all lookup domain separation selector
+    #[inline]
+    fn q_dom_sep(&self) -> Vec<F> {
+        self.gates.iter().map(|g| g.q_dom_sep()).collect()
+    }
+    // getter for the vector of table keys
+    #[inline]
+    fn table_key_vec(&self) -> Vec<F> {
+        self.gates.iter().map(|g| g.table_key()).collect()
+    }
+    // getter for the vector of table domain separation ids
+    #[inline]
+    fn table_dom_sep_vec(&self) -> Vec<F> {
+        self.gates.iter().map(|g| g.table_dom_sep()).collect()
+    }
     // TODO: (alex) try return reference instead of expensive clone
     // getter for all selectors in the following order:
     // q_lc, q_mul, q_hash, q_o, q_c, q_ecc, [q_lookup (if support lookup)]
@@ -1171,16 +1195,36 @@ where
     }
 
     fn compute_key_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        let key_table = self.compute_key_table()?;
+        self.check_plonk_type(PlonkType::UltraPlonk)?;
+        self.check_finalize_flag(true)?;
         let domain = &self.eval_domain;
         Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&key_table),
+            domain.ifft(&self.table_key_vec()),
+        ))
+    }
+
+    fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        self.check_plonk_type(PlonkType::UltraPlonk)?;
+        self.check_finalize_flag(true)?;
+        let domain = &self.eval_domain;
+        Ok(DensePolynomial::from_coefficients_vec(
+            domain.ifft(&self.table_dom_sep_vec()),
+        ))
+    }
+
+    fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        self.check_plonk_type(PlonkType::UltraPlonk)?;
+        self.check_finalize_flag(true)?;
+        let domain = &self.eval_domain;
+        Ok(DensePolynomial::from_coefficients_vec(
+            domain.ifft(&self.q_dom_sep()),
         ))
     }
 
     fn compute_merged_lookup_table(&self, tau: F) -> Result<Vec<F>, PlonkError> {
         let range_table = self.compute_range_table()?;
-        let key_table = self.compute_key_table()?;
+        let table_key_vec = self.table_key_vec();
+        let table_dom_sep_vec = self.table_dom_sep_vec();
         let q_lookup_vec = self.q_lookup();
 
         let mut merged_lookup_table = vec![];
@@ -1188,7 +1232,8 @@ where
             merged_lookup_table.push(self.merged_table_value(
                 tau,
                 &range_table,
-                &key_table,
+                &table_key_vec,
+                &table_dom_sep_vec,
                 &q_lookup_vec,
                 i,
             )?);
@@ -1230,9 +1275,11 @@ where
         let beta_plus_one = F::one() + *beta;
         let gamma_mul_beta_plus_one = *gamma * beta_plus_one;
         let q_lookup_vec = self.q_lookup();
+        let q_dom_sep_vec = self.q_dom_sep();
         for j in 0..(n - 2) {
             // compute merged lookup witness value
-            let lookup_wire_val = self.merged_lookup_wire_value(*tau, j, &q_lookup_vec)?;
+            let lookup_wire_val =
+                self.merged_lookup_wire_value(*tau, j, &q_lookup_vec, &q_dom_sep_vec)?;
             let table_val = merged_lookup_table[j];
             let table_next_val = merged_lookup_table[j + 1];
             let h1_val = sorted_vec[j];
@@ -1281,8 +1328,9 @@ where
         // only the first n-1 variables are for lookup
         let mut lookup_map = HashMap::<F, usize>::new();
         let q_lookup_vec = self.q_lookup();
+        let q_dom_sep_vec = self.q_dom_sep();
         for i in 0..(n - 1) {
-            let elem = self.merged_lookup_wire_value(tau, i, &q_lookup_vec)?;
+            let elem = self.merged_lookup_wire_value(tau, i, &q_lookup_vec, &q_dom_sep_vec)?;
             let n_lookups = lookup_map.entry(elem).or_insert(0);
             *n_lookups += 1;
         }
@@ -1329,34 +1377,23 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     #[inline]
-    // TODO: generalize to arbitrary key sets.
-    fn compute_key_table(&self) -> Result<Vec<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let n = self.eval_domain_size()?;
-        let mut key_table = vec![F::zero(); n - 1 - self.num_table_elems];
-        for i in 0..self.num_table_elems {
-            key_table.push(F::from(i as u32));
-        }
-        key_table.push(F::zero());
-        Ok(key_table)
-    }
-
-    #[inline]
     fn merged_table_value(
         &self,
         tau: F,
         range_table: &[F],
-        key_table: &[F],
+        table_key_vec: &[F],
+        table_dom_sep_vec: &[F],
         q_lookup_vec: &[F],
         i: usize,
     ) -> Result<F, PlonkError> {
         let range_val = range_table[i];
-        let key_val = key_table[i];
+        let key_val = table_key_vec[i];
+        let dom_sep_val = table_dom_sep_vec[i];
         let q_lookup_val = q_lookup_vec[i];
         let w3_val = self.witness(self.wire_variable(3, i))?;
         let w4_val = self.witness(self.wire_variable(4, i))?;
-        Ok(range_val + q_lookup_val * tau * (key_val + tau * (w3_val + tau * w4_val)))
+        Ok(range_val
+            + q_lookup_val * tau * (dom_sep_val + tau * (key_val + tau * (w3_val + tau * w4_val))))
     }
 
     #[inline]
@@ -1365,13 +1402,18 @@ impl<F: PrimeField> PlonkCircuit<F> {
         tau: F,
         i: usize,
         q_lookup_vec: &[F],
+        q_dom_sep_vec: &[F],
     ) -> Result<F, PlonkError> {
         let w_range_val = self.witness(self.wire_variable(RANGE_WIRE_ID, i))?;
         let w_0_val = self.witness(self.wire_variable(0, i))?;
         let w_1_val = self.witness(self.wire_variable(1, i))?;
         let w_2_val = self.witness(self.wire_variable(2, i))?;
         let q_lookup_val = q_lookup_vec[i];
-        Ok(w_range_val + q_lookup_val * tau * (w_0_val + tau * (w_1_val + tau * w_2_val)))
+        let q_dom_sep_val = q_dom_sep_vec[i];
+        Ok(w_range_val
+            + q_lookup_val
+                * tau
+                * (q_dom_sep_val + tau * (w_0_val + tau * (w_1_val + tau * w_2_val))))
     }
 }
 
@@ -1969,7 +2011,7 @@ pub(crate) mod test {
 
         // Check key table polynomial
         let key_table_poly = circuit.compute_key_table_polynomial()?;
-        let key_table = circuit.compute_key_table()?;
+        let key_table = circuit.table_key_vec();
         check_polynomial(&key_table_poly, &key_table);
 
         // Check sorted vector polynomials
@@ -2016,8 +2058,10 @@ pub(crate) mod test {
         let one_plus_beta = F::one() + beta;
         let gamma_mul_one_plus_beta = gamma * one_plus_beta;
         let q_lookup_vec = circuit.q_lookup();
+        let q_dom_sep = circuit.q_dom_sep();
         for j in 0..(n - 2) {
-            let lookup_wire_val = circuit.merged_lookup_wire_value(tau, j, &q_lookup_vec)?;
+            let lookup_wire_val =
+                circuit.merged_lookup_wire_value(tau, j, &q_lookup_vec, &q_dom_sep)?;
             let table_val = merged_lookup_table[j];
             let table_next_val = merged_lookup_table[j + 1];
             let h1_val = sorted_vec[j];

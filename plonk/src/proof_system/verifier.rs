@@ -632,6 +632,7 @@ where
                     w_evals[1],
                     w_evals[2],
                     lookup_evals.q_lookup_eval,
+                    lookup_evals.q_dom_sep_eval,
                 );
                 let merged_table_x = eval_merged_table::<E>(
                     challenges.tau,
@@ -640,6 +641,7 @@ where
                     lookup_evals.q_lookup_eval,
                     w_evals[3],
                     w_evals[4],
+                    lookup_evals.table_dom_sep_eval,
                 );
                 let merged_table_xw = eval_merged_table::<E>(
                     challenges.tau,
@@ -648,6 +650,7 @@ where
                     lookup_evals.q_lookup_next_eval,
                     lookup_evals.w_3_next_eval,
                     lookup_evals.w_4_next_eval,
+                    lookup_evals.table_dom_sep_next_eval,
                 );
 
                 // coefficient for prod_lookup_poly(X):
@@ -833,6 +836,8 @@ where
             vk.plookup_vk.as_ref().unwrap().key_table_comm,
             proof.h_poly_comms[0],
             *vk.q_lookup_comm()?,
+            vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
+            vk.plookup_vk.as_ref().unwrap().q_dom_sep_comm,
         ])
     }
 
@@ -853,6 +858,7 @@ where
             *vk.q_lookup_comm()?,
             wires_poly_comms[3],
             wires_poly_comms[4],
+            vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
         ])
     }
 

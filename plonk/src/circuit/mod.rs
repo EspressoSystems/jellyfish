@@ -188,6 +188,20 @@ pub trait Arithmetization<F: FftField>: Circuit<F> {
         Err(LookupUnsupported.into())
     }
 
+    /// Compute and return the polynomial that interpolates the table domain
+    /// sepration ids. Return an error if the circuit does not support
+    /// lookup or has not been finalized.
+    fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        Err(LookupUnsupported.into())
+    }
+
+    /// Compute and return the polynomial that interpolates the lookup domain
+    /// sepration selectors for the lookup gates. Return an error if the
+    /// circuit does not support lookup or has not been finalized.
+    fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+        Err(LookupUnsupported.into())
+    }
+
     /// Compute and return the combined lookup table vector given random
     /// challenge `tau`.
     fn compute_merged_lookup_table(&self, _tau: F) -> Result<Vec<F>, PlonkError> {
