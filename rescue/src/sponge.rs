@@ -44,7 +44,7 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
     fn squeeze_bytes(&mut self, num_bytes: usize) -> Vec<u8> {
         self.squeeze_bits(num_bytes)
             .chunks(8)
-            .map(|x| bools_to_u8(x))
+            .map(bools_to_u8)
             .collect()
     }
 
