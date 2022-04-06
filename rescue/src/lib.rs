@@ -34,5 +34,4 @@ pub use structs::*;
 /// an internal state.
 pub struct RescueHash<F: RescueParameter> {
     pub(crate) state: RescueVector<F>,
-    pub(crate) permutation: Permutation<F>,
 }

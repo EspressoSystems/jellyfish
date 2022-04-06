@@ -15,15 +15,16 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
     type Parameters = Permutation<T>;
 
     /// Initialize a new instance of the sponge.
-    fn new(params: &Self::Parameters) -> Self {
+    fn new(_params: &Self::Parameters) -> Self {
         Self {
             state: RescueVector::default(),
-            permutation: params.clone(),
         }
     }
 
     /// Absorb an input into the sponge.
     fn absorb(&mut self, input: &impl Absorb) {
+        let permutation = Permutation::default();
+
         let mut input_field_elements = input.to_sponge_field_elements_as_vec();
         // Pad input as follows: append a One, then pad with 0 until length is multiple
         // of RATE
@@ -36,7 +37,7 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
             .for_each(|chunk| {
                 let block = RescueVector::pad_smaller_chunk(chunk);
                 self.state.add_assign(&block);
-                self.state = self.permutation.eval(&self.state)
+                self.state = permutation.eval(&self.state)
             });
     }
 
@@ -59,6 +60,7 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
         #[cfg(debug_assertions)]
         assert!(T::size_in_bits() > 129);
 
+        let permutation = Permutation::default();
         let mut result = Vec::new();
         let mut remaining = num_bits;
 
@@ -66,7 +68,7 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
         let extracted_bits_per_elem = T::size_in_bits() - 129;
         let mut elem_ctr = 0;
         let mut extracted = self.state.vec;
-        self.state = self.permutation.eval(&self.state);
+        self.state = permutation.eval(&self.state);
 
         // modulus is 2^extracted_bits_per_elem
         let modulus: BigUint = T::from(2u64).pow(&[extracted_bits_per_elem as u64]).into();
@@ -76,7 +78,7 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
             elem_ctr += 1;
             if elem_ctr == 3 {
                 extracted = self.state.vec;
-                self.state = self.permutation.eval(&self.state);
+                self.state = permutation.eval(&self.state);
                 elem_ctr = 0;
             }
 
@@ -148,6 +150,7 @@ impl<T: RescueParameter> FieldBasedCryptographicSponge<T> for RescueHash<T> {
     /// Squeeze `num_elements` field elements from the sponge.
     fn squeeze_native_field_elements(&mut self, num_elements: usize) -> Vec<T> {
         // SQUEEZE PHASE
+        let permutation = Permutation::default();
         let mut result = vec![];
         let mut remaining = num_elements;
         // extract current rate before calling PRP again
@@ -158,7 +161,7 @@ impl<T: RescueParameter> FieldBasedCryptographicSponge<T> for RescueHash<T> {
             if remaining == 0 {
                 break;
             }
-            self.state = self.permutation.eval(&self.state)
+            self.state = permutation.eval(&self.state)
         }
         result
     }
