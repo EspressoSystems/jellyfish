@@ -29,6 +29,14 @@ use rayon::prelude::*;
 
 /// The wire type identifier for range gates.
 const RANGE_WIRE_ID: usize = 5;
+/// The wire type identifier for the key index in a lookup gate
+const LOOKUP_KEY_WIRE_ID: usize = 0;
+/// The wire type identifiers for the searched pair values in a lookup gate
+const LOOKUP_VAL_1_WIRE_ID: usize = 1;
+const LOOKUP_VAL_2_WIRE_ID: usize = 2;
+/// The wire type identifiers for the pair values in the lookup table
+const TABLE_VAL_1_WIRE_ID: usize = 3;
+const TABLE_VAL_2_WIRE_ID: usize = 4;
 
 /// Hardcoded parameters for Plonk systems.
 #[derive(Debug, Clone, Copy)]
@@ -327,8 +335,8 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                 .enumerate()
             {
                 if q_lookup != F::zero() {
-                    let val0 = self.witness(self.wire_variable(3, gate_id))?;
-                    let val1 = self.witness(self.wire_variable(4, gate_id))?;
+                    let val0 = self.witness(self.wire_variable(TABLE_VAL_1_WIRE_ID, gate_id))?;
+                    let val1 = self.witness(self.wire_variable(TABLE_VAL_2_WIRE_ID, gate_id))?;
                     key_val_table.insert((table_dom_sep, table_key, val0, val1));
                 }
             }
@@ -337,9 +345,9 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                 q_lookup_vec.iter().zip(q_dom_sep_vec.iter()).enumerate()
             {
                 if q_lookup != F::zero() {
-                    let key = self.witness(self.wire_variable(0, gate_id))?;
-                    let val0 = self.witness(self.wire_variable(1, gate_id))?;
-                    let val1 = self.witness(self.wire_variable(2, gate_id))?;
+                    let key = self.witness(self.wire_variable(LOOKUP_KEY_WIRE_ID, gate_id))?;
+                    let val0 = self.witness(self.wire_variable(LOOKUP_VAL_1_WIRE_ID, gate_id))?;
+                    let val1 = self.witness(self.wire_variable(LOOKUP_VAL_2_WIRE_ID, gate_id))?;
                     if !key_val_table.contains(&(q_dom_sep, key, val0, val1)) {
                         return Err(GateCheckFailure(
                             gate_id,
@@ -1390,10 +1398,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let key_val = table_key_vec[i];
         let dom_sep_val = table_dom_sep_vec[i];
         let q_lookup_val = q_lookup_vec[i];
-        let w3_val = self.witness(self.wire_variable(3, i))?;
-        let w4_val = self.witness(self.wire_variable(4, i))?;
+        let table_val_1 = self.witness(self.wire_variable(TABLE_VAL_1_WIRE_ID, i))?;
+        let table_val_2 = self.witness(self.wire_variable(TABLE_VAL_2_WIRE_ID, i))?;
         Ok(range_val
-            + q_lookup_val * tau * (dom_sep_val + tau * (key_val + tau * (w3_val + tau * w4_val))))
+            + q_lookup_val
+                * tau
+                * (dom_sep_val + tau * (key_val + tau * (table_val_1 + tau * table_val_2))))
     }
 
     #[inline]
@@ -1405,15 +1415,15 @@ impl<F: PrimeField> PlonkCircuit<F> {
         q_dom_sep_vec: &[F],
     ) -> Result<F, PlonkError> {
         let w_range_val = self.witness(self.wire_variable(RANGE_WIRE_ID, i))?;
-        let w_0_val = self.witness(self.wire_variable(0, i))?;
-        let w_1_val = self.witness(self.wire_variable(1, i))?;
-        let w_2_val = self.witness(self.wire_variable(2, i))?;
+        let lookup_key = self.witness(self.wire_variable(LOOKUP_KEY_WIRE_ID, i))?;
+        let lookup_val_1 = self.witness(self.wire_variable(LOOKUP_VAL_1_WIRE_ID, i))?;
+        let lookup_val_2 = self.witness(self.wire_variable(LOOKUP_VAL_2_WIRE_ID, i))?;
         let q_lookup_val = q_lookup_vec[i];
         let q_dom_sep_val = q_dom_sep_vec[i];
         Ok(w_range_val
             + q_lookup_val
                 * tau
-                * (q_dom_sep_val + tau * (w_0_val + tau * (w_1_val + tau * w_2_val))))
+                * (q_dom_sep_val + tau * (lookup_key + tau * (lookup_val_1 + tau * lookup_val_2))))
     }
 }
 

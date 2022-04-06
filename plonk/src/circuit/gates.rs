@@ -52,7 +52,7 @@ pub trait Gate<F: Field>: Downcast + GateClone<F> {
     fn table_key(&self) -> F {
         F::zero()
     }
-    /// UltraPlonk table domain sepration ids
+    /// UltraPlonk table domain separation ids
     fn table_dom_sep(&self) -> F {
         F::zero()
     }
