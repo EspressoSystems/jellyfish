@@ -15,7 +15,35 @@ use displaydoc::Display;
 
 /// Various error modes.
 #[derive(Debug, Display)]
+pub enum HashError {
+    /// Bad parameter in function call,
+    RescueError(RescueError),
+    /// Bad parameter in function call,
+    KeccakError(KeccakError),
+}
+
+/// Various error modes.
+#[derive(Debug, Display)]
 pub enum RescueError {
     /// Bad parameter in function call, {0}
     ParameterError(String),
+}
+
+/// Various error modes.
+#[derive(Debug, Display)]
+pub enum KeccakError {
+    /// Bad parameter in function call, {0}
+    ParameterError(String),
+}
+
+impl From<RescueError> for HashError {
+    fn from(e: RescueError) -> Self {
+        Self::RescueError(e)
+    }
+}
+
+impl From<KeccakError> for HashError {
+    fn from(e: KeccakError) -> Self {
+        Self::KeccakError(e)
+    }
 }

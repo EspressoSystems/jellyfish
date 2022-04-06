@@ -26,7 +26,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
+use jf_hashes::RescueParameter;
 use jf_utils::multi_pairing;
 
 /// A batching argument.

@@ -29,7 +29,7 @@ use ark_std::{
     vec::Vec,
 };
 use core::{convert::TryFrom, fmt::Debug};
-use jf_rescue::{Permutation, RescueParameter};
+use jf_hashes::{Permutation, RescueParameter};
 use jf_utils::tagged_blob;
 use serde::{Deserialize, Serialize};
 

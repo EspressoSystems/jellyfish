@@ -25,7 +25,7 @@ use ark_ec::{
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec::Vec};
-use jf_rescue::RescueParameter;
+use jf_hashes::RescueParameter;
 use jf_utils::{bytes_to_field_elements, field_switching};
 
 /// Aggregate polynomial commitments into a single commitment (in the
@@ -469,7 +469,7 @@ mod test {
     use ark_bls12_377::{g1::Parameters as Param377, Bls12_377};
     use ark_ec::{SWModelParameters, TEModelParameters};
     use ark_std::{test_rng, vec, UniformRand};
-    use jf_rescue::RescueParameter;
+    use jf_hashes::RescueParameter;
     use jf_utils::field_switching;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;

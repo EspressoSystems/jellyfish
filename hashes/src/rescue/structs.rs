@@ -1,6 +1,6 @@
 //! This module defines vector and matrix structs for rescue hash function.
 
-use crate::param::{RescueParameter, STATE_SIZE};
+use crate::rescue::param::{RescueParameter, STATE_SIZE};
 use ark_ff::PrimeField;
 
 #[derive(Clone, Debug, PartialEq, Copy, Default)]

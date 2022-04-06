@@ -1,8 +1,10 @@
 //! This file contains the APIs wrappers for ark-sponge
 
 use crate::{
-    param::{RescueParameter, RATE},
-    structs::RescueVector,
+    rescue::{
+        param::{RescueParameter, RATE},
+        structs::RescueVector,
+    },
     Permutation, RescueHash,
 };
 use ark_ff::{BigInteger, PrimeField};
@@ -119,28 +121,6 @@ impl<T: RescueParameter> CryptographicSponge for RescueHash<T> {
             // currently we do not support hashing into a non-native field
             unimplemented!()
         }
-    }
-
-    /// Squeeze `num_elements` nonnative field elements from the sponge.
-    ///
-    /// Because of rust limitation, for field-based implementation, using this
-    /// method to squeeze native field elements will have runtime casting
-    /// cost. For better efficiency, use `squeeze_native_field_elements`.
-    fn squeeze_field_elements<F: PrimeField>(&mut self, num_elements: usize) -> Vec<F> {
-        self.squeeze_field_elements_with_sizes::<F>(
-            vec![FieldElementSize::Full; num_elements].as_slice(),
-        )
-    }
-
-    /// Creates a new sponge with applied domain separation.
-    fn fork(&self, domain: &[u8]) -> Self {
-        let mut new_sponge = self.clone();
-
-        let mut input = Absorb::to_sponge_bytes_as_vec(&domain.len());
-        input.extend_from_slice(domain);
-        new_sponge.absorb(&input);
-
-        new_sponge
     }
 }
 

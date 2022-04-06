@@ -8,16 +8,15 @@
 //! The parameters in this file are mock parameters for testing purpose.
 //! They are not correct and shall not be used for anything else
 
-use crate::param::{RescueParameter, ROUNDS, STATE_SIZE};
-use ark_bw6_761::Fq;
+use crate::rescue::param::{RescueParameter, ROUNDS, STATE_SIZE};
+use ark_bn254::Fq;
 
 /// This is a dummy implementation of Rescue parameters
 /// to satisfy trait bound for Fq.
 /// This code should not be used for any other purpose.
 impl RescueParameter for Fq {
     const A: u64 = 5;
-
-    const A_INV: &'static [u64] = &[0, 0, 0, 0, 0, 0];
+    const A_INV: &'static [u64] = &[0, 0, 0, 0];
 
     const MDS_LE: [[&'static [u8]; STATE_SIZE]; STATE_SIZE] =
         [[&[0u8; 32]; STATE_SIZE]; STATE_SIZE];

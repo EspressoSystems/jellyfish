@@ -23,7 +23,7 @@ use ark_ec::{
 };
 use ark_ff::{BigInteger, FpParameters, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
-use jf_rescue::RescueParameter;
+use jf_hashes::RescueParameter;
 
 mod gadgets;
 mod poly;
@@ -328,7 +328,7 @@ mod test {
     use ark_bls12_377::{g1::Parameters as Param377, Bls12_377, Fq as Fq377};
     use ark_ec::{ProjectiveCurve, SWModelParameters, TEModelParameters};
     use ark_std::{test_rng, vec, UniformRand};
-    use jf_rescue::RescueParameter;
+    use jf_hashes::RescueParameter;
     use jf_utils::field_switching;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;

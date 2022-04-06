@@ -24,7 +24,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
+use jf_hashes::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
 use jf_utils::pad_with_zeros;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},

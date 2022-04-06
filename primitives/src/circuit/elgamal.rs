@@ -12,6 +12,7 @@ use ark_ec::{
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
+use jf_hashes::{RescueParameter, PRP, STATE_SIZE};
 use jf_plonk::{
     circuit::{
         customized::{
@@ -22,7 +23,6 @@ use jf_plonk::{
     },
     errors::PlonkError,
 };
-use jf_rescue::{RescueParameter, PRP, STATE_SIZE};
 use jf_utils::compute_len_to_next_multiple;
 
 /// Variables holding an encryption key.
@@ -261,11 +261,11 @@ mod tests {
     use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::{vec, vec::Vec};
+    use jf_hashes::{RescueParameter, RescueVector, STATE_SIZE};
     use jf_plonk::circuit::{
         customized::{ecc::Point, rescue::RescueGadget},
         Circuit, PlonkCircuit, Variable,
     };
-    use jf_rescue::{RescueParameter, RescueVector, STATE_SIZE};
     use jf_utils::fr_to_fq;
 
     #[test]

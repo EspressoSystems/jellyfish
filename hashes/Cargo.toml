@@ -1,6 +1,6 @@
 [package]
-name = "jf-rescue"
-description = "Rescue hash function"
+name = "jf-hashes"
+description = "A family of hash function"
 version = "0.1.0"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2018"
@@ -36,6 +36,8 @@ generic-array = { version = "^0.14", default-features = false }
 displaydoc = { version = "0.2.3", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
 num-bigint = { version = "0.4.3", default-features = false }
+sha3 = { version = "0.10" }
+
 
 [dev-dependencies]
 rand_chacha = "^0.3"

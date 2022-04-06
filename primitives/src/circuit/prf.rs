@@ -7,11 +7,11 @@
 //! Circuit implementation of a PRF.
 
 use crate::utils::pad_with;
+use jf_hashes::{RescueParameter, STATE_SIZE};
 use jf_plonk::{
     circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
     errors::PlonkError,
 };
-use jf_rescue::{RescueParameter, STATE_SIZE};
 
 /// Circuit implementation of a PRF.
 pub trait PrfGadget {

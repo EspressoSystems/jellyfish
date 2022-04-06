@@ -8,11 +8,11 @@
 
 use crate::utils::pad_with;
 use ark_std::vec;
+use jf_hashes::{RescueParameter, RATE};
 use jf_plonk::{
     circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
     errors::PlonkError,
 };
-use jf_rescue::{RescueParameter, RATE};
 
 /// Circuit implementation of the commitment scheme.
 pub trait CommitmentGadget {

@@ -6,9 +6,11 @@
 //! limiting the input to 3 and output to 1
 
 use crate::{
-    errors::RescueError,
-    param::{RescueParameter, RATE, ROUNDS, STATE_SIZE},
-    structs::{RescueMatrix, RescueVector},
+    errors::{HashError, RescueError},
+    rescue::{
+        param::{RescueParameter, RATE, ROUNDS, STATE_SIZE},
+        structs::{RescueMatrix, RescueVector},
+    },
 };
 use ark_ff::Zero;
 use ark_std::{string::ToString, vec, vec::Vec};
@@ -203,12 +205,13 @@ impl<F: RescueParameter> Permutation<F> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
     /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
     /// RATE and variable output length
-    pub fn sponge_no_padding(&self, input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
+    pub fn sponge_no_padding(&self, input: &[F], num_output: usize) -> Result<Vec<F>, HashError> {
         if input.len() % RATE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."
                     .to_string(),
-            ));
+            )
+            .into());
         }
         // ABSORB PHASE
         let mut state = RescueVector::zero();
@@ -306,7 +309,7 @@ mod test_prp {
     use ark_ed_on_bls12_381::Fq as Fr381;
     use ark_ed_on_bn254::Fq as Fr254;
 
-    use crate::{permutation::PRP, structs::RescueVector};
+    use crate::rescue::{permutation::PRP, structs::RescueVector};
 
     // hash output on vector [0, 0, 0, 0]
     // this value is cross checked with sage script
@@ -516,7 +519,7 @@ mod test_permutation {
     use ark_ff::PrimeField;
     use ark_std::{vec, Zero};
 
-    use crate::{
+    use crate::rescue::{
         param::RescueParameter,
         permutation::{Permutation, PRP},
         structs::RescueVector,

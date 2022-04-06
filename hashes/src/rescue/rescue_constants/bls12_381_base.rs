@@ -8,7 +8,7 @@
 //! The parameters in this file are mock parameters for testing purpose.
 //! They are not correct and shall not be used for anything else
 
-use crate::param::{RescueParameter, ROUNDS, STATE_SIZE};
+use crate::rescue::param::{RescueParameter, ROUNDS, STATE_SIZE};
 use ark_bls12_381::Fq;
 
 /// This is a dummy implementation of Rescue parameters

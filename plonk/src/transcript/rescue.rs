@@ -16,7 +16,7 @@ use ark_ec::{
 };
 use ark_poly_commit::kzg10::Commitment;
 use ark_std::vec::Vec;
-use jf_rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE};
+use jf_hashes::{Permutation as RescueHash, RescueParameter, STATE_SIZE};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 /// Transcript with rescue hash function.

@@ -12,11 +12,11 @@ use crate::merkle_tree::{AccMemberWitness, MerklePath, MerkleTree, NodePos, Node
 use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
+use jf_hashes::RescueParameter;
 use jf_plonk::{
     circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
     errors::PlonkError,
 };
-use jf_rescue::RescueParameter;
 
 #[derive(Clone)]
 struct MerkleNodeBooleanEncoding<F: PrimeField> {
@@ -304,8 +304,8 @@ mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
     use ark_std::{vec, vec::Vec};
+    use jf_hashes::RescueParameter;
     use jf_plonk::circuit::{Circuit, PlonkCircuit, Variable};
-    use jf_rescue::RescueParameter;
 
     fn check_merkle_path<F: PrimeField>(is_left_child: u8, is_right_child: u8, accept: bool) {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();

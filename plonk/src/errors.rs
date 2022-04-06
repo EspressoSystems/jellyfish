@@ -32,8 +32,8 @@ pub enum PlonkError {
     SerializationError(ark_serialize::SerializationError),
     /// Plonk proof verification failed due to wrong proof
     WrongProof,
-    /// Rescue Error
-    RescueError(jf_rescue::errors::RescueError),
+    /// Hash Error
+    HashError(jf_hashes::HashError),
     /// Invalid parameters
     InvalidParameters(String),
     /// Non-native field overflow
@@ -65,9 +65,9 @@ impl From<ark_serialize::SerializationError> for PlonkError {
     }
 }
 
-impl From<jf_rescue::errors::RescueError> for PlonkError {
-    fn from(e: jf_rescue::errors::RescueError) -> Self {
-        Self::RescueError(e)
+impl From<jf_hashes::HashError> for PlonkError {
+    fn from(e: jf_hashes::HashError) -> Self {
+        Self::HashError(e)
     }
 }
 

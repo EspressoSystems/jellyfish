@@ -8,7 +8,7 @@
 
 use ark_std::string::String;
 use displaydoc::Display;
-use jf_rescue::errors::RescueError;
+use jf_hashes::HashError;
 
 /// A `enum` specifying the possible failure modes of the primitives.
 #[derive(Debug, Display)]
@@ -25,14 +25,14 @@ pub enum PrimitivesError {
     /// Decryption failed: {0}
     FailedDecryption(String),
     /// Rescue Error: {0}
-    RescueError(RescueError),
+    HashError(HashError),
     /// Inconsistent Structure error, {0}
     InconsistentStructureError(String),
 }
 
-impl From<RescueError> for PrimitivesError {
-    fn from(e: RescueError) -> Self {
-        Self::RescueError(e)
+impl From<HashError> for PrimitivesError {
+    fn from(e: HashError) -> Self {
+        Self::HashError(e)
     }
 }
 

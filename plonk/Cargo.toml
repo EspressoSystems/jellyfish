@@ -8,7 +8,7 @@ license = "MIT"
 
 [dependencies]
 jf-utils = { path = "../utilities" }
-jf-rescue = { path = "../rescue" }
+jf-hashes = { path = "../hashes" }
 
 ark-std = { version = "0.3.0", default-features = false }
 ark-serialize = { version = "0.3.0", default-features = false }

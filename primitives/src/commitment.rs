@@ -8,7 +8,7 @@
 
 use crate::errors::PrimitivesError;
 use ark_std::{format, string::String, vec};
-use jf_rescue::{Permutation, RescueParameter, RATE};
+use jf_hashes::{Permutation, RescueParameter, RATE};
 use jf_utils::pad_with_zeros;
 
 #[derive(Default)]

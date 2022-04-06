@@ -37,7 +37,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
+use jf_hashes::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
 /// Universal Structured Reference String for PlonkKzgSnark

@@ -11,7 +11,7 @@ use crate::errors::PrimitivesError;
 use ark_ff::PrimeField;
 use ark_serialize::*;
 use ark_std::{borrow::ToOwned, format, string::ToString, vec::Vec};
-use jf_rescue::{Permutation, RescueParameter, STATE_SIZE};
+use jf_hashes::{Permutation, RescueParameter, STATE_SIZE};
 use jf_utils::pad_with_zeros;
 use zeroize::Zeroize;
 

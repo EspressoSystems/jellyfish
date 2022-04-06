@@ -16,7 +16,7 @@ ark-serialize = { version = "0.3.0", default-features = false }
 
 # jellyfish
 jf-plonk = { path = "../plonk" }
-jf-rescue = { path = "../rescue" }
+jf-hashes = { path = "../hashes" }
 jf-utils = { path = "../utilities" }
 
 # others

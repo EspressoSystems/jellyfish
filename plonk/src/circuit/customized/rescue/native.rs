@@ -15,7 +15,7 @@ use crate::{
 use ark_ff::PrimeField;
 use ark_std::{boxed::Box, format, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
-use jf_rescue::{
+use jf_hashes::{
     Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE,
 };
 use jf_utils::compute_len_to_next_multiple;
@@ -663,7 +663,7 @@ mod tests {
     use ark_ff::{FftField, PrimeField};
     use ark_std::{vec, vec::Vec};
     use itertools::Itertools;
-    use jf_rescue::{
+    use jf_hashes::{
         Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
     };
 

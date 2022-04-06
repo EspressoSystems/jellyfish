@@ -13,6 +13,7 @@ use crate::{
 use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParameters as Parameters};
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
+use jf_hashes::RescueParameter;
 use jf_plonk::{
     circuit::{
         customized::{
@@ -23,7 +24,6 @@ use jf_plonk::{
     },
     errors::PlonkError,
 };
-use jf_rescue::RescueParameter;
 use jf_utils::fr_to_fq;
 
 #[derive(Debug, Clone)]

@@ -23,7 +23,7 @@ use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_poly_commit::kzg10::Commitment;
 use ark_std::{collections::HashMap, vec::Vec};
-use jf_rescue::RescueParameter;
+use jf_hashes::RescueParameter;
 
 /// A wrapper of crate::proof_system::structs::Challenges
 #[derive(Debug, Default, PartialEq, Clone, Copy)]

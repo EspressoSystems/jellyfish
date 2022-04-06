@@ -33,7 +33,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
+use jf_hashes::RescueParameter;
 use rayon::prelude::*;
 
 /// A Plonk instantiated with KZG PCS
@@ -623,7 +623,7 @@ pub mod test {
         vec::Vec,
     };
     use core::ops::{Mul, Neg};
-    use jf_rescue::RescueParameter;
+    use jf_hashes::RescueParameter;
 
     // Different `m`s lead to different circuits.
     // Different `a0`s lead to different witness values.

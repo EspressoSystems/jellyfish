@@ -21,7 +21,7 @@ use ark_std::{
     string::ToString,
     vec,
 };
-use jf_rescue::{Permutation, RescueParameter};
+use jf_hashes::{Permutation, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
 use zeroize::Zeroize;
 
