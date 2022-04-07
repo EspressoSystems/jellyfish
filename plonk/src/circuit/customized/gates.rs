@@ -305,9 +305,13 @@ where
 
 /// An UltraPlonk lookup gate
 #[derive(Debug, Clone)]
-pub struct LookupGate;
+pub struct LookupGate<F: Field> {
+    pub(crate) q_dom_sep: F,
+    pub(crate) table_dom_sep: F,
+    pub(crate) table_key: F,
+}
 
-impl<F> Gate<F> for LookupGate
+impl<F> Gate<F> for LookupGate<F>
 where
     F: Field,
 {
@@ -316,5 +320,14 @@ where
     }
     fn q_lookup(&self) -> F {
         F::one()
+    }
+    fn q_dom_sep(&self) -> F {
+        self.q_dom_sep
+    }
+    fn table_key(&self) -> F {
+        self.table_key
+    }
+    fn table_dom_sep(&self) -> F {
+        self.table_dom_sep
     }
 }

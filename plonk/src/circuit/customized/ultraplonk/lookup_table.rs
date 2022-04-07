@@ -11,20 +11,14 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ff::PrimeField;
-use ark_std::{boxed::Box, cmp::max, vec::Vec};
+use ark_std::{boxed::Box, cmp::max};
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Create a table with keys/values
-    ///     [table_id, ..., table_id + n - 1] and
-    ///     [table_vars\[0\], ..., table_vars[n - 1]];
+    ///     [0, ..., n - 1] and
+    ///     [table_vars\[0\], ..., table_vars\[n - 1\]];
     /// and create a list of variable tuples to be looked up:
-    ///     [lookup_vars\[0\], ..., lookup_vars[m - 1]];
-    ///
-    /// **For each variable tuple `(lookup_var.0, lookup_var.1, lookup_var.2)`
-    /// to be looked up, the index variable `lookup_var.0` is required to be
-    /// in range [0, n) (either constrained by a range-check gate or other
-    /// circuits), so that one can't set it out of bounds and thus do a
-    /// lookup into one of the *other* tables. **
+    ///     [lookup_vars\[0\], ..., lookup_vars\[m - 1\]];
     ///
     /// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m
     pub fn create_table_and_lookup_variables(
@@ -42,24 +36,38 @@ impl<F: PrimeField> PlonkCircuit<F> {
             self.check_var_bound(table_var.1)?;
         }
         let n = max(lookup_vars.len(), table_vars.len());
-        // update lookup keys for domain separation.
-        let lookup_keys: Vec<Variable> = lookup_vars
-            .iter()
-            .map(|&(key, ..)| self.add_constant(key, &F::from(self.num_table_elems() as u32)))
-            .collect::<Result<Vec<_>, _>>()?;
         let n_gate = self.num_gates();
         (*self.table_gate_ids_mut()).push((n_gate, n));
+        let table_ctr = F::from(self.table_gate_ids_mut().len() as u64);
         for i in 0..n {
-            let (key, val0, val1) = match i < lookup_vars.len() {
-                true => (lookup_keys[i], lookup_vars[i].1, lookup_vars[i].2),
-                false => (self.zero(), self.zero(), self.zero()),
+            let (q_dom_sep, key, val0, val1) = match i < lookup_vars.len() {
+                true => (
+                    table_ctr,
+                    lookup_vars[i].0,
+                    lookup_vars[i].1,
+                    lookup_vars[i].2,
+                ),
+                false => (F::zero(), self.zero(), self.zero(), self.zero()),
             };
-            let (table_val0, table_val1) = match i < table_vars.len() {
-                true => table_vars[i],
-                false => (self.zero(), self.zero()),
+            let (table_dom_sep, table_key, table_val0, table_val1) = match i < table_vars.len() {
+                true => (
+                    table_ctr,
+                    F::from(i as u64),
+                    table_vars[i].0,
+                    table_vars[i].1,
+                ),
+                false => (F::zero(), F::zero(), self.zero(), self.zero()),
             };
             let wire_vars = [key, val0, val1, table_val0, table_val1];
-            self.insert_gate(&wire_vars, Box::new(LookupGate))?;
+
+            self.insert_gate(
+                &wire_vars,
+                Box::new(LookupGate {
+                    q_dom_sep,
+                    table_dom_sep,
+                    table_key,
+                }),
+            )?;
         }
         *self.num_table_elems_mut() += n;
         Ok(())
@@ -135,6 +143,27 @@ mod test {
         assert!(circuit
             .create_table_and_lookup_variables(&lookup_vars, &bad_table_vars)
             .is_err());
+
+        // A lookup over a separate table should not satisfy the circuit.
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(4);
+        let mut rng = test_rng();
+
+        let val0 = circuit.create_variable(F::rand(&mut rng))?;
+        let val1 = circuit.create_variable(F::rand(&mut rng))?;
+        let table_vars_1 = vec![(val0, val1)];
+        let val2 = circuit.create_variable(F::rand(&mut rng))?;
+        let val3 = circuit.create_variable(F::rand(&mut rng))?;
+        let table_vars_2 = vec![(val2, val3)];
+        let val2 = circuit.witness(table_vars_2[0].0)?;
+        let val3 = circuit.witness(table_vars_2[0].1)?;
+        let val2_var = circuit.create_variable(val2)?;
+        let val3_var = circuit.create_variable(val3)?;
+        let lookup_vars_1 = vec![(circuit.zero(), val2_var, val3_var)];
+
+        circuit.create_table_and_lookup_variables(&lookup_vars_1, &table_vars_2)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        circuit.create_table_and_lookup_variables(&lookup_vars_1, &table_vars_1)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         Ok(())
     }

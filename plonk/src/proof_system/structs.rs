@@ -478,6 +478,12 @@ pub struct PlookupEvaluations<F: Field> {
     /// Key table polynomial evaluation at point `zeta`.
     pub(crate) key_table_eval: F,
 
+    /// Table domain separation polynomial evaluation at point `zeta`.
+    pub(crate) table_dom_sep_eval: F,
+
+    /// Domain separation selector polynomial evaluation at point `zeta`.
+    pub(crate) q_dom_sep_eval: F,
+
     /// The first sorted vector polynomial evaluation at point `zeta`.
     pub(crate) h_1_eval: F,
 
@@ -492,6 +498,9 @@ pub struct PlookupEvaluations<F: Field> {
 
     /// Key table polynomial evaluation at point `zeta * g`.
     pub(crate) key_table_next_eval: F,
+
+    /// Table domain separation polynomial evaluation at point `zeta * g`.
+    pub(crate) table_dom_sep_next_eval: F,
 
     /// The first sorted vector polynomial evaluation at point `zeta * g`.
     pub(crate) h_1_next_eval: F,
@@ -517,6 +526,8 @@ impl<F: Field> PlookupEvaluations<F> {
             self.key_table_eval,
             self.h_1_eval,
             self.q_lookup_eval,
+            self.table_dom_sep_eval,
+            self.q_dom_sep_eval,
         ]
     }
 
@@ -531,6 +542,7 @@ impl<F: Field> PlookupEvaluations<F> {
             self.q_lookup_next_eval,
             self.w_3_next_eval,
             self.w_4_next_eval,
+            self.table_dom_sep_next_eval,
         ]
     }
 }
@@ -564,6 +576,12 @@ pub struct PlookupProvingKey<E: PairingEngine> {
 
     /// Key table polynomial.
     pub(crate) key_table_poly: DensePolynomial<E::Fr>,
+
+    /// Table domain separation polynomial.
+    pub(crate) table_dom_sep_poly: DensePolynomial<E::Fr>,
+
+    /// Lookup domain separation selector polynomial.
+    pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
 }
 
 impl<'a, E: PairingEngine> ProvingKey<'a, E> {
@@ -734,6 +752,14 @@ pub struct PlookupVerifyingKey<E: PairingEngine> {
 
     /// Key table polynomial commitment. The commitment is not hiding.
     pub(crate) key_table_comm: Commitment<E>,
+
+    /// Table domain separation polynomial commitment. The commitment is not
+    /// hiding.
+    pub(crate) table_dom_sep_comm: Commitment<E>,
+
+    /// Lookup domain separation selector polynomial commitment. The commitment
+    /// is not hiding.
+    pub(crate) q_dom_sep_comm: Commitment<E>,
 }
 
 impl<E: PairingEngine> VerifyingKey<E> {
@@ -916,8 +942,12 @@ pub(crate) fn eval_merged_table<E: PairingEngine>(
     q_lookup_eval: E::Fr,
     w3_eval: E::Fr,
     w4_eval: E::Fr,
+    table_dom_sep_eval: E::Fr,
 ) -> E::Fr {
-    range_eval + q_lookup_eval * tau * (key_eval + tau * (w3_eval + tau * w4_eval))
+    range_eval
+        + q_lookup_eval
+            * tau
+            * (table_dom_sep_eval + tau * (key_eval + tau * (w3_eval + tau * w4_eval)))
 }
 
 // Utility function for computing merged lookup witness evaluations.
@@ -929,8 +959,12 @@ pub(crate) fn eval_merged_lookup_witness<E: PairingEngine>(
     w_1_eval: E::Fr,
     w_2_eval: E::Fr,
     q_lookup_eval: E::Fr,
+    q_dom_sep_eval: E::Fr,
 ) -> E::Fr {
-    w_range_eval + q_lookup_eval * tau * (w_0_eval + tau * (w_1_eval + tau * w_2_eval))
+    w_range_eval
+        + q_lookup_eval
+            * tau
+            * (q_dom_sep_eval + tau * (w_0_eval + tau * (w_1_eval + tau * w_2_eval)))
 }
 
 #[cfg(test)]

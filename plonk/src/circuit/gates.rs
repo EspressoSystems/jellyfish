@@ -44,6 +44,18 @@ pub trait Gate<F: Field>: Downcast + GateClone<F> {
     fn q_lookup(&self) -> F {
         F::zero()
     }
+    /// UltraPlonk lookup domain separation selector.
+    fn q_dom_sep(&self) -> F {
+        F::zero()
+    }
+    /// UltraPlonk table keys.
+    fn table_key(&self) -> F {
+        F::zero()
+    }
+    /// UltraPlonk table domain separation ids
+    fn table_dom_sep(&self) -> F {
+        F::zero()
+    }
 }
 impl_downcast!(Gate<F> where F: Field);
 

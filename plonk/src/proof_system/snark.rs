@@ -87,9 +87,13 @@ where
         let plookup_pk = if circuit.support_lookup() {
             let range_table_poly = circuit.compute_range_table_polynomial()?;
             let key_table_poly = circuit.compute_key_table_polynomial()?;
+            let table_dom_sep_poly = circuit.compute_table_dom_sep_polynomial()?;
+            let q_dom_sep_poly = circuit.compute_q_dom_sep_polynomial()?;
             Some(PlookupProvingKey {
                 range_table_poly,
                 key_table_poly,
+                table_dom_sep_poly,
+                q_dom_sep_poly,
             })
         } else {
             None
@@ -129,6 +133,20 @@ where
                 key_table_comm: KZG10::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().key_table_poly,
+                    None,
+                    None,
+                )?
+                .0,
+                table_dom_sep_comm: KZG10::commit(
+                    &commit_key,
+                    &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
+                    None,
+                    None,
+                )?
+                .0,
+                q_dom_sep_comm: KZG10::commit(
+                    &commit_key,
+                    &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
                     None,
                     None,
                 )?
@@ -1357,6 +1375,12 @@ pub mod test {
         // on the vanishing set excluding point w^{n-1}
         let beta_plus_one = E::Fr::one() + beta;
         let gamma_mul_beta_plus_one = gamma * beta_plus_one;
+
+        let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
+        let key_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().key_table_poly;
+        let table_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly;
+        let q_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly;
+
         for i in 0..domain.size() - 1 {
             let point = domain.element(i);
             let next_point = point * domain.group_gen;
@@ -1367,9 +1391,8 @@ pub mod test {
                 oracles.wire_polys[1].evaluate(&point),
                 oracles.wire_polys[2].evaluate(&point),
                 pk.q_lookup_poly()?.evaluate(&point),
+                q_dom_sep_poly_ref.evaluate(&point),
             );
-            let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
-            let key_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().key_table_poly;
             let merged_table_eval = eval_merged_table::<E>(
                 challenges.tau,
                 range_table_poly_ref.evaluate(&point),
@@ -1377,6 +1400,7 @@ pub mod test {
                 pk.q_lookup_poly()?.evaluate(&point),
                 oracles.wire_polys[3].evaluate(&point),
                 oracles.wire_polys[4].evaluate(&point),
+                table_dom_sep_poly_ref.evaluate(&point),
             );
             let merged_table_next_eval = eval_merged_table::<E>(
                 challenges.tau,
@@ -1385,6 +1409,7 @@ pub mod test {
                 pk.q_lookup_poly()?.evaluate(&next_point),
                 oracles.wire_polys[3].evaluate(&next_point),
                 oracles.wire_polys[4].evaluate(&next_point),
+                table_dom_sep_poly_ref.evaluate(&next_point),
             );
 
             let eval_1 = prod_poly.evaluate(&point)

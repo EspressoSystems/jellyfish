@@ -236,10 +236,15 @@ impl<E: PairingEngine> Prover<E> {
 
         let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
         let key_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().key_table_poly;
+        let table_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly;
+        let q_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly;
+
         let range_table_eval = range_table_poly_ref.evaluate(&challenges.zeta);
         let key_table_eval = key_table_poly_ref.evaluate(&challenges.zeta);
         let h_1_eval = online_oracles.plookup_oracles.h_polys[0].evaluate(&challenges.zeta);
         let q_lookup_eval = pk.q_lookup_poly()?.evaluate(&challenges.zeta);
+        let table_dom_sep_eval = table_dom_sep_poly_ref.evaluate(&challenges.zeta);
+        let q_dom_sep_eval = q_dom_sep_poly_ref.evaluate(&challenges.zeta);
 
         let zeta_mul_g = challenges.zeta * self.domain.group_gen;
         let prod_next_eval = online_oracles
@@ -253,6 +258,7 @@ impl<E: PairingEngine> Prover<E> {
         let q_lookup_next_eval = pk.q_lookup_poly()?.evaluate(&zeta_mul_g);
         let w_3_next_eval = online_oracles.wire_polys[3].evaluate(&zeta_mul_g);
         let w_4_next_eval = online_oracles.wire_polys[4].evaluate(&zeta_mul_g);
+        let table_dom_sep_next_eval = table_dom_sep_poly_ref.evaluate(&zeta_mul_g);
 
         Ok(PlookupEvaluations {
             range_table_eval,
@@ -260,6 +266,8 @@ impl<E: PairingEngine> Prover<E> {
             h_1_eval,
             q_lookup_eval,
             prod_next_eval,
+            table_dom_sep_eval,
+            q_dom_sep_eval,
             range_table_next_eval,
             key_table_next_eval,
             h_1_next_eval,
@@ -267,6 +275,7 @@ impl<E: PairingEngine> Prover<E> {
             q_lookup_next_eval,
             w_3_next_eval,
             w_4_next_eval,
+            table_dom_sep_next_eval,
         })
     }
 
@@ -405,6 +414,8 @@ impl<E: PairingEngine> Prover<E> {
             &pk.plookup_pk.as_ref().unwrap().key_table_poly,
             &oracles.plookup_oracles.h_polys[0],
             pk.q_lookup_poly()?,
+            &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly,
+            &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly,
         ])
     }
 
@@ -424,6 +435,7 @@ impl<E: PairingEngine> Prover<E> {
             pk.q_lookup_poly()?,
             &oracles.wire_polys[3],
             &oracles.wire_polys[4],
+            &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly,
         ])
     }
 
@@ -551,11 +563,19 @@ impl<E: PairingEngine> Prover<E> {
 
             // Compute coset evaluations of Plookup online oracles.
             let (
+                table_dom_sep_coset_fft,
+                q_dom_sep_coset_fft,
                 range_table_coset_fft,
                 key_table_coset_fft,
                 h_coset_ffts,
                 prod_lookup_poly_coset_fft,
             ) = if lookup_flag {
+                let table_dom_sep_coset_fft = self
+                    .quot_domain
+                    .coset_fft(pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
+                let q_dom_sep_coset_fft = self
+                    .quot_domain
+                    .coset_fft(pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
                 let range_table_coset_fft = self
                     .quot_domain
                     .coset_fft(pk.plookup_pk.as_ref().unwrap().range_table_poly.coeffs()); // safe unwrap
@@ -572,13 +592,15 @@ impl<E: PairingEngine> Prover<E> {
                     .quot_domain
                     .coset_fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
                 (
+                    Some(table_dom_sep_coset_fft),
+                    Some(q_dom_sep_coset_fft),
                     Some(range_table_coset_fft),
                     Some(key_table_coset_fft),
                     Some(h_coset_ffts),
                     Some(prod_lookup_poly_coset_fft),
                 )
             } else {
-                (None, None, None, None)
+                (None, None, None, None, None, None)
             };
 
             // Compute coset evaluations of the quotient polynomial.
@@ -624,6 +646,8 @@ impl<E: PairingEngine> Prover<E> {
                             range_table_coset_fft.as_ref().unwrap(),
                             key_table_coset_fft.as_ref().unwrap(),
                             selectors_coset_fft.last().unwrap(), // TODO: add a method to extract q_lookup_coset_fft
+                            table_dom_sep_coset_fft.as_ref().unwrap(),
+                            q_dom_sep_coset_fft.as_ref().unwrap(),
                             challenges,
                         );
                         t1 += t_lookup_1;
@@ -765,6 +789,8 @@ impl<E: PairingEngine> Prover<E> {
         range_table_coset_fft: &[E::Fr],
         key_table_coset_fft: &[E::Fr],
         q_lookup_coset_fft: &[E::Fr],
+        table_dom_sep_coset_fft: &[E::Fr],
+        q_dom_sep_coset_fft: &[E::Fr],
         challenges: &Challenges<E::Fr>,
     ) -> (E::Fr, E::Fr) {
         assert!(pk.plookup_pk.is_some());
@@ -788,8 +814,12 @@ impl<E: PairingEngine> Prover<E> {
         let p_xw = prod_lookup_coset_fft[(i + domain_size_ratio) % m];
         let range_table_x = range_table_coset_fft[i];
         let key_table_x = key_table_coset_fft[i];
+        let table_dom_sep_x = table_dom_sep_coset_fft[i];
+        let q_dom_sep_x = q_dom_sep_coset_fft[i];
+
         let range_table_xw = range_table_coset_fft[(i + domain_size_ratio) % m];
         let key_table_xw = key_table_coset_fft[(i + domain_size_ratio) % m];
+        let table_dom_sep_xw = table_dom_sep_coset_fft[(i + domain_size_ratio) % m];
         let merged_table_x = eval_merged_table::<E>(
             challenges.tau,
             range_table_x,
@@ -797,6 +827,7 @@ impl<E: PairingEngine> Prover<E> {
             q_lookup_coset_fft[i],
             w[3],
             w[4],
+            table_dom_sep_x,
         );
         let merged_table_xw = eval_merged_table::<E>(
             challenges.tau,
@@ -805,6 +836,7 @@ impl<E: PairingEngine> Prover<E> {
             q_lookup_coset_fft[(i + domain_size_ratio) % m],
             w_next[3],
             w_next[4],
+            table_dom_sep_xw,
         );
         let merged_lookup_x = eval_merged_lookup_witness::<E>(
             challenges.tau,
@@ -813,6 +845,7 @@ impl<E: PairingEngine> Prover<E> {
             w[1],
             w[2],
             q_lookup_coset_fft[i],
+            q_dom_sep_x,
         );
 
         // The check that h1(X) - h2(wX) = 0 at point w^{n-1}
@@ -993,6 +1026,7 @@ impl<E: PairingEngine> Prover<E> {
             plookup_evals.q_lookup_eval,
             w_evals[3],
             w_evals[4],
+            plookup_evals.table_dom_sep_eval,
         );
         let merged_table_next_eval = eval_merged_table::<E>(
             challenges.tau,
@@ -1001,6 +1035,7 @@ impl<E: PairingEngine> Prover<E> {
             plookup_evals.q_lookup_next_eval,
             plookup_evals.w_3_next_eval,
             plookup_evals.w_4_next_eval,
+            plookup_evals.table_dom_sep_next_eval,
         );
         let merged_lookup_eval = eval_merged_lookup_witness::<E>(
             challenges.tau,
@@ -1009,6 +1044,7 @@ impl<E: PairingEngine> Prover<E> {
             w_evals[1],
             w_evals[2],
             plookup_evals.q_lookup_eval,
+            plookup_evals.q_dom_sep_eval,
         );
 
         let beta_plus_one = one + challenges.beta;
