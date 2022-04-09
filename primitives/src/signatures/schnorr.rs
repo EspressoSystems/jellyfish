@@ -7,6 +7,7 @@
 //! This module implements the Schnorr signature over the various Edwards
 //! curves.
 
+use super::SignatureScheme;
 use crate::{constants::*, errors::PrimitivesError};
 use ark_ec::{
     group::Group,
@@ -17,6 +18,7 @@ use ark_ff::PrimeField;
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
+    marker::PhantomData,
     rand::{CryptoRng, RngCore},
     string::ToString,
     vec,
@@ -24,6 +26,70 @@ use ark_std::{
 use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
 use zeroize::Zeroize;
+
+/// Schnorr signature scheme.
+pub struct SchnorrSignatureScheme<P, H> {
+    curve_param: PhantomData<P>,
+    hasher: PhantomData<H>,
+}
+
+impl<F, P, H> SignatureScheme<H> for SchnorrSignatureScheme<P, H>
+where
+    F: RescueParameter,
+    P: Parameters<BaseField = F> + Clone,
+{
+    /// Signing key.
+    type SigningKey = SignKey<P::ScalarField>;
+
+    /// Verification key
+    type VerificationKey = VerKey<P>;
+
+    /// Public Parameter
+    type PublicParameter = ();
+
+    /// Signature
+    type Signature = Signature<P>;
+
+    /// A message is &[MessageUnit]
+    type MessageUnit = F;
+
+    /// generate public parameters from RNG.
+    fn param_gen<R: CryptoRng + RngCore>(
+        _prng: &mut R,
+    ) -> Result<Self::PublicParameter, PrimitivesError> {
+        Ok(())
+    }
+
+    /// Sample a pair of keys.
+    fn key_gen<R: CryptoRng + RngCore>(
+        _pp: &Self::PublicParameter,
+        prng: &mut R,
+    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
+        let kp = KeyPair::<P>::generate(prng);
+        Ok((kp.sk, kp.vk))
+    }
+
+    /// Sample a pair of keys.
+    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
+        _pp: &Self::PublicParameter,
+        sk: &Self::SigningKey,
+        msg: M,
+        _prng: &mut R,
+    ) -> Result<Self::Signature, PrimitivesError> {
+        let kp = KeyPair::<P>::generate_with_sign_key(sk.0);
+        Ok(kp.sign(msg.as_ref()))
+    }
+
+    /// Verify a signature.
+    fn verify<M: AsRef<[Self::MessageUnit]>>(
+        _pp: &Self::PublicParameter,
+        vk: &Self::VerificationKey,
+        msg: M,
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError> {
+        vk.verify(msg.as_ref(), sig)
+    }
+}
 
 pub(crate) const DOMAIN_SEPARATION: &[u8; 24] = b"DSA_WITH_RESCUE_HASH_v01";
 
@@ -33,7 +99,8 @@ pub(crate) const DOMAIN_SEPARATION: &[u8; 24] = b"DSA_WITH_RESCUE_HASH_v01";
 #[derive(
     Clone, Hash, Default, Zeroize, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
-struct SignKey<F: PrimeField>(pub(crate) F);
+/// Signing key for Schnorr signature.
+pub struct SignKey<F: PrimeField>(pub(crate) F);
 
 impl<F: PrimeField> Drop for SignKey<F> {
     fn drop(&mut self) {
@@ -212,8 +279,7 @@ where
 
         let r = fq_to_fr::<F, P>(&hash.sponge_with_padding(&msg_input, 1)[0]);
         let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
-        let c = self.challenge(&hash, &R, msg);
-
+        let c = self.vk.challenge(&hash, &R, msg);
         let s = c * self.sk.0 + r;
 
         Signature { s, R }
@@ -228,22 +294,6 @@ where
             sk: randomized_sk,
             vk: randomized_vk,
         }
-    }
-}
-
-impl<F, P> KeyPair<P>
-where
-    F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
-{
-    #[allow(non_snake_case)]
-    fn challenge(
-        &self,
-        hash: &Permutation<F>,
-        R: &GroupProjective<P>,
-        msg: &[F],
-    ) -> P::ScalarField {
-        self.vk.challenge(hash, R, msg)
     }
 }
 
@@ -311,6 +361,8 @@ where
     F: RescueParameter,
     P: Parameters<BaseField = F> + Clone,
 {
+    // TODO: this function should be generic w.r.t. hash functions
+    // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
     fn challenge(
         &self,

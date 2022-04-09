@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Crate implementates various cryptography primitives, as
+//! Crate implements various cryptography primitives, as
 //! well as the plonk circuit implementation of those primitives.
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -24,6 +24,6 @@ pub mod elgamal;
 pub mod errors;
 pub mod merkle_tree;
 pub mod prf;
-pub mod schnorr_dsa;
+pub mod signatures;
 
 pub(crate) mod utils;

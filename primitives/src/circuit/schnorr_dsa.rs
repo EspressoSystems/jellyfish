@@ -8,7 +8,7 @@
 
 use crate::{
     constants::{challenge_bit_len, field_bit_len},
-    schnorr_dsa::{Signature, VerKey, DOMAIN_SEPARATION},
+    signatures::schnorr::{Signature, VerKey, DOMAIN_SEPARATION},
 };
 use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParameters as Parameters};
 use ark_ff::PrimeField;
@@ -64,7 +64,7 @@ where
     /// * `msg` - message variables that have been signed.
     /// * `sig` - signature variable.
     /// * `returns` - a bool variable indicating whether the signature is valid.
-    fn is_valid_signature(
+    fn check_signature_validity(
         &mut self,
         vk: &VerKeyVar,
         msg: &[Variable],
@@ -105,7 +105,7 @@ where
         Ok(())
     }
 
-    fn is_valid_signature(
+    fn check_signature_validity(
         &mut self,
         vk: &VerKeyVar,
         msg: &[Variable],
@@ -196,7 +196,7 @@ where
 mod tests {
     use crate::{
         circuit::schnorr_dsa::*,
-        schnorr_dsa::{KeyPair, Signature, VerKey},
+        signatures::schnorr::{KeyPair, Signature, VerKey},
     };
     use ark_ed_on_bls12_377::EdwardsParameters as Param377;
     use ark_ed_on_bls12_381::EdwardsParameters as Param381;
@@ -311,8 +311,12 @@ mod tests {
             .iter()
             .map(|m| circuit.create_variable(*m))
             .collect::<Result<Vec<_>, PlonkError>>()?;
-        let bit =
-            SignatureGadget::<_, P>::is_valid_signature(&mut circuit, &vk_var, &msg_var, &sig_var)?;
+        let bit = SignatureGadget::<_, P>::check_signature_validity(
+            &mut circuit,
+            &vk_var,
+            &msg_var,
+            &sig_var,
+        )?;
         Ok((circuit, bit))
     }
 }

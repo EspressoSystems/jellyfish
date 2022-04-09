@@ -4,18 +4,18 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use crate::{elgamal, schnorr_dsa};
+use crate::{elgamal, signatures::schnorr};
 use ark_ec::{ProjectiveCurve, TEModelParameters as Parameters};
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use jf_plonk::circuit::Variable;
 
-impl<F, P> From<&schnorr_dsa::VerKey<P>> for (F, F)
+impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
 where
     F: PrimeField,
     P: Parameters<BaseField = F> + Clone,
 {
-    fn from(vk: &schnorr_dsa::VerKey<P>) -> Self {
+    fn from(vk: &schnorr::VerKey<P>) -> Self {
         let point = vk.0.into_affine();
         (point.x, point.y)
     }
