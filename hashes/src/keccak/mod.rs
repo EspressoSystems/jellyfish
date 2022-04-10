@@ -1,4 +1,6 @@
 //! This file implements Sponge wrappers for sha3::keccak256
+//! Mostly reusing the design from
+//! <https://github.com/algorand/pixel/blob/master/src/prng.rs>
 
 use ark_ff::PrimeField;
 use ark_sponge::{Absorb, CryptographicSponge, FieldElementSize};
@@ -10,8 +12,8 @@ use sha3::Digest;
 /// - an internal state
 /// - a hasher type
 pub struct KeccakSponge<H: Digest> {
-    _state: [u8; 32],
-    phantom: PhantomData<H>,
+    state: [u8; 32],
+    _phantom: PhantomData<H>,
 }
 
 impl<H: Digest + Clone> CryptographicSponge for KeccakSponge<H> {
@@ -19,13 +21,26 @@ impl<H: Digest + Clone> CryptographicSponge for KeccakSponge<H> {
     type Parameters = H;
 
     /// Initialize a new instance of the sponge.
+    /// A fresh instance is instantiated with [0u8; 32]
     fn new(_params: &Self::Parameters) -> Self {
-        todo!()
+        Self {
+            state: [0u8; 32],
+            _phantom: PhantomData::default(),
+        }
     }
 
     /// Absorb an input into the sponge.
-    fn absorb(&mut self, _input: &impl Absorb) {
-        todo!()
+    fn absorb(&mut self, input: &impl Absorb) {
+        let mut hasher = H::new();
+        hasher.update(
+            [
+                "dom sep: absorb".as_bytes(),
+                self.state.as_ref(),
+                &input.to_sponge_bytes_as_vec(),
+            ]
+            .concat(),
+        );
+        self.state.copy_from_slice(&hasher.finalize());
     }
 
     /// Squeeze `num_bytes` bytes from the sponge.
