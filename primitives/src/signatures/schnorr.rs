@@ -9,22 +9,24 @@
 
 use super::SignatureScheme;
 use crate::{constants::*, errors::PrimitivesError};
+use ark_crypto_primitives::Error;
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
     AffineCurve, ModelParameters, ProjectiveCurve, TEModelParameters as Parameters,
 };
-use ark_ff::PrimeField;
+use ark_ff::{PrimeField, ToBytes};
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
+    io::{Result as IoResult, Write},
     marker::PhantomData,
-    rand::{CryptoRng, RngCore},
+    rand::Rng,
     string::ToString,
     vec,
 };
 use jf_rescue::{Permutation, RescueParameter};
-use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
+use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, hash_to_field, tagged_blob};
 use zeroize::Zeroize;
 
 /// Schnorr signature scheme.
@@ -33,61 +35,75 @@ pub struct SchnorrSignatureScheme<P, H> {
     hasher: PhantomData<H>,
 }
 
-impl<F, P, H> SignatureScheme<H> for SchnorrSignatureScheme<P, H>
+impl<F, P, H> SignatureScheme for SchnorrSignatureScheme<P, H>
 where
     F: RescueParameter,
     P: Parameters<BaseField = F> + Clone,
 {
     /// Signing key.
-    type SigningKey = SignKey<P::ScalarField>;
+    type SecretKey = SignKey<P::ScalarField>;
 
     /// Verification key
-    type VerificationKey = VerKey<P>;
+    type PublicKey = VerKey<P>;
 
     /// Public Parameter
-    type PublicParameter = ();
+    type Parameters = ();
 
     /// Signature
     type Signature = Signature<P>;
 
-    /// A message is &[MessageUnit]
-    type MessageUnit = F;
-
     /// generate public parameters from RNG.
-    fn param_gen<R: CryptoRng + RngCore>(
-        _prng: &mut R,
-    ) -> Result<Self::PublicParameter, PrimitivesError> {
+    fn setup<R: Rng>(_rng: &mut R) -> Result<Self::Parameters, Error> {
         Ok(())
     }
 
-    /// Sample a pair of keys.
-    fn key_gen<R: CryptoRng + RngCore>(
-        _pp: &Self::PublicParameter,
-        prng: &mut R,
-    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        let kp = KeyPair::<P>::generate(prng);
-        Ok((kp.sk, kp.vk))
+    fn keygen<R: Rng>(
+        _pp: &Self::Parameters,
+        rng: &mut R,
+    ) -> Result<(Self::PublicKey, Self::SecretKey), Error> {
+        let kp = KeyPair::<P>::generate(rng);
+        Ok((kp.vk, kp.sk))
     }
 
-    /// Sample a pair of keys.
-    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
-        _pp: &Self::PublicParameter,
-        sk: &Self::SigningKey,
-        msg: M,
-        _prng: &mut R,
-    ) -> Result<Self::Signature, PrimitivesError> {
+    fn sign<R: Rng>(
+        _pp: &Self::Parameters,
+        sk: &Self::SecretKey,
+        message: &[u8],
+        _rng: &mut R,
+    ) -> Result<Self::Signature, Error> {
         let kp = KeyPair::<P>::generate_with_sign_key(sk.0);
-        Ok(kp.sign(msg.as_ref()))
+        let msg_fr = hash_to_field(message);
+        Ok(kp.sign(&[msg_fr]))
     }
 
-    /// Verify a signature.
-    fn verify<M: AsRef<[Self::MessageUnit]>>(
-        _pp: &Self::PublicParameter,
-        vk: &Self::VerificationKey,
-        msg: M,
-        sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError> {
-        vk.verify(msg.as_ref(), sig)
+    fn verify(
+        _pp: &Self::Parameters,
+        pk: &Self::PublicKey,
+        message: &[u8],
+        signature: &Self::Signature,
+    ) -> Result<bool, Error> {
+        let msg_fr = hash_to_field(message);
+        match pk.verify(&[msg_fr], signature) {
+            Ok(_p) => Ok(true),
+            Err(_e) => Ok(false),
+        }
+    }
+
+    fn randomize_public_key(
+        _pp: &Self::Parameters,
+        public_key: &Self::PublicKey,
+        randomness: &[u8],
+    ) -> Result<Self::PublicKey, Error> {
+        let randomizer = P::ScalarField::from_le_bytes_mod_order(randomness);
+        Ok(public_key.randomize_with(&randomizer))
+    }
+
+    fn randomize_signature(
+        _pp: &Self::Parameters,
+        _signature: &Self::Signature,
+        _randomness: &[u8],
+    ) -> Result<Self::Signature, Error> {
+        unimplemented!()
     }
 }
 
@@ -115,6 +131,13 @@ impl<F: PrimeField> SignKey<F> {
     }
 }
 
+impl<F: PrimeField> ToBytes for SignKey<F> {
+    #[inline]
+    fn write<W: Write>(&self, writer: W) -> IoResult<()> {
+        self.0.write(writer)
+    }
+}
+
 // =====================================================
 // Verification key
 // =====================================================
@@ -122,11 +145,20 @@ impl<F: PrimeField> SignKey<F> {
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
 #[tagged_blob("VERKEY")]
-#[derive(Clone, Default, CanonicalSerialize, CanonicalDeserialize, Eq, Derivative)]
+#[derive(Clone, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
+#[derivative(Default(bound = "P: Parameters"))]
+#[derivative(Eq(bound = "P: Parameters"))]
 pub struct VerKey<P>(pub(crate) GroupProjective<P>)
 where
     P: Parameters + Clone;
+
+impl<P: Parameters + Clone> ToBytes for VerKey<P> {
+    #[inline]
+    fn write<W: Write>(&self, writer: W) -> IoResult<()> {
+        self.0.write(writer)
+    }
+}
 
 impl<P: Parameters + Clone> VerKey<P> {
     /// Return a randomized verification key.
@@ -204,6 +236,7 @@ where
 #[tagged_blob("SIG")]
 #[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
+#[derivative(Default(bound = "P: Parameters"))]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
@@ -241,7 +274,7 @@ where
     P: Parameters<BaseField = F> + Clone,
 {
     /// Key-pair generation algorithm
-    pub fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> KeyPair<P> {
+    pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
         let sk = SignKey::generate(prng);
         let vk = VerKey::from(&sk);
         KeyPair { sk, vk }
@@ -298,7 +331,7 @@ where
 }
 
 impl<F: PrimeField> SignKey<F> {
-    fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> SignKey<F> {
+    fn generate<R: Rng>(prng: &mut R) -> SignKey<F> {
         SignKey(F::rand(prng))
     }
 }
@@ -395,16 +428,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fq as FqEd381};
-    use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as Param381b, Fq as FqEd381b};
-    use ark_ed_on_bn254::{EdwardsParameters as Param254, Fq as FqEd254};
-    use ark_std::UniformRand;
-
     use super::*;
+    use ark_ed_on_bls12_377::EdwardsParameters as Param377;
+    use ark_ed_on_bls12_381::EdwardsParameters as Param381;
+    use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
+    use ark_ed_on_bn254::EdwardsParameters as Param254;
+    use ark_std::{test_rng, UniformRand};
 
     macro_rules! test_signature {
-        ($curve_param:tt, $base_field:tt) => {
+        ($curve_param:tt) => {
             let mut rng = ark_std::test_rng();
 
             let keypair1 = KeyPair::generate(&mut rng);
@@ -428,19 +460,44 @@ mod tests {
                     // wrong public key
                     assert!(pk_bad.verify(&msg, &sig).is_err());
                     // wrong message
-                    msg.push($base_field::from(i as u64));
+                    msg.push(<$curve_param as ModelParameters>::BaseField::from(i as u64));
                     assert!(pk.verify(&msg, &sig).is_err());
                 }
             }
+
+            let message = "Hi, I am a Schnorr signature!";
+            sign_and_verify::<SchnorrSignatureScheme<$curve_param, $curve_param>>(
+                message.as_bytes(),
+            );
+            failed_verification::<SchnorrSignatureScheme<$curve_param, $curve_param>>(
+                message.as_bytes(),
+                "Bad message".as_bytes(),
+            );
         };
     }
 
     #[test]
     fn test_signature() {
-        test_signature!(Param254, FqEd254);
-        test_signature!(Param377, FqEd377);
-        test_signature!(Param381, FqEd381);
-        test_signature!(Param381b, FqEd381b);
+        test_signature!(Param254);
+        test_signature!(Param377);
+        test_signature!(Param381);
+        test_signature!(Param381b);
+    }
+
+    fn sign_and_verify<S: SignatureScheme>(message: &[u8]) {
+        let rng = &mut test_rng();
+        let parameters = S::setup::<_>(rng).unwrap();
+        let (pk, sk) = S::keygen(&parameters, rng).unwrap();
+        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
+        assert!(S::verify(&parameters, &pk, &message, &sig).unwrap());
+    }
+
+    fn failed_verification<S: SignatureScheme>(message: &[u8], bad_message: &[u8]) {
+        let rng = &mut test_rng();
+        let parameters = S::setup::<_>(rng).unwrap();
+        let (pk, sk) = S::keygen(&parameters, rng).unwrap();
+        let sig = S::sign(&parameters, &sk, message, rng).unwrap();
+        assert!(!S::verify(&parameters, &pk, bad_message, &sig).unwrap());
     }
 
     mod serde {

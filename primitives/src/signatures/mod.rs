@@ -1,58 +1,46 @@
 //! Module for signature primitives.
 
-use crate::errors::PrimitivesError;
-use ark_std::rand::{CryptoRng, RngCore};
+pub use ark_crypto_primitives::signature::SignatureScheme;
+use ark_crypto_primitives::Error;
+use ark_ff::PrimeField;
+use ark_serialize::CanonicalSerialize;
+use ark_std::{rand::Rng, vec::Vec};
 
 pub mod bls;
 pub mod schnorr;
 
-/// Trait definition for a signature scheme.
-// A signature scheme is associated with a hash function H that is
-// to be used for challenge generation.
-// FIXME: update H bound once hash-api is merged.
-pub trait SignatureScheme<H> {
-    /// Signing key.
-    type SigningKey;
+/// A signature scheme that takes field elements as messages
+pub trait FieldBasedSignatureScheme: SignatureScheme {
+    /// A message is a slice of prime field elements
+    type MessageUnit: PrimeField;
 
-    /// Verification key
-    type VerificationKey;
-
-    /// Public Parameter
-    type PublicParameter;
-
-    /// Signature
-    type Signature;
-
-    /// A message is &\[MessageUnit\]
-    type MessageUnit;
-
-    /// generate public parameters from RNG.
-    fn param_gen<R: CryptoRng + RngCore>(
-        prng: &mut R,
-    ) -> Result<Self::PublicParameter, PrimitivesError>;
-
-    /// Sample a pair of keys.
-    fn key_gen<R: CryptoRng + RngCore>(
-        pp: &Self::PublicParameter,
-        prng: &mut R,
-    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError>;
-
-    /// Sign a message with the signing key
-    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
-        pp: &Self::PublicParameter,
-        sk: &Self::SigningKey,
-        msg: M,
-        prng: &mut R,
-    ) -> Result<Self::Signature, PrimitivesError>;
-
-    /// Verify a signature.
-    fn verify<M: AsRef<[Self::MessageUnit]>>(
-        pp: &Self::PublicParameter,
-        vk: &Self::VerificationKey,
-        msg: M,
-        sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError>;
+    /// Default implementation of signing field elements.
+    fn sign_field_elements<R: Rng>(
+        pp: &Self::Parameters,
+        sk: &Self::SecretKey,
+        message: &[Self::MessageUnit],
+        rng: &mut R,
+    ) -> Result<Self::Signature, Error> {
+        let mut msg = Vec::new();
+        for m in message.iter() {
+            m.serialize(&mut msg)?
+        }
+        Self::sign(pp, sk, &msg, rng)
+    }
+    /// Default implementation of verifying signatures on field elements.
+    fn verify_field_elements(
+        pp: &Self::Parameters,
+        pk: &Self::PublicKey,
+        message: &[Self::MessageUnit],
+        signature: &Self::Signature,
+    ) -> Result<bool, Error> {
+        let mut msg = Vec::new();
+        for m in message.iter() {
+            m.serialize(&mut msg)?
+        }
+        Self::verify(pp, pk, &msg, signature)
+    }
 }
 
-/// Trait for aggregatable signatures.
-pub trait AggregateableSignatureSchemes<H>: SignatureScheme<H> {}
+/// Trait for aggregatable signatures. (TODO)
+pub trait AggregateableSignatureSchemes: SignatureScheme {}
