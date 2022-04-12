@@ -504,7 +504,7 @@ where
         let right_coeff = [lambda_1, F::one(), F::zero(), F::zero()];
         let right_var = circuit.lc(&right_wire, &right_coeff)?;
 
-        circuit.is_equal(left_var, right_var)?
+        circuit.check_equal(left_var, right_var)?
     };
 
     let k2_is_neg_sat = {
@@ -517,7 +517,7 @@ where
         let right_wire = [*s_var, t_var, circuit.zero(), circuit.zero()];
         let right_coeff = [F::one(), r1, F::zero(), F::zero()];
         let right_var = circuit.lc(&right_wire, &right_coeff)?;
-        circuit.is_equal(left_var, right_var)?
+        circuit.check_equal(left_var, right_var)?
     };
 
     //  (f.3) either f.1 or f.2 is satisfied
@@ -535,7 +535,7 @@ where
 
         let right_var = circuit.mul_constant(t_var, &r2)?;
 
-        circuit.is_equal(left_var, right_var)?
+        circuit.check_equal(left_var, right_var)?
     };
 
     let k2_is_neg_sat = {
@@ -547,7 +547,7 @@ where
 
         let right_var = circuit.mul_constant(k2_var, &lambda_2)?;
 
-        circuit.is_equal(left_var, right_var)?
+        circuit.check_equal(left_var, right_var)?
     };
 
     //  (g.3) either g.1 or g.2 is satisfied

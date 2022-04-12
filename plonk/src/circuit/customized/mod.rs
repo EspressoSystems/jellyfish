@@ -323,16 +323,16 @@ where
 
     /// Obtain a bool variable representing whether two input variables are
     /// equal. Return error if variables are invalid.
-    pub fn is_equal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
+    pub fn check_equal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
         let delta = self.sub(a, b)?;
-        self.is_zero(delta)
+        self.check_is_zero(delta)
     }
 
     /// Obtain a bool variable representing whether input variable is zero.
     /// Return error if the input variable is invalid.
-    pub fn is_zero(&mut self, a: Variable) -> Result<Variable, PlonkError> {
+    pub fn check_is_zero(&mut self, a: Variable) -> Result<Variable, PlonkError> {
         self.check_var_bound(a)?;
 
         // y is the bit indicating if a == zero
@@ -374,7 +374,7 @@ where
     /// variable representing the result of a logic negation gate. Return the
     /// index of the variable. Return error if the input variable is invalid.
     pub fn logic_neg(&mut self, a: Variable) -> Result<Variable, PlonkError> {
-        self.is_zero(a)
+        self.check_is_zero(a)
     }
 
     /// Assuming values represented by `a` and `b` are boolean, obtain a
@@ -654,12 +654,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Return a boolean variable indicating whether variable `a` is in the
     /// range [0, 2^`bit_len`). Return error if the variable is invalid.
     /// TODO: optimize the gate for UltraPlonk.
-    pub fn is_in_range(&mut self, a: Variable, bit_len: usize) -> Result<Variable, PlonkError> {
+    pub fn check_in_range(&mut self, a: Variable, bit_len: usize) -> Result<Variable, PlonkError> {
         let a_bit_le = self.unpack(a, F::size_in_bits())?;
         // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
         // zeroes.
         let higher_bit_sum = self.sum(&a_bit_le[bit_len..])?;
-        self.is_zero(higher_bit_sum)
+        self.check_is_zero(higher_bit_sum)
     }
 
     /// Obtain the `bit_len`-long binary representation of variable `a`
@@ -900,8 +900,8 @@ pub(crate) mod test {
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
         let b = circuit.create_variable(val)?;
-        let a_b_eq = circuit.is_equal(a, b)?;
-        let a_zero_eq = circuit.is_equal(a, circuit.zero())?;
+        let a_b_eq = circuit.check_equal(a, b)?;
+        let a_zero_eq = circuit.check_equal(a, circuit.zero())?;
 
         // check circuit
         assert_eq!(circuit.witness(a_b_eq)?, F::one());
@@ -910,7 +910,7 @@ pub(crate) mod test {
         *circuit.witness_mut(b) = val + F::one();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
-        assert!(circuit.is_equal(circuit.num_vars(), a).is_err());
+        assert!(circuit.check_equal(circuit.num_vars(), a).is_err());
 
         let circuit_1 = build_is_equal_circuit(F::one(), F::one())?;
         let circuit_2 = build_is_equal_circuit(F::zero(), F::one())?;
@@ -923,7 +923,7 @@ pub(crate) mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
-        circuit.is_equal(a, b)?;
+        circuit.check_equal(a, b)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
     }
@@ -939,8 +939,8 @@ pub(crate) mod test {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
-        let a_zero_eq = circuit.is_zero(a)?;
-        let zero_zero_eq = circuit.is_zero(circuit.zero())?;
+        let a_zero_eq = circuit.check_is_zero(a)?;
+        let zero_zero_eq = circuit.check_is_zero(circuit.zero())?;
 
         // check circuit
         assert_eq!(circuit.witness(a_zero_eq)?, F::zero());
@@ -952,7 +952,7 @@ pub(crate) mod test {
         *circuit.witness_mut(a) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
-        assert!(circuit.is_zero(circuit.num_vars()).is_err());
+        assert!(circuit.check_is_zero(circuit.num_vars()).is_err());
 
         let circuit_1 = build_is_zero_circuit(F::one())?;
         let circuit_2 = build_is_zero_circuit(F::zero())?;
@@ -964,7 +964,7 @@ pub(crate) mod test {
     fn build_is_zero_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(a)?;
-        circuit.is_zero(a)?;
+        circuit.check_is_zero(a)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
     }
@@ -1367,9 +1367,9 @@ pub(crate) mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(1023u32))?;
 
-        let b1 = circuit.is_in_range(a, 5)?;
-        let b2 = circuit.is_in_range(a, 10)?;
-        let b3 = circuit.is_in_range(a, 0)?;
+        let b1 = circuit.check_in_range(a, 5)?;
+        let b2 = circuit.check_in_range(a, 10)?;
+        let b3 = circuit.check_in_range(a, 0)?;
         assert_eq!(circuit.witness(b1)?, F::zero());
         assert_eq!(circuit.witness(b2)?, F::one());
         assert_eq!(circuit.witness(b3)?, F::zero());
@@ -1379,7 +1379,7 @@ pub(crate) mod test {
         *circuit.witness_mut(a) = F::from(1024u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
-        assert!(circuit.is_in_range(circuit.num_vars(), 10).is_err());
+        assert!(circuit.check_in_range(circuit.num_vars(), 10).is_err());
 
         // build two fixed circuits with different variable assignments, checking that
         // the arithmetized extended permutation polynomial is variable
@@ -1394,7 +1394,7 @@ pub(crate) mod test {
     fn build_is_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a_var = circuit.create_variable(a)?;
-        circuit.is_in_range(a_var, 10)?;
+        circuit.check_in_range(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
     }
@@ -1414,7 +1414,7 @@ pub(crate) mod test {
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
         let b = circuit.create_variable(val)?;
-        circuit.is_equal(a, b)?;
+        circuit.check_equal(a, b)?;
 
         // lc gate
         let wire_in: Vec<_> = [
