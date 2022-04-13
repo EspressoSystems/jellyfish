@@ -929,13 +929,13 @@ pub(crate) mod test {
     }
 
     #[test]
-    fn test_is_zero() -> Result<(), PlonkError> {
-        test_is_zero_helper::<FqEd254>()?;
-        test_is_zero_helper::<FqEd377>()?;
-        test_is_zero_helper::<FqEd381>()?;
-        test_is_zero_helper::<Fq377>()
+    fn test_check_is_zero() -> Result<(), PlonkError> {
+        test_check_is_zero_helper::<FqEd254>()?;
+        test_check_is_zero_helper::<FqEd377>()?;
+        test_check_is_zero_helper::<FqEd381>()?;
+        test_check_is_zero_helper::<Fq377>()
     }
-    fn test_is_zero_helper<F: PrimeField>() -> Result<(), PlonkError> {
+    fn test_check_is_zero_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
@@ -954,14 +954,14 @@ pub(crate) mod test {
         // Check variable out of bound error.
         assert!(circuit.check_is_zero(circuit.num_vars()).is_err());
 
-        let circuit_1 = build_is_zero_circuit(F::one())?;
-        let circuit_2 = build_is_zero_circuit(F::zero())?;
+        let circuit_1 = build_check_is_zero_circuit(F::one())?;
+        let circuit_2 = build_check_is_zero_circuit(F::zero())?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
 
-    fn build_is_zero_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
+    fn build_check_is_zero_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(a)?;
         circuit.check_is_zero(a)?;
@@ -1357,13 +1357,13 @@ pub(crate) mod test {
     }
 
     #[test]
-    fn test_is_in_range() -> Result<(), PlonkError> {
-        test_is_in_range_helper::<FqEd254>()?;
-        test_is_in_range_helper::<FqEd377>()?;
-        test_is_in_range_helper::<FqEd381>()?;
-        test_is_in_range_helper::<Fq377>()
+    fn test_check_in_range() -> Result<(), PlonkError> {
+        test_check_in_range_helper::<FqEd254>()?;
+        test_check_in_range_helper::<FqEd377>()?;
+        test_check_in_range_helper::<FqEd381>()?;
+        test_check_in_range_helper::<Fq377>()
     }
-    fn test_is_in_range_helper<F: PrimeField>() -> Result<(), PlonkError> {
+    fn test_check_in_range_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(1023u32))?;
 
@@ -1384,14 +1384,14 @@ pub(crate) mod test {
         // build two fixed circuits with different variable assignments, checking that
         // the arithmetized extended permutation polynomial is variable
         // independent
-        let circuit_1 = build_is_in_range_circuit(F::from(314u32))?;
-        let circuit_2 = build_is_in_range_circuit(F::from(1489u32))?;
+        let circuit_1 = build_check_in_range_circuit(F::from(314u32))?;
+        let circuit_2 = build_check_in_range_circuit(F::from(1489u32))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
 
-    fn build_is_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
+    fn build_check_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a_var = circuit.create_variable(a)?;
         circuit.check_in_range(a_var, 10)?;
