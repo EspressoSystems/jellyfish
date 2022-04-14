@@ -64,7 +64,7 @@ where
     /// * `msg` - message variables that have been signed.
     /// * `sig` - signature variable.
     /// * `returns` - a bool variable indicating whether the signature is valid.
-    fn is_valid_signature(
+    fn check_valid_signature(
         &mut self,
         vk: &VerKeyVar,
         msg: &[Variable],
@@ -105,14 +105,14 @@ where
         Ok(())
     }
 
-    fn is_valid_signature(
+    fn check_valid_signature(
         &mut self,
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
     ) -> Result<Variable, PlonkError> {
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
-        self.is_equal_point(&p1, &p2)
+        self.check_equal_point(&p1, &p2)
     }
 
     fn create_signature_variable(
@@ -311,8 +311,12 @@ mod tests {
             .iter()
             .map(|m| circuit.create_variable(*m))
             .collect::<Result<Vec<_>, PlonkError>>()?;
-        let bit =
-            SignatureGadget::<_, P>::is_valid_signature(&mut circuit, &vk_var, &msg_var, &sig_var)?;
+        let bit = SignatureGadget::<_, P>::check_valid_signature(
+            &mut circuit,
+            &vk_var,
+            &msg_var,
+            &sig_var,
+        )?;
         Ok((circuit, bit))
     }
 }

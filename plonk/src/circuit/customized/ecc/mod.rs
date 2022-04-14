@@ -259,15 +259,15 @@ where
 
     /// Obtain a bool variable representing whether two point variables are
     /// equal. Return error if point variables are invalid.
-    pub fn is_equal_point(
+    pub fn check_equal_point(
         &mut self,
         point0: &PointVariable,
         point1: &PointVariable,
     ) -> Result<Variable, PlonkError> {
         self.check_point_var_bound(point0)?;
         self.check_point_var_bound(point1)?;
-        let x_eq = self.is_equal(point0.0, point1.0)?;
-        let y_eq = self.is_equal(point0.1, point1.1)?;
+        let x_eq = self.check_equal(point0.0, point1.0)?;
+        let y_eq = self.check_equal(point0.1, point1.1)?;
         self.mul(x_eq, y_eq)
     }
 }
@@ -305,9 +305,9 @@ where
         self.check_var_bound(expected_neutral)?;
 
         // constraint 1: b_x = is_equal(x, 0);
-        let b_x = self.is_equal(point_var.0, self.zero())?;
+        let b_x = self.check_equal(point_var.0, self.zero())?;
         // constraint 2: b_y = is_equal(y, 1);
-        let b_y = self.is_equal(point_var.1, self.one())?;
+        let b_y = self.check_equal(point_var.1, self.one())?;
         // constraint 3: b = b_x * b_y;
         self.mul_gate(b_x, b_y, expected_neutral)?;
         Ok(())
@@ -1019,8 +1019,8 @@ mod test {
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
         let p2_var = circuit.create_point_variable(Point::from(p2))?;
         let p3_var = circuit.create_point_variable(Point::from(p3))?;
-        let p1_p2_eq = circuit.is_equal_point(&p1_var, &p2_var)?;
-        let p1_p3_eq = circuit.is_equal_point(&p1_var, &p3_var)?;
+        let p1_p2_eq = circuit.check_equal_point(&p1_var, &p2_var)?;
+        let p1_p3_eq = circuit.check_equal_point(&p1_var, &p3_var)?;
 
         assert_eq!(circuit.witness(p1_p2_eq)?, F::one());
         assert_eq!(circuit.witness(p1_p3_eq)?, F::zero());
@@ -1029,7 +1029,7 @@ mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
         assert!(circuit
-            .is_equal_point(&PointVariable(0, 0), &PointVariable(1, circuit.num_vars()))
+            .check_equal_point(&PointVariable(0, 0), &PointVariable(1, circuit.num_vars()))
             .is_err());
 
         let circuit_1 =
@@ -1050,8 +1050,8 @@ mod test {
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
         let p2_var = circuit.create_point_variable(Point::from(p2))?;
         let p3_var = circuit.create_point_variable(Point::from(p3))?;
-        circuit.is_equal_point(&p1_var, &p2_var)?;
-        circuit.is_equal_point(&p1_var, &p3_var)?;
+        circuit.check_equal_point(&p1_var, &p2_var)?;
+        circuit.check_equal_point(&p1_var, &p3_var)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
     }
