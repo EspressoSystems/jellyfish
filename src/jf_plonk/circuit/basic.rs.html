@@ -1,6 +1,9 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk&#x2F;src&#x2F;circuit&#x2F;basic.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>basic.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/basic.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>basic.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -2108,6 +2111,60 @@
 <span id="2106">2106</span>
 <span id="2107">2107</span>
 <span id="2108">2108</span>
+<span id="2109">2109</span>
+<span id="2110">2110</span>
+<span id="2111">2111</span>
+<span id="2112">2112</span>
+<span id="2113">2113</span>
+<span id="2114">2114</span>
+<span id="2115">2115</span>
+<span id="2116">2116</span>
+<span id="2117">2117</span>
+<span id="2118">2118</span>
+<span id="2119">2119</span>
+<span id="2120">2120</span>
+<span id="2121">2121</span>
+<span id="2122">2122</span>
+<span id="2123">2123</span>
+<span id="2124">2124</span>
+<span id="2125">2125</span>
+<span id="2126">2126</span>
+<span id="2127">2127</span>
+<span id="2128">2128</span>
+<span id="2129">2129</span>
+<span id="2130">2130</span>
+<span id="2131">2131</span>
+<span id="2132">2132</span>
+<span id="2133">2133</span>
+<span id="2134">2134</span>
+<span id="2135">2135</span>
+<span id="2136">2136</span>
+<span id="2137">2137</span>
+<span id="2138">2138</span>
+<span id="2139">2139</span>
+<span id="2140">2140</span>
+<span id="2141">2141</span>
+<span id="2142">2142</span>
+<span id="2143">2143</span>
+<span id="2144">2144</span>
+<span id="2145">2145</span>
+<span id="2146">2146</span>
+<span id="2147">2147</span>
+<span id="2148">2148</span>
+<span id="2149">2149</span>
+<span id="2150">2150</span>
+<span id="2151">2151</span>
+<span id="2152">2152</span>
+<span id="2153">2153</span>
+<span id="2154">2154</span>
+<span id="2155">2155</span>
+<span id="2156">2156</span>
+<span id="2157">2157</span>
+<span id="2158">2158</span>
+<span id="2159">2159</span>
+<span id="2160">2160</span>
+<span id="2161">2161</span>
+<span id="2162">2162</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -2139,6 +2196,14 @@
 
 <span class="doccomment">/// The wire type identifier for range gates.</span>
 <span class="kw">const</span> <span class="ident">RANGE_WIRE_ID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">5</span>;
+<span class="doccomment">/// The wire type identifier for the key index in a lookup gate</span>
+<span class="kw">const</span> <span class="ident">LOOKUP_KEY_WIRE_ID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="doccomment">/// The wire type identifiers for the searched pair values in a lookup gate</span>
+<span class="kw">const</span> <span class="ident">LOOKUP_VAL_1_WIRE_ID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
+<span class="kw">const</span> <span class="ident">LOOKUP_VAL_2_WIRE_ID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="doccomment">/// The wire type identifiers for the pair values in the lookup table</span>
+<span class="kw">const</span> <span class="ident">TABLE_VAL_1_WIRE_ID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="kw">const</span> <span class="ident">TABLE_VAL_2_WIRE_ID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
 
 <span class="doccomment">/// Hardcoded parameters for Plonk systems.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
@@ -2424,29 +2489,38 @@
             }
             <span class="comment">// key-value map lookup gates</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_val_table</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-            <span class="ident">key_val_table</span>.<span class="ident">insert</span>((<span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()));
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_table_elems</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="ident">key_val_table</span>.<span class="ident">insert</span>((<span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()));
             <span class="kw">let</span> <span class="ident">q_lookup_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_lookup</span>();
-            <span class="kw">for</span> (<span class="ident">gate_id</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup</span>) <span class="kw">in</span> <span class="ident">q_lookup_vec</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+            <span class="kw">let</span> <span class="ident">q_dom_sep_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_dom_sep</span>();
+            <span class="kw">let</span> <span class="ident">table_key_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table_key_vec</span>();
+            <span class="kw">let</span> <span class="ident">table_dom_sep_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table_dom_sep_vec</span>();
+            <span class="comment">// insert table elements</span>
+            <span class="kw">for</span> (<span class="ident">gate_id</span>, ((<span class="kw-2">&amp;</span><span class="ident">q_lookup</span>, <span class="kw-2">&amp;</span><span class="ident">table_dom_sep</span>), <span class="kw-2">&amp;</span><span class="ident">table_key</span>)) <span class="kw">in</span> <span class="ident">q_lookup_vec</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">zip</span>(<span class="ident">table_dom_sep_vec</span>.<span class="ident">iter</span>())
+                .<span class="ident">zip</span>(<span class="ident">table_key_vec</span>.<span class="ident">iter</span>())
+                .<span class="ident">enumerate</span>()
+            {
                 <span class="kw">if</span> <span class="ident">q_lookup</span> <span class="op">!</span><span class="op">=</span> <span class="ident">F::zero</span>() {
-                    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">num_table_elems</span>);
-                    <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">3</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">4</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
-                    <span class="ident">key_val_table</span>.<span class="ident">insert</span>((<span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>));
-                    <span class="ident">num_table_elems</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                    <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">TABLE_VAL_1_WIRE_ID</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">TABLE_VAL_2_WIRE_ID</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
+                    <span class="ident">key_val_table</span>.<span class="ident">insert</span>((<span class="ident">table_dom_sep</span>, <span class="ident">table_key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>));
                 }
             }
-            <span class="kw">for</span> (<span class="ident">gate_id</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup</span>) <span class="kw">in</span> <span class="ident">q_lookup_vec</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+            <span class="comment">// check lookups</span>
+            <span class="kw">for</span> (<span class="ident">gate_id</span>, (<span class="kw-2">&amp;</span><span class="ident">q_lookup</span>, <span class="kw-2">&amp;</span><span class="ident">q_dom_sep</span>)) <span class="kw">in</span>
+                <span class="ident">q_lookup_vec</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">q_dom_sep_vec</span>.<span class="ident">iter</span>()).<span class="ident">enumerate</span>()
+            {
                 <span class="kw">if</span> <span class="ident">q_lookup</span> <span class="op">!</span><span class="op">=</span> <span class="ident">F::zero</span>() {
-                    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">0</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">1</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">2</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">key_val_table</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>)) {
+                    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">LOOKUP_KEY_WIRE_ID</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">LOOKUP_VAL_1_WIRE_ID</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">LOOKUP_VAL_2_WIRE_ID</span>, <span class="ident">gate_id</span>))<span class="question-mark">?</span>;
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">key_val_table</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">q_dom_sep</span>, <span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>)) {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GateCheckFailure</span>(
                             <span class="ident">gate_id</span>,
                             <span class="macro">format!</span>(
-                                <span class="string">&quot;Lookup gate failed: ({}, {}, {}) not in the table&quot;</span>,
-                                <span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>
+                                <span class="string">&quot;Lookup gate failed: ({}, {}, {}, {}) not in the table&quot;</span>,
+                                <span class="ident">q_dom_sep</span>, <span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>
                             ),
                         )
                         .<span class="ident">into</span>());
@@ -2898,6 +2972,21 @@
     <span class="kw">fn</span> <span class="ident">q_lookup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">gates</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">g</span><span class="op">|</span> <span class="ident">g</span>.<span class="ident">q_lookup</span>()).<span class="ident">collect</span>()
     }
+    <span class="comment">// getter for all lookup domain separation selector</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">q_dom_sep</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">gates</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">g</span><span class="op">|</span> <span class="ident">g</span>.<span class="ident">q_dom_sep</span>()).<span class="ident">collect</span>()
+    }
+    <span class="comment">// getter for the vector of table keys</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">table_key_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">gates</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">g</span><span class="op">|</span> <span class="ident">g</span>.<span class="ident">table_key</span>()).<span class="ident">collect</span>()
+    }
+    <span class="comment">// getter for the vector of table domain separation ids</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">fn</span> <span class="ident">table_dom_sep_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">gates</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">g</span><span class="op">|</span> <span class="ident">g</span>.<span class="ident">table_dom_sep</span>()).<span class="ident">collect</span>()
+    }
     <span class="comment">// TODO: (alex) try return reference instead of expensive clone</span>
     <span class="comment">// getter for all selectors in the following order:</span>
     <span class="comment">// q_lc, q_mul, q_hash, q_o, q_c, q_ecc, [q_lookup (if support lookup)]</span>
@@ -3281,16 +3370,36 @@
     }
 
     <span class="kw">fn</span> <span class="ident">compute_key_table_polynomial</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key_table</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">compute_key_table</span>()<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">check_plonk_type</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">check_finalize_flag</span>(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">eval_domain</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">DensePolynomial::from_coefficients_vec</span>(
-            <span class="ident">domain</span>.<span class="ident">ifft</span>(<span class="kw-2">&amp;</span><span class="ident">key_table</span>),
+            <span class="ident">domain</span>.<span class="ident">ifft</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">table_key_vec</span>()),
+        ))
+    }
+
+    <span class="kw">fn</span> <span class="ident">compute_table_dom_sep_polynomial</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">check_plonk_type</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">check_finalize_flag</span>(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">eval_domain</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">DensePolynomial::from_coefficients_vec</span>(
+            <span class="ident">domain</span>.<span class="ident">ifft</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">table_dom_sep_vec</span>()),
+        ))
+    }
+
+    <span class="kw">fn</span> <span class="ident">compute_q_dom_sep_polynomial</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">check_plonk_type</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">check_finalize_flag</span>(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">eval_domain</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">DensePolynomial::from_coefficients_vec</span>(
+            <span class="ident">domain</span>.<span class="ident">ifft</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">q_dom_sep</span>()),
         ))
     }
 
     <span class="kw">fn</span> <span class="ident">compute_merged_lookup_table</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tau</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_table</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">compute_range_table</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">key_table</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">compute_key_table</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">table_key_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table_key_vec</span>();
+        <span class="kw">let</span> <span class="ident">table_dom_sep_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table_dom_sep_vec</span>();
         <span class="kw">let</span> <span class="ident">q_lookup_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_lookup</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">merged_lookup_table</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -3298,7 +3407,8 @@
             <span class="ident">merged_lookup_table</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">merged_table_value</span>(
                 <span class="ident">tau</span>,
                 <span class="kw-2">&amp;</span><span class="ident">range_table</span>,
-                <span class="kw-2">&amp;</span><span class="ident">key_table</span>,
+                <span class="kw-2">&amp;</span><span class="ident">table_key_vec</span>,
+                <span class="kw-2">&amp;</span><span class="ident">table_dom_sep_vec</span>,
                 <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>,
                 <span class="ident">i</span>,
             )<span class="question-mark">?</span>);
@@ -3340,9 +3450,11 @@
         <span class="kw">let</span> <span class="ident">beta_plus_one</span> <span class="op">=</span> <span class="ident">F::one</span>() <span class="op">+</span> <span class="kw-2">*</span><span class="ident">beta</span>;
         <span class="kw">let</span> <span class="ident">gamma_mul_beta_plus_one</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">gamma</span> <span class="op">*</span> <span class="ident">beta_plus_one</span>;
         <span class="kw">let</span> <span class="ident">q_lookup_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_lookup</span>();
+        <span class="kw">let</span> <span class="ident">q_dom_sep_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_dom_sep</span>();
         <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">n</span> <span class="op">-</span> <span class="number">2</span>) {
             <span class="comment">// compute merged lookup witness value</span>
-            <span class="kw">let</span> <span class="ident">lookup_wire_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">merged_lookup_wire_value</span>(<span class="kw-2">*</span><span class="ident">tau</span>, <span class="ident">j</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">lookup_wire_val</span> <span class="op">=</span>
+                <span class="self">self</span>.<span class="ident">merged_lookup_wire_value</span>(<span class="kw-2">*</span><span class="ident">tau</span>, <span class="ident">j</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>, <span class="kw-2">&amp;</span><span class="ident">q_dom_sep_vec</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">table_val</span> <span class="op">=</span> <span class="ident">merged_lookup_table</span>[<span class="ident">j</span>];
             <span class="kw">let</span> <span class="ident">table_next_val</span> <span class="op">=</span> <span class="ident">merged_lookup_table</span>[<span class="ident">j</span> <span class="op">+</span> <span class="number">1</span>];
             <span class="kw">let</span> <span class="ident">h1_val</span> <span class="op">=</span> <span class="ident">sorted_vec</span>[<span class="ident">j</span>];
@@ -3391,8 +3503,9 @@
         <span class="comment">// only the first n-1 variables are for lookup</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lookup_map</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">usize</span><span class="op">&gt;</span><span class="ident">::new</span>();
         <span class="kw">let</span> <span class="ident">q_lookup_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_lookup</span>();
+        <span class="kw">let</span> <span class="ident">q_dom_sep_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">q_dom_sep</span>();
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>) {
-            <span class="kw">let</span> <span class="ident">elem</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">merged_lookup_wire_value</span>(<span class="ident">tau</span>, <span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">elem</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">merged_lookup_wire_value</span>(<span class="ident">tau</span>, <span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>, <span class="kw-2">&amp;</span><span class="ident">q_dom_sep_vec</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">n_lookups</span> <span class="op">=</span> <span class="ident">lookup_map</span>.<span class="ident">entry</span>(<span class="ident">elem</span>).<span class="ident">or_insert</span>(<span class="number">0</span>);
             <span class="kw-2">*</span><span class="ident">n_lookups</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         }
@@ -3439,34 +3552,25 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="comment">// TODO: generalize to arbitrary key sets.</span>
-    <span class="kw">fn</span> <span class="ident">compute_key_table</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">check_plonk_type</span>(<span class="ident">PlonkType::UltraPlonk</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_finalize_flag</span>(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval_domain_size</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_table</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::zero</span>(); <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">num_table_elems</span>];
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">num_table_elems</span> {
-            <span class="ident">key_table</span>.<span class="ident">push</span>(<span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>));
-        }
-        <span class="ident">key_table</span>.<span class="ident">push</span>(<span class="ident">F::zero</span>());
-        <span class="prelude-val">Ok</span>(<span class="ident">key_table</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">merged_table_value</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">tau</span>: <span class="ident">F</span>,
         <span class="ident">range_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-        <span class="ident">key_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
+        <span class="ident">table_key_vec</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
+        <span class="ident">table_dom_sep_vec</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">q_lookup_vec</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">i</span>: <span class="ident">usize</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">range_val</span> <span class="op">=</span> <span class="ident">range_table</span>[<span class="ident">i</span>];
-        <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">key_table</span>[<span class="ident">i</span>];
+        <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">table_key_vec</span>[<span class="ident">i</span>];
+        <span class="kw">let</span> <span class="ident">dom_sep_val</span> <span class="op">=</span> <span class="ident">table_dom_sep_vec</span>[<span class="ident">i</span>];
         <span class="kw">let</span> <span class="ident">q_lookup_val</span> <span class="op">=</span> <span class="ident">q_lookup_vec</span>[<span class="ident">i</span>];
-        <span class="kw">let</span> <span class="ident">w3_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">3</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">w4_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">4</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">range_val</span> <span class="op">+</span> <span class="ident">q_lookup_val</span> <span class="op">*</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">key_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w3_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">w4_val</span>)))
+        <span class="kw">let</span> <span class="ident">table_val_1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">TABLE_VAL_1_WIRE_ID</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">table_val_2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">TABLE_VAL_2_WIRE_ID</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">range_val</span>
+            <span class="op">+</span> <span class="ident">q_lookup_val</span>
+                <span class="op">*</span> <span class="ident">tau</span>
+                <span class="op">*</span> (<span class="ident">dom_sep_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">key_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">table_val_1</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">table_val_2</span>))))
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
@@ -3475,13 +3579,18 @@
         <span class="ident">tau</span>: <span class="ident">F</span>,
         <span class="ident">i</span>: <span class="ident">usize</span>,
         <span class="ident">q_lookup_vec</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
+        <span class="ident">q_dom_sep_vec</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">w_range_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">RANGE_WIRE_ID</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">w_0_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">0</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">w_1_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">1</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">w_2_val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="number">2</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">lookup_key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">LOOKUP_KEY_WIRE_ID</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">lookup_val_1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">LOOKUP_VAL_1_WIRE_ID</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">lookup_val_2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">LOOKUP_VAL_2_WIRE_ID</span>, <span class="ident">i</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">q_lookup_val</span> <span class="op">=</span> <span class="ident">q_lookup_vec</span>[<span class="ident">i</span>];
-        <span class="prelude-val">Ok</span>(<span class="ident">w_range_val</span> <span class="op">+</span> <span class="ident">q_lookup_val</span> <span class="op">*</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w_0_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w_1_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">w_2_val</span>)))
+        <span class="kw">let</span> <span class="ident">q_dom_sep_val</span> <span class="op">=</span> <span class="ident">q_dom_sep_vec</span>[<span class="ident">i</span>];
+        <span class="prelude-val">Ok</span>(<span class="ident">w_range_val</span>
+            <span class="op">+</span> <span class="ident">q_lookup_val</span>
+                <span class="op">*</span> <span class="ident">tau</span>
+                <span class="op">*</span> (<span class="ident">q_dom_sep_val</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">lookup_key</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">lookup_val_1</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">lookup_val_2</span>))))
     }
 }
 
@@ -4079,7 +4188,7 @@
 
         <span class="comment">// Check key table polynomial</span>
         <span class="kw">let</span> <span class="ident">key_table_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_key_table_polynomial</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">key_table</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_key_table</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">key_table</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">table_key_vec</span>();
         <span class="ident">check_polynomial</span>(<span class="kw-2">&amp;</span><span class="ident">key_table_poly</span>, <span class="kw-2">&amp;</span><span class="ident">key_table</span>);
 
         <span class="comment">// Check sorted vector polynomials</span>
@@ -4126,8 +4235,10 @@
         <span class="kw">let</span> <span class="ident">one_plus_beta</span> <span class="op">=</span> <span class="ident">F::one</span>() <span class="op">+</span> <span class="ident">beta</span>;
         <span class="kw">let</span> <span class="ident">gamma_mul_one_plus_beta</span> <span class="op">=</span> <span class="ident">gamma</span> <span class="op">*</span> <span class="ident">one_plus_beta</span>;
         <span class="kw">let</span> <span class="ident">q_lookup_vec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">q_lookup</span>();
+        <span class="kw">let</span> <span class="ident">q_dom_sep</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">q_dom_sep</span>();
         <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">n</span> <span class="op">-</span> <span class="number">2</span>) {
-            <span class="kw">let</span> <span class="ident">lookup_wire_val</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">merged_lookup_wire_value</span>(<span class="ident">tau</span>, <span class="ident">j</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">lookup_wire_val</span> <span class="op">=</span>
+                <span class="ident">circuit</span>.<span class="ident">merged_lookup_wire_value</span>(<span class="ident">tau</span>, <span class="ident">j</span>, <span class="kw-2">&amp;</span><span class="ident">q_lookup_vec</span>, <span class="kw-2">&amp;</span><span class="ident">q_dom_sep</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">table_val</span> <span class="op">=</span> <span class="ident">merged_lookup_table</span>[<span class="ident">j</span>];
             <span class="kw">let</span> <span class="ident">table_next_val</span> <span class="op">=</span> <span class="ident">merged_lookup_table</span>[<span class="ident">j</span> <span class="op">+</span> <span class="number">1</span>];
             <span class="kw">let</span> <span class="ident">h1_val</span> <span class="op">=</span> <span class="ident">sorted_vec</span>[<span class="ident">j</span>];
@@ -4217,5 +4328,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0 (7737e0b5c 2022-04-04)" ></div>
 </body></html>
