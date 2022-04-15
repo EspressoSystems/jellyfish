@@ -1,7 +1,7 @@
 [package]
 name = "jf-utils"
 description = "Utilities for Jellyfish cryptographic library"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2018"
 license = "MIT"
