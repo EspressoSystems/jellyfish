@@ -40,7 +40,7 @@
 <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
 
 <span class="doccomment">/// Various error modes.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RescueError</span> {
     <span class="doccomment">/// Bad parameter in function call, {0}</span>
     <span class="ident">ParameterError</span>(<span class="ident">String</span>),

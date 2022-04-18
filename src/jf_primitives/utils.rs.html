@@ -52,18 +52,18 @@
 <span class="comment">// You should have received a copy of the MIT License</span>
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">elgamal</span>, <span class="ident">schnorr_dsa</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">elgamal</span>, <span class="ident">signatures::schnorr</span>};
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
 <span class="kw">use</span> <span class="ident">jf_plonk::circuit::Variable</span>;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">schnorr_dsa::VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">F</span>, <span class="ident">F</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">schnorr::VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">F</span>, <span class="ident">F</span>)
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">schnorr_dsa::VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">schnorr::VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">vk</span>.<span class="number">0</span>.<span class="ident">into_affine</span>();
         (<span class="ident">point</span>.<span class="ident">x</span>, <span class="ident">point</span>.<span class="ident">y</span>)
     }

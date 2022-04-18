@@ -56,7 +56,7 @@
 <span class="kw">use</span> <span class="ident">jf_rescue::errors::RescueError</span>;
 
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the primitives.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PrimitivesError</span> {
     <span class="doccomment">/// Unsuccessful verification for proof or signature, {0}</span>
     <span class="ident">VerificationError</span>(<span class="ident">String</span>),

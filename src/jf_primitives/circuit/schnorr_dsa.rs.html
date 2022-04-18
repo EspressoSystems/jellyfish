@@ -335,7 +335,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">constants</span>::{<span class="ident">challenge_bit_len</span>, <span class="ident">field_bit_len</span>},
-    <span class="ident">schnorr_dsa</span>::{<span class="ident">Signature</span>, <span class="ident">VerKey</span>, <span class="ident">DOMAIN_SEPARATION</span>},
+    <span class="ident">signatures::schnorr</span>::{<span class="ident">Signature</span>, <span class="ident">VerKey</span>, <span class="ident">DOMAIN_SEPARATION</span>},
 };
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">twisted_edwards_extended::GroupAffine</span>, <span class="ident">AffineCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
@@ -391,7 +391,7 @@
     <span class="doccomment">/// * `msg` - message variables that have been signed.</span>
     <span class="doccomment">/// * `sig` - signature variable.</span>
     <span class="doccomment">/// * `returns` - a bool variable indicating whether the signature is valid.</span>
-    <span class="kw">fn</span> <span class="ident">check_valid_signature</span>(
+    <span class="kw">fn</span> <span class="ident">check_signature_validity</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
@@ -432,7 +432,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">check_valid_signature</span>(
+    <span class="kw">fn</span> <span class="ident">check_signature_validity</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
@@ -523,7 +523,7 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::{
         <span class="ident">circuit::schnorr_dsa</span>::<span class="kw-2">*</span>,
-        <span class="ident">schnorr_dsa</span>::{<span class="ident">KeyPair</span>, <span class="ident">Signature</span>, <span class="ident">VerKey</span>},
+        <span class="ident">signatures::schnorr</span>::{<span class="ident">KeyPair</span>, <span class="ident">Signature</span>, <span class="ident">VerKey</span>},
     };
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param377</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381</span>;
@@ -638,7 +638,7 @@
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">m</span>))
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">bit</span> <span class="op">=</span> <span class="ident">SignatureGadget</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::check_valid_signature</span>(
+        <span class="kw">let</span> <span class="ident">bit</span> <span class="op">=</span> <span class="ident">SignatureGadget</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::check_signature_validity</span>(
             <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
             <span class="kw-2">&amp;</span><span class="ident">vk_var</span>,
             <span class="kw-2">&amp;</span><span class="ident">msg_var</span>,

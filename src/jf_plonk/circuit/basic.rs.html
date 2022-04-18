@@ -2165,6 +2165,7 @@
 <span id="2160">2160</span>
 <span id="2161">2161</span>
 <span id="2162">2162</span>
+<span id="2163">2163</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -3310,9 +3311,10 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">F::one</span>();
             <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">num_wire_types</span> {
                 <span class="kw">let</span> <span class="ident">wire_value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>[<span class="self">self</span>.<span class="ident">wire_variable</span>(<span class="ident">i</span>, <span class="ident">j</span>)];
-                <span class="ident">a</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">wire_value</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">beta</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">extended_id_permutation</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">j</span>] <span class="op">+</span> <span class="ident">gamma</span>;
+                <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">wire_value</span> <span class="op">+</span> <span class="ident">gamma</span>;
+                <span class="ident">a</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">tmp</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">beta</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">extended_id_permutation</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">j</span>];
                 <span class="kw">let</span> (<span class="ident">perm_i</span>, <span class="ident">perm_j</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">wire_permutation</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">j</span>];
-                <span class="ident">b</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">wire_value</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">beta</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">extended_id_permutation</span>[<span class="ident">perm_i</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">perm_j</span>] <span class="op">+</span> <span class="ident">gamma</span>;
+                <span class="ident">b</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">tmp</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">beta</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">extended_id_permutation</span>[<span class="ident">perm_i</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">perm_j</span>];
             }
             <span class="kw">let</span> <span class="ident">prev_prod</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">product_vec</span>.<span class="ident">last</span>().<span class="ident">ok_or</span>(<span class="ident">PlonkError::IndexError</span>)<span class="question-mark">?</span>;
             <span class="ident">product_vec</span>.<span class="ident">push</span>(<span class="ident">prev_prod</span> <span class="op">*</span> <span class="ident">a</span> <span class="op">/</span> <span class="ident">b</span>);
