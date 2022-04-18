@@ -11,7 +11,7 @@ use displaydoc::Display;
 use jf_rescue::errors::RescueError;
 
 /// A `enum` specifying the possible failure modes of the primitives.
-#[derive(Debug, Display)]
+#[derive(Debug, Display, PartialEq)]
 pub enum PrimitivesError {
     /// Unsuccessful verification for proof or signature, {0}
     VerificationError(String),
