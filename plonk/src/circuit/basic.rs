@@ -1143,9 +1143,10 @@ where
             let mut b = F::one();
             for i in 0..self.num_wire_types {
                 let wire_value = self.witness[self.wire_variable(i, j)];
-                a *= wire_value + *beta * self.extended_id_permutation[i * n + j] + gamma;
+                let tmp = wire_value + gamma;
+                a *= tmp + *beta * self.extended_id_permutation[i * n + j];
                 let (perm_i, perm_j) = self.wire_permutation[i * n + j];
-                b *= wire_value + *beta * self.extended_id_permutation[perm_i * n + perm_j] + gamma;
+                b *= tmp + *beta * self.extended_id_permutation[perm_i * n + perm_j];
             }
             let prev_prod = *product_vec.last().ok_or(PlonkError::IndexError)?;
             product_vec.push(prev_prod * a / b);
