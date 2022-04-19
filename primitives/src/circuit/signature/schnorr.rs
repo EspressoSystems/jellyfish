@@ -7,8 +7,9 @@
 //! Circuit implementation of a Schnorr signature scheme.
 
 use crate::{
-    constants::{challenge_bit_len, field_bit_len},
-    signatures::schnorr::{Signature, VerKey, DOMAIN_SEPARATION},
+    constants::CS_ID_SCHNORR,
+    signatures::schnorr::{Signature, VerKey},
+    utils::{challenge_bit_len, field_bit_len},
 };
 use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParameters as Parameters};
 use ark_ff::PrimeField;
@@ -172,7 +173,7 @@ where
         sig_point: &PointVariable,
         msg: &[Variable],
     ) -> Result<Vec<Variable>, PlonkError> {
-        let instance_description = F::from_be_bytes_mod_order(DOMAIN_SEPARATION);
+        let instance_description = F::from_be_bytes_mod_order(CS_ID_SCHNORR);
         // TODO: create `inst_desc_var` and the constant gate *only once* during the
         // entire circuit construction.
         let inst_desc_var = self.create_variable(instance_description)?;
@@ -194,10 +195,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        circuit::schnorr_dsa::*,
-        signatures::schnorr::{KeyPair, Signature, VerKey},
-    };
+    use super::*;
+    use crate::signatures::schnorr::{KeyPair, Signature, VerKey};
     use ark_ed_on_bls12_377::EdwardsParameters as Param377;
     use ark_ed_on_bls12_381::EdwardsParameters as Param381;
     use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
@@ -227,9 +226,9 @@ mod tests {
         let msg: Vec<F> = (0..20).map(|i| F::from(i as u64)).collect();
         let mut msg_bad = msg.clone();
         msg_bad[0] = F::from(2 as u64);
-        let sig = keypair.sign(&msg);
-        let sig_bad = keypair.sign(&msg_bad);
-        vk.verify(&msg, &sig).unwrap();
+        let sig = keypair.sign(&msg, CS_ID_SCHNORR);
+        let sig_bad = keypair.sign(&msg_bad, CS_ID_SCHNORR);
+        vk.verify(&msg, &sig, CS_ID_SCHNORR).unwrap();
 
         // Test `verify_signature()`
         // Good path

@@ -7,17 +7,17 @@
 //! This module implements the Schnorr signature over the various Edwards
 //! curves.
 
-use crate::{constants::*, errors::PrimitivesError, signatures::SignatureScheme};
+use super::SignatureScheme;
+use crate::{errors::PrimitivesError, utils::curve_cofactor};
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
     AffineCurve, ModelParameters, ProjectiveCurve, TEModelParameters as Parameters,
 };
-use ark_ff::{PrimeField, ToBytes};
+use ark_ff::PrimeField;
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
-    io::{Result as IoResult, Write},
     marker::PhantomData,
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
@@ -28,12 +28,11 @@ use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
 use zeroize::Zeroize;
 
 /// Schnorr signature scheme.
-pub struct SchnorrSignatureScheme<P, H> {
+pub struct SchnorrSignatureScheme<P> {
     curve_param: PhantomData<P>,
-    hasher: PhantomData<H>,
 }
 
-impl<F, P, H> SignatureScheme for SchnorrSignatureScheme<P, H>
+impl<F, P> SignatureScheme for SchnorrSignatureScheme<P>
 where
     F: RescueParameter,
     P: Parameters<BaseField = F> + Clone,
@@ -50,63 +49,50 @@ where
     /// Signature
     type Signature = Signature<P>;
 
-    /// message
-    type MessageUnit = P::BaseField;
+    /// A message is &[MessageUnit]
+    type MessageUnit = F;
 
     /// generate public parameters from RNG.
-    fn setup<R: CryptoRng + RngCore>(
+    fn param_gen<R: CryptoRng + RngCore, B: AsRef<[u8]>>(
         _prng: &mut R,
+        _ciphersuite_id: B,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
         Ok(())
     }
 
-    fn keygen<R: Rng>(
+    /// Sample a pair of keys.
+    fn key_gen<R: CryptoRng + RngCore, B: AsRef<[u8]>>(
         _pp: &Self::PublicParameter,
-        rng: &mut R,
+        _ciphersuite_id: B,
+        prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        let kp = KeyPair::<P>::generate(rng);
+        let kp = KeyPair::<P>::generate(prng);
         Ok((kp.sk, kp.vk))
     }
 
-    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
+    /// Sample a pair of keys.
+    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>, B: AsRef<[u8]>>(
         _pp: &Self::PublicParameter,
         sk: &Self::SigningKey,
         msg: M,
+        ciphersuite_id: B,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
         let kp = KeyPair::<P>::generate_with_sign_key(sk.0);
-        Ok(kp.sign(msg.as_ref()))
+        Ok(kp.sign(msg.as_ref(), ciphersuite_id))
     }
 
     /// Verify a signature.
-    fn verify<M: AsRef<[Self::MessageUnit]>>(
+    fn verify<M: AsRef<[Self::MessageUnit]>, B: AsRef<[u8]>>(
         _pp: &Self::PublicParameter,
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
+        ciphersuite_id: B,
     ) -> Result<(), PrimitivesError> {
-        vk.verify(msg.as_ref(), sig)
-    }
-
-    fn randomize_public_key(
-        _pp: &Self::PublicParameter,
-        public_key: &Self::VerificationKey,
-        randomness: &[u8],
-    ) -> Result<Self::VerificationKey, PrimitivesError> {
-        let randomizer = P::ScalarField::from_le_bytes_mod_order(randomness);
-        Ok(public_key.randomize_with(&randomizer))
-    }
-
-    fn randomize_signature(
-        _pp: &Self::PublicParameter,
-        _signature: &Self::Signature,
-        _randomness: &[u8],
-    ) -> Result<Self::Signature, PrimitivesError> {
-        unimplemented!()
+        vk.verify(msg.as_ref(), sig, ciphersuite_id)
     }
 }
-
-pub(crate) const DOMAIN_SEPARATION: &[u8; 24] = b"DSA_WITH_RESCUE_HASH_v01";
 
 // =====================================================
 // Signing key
@@ -130,20 +116,13 @@ impl<F: PrimeField> SignKey<F> {
     }
 }
 
-impl<F: PrimeField> ToBytes for SignKey<F> {
-    #[inline]
-    fn write<W: Write>(&self, writer: W) -> IoResult<()> {
-        self.0.write(writer)
-    }
-}
-
 // =====================================================
 // Verification key
 // =====================================================
 
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
-#[tagged_blob("VERKEY")]
+#[tagged_blob("SCHNORRVERKEY")]
 #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
 #[derivative(Default(bound = "P: Parameters"))]
@@ -151,13 +130,6 @@ impl<F: PrimeField> ToBytes for SignKey<F> {
 pub struct VerKey<P>(pub(crate) GroupProjective<P>)
 where
     P: Parameters + Clone;
-
-impl<P: Parameters + Clone> ToBytes for VerKey<P> {
-    #[inline]
-    fn write<W: Write>(&self, writer: W) -> IoResult<()> {
-        self.0.write(writer)
-    }
-}
 
 impl<P: Parameters + Clone> VerKey<P> {
     /// Return a randomized verification key.
@@ -303,15 +275,16 @@ where
 
     /// Signature function
     #[allow(non_snake_case)]
-    pub fn sign(&self, msg: &[F]) -> Signature<P> {
+    pub fn sign<B: AsRef<[u8]>>(&self, msg: &[F], csid: B) -> Signature<P> {
         let hash = Permutation::default();
-        let instance_description = F::from_be_bytes_mod_order(DOMAIN_SEPARATION);
+        // Do we want to remove the instance description?
+        let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut msg_input = vec![instance_description, fr_to_fq::<F, P>(&self.sk.0)];
         msg_input.extend(msg.iter());
 
         let r = fq_to_fr::<F, P>(&hash.sponge_with_padding(&msg_input, 1)[0]);
         let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
-        let c = self.vk.challenge(&hash, &R, msg);
+        let c = self.vk.challenge(&hash, &R, msg, csid);
         let s = c * self.sk.0 + r;
 
         Signature { s, R }
@@ -360,7 +333,12 @@ where
 
     /// Signature verification function
     #[allow(non_snake_case)]
-    pub fn verify(&self, msg: &[P::BaseField], sig: &Signature<P>) -> Result<(), PrimitivesError> {
+    pub fn verify<B: AsRef<[u8]>>(
+        &self,
+        msg: &[P::BaseField],
+        sig: &Signature<P>,
+        csid: B,
+    ) -> Result<(), PrimitivesError> {
         // Reject if public key is of small order
         if Group::mul(&self.0, &P::ScalarField::from(curve_cofactor::<P>()))
             == GroupProjective::<P>::default()
@@ -372,7 +350,7 @@ where
 
         // restrictive cofactorless verification
         let hash = Permutation::<F>::default();
-        let c = self.challenge(&hash, &sig.R, msg);
+        let c = self.challenge(&hash, &sig.R, msg, csid);
 
         let base = GroupProjective::<P>::prime_subgroup_generator();
         let x = Group::mul(&base, &sig.s);
@@ -396,15 +374,16 @@ where
     // TODO: this function should be generic w.r.t. hash functions
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
-    fn challenge(
+    fn challenge<B: AsRef<[u8]>>(
         &self,
         hash: &Permutation<F>,
         R: &GroupProjective<P>,
         msg: &[F],
+        csid: B,
     ) -> P::ScalarField {
         // is the domain separator always an Fr? If so how about using Fr as domain
         // separator rather than bytes?
-        let instance_description = F::from_be_bytes_mod_order(DOMAIN_SEPARATION);
+        let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut challenge_input = {
             let vk_affine = self.0.into_affine();
             let R_affine = R.into_affine();
@@ -428,11 +407,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        constants::CS_ID_SCHNORR,
+        signatures::tests::{failed_verification, sign_and_verify},
+    };
     use ark_ed_on_bls12_377::EdwardsParameters as Param377;
     use ark_ed_on_bls12_381::EdwardsParameters as Param381;
     use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
     use ark_ed_on_bn254::EdwardsParameters as Param254;
-    use ark_std::{test_rng, UniformRand};
+    use ark_std::UniformRand;
 
     macro_rules! test_signature {
         ($curve_param:tt) => {
@@ -453,22 +436,23 @@ mod tests {
                 for keypair in &keypairs {
                     assert_eq!(keypair.vk, VerKey::from(&keypair.sk));
 
-                    let sig = keypair.sign(&msg);
+                    let sig = keypair.sign(&msg, CS_ID_SCHNORR);
                     let pk = keypair.ver_key_ref();
-                    assert!(pk.verify(&msg, &sig).is_ok());
+                    assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
                     // wrong public key
-                    assert!(pk_bad.verify(&msg, &sig).is_err());
+                    assert!(pk_bad.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
                     // wrong message
                     msg.push(<$curve_param as ModelParameters>::BaseField::from(i as u64));
-                    assert!(pk.verify(&msg, &sig).is_err());
+                    assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
                 }
             }
 
             let message = <$curve_param as ModelParameters>::BaseField::rand(&mut rng);
-            sign_and_verify::<SchnorrSignatureScheme<$curve_param, $curve_param>>(&[message]);
-            failed_verification::<SchnorrSignatureScheme<$curve_param, $curve_param>>(
+            sign_and_verify::<SchnorrSignatureScheme<$curve_param>, _>(&[message], CS_ID_SCHNORR);
+            failed_verification::<SchnorrSignatureScheme<$curve_param>, _>(
                 &[message],
                 &[<$curve_param as ModelParameters>::BaseField::rand(&mut rng)],
+                CS_ID_SCHNORR,
             );
         };
     }
@@ -481,27 +465,9 @@ mod tests {
         test_signature!(Param381b);
     }
 
-    fn sign_and_verify<S: SignatureScheme>(message: &[S::MessageUnit]) {
-        let rng = &mut test_rng();
-        let parameters = S::setup::<_>(rng).unwrap();
-        let (sk, pk) = S::keygen(&parameters, rng).unwrap();
-        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
-        assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
-    }
-
-    fn failed_verification<S: SignatureScheme>(
-        message: &[S::MessageUnit],
-        bad_message: &[S::MessageUnit],
-    ) {
-        let rng = &mut test_rng();
-        let parameters = S::setup::<_>(rng).unwrap();
-        let (sk, pk) = S::keygen(&parameters, rng).unwrap();
-        let sig = S::sign(&parameters, &sk, message, rng).unwrap();
-        assert!(!S::verify(&parameters, &pk, bad_message, &sig).is_ok());
-    }
-
     mod serde {
         use super::super::{KeyPair, SignKey, Signature, VerKey};
+        use crate::constants::CS_ID_SCHNORR;
         use ark_ec::twisted_edwards_extended::GroupProjective;
         use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377, Fr as FrEd377};
         use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fq as FqEd381, Fr as FrEd381};
@@ -520,8 +486,8 @@ mod tests {
                 // happy path
                 let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
                 let vk = keypair.ver_key_ref();
-                let sig = keypair.sign(&[]);
-                assert!(&vk.verify(&[], &sig).is_ok());
+                let sig = keypair.sign(&[], CS_ID_SCHNORR);
+                assert!(&vk.verify(&[], &sig, CS_ID_SCHNORR).is_ok());
 
                 // Bad path
                 let bad_ver_key = VerKey(GroupProjective::<$curve_param>::zero());
@@ -530,8 +496,10 @@ mod tests {
                     vk: bad_ver_key.clone(),
                 };
 
-                let sig_on_bad_key = bad_keypair.sign(&[]);
-                assert!(&bad_ver_key.verify(&[], &sig_on_bad_key).is_err());
+                let sig_on_bad_key = bad_keypair.sign(&[], CS_ID_SCHNORR);
+                assert!(&bad_ver_key
+                    .verify(&[], &sig_on_bad_key, CS_ID_SCHNORR)
+                    .is_err());
 
                 // test serialization
                 let mut vk_bytes = vec![];
@@ -555,9 +523,9 @@ mod tests {
 
                 // Happy path
                 let msg = vec![$base_field::from(8u8), $base_field::from(10u8)];
-                let sig = keypair.sign(&msg);
-                assert!(keypair.vk.verify(&msg, &sig).is_ok());
-                assert!(keypair.vk.verify(&[], &sig).is_err());
+                let sig = keypair.sign(&msg, CS_ID_SCHNORR);
+                assert!(keypair.vk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
+                assert!(keypair.vk.verify(&[], &sig, CS_ID_SCHNORR).is_err());
                 let mut bytes_sig = vec![];
                 sig.serialize(&mut bytes_sig).unwrap();
                 let sig_de: Signature<$curve_param> =
@@ -590,7 +558,7 @@ mod tests {
                 let sk = SignKey::<$scalar_field>::generate(&mut rng);
                 let vk = keypair.ver_key();
                 let msg = vec![$base_field::rand(&mut rng)];
-                let sig = keypair.sign(&msg);
+                let sig = keypair.sign(&msg, CS_ID_SCHNORR);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
                 keypair.serialize(&mut ser_bytes).unwrap();

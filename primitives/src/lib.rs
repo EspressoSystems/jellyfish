@@ -8,7 +8,7 @@
 //! well as the plonk circuit implementation of those primitives.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(warnings)]
+// #![deny(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -22,6 +22,7 @@ pub mod commitment;
 pub mod constants;
 pub mod elgamal;
 pub mod errors;
+pub mod hash_to_group;
 pub mod merkle_tree;
 pub mod prf;
 pub mod signatures;
