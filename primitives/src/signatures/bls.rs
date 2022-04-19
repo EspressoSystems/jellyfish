@@ -67,7 +67,7 @@ where
     /// Signature
     type Signature = BLSSignature<P>;
 
-    /// A message is &[MessageUnit]
+    /// A message is &\[MessageUnit\]
     type MessageUnit = u8;
 
     /// generate public parameters from RNG.

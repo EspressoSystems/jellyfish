@@ -51,7 +51,7 @@ where
     /// Signature
     type Signature = Signature<P>;
 
-    /// A message is &[MessageUnit]
+    /// A message is &\[MessageUnit\]
     type MessageUnit = F;
 
     /// generate public parameters from RNG.
