@@ -1,7 +1,7 @@
 //! Placeholder for BLS signature.
 
 use super::SignatureScheme;
-use crate::{errors::PrimitivesError, hash_to_group::HashToGroup};
+use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError, hash_to_group::HashToGroup};
 use ark_ec::{
     bls12::{Bls12, Bls12Parameters},
     short_weierstrass_jacobian::GroupAffine,
@@ -22,7 +22,7 @@ use jf_utils::{multi_pairing, tagged_blob};
 /// BLS signature scheme.
 /// Optimized for signature size, i.e.: PK in G2 and sig in G1
 pub struct BLSSignatureScheme<P: Bls12Parameters> {
-    pairing_engine: PhantomData<P>,
+    pairing_friend_curve: PhantomData<P>,
 }
 
 /// BLS public verification key
@@ -53,6 +53,8 @@ where
     P: Bls12Parameters,
     P::G1Parameters: HashToGroup,
 {
+    const CS_ID: &'static str = CS_ID_BLS_SIG_NAIVE;
+
     /// Signing key.
     type SigningKey = BLSSignKey<P>;
 
@@ -69,17 +71,15 @@ where
     type MessageUnit = u8;
 
     /// generate public parameters from RNG.
-    fn param_gen<R: CryptoRng + RngCore, B: AsRef<[u8]>>(
+    fn param_gen<R: CryptoRng + RngCore>(
         _prng: &mut R,
-        _ciphersuite_id: B,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
         Ok(())
     }
 
     /// Sample a pair of keys.
-    fn key_gen<R: CryptoRng + RngCore, B: AsRef<[u8]>>(
+    fn key_gen<R: CryptoRng + RngCore>(
         _pp: &Self::PublicParameter,
-        _ciphersuite_id: B,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
         // todo: absorb ciphersuite_id in prng
@@ -95,40 +95,30 @@ where
     }
 
     /// Sample a pair of keys.
-    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>, B: AsRef<[u8]>>(
+    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         sk: &Self::SigningKey,
         msg: M,
-        ciphersuite_id: B,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
-        let hm =
-            <P::G1Parameters as HashToGroup>::hash_to_group(msg.as_ref(), ciphersuite_id.as_ref())?;
+        let hm = <P::G1Parameters as HashToGroup>::hash_to_group(
+            msg.as_ref(),
+            CS_ID_BLS_SIG_NAIVE.as_ref(),
+        )?;
         Ok(BLSSignature(hm.mul(&sk.0.into_repr()).into_affine()))
     }
 
     /// Verify a signature.
-    fn verify<M: AsRef<[Self::MessageUnit]>, B: AsRef<[u8]>>(
+    fn verify<M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
-        ciphersuite_id: B,
     ) -> Result<(), PrimitivesError> {
-        let hm =
-            <P::G1Parameters as HashToGroup>::hash_to_group(msg.as_ref(), ciphersuite_id.as_ref())?;
-
-        ark_std::println!(
-            "{:?}",
-            multi_pairing::<Bls12<P>>(
-                [hm.into_affine(), sig.0].as_ref(),
-                [
-                    vk.0,
-                    GroupAffine::<P::G2Parameters>::prime_subgroup_generator(),
-                ]
-                .as_ref(),
-            )
-        );
+        let hm = <P::G1Parameters as HashToGroup>::hash_to_group(
+            msg.as_ref(),
+            CS_ID_BLS_SIG_NAIVE.as_ref(),
+        )?;
 
         if multi_pairing::<Bls12<P>>(
             [hm.into_affine(), sig.0].as_ref(),
@@ -151,10 +141,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{
-        constants::CS_ID_BLS_NAIVE,
-        signatures::tests::{failed_verification, sign_and_verify},
-    };
+    use crate::signatures::tests::{failed_verification, sign_and_verify};
     use ark_bls12_377::Parameters as Param377;
     use ark_bls12_381::Parameters as Param381;
 
@@ -162,14 +149,10 @@ mod test {
         ($curve_param:tt) => {
             let message = "this is a test message";
             let message_bad = "this is a wrong message";
-            sign_and_verify::<BLSSignatureScheme<$curve_param>, _>(
-                message.as_ref(),
-                CS_ID_BLS_NAIVE,
-            );
-            failed_verification::<BLSSignatureScheme<$curve_param>, _>(
+            sign_and_verify::<BLSSignatureScheme<$curve_param>>(message.as_ref());
+            failed_verification::<BLSSignatureScheme<$curve_param>>(
                 message.as_ref(),
                 message_bad.as_ref(),
-                CS_ID_BLS_NAIVE,
             );
         };
     }

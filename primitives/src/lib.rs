@@ -26,5 +26,6 @@ pub mod hash_to_group;
 pub mod merkle_tree;
 pub mod prf;
 pub mod signatures;
+pub mod vrf;
 
 pub(crate) mod utils;

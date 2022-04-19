@@ -8,7 +8,7 @@
 //! curves.
 
 use super::SignatureScheme;
-use crate::{errors::PrimitivesError, utils::curve_cofactor};
+use crate::{constants::CS_ID_SCHNORR, errors::PrimitivesError, utils::curve_cofactor};
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
@@ -37,6 +37,8 @@ where
     F: RescueParameter,
     P: Parameters<BaseField = F> + Clone,
 {
+    const CS_ID: &'static str = CS_ID_SCHNORR;
+
     /// Signing key.
     type SigningKey = SignKey<P::ScalarField>;
 
@@ -53,17 +55,15 @@ where
     type MessageUnit = F;
 
     /// generate public parameters from RNG.
-    fn param_gen<R: CryptoRng + RngCore, B: AsRef<[u8]>>(
+    fn param_gen<R: CryptoRng + RngCore>(
         _prng: &mut R,
-        _ciphersuite_id: B,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
         Ok(())
     }
 
     /// Sample a pair of keys.
-    fn key_gen<R: CryptoRng + RngCore, B: AsRef<[u8]>>(
+    fn key_gen<R: CryptoRng + RngCore>(
         _pp: &Self::PublicParameter,
-        _ciphersuite_id: B,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
         let kp = KeyPair::<P>::generate(prng);
@@ -71,26 +71,24 @@ where
     }
 
     /// Sample a pair of keys.
-    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>, B: AsRef<[u8]>>(
+    fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         sk: &Self::SigningKey,
         msg: M,
-        ciphersuite_id: B,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
         let kp = KeyPair::<P>::generate_with_sign_key(sk.0);
-        Ok(kp.sign(msg.as_ref(), ciphersuite_id))
+        Ok(kp.sign(msg.as_ref(), Self::CS_ID))
     }
 
     /// Verify a signature.
-    fn verify<M: AsRef<[Self::MessageUnit]>, B: AsRef<[u8]>>(
+    fn verify<M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
-        ciphersuite_id: B,
     ) -> Result<(), PrimitivesError> {
-        vk.verify(msg.as_ref(), sig, ciphersuite_id)
+        vk.verify(msg.as_ref(), sig, Self::CS_ID)
     }
 }
 
@@ -448,11 +446,10 @@ mod tests {
             }
 
             let message = <$curve_param as ModelParameters>::BaseField::rand(&mut rng);
-            sign_and_verify::<SchnorrSignatureScheme<$curve_param>, _>(&[message], CS_ID_SCHNORR);
-            failed_verification::<SchnorrSignatureScheme<$curve_param>, _>(
+            sign_and_verify::<SchnorrSignatureScheme<$curve_param>>(&[message]);
+            failed_verification::<SchnorrSignatureScheme<$curve_param>>(
                 &[message],
                 &[<$curve_param as ModelParameters>::BaseField::rand(&mut rng)],
-                CS_ID_SCHNORR,
             );
         };
     }
