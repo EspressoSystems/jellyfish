@@ -32,8 +32,13 @@ pub trait SignatureScheme {
     type MessageUnit;
 
     /// generate public parameters from RNG.
+    /// If the RNG is not presented, use the default group generator.
+    // FIXME: the API looks a bit strange when the default generator is used.
+    // For example:
+    //   `S::param_gen::<StdRng>(None)`
+    // wheere `StdRng` is redundent.
     fn param_gen<R: CryptoRng + RngCore>(
-        prng: &mut R,
+        prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError>;
 
     /// Sample a pair of keys.
@@ -67,11 +72,16 @@ pub trait AggregateableSignatureSchemes<H>: SignatureScheme {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_std::test_rng;
+    use ark_std::{rand::prelude::StdRng, test_rng};
 
     pub(crate) fn sign_and_verify<S: SignatureScheme>(message: &[S::MessageUnit]) {
         let rng = &mut test_rng();
-        let parameters = S::param_gen(rng).unwrap();
+        let parameters = S::param_gen(Some(rng)).unwrap();
+        let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
+        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
+        assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
+
+        let parameters = S::param_gen::<StdRng>(None).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
         let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
         assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
@@ -82,7 +92,7 @@ mod tests {
         bad_message: &[S::MessageUnit],
     ) {
         let rng = &mut test_rng();
-        let parameters = S::param_gen(rng).unwrap();
+        let parameters = S::param_gen(Some(rng)).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
         let sig = S::sign(&parameters, &sk, message, rng).unwrap();
         assert!(!S::verify(&parameters, &pk, bad_message, &sig).is_ok());

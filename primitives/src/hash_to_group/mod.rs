@@ -40,9 +40,9 @@ pub trait HashToGroup: SWModelParameters + Sized {
         let mut rng = ChaCha20Rng::from_seed(seed);
         loop {
             let x = Self::BaseField::rand(&mut rng);
-            let greatest = rng.gen();
-
-            if let Some(p) = GroupAffine::<Self>::get_point_from_x(x, greatest) {
+            // a boolean flag to decide if y is positive or not
+            let y_flag = rng.gen();
+            if let Some(p) = GroupAffine::<Self>::get_point_from_x(x, y_flag) {
                 return Ok(p.mul_by_cofactor_to_projective());
             }
         }
@@ -50,13 +50,13 @@ pub trait HashToGroup: SWModelParameters + Sized {
 }
 
 impl HashToGroup for ark_bls12_381::g1::Parameters {
-    // todo
+    // TODO:
     // overload hash to group with the method in
     // <https://github.com/algorand/pairing-plus/blob/7ec2ae03aae4ba2fc5210810211478171ccededf/src/bls12_381/osswu_map/g1.rs#L47>
 }
 
 impl HashToGroup for ark_bls12_377::g1::Parameters {
-    // todo
+    // TODO:
     // overload hash to group with the method in
     // <https://github.com/algorand/pairing-plus/blob/7ec2ae03aae4ba2fc5210810211478171ccededf/src/bls12_381/osswu_map/g1.rs#L47>
 }

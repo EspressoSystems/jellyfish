@@ -10,7 +10,12 @@ use crate::{
         BLSSignatureScheme, SignatureScheme,
     },
 };
-use ark_ec::bls12::Bls12Parameters;
+use ark_ec::{
+    bls12::Bls12Parameters,
+    short_weierstrass_jacobian::{GroupAffine, GroupProjective},
+    AffineCurve, ProjectiveCurve,
+};
+use ark_ff::UniformRand;
 use ark_serialize::CanonicalSerialize;
 use ark_std::{
     marker::PhantomData,
@@ -34,7 +39,7 @@ where
     const CS_ID: &'static str = CS_ID_BLS_VRF_NAIVE;
 
     /// Public Parameter
-    type PublicParameter = ();
+    type PublicParameter = GroupAffine<P::G2Parameters>;
 
     /// VRF public key.
     type PublicKey = BLSVerKey<P>;
@@ -53,9 +58,12 @@ where
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
-        _prng: &mut R,
+        prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
-        Ok(())
+        match prng {
+            None => Ok(GroupAffine::<P::G2Parameters>::prime_subgroup_generator()),
+            Some(prng) => Ok(GroupProjective::<P::G2Parameters>::rand(prng).into_affine()),
+        }
     }
 
     /// Creates a pair of VRF public and private keys.
@@ -68,12 +76,12 @@ where
 
     /// Creates the VRF proof associated with a VRF secret key.
     fn prove<R: CryptoRng + RngCore>(
-        _pp: &Self::PublicParameter,
+        pp: &Self::PublicParameter,
         secret_key: &Self::SecretKey,
         input: &Self::Input,
         prng: &mut R,
     ) -> Result<Self::Proof, PrimitivesError> {
-        <BLSSignatureScheme<P> as SignatureScheme>::sign(&(), secret_key, input, prng)
+        <BLSSignatureScheme<P> as SignatureScheme>::sign(pp, secret_key, input, prng)
     }
 
     /// Computes the VRF output associated with a VRF proof.
@@ -92,13 +100,12 @@ where
 
     /// Verifies a VRF proof.
     fn verify(
-        _pp: &Self::PublicParameter,
+        pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
         input: &Self::Input,
     ) -> Result<bool, PrimitivesError> {
-        if <BLSSignatureScheme<P> as SignatureScheme>::verify(&(), public_key, input, proof)
-            .is_err()
+        if <BLSSignatureScheme<P> as SignatureScheme>::verify(pp, public_key, input, proof).is_err()
         {
             return Ok(false);
         }

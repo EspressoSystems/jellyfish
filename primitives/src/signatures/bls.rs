@@ -4,7 +4,7 @@ use super::SignatureScheme;
 use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError, hash_to_group::HashToGroup};
 use ark_ec::{
     bls12::{Bls12, Bls12Parameters},
-    short_weierstrass_jacobian::GroupAffine,
+    short_weierstrass_jacobian::{GroupAffine, GroupProjective},
     AffineCurve, ModelParameters, ProjectiveCurve,
 };
 use ark_ff::{Fp12, PrimeField};
@@ -62,7 +62,7 @@ where
     type VerificationKey = BLSVerKey<P>;
 
     /// Public Parameter
-    type PublicParameter = ();
+    type PublicParameter = GroupAffine<P::G2Parameters>;
 
     /// Signature
     type Signature = BLSSignature<P>;
@@ -71,30 +71,30 @@ where
     type MessageUnit = u8;
 
     /// generate public parameters from RNG.
+    /// If the RNG is not presented, use the default group generator.
     fn param_gen<R: CryptoRng + RngCore>(
-        _prng: &mut R,
+        prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
-        Ok(())
+        match prng {
+            None => Ok(GroupAffine::<P::G2Parameters>::prime_subgroup_generator()),
+            Some(prng) => Ok(GroupProjective::<P::G2Parameters>::rand(prng).into_affine()),
+        }
     }
 
     /// Sample a pair of keys.
     fn key_gen<R: CryptoRng + RngCore>(
-        _pp: &Self::PublicParameter,
+        pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        // todo: absorb ciphersuite_id in prng
+        // TODO: absorb ciphersuite_id in prng
         let sk = BLSSignKey(<P::G1Parameters as ModelParameters>::ScalarField::rand(
             prng,
         ));
-        let vk = BLSVerKey(
-            GroupAffine::<P::G2Parameters>::prime_subgroup_generator()
-                .mul(sk.0)
-                .into_affine(),
-        );
+        let vk = BLSVerKey(pp.mul(sk.0).into_affine());
         Ok((sk, vk))
     }
 
-    /// Sample a pair of keys.
+    /// Sign a message
     fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         sk: &Self::SigningKey,
@@ -110,7 +110,7 @@ where
 
     /// Verify a signature.
     fn verify<M: AsRef<[Self::MessageUnit]>>(
-        _pp: &Self::PublicParameter,
+        pp: &Self::PublicParameter,
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
@@ -122,11 +122,7 @@ where
 
         if multi_pairing::<Bls12<P>>(
             [hm.into_affine(), sig.0].as_ref(),
-            [
-                vk.0.neg(),
-                GroupAffine::<P::G2Parameters>::prime_subgroup_generator(),
-            ]
-            .as_ref(),
+            [vk.0.neg(), *pp].as_ref(),
         ) == Fp12::<P::Fp12Params>::one()
         {
             Ok(())

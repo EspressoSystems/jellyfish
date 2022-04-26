@@ -29,8 +29,13 @@ pub trait Vrf<VrfHasher, P> {
     type Output;
 
     /// generate public parameters from RNG.
+    /// If the RNG is not presented, use the default group generator.
+    // FIXME: the API looks a bit strange when the default generator is used.
+    // For example:
+    //   `S::param_gen::<StdRng>(None)`
+    // wheere `StdRng` is redundent.
     fn param_gen<R: CryptoRng + RngCore>(
-        prng: &mut R,
+        prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError>;
 
     /// Creates a pair of VRF public and private keys.
@@ -65,11 +70,17 @@ pub trait Vrf<VrfHasher, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_std::test_rng;
+    use ark_std::{rand::prelude::StdRng, test_rng};
 
     pub(crate) fn sign_and_verify<V: Vrf<H, P>, H, P>(message: &V::Input) {
         let rng = &mut test_rng();
-        let parameters = V::param_gen(rng).unwrap();
+        let parameters = V::param_gen(Some(rng)).unwrap();
+        let (sk, pk) = V::key_gen(&parameters, rng).unwrap();
+        let vrf_proof = V::prove(&parameters, &sk, &message, rng).unwrap();
+        let _vrf_output = V::evaluate(&parameters, &vrf_proof).unwrap();
+        assert!(V::verify(&parameters, &vrf_proof, &pk, &message).unwrap());
+
+        let parameters = V::param_gen::<StdRng>(None).unwrap();
         let (sk, pk) = V::key_gen(&parameters, rng).unwrap();
         let vrf_proof = V::prove(&parameters, &sk, &message, rng).unwrap();
         let _vrf_output = V::evaluate(&parameters, &vrf_proof).unwrap();
@@ -82,7 +93,7 @@ mod tests {
         bad_message: &V::Input,
     ) {
         let rng = &mut test_rng();
-        let parameters = V::param_gen(rng).unwrap();
+        let parameters = V::param_gen(Some(rng)).unwrap();
         let (sk, pk) = V::key_gen(&parameters, rng).unwrap();
         let vrf_proof = V::prove(&parameters, &sk, &message, rng).unwrap();
         let _vrf_output = V::evaluate(&parameters, &vrf_proof).unwrap();
