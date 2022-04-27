@@ -10,12 +10,7 @@ use crate::{
         BLSSignatureScheme, SignatureScheme,
     },
 };
-use ark_ec::{
-    bls12::Bls12Parameters,
-    short_weierstrass_jacobian::{GroupAffine, GroupProjective},
-    AffineCurve, ProjectiveCurve,
-};
-use ark_ff::UniformRand;
+use ark_ec::bls12::Bls12Parameters;
 use ark_serialize::CanonicalSerialize;
 use ark_std::{
     marker::PhantomData,
@@ -38,8 +33,11 @@ where
 {
     const CS_ID: &'static str = CS_ID_BLS_VRF_NAIVE;
 
-    /// Public Parameter
-    type PublicParameter = GroupAffine<P::G2Parameters>;
+    /// Public Parameter.
+    /// For BLS signatures, we want to use default
+    /// prime subgroup generators. So here we don't need
+    /// to specify which PP it is.
+    type PublicParameter = ();
 
     /// VRF public key.
     type PublicKey = BLSVerKey<P>;
@@ -58,12 +56,9 @@ where
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
-        prng: Option<&mut R>,
+        _prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
-        match prng {
-            None => Ok(GroupAffine::<P::G2Parameters>::prime_subgroup_generator()),
-            Some(prng) => Ok(GroupProjective::<P::G2Parameters>::rand(prng).into_affine()),
-        }
+        Ok(())
     }
 
     /// Creates a pair of VRF public and private keys.

@@ -46,7 +46,7 @@ where
     type VerificationKey = VerKey<P>;
 
     /// Public Parameter
-    type PublicParameter = GroupAffine<P>;
+    type PublicParameter = ();
 
     /// Signature
     type Signature = Signature<P>;
@@ -55,16 +55,10 @@ where
     type MessageUnit = F;
 
     /// generate public parameters from RNG.
-    /// If the RNG is not presented, use the default group generator.
-    // Currently we simply set it to the default generator.
-    // We will need a different trait API to derive it from generator.
-    // FIXME: We may want to use a customized generator.
-    // That means we need to modify `KeyPair::<P>::generate()` etc.
-    // which will introduce breaking changes.
     fn param_gen<R: CryptoRng + RngCore>(
         _prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
-        Ok(GroupAffine::<P>::prime_subgroup_generator())
+        Ok(())
     }
 
     /// Sample a pair of keys.
