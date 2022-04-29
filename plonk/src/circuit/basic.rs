@@ -504,7 +504,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         }
     }
 
-    // Plookup-related methods
+    // Plonkup-related methods
     //
     fn support_lookup(&self) -> bool {
         self.plonk_params.plonk_type == PlonkType::UltraPlonk
@@ -1193,7 +1193,7 @@ where
         Ok(DensePolynomial::from_coefficients_vec(pub_input_vec))
     }
 
-    // Plookup-related methods
+    // Plonkup-related methods
     //
     fn compute_range_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
         let range_table = self.compute_range_table()?;
@@ -1969,7 +1969,7 @@ pub(crate) mod test {
         assert!(circuit.constant_gate(0, F::one()).is_err());
         assert!(circuit.bool_gate(0).is_err());
         assert!(circuit.equal_gate(0, 0).is_err());
-        // Plookup-related methods
+        // Plonkup-related methods
         assert!(circuit.add_range_check_variable(0).is_err());
 
         Ok(())

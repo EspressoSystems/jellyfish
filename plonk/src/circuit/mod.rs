@@ -123,7 +123,7 @@ pub trait Circuit<F: Field> {
     /// Pad the circuit with n dummy gates
     fn pad_gate(&mut self, n: usize);
 
-    /// Plookup-related methods.
+    /// Plonkup-related methods.
     /// Return true if the circuit support lookup gates.
     fn support_lookup(&self) -> bool;
 }
@@ -170,7 +170,7 @@ pub trait Arithmetization<F: FftField>: Circuit<F> {
     /// The IO gates of the circuit are guaranteed to be in the front.
     fn compute_pub_input_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError>;
 
-    /// Plookup-related methods
+    /// Plonkup-related methods
     /// Return default errors if the constraint system does not support lookup
     /// gates.
     ///
@@ -221,7 +221,7 @@ pub trait Arithmetization<F: FftField>: Circuit<F> {
         Err(LookupUnsupported.into())
     }
 
-    /// Compute and return the product polynomial for Plookup arguments.
+    /// Compute and return the product polynomial for Plonkup arguments.
     /// `beta` and `gamma` are random challenges, `sorted_vec` is the sorted
     /// concatenation of the lookup table and the lookup witnesses.
     /// Return an error if the circuit does not support lookup or

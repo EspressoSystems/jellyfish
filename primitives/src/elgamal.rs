@@ -111,6 +111,7 @@ where
     P: Parameters + Clone,
 {
     /// Flatten out the ciphertext into a vector of scalars
+    #[allow(clippy::needless_borrow)]
     pub fn to_scalars(&self) -> Vec<P::BaseField> {
         let mut result = vec![];
         let (x, y) = (&self.ephemeral).into();

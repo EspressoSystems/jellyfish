@@ -308,7 +308,7 @@ where
 ///
 /// - input evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1
 ///
-/// Note that this function cannot evaluate plookup verification circuits.
+/// Note that this function cannot evaluate plonkup verification circuits.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn compute_lin_poly_constant_term_circuit<E, F>(
     circuit: &mut PlonkCircuit<F>,
@@ -484,7 +484,7 @@ where
 ///
 /// - input evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1
 ///
-/// Do not compute plookup related variables.
+/// Do not compute plonkup related variables.
 pub(super) fn linearization_scalars_and_bases_circuit<E, F>(
     circuit: &mut PlonkCircuit<F>,
     vks: &[&VerifyingKeyVar<E>],

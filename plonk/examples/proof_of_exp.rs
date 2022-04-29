@@ -105,7 +105,7 @@ where
     // Step 1:
     // We instantiate a turbo plonk circuit.
     //
-    // Here we only need turbo plonk since we are not using plookups.
+    // Here we only need turbo plonk since we are not using plonkups.
     let mut circuit = PlonkCircuit::<EmbedCurve::BaseField>::new_turbo_plonk();
 
     // Step 2:

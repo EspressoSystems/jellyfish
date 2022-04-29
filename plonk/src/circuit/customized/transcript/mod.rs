@@ -324,7 +324,7 @@ mod tests {
             k: Vec::new(),
             open_key: open_key.clone(),
             is_merged: false,
-            plookup_vk: None,
+            plonkup_vk: None,
         };
 
         let dummy_vk_var = VerifyingKeyVar::new(&mut circuit, &dummy_vk).unwrap();
@@ -383,7 +383,7 @@ mod tests {
                 k,
                 open_key: open_key.clone(),
                 is_merged: false,
-                plookup_vk: None,
+                plonkup_vk: None,
             };
             let vk_var = VerifyingKeyVar::new(&mut circuit, &vk).unwrap();
 

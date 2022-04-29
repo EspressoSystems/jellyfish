@@ -27,7 +27,7 @@ macro_rules! to_big_int {
 /// as the multiplication of two components (e.g. p.0 * q.0)
 /// won't overflow the prime field.
 /// Warning: for performance reasons, when this struct is used,
-/// we will assume 2^m - two_power_m without checking.
+/// we will assume 2^m = two_power_m without checking.
 pub struct FpElem<F: PrimeField> {
     p: (F, F),
     m: usize,
@@ -86,7 +86,7 @@ where
 /// Represent variable of an Fp element:
 ///   elem = witness[vars.0] + 2^m * witness[vars.1]
 /// Warning: for performance reasons, when this struct is used,
-/// we will assume 2^m - two_power_m without checking.
+/// we will assume 2^m = two_power_m without checking.
 pub struct FpElemVar<F: PrimeField> {
     vars: (Variable, Variable),
     m: usize,

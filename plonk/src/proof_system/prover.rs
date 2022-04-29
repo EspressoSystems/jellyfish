@@ -7,8 +7,8 @@
 use core::ops::Neg;
 
 use super::structs::{
-    eval_merged_lookup_witness, eval_merged_table, Challenges, Oracles, PlookupEvaluations,
-    PlookupOracles, ProofEvaluations, ProvingKey,
+    eval_merged_lookup_witness, eval_merged_table, Challenges, Oracles, PlonkupEvaluations,
+    PlonkupOracles, ProofEvaluations, ProvingKey,
 };
 use crate::{
     circuit::Arithmetization,
@@ -85,13 +85,13 @@ impl<E: PairingEngine> Prover<E> {
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
 
-    /// Round 1.5 (Plookup): Compute and commit the polynomials that interpolate
+    /// Round 1.5 (Plonkup): Compute and commit the polynomials that interpolate
     /// the sorted concatenation of the (merged) lookup table and the
     /// (merged) witnesses in lookup gates. Return the sorted vector, the
     /// polynomials and their commitments, as well as the merged lookup table.
     /// `cs` is guaranteed to support lookup.
     #[allow(clippy::type_complexity)]
-    pub(crate) fn run_plookup_1st_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_plonkup_1st_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
@@ -126,10 +126,10 @@ impl<E: PairingEngine> Prover<E> {
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
-    /// Round 2.5 (Plookup): Compute and commit the Plookup grand product
+    /// Round 2.5 (Plonkup): Compute and commit the Plonkup grand product
     /// polynomial. Return the grand product polynomial and its commitment.
     /// `cs` is guaranteed to support lookup
-    pub(crate) fn run_plookup_2nd_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_plonkup_2nd_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
@@ -140,7 +140,7 @@ impl<E: PairingEngine> Prover<E> {
     ) -> Result<(Commitment<E>, DensePolynomial<E::Fr>), PlonkError> {
         if sorted_vec.is_none() {
             return Err(
-                ParameterError("Run Plookup with empty sorted lookup vectors".to_string()).into(),
+                ParameterError("Run Plonkup with empty sorted lookup vectors".to_string()).into(),
             );
         }
 
@@ -212,55 +212,55 @@ impl<E: PairingEngine> Prover<E> {
         }
     }
 
-    /// Round 4.5 (Plookup): Compute and return evaluations of Plookup-related
+    /// Round 4.5 (Plonkup): Compute and return evaluations of Plonkup-related
     /// polynomials
-    pub(crate) fn compute_plookup_evaluations(
+    pub(crate) fn compute_plonkup_evaluations(
         &self,
         pk: &ProvingKey<E>,
         challenges: &Challenges<E::Fr>,
         online_oracles: &Oracles<E::Fr>,
-    ) -> Result<PlookupEvaluations<E::Fr>, PlonkError> {
-        if pk.plookup_pk.is_none() {
+    ) -> Result<PlonkupEvaluations<E::Fr>, PlonkError> {
+        if pk.plonkup_pk.is_none() {
             return Err(ParameterError(
-                "Evaluate Plookup polynomials without supporting lookup".to_string(),
+                "Evaluate Plonkup polynomials without supporting lookup".to_string(),
             )
             .into());
         }
-        if online_oracles.plookup_oracles.h_polys.len() != 2 {
+        if online_oracles.plonkup_oracles.h_polys.len() != 2 {
             return Err(ParameterError(
-                "Evaluate Plookup polynomials without updating sorted lookup vector polynomials"
+                "Evaluate Plonkup polynomials without updating sorted lookup vector polynomials"
                     .to_string(),
             )
             .into());
         }
 
-        let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
-        let key_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().key_table_poly;
-        let table_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly;
-        let q_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly;
+        let range_table_poly_ref = &pk.plonkup_pk.as_ref().unwrap().range_table_poly;
+        let key_table_poly_ref = &pk.plonkup_pk.as_ref().unwrap().key_table_poly;
+        let table_dom_sep_poly_ref = &pk.plonkup_pk.as_ref().unwrap().table_dom_sep_poly;
+        let q_dom_sep_poly_ref = &pk.plonkup_pk.as_ref().unwrap().q_dom_sep_poly;
 
         let range_table_eval = range_table_poly_ref.evaluate(&challenges.zeta);
         let key_table_eval = key_table_poly_ref.evaluate(&challenges.zeta);
-        let h_1_eval = online_oracles.plookup_oracles.h_polys[0].evaluate(&challenges.zeta);
+        let h_1_eval = online_oracles.plonkup_oracles.h_polys[0].evaluate(&challenges.zeta);
         let q_lookup_eval = pk.q_lookup_poly()?.evaluate(&challenges.zeta);
         let table_dom_sep_eval = table_dom_sep_poly_ref.evaluate(&challenges.zeta);
         let q_dom_sep_eval = q_dom_sep_poly_ref.evaluate(&challenges.zeta);
 
         let zeta_mul_g = challenges.zeta * self.domain.group_gen;
         let prod_next_eval = online_oracles
-            .plookup_oracles
+            .plonkup_oracles
             .prod_lookup_poly
             .evaluate(&zeta_mul_g);
         let range_table_next_eval = range_table_poly_ref.evaluate(&zeta_mul_g);
         let key_table_next_eval = key_table_poly_ref.evaluate(&zeta_mul_g);
-        let h_1_next_eval = online_oracles.plookup_oracles.h_polys[0].evaluate(&zeta_mul_g);
-        let h_2_next_eval = online_oracles.plookup_oracles.h_polys[1].evaluate(&zeta_mul_g);
+        let h_1_next_eval = online_oracles.plonkup_oracles.h_polys[0].evaluate(&zeta_mul_g);
+        let h_2_next_eval = online_oracles.plonkup_oracles.h_polys[1].evaluate(&zeta_mul_g);
         let q_lookup_next_eval = pk.q_lookup_poly()?.evaluate(&zeta_mul_g);
         let w_3_next_eval = online_oracles.wire_polys[3].evaluate(&zeta_mul_g);
         let w_4_next_eval = online_oracles.wire_polys[4].evaluate(&zeta_mul_g);
         let table_dom_sep_next_eval = table_dom_sep_poly_ref.evaluate(&zeta_mul_g);
 
-        Ok(PlookupEvaluations {
+        Ok(PlonkupEvaluations {
             range_table_eval,
             key_table_eval,
             h_1_eval,
@@ -287,7 +287,7 @@ impl<E: PairingEngine> Prover<E> {
         challenges: &Challenges<E::Fr>,
         online_oracles: &Oracles<E::Fr>,
         poly_evals: &ProofEvaluations<E::Fr>,
-        plookup_evals: Option<&PlookupEvaluations<E::Fr>>,
+        plonkup_evals: Option<&PlonkupEvaluations<E::Fr>>,
     ) -> Result<DensePolynomial<E::Fr>, PlonkError> {
         let r_circ = Self::compute_lin_poly_circuit_contribution(pk, &poly_evals.wires_evals);
         let r_perm = Self::compute_lin_poly_copy_constraint_contribution(
@@ -297,14 +297,14 @@ impl<E: PairingEngine> Prover<E> {
             &online_oracles.prod_perm_poly,
         );
         let mut lin_poly = r_circ + r_perm;
-        // compute Plookup contribution if support lookup
-        let r_lookup = if plookup_evals.is_some() {
-            Some(self.compute_lin_poly_plookup_contribution(
+        // compute Plonkup contribution if support lookup
+        let r_lookup = if plonkup_evals.is_some() {
+            Some(self.compute_lin_poly_plonkup_contribution(
                 pk,
                 challenges,
                 &poly_evals.wires_evals,
-                plookup_evals.as_ref().unwrap(),
-                &online_oracles.plookup_oracles,
+                plonkup_evals.as_ref().unwrap(),
+                &online_oracles.plonkup_oracles,
             ))
         } else {
             None
@@ -366,11 +366,11 @@ impl<E: PairingEngine> Prover<E> {
                 polys_ref.push(poly);
             }
 
-            // Add Plookup related polynomials if support lookup.
+            // Add Plonkup related polynomials if support lookup.
             let lookup_flag =
-                pk.plookup_pk.is_some() && (oracles.plookup_oracles.h_polys.len() == 2);
+                pk.plonkup_pk.is_some() && (oracles.plonkup_oracles.h_polys.len() == 2);
             if lookup_flag {
-                polys_ref.extend(Self::plookup_open_polys_ref(oracles, pk)?);
+                polys_ref.extend(Self::plonkup_open_polys_ref(oracles, pk)?);
             }
         }
 
@@ -381,11 +381,11 @@ impl<E: PairingEngine> Prover<E> {
         let mut polys_ref = vec![];
         for (pk, oracles) in pks.iter().zip(online_oracles.iter()) {
             polys_ref.push(&oracles.prod_perm_poly);
-            // Add Plookup related polynomials if support lookup
+            // Add Plonkup related polynomials if support lookup
             let lookup_flag =
-                pk.plookup_pk.is_some() && (oracles.plookup_oracles.h_polys.len() == 2);
+                pk.plonkup_pk.is_some() && (oracles.plonkup_oracles.h_polys.len() == 2);
             if lookup_flag {
-                polys_ref.extend(Self::plookup_shifted_open_polys_ref(oracles, pk)?);
+                polys_ref.extend(Self::plonkup_shifted_open_polys_ref(oracles, pk)?);
             }
         }
 
@@ -402,40 +402,40 @@ impl<E: PairingEngine> Prover<E> {
 
 /// Private helper methods
 impl<E: PairingEngine> Prover<E> {
-    /// Return the list of plookup polynomials to be opened at point `zeta`
+    /// Return the list of plonkup polynomials to be opened at point `zeta`
     /// The order should be consistent with the verifier side.
     #[inline]
-    fn plookup_open_polys_ref<'a>(
+    fn plonkup_open_polys_ref<'a>(
         oracles: &'a Oracles<E::Fr>,
         pk: &'a ProvingKey<E>,
     ) -> Result<Vec<&'a DensePolynomial<E::Fr>>, PlonkError> {
         Ok(vec![
-            &pk.plookup_pk.as_ref().unwrap().range_table_poly,
-            &pk.plookup_pk.as_ref().unwrap().key_table_poly,
-            &oracles.plookup_oracles.h_polys[0],
+            &pk.plonkup_pk.as_ref().unwrap().range_table_poly,
+            &pk.plonkup_pk.as_ref().unwrap().key_table_poly,
+            &oracles.plonkup_oracles.h_polys[0],
             pk.q_lookup_poly()?,
-            &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly,
-            &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly,
+            &pk.plonkup_pk.as_ref().unwrap().table_dom_sep_poly,
+            &pk.plonkup_pk.as_ref().unwrap().q_dom_sep_poly,
         ])
     }
 
-    /// Return the list of plookup polynomials to be opened at point `zeta * g`
+    /// Return the list of plonkup polynomials to be opened at point `zeta * g`
     /// The order should be consistent with the verifier side.
     #[inline]
-    fn plookup_shifted_open_polys_ref<'a>(
+    fn plonkup_shifted_open_polys_ref<'a>(
         oracles: &'a Oracles<E::Fr>,
         pk: &'a ProvingKey<E>,
     ) -> Result<Vec<&'a DensePolynomial<E::Fr>>, PlonkError> {
         Ok(vec![
-            &oracles.plookup_oracles.prod_lookup_poly,
-            &pk.plookup_pk.as_ref().unwrap().range_table_poly,
-            &pk.plookup_pk.as_ref().unwrap().key_table_poly,
-            &oracles.plookup_oracles.h_polys[0],
-            &oracles.plookup_oracles.h_polys[1],
+            &oracles.plonkup_oracles.prod_lookup_poly,
+            &pk.plonkup_pk.as_ref().unwrap().range_table_poly,
+            &pk.plonkup_pk.as_ref().unwrap().key_table_poly,
+            &oracles.plonkup_oracles.h_polys[0],
+            &oracles.plonkup_oracles.h_polys[1],
             pk.q_lookup_poly()?,
             &oracles.wire_polys[3],
             &oracles.wire_polys[4],
-            &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly,
+            &pk.plonkup_pk.as_ref().unwrap().table_dom_sep_poly,
         ])
     }
 
@@ -534,8 +534,8 @@ impl<E: PairingEngine> Prover<E> {
         let alpha_7 = alpha_3.square() * challenges.alpha;
         // enumerate proving instances
         for (oracles, pk) in online_oracles.iter().zip(pks.iter()) {
-            // lookup_flag = 1 if support Plookup argument.
-            let lookup_flag = pk.plookup_pk.is_some();
+            // lookup_flag = 1 if support Plonkup argument.
+            let lookup_flag = pk.plonkup_pk.is_some();
 
             // Compute coset evaluations.
             let selectors_coset_fft: Vec<Vec<E::Fr>> = pk
@@ -561,7 +561,7 @@ impl<E: PairingEngine> Prover<E> {
             let pub_input_poly_coset_fft =
                 self.quot_domain.coset_fft(oracles.pub_inp_poly.coeffs());
 
-            // Compute coset evaluations of Plookup online oracles.
+            // Compute coset evaluations of Plonkup online oracles.
             let (
                 table_dom_sep_coset_fft,
                 q_dom_sep_coset_fft,
@@ -572,25 +572,25 @@ impl<E: PairingEngine> Prover<E> {
             ) = if lookup_flag {
                 let table_dom_sep_coset_fft = self
                     .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
+                    .coset_fft(pk.plonkup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
                 let q_dom_sep_coset_fft = self
                     .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
+                    .coset_fft(pk.plonkup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
                 let range_table_coset_fft = self
                     .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().range_table_poly.coeffs()); // safe unwrap
+                    .coset_fft(pk.plonkup_pk.as_ref().unwrap().range_table_poly.coeffs()); // safe unwrap
                 let key_table_coset_fft = self
                     .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
+                    .coset_fft(pk.plonkup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
                 let h_coset_ffts: Vec<Vec<E::Fr>> = oracles
-                    .plookup_oracles
+                    .plonkup_oracles
                     .h_polys
                     .par_iter()
                     .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                     .collect();
                 let prod_lookup_poly_coset_fft = self
                     .quot_domain
-                    .coset_fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
+                    .coset_fft(oracles.plonkup_oracles.prod_lookup_poly.coeffs());
                 (
                     Some(table_dom_sep_coset_fft),
                     Some(q_dom_sep_coset_fft),
@@ -633,9 +633,9 @@ impl<E: PairingEngine> Prover<E> {
                     let mut t1 = t_circ + t_perm_1;
                     let mut t2 = t_perm_2;
 
-                    // add Plookup-related terms
+                    // add Plonkup-related terms
                     if lookup_flag {
-                        let (t_lookup_1, t_lookup_2) = self.compute_quotient_plookup_contribution(
+                        let (t_lookup_1, t_lookup_2) = self.compute_quotient_plonkup_contribution(
                             i,
                             self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
                             pk,
@@ -772,12 +772,12 @@ impl<E: PairingEngine> Prover<E> {
     /// `lookup_w`: (merged) lookup witness coset evaluations at `eval_point`.
     /// `h_coset_ffts`: coset evaluations for the sorted lookup vector
     /// polynomials. `prod_lookup_coset_fft`: coset evaluations for the
-    /// Plookup product polynomial. `challenges`: Fiat-shamir challenges.
+    /// Plonkup product polynomial. `challenges`: Fiat-shamir challenges.
     ///
     /// The coset evaluations should be non-empty. The proving key should be
     /// guaranteed to support lookup.
     #[allow(clippy::too_many_arguments)]
-    fn compute_quotient_plookup_contribution(
+    fn compute_quotient_plonkup_contribution(
         &self,
         i: usize,
         eval_point: E::Fr,
@@ -793,7 +793,7 @@ impl<E: PairingEngine> Prover<E> {
         q_dom_sep_coset_fft: &[E::Fr],
         challenges: &Challenges<E::Fr>,
     ) -> (E::Fr, E::Fr) {
-        assert!(pk.plookup_pk.is_some());
+        assert!(pk.plonkup_pk.is_some());
         assert_eq!(h_coset_ffts.len(), 2);
 
         let n = pk.domain_size();
@@ -995,14 +995,14 @@ impl<E: PairingEngine> Prover<E> {
         r_perm
     }
 
-    // Compute the Plookup part of the linearization polynomial
-    fn compute_lin_poly_plookup_contribution(
+    // Compute the Plonkup part of the linearization polynomial
+    fn compute_lin_poly_plonkup_contribution(
         &self,
         pk: &ProvingKey<E>,
         challenges: &Challenges<E::Fr>,
         w_evals: &[E::Fr],
-        plookup_evals: &PlookupEvaluations<E::Fr>,
-        oracles: &PlookupOracles<E::Fr>,
+        plonkup_evals: &PlonkupEvaluations<E::Fr>,
+        oracles: &PlonkupOracles<E::Fr>,
     ) -> DensePolynomial<E::Fr> {
         let alpha_2 = challenges.alpha.square();
         let alpha_4 = alpha_2.square();
@@ -1021,21 +1021,21 @@ impl<E: PairingEngine> Prover<E> {
         // compute the coefficient for polynomial `prod_lookup_poly`
         let merged_table_eval = eval_merged_table::<E>(
             challenges.tau,
-            plookup_evals.range_table_eval,
-            plookup_evals.key_table_eval,
-            plookup_evals.q_lookup_eval,
+            plonkup_evals.range_table_eval,
+            plonkup_evals.key_table_eval,
+            plonkup_evals.q_lookup_eval,
             w_evals[3],
             w_evals[4],
-            plookup_evals.table_dom_sep_eval,
+            plonkup_evals.table_dom_sep_eval,
         );
         let merged_table_next_eval = eval_merged_table::<E>(
             challenges.tau,
-            plookup_evals.range_table_next_eval,
-            plookup_evals.key_table_next_eval,
-            plookup_evals.q_lookup_next_eval,
-            plookup_evals.w_3_next_eval,
-            plookup_evals.w_4_next_eval,
-            plookup_evals.table_dom_sep_next_eval,
+            plonkup_evals.range_table_next_eval,
+            plonkup_evals.key_table_next_eval,
+            plonkup_evals.q_lookup_next_eval,
+            plonkup_evals.w_3_next_eval,
+            plonkup_evals.w_4_next_eval,
+            plonkup_evals.table_dom_sep_next_eval,
         );
         let merged_lookup_eval = eval_merged_lookup_witness::<E>(
             challenges.tau,
@@ -1043,8 +1043,8 @@ impl<E: PairingEngine> Prover<E> {
             w_evals[0],
             w_evals[1],
             w_evals[2],
-            plookup_evals.q_lookup_eval,
-            plookup_evals.q_dom_sep_eval,
+            plonkup_evals.q_lookup_eval,
+            plonkup_evals.q_dom_sep_eval,
         );
 
         let beta_plus_one = one + challenges.beta;
@@ -1063,10 +1063,10 @@ impl<E: PairingEngine> Prover<E> {
         // compute the coefficient for polynomial `h_2_poly`
         let coeff = -alpha_6
             * zeta_minus_g_inv
-            * plookup_evals.prod_next_eval
+            * plonkup_evals.prod_next_eval
             * (challenges.gamma * beta_plus_one
-                + plookup_evals.h_1_eval
-                + challenges.beta * plookup_evals.h_1_next_eval);
+                + plonkup_evals.h_1_eval
+                + challenges.beta * plonkup_evals.h_1_next_eval);
         r_lookup = r_lookup + Self::mul_poly(&oracles.h_polys[1], &coeff);
 
         r_lookup

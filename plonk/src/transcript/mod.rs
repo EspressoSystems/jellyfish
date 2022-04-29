@@ -17,7 +17,7 @@ pub use standard::StandardTranscript;
 
 use crate::{
     errors::PlonkError,
-    proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
+    proof_system::structs::{PlonkupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
@@ -166,10 +166,10 @@ pub trait PlonkTranscript<F> {
         )
     }
 
-    /// Append the plookup evaluation to the transcript.
-    fn append_plookup_evaluations<E: PairingEngine>(
+    /// Append the plonkup evaluation to the transcript.
+    fn append_plonkup_evaluations<E: PairingEngine>(
         &mut self,
-        evals: &PlookupEvaluations<E::Fr>,
+        evals: &PlonkupEvaluations<E::Fr>,
     ) -> Result<(), PlonkError> {
         <Self as PlonkTranscript<F>>::append_message(
             self,

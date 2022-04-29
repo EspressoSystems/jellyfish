@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use super::structs::{
-    BatchProof, Challenges, PlookupProof, ProofEvaluations, ScalarsAndBases, VerifyingKey,
+    BatchProof, Challenges, PlonkupProof, ProofEvaluations, ScalarsAndBases, VerifyingKey,
 };
 use crate::{
     circuit::customized::ecc::SWToTEConParam,
@@ -92,7 +92,7 @@ where
                 )
                 .into());
             }
-            if vk.plookup_vk.is_some() != batch_proof.plookup_proofs_vec[i].is_some() {
+            if vk.plonkup_vk.is_some() != batch_proof.plonkup_proofs_vec[i].is_some() {
                 return Err(ParameterError(format!(
                     "Mismatched proof type and verification key type for the {}-th instance",
                     i
@@ -128,7 +128,7 @@ where
         let alpha_powers = vec![alpha_2, alpha_3, alpha_4, alpha_5, alpha_6];
         let mut alpha_bases = vec![E::Fr::one()];
 
-        let mut tmp = if verify_keys[0].plookup_vk.is_some() {
+        let mut tmp = if verify_keys[0].plonkup_vk.is_some() {
             alpha_7
         } else {
             alpha_3
@@ -171,7 +171,7 @@ where
         let eval = Self::aggregate_evaluations(
             &lin_poly_constant,
             &batch_proof.poly_evals_vec,
-            &batch_proof.plookup_proofs_vec,
+            &batch_proof.plonkup_proofs_vec,
             &buffer_v_and_uv_basis,
         )?;
 
@@ -286,8 +286,8 @@ where
         }
         let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
 
-        for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
-            if let Some(proof_lkup) = plookup_proof.as_ref() {
+        for plonkup_proof in batch_proof.plonkup_proofs_vec.iter() {
+            if let Some(proof_lkup) = plonkup_proof.as_ref() {
                 transcript.append_commitments(b"h_poly_comms", &proof_lkup.h_poly_comms)?;
             }
         }
@@ -297,10 +297,10 @@ where
         for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
             transcript.append_commitment(b"perm_poly_comms", prod_perm_poly_comm)?;
         }
-        for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
-            if let Some(proof_lkup) = plookup_proof.as_ref() {
+        for plonkup_proof in batch_proof.plonkup_proofs_vec.iter() {
+            if let Some(proof_lkup) = plonkup_proof.as_ref() {
                 transcript
-                    .append_commitment(b"plookup_poly_comms", &proof_lkup.prod_lookup_poly_comm)?;
+                    .append_commitment(b"plonkup_poly_comms", &proof_lkup.prod_lookup_poly_comm)?;
             }
         }
 
@@ -310,9 +310,9 @@ where
         for poly_evals in batch_proof.poly_evals_vec.iter() {
             transcript.append_proof_evaluations::<E>(poly_evals)?;
         }
-        for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
-            if let Some(proof_lkup) = plookup_proof.as_ref() {
-                transcript.append_plookup_evaluations::<E>(&proof_lkup.poly_evals)?;
+        for plonkup_proof in batch_proof.plonkup_proofs_vec.iter() {
+            if let Some(proof_lkup) = plonkup_proof.as_ref() {
+                transcript.append_plonkup_evaluations::<E>(&proof_lkup.poly_evals)?;
             }
         }
 
@@ -375,9 +375,9 @@ where
         }
 
         let mut result = E::Fr::zero();
-        for (poly_evals, (plookup_proof, (&pi, (&vk, &current_alpha_bases)))) in
+        for (poly_evals, (plonkup_proof, (&pi, (&vk, &current_alpha_bases)))) in
             batch_proof.poly_evals_vec.iter().zip(
-                batch_proof.plookup_proofs_vec.iter().zip(
+                batch_proof.plonkup_proofs_vec.iter().zip(
                     public_inputs
                         .iter()
                         .zip(verify_keys.iter().zip(alpha_bases.iter())),
@@ -388,7 +388,7 @@ where
                 - alpha_powers[0] * lagrange_1_eval;
             let num_wire_types = GATE_WIDTH
                 + 1
-                + match plookup_proof.is_some() {
+                + match plonkup_proof.is_some() {
                     true => 1,
                     false => 0,
                 };
@@ -402,11 +402,11 @@ where
                 },
             );
 
-            if let Some(proof_lk) = plookup_proof {
+            if let Some(proof_lk) = plonkup_proof {
                 let gamma_mul_beta_plus_one = challenges.gamma * (E::Fr::one() + challenges.beta);
                 let evals = &proof_lk.poly_evals;
 
-                let plookup_constant = *lagrange_n_eval
+                let plonkup_constant = *lagrange_n_eval
                     * (evals.h_1_eval - evals.h_2_next_eval - alpha_powers[0])
                     - challenges.alpha * lagrange_1_eval
                     - alpha_powers[1]
@@ -416,7 +416,7 @@ where
                             + evals.h_1_eval
                             + challenges.beta * evals.h_1_next_eval)
                         * (gamma_mul_beta_plus_one + challenges.beta * evals.h_2_next_eval);
-                tmp += alpha_powers[1] * plookup_constant;
+                tmp += alpha_powers[1] * plonkup_constant;
             }
 
             result += current_alpha_bases * tmp;
@@ -502,22 +502,22 @@ where
                 challenges.v,
             );
 
-            // Add Plookup polynomial commitments
-            if let Some(proof_lkup) = batch_proof.plookup_proofs_vec[i].as_ref() {
+            // Add Plonkup polynomial commitments
+            if let Some(proof_lkup) = batch_proof.plonkup_proofs_vec[i].as_ref() {
                 // add commitments to be evaluated at point `zeta`
-                let plookup_comms = Self::plookup_open_poly_comms(proof_lkup, vk)?;
-                for &comm in plookup_comms.iter() {
+                let plonkup_comms = Self::plonkup_open_poly_comms(proof_lkup, vk)?;
+                for &comm in plonkup_comms.iter() {
                     buffer_v_and_uv_basis.push(v_base);
                     Self::add_poly_comm(&mut scalars_and_bases, &mut v_base, comm.0, challenges.v);
                 }
 
                 // add commitments to be evaluated at point `zeta * g`
-                let plookup_shifted_comms = Self::plookup_shifted_open_poly_comms(
+                let plonkup_shifted_comms = Self::plonkup_shifted_open_poly_comms(
                     proof_lkup,
                     vk,
                     &batch_proof.wires_poly_comms_vec[i],
                 )?;
-                for &comm in plookup_shifted_comms.iter() {
+                for &comm in plonkup_shifted_comms.iter() {
                     buffer_v_and_uv_basis.push(uv_base);
                     Self::add_poly_comm(&mut scalars_and_bases, &mut uv_base, comm.0, challenges.v);
                 }
@@ -622,8 +622,8 @@ where
                 scalars_and_bases.push(s * current_alpha_bases, poly.0);
             }
 
-            // Add Plookup related commitments
-            if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
+            // Add Plonkup related commitments
+            if let Some(lookup_proof) = batch_proof.plonkup_proofs_vec[i].as_ref() {
                 let lookup_evals = &lookup_proof.poly_evals;
                 let merged_lookup_x = eval_merged_lookup_witness::<E>(
                     challenges.tau,
@@ -710,15 +710,15 @@ where
     pub(crate) fn aggregate_evaluations(
         lin_poly_constant: &E::Fr,
         poly_evals_vec: &[ProofEvaluations<E::Fr>],
-        plookup_proofs_vec: &[Option<PlookupProof<E>>],
+        plonkup_proofs_vec: &[Option<PlonkupProof<E>>],
         buffer_v_and_uv_basis: &[E::Fr],
     ) -> Result<E::Fr, PlonkError> {
-        assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
+        assert_eq!(poly_evals_vec.len(), plonkup_proofs_vec.len());
 
         let mut result: E::Fr = lin_poly_constant.neg();
         let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
 
-        for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
+        for (poly_evals, plonkup_proof) in poly_evals_vec.iter().zip(plonkup_proofs_vec.iter()) {
             // evaluations at point `zeta`
             for &wire_eval in poly_evals.wires_evals.iter() {
                 Self::add_pcs_eval(
@@ -747,8 +747,8 @@ where
                 poly_evals.perm_next_eval,
             );
 
-            // add Plookup related polynomial evaluations
-            if let Some(proof_lk) = plookup_proof {
+            // add Plonkup related polynomial evaluations
+            if let Some(proof_lk) = plonkup_proof {
                 let evals = &proof_lk.poly_evals;
                 // evaluations at point `zeta`
                 for &eval in evals.evals_vec().iter() {
@@ -827,38 +827,38 @@ where
     #[inline]
     /// Return the list of polynomial commitments to be opened at point `zeta`.
     /// The order should be consistent with the prover side.
-    fn plookup_open_poly_comms(
-        proof: &PlookupProof<E>,
+    fn plonkup_open_poly_comms(
+        proof: &PlonkupProof<E>,
         vk: &VerifyingKey<E>,
     ) -> Result<Vec<Commitment<E>>, PlonkError> {
         Ok(vec![
-            vk.plookup_vk.as_ref().unwrap().range_table_comm,
-            vk.plookup_vk.as_ref().unwrap().key_table_comm,
+            vk.plonkup_vk.as_ref().unwrap().range_table_comm,
+            vk.plonkup_vk.as_ref().unwrap().key_table_comm,
             proof.h_poly_comms[0],
             *vk.q_lookup_comm()?,
-            vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
-            vk.plookup_vk.as_ref().unwrap().q_dom_sep_comm,
+            vk.plonkup_vk.as_ref().unwrap().table_dom_sep_comm,
+            vk.plonkup_vk.as_ref().unwrap().q_dom_sep_comm,
         ])
     }
 
     #[inline]
     /// Return the list of polynomial commitments to be opened at point `zeta *
     /// g`. The order should be consistent with the prover side.
-    fn plookup_shifted_open_poly_comms(
-        proof: &PlookupProof<E>,
+    fn plonkup_shifted_open_poly_comms(
+        proof: &PlonkupProof<E>,
         vk: &VerifyingKey<E>,
         wires_poly_comms: &[Commitment<E>],
     ) -> Result<Vec<Commitment<E>>, PlonkError> {
         Ok(vec![
             proof.prod_lookup_poly_comm,
-            vk.plookup_vk.as_ref().unwrap().range_table_comm,
-            vk.plookup_vk.as_ref().unwrap().key_table_comm,
+            vk.plonkup_vk.as_ref().unwrap().range_table_comm,
+            vk.plonkup_vk.as_ref().unwrap().key_table_comm,
             proof.h_poly_comms[0],
             proof.h_poly_comms[1],
             *vk.q_lookup_comm()?,
             wires_poly_comms[3],
             wires_poly_comms[4],
-            vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
+            vk.plonkup_vk.as_ref().unwrap().table_dom_sep_comm,
         ])
     }
 

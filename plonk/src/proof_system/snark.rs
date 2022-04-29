@@ -8,8 +8,8 @@
 use super::{
     prover::Prover,
     structs::{
-        trim, BatchProof, Challenges, Oracles, PlookupProof, PlookupProvingKey,
-        PlookupVerifyingKey, Proof, ProvingKey, VerifyingKey,
+        trim, BatchProof, Challenges, Oracles, PlonkupProof, PlonkupProvingKey,
+        PlonkupVerifyingKey, Proof, ProvingKey, VerifyingKey,
     },
     verifier::Verifier,
     Snark,
@@ -83,13 +83,13 @@ where
         let selectors_polys = circuit.compute_selector_polynomials()?;
         let sigma_polys = circuit.compute_extended_permutation_polynomials()?;
 
-        // Compute Plookup proving key if support lookup.
-        let plookup_pk = if circuit.support_lookup() {
+        // Compute Plonkup proving key if support lookup.
+        let plonkup_pk = if circuit.support_lookup() {
             let range_table_poly = circuit.compute_range_table_polynomial()?;
             let key_table_poly = circuit.compute_key_table_polynomial()?;
             let table_dom_sep_poly = circuit.compute_table_dom_sep_polynomial()?;
             let q_dom_sep_poly = circuit.compute_q_dom_sep_polynomial()?;
-            Some(PlookupProvingKey {
+            Some(PlonkupProvingKey {
                 range_table_poly,
                 key_table_poly,
                 table_dom_sep_poly,
@@ -119,34 +119,34 @@ where
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
-        // Compute Plookup verifying key if support lookup.
-        let plookup_vk = match circuit.support_lookup() {
+        // Compute Plonkup verifying key if support lookup.
+        let plonkup_vk = match circuit.support_lookup() {
             false => None,
-            true => Some(PlookupVerifyingKey {
+            true => Some(PlonkupVerifyingKey {
                 range_table_comm: KZG10::commit(
                     &commit_key,
-                    &plookup_pk.as_ref().unwrap().range_table_poly,
+                    &plonkup_pk.as_ref().unwrap().range_table_poly,
                     None,
                     None,
                 )?
                 .0,
                 key_table_comm: KZG10::commit(
                     &commit_key,
-                    &plookup_pk.as_ref().unwrap().key_table_poly,
+                    &plonkup_pk.as_ref().unwrap().key_table_poly,
                     None,
                     None,
                 )?
                 .0,
                 table_dom_sep_comm: KZG10::commit(
                     &commit_key,
-                    &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
+                    &plonkup_pk.as_ref().unwrap().table_dom_sep_poly,
                     None,
                     None,
                 )?
                 .0,
                 q_dom_sep_comm: KZG10::commit(
                     &commit_key,
-                    &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
+                    &plonkup_pk.as_ref().unwrap().q_dom_sep_poly,
                     None,
                     None,
                 )?
@@ -161,7 +161,7 @@ where
             sigma_comms,
             k: compute_coset_representatives(circuit.num_wire_types(), Some(domain_size)),
             open_key,
-            plookup_vk,
+            plonkup_vk,
             is_merged: false,
         };
 
@@ -171,7 +171,7 @@ where
             selectors: selectors_polys,
             commit_key,
             vk: vk.clone(),
-            plookup_pk,
+            plonkup_pk,
         };
 
         Ok((pk, vk))
@@ -330,7 +330,7 @@ where
                 ))
                 .into());
             }
-            if circuit.support_lookup() != pk.plookup_pk.is_some() {
+            if circuit.support_lookup() != pk.plonkup_pk.is_some() {
                 return Err(ParameterError(
                     "Mismatched Plonk types between the proving key and the circuit".to_string(),
                 )
@@ -366,7 +366,7 @@ where
         }
 
         // Round 1.5
-        // Plookup: compute and interpolate the sorted concatenation of the (merged)
+        // Plonkup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
         challenges.tau = transcript.get_and_append_challenge::<E>(b"tau")?;
         let mut h_poly_comms_vec = vec![];
@@ -375,13 +375,13 @@ where
         for i in 0..circuits.len() {
             let (sorted_vec, h_poly_comms, merged_table) = if circuits[i].support_lookup() {
                 let ((h_poly_comms, h_polys), sorted_vec, merged_table) = prover
-                    .run_plookup_1st_round(
+                    .run_plonkup_1st_round(
                         prng,
                         &prove_keys[i].commit_key,
                         circuits[i],
                         challenges.tau,
                     )?;
-                online_oracles[i].plookup_oracles.h_polys = h_polys;
+                online_oracles[i].plonkup_oracles.h_polys = h_polys;
                 transcript.append_commitments(b"h_poly_comms", &h_poly_comms)?;
                 (Some(sorted_vec), Some(h_poly_comms), Some(merged_table))
             } else {
@@ -405,11 +405,11 @@ where
         }
 
         // Round 2.5
-        // Plookup: compute Plookup product accumulation polynomial
+        // Plonkup: compute Plonkup product accumulation polynomial
         let mut prod_lookup_poly_comms_vec = vec![];
         for i in 0..circuits.len() {
             let prod_lookup_poly_comm = if circuits[i].support_lookup() {
-                let (prod_lookup_poly_comm, prod_lookup_poly) = prover.run_plookup_2nd_round(
+                let (prod_lookup_poly_comm, prod_lookup_poly) = prover.run_plonkup_2nd_round(
                     prng,
                     &prove_keys[i].commit_key,
                     circuits[i],
@@ -417,8 +417,8 @@ where
                     merged_table_list[i].as_ref(),
                     sorted_vec_list[i].as_ref(),
                 )?;
-                online_oracles[i].plookup_oracles.prod_lookup_poly = prod_lookup_poly;
-                transcript.append_commitment(b"plookup_poly_comms", &prod_lookup_poly_comm)?;
+                online_oracles[i].plonkup_oracles.prod_lookup_poly = prod_lookup_poly;
+                transcript.append_commitment(b"plonkup_poly_comms", &prod_lookup_poly_comm)?;
                 Some(prod_lookup_poly_comm)
             } else {
                 None
@@ -452,21 +452,21 @@ where
         }
 
         // Round 4.5
-        // Plookup: compute evaluations on Plookup-related polynomials
-        let mut plookup_evals_vec = vec![];
+        // Plonkup: compute evaluations on Plonkup-related polynomials
+        let mut plonkup_evals_vec = vec![];
         for i in 0..circuits.len() {
-            let plookup_evals = if circuits[i].support_lookup() {
-                let evals = prover.compute_plookup_evaluations(
+            let plonkup_evals = if circuits[i].support_lookup() {
+                let evals = prover.compute_plonkup_evaluations(
                     prove_keys[i],
                     &challenges,
                     &online_oracles[i],
                 )?;
-                transcript.append_plookup_evaluations::<E>(&evals)?;
+                transcript.append_plonkup_evaluations::<E>(&evals)?;
                 Some(evals)
             } else {
                 None
             };
-            plookup_evals_vec.push(plookup_evals);
+            plonkup_evals_vec.push(plonkup_evals);
         }
 
         let mut lin_poly = Prover::<E>::compute_quotient_component_for_lin_poly(
@@ -485,11 +485,11 @@ where
                     &challenges,
                     &online_oracles[i],
                     &poly_evals_vec[i],
-                    plookup_evals_vec[i].as_ref(),
+                    plonkup_evals_vec[i].as_ref(),
                 )?;
             // update the alpha power term (i.e. the random combiner that aggregates
             // multiple instances)
-            if plookup_evals_vec[i].is_some() {
+            if plonkup_evals_vec[i].is_some() {
                 alpha_base *= alpha_7;
             } else {
                 alpha_base *= alpha_3;
@@ -507,19 +507,19 @@ where
             &lin_poly,
         )?;
 
-        // Plookup: build Plookup argument
-        let mut plookup_proofs_vec = vec![];
+        // Plonkup: build Plonkup argument
+        let mut plonkup_proofs_vec = vec![];
         for i in 0..circuits.len() {
-            let plookup_proof = if circuits[i].support_lookup() {
-                Some(PlookupProof {
+            let plonkup_proof = if circuits[i].support_lookup() {
+                Some(PlonkupProof {
                     h_poly_comms: h_poly_comms_vec[i].clone().unwrap(),
                     prod_lookup_poly_comm: prod_lookup_poly_comms_vec[i].unwrap(),
-                    poly_evals: plookup_evals_vec[i].clone().unwrap(),
+                    poly_evals: plonkup_evals_vec[i].clone().unwrap(),
                 })
             } else {
                 None
             };
-            plookup_proofs_vec.push(plookup_proof);
+            plonkup_proofs_vec.push(plonkup_proof);
         }
 
         Ok((
@@ -527,7 +527,7 @@ where
                 wires_poly_comms_vec,
                 prod_perm_poly_comms_vec,
                 poly_evals_vec,
-                plookup_proofs_vec,
+                plonkup_proofs_vec,
                 split_quot_poly_comms,
                 opening_proof,
                 shifted_opening_proof,
@@ -579,7 +579,7 @@ where
             opening_proof: batch_proof.opening_proof,
             shifted_opening_proof: batch_proof.shifted_opening_proof,
             poly_evals: batch_proof.poly_evals_vec[0].clone(),
-            plookup_proof: batch_proof.plookup_proofs_vec[0].clone(),
+            plonkup_proof: batch_proof.plonkup_proofs_vec[0].clone(),
         })
     }
 
@@ -751,17 +751,17 @@ pub mod test {
                 PlonkType::UltraPlonk => 1,
             };
         assert_eq!(pk.sigmas.len(), num_wire_types);
-        // check plookup proving key
+        // check plonkup proving key
         if plonk_type == PlonkType::UltraPlonk {
             let range_table_poly = circuit.compute_range_table_polynomial()?;
             assert_eq!(
-                pk.plookup_pk.as_ref().unwrap().range_table_poly,
+                pk.plonkup_pk.as_ref().unwrap().range_table_poly,
                 range_table_poly
             );
 
             let key_table_poly = circuit.compute_key_table_polynomial()?;
             assert_eq!(
-                pk.plookup_pk.as_ref().unwrap().key_table_poly,
+                pk.plonkup_pk.as_ref().unwrap().key_table_poly,
                 key_table_poly
             );
         }
@@ -786,30 +786,30 @@ pub mod test {
                 let (expected_comm, _) = KZG10::commit(&pk.commit_key, p, None, None).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
-        // check plookup verification key
+        // check plonkup verification key
         if plonk_type == PlonkType::UltraPlonk {
             let (expected_comm, _) = KZG10::commit(
                 &pk.commit_key,
-                &pk.plookup_pk.as_ref().unwrap().range_table_poly,
+                &pk.plonkup_pk.as_ref().unwrap().range_table_poly,
                 None,
                 None,
             )
             .unwrap();
             assert_eq!(
                 expected_comm,
-                vk.plookup_vk.as_ref().unwrap().range_table_comm
+                vk.plonkup_vk.as_ref().unwrap().range_table_comm
             );
 
             let (expected_comm, _) = KZG10::commit(
                 &pk.commit_key,
-                &pk.plookup_pk.as_ref().unwrap().key_table_poly,
+                &pk.plonkup_pk.as_ref().unwrap().key_table_poly,
                 None,
                 None,
             )
             .unwrap();
             assert_eq!(
                 expected_comm,
-                vk.plookup_vk.as_ref().unwrap().key_table_comm
+                vk.plonkup_vk.as_ref().unwrap().key_table_comm
             );
         }
 
@@ -1351,8 +1351,8 @@ pub mod test {
         let n = pk.domain_size();
         let domain =
             Radix2EvaluationDomain::<E::Fr>::new(n).ok_or(PlonkError::DomainCreationError)?;
-        let prod_poly = &oracles.plookup_oracles.prod_lookup_poly;
-        let h_polys = &oracles.plookup_oracles.h_polys;
+        let prod_poly = &oracles.plonkup_oracles.prod_lookup_poly;
+        let h_polys = &oracles.plonkup_oracles.h_polys;
 
         // check z(X) = 1 at point 1
         assert_eq!(prod_poly.evaluate(&domain.element(0)), E::Fr::one());
@@ -1376,10 +1376,10 @@ pub mod test {
         let beta_plus_one = E::Fr::one() + beta;
         let gamma_mul_beta_plus_one = gamma * beta_plus_one;
 
-        let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
-        let key_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().key_table_poly;
-        let table_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly;
-        let q_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly;
+        let range_table_poly_ref = &pk.plonkup_pk.as_ref().unwrap().range_table_poly;
+        let key_table_poly_ref = &pk.plonkup_pk.as_ref().unwrap().key_table_poly;
+        let table_dom_sep_poly_ref = &pk.plonkup_pk.as_ref().unwrap().table_dom_sep_poly;
+        let q_dom_sep_poly_ref = &pk.plonkup_pk.as_ref().unwrap().q_dom_sep_poly;
 
         for i in 0..domain.size() - 1 {
             let point = domain.element(i);

@@ -80,8 +80,8 @@ pub struct Proof<E: PairingEngine> {
     /// Polynomial evaluations.
     pub(crate) poly_evals: ProofEvaluations<E::Fr>,
 
-    /// The partial proof for Plookup argument
-    pub(crate) plookup_proof: Option<PlookupProof<E>>,
+    /// The partial proof for Plonkup argument
+    pub(crate) plonkup_proof: Option<PlonkupProof<E>>,
 }
 
 impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
@@ -149,7 +149,7 @@ where
                 opening_proof,
                 shifted_opening_proof,
                 poly_evals,
-                plookup_proof: None,
+                plonkup_proof: None,
             })
         } else {
             Err(SnarkError::ParameterError(
@@ -185,7 +185,7 @@ where
     P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
 {
     fn from(proof: Proof<E>) -> Self {
-        if proof.plookup_proof.is_some() {
+        if proof.plonkup_proof.is_some() {
             panic!("Only support TurboPlonk for now.");
         }
         let poly_evals_scalars: Vec<E::Fr> = proof.poly_evals.into();
@@ -216,19 +216,19 @@ where
     }
 }
 
-/// A Plookup argument proof.
+/// A Plonkup argument proof.
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
-pub struct PlookupProof<E: PairingEngine> {
+pub struct PlonkupProof<E: PairingEngine> {
     /// The commitments for the polynomials that interpolate the sorted
     /// concatenation of the lookup table and the witnesses in the lookup gates.
     pub(crate) h_poly_comms: Vec<Commitment<E>>,
 
-    /// The product accumulation polynomial commitment for the Plookup argument
+    /// The product accumulation polynomial commitment for the Plonkup argument
     pub(crate) prod_lookup_poly_comm: Commitment<E>,
 
     /// Polynomial evaluations.
-    pub(crate) poly_evals: PlookupEvaluations<E::Fr>,
+    pub(crate) poly_evals: PlonkupEvaluations<E::Fr>,
 }
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
@@ -245,8 +245,8 @@ pub struct BatchProof<E: PairingEngine> {
     /// The list of polynomial evaluations.
     pub(crate) poly_evals_vec: Vec<ProofEvaluations<E::Fr>>,
 
-    /// The list of partial proofs for Plookup argument
-    pub(crate) plookup_proofs_vec: Vec<Option<PlookupProof<E>>>,
+    /// The list of partial proofs for Plonkup argument
+    pub(crate) plonkup_proofs_vec: Vec<Option<PlonkupProof<E>>>,
 
     /// Splitted quotient polynomial commitments.
     pub(crate) split_quot_poly_comms: Vec<Commitment<E>>,
@@ -275,7 +275,7 @@ impl<E: PairingEngine> BatchProof<E> {
             wires_poly_comms_vec: vec![vec![Commitment::default(); num_wire_types]; n],
             prod_perm_poly_comms_vec: vec![Commitment::default(); n],
             poly_evals_vec: vec![ProofEvaluations::default(); n],
-            plookup_proofs_vec: vec![None; n],
+            plonkup_proofs_vec: vec![None; n],
             split_quot_poly_comms: vec![Commitment::default(); num_wire_types],
             opening_proof: Commitment::default(),
             shifted_opening_proof: Commitment::default(),
@@ -289,7 +289,7 @@ impl<E: PairingEngine> From<Proof<E>> for BatchProof<E> {
             wires_poly_comms_vec: vec![proof.wires_poly_comms],
             prod_perm_poly_comms_vec: vec![proof.prod_perm_poly_comm],
             poly_evals_vec: vec![proof.poly_evals],
-            plookup_proofs_vec: vec![proof.plookup_proof],
+            plonkup_proofs_vec: vec![proof.plonkup_proof],
             split_quot_poly_comms: proof.split_quot_poly_comms,
             opening_proof: proof.opening_proof,
             shifted_opening_proof: proof.shifted_opening_proof,
@@ -313,7 +313,7 @@ impl<T: PrimeField> ProofEvaluations<T> {
     {
         if T::size_in_bits() >= F::size_in_bits() {
             return Err(PlonkError::InvalidParameters(format!(
-                "circuit field size {} is not greater than Plookup Evaluation field size {}",
+                "circuit field size {} is not greater than Plonkup Evaluation field size {}",
                 F::size_in_bits(),
                 T::size_in_bits()
             )));
@@ -362,14 +362,14 @@ impl<E: PairingEngine> BatchProof<E> {
         for e in self.wires_poly_comms_vec.iter() {
             let mut tmp = Vec::new();
             for f in e.iter() {
-                let p: Point<F> = (&f.0).into();
+                let p: Point<F> = f.0.into();
                 tmp.push(circuit.create_point_variable(p)?);
             }
             wires_poly_comms_vec.push(tmp);
         }
         let mut prod_perm_poly_comms_vec = Vec::new();
         for e in self.prod_perm_poly_comms_vec.iter() {
-            let p: Point<F> = (&e.0).into();
+            let p: Point<F> = e.0.into();
             prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)?);
         }
 
@@ -381,14 +381,14 @@ impl<E: PairingEngine> BatchProof<E> {
 
         let mut split_quot_poly_comms = Vec::new();
         for e in self.split_quot_poly_comms.iter() {
-            let p: Point<F> = (&e.0).into();
+            let p: Point<F> = e.0.into();
             split_quot_poly_comms.push(circuit.create_point_variable(p)?);
         }
 
-        let p: Point<F> = (&self.opening_proof.0).into();
+        let p: Point<F> = self.opening_proof.0.into();
         let opening_proof = circuit.create_point_variable(p)?;
 
-        let p: Point<F> = (&self.shifted_opening_proof.0).into();
+        let p: Point<F> = self.shifted_opening_proof.0.into();
         let shifted_opening_proof = circuit.create_point_variable(p)?;
 
         Ok(BatchProofVar {
@@ -469,9 +469,9 @@ where
     }
 }
 
-/// A struct that stores the polynomial evaluations in a Plookup argument proof.
+/// A struct that stores the polynomial evaluations in a Plonkup argument proof.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupEvaluations<F: Field> {
+pub struct PlonkupEvaluations<F: Field> {
     /// Range table polynomial evaluation at point `zeta`.
     pub(crate) range_table_eval: F,
 
@@ -518,7 +518,7 @@ pub struct PlookupEvaluations<F: Field> {
     pub(crate) w_4_next_eval: F,
 }
 
-impl<F: Field> PlookupEvaluations<F> {
+impl<F: Field> PlonkupEvaluations<F> {
     /// Return the list of evaluations at point `zeta`.
     pub(crate) fn evals_vec(&self) -> Vec<F> {
         vec![
@@ -563,14 +563,14 @@ pub struct ProvingKey<'a, E: PairingEngine> {
     /// The verifying key. It is used by prover to initialize transcripts.
     pub vk: VerifyingKey<E>,
 
-    /// Proving key for Plookup, None if not support lookup.
-    pub(crate) plookup_pk: Option<PlookupProvingKey<E>>,
+    /// Proving key for Plonkup, None if not support lookup.
+    pub(crate) plonkup_pk: Option<PlonkupProvingKey<E>>,
 }
 
-/// Preprocessed prover parameters used to compute Plookup proofs for a certain
+/// Preprocessed prover parameters used to compute Plonkup proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupProvingKey<E: PairingEngine> {
+pub struct PlonkupProvingKey<E: PairingEngine> {
     /// Range table polynomial.
     pub(crate) range_table_poly: DensePolynomial<E::Fr>,
 
@@ -601,7 +601,7 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
 
     /// The lookup selector polynomial
     pub(crate) fn q_lookup_poly(&self) -> Result<&DensePolynomial<E::Fr>, PlonkError> {
-        if self.plookup_pk.is_none() {
+        if self.plonkup_pk.is_none() {
             return Err(SnarkLookupUnsupported.into());
         }
         Ok(self.selectors.last().unwrap())
@@ -628,7 +628,7 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
             )
             .into());
         }
-        if self.plookup_pk.is_some() || other_pk.plookup_pk.is_some() {
+        if self.plonkup_pk.is_some() || other_pk.plonkup_pk.is_some() {
             return Err(ParameterError("cannot merge UltraPlonk proving keys".to_string()).into());
         }
         let sigmas: Vec<DensePolynomial<E::Fr>> = self
@@ -649,7 +649,7 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
             selectors,
             commit_key: self.commit_key.clone(),
             vk: self.vk.merge(&other_pk.vk)?,
-            plookup_pk: None,
+            plonkup_pk: None,
         })
     }
 }
@@ -680,8 +680,8 @@ pub struct VerifyingKey<E: PairingEngine> {
     /// A flag indicating whether the key is a merged key.
     pub(crate) is_merged: bool,
 
-    /// Plookup verifying key, None if not support lookup.
-    pub(crate) plookup_vk: Option<PlookupVerifyingKey<E>>,
+    /// Plonkup verifying key, None if not support lookup.
+    pub(crate) plonkup_vk: Option<PlonkupVerifyingKey<E>>,
 }
 
 impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
@@ -692,7 +692,7 @@ where
     P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr> + Clone,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
-        if vk.plookup_vk.is_some() {
+        if vk.plonkup_vk.is_some() {
             panic!("Only support TurboPlonk VerifyingKey for now.");
         }
 
@@ -730,12 +730,12 @@ where
     pub fn convert_te_coordinates_to_scalars(&self) -> Vec<F> {
         let mut res = vec![];
         for sigma_comm in self.sigma_comms.iter() {
-            let point: Point<F> = (&sigma_comm.0).into();
+            let point: Point<F> = sigma_comm.0.into();
             res.push(point.get_x());
             res.push(point.get_y());
         }
         for selector_comm in self.selector_comms.iter() {
-            let point: Point<F> = (&selector_comm.0).into();
+            let point: Point<F> = selector_comm.0.into();
             res.push(point.get_x());
             res.push(point.get_y());
         }
@@ -743,10 +743,10 @@ where
     }
 }
 
-/// Preprocessed verifier parameters used to verify Plookup proofs for a certain
+/// Preprocessed verifier parameters used to verify Plonkup proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupVerifyingKey<E: PairingEngine> {
+pub struct PlonkupVerifyingKey<E: PairingEngine> {
     /// Range table polynomial commitment. The commitment is not hiding.
     pub(crate) range_table_comm: Commitment<E>,
 
@@ -775,7 +775,7 @@ impl<E: PairingEngine> VerifyingKey<E> {
             k: compute_coset_representatives(num_wire_types, Some(domain_size)),
             open_key: OpenKey::default(),
             is_merged: false,
-            plookup_vk: None,
+            plonkup_vk: None,
         }
     }
     /// Merge with another TurboPlonk verifying key to obtain a new TurboPlonk
@@ -799,7 +799,7 @@ impl<E: PairingEngine> VerifyingKey<E> {
             )
             .into());
         }
-        if self.plookup_vk.is_some() || other_vk.plookup_vk.is_some() {
+        if self.plonkup_vk.is_some() || other_vk.plonkup_vk.is_some() {
             return Err(
                 ParameterError("cannot merge UltraPlonk verifying keys".to_string()).into(),
             );
@@ -824,14 +824,14 @@ impl<E: PairingEngine> VerifyingKey<E> {
             selector_comms,
             k: self.k.clone(),
             open_key: self.open_key.clone(),
-            plookup_vk: None,
+            plonkup_vk: None,
             is_merged: true,
         })
     }
 
     /// The lookup selector polynomial commitment
     pub(crate) fn q_lookup_comm(&self) -> Result<&Commitment<E>, PlonkError> {
-        if self.plookup_vk.is_none() {
+        if self.plonkup_vk.is_none() {
             return Err(SnarkLookupUnsupported.into());
         }
         Ok(self.selector_comms.last().unwrap())
@@ -856,12 +856,12 @@ pub(crate) struct Oracles<F: FftField> {
     pub(crate) wire_polys: Vec<DensePolynomial<F>>,
     pub(crate) pub_inp_poly: DensePolynomial<F>,
     pub(crate) prod_perm_poly: DensePolynomial<F>,
-    pub(crate) plookup_oracles: PlookupOracles<F>,
+    pub(crate) plonkup_oracles: PlonkupOracles<F>,
 }
 
-/// Plookup IOP online polynomial oracles.
+/// Plonkup IOP online polynomial oracles.
 #[derive(Debug, Default, Clone)]
-pub(crate) struct PlookupOracles<F: FftField> {
+pub(crate) struct PlonkupOracles<F: FftField> {
     pub(crate) h_polys: Vec<DensePolynomial<F>>,
     pub(crate) prod_lookup_poly: DensePolynomial<F>,
 }

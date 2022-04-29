@@ -9,7 +9,7 @@ use super::PlonkTranscript;
 use crate::{
     circuit::customized::ecc::{Point, SWToTEConParam},
     errors::PlonkError,
-    proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
+    proof_system::structs::{PlonkupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
@@ -71,14 +71,14 @@ where
         // selector commitments
         for com in vk.selector_comms.iter() {
             // convert the SW form commitments into TE form
-            let te_point: Point<F> = (&com.0).into();
+            let te_point: Point<F> = com.0.into();
             self.transcript.push(te_point.get_x());
             self.transcript.push(te_point.get_y());
         }
         // sigma commitments
         for com in vk.sigma_comms.iter() {
             // convert the SW form commitments into TE form
-            let te_point: Point<F> = (&com.0).into();
+            let te_point: Point<F> = com.0.into();
             self.transcript.push(te_point.get_x());
             self.transcript.push(te_point.get_y());
         }
@@ -112,7 +112,7 @@ where
         P: SWParam<BaseField = F> + Clone,
     {
         // convert the SW form commitments into TE form
-        let te_point: Point<F> = (&comm.0).into();
+        let te_point: Point<F> = comm.0.into();
         // push the x and y coordinate of comm (in twisted
         // edwards form) to the transcript
 
@@ -149,9 +149,9 @@ where
         Ok(())
     }
 
-    fn append_plookup_evaluations<E: PairingEngine>(
+    fn append_plonkup_evaluations<E: PairingEngine>(
         &mut self,
-        evals: &PlookupEvaluations<E::Fr>,
+        evals: &PlonkupEvaluations<E::Fr>,
     ) -> Result<(), PlonkError> {
         for eval in evals.evals_vec().iter() {
             self.transcript.push(field_switching(eval));

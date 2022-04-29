@@ -32,7 +32,7 @@ pub mod testing_apis;
 pub enum PlonkType {
     /// TurboPlonk
     TurboPlonk,
-    /// TurboPlonk that supports Plookup
+    /// TurboPlonk that supports Plonkup
     UltraPlonk,
 }
 

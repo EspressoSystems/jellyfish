@@ -13,7 +13,7 @@ use crate::{
     circuit::customized::ecc::SWToTEConParam,
     errors::PlonkError,
     proof_system::{
-        structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
+        structs::{self, BatchProof, PlonkupProof, ProofEvaluations, VerifyingKey},
         verifier,
     },
     transcript::PlonkTranscript,
@@ -331,13 +331,13 @@ where
     pub fn aggregate_evaluations(
         lin_poly_constant: &E::Fr,
         poly_evals_vec: &[ProofEvaluations<E::Fr>],
-        plookup_proofs_vec: &[Option<PlookupProof<E>>],
+        plonkup_proofs_vec: &[Option<PlonkupProof<E>>],
         buffer_v_and_uv_basis: &[E::Fr],
     ) -> Result<E::Fr, PlonkError> {
         verifier::Verifier::<E>::aggregate_evaluations(
             lin_poly_constant,
             poly_evals_vec,
-            plookup_proofs_vec,
+            plonkup_proofs_vec,
             buffer_v_and_uv_basis,
         )
     }
