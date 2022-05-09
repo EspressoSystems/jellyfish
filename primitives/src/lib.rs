@@ -22,8 +22,10 @@ pub mod commitment;
 pub mod constants;
 pub mod elgamal;
 pub mod errors;
+pub mod hash_to_group;
 pub mod merkle_tree;
 pub mod prf;
 pub mod signatures;
+pub mod vrf;
 
 pub(crate) mod utils;

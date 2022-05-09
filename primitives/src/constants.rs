@@ -6,27 +6,11 @@
 
 //! Constants for curve specific parameters.
 
-use ark_ec::models::TEModelParameters;
-use ark_ff::{FpParameters, PrimeField};
+/// ciphersuite identifier for schnorr signature
+pub const CS_ID_SCHNORR: &str = "SCHNORR_WITH_RESCUE_HASH_v01";
 
-#[inline]
-pub(crate) fn field_byte_len<F: PrimeField>() -> usize {
-    ((F::Params::MODULUS_BITS + 7) / 8) as usize
-}
+/// ciphersuite identifier for BLS signature
+pub const CS_ID_BLS_SIG_NAIVE: &str = "BLS_SIG_WITH_NAIVE_HtG_v01";
 
-#[inline]
-pub(crate) fn field_bit_len<F: PrimeField>() -> usize {
-    F::Params::MODULUS_BITS as usize
-}
-
-#[inline]
-pub(crate) fn challenge_bit_len<F: PrimeField>() -> usize {
-    // Our challenge is of size 248 bits
-    // This is enough for a soundness error of 2^-128
-    (field_byte_len::<F>() - 1) << 3
-}
-
-#[inline]
-pub(crate) fn curve_cofactor<P: TEModelParameters>() -> u64 {
-    P::COFACTOR[0]
-}
+/// ciphersuite identifier for BLS VRF
+pub const CS_ID_BLS_VRF_NAIVE: &str = "BLS_VRF_WITH_NAIVE_HtG_v01";

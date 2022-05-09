@@ -13,6 +13,9 @@ ark-ff = { version = "0.3.0", default-features = false }
 ark-std = { version = "0.3.0", default-features = false }
 ark-ec = { version = "0.3.0", default-features = false }
 ark-serialize = { version = "0.3.0", default-features = false }
+ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
+ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, features = ["curve"], rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+
 
 # jellyfish
 jf-plonk = { path = "../plonk" }
@@ -28,6 +31,9 @@ generic-array = { version = "^0.14", default-features = false }
 crypto_box = { version = "0.7.1", default-features = false, features = [ "u64_backend", "alloc" ] }
 displaydoc = { version = "0.2.3", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
+rand_chacha = { version = "0.3.1", default-features = false }
+sha2 = { version = "0.10.1", default-features = false }
+digest = { version = "0.10.1", default-features = false }
 
 [dev-dependencies]
 rand_chacha = "^0.3"
@@ -40,8 +46,6 @@ ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-f
 ark-ed-on-bls12-381 = { version = "0.3.0", default-features = false }
 ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bn254 = { version = "0.3.0", default-features = false }
-ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, features = ["curve"], rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
 ark-bn254 = { version = "0.3.0", default-features = false, features = ["curve"] }
 ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 
