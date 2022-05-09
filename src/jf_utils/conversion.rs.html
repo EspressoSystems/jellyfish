@@ -268,22 +268,22 @@
     <span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
-    <span class="comment">// segment the bytes into trunks of bytes, each trunk is of size</span>
-    <span class="comment">// that is floor(F::size_in_bits/8). then, cast each trunk</span>
+    <span class="comment">// segment the bytes into chunks of bytes, each chunk is of size</span>
+    <span class="comment">// that is floor(F::size_in_bits/8). then, cast each chunk</span>
     <span class="comment">// into F via F::from_le_bytes_mod_order</span>
     <span class="comment">// note that mod_reduction is guaranteed to not occur</span>
 
     <span class="comment">// Field order is never a multiple of 8</span>
-    <span class="kw">let</span> <span class="ident">trunk_length</span> <span class="op">=</span> <span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">8</span>;
+    <span class="kw">let</span> <span class="ident">chunk_length</span> <span class="op">=</span> <span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">8</span>;
 
-    <span class="comment">// pad the input to a multiple of trunk_length</span>
-    <span class="kw">let</span> <span class="ident">padded_length</span> <span class="op">=</span> (<span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">trunk_length</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">/</span> <span class="ident">trunk_length</span> <span class="op">*</span> <span class="ident">trunk_length</span>;
+    <span class="comment">// pad the input to a multiple of chunk_length</span>
+    <span class="kw">let</span> <span class="ident">padded_length</span> <span class="op">=</span> (<span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">chunk_length</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">/</span> <span class="ident">chunk_length</span> <span class="op">*</span> <span class="ident">chunk_length</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">to_vec</span>();
     <span class="ident">padded_bytes</span>.<span class="ident">resize</span>(<span class="ident">padded_length</span>, <span class="number">0u8</span>);
-    <span class="macro">assert!</span>(<span class="ident">padded_bytes</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">trunk_length</span> <span class="op">==</span> <span class="number">0</span>);
+    <span class="macro">assert!</span>(<span class="ident">padded_bytes</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">chunk_length</span> <span class="op">==</span> <span class="number">0</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="ident">padded_bytes</span>.<span class="ident">chunks</span>(<span class="ident">trunk_length</span>) {
+    <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="ident">padded_bytes</span>.<span class="ident">chunks</span>(<span class="ident">chunk_length</span>) {
         <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">chunk</span>));
     }
     <span class="ident">result</span>

@@ -1,1 +1,1 @@
-initSidebarItems({});
+initSidebarItems({"struct":[["BLSSignKey","Signing key for BLS signature."],["BLSSignature","Signing key for BLS signature."],["BLSSignatureScheme","BLS signature scheme. Optimized for signature size, i.e.: PK in G2 and sig in G1"],["BLSVerKey","BLS public verification key"]]});

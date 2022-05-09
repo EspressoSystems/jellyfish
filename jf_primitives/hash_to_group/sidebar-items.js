@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["HashToGroup","Trait definition and default implementation for hash to group functions."]]});

@@ -594,41 +594,6 @@
 <span id="589">589</span>
 <span id="590">590</span>
 <span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
-<span id="600">600</span>
-<span id="601">601</span>
-<span id="602">602</span>
-<span id="603">603</span>
-<span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
-<span id="613">613</span>
-<span id="614">614</span>
-<span id="615">615</span>
-<span id="616">616</span>
-<span id="617">617</span>
-<span id="618">618</span>
-<span id="619">619</span>
-<span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
-<span id="625">625</span>
-<span id="626">626</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -638,17 +603,17 @@
 <span class="doccomment">//! This module implements the Schnorr signature over the various Edwards</span>
 <span class="doccomment">//! curves.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">constants</span>::<span class="kw-2">*</span>, <span class="ident">errors::PrimitivesError</span>, <span class="ident">signatures::SignatureScheme</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SignatureScheme</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">constants::CS_ID_SCHNORR</span>, <span class="ident">errors::PrimitivesError</span>, <span class="ident">utils::curve_cofactor</span>};
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{
     <span class="ident">group::Group</span>,
     <span class="ident">twisted_edwards_extended</span>::{<span class="ident">GroupAffine</span>, <span class="ident">GroupProjective</span>},
     <span class="ident">AffineCurve</span>, <span class="ident">ModelParameters</span>, <span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>,
 };
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">PrimeField</span>, <span class="ident">ToBytes</span>};
+<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{
     <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
-    <span class="ident">io</span>::{<span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">IoResult</span>, <span class="ident">Write</span>},
     <span class="ident">marker::PhantomData</span>,
     <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">Rng</span>, <span class="ident">RngCore</span>},
     <span class="ident">string::ToString</span>,
@@ -659,16 +624,17 @@
 <span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
 
 <span class="doccomment">/// Schnorr signature scheme.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span>, <span class="ident">H</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
     <span class="ident">curve_param</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    <span class="ident">hasher</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">SignatureScheme</span> <span class="kw">for</span> <span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureScheme</span> <span class="kw">for</span> <span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
     <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
+    <span class="kw">const</span> <span class="ident">CS_ID</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="ident">CS_ID_SCHNORR</span>;
+
     <span class="doccomment">/// Signing key.</span>
     <span class="kw">type</span> <span class="ident">SigningKey</span> <span class="op">=</span> <span class="ident">SignKey</span><span class="op">&lt;</span><span class="ident">P::ScalarField</span><span class="op">&gt;</span>;
 
@@ -681,24 +647,26 @@
     <span class="doccomment">/// Signature</span>
     <span class="kw">type</span> <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// message</span>
-    <span class="kw">type</span> <span class="ident">MessageUnit</span> <span class="op">=</span> <span class="ident">P::BaseField</span>;
+    <span class="doccomment">/// A message is &amp;\[MessageUnit\]</span>
+    <span class="kw">type</span> <span class="ident">MessageUnit</span> <span class="op">=</span> <span class="ident">F</span>;
 
     <span class="doccomment">/// generate public parameters from RNG.</span>
-    <span class="kw">fn</span> <span class="ident">setup</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">_prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+    <span class="kw">fn</span> <span class="ident">param_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
+        <span class="ident">_prng</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">R</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">keygen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Rng</span><span class="op">&gt;</span>(
+    <span class="doccomment">/// Sample a pair of keys.</span>
+    <span class="kw">fn</span> <span class="ident">key_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
         <span class="ident">_pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::SigningKey</span>, <span class="ident"><span class="self">Self</span>::VerificationKey</span>), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="ident">prng</span>);
         <span class="prelude-val">Ok</span>((<span class="ident">kp</span>.<span class="ident">sk</span>, <span class="ident">kp</span>.<span class="ident">vk</span>))
     }
 
+    <span class="doccomment">/// Sign a message with the signing key</span>
     <span class="kw">fn</span> <span class="ident">sign</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>, <span class="ident">M</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident"><span class="self">Self</span>::MessageUnit</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="ident">_pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
         <span class="ident">sk</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::SigningKey</span>,
@@ -706,7 +674,7 @@
         <span class="ident">_prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate_with_sign_key</span>(<span class="ident">sk</span>.<span class="number">0</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">kp</span>.<span class="ident">sign</span>(<span class="ident">msg</span>.<span class="ident">as_ref</span>()))
+        <span class="prelude-val">Ok</span>(<span class="ident">kp</span>.<span class="ident">sign</span>(<span class="ident">msg</span>.<span class="ident">as_ref</span>(), <span class="ident"><span class="self">Self</span>::CS_ID</span>))
     }
 
     <span class="doccomment">/// Verify a signature.</span>
@@ -716,28 +684,9 @@
         <span class="ident">msg</span>: <span class="ident">M</span>,
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Signature</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="ident">vk</span>.<span class="ident">verify</span>(<span class="ident">msg</span>.<span class="ident">as_ref</span>(), <span class="ident">sig</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">randomize_public_key</span>(
-        <span class="ident">_pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::VerificationKey</span>,
-        <span class="ident">randomness</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::VerificationKey</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">randomizer</span> <span class="op">=</span> <span class="ident">P::ScalarField::from_le_bytes_mod_order</span>(<span class="ident">randomness</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">public_key</span>.<span class="ident">randomize_with</span>(<span class="kw-2">&amp;</span><span class="ident">randomizer</span>))
-    }
-
-    <span class="kw">fn</span> <span class="ident">randomize_signature</span>(
-        <span class="ident">_pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">_signature</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Signature</span>,
-        <span class="ident">_randomness</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="macro">unimplemented!</span>()
+        <span class="ident">vk</span>.<span class="ident">verify</span>(<span class="ident">msg</span>.<span class="ident">as_ref</span>(), <span class="ident">sig</span>, <span class="ident"><span class="self">Self</span>::CS_ID</span>)
     }
 }
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">DOMAIN_SEPARATION</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">24</span>] <span class="op">=</span> <span class="string">b&quot;DSA_WITH_RESCUE_HASH_v01&quot;</span>;
 
 <span class="comment">// =====================================================</span>
 <span class="comment">// Signing key</span>
@@ -761,20 +710,13 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">ToBytes</span> <span class="kw">for</span> <span class="ident">SignKey</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="ident">W</span>) -&gt; <span class="ident">IoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>(<span class="ident">writer</span>)
-    }
-}
-
 <span class="comment">// =====================================================</span>
 <span class="comment">// Verification key</span>
 <span class="comment">// =====================================================</span>
 
 <span class="doccomment">/// Signature public verification key</span>
 <span class="comment">// derive zeroize here so that keypair can be zeroized</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;VERKEY&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;SCHNORRVERKEY&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
@@ -782,13 +724,6 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">GroupProjective</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>)
 <span class="kw">where</span>
     <span class="ident">P</span>: <span class="ident">Parameters</span> <span class="op">+</span> <span class="ident">Clone</span>;
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span> <span class="ident">ToBytes</span> <span class="kw">for</span> <span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="ident">W</span>) -&gt; <span class="ident">IoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>(<span class="ident">writer</span>)
-    }
-}
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span> <span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Return a randomized verification key.</span>
@@ -934,15 +869,16 @@
 
     <span class="doccomment">/// Signature function</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">csid</span>: <span class="ident">B</span>) -&gt; <span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">DOMAIN_SEPARATION</span>);
+        <span class="comment">// Do we want to remove the instance description?</span>
+        <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">csid</span>.<span class="ident">as_ref</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">instance_description</span>, <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sk</span>.<span class="number">0</span>)];
         <span class="ident">msg_input</span>.<span class="ident">extend</span>(<span class="ident">msg</span>.<span class="ident">iter</span>());
 
         <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">fq_to_fr</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>.<span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">msg_input</span>, <span class="number">1</span>)[<span class="number">0</span>]);
         <span class="kw">let</span> <span class="ident">R</span> <span class="op">=</span> <span class="ident">Group::mul</span>(<span class="kw-2">&amp;</span><span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>(), <span class="kw-2">&amp;</span><span class="ident">r</span>);
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vk</span>.<span class="ident">challenge</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>, <span class="kw-2">&amp;</span><span class="ident">R</span>, <span class="ident">msg</span>);
+        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vk</span>.<span class="ident">challenge</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>, <span class="kw-2">&amp;</span><span class="ident">R</span>, <span class="ident">msg</span>, <span class="ident">csid</span>);
         <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">c</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">sk</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">r</span>;
 
         <span class="ident">Signature</span> { <span class="ident">s</span>, <span class="ident">R</span> }
@@ -991,7 +927,12 @@
 
     <span class="doccomment">/// Signature verification function</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">P::BaseField</span>], <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">P::BaseField</span>],
+        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+        <span class="ident">csid</span>: <span class="ident">B</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
         <span class="comment">// Reject if public key is of small order</span>
         <span class="kw">if</span> <span class="ident">Group::mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">P::ScalarField::from</span>(<span class="ident">curve_cofactor</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>()))
             <span class="op">==</span> <span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::default</span>()
@@ -1003,7 +944,7 @@
 
         <span class="comment">// restrictive cofactorless verification</span>
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">Permutation</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">challenge</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">R</span>, <span class="ident">msg</span>);
+        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">challenge</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">R</span>, <span class="ident">msg</span>, <span class="ident">csid</span>);
 
         <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>();
         <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Group::mul</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">s</span>);
@@ -1027,15 +968,16 @@
     <span class="comment">// TODO: this function should be generic w.r.t. hash functions</span>
     <span class="comment">// Fixme after the hash-api PR is merged.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">challenge</span>(
+    <span class="kw">fn</span> <span class="ident">challenge</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="kw-2">&amp;</span><span class="ident">GroupProjective</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
+        <span class="ident">csid</span>: <span class="ident">B</span>,
     ) -&gt; <span class="ident">P::ScalarField</span> {
         <span class="comment">// is the domain separator always an Fr? If so how about using Fr as domain</span>
         <span class="comment">// separator rather than bytes?</span>
-        <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">DOMAIN_SEPARATION</span>);
+        <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">csid</span>.<span class="ident">as_ref</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">challenge_input</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">vk_affine</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">into_affine</span>();
             <span class="kw">let</span> <span class="ident">R_affine</span> <span class="op">=</span> <span class="ident">R</span>.<span class="ident">into_affine</span>();
@@ -1059,11 +1001,15 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::{
+        <span class="ident">constants::CS_ID_SCHNORR</span>,
+        <span class="ident">signatures::tests</span>::{<span class="ident">failed_verification</span>, <span class="ident">sign_and_verify</span>},
+    };
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param377</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381b</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param254</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">UniformRand</span>};
+    <span class="kw">use</span> <span class="ident">ark_std::UniformRand</span>;
 
     <span class="macro">macro_rules!</span> <span class="ident">test_signature</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span>:<span class="ident">tt</span>) =&gt; {
@@ -1084,20 +1030,20 @@
                 <span class="kw">for</span> <span class="ident">keypair</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">keypairs</span> {
                     <span class="macro">assert_eq!</span>(<span class="ident">keypair</span>.<span class="ident">vk</span>, <span class="ident">VerKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">sk</span>));
 
-                    <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
+                    <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">CS_ID_SCHNORR</span>);
                     <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">ver_key_ref</span>();
-                    <span class="macro">assert!</span>(<span class="ident">pk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
+                    <span class="macro">assert!</span>(<span class="ident">pk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">is_ok</span>());
                     <span class="comment">// wrong public key</span>
-                    <span class="macro">assert!</span>(<span class="ident">pk_bad</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_err</span>());
+                    <span class="macro">assert!</span>(<span class="ident">pk_bad</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">is_err</span>());
                     <span class="comment">// wrong message</span>
                     <span class="ident">msg</span>.<span class="ident">push</span>(<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::BaseField::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>));
-                    <span class="macro">assert!</span>(<span class="ident">pk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_err</span>());
+                    <span class="macro">assert!</span>(<span class="ident">pk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">is_err</span>());
                 }
             }
 
             <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::BaseField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="ident">sign_and_verify</span>::<span class="op">&lt;</span><span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">message</span>]);
-            <span class="ident">failed_verification</span>::<span class="op">&lt;</span><span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+            <span class="ident">sign_and_verify</span>::<span class="op">&lt;</span><span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">message</span>]);
+            <span class="ident">failed_verification</span>::<span class="op">&lt;</span><span class="ident">SchnorrSignatureScheme</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="op">&gt;</span>(
                 <span class="kw-2">&amp;</span>[<span class="ident">message</span>],
                 <span class="kw-2">&amp;</span>[<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::BaseField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)],
             );
@@ -1112,27 +1058,9 @@
         <span class="macro">test_signature!</span>(<span class="ident">Param381b</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">sign_and_verify</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">SignatureScheme</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">S::MessageUnit</span>]) {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">S::setup</span>::<span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">S::keygen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">S::sign</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
-    }
-
-    <span class="kw">fn</span> <span class="ident">failed_verification</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">SignatureScheme</span><span class="op">&gt;</span>(
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">S::MessageUnit</span>],
-        <span class="ident">bad_message</span>: <span class="kw-2">&amp;</span>[<span class="ident">S::MessageUnit</span>],
-    ) {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">S::setup</span>::<span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">S::keygen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">S::sign</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">bad_message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
-    }
-
     <span class="kw">mod</span> <span class="ident">serde</span> {
         <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span></span>::{<span class="ident">KeyPair</span>, <span class="ident">SignKey</span>, <span class="ident">Signature</span>, <span class="ident">VerKey</span>};
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::constants::CS_ID_SCHNORR</span>;
         <span class="kw">use</span> <span class="ident">ark_ec::twisted_edwards_extended::GroupProjective</span>;
         <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param377</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">FrEd377</span>};
         <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">FrEd381</span>};
@@ -1151,8 +1079,8 @@
                 <span class="comment">// happy path</span>
                 <span class="kw">let</span> <span class="ident">keypair</span>: <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
                 <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">ver_key_ref</span>();
-                <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span>[]);
-                <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
+                <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span>[], <span class="ident">CS_ID_SCHNORR</span>);
+                <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">is_ok</span>());
 
                 <span class="comment">// Bad path</span>
                 <span class="kw">let</span> <span class="ident">bad_ver_key</span> <span class="op">=</span> <span class="ident">VerKey</span>(<span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="ident">::zero</span>());
@@ -1161,8 +1089,10 @@
                     <span class="ident">vk</span>: <span class="ident">bad_ver_key</span>.<span class="ident">clone</span>(),
                 };
 
-                <span class="kw">let</span> <span class="ident">sig_on_bad_key</span> <span class="op">=</span> <span class="ident">bad_keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span>[]);
-                <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">bad_ver_key</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">sig_on_bad_key</span>).<span class="ident">is_err</span>());
+                <span class="kw">let</span> <span class="ident">sig_on_bad_key</span> <span class="op">=</span> <span class="ident">bad_keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span>[], <span class="ident">CS_ID_SCHNORR</span>);
+                <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">bad_ver_key</span>
+                    .<span class="ident">verify</span>(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">sig_on_bad_key</span>, <span class="ident">CS_ID_SCHNORR</span>)
+                    .<span class="ident">is_err</span>());
 
                 <span class="comment">// test serialization</span>
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -1186,9 +1116,9 @@
 
                 <span class="comment">// Happy path</span>
                 <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::from</span>(<span class="number">8u8</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::from</span>(<span class="number">10u8</span>)];
-                <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
-                <span class="macro">assert!</span>(<span class="ident">keypair</span>.<span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
-                <span class="macro">assert!</span>(<span class="ident">keypair</span>.<span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_err</span>());
+                <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">CS_ID_SCHNORR</span>);
+                <span class="macro">assert!</span>(<span class="ident">keypair</span>.<span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">is_ok</span>());
+                <span class="macro">assert!</span>(<span class="ident">keypair</span>.<span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">is_err</span>());
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes_sig</span> <span class="op">=</span> <span class="macro">vec!</span>[];
                 <span class="ident">sig</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_sig</span>).<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">sig_de</span>: <span class="ident">Signature</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span> <span class="op">=</span>
@@ -1221,7 +1151,7 @@
                 <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">SignKey</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">scalar_field</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
                 <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">ver_key</span>();
                 <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)];
-                <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
+                <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">CS_ID_SCHNORR</span>);
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                 <span class="ident">keypair</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>).<span class="ident">unwrap</span>();
