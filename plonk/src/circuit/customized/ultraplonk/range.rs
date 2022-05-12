@@ -48,9 +48,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         // add linear combination gates
-        if len > 1 {
-            self.decompose_vars_gate(reprs_le_vars, a, F::from(range_size as u64))?;
-        }
+        self.decompose_vars_gate(reprs_le_vars, a, F::from(range_size as u64))?;
 
         Ok(())
     }
@@ -155,6 +153,16 @@ mod test {
         *circuit.witness_mut(a[0]) = tmp;
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        // Should fail when the value = 2^RANGE_BIT_LEN_FOR_TEST
+        let a_var = circuit.create_variable(F::from(1u32 << RANGE_BIT_LEN_FOR_TEST))?;
+        circuit.range_gate_with_lookup(a_var, RANGE_BIT_LEN_FOR_TEST)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        // Should fail when the value = 2^{2*RANGE_BIT_LEN_FOR_TEST}
+        let a_var = circuit.create_variable(F::from(1u32 << (2 * RANGE_BIT_LEN_FOR_TEST)))?;
+        circuit.range_gate_with_lookup(a_var, 2 * RANGE_BIT_LEN_FOR_TEST)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
         let zero_var = circuit.zero();
         // bit_len = 0
         assert!(circuit.range_gate_with_lookup(zero_var, 0).is_err());
