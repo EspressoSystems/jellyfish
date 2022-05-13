@@ -1,7 +1,9 @@
 //! Placeholder for BLS signature.
 
 use super::SignatureScheme;
-use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError, hash_to_group::HashToGroup};
+use crate::{
+    constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError, hash_to_group::SWHashToGroup,
+};
 use ark_ec::{
     bls12::{Bls12, Bls12Parameters},
     short_weierstrass_jacobian::GroupAffine,
@@ -51,7 +53,7 @@ pub struct BLSSignature<P: Bls12Parameters>(pub(crate) GroupAffine<P::G1Paramete
 impl<P> SignatureScheme for BLSSignatureScheme<P>
 where
     P: Bls12Parameters,
-    P::G1Parameters: HashToGroup,
+    P::G1Parameters: SWHashToGroup,
 {
     const CS_ID: &'static str = CS_ID_BLS_SIG_NAIVE;
 
@@ -105,7 +107,7 @@ where
         msg: M,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
-        let hm = <P::G1Parameters as HashToGroup>::hash_to_group(
+        let hm = <P::G1Parameters as SWHashToGroup>::hash_to_group(
             msg.as_ref(),
             CS_ID_BLS_SIG_NAIVE.as_ref(),
         )?;
@@ -119,7 +121,7 @@ where
         msg: M,
         sig: &Self::Signature,
     ) -> Result<(), PrimitivesError> {
-        let hm = <P::G1Parameters as HashToGroup>::hash_to_group(
+        let hm = <P::G1Parameters as SWHashToGroup>::hash_to_group(
             msg.as_ref(),
             CS_ID_BLS_SIG_NAIVE.as_ref(),
         )?;

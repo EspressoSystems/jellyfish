@@ -4,7 +4,7 @@ use super::Vrf;
 use crate::{
     constants::CS_ID_BLS_VRF_NAIVE,
     errors::PrimitivesError,
-    hash_to_group::HashToGroup,
+    hash_to_group::SWHashToGroup,
     signatures::{
         bls::{BLSSignKey, BLSSignature, BLSVerKey},
         BLSSignatureScheme, SignatureScheme,
@@ -29,7 +29,7 @@ impl<H, P> Vrf<H, P> for BLSVRFScheme<P>
 where
     H: Digest,
     P: Bls12Parameters,
-    P::G1Parameters: HashToGroup,
+    P::G1Parameters: SWHashToGroup,
 {
     const CS_ID: &'static str = CS_ID_BLS_VRF_NAIVE;
 
