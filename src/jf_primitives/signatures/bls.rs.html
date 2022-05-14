@@ -172,10 +172,14 @@
 <span id="167">167</span>
 <span id="168">168</span>
 <span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Placeholder for BLS signature.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SignatureScheme</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">constants::CS_ID_BLS_SIG_NAIVE</span>, <span class="ident">errors::PrimitivesError</span>, <span class="ident">hash_to_group::HashToGroup</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">constants::CS_ID_BLS_SIG_NAIVE</span>, <span class="ident">errors::PrimitivesError</span>, <span class="ident">hash_to_group::SWHashToGroup</span>,
+};
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{
     <span class="ident">bls12</span>::{<span class="ident">Bls12</span>, <span class="ident">Bls12Parameters</span>},
     <span class="ident">short_weierstrass_jacobian::GroupAffine</span>,
@@ -225,7 +229,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureScheme</span> <span class="kw">for</span> <span class="ident">BLSSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">P</span>: <span class="ident">Bls12Parameters</span>,
-    <span class="ident">P::G1Parameters</span>: <span class="ident">HashToGroup</span>,
+    <span class="ident">P::G1Parameters</span>: <span class="ident">SWHashToGroup</span>,
 {
     <span class="kw">const</span> <span class="ident">CS_ID</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="ident">CS_ID_BLS_SIG_NAIVE</span>;
 
@@ -279,7 +283,7 @@
         <span class="ident">msg</span>: <span class="ident">M</span>,
         <span class="ident">_prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hm</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">HashToGroup</span><span class="op">&gt;</span><span class="ident">::hash_to_group</span>(
+        <span class="kw">let</span> <span class="ident">hm</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">SWHashToGroup</span><span class="op">&gt;</span><span class="ident">::hash_to_group</span>(
             <span class="ident">msg</span>.<span class="ident">as_ref</span>(),
             <span class="ident">CS_ID_BLS_SIG_NAIVE</span>.<span class="ident">as_ref</span>(),
         )<span class="question-mark">?</span>;
@@ -293,7 +297,7 @@
         <span class="ident">msg</span>: <span class="ident">M</span>,
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Signature</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hm</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">HashToGroup</span><span class="op">&gt;</span><span class="ident">::hash_to_group</span>(
+        <span class="kw">let</span> <span class="ident">hm</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">SWHashToGroup</span><span class="op">&gt;</span><span class="ident">::hash_to_group</span>(
             <span class="ident">msg</span>.<span class="ident">as_ref</span>(),
             <span class="ident">CS_ID_BLS_SIG_NAIVE</span>.<span class="ident">as_ref</span>(),
         )<span class="question-mark">?</span>;
