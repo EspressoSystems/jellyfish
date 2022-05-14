@@ -13,6 +13,7 @@
 
 - Derive `Debug`, `Snafu` on `enum TaggedBlobError`
 - Updated `tagged-base64` reference url to reflect the Espresso Systems name change
+- Add `HashToGroup` support for both SW and TE curves
 
 ### Bugfixes
 

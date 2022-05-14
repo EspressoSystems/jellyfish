@@ -7,7 +7,7 @@
 //! Module for hash to various elliptic curve groups
 
 mod short_weierstrass;
-mod twisted_edward;
+mod twisted_edwards;
 
 pub use short_weierstrass::SWHashToGroup;
-pub use twisted_edward::TEHashToGroup;
+pub use twisted_edwards::TEHashToGroup;

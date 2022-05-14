@@ -19,7 +19,8 @@ use digest::Digest;
 use rand_chacha::ChaCha20Rng;
 use sha2::Sha256;
 
-/// Trait definition and default implementation for hash to group functions.
+/// Trait definition and default implementation for hash to group functions for
+/// Twisted Edwards Curves.
 pub trait TEHashToGroup: TEModelParameters + Sized {
     /// Hash to Group point, using sha2-512 function
     /// hashing to G1 point of `C: ProjectiveCurve`.
@@ -54,6 +55,12 @@ impl TEHashToGroup for ark_ed_on_bls12_377::EdwardsParameters {
     // <https://github.com/algorand/pairing-plus/blob/7ec2ae03aae4ba2fc5210810211478171ccededf/src/bls12_381/osswu_map/g1.rs#L47>
 }
 
+impl TEHashToGroup for ark_ed_on_bls12_381::EdwardsParameters {
+    // TODO:
+    // overload hash to group with the method in
+    // <https://github.com/algorand/pairing-plus/blob/7ec2ae03aae4ba2fc5210810211478171ccededf/src/bls12_381/osswu_map/g1.rs#L47>
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -62,6 +69,7 @@ mod test {
     #[test]
     fn test_hash_to_group() {
         test_hash_to_group_helper::<ark_ed_on_bls12_377::EdwardsParameters>();
+        test_hash_to_group_helper::<ark_ed_on_bls12_381::EdwardsParameters>();
     }
 
     fn test_hash_to_group_helper<P: TEHashToGroup>() {

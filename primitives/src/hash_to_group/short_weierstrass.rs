@@ -19,7 +19,8 @@ use digest::Digest;
 use rand_chacha::ChaCha20Rng;
 use sha2::Sha256;
 
-/// Trait definition and default implementation for hash to group functions.
+/// Trait definition and default implementation for hash to group functions for
+/// Short Weierstrass Curves.
 pub trait SWHashToGroup: SWModelParameters + Sized {
     /// Hash to Group point, using sha2-512 function
     /// hashing to G1 point of `C: ProjectiveCurve`.
