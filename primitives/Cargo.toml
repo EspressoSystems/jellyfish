@@ -13,9 +13,12 @@ ark-ff = { version = "0.3.0", default-features = false }
 ark-std = { version = "0.3.0", default-features = false }
 ark-ec = { version = "0.3.0", default-features = false }
 ark-serialize = { version = "0.3.0", default-features = false }
+
+# ark curves
 ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, features = ["curve"], rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-
+ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
+ark-ed-on-bls12-381 = { version = "0.3.0", default-features = false }
 
 # jellyfish
 jf-plonk = { path = "../plonk" }
@@ -42,8 +45,6 @@ quickcheck = "1.0.0"
 criterion = "0.3.1"
 
 # ark curves
-ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
-ark-ed-on-bls12-381 = { version = "0.3.0", default-features = false }
 ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bn254 = { version = "0.3.0", default-features = false }
 ark-bn254 = { version = "0.3.0", default-features = false, features = ["curve"] }
