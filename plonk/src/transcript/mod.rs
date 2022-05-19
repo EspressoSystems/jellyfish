@@ -17,7 +17,7 @@ pub use standard::StandardTranscript;
 
 use crate::{
     errors::PlonkError,
-    proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
+    proof_system::structs::{ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
@@ -163,43 +163,6 @@ pub trait PlonkTranscript<F> {
             self,
             b"perm_next_eval",
             &to_bytes!(&evals.perm_next_eval)?,
-        )
-    }
-
-    /// Append the plookup evaluation to the transcript.
-    fn append_plookup_evaluations<E: PairingEngine>(
-        &mut self,
-        evals: &PlookupEvaluations<E::Fr>,
-    ) -> Result<(), PlonkError> {
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"lookup_table_eval",
-            &to_bytes!(&evals.range_table_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"h_1_eval",
-            &to_bytes!(&evals.h_1_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"prod_next_eval",
-            &to_bytes!(&evals.prod_next_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"lookup_table_next_eval",
-            &to_bytes!(&evals.range_table_next_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"h_1_next_eval",
-            &to_bytes!(&evals.h_1_next_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"h_2_next_eval",
-            &to_bytes!(&evals.h_2_next_eval)?,
         )
     }
 

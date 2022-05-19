@@ -7,10 +7,7 @@
 //! Instantiations of Plonk-based proof systems
 use super::{
     prover::Prover,
-    structs::{
-        trim, BatchProof, Challenges, Oracles, //PlookupProof, PlookupProvingKey,
-        Proof, ProvingKey, VerifyingKey,
-    },
+    structs::{trim, BatchProof, Challenges, Oracles, Proof, ProvingKey, VerifyingKey},
     verifier::Verifier,
     Snark,
 };
@@ -83,22 +80,6 @@ where
         let selectors_polys = circuit.compute_selector_polynomials()?;
         let sigma_polys = circuit.compute_extended_permutation_polynomials()?;
 
-        // // Compute Plookup proving key if support lookup.
-        // let plookup_pk = if circuit.support_lookup() {
-        //     let range_table_poly = circuit.compute_range_table_polynomial()?;
-        //     let key_table_poly = circuit.compute_key_table_polynomial()?;
-        //     let table_dom_sep_poly = circuit.compute_table_dom_sep_polynomial()?;
-        //     let q_dom_sep_poly = circuit.compute_q_dom_sep_polynomial()?;
-        //     Some(PlookupProvingKey {
-        //         range_table_poly,
-        //         key_table_poly,
-        //         table_dom_sep_poly,
-        //         q_dom_sep_poly,
-        //     })
-        // } else {
-        //     None
-        // };
-
         // 2. Compute VerifyingKey
         let (commit_key, open_key) = trim(&srs.0, srs_size);
         let selector_comms: Vec<_> = selectors_polys
@@ -119,40 +100,6 @@ where
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
-        // // Compute Plookup verifying key if support lookup.
-        // let plookup_vk = match circuit.support_lookup() {
-        //     false => None,
-        //     true => Some(PlookupVerifyingKey {
-        //         range_table_comm: KZG10::commit(
-        //             &commit_key,
-        //             &plookup_pk.as_ref().unwrap().range_table_poly,
-        //             None,
-        //             None,
-        //         )?
-        //         .0,
-        //         key_table_comm: KZG10::commit(
-        //             &commit_key,
-        //             &plookup_pk.as_ref().unwrap().key_table_poly,
-        //             None,
-        //             None,
-        //         )?
-        //         .0,
-        //         table_dom_sep_comm: KZG10::commit(
-        //             &commit_key,
-        //             &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
-        //             None,
-        //             None,
-        //         )?
-        //         .0,
-        //         q_dom_sep_comm: KZG10::commit(
-        //             &commit_key,
-        //             &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
-        //             None,
-        //             None,
-        //         )?
-        //         .0,
-        //     }),
-        // };
 
         let vk = VerifyingKey {
             domain_size,
@@ -161,7 +108,6 @@ where
             sigma_comms,
             k: compute_coset_representatives(circuit.num_wire_types(), Some(domain_size)),
             open_key,
-            // plookup_vk,
             is_merged: false,
         };
 
@@ -171,7 +117,6 @@ where
             selectors: selectors_polys,
             commit_key,
             vk: vk.clone(),
-            // plookup_pk,
         };
 
         Ok((pk, vk))
@@ -330,12 +275,7 @@ where
                 ))
                 .into());
             }
-            // if circuit.support_lookup() != pk.plookup_pk.is_some() {
-            //     return Err(ParameterError(
-            //         "Mismatched Plonk types between the proving key and the circuit".to_string(),
-            //     )
-            //     .into());
-            // }
+
             if circuit.num_wire_types() != num_wire_types {
                 return Err(ParameterError("inconsistent plonk circuit types".to_string()).into());
             }
@@ -365,33 +305,6 @@ where
             wires_poly_comms_vec.push(wires_poly_comms);
         }
 
-        // // Round 1.5
-        // // Plookup: compute and interpolate the sorted concatenation of the (merged)
-        // // lookup table and the (merged) witness values
-        // challenges.tau = transcript.get_and_append_challenge::<E>(b"tau")?;
-        // let mut h_poly_comms_vec = vec![];
-        // let mut sorted_vec_list = vec![];
-        // let mut merged_table_list = vec![];
-        // for i in 0..circuits.len() {
-        //     let (sorted_vec, h_poly_comms, merged_table) = if circuits[i].support_lookup() {
-        //         let ((h_poly_comms, h_polys), sorted_vec, merged_table) = prover
-        //             .run_plookup_1st_round(
-        //                 prng,
-        //                 &prove_keys[i].commit_key,
-        //                 circuits[i],
-        //                 challenges.tau,
-        //             )?;
-        //         online_oracles[i].plookup_oracles.h_polys = h_polys;
-        //         transcript.append_commitments(b"h_poly_comms", &h_poly_comms)?;
-        //         (Some(sorted_vec), Some(h_poly_comms), Some(merged_table))
-        //     } else {
-        //         (None, None, None)
-        //     };
-        //     h_poly_comms_vec.push(h_poly_comms);
-        //     sorted_vec_list.push(sorted_vec);
-        //     merged_table_list.push(merged_table);
-        // }
-
         // Round 2
         challenges.beta = transcript.get_and_append_challenge::<E>(b"beta")?;
         challenges.gamma = transcript.get_and_append_challenge::<E>(b"gamma")?;
@@ -403,28 +316,6 @@ where
             transcript.append_commitment(b"perm_poly_comms", &prod_perm_poly_comm)?;
             prod_perm_poly_comms_vec.push(prod_perm_poly_comm);
         }
-
-        // // Round 2.5
-        // // Plookup: compute Plookup product accumulation polynomial
-        // let mut prod_lookup_poly_comms_vec = vec![];
-        // for i in 0..circuits.len() {
-        //     let prod_lookup_poly_comm = if circuits[i].support_lookup() {
-        //         let (prod_lookup_poly_comm, prod_lookup_poly) = prover.run_plookup_2nd_round(
-        //             prng,
-        //             &prove_keys[i].commit_key,
-        //             circuits[i],
-        //             &challenges,
-        //             merged_table_list[i].as_ref(),
-        //             sorted_vec_list[i].as_ref(),
-        //         )?;
-        //         online_oracles[i].plookup_oracles.prod_lookup_poly = prod_lookup_poly;
-        //         transcript.append_commitment(b"plookup_poly_comms", &prod_lookup_poly_comm)?;
-        //         Some(prod_lookup_poly_comm)
-        //     } else {
-        //         None
-        //     };
-        //     prod_lookup_poly_comms_vec.push(prod_lookup_poly_comm);
-        // }
 
         // Round 3
         challenges.alpha = transcript.get_and_append_challenge::<E>(b"alpha")?;
@@ -451,24 +342,6 @@ where
             poly_evals_vec.push(poly_evals);
         }
 
-        // // Round 4.5
-        // // Plookup: compute evaluations on Plookup-related polynomials
-        // let mut plookup_evals_vec = vec![];
-        // for i in 0..circuits.len() {
-        //     let plookup_evals = if circuits[i].support_lookup() {
-        //         let evals = prover.compute_plookup_evaluations(
-        //             prove_keys[i],
-        //             &challenges,
-        //             &online_oracles[i],
-        //         )?;
-        //         transcript.append_plookup_evaluations::<E>(&evals)?;
-        //         Some(evals)
-        //     } else {
-        //         None
-        //     };
-        //     plookup_evals_vec.push(plookup_evals);
-        // }
-
         let mut lin_poly = Prover::<E>::compute_quotient_component_for_lin_poly(
             n,
             challenges.zeta,
@@ -476,7 +349,6 @@ where
         )?;
         let mut alpha_base = E::Fr::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
-        // let alpha_7 = alpha_3.square() * challenges.alpha;
         for i in 0..circuits.len() {
             lin_poly = lin_poly
                 + prover.compute_non_quotient_component_for_lin_poly(
@@ -485,15 +357,9 @@ where
                     &challenges,
                     &online_oracles[i],
                     &poly_evals_vec[i],
-                    // plookup_evals_vec[i].as_ref(),
                 )?;
-            // update the alpha power term (i.e. the random combiner that aggregates
-            // multiple instances)
-            // if plookup_evals_vec[i].is_some() {
-            //     alpha_base *= alpha_7;
-            // } else {
-                alpha_base *= alpha_3;
-            // }
+
+            alpha_base *= alpha_3;
         }
 
         // Round 5
@@ -507,27 +373,11 @@ where
             &lin_poly,
         )?;
 
-        // // Plookup: build Plookup argument
-        // let mut plookup_proofs_vec = vec![];
-        // for i in 0..circuits.len() {
-        //     let plookup_proof = if circuits[i].support_lookup() {
-        //         Some(PlookupProof {
-        //             h_poly_comms: h_poly_comms_vec[i].clone().unwrap(),
-        //             prod_lookup_poly_comm: prod_lookup_poly_comms_vec[i].unwrap(),
-        //             poly_evals: plookup_evals_vec[i].clone().unwrap(),
-        //         })
-        //     } else {
-        //         None
-        //     };
-        //     plookup_proofs_vec.push(plookup_proof);
-        // }
-
         Ok((
             BatchProof {
                 wires_poly_comms_vec,
                 prod_perm_poly_comms_vec,
                 poly_evals_vec,
-                // plookup_proofs_vec,
                 split_quot_poly_comms,
                 opening_proof,
                 shifted_opening_proof,
@@ -579,7 +429,6 @@ where
             opening_proof: batch_proof.opening_proof,
             shifted_opening_proof: batch_proof.shifted_opening_proof,
             poly_evals: batch_proof.poly_evals_vec[0].clone(),
-            // plookup_proof: batch_proof.plookup_proofs_vec[0].clone(),
         })
     }
 
@@ -608,17 +457,14 @@ pub mod test {
         constants::GATE_WIDTH,
         errors::PlonkError,
         proof_system::{
-            structs::{
-                Challenges, Oracles, Proof,
-                ProvingKey, UniversalSrs, VerifyingKey,
-            },
+            structs::{Challenges, Oracles, Proof, ProvingKey, UniversalSrs, VerifyingKey},
             PlonkKzgSnark, Snark,
         },
         transcript::{
             rescue::RescueTranscript, solidity::SolidityTranscript, standard::StandardTranscript,
             PlonkTranscript,
         },
-        MergeableCircuitType, PlonkType,
+        PlonkType, PredicateCircuitType,
     };
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
@@ -651,10 +497,8 @@ pub mod test {
         a0: usize,
         plonk_type: PlonkType,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let range_bit_len = 5;
         let mut cs: PlonkCircuit<F> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-            // PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(range_bit_len),
         };
         // Create variables
         let mut a = vec![];
@@ -682,29 +526,6 @@ pub mod test {
         cs.mul_gate(b1_plus_a0, b1_minus_a0, c)?;
         cs.constant_gate(b[0], F::from(m as u64 * 2))?;
 
-        // if plonk_type == PlonkType::UltraPlonk {
-        //     // Create range gates
-        //     // 1. range_table = {0, 1, ..., 31}
-        //     // 2. a_i \in range_table for i = 0..m-1
-        //     // 3. b0 \in range_table
-        //     for &var in a.iter().take(m) {
-        //         cs.add_range_check_variable(var)?;
-        //     }
-        //     cs.add_range_check_variable(b[0])?;
-
-        //     // Create variable table lookup gates
-        //     // 1. table = [(a0, a2), (a1, a3), (b0, a0)]
-        //     let table_vars = [(a[0], a[2]), (a[1], a[3]), (b[0], a[0])];
-        //     // 2. lookup_witness = [(1, a0+1, a0+3), (2, 2m, a0)]
-        //     let key0 = cs.one();
-        //     let key1 = cs.create_variable(F::from(2u8))?;
-        //     let two_m = cs.create_public_variable(F::from(m as u64 * 2))?;
-        //     let a1 = cs.add_constant(a[0], &F::one())?;
-        //     let a3 = cs.add_constant(a[0], &F::from(3u8))?;
-        //     let lookup_vars = [(key0, a1, a3), (key1, two_m, a[0])];
-        //     cs.create_table_and_lookup_variables(&lookup_vars, &table_vars)?;
-        // }
-
         // Finalize the circuit.
         cs.finalize_for_arithmetization()?;
 
@@ -714,13 +535,9 @@ pub mod test {
     #[test]
     fn test_preprocessing() -> Result<(), PlonkError> {
         test_preprocessing_helper::<Bn254, Fq254, _>(PlonkType::TurboPlonk)?;
-        // test_preprocessing_helper::<Bn254, Fq254, _>(PlonkType::UltraPlonk)?;
         test_preprocessing_helper::<Bls12_377, Fq377, _>(PlonkType::TurboPlonk)?;
-        // test_preprocessing_helper::<Bls12_377, Fq377, _>(PlonkType::UltraPlonk)?;
         test_preprocessing_helper::<Bls12_381, Fq381, _>(PlonkType::TurboPlonk)?;
-        // test_preprocessing_helper::<Bls12_381, Fq381, _>(PlonkType::UltraPlonk)?;
         test_preprocessing_helper::<BW6_761, Fq761, _>(PlonkType::TurboPlonk)
-        // test_preprocessing_helper::<BW6_761, Fq761, _>(PlonkType::UltraPlonk)
     }
     fn test_preprocessing_helper<E, F, P>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
@@ -744,27 +561,8 @@ pub mod test {
         assert_eq!(pk.sigmas, sigmas);
         assert_eq!(pk.domain_size(), domain_size);
         assert_eq!(pk.num_inputs(), num_inputs);
-        let num_wire_types = GATE_WIDTH
-            + 1
-            + match plonk_type {
-                PlonkType::TurboPlonk => 0,
-                // PlonkType::UltraPlonk => 1,
-            };
+        let num_wire_types = GATE_WIDTH + 1;
         assert_eq!(pk.sigmas.len(), num_wire_types);
-        // // check plookup proving key
-        // if plonk_type == PlonkType::UltraPlonk {
-        //     let range_table_poly = circuit.compute_range_table_polynomial()?;
-        //     assert_eq!(
-        //         pk.plookup_pk.as_ref().unwrap().range_table_poly,
-        //         range_table_poly
-        //     );
-
-        //     let key_table_poly = circuit.compute_key_table_polynomial()?;
-        //     assert_eq!(
-        //         pk.plookup_pk.as_ref().unwrap().key_table_poly,
-        //         key_table_poly
-        //     );
-        // }
 
         // check verifying key
         assert_eq!(vk.domain_size, domain_size);
@@ -786,32 +584,6 @@ pub mod test {
                 let (expected_comm, _) = KZG10::commit(&pk.commit_key, p, None, None).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
-        // // check plookup verification key
-        // if plonk_type == PlonkType::UltraPlonk {
-        //     let (expected_comm, _) = KZG10::commit(
-        //         &pk.commit_key,
-        //         &pk.plookup_pk.as_ref().unwrap().range_table_poly,
-        //         None,
-        //         None,
-        //     )
-        //     .unwrap();
-        //     assert_eq!(
-        //         expected_comm,
-        //         vk.plookup_vk.as_ref().unwrap().range_table_comm
-        //     );
-
-        //     let (expected_comm, _) = KZG10::commit(
-        //         &pk.commit_key,
-        //         &pk.plookup_pk.as_ref().unwrap().key_table_poly,
-        //         None,
-        //         None,
-        //     )
-        //     .unwrap();
-        //     assert_eq!(
-        //         expected_comm,
-        //         vk.plookup_vk.as_ref().unwrap().key_table_comm
-        //     );
-        // }
 
         Ok(())
     }
@@ -822,36 +594,24 @@ pub mod test {
         test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
+
         test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
+
         test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
+
         test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
 
         // rescue transcripts
         // currently only available for bls12-377
         test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-        //     PlonkType::UltraPlonk,
-        // )?;
 
         // solidity-friendly keccak256 transcripts
         // currently only needed for CAPE using bls12-381
@@ -1040,36 +800,21 @@ pub mod test {
         test_inconsistent_pub_input_len_helper::<Bn254, Fq254, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_inconsistent_pub_input_len_helper::<Bn254, Fq254, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
         test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
         test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
         test_inconsistent_pub_input_len_helper::<BW6_761, Fq761, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_inconsistent_pub_input_len_helper::<BW6_761, Fq761, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
 
         // rescue transcripts
         // currently only available for bls12-377
         test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
             PlonkType::TurboPlonk,
         )?;
-        // test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-        //     PlonkType::UltraPlonk,
-        // )?;
 
         // Solidity-friendly keccak256 transcript
         test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
@@ -1097,14 +842,12 @@ pub mod test {
         // 2. Create circuits
         let mut cs1: PlonkCircuit<E::Fr> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-            // PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(2),
         };
         let var = cs1.create_variable(E::Fr::from(1u8))?;
         cs1.constant_gate(var, E::Fr::from(1u8))?;
         cs1.finalize_for_arithmetization()?;
         let mut cs2: PlonkCircuit<E::Fr> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-            // PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(2),
         };
         cs2.create_public_variable(E::Fr::from(1u8))?;
         cs2.finalize_for_arithmetization()?;
@@ -1144,27 +887,12 @@ pub mod test {
         test_plonk_prover_polynomials_helper::<BW6_761, Fq761, _, StandardTranscript>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_prover_polynomials_helper::<Bn254, Fq254, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
-        // test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
-        // test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
-        // test_plonk_prover_polynomials_helper::<BW6_761, Fq761, _, StandardTranscript>(
-        //     PlonkType::UltraPlonk,
-        // )?;
 
         // rescue transcripts
         // currently only available for bls12-377
         test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
             PlonkType::TurboPlonk,
         )?;
-        // test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-        //     PlonkType::UltraPlonk,
-        // )?;
 
         // Solidity-friendly keccak256 transcript
         test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
@@ -1201,22 +929,18 @@ pub mod test {
             PlonkKzgSnark::<E>::batch_prove_internal::<_, _, T>(rng, &[&circuit], &[&pk], None)?;
 
         // 5. Check that the targeted polynomials evaluate to zero on the vanishing set.
-        check_plonk_prover_polynomials(plonk_type, &oracles[0], &pk, &challenges)?;
+        check_plonk_prover_polynomials(&oracles[0], &pk, &challenges)?;
 
         Ok(())
     }
 
     fn check_plonk_prover_polynomials<E: PairingEngine>(
-        plonk_type: PlonkType,
         oracles: &Oracles<E::Fr>,
         pk: &ProvingKey<E>,
         challenges: &Challenges<E::Fr>,
     ) -> Result<(), PlonkError> {
         check_circuit_polynomial_on_vanishing_set(&oracles, &pk)?;
         check_perm_polynomials_on_vanishing_set(&oracles, &pk, &challenges)?;
-        // if plonk_type == PlonkType::UltraPlonk {
-        //     check_lookup_polynomials_on_vanishing_set(&oracles, &pk, &challenges)?;
-        // }
 
         Ok(())
     }
@@ -1340,95 +1064,6 @@ pub mod test {
 
         Ok(())
     }
-
-    // fn check_lookup_polynomials_on_vanishing_set<E: PairingEngine>(
-    //     oracles: &Oracles<E::Fr>,
-    //     pk: &ProvingKey<E>,
-    //     challenges: &Challenges<E::Fr>,
-    // ) -> Result<(), PlonkError> {
-    //     let beta = challenges.beta;
-    //     let gamma = challenges.gamma;
-    //     let n = pk.domain_size();
-    //     let domain =
-    //         Radix2EvaluationDomain::<E::Fr>::new(n).ok_or(PlonkError::DomainCreationError)?;
-    //     let prod_poly = &oracles.plookup_oracles.prod_lookup_poly;
-    //     let h_polys = &oracles.plookup_oracles.h_polys;
-
-    //     // check z(X) = 1 at point 1
-    //     assert_eq!(prod_poly.evaluate(&domain.element(0)), E::Fr::one());
-
-    //     // check z(X) = 1 at point w^{n-1}
-    //     assert_eq!(prod_poly.evaluate(&domain.element(n - 1)), E::Fr::one());
-
-    //     // check h1(X) = h2(w * X) at point w^{n-1}
-    //     assert_eq!(
-    //         h_polys[0].evaluate(&domain.element(n - 1)),
-    //         h_polys[1].evaluate(&domain.element(0))
-    //     );
-
-    //     // check z(X) *
-    //     //      (1+beta) * (gamma + merged_lookup_wire(X)) *
-    //     //      (gamma(1+beta) + merged_table(X) + beta * merged_table(Xw))
-    //     //     = z(Xw) *
-    //     //      (gamma(1+beta) + h1(X) + beta * h1(Xw)) *
-    //     //      (gamma(1+beta) + h2(x) + beta * h2(Xw))
-    //     // on the vanishing set excluding point w^{n-1}
-    //     let beta_plus_one = E::Fr::one() + beta;
-    //     let gamma_mul_beta_plus_one = gamma * beta_plus_one;
-
-    //     let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
-    //     let key_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().key_table_poly;
-    //     let table_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly;
-    //     let q_dom_sep_poly_ref = &pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly;
-
-    //     for i in 0..domain.size() - 1 {
-    //         let point = domain.element(i);
-    //         let next_point = point * domain.group_gen;
-    //         let merged_lookup_wire_eval = eval_merged_lookup_witness::<E>(
-    //             challenges.tau,
-    //             oracles.wire_polys[5].evaluate(&point),
-    //             oracles.wire_polys[0].evaluate(&point),
-    //             oracles.wire_polys[1].evaluate(&point),
-    //             oracles.wire_polys[2].evaluate(&point),
-    //             pk.q_lookup_poly()?.evaluate(&point),
-    //             q_dom_sep_poly_ref.evaluate(&point),
-    //         );
-    //         let merged_table_eval = eval_merged_table::<E>(
-    //             challenges.tau,
-    //             range_table_poly_ref.evaluate(&point),
-    //             key_table_poly_ref.evaluate(&point),
-    //             pk.q_lookup_poly()?.evaluate(&point),
-    //             oracles.wire_polys[3].evaluate(&point),
-    //             oracles.wire_polys[4].evaluate(&point),
-    //             table_dom_sep_poly_ref.evaluate(&point),
-    //         );
-    //         let merged_table_next_eval = eval_merged_table::<E>(
-    //             challenges.tau,
-    //             range_table_poly_ref.evaluate(&next_point),
-    //             key_table_poly_ref.evaluate(&next_point),
-    //             pk.q_lookup_poly()?.evaluate(&next_point),
-    //             oracles.wire_polys[3].evaluate(&next_point),
-    //             oracles.wire_polys[4].evaluate(&next_point),
-    //             table_dom_sep_poly_ref.evaluate(&next_point),
-    //         );
-
-    //         let eval_1 = prod_poly.evaluate(&point)
-    //             * beta_plus_one
-    //             * (gamma + merged_lookup_wire_eval)
-    //             * (gamma_mul_beta_plus_one + merged_table_eval + beta * merged_table_next_eval);
-    //         let eval_2 = prod_poly.evaluate(&next_point)
-    //             * (gamma_mul_beta_plus_one
-    //                 + h_polys[0].evaluate(&point)
-    //                 + beta * h_polys[0].evaluate(&next_point))
-    //             * (gamma_mul_beta_plus_one
-    //                 + h_polys[1].evaluate(&point)
-    //                 + beta * h_polys[1].evaluate(&next_point));
-    //         assert_eq!(eval_1, eval_2, "i={}, domain_size={}", i, domain.size());
-    //     }
-
-    //     Ok(())
-    // }
-
     #[test]
     fn test_proof_from_to_fields() -> Result<(), PlonkError> {
         test_proof_from_to_fields_helper::<Bn254, _>()?;
@@ -1464,18 +1099,13 @@ pub mod test {
     fn test_serde() -> Result<(), PlonkError> {
         // merlin transcripts
         test_serde_helper::<Bn254, Fq254, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        // test_serde_helper::<Bn254, Fq254, _, StandardTranscript>(PlonkType::UltraPlonk)?;
         test_serde_helper::<Bls12_377, Fq377, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        // test_serde_helper::<Bls12_377, Fq377, _, StandardTranscript>(PlonkType::UltraPlonk)?;
         test_serde_helper::<Bls12_381, Fq381, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        // test_serde_helper::<Bls12_381, Fq381, _, StandardTranscript>(PlonkType::UltraPlonk)?;
         test_serde_helper::<BW6_761, Fq761, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        // test_serde_helper::<BW6_761, Fq761, _, StandardTranscript>(PlonkType::UltraPlonk)?;
 
         // rescue transcripts
         // currently only available for bls12-377
         test_serde_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(PlonkType::TurboPlonk)?;
-        // test_serde_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(PlonkType::UltraPlonk)?;
 
         // Solidity-friendly keccak256 transcript
         test_serde_helper::<Bls12_381, Fq381, _, SolidityTranscript>(PlonkType::TurboPlonk)?;
@@ -1583,10 +1213,10 @@ pub mod test {
         //
         // 2. Create circuits
         let type_a_circuits: Vec<PlonkCircuit<E::Fr>> = (6..13)
-            .map(|i| gen_mergeable_circuit(i, i, MergeableCircuitType::TypeA))
+            .map(|i| gen_mergeable_circuit(i, i, PredicateCircuitType::BirthPredicate))
             .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
         let type_b_circuits = (6..13)
-            .map(|i| gen_mergeable_circuit(i, i, MergeableCircuitType::TypeB))
+            .map(|i| gen_mergeable_circuit(i, i, PredicateCircuitType::DeathPredicate))
             .collect::<Result<Vec<_>, PlonkError>>()?;
         // merge circuits
         let circuits = type_a_circuits
@@ -1680,7 +1310,7 @@ pub mod test {
     fn gen_mergeable_circuit<F: PrimeField>(
         m: usize,
         a0: usize,
-        circuit_type: MergeableCircuitType,
+        circuit_type: PredicateCircuitType,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut cs: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         // Create variables

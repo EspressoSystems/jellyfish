@@ -32,16 +32,14 @@ pub mod testing_apis;
 pub enum PlonkType {
     /// TurboPlonk
     TurboPlonk,
-    // /// TurboPlonk that supports Plookup
-    // UltraPlonk,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 /// Enum for each type of mergeable circuit. We can only merge circuits from
 /// different types.
-pub enum MergeableCircuitType {
+pub enum PredicateCircuitType {
     /// First type
-    TypeA,
+    BirthPredicate,
     /// Second type
-    TypeB,
+    DeathPredicate,
 }

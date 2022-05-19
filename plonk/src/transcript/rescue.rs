@@ -9,7 +9,7 @@ use super::PlonkTranscript;
 use crate::{
     circuit::customized::ecc::{Point, SWToTEConParam},
     errors::PlonkError,
-    proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
+    proof_system::structs::{ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
@@ -146,19 +146,6 @@ where
             self.transcript.push(field_switching(e))
         }
         self.transcript.push(field_switching(&evals.perm_next_eval));
-        Ok(())
-    }
-
-    fn append_plookup_evaluations<E: PairingEngine>(
-        &mut self,
-        evals: &PlookupEvaluations<E::Fr>,
-    ) -> Result<(), PlonkError> {
-        for eval in evals.evals_vec().iter() {
-            self.transcript.push(field_switching(eval));
-        }
-        for next_eval in evals.next_evals_vec().iter() {
-            self.transcript.push(field_switching(next_eval));
-        }
         Ok(())
     }
 

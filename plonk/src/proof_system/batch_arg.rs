@@ -14,7 +14,7 @@ use crate::{
         PlonkKzgSnark,
     },
     transcript::PlonkTranscript,
-    MergeableCircuitType,
+    PredicateCircuitType,
 };
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
 use ark_ff::One;
@@ -39,7 +39,7 @@ pub struct Instance<'a, E: PairingEngine> {
     // TODO: considering giving instance an ID
     prove_key: ProvingKey<'a, E>, // the verification key can be obtained inside the proving key.
     circuit: PlonkCircuit<E::Fr>,
-    _circuit_type: MergeableCircuitType,
+    _circuit_type: PredicateCircuitType,
 }
 
 impl<'a, E: PairingEngine> Instance<'a, E> {
@@ -64,7 +64,7 @@ where
     pub fn setup_instance(
         srs: &'a UniversalSrs<E>,
         mut circuit: PlonkCircuit<E::Fr>,
-        circuit_type: MergeableCircuitType,
+        circuit_type: PredicateCircuitType,
     ) -> Result<Instance<'a, E>, PlonkError> {
         circuit.finalize_for_mergeable_circuit(circuit_type)?;
         let (prove_key, _) = PlonkKzgSnark::preprocess(srs, &circuit)?;
@@ -214,12 +214,12 @@ where
 pub(crate) fn new_mergeable_circuit_for_test<E: PairingEngine>(
     shared_public_input: E::Fr,
     i: usize,
-    circuit_type: MergeableCircuitType,
+    circuit_type: PredicateCircuitType,
 ) -> Result<PlonkCircuit<E::Fr>, PlonkError> {
     let mut circuit = PlonkCircuit::new_turbo_plonk();
     let shared_pub_var = circuit.create_public_variable(shared_public_input)?;
     let mut var = shared_pub_var;
-    if circuit_type == MergeableCircuitType::TypeA {
+    if circuit_type == PredicateCircuitType::BirthPredicate {
         // compute type A instances: add `shared_public_input` by i times
         for _ in 0..i {
             var = circuit.add(var, shared_pub_var)?;
@@ -257,20 +257,26 @@ where
         let circuit = new_mergeable_circuit_for_test::<E>(
             shared_public_input,
             i,
-            crate::MergeableCircuitType::TypeA,
+            crate::PredicateCircuitType::BirthPredicate,
         )?;
-        let instance =
-            BatchArgument::setup_instance(srs, circuit, crate::MergeableCircuitType::TypeA)?;
+        let instance = BatchArgument::setup_instance(
+            srs,
+            circuit,
+            crate::PredicateCircuitType::BirthPredicate,
+        )?;
         vks_type_a.push(instance.verify_key_ref().clone());
         instances_type_a.push(instance);
 
         let circuit = new_mergeable_circuit_for_test::<E>(
             shared_public_input,
             i,
-            crate::MergeableCircuitType::TypeB,
+            crate::PredicateCircuitType::DeathPredicate,
         )?;
-        let instance =
-            BatchArgument::setup_instance(srs, circuit, crate::MergeableCircuitType::TypeB)?;
+        let instance = BatchArgument::setup_instance(
+            srs,
+            circuit,
+            crate::PredicateCircuitType::DeathPredicate,
+        )?;
         vks_type_b.push(instance.verify_key_ref().clone());
         instances_type_b.push(instance);
     }
@@ -313,19 +319,25 @@ mod test {
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
                 i,
-                crate::MergeableCircuitType::TypeA,
+                crate::PredicateCircuitType::BirthPredicate,
             )?;
-            let instance =
-                BatchArgument::setup_instance(&srs, circuit, crate::MergeableCircuitType::TypeA)?;
+            let instance = BatchArgument::setup_instance(
+                &srs,
+                circuit,
+                crate::PredicateCircuitType::BirthPredicate,
+            )?;
             instances_type_a.push(instance);
 
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
                 i,
-                crate::MergeableCircuitType::TypeB,
+                crate::PredicateCircuitType::DeathPredicate,
             )?;
-            let instance =
-                BatchArgument::setup_instance(&srs, circuit, crate::MergeableCircuitType::TypeB)?;
+            let instance = BatchArgument::setup_instance(
+                &srs,
+                circuit,
+                crate::PredicateCircuitType::DeathPredicate,
+            )?;
             instances_type_b.push(instance);
         }
 

@@ -29,10 +29,8 @@ fn gen_circuit_for_bench<F: PrimeField>(
     num_gates: usize,
     plonk_type: PlonkType,
 ) -> Result<PlonkCircuit<F>, PlonkError> {
-    let range_bit_len = 8;
     let mut cs: PlonkCircuit<F> = match plonk_type {
         PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-        // PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(range_bit_len),
     };
     let mut a = cs.zero();
     for _ in 0..num_gates - 10 {
@@ -77,10 +75,6 @@ fn bench_prove() {
     plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, NUM_GATES_LARGE);
     plonk_prove_bench!(Bn254, Fr254, PlonkType::TurboPlonk, NUM_GATES_LARGE);
     plonk_prove_bench!(BW6_761, Fr761, PlonkType::TurboPlonk, NUM_GATES_SMALL);
-    // plonk_prove_bench!(Bls12_381, Fr381, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    // plonk_prove_bench!(Bls12_377, Fr377, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    // plonk_prove_bench!(Bn254, Fr254, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    // plonk_prove_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, NUM_GATES_SMALL);
 }
 
 macro_rules! plonk_verify_bench {
@@ -119,10 +113,6 @@ fn bench_verify() {
     plonk_verify_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, NUM_GATES_LARGE);
     plonk_verify_bench!(Bn254, Fr254, PlonkType::TurboPlonk, NUM_GATES_LARGE);
     plonk_verify_bench!(BW6_761, Fr761, PlonkType::TurboPlonk, NUM_GATES_SMALL);
-    // plonk_verify_bench!(Bls12_381, Fr381, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    // plonk_verify_bench!(Bls12_377, Fr377, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    // plonk_verify_bench!(Bn254, Fr254, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    // plonk_verify_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, NUM_GATES_SMALL);
 }
 
 macro_rules! plonk_batch_verify_bench {
@@ -171,10 +161,6 @@ fn bench_batch_verify() {
     plonk_batch_verify_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, 1000);
     plonk_batch_verify_bench!(Bn254, Fr254, PlonkType::TurboPlonk, 1000);
     plonk_batch_verify_bench!(BW6_761, Fr761, PlonkType::TurboPlonk, 1000);
-    // plonk_batch_verify_bench!(Bls12_381, Fr381, PlonkType::UltraPlonk, 1000);
-    // plonk_batch_verify_bench!(Bls12_377, Fr377, PlonkType::UltraPlonk, 1000);
-    // plonk_batch_verify_bench!(Bn254, Fr254, PlonkType::UltraPlonk, 1000);
-    // plonk_batch_verify_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, 1000);
 }
 
 fn main() {
