@@ -124,7 +124,7 @@ where
         let alpha_4 = alpha_2 * alpha_2;
         let alpha_5 = alpha_2 * alpha_3;
         let alpha_6 = alpha_4 * alpha_2;
-        let alpha_7 = alpha_3 * alpha_4;
+        // let alpha_7 = alpha_3 * alpha_4;
         let alpha_powers = vec![alpha_2, alpha_3, alpha_4, alpha_5, alpha_6];
         let mut alpha_bases = vec![E::Fr::one()];
 
@@ -285,7 +285,7 @@ where
         for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
             transcript.append_commitments(b"witness_poly_comms", wires_poly_comms)?;
         }
-        let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+        // let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
 
         // for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
         //     if let Some(proof_lkup) = plookup_proof.as_ref() {
@@ -322,7 +322,7 @@ where
         transcript.append_commitment(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
         let u = transcript.get_and_append_challenge::<E>(b"u")?;
         Ok(Challenges {
-            tau,
+            // tau,
             alpha,
             beta,
             gamma,

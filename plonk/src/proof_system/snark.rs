@@ -476,7 +476,7 @@ where
         )?;
         let mut alpha_base = E::Fr::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
-        let alpha_7 = alpha_3.square() * challenges.alpha;
+        // let alpha_7 = alpha_3.square() * challenges.alpha;
         for i in 0..circuits.len() {
             lin_poly = lin_poly
                 + prover.compute_non_quotient_component_for_lin_poly(

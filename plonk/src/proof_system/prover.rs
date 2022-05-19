@@ -127,38 +127,38 @@ impl<E: PairingEngine> Prover<E> {
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
-    /// Round 2.5 (Plookup): Compute and commit the Plookup grand product
-    /// polynomial. Return the grand product polynomial and its commitment.
-    /// `cs` is guaranteed to support lookup
-    pub(crate) fn run_plookup_2nd_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
-        &self,
-        prng: &mut R,
-        ck: &CommitKey<E>,
-        cs: &C,
-        challenges: &Challenges<E::Fr>,
-        merged_lookup_table: Option<&Vec<E::Fr>>,
-        sorted_vec: Option<&Vec<E::Fr>>,
-    ) -> Result<(Commitment<E>, DensePolynomial<E::Fr>), PlonkError> {
-        if sorted_vec.is_none() {
-            return Err(
-                ParameterError("Run Plookup with empty sorted lookup vectors".to_string()).into(),
-            );
-        }
+    // /// Round 2.5 (Plookup): Compute and commit the Plookup grand product
+    // /// polynomial. Return the grand product polynomial and its commitment.
+    // /// `cs` is guaranteed to support lookup
+    // pub(crate) fn run_plookup_2nd_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    //     &self,
+    //     prng: &mut R,
+    //     ck: &CommitKey<E>,
+    //     cs: &C,
+    //     challenges: &Challenges<E::Fr>,
+    //     merged_lookup_table: Option<&Vec<E::Fr>>,
+    //     sorted_vec: Option<&Vec<E::Fr>>,
+    // ) -> Result<(Commitment<E>, DensePolynomial<E::Fr>), PlonkError> {
+    //     if sorted_vec.is_none() {
+    //         return Err(
+    //             ParameterError("Run Plookup with empty sorted lookup vectors".to_string()).into(),
+    //         );
+    //     }
 
-        let prod_lookup_poly = self.mask_polynomial(
-            prng,
-            cs.compute_lookup_prod_polynomial(
-                &challenges.tau,
-                &challenges.beta,
-                &challenges.gamma,
-                merged_lookup_table.unwrap(),
-                sorted_vec.unwrap(),
-            )?,
-            2,
-        );
-        let prod_lookup_comm = Self::commit_polynomial(ck, &prod_lookup_poly)?;
-        Ok((prod_lookup_comm, prod_lookup_poly))
-    }
+    //     let prod_lookup_poly = self.mask_polynomial(
+    //         prng,
+    //         cs.compute_lookup_prod_polynomial(
+    //             &challenges.tau,
+    //             &challenges.beta,
+    //             &challenges.gamma,
+    //             merged_lookup_table.unwrap(),
+    //             sorted_vec.unwrap(),
+    //         )?,
+    //         2,
+    //     );
+    //     let prod_lookup_comm = Self::commit_polynomial(ck, &prod_lookup_poly)?;
+    //     Ok((prod_lookup_comm, prod_lookup_poly))
+    // }
 
     /// Round 3: Return the splitted quotient polynomials and their commitments.
     /// Note that the first `num_wire_types`-1 splitted quotient polynomials
