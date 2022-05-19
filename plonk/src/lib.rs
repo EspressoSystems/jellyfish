@@ -32,8 +32,8 @@ pub mod testing_apis;
 pub enum PlonkType {
     /// TurboPlonk
     TurboPlonk,
-    /// TurboPlonk that supports Plookup
-    UltraPlonk,
+    // /// TurboPlonk that supports Plookup
+    // UltraPlonk,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

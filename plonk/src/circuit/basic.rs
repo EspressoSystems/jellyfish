@@ -149,7 +149,7 @@ impl<F: FftField> PlonkCircuit<F> {
                 + 1
                 + match plonk_params.plonk_type {
                     PlonkType::TurboPlonk => 0,
-                    PlonkType::UltraPlonk => 1,
+                    // PlonkType::UltraPlonk => 1,
                 },
             eval_domain: Radix2EvaluationDomain::new(1).unwrap(),
             plonk_params,
@@ -168,11 +168,11 @@ impl<F: FftField> PlonkCircuit<F> {
         Self::new(plonk_params)
     }
 
-    /// Construct a new UltraPlonk circuit.
-    pub fn new_ultra_plonk(range_bit_len: usize) -> Self {
-        let plonk_params = PlonkParams::init(PlonkType::UltraPlonk, Some(range_bit_len)).unwrap(); // safe unwrap
-        Self::new(plonk_params)
-    }
+    // /// Construct a new UltraPlonk circuit.
+    // pub fn new_ultra_plonk(range_bit_len: usize) -> Self {
+    //     let plonk_params = PlonkParams::init(PlonkType::UltraPlonk, Some(range_bit_len)).unwrap(); // safe unwrap
+    //     Self::new(plonk_params)
+    // }
 
     /// Insert a general (algebraic) gate
     /// * `wire_vars` - wire variables. Each of these variables must be in range
@@ -196,16 +196,16 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
-    /// Add a range_check gate that checks whether a variable is in the range
-    /// [0, range_size). Return an error if the circuit does not support
-    /// lookup.
-    pub(crate) fn add_range_check_variable(&mut self, var: Variable) -> Result<(), PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(false)?;
-        self.check_var_bound(var)?;
-        self.wire_variables[RANGE_WIRE_ID].push(var);
-        Ok(())
-    }
+    // /// Add a range_check gate that checks whether a variable is in the range
+    // /// [0, range_size). Return an error if the circuit does not support
+    // /// lookup.
+    // pub(crate) fn add_range_check_variable(&mut self, var: Variable) -> Result<(), PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     self.check_finalize_flag(false)?;
+    //     self.check_var_bound(var)?;
+    //     self.wire_variables[RANGE_WIRE_ID].push(var);
+    //     Ok(())
+    // }
 
     #[inline]
     /// Checks if a variable is strictly less than the number of variables.
@@ -254,21 +254,21 @@ impl<F: FftField> PlonkCircuit<F> {
         self.num_table_elems
     }
 
-    /// The bit length of UltraPlonk range gates.
-    pub fn range_bit_len(&self) -> Result<usize, PlonkError> {
-        if self.plonk_params.plonk_type != PlonkType::UltraPlonk {
-            return Err(ParameterError(
-                "call range_bit_len() with non-ultraplonk circuit".to_string(),
-            )
-            .into());
-        }
-        Ok(self.plonk_params.range_bit_len.unwrap()) // safe unwrap
-    }
+    // /// The bit length of UltraPlonk range gates.
+    // pub fn range_bit_len(&self) -> Result<usize, PlonkError> {
+    //     if self.plonk_params.plonk_type != PlonkType::UltraPlonk {
+    //         return Err(ParameterError(
+    //             "call range_bit_len() with non-ultraplonk circuit".to_string(),
+    //         )
+    //         .into());
+    //     }
+    //     Ok(self.plonk_params.range_bit_len.unwrap()) // safe unwrap
+    // }
 
-    /// The range size of UltraPlonk range gates.
-    pub fn range_size(&self) -> Result<usize, PlonkError> {
-        Ok(1 << self.range_bit_len()?)
-    }
+    // /// The range size of UltraPlonk range gates.
+    // pub fn range_size(&self) -> Result<usize, PlonkError> {
+    //     Ok(1 << self.range_bit_len()?)
+    // }
 }
 
 impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
@@ -314,53 +314,53 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                 self.check_gate(gate_id, &pi)?;
             }
         }
-        // Check range/lookup gates if the circuit supports lookup
-        if self.plonk_params.plonk_type == PlonkType::UltraPlonk {
-            // range gates
-            for idx in 0..self.wire_variables[RANGE_WIRE_ID].len() {
-                self.check_range_gate(idx)?
-            }
-            // key-value map lookup gates
-            let mut key_val_table = HashSet::new();
-            key_val_table.insert((F::zero(), F::zero(), F::zero(), F::zero()));
-            let q_lookup_vec = self.q_lookup();
-            let q_dom_sep_vec = self.q_dom_sep();
-            let table_key_vec = self.table_key_vec();
-            let table_dom_sep_vec = self.table_dom_sep_vec();
-            // insert table elements
-            for (gate_id, ((&q_lookup, &table_dom_sep), &table_key)) in q_lookup_vec
-                .iter()
-                .zip(table_dom_sep_vec.iter())
-                .zip(table_key_vec.iter())
-                .enumerate()
-            {
-                if q_lookup != F::zero() {
-                    let val0 = self.witness(self.wire_variable(TABLE_VAL_1_WIRE_ID, gate_id))?;
-                    let val1 = self.witness(self.wire_variable(TABLE_VAL_2_WIRE_ID, gate_id))?;
-                    key_val_table.insert((table_dom_sep, table_key, val0, val1));
-                }
-            }
-            // check lookups
-            for (gate_id, (&q_lookup, &q_dom_sep)) in
-                q_lookup_vec.iter().zip(q_dom_sep_vec.iter()).enumerate()
-            {
-                if q_lookup != F::zero() {
-                    let key = self.witness(self.wire_variable(LOOKUP_KEY_WIRE_ID, gate_id))?;
-                    let val0 = self.witness(self.wire_variable(LOOKUP_VAL_1_WIRE_ID, gate_id))?;
-                    let val1 = self.witness(self.wire_variable(LOOKUP_VAL_2_WIRE_ID, gate_id))?;
-                    if !key_val_table.contains(&(q_dom_sep, key, val0, val1)) {
-                        return Err(GateCheckFailure(
-                            gate_id,
-                            format!(
-                                "Lookup gate failed: ({}, {}, {}, {}) not in the table",
-                                q_dom_sep, key, val0, val1
-                            ),
-                        )
-                        .into());
-                    }
-                }
-            }
-        }
+        // // Check range/lookup gates if the circuit supports lookup
+        // if self.plonk_params.plonk_type == PlonkType::UltraPlonk {
+        //     // range gates
+        //     for idx in 0..self.wire_variables[RANGE_WIRE_ID].len() {
+        //         self.check_range_gate(idx)?
+        //     }
+        //     // key-value map lookup gates
+        //     let mut key_val_table = HashSet::new();
+        //     key_val_table.insert((F::zero(), F::zero(), F::zero(), F::zero()));
+        //     let q_lookup_vec = self.q_lookup();
+        //     let q_dom_sep_vec = self.q_dom_sep();
+        //     let table_key_vec = self.table_key_vec();
+        //     let table_dom_sep_vec = self.table_dom_sep_vec();
+        //     // insert table elements
+        //     for (gate_id, ((&q_lookup, &table_dom_sep), &table_key)) in q_lookup_vec
+        //         .iter()
+        //         .zip(table_dom_sep_vec.iter())
+        //         .zip(table_key_vec.iter())
+        //         .enumerate()
+        //     {
+        //         if q_lookup != F::zero() {
+        //             let val0 = self.witness(self.wire_variable(TABLE_VAL_1_WIRE_ID, gate_id))?;
+        //             let val1 = self.witness(self.wire_variable(TABLE_VAL_2_WIRE_ID, gate_id))?;
+        //             key_val_table.insert((table_dom_sep, table_key, val0, val1));
+        //         }
+        //     }
+        //     // check lookups
+        //     for (gate_id, (&q_lookup, &q_dom_sep)) in
+        //         q_lookup_vec.iter().zip(q_dom_sep_vec.iter()).enumerate()
+        //     {
+        //         if q_lookup != F::zero() {
+        //             let key = self.witness(self.wire_variable(LOOKUP_KEY_WIRE_ID, gate_id))?;
+        //             let val0 = self.witness(self.wire_variable(LOOKUP_VAL_1_WIRE_ID, gate_id))?;
+        //             let val1 = self.witness(self.wire_variable(LOOKUP_VAL_2_WIRE_ID, gate_id))?;
+        //             if !key_val_table.contains(&(q_dom_sep, key, val0, val1)) {
+        //                 return Err(GateCheckFailure(
+        //                     gate_id,
+        //                     format!(
+        //                         "Lookup gate failed: ({}, {}, {}, {}) not in the table",
+        //                         q_dom_sep, key, val0, val1
+        //                     ),
+        //                 )
+        //                 .into());
+        //             }
+        //         }
+        //     }
+        // }
         Ok(())
     }
 
@@ -504,35 +504,35 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         }
     }
 
-    // Plookup-related methods
-    //
-    fn support_lookup(&self) -> bool {
-        self.plonk_params.plonk_type == PlonkType::UltraPlonk
-    }
+    // // Plookup-related methods
+    // //
+    // fn support_lookup(&self) -> bool {
+    //     self.plonk_params.plonk_type == PlonkType::UltraPlonk
+    // }
 }
 
 /// Private helper methods
 impl<F: FftField> PlonkCircuit<F> {
-    /// Check correctness of the idx-th range gate. Return an error if the
-    /// circuit does not support lookup.
-    fn check_range_gate(&self, idx: usize) -> Result<(), PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        if idx >= self.wire_variables[RANGE_WIRE_ID].len() {
-            return Err(IndexError.into());
-        }
-        let range_size = self.range_size()?;
-        if self.witness[self.wire_variables[RANGE_WIRE_ID][idx]] >= F::from(range_size as u32) {
-            return Err(GateCheckFailure(
-                idx,
-                format!(
-                    "Range gate failed: {} >= {}",
-                    self.witness[self.wire_variables[RANGE_WIRE_ID][idx]], range_size
-                ),
-            )
-            .into());
-        }
-        Ok(())
-    }
+    // /// Check correctness of the idx-th range gate. Return an error if the
+    // /// circuit does not support lookup.
+    // fn check_range_gate(&self, idx: usize) -> Result<(), PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     if idx >= self.wire_variables[RANGE_WIRE_ID].len() {
+    //         return Err(IndexError.into());
+    //     }
+    //     let range_size = self.range_size()?;
+    //     if self.witness[self.wire_variables[RANGE_WIRE_ID][idx]] >= F::from(range_size as u32) {
+    //         return Err(GateCheckFailure(
+    //             idx,
+    //             format!(
+    //                 "Range gate failed: {} >= {}",
+    //                 self.witness[self.wire_variables[RANGE_WIRE_ID][idx]], range_size
+    //             ),
+    //         )
+    //         .into());
+    //     }
+    //     Ok(())
+    // }
 
     fn is_finalized(&self) -> bool {
         self.eval_domain.size() != 1
@@ -558,26 +558,26 @@ impl<F: FftField> PlonkCircuit<F> {
                 *io_gate_id = gate_id;
             }
         }
-        if self.support_lookup() {
-            // move lookup gates to the rear, the relative order of the lookup gates
-            // should not change
-            let n = self.eval_domain.size();
-            // be careful that we can't put a lookup gates at the very last slot.
-            let mut cur_gate_id = n - 2;
-            for &(table_gate_id, table_size) in self.table_gate_ids.iter().rev() {
-                for gate_id in (table_gate_id..table_gate_id + table_size).rev() {
-                    if gate_id < cur_gate_id {
-                        // Swap gate types
-                        self.gates.swap(gate_id, cur_gate_id);
-                        // Swap wire variables
-                        for j in 0..GATE_WIDTH + 1 {
-                            self.wire_variables[j].swap(gate_id, cur_gate_id);
-                        }
-                        cur_gate_id -= 1;
-                    }
-                }
-            }
-        }
+        // if self.support_lookup() {
+        //     // move lookup gates to the rear, the relative order of the lookup gates
+        //     // should not change
+        //     let n = self.eval_domain.size();
+        //     // be careful that we can't put a lookup gates at the very last slot.
+        //     let mut cur_gate_id = n - 2;
+        //     for &(table_gate_id, table_size) in self.table_gate_ids.iter().rev() {
+        //         for gate_id in (table_gate_id..table_gate_id + table_size).rev() {
+        //             if gate_id < cur_gate_id {
+        //                 // Swap gate types
+        //                 self.gates.swap(gate_id, cur_gate_id);
+        //                 // Swap wire variables
+        //                 for j in 0..GATE_WIDTH + 1 {
+        //                     self.wire_variables[j].swap(gate_id, cur_gate_id);
+        //                 }
+        //                 cur_gate_id -= 1;
+        //             }
+        //         }
+        //     }
+        // }
         Ok(())
     }
     // use downcast to check whether a gate is of IoGate type
@@ -835,9 +835,9 @@ impl<F: FftField> PlonkCircuit<F> {
         selectors.push(self.q_o());
         selectors.push(self.q_c());
         selectors.push(self.q_ecc());
-        if self.support_lookup() {
-            selectors.push(self.q_lookup());
-        }
+        // if self.support_lookup() {
+        //     selectors.push(self.q_lookup());
+        // }
         selectors
     }
 }
@@ -903,17 +903,17 @@ impl<F: PrimeField> PlonkCircuit<F> {
         if self.is_finalized() {
             return Ok(());
         }
-        let num_slots_needed = match self.support_lookup() {
-            false => self.num_gates(),
-            true => max(
-                self.num_gates(),
-                max(self.range_size()?, self.wire_variables[RANGE_WIRE_ID].len())
-                    + self.num_table_elems()
-                    + 1,
-            ), // range gates and lookup gates need to have separate slots
-        };
+        // let num_slots_needed = match self.support_lookup() {
+        //     false => self.num_gates(),
+        //     true => max(
+        //         self.num_gates(),
+        //         max(self.range_size()?, self.wire_variables[RANGE_WIRE_ID].len())
+        //             + self.num_table_elems()
+        //             + 1,
+        //     ), // range gates and lookup gates need to have separate slots
+        // };
         self.eval_domain =
-            Radix2EvaluationDomain::new(num_slots_needed).ok_or(PlonkError::DomainCreationError)?;
+            Radix2EvaluationDomain::new(self.num_gates()).ok_or(PlonkError::DomainCreationError)?;
         self.pad()?;
         self.rearrange_gates()?;
         self.compute_wire_permutation();
@@ -1193,197 +1193,197 @@ where
         Ok(DensePolynomial::from_coefficients_vec(pub_input_vec))
     }
 
-    // Plookup-related methods
-    //
-    fn compute_range_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        let range_table = self.compute_range_table()?;
-        let domain = &self.eval_domain;
-        Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&range_table),
-        ))
-    }
+    // // Plookup-related methods
+    // //
+    // fn compute_range_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+    //     let range_table = self.compute_range_table()?;
+    //     let domain = &self.eval_domain;
+    //     Ok(DensePolynomial::from_coefficients_vec(
+    //         domain.ifft(&range_table),
+    //     ))
+    // }
 
-    fn compute_key_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let domain = &self.eval_domain;
-        Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&self.table_key_vec()),
-        ))
-    }
+    // fn compute_key_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     self.check_finalize_flag(true)?;
+    //     let domain = &self.eval_domain;
+    //     Ok(DensePolynomial::from_coefficients_vec(
+    //         domain.ifft(&self.table_key_vec()),
+    //     ))
+    // }
 
-    fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let domain = &self.eval_domain;
-        Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&self.table_dom_sep_vec()),
-        ))
-    }
+    // fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     self.check_finalize_flag(true)?;
+    //     let domain = &self.eval_domain;
+    //     Ok(DensePolynomial::from_coefficients_vec(
+    //         domain.ifft(&self.table_dom_sep_vec()),
+    //     ))
+    // }
 
-    fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let domain = &self.eval_domain;
-        Ok(DensePolynomial::from_coefficients_vec(
-            domain.ifft(&self.q_dom_sep()),
-        ))
-    }
+    // fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     self.check_finalize_flag(true)?;
+    //     let domain = &self.eval_domain;
+    //     Ok(DensePolynomial::from_coefficients_vec(
+    //         domain.ifft(&self.q_dom_sep()),
+    //     ))
+    // }
 
-    fn compute_merged_lookup_table(&self, tau: F) -> Result<Vec<F>, PlonkError> {
-        let range_table = self.compute_range_table()?;
-        let table_key_vec = self.table_key_vec();
-        let table_dom_sep_vec = self.table_dom_sep_vec();
-        let q_lookup_vec = self.q_lookup();
+    // fn compute_merged_lookup_table(&self, tau: F) -> Result<Vec<F>, PlonkError> {
+    //     let range_table = self.compute_range_table()?;
+    //     let table_key_vec = self.table_key_vec();
+    //     let table_dom_sep_vec = self.table_dom_sep_vec();
+    //     let q_lookup_vec = self.q_lookup();
 
-        let mut merged_lookup_table = vec![];
-        for i in 0..self.eval_domain_size()? {
-            merged_lookup_table.push(self.merged_table_value(
-                tau,
-                &range_table,
-                &table_key_vec,
-                &table_dom_sep_vec,
-                &q_lookup_vec,
-                i,
-            )?);
-        }
+    //     let mut merged_lookup_table = vec![];
+    //     for i in 0..self.eval_domain_size()? {
+    //         merged_lookup_table.push(self.merged_table_value(
+    //             tau,
+    //             &range_table,
+    //             &table_key_vec,
+    //             &table_dom_sep_vec,
+    //             &q_lookup_vec,
+    //             i,
+    //         )?);
+    //     }
 
-        Ok(merged_lookup_table)
-    }
+    //     Ok(merged_lookup_table)
+    // }
 
-    fn compute_lookup_prod_polynomial(
-        &self,
-        tau: &F,
-        beta: &F,
-        gamma: &F,
-        merged_lookup_table: &[F],
-        sorted_vec: &[F],
-    ) -> Result<DensePolynomial<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let domain = &self.eval_domain;
-        let n = domain.size();
-        if n != self.wire_variables[RANGE_WIRE_ID].len() {
-            return Err(ParameterError(
-                "Domain size should match the size of the padded lookup variables vector"
-                    .to_string(),
-            )
-            .into());
-        }
-        if n != merged_lookup_table.len() {
-            return Err(ParameterError(
-                "Domain size should match the size of the padded lookup table".to_string(),
-            )
-            .into());
-        }
-        if 2 * n - 1 != sorted_vec.len() {
-            return Err(ParameterError("The sorted vector has wrong length".to_string()).into());
-        }
+    // fn compute_lookup_prod_polynomial(
+    //     &self,
+    //     tau: &F,
+    //     beta: &F,
+    //     gamma: &F,
+    //     merged_lookup_table: &[F],
+    //     sorted_vec: &[F],
+    // ) -> Result<DensePolynomial<F>, PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     self.check_finalize_flag(true)?;
+    //     let domain = &self.eval_domain;
+    //     let n = domain.size();
+    //     if n != self.wire_variables[RANGE_WIRE_ID].len() {
+    //         return Err(ParameterError(
+    //             "Domain size should match the size of the padded lookup variables vector"
+    //                 .to_string(),
+    //         )
+    //         .into());
+    //     }
+    //     if n != merged_lookup_table.len() {
+    //         return Err(ParameterError(
+    //             "Domain size should match the size of the padded lookup table".to_string(),
+    //         )
+    //         .into());
+    //     }
+    //     if 2 * n - 1 != sorted_vec.len() {
+    //         return Err(ParameterError("The sorted vector has wrong length".to_string()).into());
+    //     }
 
-        let mut product_vec = vec![F::one()];
-        let beta_plus_one = F::one() + *beta;
-        let gamma_mul_beta_plus_one = *gamma * beta_plus_one;
-        let q_lookup_vec = self.q_lookup();
-        let q_dom_sep_vec = self.q_dom_sep();
-        for j in 0..(n - 2) {
-            // compute merged lookup witness value
-            let lookup_wire_val =
-                self.merged_lookup_wire_value(*tau, j, &q_lookup_vec, &q_dom_sep_vec)?;
-            let table_val = merged_lookup_table[j];
-            let table_next_val = merged_lookup_table[j + 1];
-            let h1_val = sorted_vec[j];
-            let h1_next_val = sorted_vec[j + 1];
-            let h2_val = sorted_vec[n - 1 + j];
-            let h2_next_val = sorted_vec[n + j];
+    //     let mut product_vec = vec![F::one()];
+    //     let beta_plus_one = F::one() + *beta;
+    //     let gamma_mul_beta_plus_one = *gamma * beta_plus_one;
+    //     let q_lookup_vec = self.q_lookup();
+    //     let q_dom_sep_vec = self.q_dom_sep();
+    //     for j in 0..(n - 2) {
+    //         // compute merged lookup witness value
+    //         let lookup_wire_val =
+    //             self.merged_lookup_wire_value(*tau, j, &q_lookup_vec, &q_dom_sep_vec)?;
+    //         let table_val = merged_lookup_table[j];
+    //         let table_next_val = merged_lookup_table[j + 1];
+    //         let h1_val = sorted_vec[j];
+    //         let h1_next_val = sorted_vec[j + 1];
+    //         let h2_val = sorted_vec[n - 1 + j];
+    //         let h2_next_val = sorted_vec[n + j];
 
-            // Nominator
-            let a = beta_plus_one
-                * (*gamma + lookup_wire_val)
-                * (gamma_mul_beta_plus_one + table_val + *beta * table_next_val);
-            // Denominator
-            let b = (gamma_mul_beta_plus_one + h1_val + *beta * h1_next_val)
-                * (gamma_mul_beta_plus_one + h2_val + *beta * h2_next_val);
+    //         // Nominator
+    //         let a = beta_plus_one
+    //             * (*gamma + lookup_wire_val)
+    //             * (gamma_mul_beta_plus_one + table_val + *beta * table_next_val);
+    //         // Denominator
+    //         let b = (gamma_mul_beta_plus_one + h1_val + *beta * h1_next_val)
+    //             * (gamma_mul_beta_plus_one + h2_val + *beta * h2_next_val);
 
-            let prev_prod = *product_vec.last().ok_or(PlonkError::IndexError)?;
-            product_vec.push(prev_prod * a / b);
-        }
-        product_vec.push(F::one());
-        domain.ifft_in_place(&mut product_vec);
-        Ok(DensePolynomial::from_coefficients_vec(product_vec))
-    }
+    //         let prev_prod = *product_vec.last().ok_or(PlonkError::IndexError)?;
+    //         product_vec.push(prev_prod * a / b);
+    //     }
+    //     product_vec.push(F::one());
+    //     domain.ifft_in_place(&mut product_vec);
+    //     Ok(DensePolynomial::from_coefficients_vec(product_vec))
+    // }
 
-    fn compute_lookup_sorted_vec_polynomials(
-        &self,
-        tau: F,
-        merged_lookup_table: &[F],
-    ) -> Result<SortedLookupVecAndPolys<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let domain = &self.eval_domain;
-        let n = domain.size();
-        if n != self.wire_variables[RANGE_WIRE_ID].len() {
-            return Err(ParameterError(
-                "Domain size should match the size of the padded lookup variables vector"
-                    .to_string(),
-            )
-            .into());
-        }
-        if n != merged_lookup_table.len() {
-            return Err(ParameterError(
-                "Domain size should match the size of the padded lookup table".to_string(),
-            )
-            .into());
-        }
-        // only the first n-1 variables are for lookup
-        let mut lookup_map = HashMap::<F, usize>::new();
-        let q_lookup_vec = self.q_lookup();
-        let q_dom_sep_vec = self.q_dom_sep();
-        for i in 0..(n - 1) {
-            let elem = self.merged_lookup_wire_value(tau, i, &q_lookup_vec, &q_dom_sep_vec)?;
-            let n_lookups = lookup_map.entry(elem).or_insert(0);
-            *n_lookups += 1;
-        }
-        // merge-sort the lookup vector with the (merged) lookup table
-        // according to the order of the (merged) lookup table.
-        let mut sorted_vec = vec![];
-        for elem in merged_lookup_table.iter() {
-            if let Some(n_lookup) = lookup_map.get(elem) {
-                sorted_vec.extend(vec![*elem; 1 + n_lookup]);
-                lookup_map.remove(elem);
-            } else {
-                sorted_vec.push(*elem);
-            }
-        }
+//     fn compute_lookup_sorted_vec_polynomials(
+//         &self,
+//         tau: F,
+//         merged_lookup_table: &[F],
+//     ) -> Result<SortedLookupVecAndPolys<F>, PlonkError> {
+//         self.check_plonk_type(PlonkType::UltraPlonk)?;
+//         self.check_finalize_flag(true)?;
+//         let domain = &self.eval_domain;
+//         let n = domain.size();
+//         if n != self.wire_variables[RANGE_WIRE_ID].len() {
+//             return Err(ParameterError(
+//                 "Domain size should match the size of the padded lookup variables vector"
+//                     .to_string(),
+//             )
+//             .into());
+//         }
+//         if n != merged_lookup_table.len() {
+//             return Err(ParameterError(
+//                 "Domain size should match the size of the padded lookup table".to_string(),
+//             )
+//             .into());
+//         }
+//         // only the first n-1 variables are for lookup
+//         let mut lookup_map = HashMap::<F, usize>::new();
+//         let q_lookup_vec = self.q_lookup();
+//         let q_dom_sep_vec = self.q_dom_sep();
+//         for i in 0..(n - 1) {
+//             let elem = self.merged_lookup_wire_value(tau, i, &q_lookup_vec, &q_dom_sep_vec)?;
+//             let n_lookups = lookup_map.entry(elem).or_insert(0);
+//             *n_lookups += 1;
+//         }
+//         // merge-sort the lookup vector with the (merged) lookup table
+//         // according to the order of the (merged) lookup table.
+//         let mut sorted_vec = vec![];
+//         for elem in merged_lookup_table.iter() {
+//             if let Some(n_lookup) = lookup_map.get(elem) {
+//                 sorted_vec.extend(vec![*elem; 1 + n_lookup]);
+//                 lookup_map.remove(elem);
+//             } else {
+//                 sorted_vec.push(*elem);
+//             }
+//         }
 
-        if sorted_vec.len() != 2 * n - 1 {
-            return Err(ParameterError("The sorted vector has wrong length, some lookup variables might be outside the table".to_string()).into());
-        }
-        let h1_poly = DensePolynomial::from_coefficients_vec(domain.ifft(&sorted_vec[..n]));
-        let h2_poly = DensePolynomial::from_coefficients_vec(domain.ifft(&sorted_vec[n - 1..]));
-        Ok((sorted_vec, h1_poly, h2_poly))
-    }
+//         if sorted_vec.len() != 2 * n - 1 {
+//             return Err(ParameterError("The sorted vector has wrong length, some lookup variables might be outside the table".to_string()).into());
+//         }
+//         let h1_poly = DensePolynomial::from_coefficients_vec(domain.ifft(&sorted_vec[..n]));
+//         let h2_poly = DensePolynomial::from_coefficients_vec(domain.ifft(&sorted_vec[n - 1..]));
+//         Ok((sorted_vec, h1_poly, h2_poly))
+//     }
 }
 
 /// Private helper methods for arithmetizations.
 impl<F: PrimeField> PlonkCircuit<F> {
-    #[inline]
-    fn compute_range_table(&self) -> Result<Vec<F>, PlonkError> {
-        self.check_plonk_type(PlonkType::UltraPlonk)?;
-        self.check_finalize_flag(true)?;
-        let domain = &self.eval_domain;
-        let range_size = self.range_size()?;
-        if domain.size() < range_size {
-            return Err(ParameterError(format!(
-                "Domain size {} < range size {}",
-                domain.size(),
-                range_size
-            ))
-            .into());
-        }
-        let mut range_table: Vec<F> = (0..range_size).map(|i| F::from(i as u32)).collect();
-        range_table.resize(domain.size(), F::zero());
-        Ok(range_table)
-    }
+    // #[inline]
+    // fn compute_range_table(&self) -> Result<Vec<F>, PlonkError> {
+    //     self.check_plonk_type(PlonkType::UltraPlonk)?;
+    //     self.check_finalize_flag(true)?;
+    //     let domain = &self.eval_domain;
+    //     let range_size = self.range_size()?;
+    //     if domain.size() < range_size {
+    //         return Err(ParameterError(format!(
+    //             "Domain size {} < range size {}",
+    //             domain.size(),
+    //             range_size
+    //         ))
+    //         .into());
+    //     }
+    //     let mut range_table: Vec<F> = (0..range_size).map(|i| F::from(i as u32)).collect();
+    //     range_table.resize(domain.size(), F::zero());
+    //     Ok(range_table)
+    // }
 
     #[inline]
     fn merged_table_value(
@@ -1746,38 +1746,38 @@ pub(crate) mod test {
         Ok((circuit, vec![F::from(1u32), F::from(8u32)]))
     }
 
-    fn create_ultra_plonk_instance<F: PrimeField>() -> Result<(PlonkCircuit<F>, Vec<F>), PlonkError>
-    {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(4);
-        let a = circuit.create_variable(F::from(3u32))?;
-        let b = circuit.create_public_variable(F::from(1u32))?;
-        circuit.constant_gate(a, F::from(3u32))?;
-        circuit.bool_gate(b)?;
-        let c = circuit.add(a, b)?;
-        let d = circuit.sub(a, b)?;
-        let e = circuit.mul(c, d)?;
-        let f = circuit.create_public_variable(F::from(8u32))?;
-        circuit.equal_gate(e, f)?;
+    // fn create_ultra_plonk_instance<F: PrimeField>() -> Result<(PlonkCircuit<F>, Vec<F>), PlonkError>
+    // {
+    //     let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(4);
+    //     let a = circuit.create_variable(F::from(3u32))?;
+    //     let b = circuit.create_public_variable(F::from(1u32))?;
+    //     circuit.constant_gate(a, F::from(3u32))?;
+    //     circuit.bool_gate(b)?;
+    //     let c = circuit.add(a, b)?;
+    //     let d = circuit.sub(a, b)?;
+    //     let e = circuit.mul(c, d)?;
+    //     let f = circuit.create_public_variable(F::from(8u32))?;
+    //     circuit.equal_gate(e, f)?;
 
-        // Add range gates
-        circuit.add_range_check_variable(b)?;
-        circuit.add_range_check_variable(c)?;
-        circuit.add_range_check_variable(e)?;
-        circuit.add_range_check_variable(f)?;
-        circuit.add_range_check_variable(circuit.zero())?;
+    //     // Add range gates
+    //     circuit.add_range_check_variable(b)?;
+    //     circuit.add_range_check_variable(c)?;
+    //     circuit.add_range_check_variable(e)?;
+    //     circuit.add_range_check_variable(f)?;
+    //     circuit.add_range_check_variable(circuit.zero())?;
 
-        // Add variable table lookup gates
-        // table = [(3,1), (4,2), (8,8)]
-        let table_vars = [(a, b), (c, d), (e, f)];
-        // lookup_witness = [(0, 3, 1), (2, 8, 8)]
-        let x = circuit.create_variable(F::from(3u8))?;
-        let y = circuit.create_variable(F::from(8u8))?;
-        let key1 = circuit.create_variable(F::from(2u8))?;
-        let lookup_vars = [(circuit.zero(), x, circuit.one()), (key1, y, y)];
-        circuit.create_table_and_lookup_variables(&lookup_vars, &table_vars)?;
+    //     // Add variable table lookup gates
+    //     // table = [(3,1), (4,2), (8,8)]
+    //     let table_vars = [(a, b), (c, d), (e, f)];
+    //     // lookup_witness = [(0, 3, 1), (2, 8, 8)]
+    //     let x = circuit.create_variable(F::from(3u8))?;
+    //     let y = circuit.create_variable(F::from(8u8))?;
+    //     let key1 = circuit.create_variable(F::from(2u8))?;
+    //     let lookup_vars = [(circuit.zero(), x, circuit.one()), (key1, y, y)];
+    //     circuit.create_table_and_lookup_variables(&lookup_vars, &table_vars)?;
 
-        Ok((circuit, vec![F::from(1u32), F::from(8u32)]))
-    }
+    //     Ok((circuit, vec![F::from(1u32), F::from(8u32)]))
+    // }
 
     /// Tests related to permutations
     #[test]
@@ -1797,7 +1797,7 @@ pub(crate) mod test {
         let _ = circuit.mul(c, d)?;
 
         // Create a UltraPlonk instance
-        let (mut circuit, _) = create_ultra_plonk_instance::<F>()?;
+        let (mut circuit, _) = create_turbo_plonk_instance::<F>()?;
         check_wire_permutation_and_extended_id_permutation(&mut circuit)?;
 
         Ok(())
@@ -1868,34 +1868,34 @@ pub(crate) mod test {
         Ok(())
     }
 
-    // Test flags
-    //
+    // // Test flags
+    // //
 
-    #[test]
-    fn test_ultra_plonk_flag() -> Result<(), PlonkError> {
-        test_ultra_plonk_flag_helper::<FqEd254>()?;
-        test_ultra_plonk_flag_helper::<FqEd377>()?;
-        test_ultra_plonk_flag_helper::<FqEd381>()?;
-        test_ultra_plonk_flag_helper::<Fq377>()
-    }
+    // #[test]
+    // fn test_ultra_plonk_flag() -> Result<(), PlonkError> {
+    //     test_ultra_plonk_flag_helper::<FqEd254>()?;
+    //     test_ultra_plonk_flag_helper::<FqEd377>()?;
+    //     test_ultra_plonk_flag_helper::<FqEd381>()?;
+    //     test_ultra_plonk_flag_helper::<Fq377>()
+    // }
 
-    fn test_ultra_plonk_flag_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        // Check that below methods return errors when not in UltraPlonk mode.
-        assert!(circuit.add_range_check_variable(0).is_err());
-        circuit.finalize_for_arithmetization()?;
-        assert!(circuit.compute_range_table_polynomial().is_err());
-        assert!(circuit.compute_key_table_polynomial().is_err());
-        assert!(circuit.compute_merged_lookup_table(F::one()).is_err());
-        assert!(circuit
-            .compute_lookup_sorted_vec_polynomials(F::one(), &[])
-            .is_err());
-        assert!(circuit
-            .compute_lookup_prod_polynomial(&F::one(), &F::one(), &F::one(), &[], &[])
-            .is_err());
+    // fn test_ultra_plonk_flag_helper<F: PrimeField>() -> Result<(), PlonkError> {
+    //     let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+    //     // Check that below methods return errors when not in UltraPlonk mode.
+    //     assert!(circuit.add_range_check_variable(0).is_err());
+    //     circuit.finalize_for_arithmetization()?;
+    //     assert!(circuit.compute_range_table_polynomial().is_err());
+    //     assert!(circuit.compute_key_table_polynomial().is_err());
+    //     assert!(circuit.compute_merged_lookup_table(F::one()).is_err());
+    //     assert!(circuit
+    //         .compute_lookup_sorted_vec_polynomials(F::one(), &[])
+    //         .is_err());
+    //     assert!(circuit
+    //         .compute_lookup_prod_polynomial(&F::one(), &F::one(), &F::one(), &[], &[])
+    //         .is_err());
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     #[test]
     fn test_finalized_flag() -> Result<(), PlonkError> {
@@ -1930,50 +1930,49 @@ pub(crate) mod test {
         Ok(())
     }
 
-    #[test]
+    // #[test]
+    // fn test_ultra_plonk_finalized_flag() -> Result<(), PlonkError> {
+    //     test_ultra_plonk_finalized_flag_helper::<FqEd254>()?;
+    //     test_ultra_plonk_finalized_flag_helper::<FqEd377>()?;
+    //     test_ultra_plonk_finalized_flag_helper::<FqEd381>()?;
+    //     test_ultra_plonk_finalized_flag_helper::<Fq377>()
+    // }
 
-    fn test_ultra_plonk_finalized_flag() -> Result<(), PlonkError> {
-        test_ultra_plonk_finalized_flag_helper::<FqEd254>()?;
-        test_ultra_plonk_finalized_flag_helper::<FqEd377>()?;
-        test_ultra_plonk_finalized_flag_helper::<FqEd381>()?;
-        test_ultra_plonk_finalized_flag_helper::<Fq377>()
-    }
+    // fn test_ultra_plonk_finalized_flag_helper<F: PrimeField>() -> Result<(), PlonkError> {
+    //     let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(1);
+    //     // Should not call arithmetization methods before finalizing the circuit.
+    //     assert!(circuit.compute_selector_polynomials().is_err());
+    //     assert!(circuit.compute_extended_permutation_polynomials().is_err());
+    //     assert!(circuit.compute_pub_input_polynomial().is_err());
+    //     assert!(circuit.compute_wire_polynomials().is_err());
+    //     assert!(circuit
+    //         .compute_prod_permutation_polynomial(&F::one(), &F::one())
+    //         .is_err());
+    //     assert!(circuit.compute_range_table_polynomial().is_err());
+    //     assert!(circuit.compute_key_table_polynomial().is_err());
+    //     assert!(circuit.compute_merged_lookup_table(F::one()).is_err());
+    //     assert!(circuit
+    //         .compute_lookup_sorted_vec_polynomials(F::one(), &[])
+    //         .is_err());
+    //     assert!(circuit
+    //         .compute_lookup_prod_polynomial(&F::one(), &F::one(), &F::one(), &[], &[])
+    //         .is_err());
 
-    fn test_ultra_plonk_finalized_flag_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(1);
-        // Should not call arithmetization methods before finalizing the circuit.
-        assert!(circuit.compute_selector_polynomials().is_err());
-        assert!(circuit.compute_extended_permutation_polynomials().is_err());
-        assert!(circuit.compute_pub_input_polynomial().is_err());
-        assert!(circuit.compute_wire_polynomials().is_err());
-        assert!(circuit
-            .compute_prod_permutation_polynomial(&F::one(), &F::one())
-            .is_err());
-        assert!(circuit.compute_range_table_polynomial().is_err());
-        assert!(circuit.compute_key_table_polynomial().is_err());
-        assert!(circuit.compute_merged_lookup_table(F::one()).is_err());
-        assert!(circuit
-            .compute_lookup_sorted_vec_polynomials(F::one(), &[])
-            .is_err());
-        assert!(circuit
-            .compute_lookup_prod_polynomial(&F::one(), &F::one(), &F::one(), &[], &[])
-            .is_err());
+    //     // Should not insert gates or add variables after finalizing the circuit.
+    //     circuit.finalize_for_arithmetization()?;
+    //     assert!(circuit.create_variable(F::one()).is_err());
+    //     assert!(circuit.create_public_variable(F::one()).is_err());
+    //     assert!(circuit.add_gate(0, 0, 0).is_err());
+    //     assert!(circuit.sub_gate(0, 0, 0).is_err());
+    //     assert!(circuit.mul_gate(0, 0, 0).is_err());
+    //     assert!(circuit.constant_gate(0, F::one()).is_err());
+    //     assert!(circuit.bool_gate(0).is_err());
+    //     assert!(circuit.equal_gate(0, 0).is_err());
+    //     // Plookup-related methods
+    //     assert!(circuit.add_range_check_variable(0).is_err());
 
-        // Should not insert gates or add variables after finalizing the circuit.
-        circuit.finalize_for_arithmetization()?;
-        assert!(circuit.create_variable(F::one()).is_err());
-        assert!(circuit.create_public_variable(F::one()).is_err());
-        assert!(circuit.add_gate(0, 0, 0).is_err());
-        assert!(circuit.sub_gate(0, 0, 0).is_err());
-        assert!(circuit.mul_gate(0, 0, 0).is_err());
-        assert!(circuit.constant_gate(0, F::one()).is_err());
-        assert!(circuit.bool_gate(0).is_err());
-        assert!(circuit.equal_gate(0, 0).is_err());
-        // Plookup-related methods
-        assert!(circuit.add_range_check_variable(0).is_err());
-
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     // Test arithmetizations
     //
@@ -1992,9 +1991,9 @@ pub(crate) mod test {
         test_arithmetization_for_circuit(circuit, pub_inputs)?;
 
         // Create the UltraPlonk circuit
-        let (mut circuit, pub_inputs) = create_ultra_plonk_instance::<F>()?;
+        let (mut circuit, pub_inputs) = create_turbo_plonk_instance::<F>()?;
         circuit.finalize_for_arithmetization()?;
-        test_arithmetization_for_lookup_circuit(&circuit)?;
+        // test_arithmetization_for_lookup_circuit(&circuit)?;
         test_arithmetization_for_circuit(circuit, pub_inputs)?;
 
         Ok(())
@@ -2010,91 +2009,91 @@ pub(crate) mod test {
         }
     }
 
-    pub(crate) fn test_arithmetization_for_lookup_circuit<F: PrimeField>(
-        circuit: &PlonkCircuit<F>,
-    ) -> Result<(), PlonkError> {
-        let n = circuit.eval_domain.size();
+    // pub(crate) fn test_arithmetization_for_lookup_circuit<F: PrimeField>(
+    //     circuit: &PlonkCircuit<F>,
+    // ) -> Result<(), PlonkError> {
+    //     let n = circuit.eval_domain.size();
 
-        // Check range table polynomial
-        let range_table_poly = circuit.compute_range_table_polynomial()?;
-        let range_table = circuit.compute_range_table()?;
-        check_polynomial(&range_table_poly, &range_table);
+    //     // Check range table polynomial
+    //     let range_table_poly = circuit.compute_range_table_polynomial()?;
+    //     let range_table = circuit.compute_range_table()?;
+    //     check_polynomial(&range_table_poly, &range_table);
 
-        // Check key table polynomial
-        let key_table_poly = circuit.compute_key_table_polynomial()?;
-        let key_table = circuit.table_key_vec();
-        check_polynomial(&key_table_poly, &key_table);
+    //     // Check key table polynomial
+    //     let key_table_poly = circuit.compute_key_table_polynomial()?;
+    //     let key_table = circuit.table_key_vec();
+    //     check_polynomial(&key_table_poly, &key_table);
 
-        // Check sorted vector polynomials
-        let rng = &mut test_rng();
-        let tau = F::rand(rng);
-        let merged_lookup_table = circuit.compute_merged_lookup_table(tau)?;
-        let (sorted_vec, h1_poly, h2_poly) =
-            circuit.compute_lookup_sorted_vec_polynomials(tau, &merged_lookup_table)?;
-        assert_eq!(sorted_vec.len(), 2 * n - 1);
-        // check that sorted_vec is sorted according to the order of
-        // `merged_lookup_table`.
-        assert_eq!(sorted_vec[0], merged_lookup_table[0]);
-        let mut ptr = 1;
-        for slice in sorted_vec.windows(2) {
-            // find the next different value in `sorted_vec`
-            if slice[0] == slice[1] {
-                continue;
-            }
-            // find the next different value in `merged_lookup_table`
-            while ptr < n && merged_lookup_table[ptr] == merged_lookup_table[ptr - 1] {
-                ptr += 1;
-            }
-            assert!(ptr < n);
-            assert_eq!(merged_lookup_table[ptr], slice[1]);
-            ptr += 1;
-        }
-        // assert that the elements in `merged_lookup_table` have been exhausted
-        assert_eq!(ptr, n);
+    //     // Check sorted vector polynomials
+    //     let rng = &mut test_rng();
+    //     let tau = F::rand(rng);
+    //     let merged_lookup_table = circuit.compute_merged_lookup_table(tau)?;
+    //     let (sorted_vec, h1_poly, h2_poly) =
+    //         circuit.compute_lookup_sorted_vec_polynomials(tau, &merged_lookup_table)?;
+    //     assert_eq!(sorted_vec.len(), 2 * n - 1);
+    //     // check that sorted_vec is sorted according to the order of
+    //     // `merged_lookup_table`.
+    //     assert_eq!(sorted_vec[0], merged_lookup_table[0]);
+    //     let mut ptr = 1;
+    //     for slice in sorted_vec.windows(2) {
+    //         // find the next different value in `sorted_vec`
+    //         if slice[0] == slice[1] {
+    //             continue;
+    //         }
+    //         // find the next different value in `merged_lookup_table`
+    //         while ptr < n && merged_lookup_table[ptr] == merged_lookup_table[ptr - 1] {
+    //             ptr += 1;
+    //         }
+    //         assert!(ptr < n);
+    //         assert_eq!(merged_lookup_table[ptr], slice[1]);
+    //         ptr += 1;
+    //     }
+    //     // assert that the elements in `merged_lookup_table` have been exhausted
+    //     assert_eq!(ptr, n);
 
-        check_polynomial(&h1_poly, &sorted_vec[..n]);
-        check_polynomial(&h2_poly, &sorted_vec[n - 1..]);
+    //     check_polynomial(&h1_poly, &sorted_vec[..n]);
+    //     check_polynomial(&h2_poly, &sorted_vec[n - 1..]);
 
-        // Check product accumulation polynomial
-        let beta = F::rand(rng);
-        let gamma = F::rand(rng);
-        let prod_poly = circuit.compute_lookup_prod_polynomial(
-            &tau,
-            &beta,
-            &gamma,
-            &merged_lookup_table,
-            &sorted_vec,
-        )?;
-        let mut prod_evals = vec![F::one()];
-        let one_plus_beta = F::one() + beta;
-        let gamma_mul_one_plus_beta = gamma * one_plus_beta;
-        let q_lookup_vec = circuit.q_lookup();
-        let q_dom_sep = circuit.q_dom_sep();
-        for j in 0..(n - 2) {
-            let lookup_wire_val =
-                circuit.merged_lookup_wire_value(tau, j, &q_lookup_vec, &q_dom_sep)?;
-            let table_val = merged_lookup_table[j];
-            let table_next_val = merged_lookup_table[j + 1];
-            let h1_val = sorted_vec[j];
-            let h1_next_val = sorted_vec[j + 1];
-            let h2_val = sorted_vec[n - 1 + j];
-            let h2_next_val = sorted_vec[n + j];
+    //     // Check product accumulation polynomial
+    //     let beta = F::rand(rng);
+    //     let gamma = F::rand(rng);
+    //     let prod_poly = circuit.compute_lookup_prod_polynomial(
+    //         &tau,
+    //         &beta,
+    //         &gamma,
+    //         &merged_lookup_table,
+    //         &sorted_vec,
+    //     )?;
+    //     let mut prod_evals = vec![F::one()];
+    //     let one_plus_beta = F::one() + beta;
+    //     let gamma_mul_one_plus_beta = gamma * one_plus_beta;
+    //     let q_lookup_vec = circuit.q_lookup();
+    //     let q_dom_sep = circuit.q_dom_sep();
+    //     for j in 0..(n - 2) {
+    //         let lookup_wire_val =
+    //             circuit.merged_lookup_wire_value(tau, j, &q_lookup_vec, &q_dom_sep)?;
+    //         let table_val = merged_lookup_table[j];
+    //         let table_next_val = merged_lookup_table[j + 1];
+    //         let h1_val = sorted_vec[j];
+    //         let h1_next_val = sorted_vec[j + 1];
+    //         let h2_val = sorted_vec[n - 1 + j];
+    //         let h2_next_val = sorted_vec[n + j];
 
-            // Nominator
-            let a = one_plus_beta
-                * (gamma + lookup_wire_val)
-                * (gamma_mul_one_plus_beta + table_val + beta * table_next_val);
-            // Denominator
-            let b = (gamma_mul_one_plus_beta + h1_val + beta * h1_next_val)
-                * (gamma_mul_one_plus_beta + h2_val + beta * h2_next_val);
-            let prod = prod_evals[j] * a / b;
-            prod_evals.push(prod);
-        }
-        prod_evals.push(F::one());
-        check_polynomial(&prod_poly, &prod_evals);
+    //         // Nominator
+    //         let a = one_plus_beta
+    //             * (gamma + lookup_wire_val)
+    //             * (gamma_mul_one_plus_beta + table_val + beta * table_next_val);
+    //         // Denominator
+    //         let b = (gamma_mul_one_plus_beta + h1_val + beta * h1_next_val)
+    //             * (gamma_mul_one_plus_beta + h2_val + beta * h2_next_val);
+    //         let prod = prod_evals[j] * a / b;
+    //         prod_evals.push(prod);
+    //     }
+    //     prod_evals.push(F::one());
+    //     check_polynomial(&prod_poly, &prod_evals);
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     pub(crate) fn test_arithmetization_for_circuit<F: PrimeField>(
         circuit: PlonkCircuit<F>,

@@ -612,20 +612,20 @@ mod tests {
                 // ark_std::println!("Turbo Plonk: {} constraints", circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
-            {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
-                let s = P::ScalarField::rand(&mut rng);
-                let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
+            // {
+            //     let mut base = GroupAffine::<P>::rand(&mut rng);
+            //     let s = P::ScalarField::rand(&mut rng);
+            //     let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
-                let s_var = circuit.create_variable(F::from(fr_to_fq::<F, P>(&s)))?;
-                let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
-                let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
-                assert_eq!(Point::from(base), circuit.point_witness(&result)?);
+            //     let s_var = circuit.create_variable(F::from(fr_to_fq::<F, P>(&s)))?;
+            //     let base_var = circuit.create_point_variable(Point::from(base))?;
+            //     base *= s;
+            //     let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
+            //     assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
-                // ark_std::println!("Ultra Plonk: {} constraints", circuit.num_gates());
-                assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            }
+            //     // ark_std::println!("Ultra Plonk: {} constraints", circuit.num_gates());
+            //     assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+            // }
 
             {
                 let mut base = GroupAffine::<P>::rand(&mut rng);
@@ -642,20 +642,20 @@ mod tests {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
 
-            {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
-                let s = P::ScalarField::rand(&mut rng);
-                let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
+            // {
+            //     let mut base = GroupAffine::<P>::rand(&mut rng);
+            //     let s = P::ScalarField::rand(&mut rng);
+            //     let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
-                let s_var = circuit.create_variable(F::from(fr_to_fq::<F, P>(&s)))?;
-                let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
-                let result = circuit.glv_mul::<P>(s_var, &base_var)?;
-                assert_eq!(Point::from(base), circuit.point_witness(&result)?);
+            //     let s_var = circuit.create_variable(F::from(fr_to_fq::<F, P>(&s)))?;
+            //     let base_var = circuit.create_point_variable(Point::from(base))?;
+            //     base *= s;
+            //     let result = circuit.glv_mul::<P>(s_var, &base_var)?;
+            //     assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
-                // ark_std::println!("Ultra Plonk GLV: {} constraints", circuit.num_gates());
-                assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            }
+            //     // ark_std::println!("Ultra Plonk GLV: {} constraints", circuit.num_gates());
+            //     assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+            // }
         }
         Ok(())
     }
@@ -700,7 +700,8 @@ mod tests {
 
             assert_eq!(k1 - k2 * lambda, scalar,);
 
-            let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_ultra_plonk(16);
+            // let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_ultra_plonk(16);
+            let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_turbo_plonk();
             let scalar_var = circuit.create_variable(field_switching(&scalar)).unwrap();
             let res =
                 scalar_decomposition_gate::<_, EdwardsParameters, _>(&mut circuit, &scalar_var)

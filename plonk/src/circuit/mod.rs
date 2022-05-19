@@ -123,9 +123,9 @@ pub trait Circuit<F: Field> {
     /// Pad the circuit with n dummy gates
     fn pad_gate(&mut self, n: usize);
 
-    /// Plookup-related methods.
-    /// Return true if the circuit support lookup gates.
-    fn support_lookup(&self) -> bool;
+    // /// Plookup-related methods.
+    // /// Return true if the circuit support lookup gates.
+    // fn support_lookup(&self) -> bool;
 }
 
 // The sorted concatenation of the lookup table and the witness values to be

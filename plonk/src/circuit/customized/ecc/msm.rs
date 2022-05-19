@@ -78,11 +78,11 @@ where
             )));
         }
 
-        if self.support_lookup() {
-            msm_pippenger::<F, P>(self, bases, scalars, scalar_bit_length)
-        } else {
+        // if self.support_lookup() {
+        //     msm_pippenger::<F, P>(self, bases, scalars, scalar_bit_length)
+        // } else {
             msm_naive::<F, P>(self, bases, scalars, scalar_bit_length)
-        }
+        // }
     }
 }
 
@@ -152,160 +152,160 @@ where
     Ok(res)
 }
 
-// A variant of Pippenger MSM.
-//
-// Some typical result on BW6-761 curve is shown below (i.e. the circuit
-// simulates BLS12-377 curve operations). More results are available in the test
-// function.
-//
-// number of basis: 1
-// #variables: 887
-// #constraints: 783
-//
-// number of basis: 2
-// #variables: 1272
-// #constraints: 1064
-//
-// number of basis: 4
-// #variables: 2042
-// #constraints: 1626
-//
-// number of basis: 8
-// #variables: 3582
-// #constraints: 2750
-//
-// number of basis: 16
-// #variables: 6662
-// #constraints: 4998
-//
-// number of basis: 32
-// #variables: 12822
-// #constraints: 9494
-//
-// number of basis: 64
-// #variables: 25142
-// #constraints: 18486
-//
-// number of basis: 128
-// #variables: 49782
-// #constraints: 36470
-fn msm_pippenger<F, P>(
-    circuit: &mut PlonkCircuit<F>,
-    bases: &[PointVariable],
-    scalars: &[Variable],
-    scalar_bit_length: usize,
-) -> Result<PointVariable, PlonkError>
-where
-    F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
-{
-    // ================================================
-    // check inputs
-    // ================================================
-    for (&scalar, base) in scalars.iter().zip(bases.iter()) {
-        circuit.check_var_bound(scalar)?;
-        circuit.check_point_var_bound(base)?;
-    }
+// // A variant of Pippenger MSM.
+// //
+// // Some typical result on BW6-761 curve is shown below (i.e. the circuit
+// // simulates BLS12-377 curve operations). More results are available in the test
+// // function.
+// //
+// // number of basis: 1
+// // #variables: 887
+// // #constraints: 783
+// //
+// // number of basis: 2
+// // #variables: 1272
+// // #constraints: 1064
+// //
+// // number of basis: 4
+// // #variables: 2042
+// // #constraints: 1626
+// //
+// // number of basis: 8
+// // #variables: 3582
+// // #constraints: 2750
+// //
+// // number of basis: 16
+// // #variables: 6662
+// // #constraints: 4998
+// //
+// // number of basis: 32
+// // #variables: 12822
+// // #constraints: 9494
+// //
+// // number of basis: 64
+// // #variables: 25142
+// // #constraints: 18486
+// //
+// // number of basis: 128
+// // #variables: 49782
+// // #constraints: 36470
+// fn msm_pippenger<F, P>(
+//     circuit: &mut PlonkCircuit<F>,
+//     bases: &[PointVariable],
+//     scalars: &[Variable],
+//     scalar_bit_length: usize,
+// ) -> Result<PointVariable, PlonkError>
+// where
+//     F: PrimeField,
+//     P: Parameters<BaseField = F> + Clone,
+// {
+//     // ================================================
+//     // check inputs
+//     // ================================================
+//     for (&scalar, base) in scalars.iter().zip(bases.iter()) {
+//         circuit.check_var_bound(scalar)?;
+//         circuit.check_point_var_bound(base)?;
+//     }
 
-    // ================================================
-    // set up parameters
-    // ================================================
-    let c = if scalar_bit_length < 32 {
-        3
-    } else {
-        ln_without_floats(scalar_bit_length)
-    };
+//     // ================================================
+//     // set up parameters
+//     // ================================================
+//     let c = if scalar_bit_length < 32 {
+//         3
+//     } else {
+//         ln_without_floats(scalar_bit_length)
+//     };
 
-    // ================================================
-    // compute lookup tables and window sums
-    // ================================================
-    let point_zero_var = circuit.neutral_point_variable();
-    // Each window is of size `c`.
-    // We divide up the bits 0..scalar_bit_length into windows of size `c`, and
-    // in parallel process each such window.
-    let mut window_sums = Vec::new();
-    for (base_var, &scalar_var) in bases.iter().zip(scalars.iter()) {
-        // decompose scalar into c-bit scalars
-        let decomposed_scalar_vars =
-            decompose_scalar_var(circuit, scalar_var, c, scalar_bit_length)?;
+//     // ================================================
+//     // compute lookup tables and window sums
+//     // ================================================
+//     let point_zero_var = circuit.neutral_point_variable();
+//     // Each window is of size `c`.
+//     // We divide up the bits 0..scalar_bit_length into windows of size `c`, and
+//     // in parallel process each such window.
+//     let mut window_sums = Vec::new();
+//     for (base_var, &scalar_var) in bases.iter().zip(scalars.iter()) {
+//         // decompose scalar into c-bit scalars
+//         let decomposed_scalar_vars =
+//             decompose_scalar_var(circuit, scalar_var, c, scalar_bit_length)?;
 
-        // create point table [0 * base, 1 * base, ..., (2^c-1) * base]
-        let mut table_point_vars = vec![point_zero_var, *base_var];
-        for _ in 0..((1 << c) - 2) {
-            let point_var = circuit.ecc_add::<P>(base_var, table_point_vars.last().unwrap())?;
-            table_point_vars.push(point_var);
-        }
+//         // create point table [0 * base, 1 * base, ..., (2^c-1) * base]
+//         let mut table_point_vars = vec![point_zero_var, *base_var];
+//         for _ in 0..((1 << c) - 2) {
+//             let point_var = circuit.ecc_add::<P>(base_var, table_point_vars.last().unwrap())?;
+//             table_point_vars.push(point_var);
+//         }
 
-        // create lookup point variables
-        let mut lookup_point_vars = Vec::new();
-        for &scalar_var in decomposed_scalar_vars.iter() {
-            let lookup_point = compute_scalar_mul_value::<F, P>(circuit, scalar_var, base_var)?;
-            let lookup_point_var = circuit.create_point_variable(lookup_point)?;
-            lookup_point_vars.push(lookup_point_var);
-        }
+//         // create lookup point variables
+//         let mut lookup_point_vars = Vec::new();
+//         for &scalar_var in decomposed_scalar_vars.iter() {
+//             let lookup_point = compute_scalar_mul_value::<F, P>(circuit, scalar_var, base_var)?;
+//             let lookup_point_var = circuit.create_point_variable(lookup_point)?;
+//             lookup_point_vars.push(lookup_point_var);
+//         }
 
-        create_point_lookup_gates(
-            circuit,
-            &table_point_vars,
-            &decomposed_scalar_vars,
-            &lookup_point_vars,
-        )?;
+//         create_point_lookup_gates(
+//             circuit,
+//             &table_point_vars,
+//             &decomposed_scalar_vars,
+//             &lookup_point_vars,
+//         )?;
 
-        // update window sums
-        if window_sums.is_empty() {
-            window_sums = lookup_point_vars;
-        } else {
-            for (window_sum_mut, lookup_point_var) in
-                window_sums.iter_mut().zip(lookup_point_vars.iter())
-            {
-                *window_sum_mut = circuit.ecc_add::<P>(window_sum_mut, lookup_point_var)?;
-            }
-        }
-    }
+//         // update window sums
+//         if window_sums.is_empty() {
+//             window_sums = lookup_point_vars;
+//         } else {
+//             for (window_sum_mut, lookup_point_var) in
+//                 window_sums.iter_mut().zip(lookup_point_vars.iter())
+//             {
+//                 *window_sum_mut = circuit.ecc_add::<P>(window_sum_mut, lookup_point_var)?;
+//             }
+//         }
+//     }
 
-    // ================================================
-    // performing additions
-    // ================================================
-    // We store the sum for the lowest window.
-    let lowest = *window_sums.first().unwrap();
+//     // ================================================
+//     // performing additions
+//     // ================================================
+//     // We store the sum for the lowest window.
+//     let lowest = *window_sums.first().unwrap();
 
-    // We're traversing windows from high to low.
-    let b = &window_sums[1..]
-        .iter()
-        .rev()
-        .fold(point_zero_var, |mut total, sum_i| {
-            // total += sum_i
-            total = circuit.ecc_add::<P>(&total, sum_i).unwrap();
-            for _ in 0..c {
-                // double
-                total = circuit.ecc_add::<P>(&total, &total).unwrap();
-            }
-            total
-        });
-    circuit.ecc_add::<P>(&lowest, b)
-}
+//     // We're traversing windows from high to low.
+//     let b = &window_sums[1..]
+//         .iter()
+//         .rev()
+//         .fold(point_zero_var, |mut total, sum_i| {
+//             // total += sum_i
+//             total = circuit.ecc_add::<P>(&total, sum_i).unwrap();
+//             for _ in 0..c {
+//                 // double
+//                 total = circuit.ecc_add::<P>(&total, &total).unwrap();
+//             }
+//             total
+//         });
+//     circuit.ecc_add::<P>(&lowest, b)
+// }
 
-#[inline]
-fn create_point_lookup_gates<F>(
-    circuit: &mut PlonkCircuit<F>,
-    table_point_vars: &[PointVariable],
-    lookup_scalar_vars: &[Variable],
-    lookup_point_vars: &[PointVariable],
-) -> Result<(), PlonkError>
-where
-    F: PrimeField,
-{
-    let table_vars: Vec<(Variable, Variable)> = table_point_vars
-        .iter()
-        .map(|p| (p.get_x(), p.get_y()))
-        .collect();
-    let lookup_vars: Vec<(Variable, Variable, Variable)> = lookup_scalar_vars
-        .iter()
-        .zip(lookup_point_vars.iter())
-        .map(|(&s, pt)| (s, pt.get_x(), pt.get_y()))
-        .collect();
-    circuit.create_table_and_lookup_variables(&lookup_vars, &table_vars)
-}
+// #[inline]
+// fn create_point_lookup_gates<F>(
+//     circuit: &mut PlonkCircuit<F>,
+//     table_point_vars: &[PointVariable],
+//     lookup_scalar_vars: &[Variable],
+//     lookup_point_vars: &[PointVariable],
+// ) -> Result<(), PlonkError>
+// where
+//     F: PrimeField,
+// {
+//     let table_vars: Vec<(Variable, Variable)> = table_point_vars
+//         .iter()
+//         .map(|p| (p.get_x(), p.get_y()))
+//         .collect();
+//     let lookup_vars: Vec<(Variable, Variable, Variable)> = lookup_scalar_vars
+//         .iter()
+//         .zip(lookup_point_vars.iter())
+//         .map(|(&s, pt)| (s, pt.get_x(), pt.get_y()))
+//         .collect();
+//     circuit.create_table_and_lookup_variables(&lookup_vars, &table_vars)
+// }
 
 #[inline]
 /// Decompose a `scalar_bit_length`-bit scalar `s` into many c-bit scalar
@@ -392,13 +392,13 @@ mod tests {
     #[test]
     fn test_variable_base_multi_scalar_mul() -> Result<(), PlonkError> {
         test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::UltraPlonk)?;
+        // test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::UltraPlonk)?;
         test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::UltraPlonk)?;
+        // test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::UltraPlonk)?;
         test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::UltraPlonk)?;
+        // test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::UltraPlonk)?;
         test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::UltraPlonk)?;
+        // test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::UltraPlonk)?;
 
         // // uncomment the following code to dump the circuit comparison to screen
         // assert!(false);
@@ -418,7 +418,7 @@ mod tests {
         for dim in [1, 2, 4, 8, 16, 32, 64, 128] {
             let mut circuit: PlonkCircuit<F> = match plonk_type {
                 PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-                PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST),
+                // PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST),
             };
 
             // bases and scalars

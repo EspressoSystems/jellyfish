@@ -477,18 +477,18 @@ where
         self.check_var_bound(scalar)?;
         self.check_point_var_bound(base)?;
 
-        if self.support_lookup()
-            && P::ScalarField::size_in_bits() == 253
-            && P::BaseField::size_in_bits() == 255
-        {
-            // bandersnatch glv multiplication
-            // FIXME: we do not have an easier flag to tell if a parameter
-            // is bandersnatch or not, yet.
-            self.glv_mul::<P>(scalar, base)
-        } else {
+        // if self.support_lookup()
+        //     && P::ScalarField::size_in_bits() == 253
+        //     && P::BaseField::size_in_bits() == 255
+        // {
+        //     // bandersnatch glv multiplication
+        //     // FIXME: we do not have an easier flag to tell if a parameter
+        //     // is bandersnatch or not, yet.
+        //     self.glv_mul::<P>(scalar, base)
+        // } else {
             // non-bandersantch multiplication
             msm::MultiScalarMultiplicationCircuit::<F, P>::msm(self, &[*base], &[scalar])
-        }
+        // }
     }
 
     /// Obtain a variable of the result of a variable base scalar

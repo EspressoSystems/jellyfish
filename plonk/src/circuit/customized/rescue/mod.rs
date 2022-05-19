@@ -8,7 +8,7 @@
 //! fields.
 
 mod native;
-mod non_native;
+// mod non_native;
 
 pub use native::{RescueGadget, RescueStateVar};
-pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};
+// pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};

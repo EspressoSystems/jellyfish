@@ -5,13 +5,13 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use super::structs::{
-    BatchProof, Challenges, PlookupProof, ProofEvaluations, ScalarsAndBases, VerifyingKey,
+    BatchProof, Challenges, ProofEvaluations, ScalarsAndBases, VerifyingKey,
 };
 use crate::{
     circuit::customized::ecc::SWToTEConParam,
     constants::*,
     errors::{PlonkError, SnarkError::ParameterError},
-    proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
+    proof_system::structs::{OpenKey},
     transcript::*,
 };
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
@@ -92,13 +92,13 @@ where
                 )
                 .into());
             }
-            if vk.plookup_vk.is_some() != batch_proof.plookup_proofs_vec[i].is_some() {
-                return Err(ParameterError(format!(
-                    "Mismatched proof type and verification key type for the {}-th instance",
-                    i
-                ))
-                .into());
-            }
+            // if vk.plookup_vk.is_some() != batch_proof.plookup_proofs_vec[i].is_some() {
+            //     return Err(ParameterError(format!(
+            //         "Mismatched proof type and verification key type for the {}-th instance",
+            //         i
+            //     ))
+            //     .into());
+            // }
             if vk.domain_size != self.domain.size() {
                 return Err(ParameterError(format!(
                     "the domain size {} of the {}-th verification key is different from {}",
@@ -128,11 +128,12 @@ where
         let alpha_powers = vec![alpha_2, alpha_3, alpha_4, alpha_5, alpha_6];
         let mut alpha_bases = vec![E::Fr::one()];
 
-        let mut tmp = if verify_keys[0].plookup_vk.is_some() {
-            alpha_7
-        } else {
-            alpha_3
-        };
+        let mut tmp = alpha_3;
+        // let mut tmp = if verify_keys[0].plookup_vk.is_some() {
+        //     alpha_7
+        // } else {
+        //     alpha_3
+        // };
         if verify_keys.len() > 1 {
             for _ in 0..verify_keys.len() - 1 {
                 alpha_bases.push(tmp);
@@ -171,7 +172,7 @@ where
         let eval = Self::aggregate_evaluations(
             &lin_poly_constant,
             &batch_proof.poly_evals_vec,
-            &batch_proof.plookup_proofs_vec,
+            // &batch_proof.plookup_proofs_vec,
             &buffer_v_and_uv_basis,
         )?;
 
@@ -286,23 +287,23 @@ where
         }
         let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
 
-        for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
-            if let Some(proof_lkup) = plookup_proof.as_ref() {
-                transcript.append_commitments(b"h_poly_comms", &proof_lkup.h_poly_comms)?;
-            }
-        }
+        // for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
+        //     if let Some(proof_lkup) = plookup_proof.as_ref() {
+        //         transcript.append_commitments(b"h_poly_comms", &proof_lkup.h_poly_comms)?;
+        //     }
+        // }
 
         let beta = transcript.get_and_append_challenge::<E>(b"beta")?;
         let gamma = transcript.get_and_append_challenge::<E>(b"gamma")?;
         for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
             transcript.append_commitment(b"perm_poly_comms", prod_perm_poly_comm)?;
         }
-        for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
-            if let Some(proof_lkup) = plookup_proof.as_ref() {
-                transcript
-                    .append_commitment(b"plookup_poly_comms", &proof_lkup.prod_lookup_poly_comm)?;
-            }
-        }
+        // for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
+        //     if let Some(proof_lkup) = plookup_proof.as_ref() {
+        //         transcript
+        //             .append_commitment(b"plookup_poly_comms", &proof_lkup.prod_lookup_poly_comm)?;
+        //     }
+        // }
 
         let alpha = transcript.get_and_append_challenge::<E>(b"alpha")?;
         transcript.append_commitments(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
@@ -310,11 +311,11 @@ where
         for poly_evals in batch_proof.poly_evals_vec.iter() {
             transcript.append_proof_evaluations::<E>(poly_evals)?;
         }
-        for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
-            if let Some(proof_lkup) = plookup_proof.as_ref() {
-                transcript.append_plookup_evaluations::<E>(&proof_lkup.poly_evals)?;
-            }
-        }
+        // for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
+        //     if let Some(proof_lkup) = plookup_proof.as_ref() {
+        //         transcript.append_plookup_evaluations::<E>(&proof_lkup.poly_evals)?;
+        //     }
+        // }
 
         let v = transcript.get_and_append_challenge::<E>(b"v")?;
         transcript.append_commitment(b"open_proof", &batch_proof.opening_proof)?;
@@ -375,23 +376,23 @@ where
         }
 
         let mut result = E::Fr::zero();
-        for (poly_evals, (plookup_proof, (&pi, (&vk, &current_alpha_bases)))) in
+        for (poly_evals,  (&pi, (&vk, &current_alpha_bases))) in
             batch_proof.poly_evals_vec.iter().zip(
-                batch_proof.plookup_proofs_vec.iter().zip(
+                // batch_proof.plookup_proofs_vec.iter().zip(
                     public_inputs
                         .iter()
                         .zip(verify_keys.iter().zip(alpha_bases.iter())),
-                ),
+                // ),
             )
         {
             let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vanish_eval, vk.is_merged)?
                 - alpha_powers[0] * lagrange_1_eval;
             let num_wire_types = GATE_WIDTH
-                + 1
-                + match plookup_proof.is_some() {
-                    true => 1,
-                    false => 0,
-                };
+                + 1;
+                // + match plookup_proof.is_some() {
+                //     true => 1,
+                //     false => 0,
+                // };
             let first_w_evals = &poly_evals.wires_evals[..num_wire_types - 1];
             let last_w_eval = &poly_evals.wires_evals[num_wire_types - 1];
             let sigma_evals = &poly_evals.wire_sigma_evals[..];
@@ -402,22 +403,22 @@ where
                 },
             );
 
-            if let Some(proof_lk) = plookup_proof {
-                let gamma_mul_beta_plus_one = challenges.gamma * (E::Fr::one() + challenges.beta);
-                let evals = &proof_lk.poly_evals;
+            // if let Some(proof_lk) = plookup_proof {
+            //     let gamma_mul_beta_plus_one = challenges.gamma * (E::Fr::one() + challenges.beta);
+            //     let evals = &proof_lk.poly_evals;
 
-                let plookup_constant = *lagrange_n_eval
-                    * (evals.h_1_eval - evals.h_2_next_eval - alpha_powers[0])
-                    - challenges.alpha * lagrange_1_eval
-                    - alpha_powers[1]
-                        * (challenges.zeta - self.domain.group_gen_inv)
-                        * evals.prod_next_eval
-                        * (gamma_mul_beta_plus_one
-                            + evals.h_1_eval
-                            + challenges.beta * evals.h_1_next_eval)
-                        * (gamma_mul_beta_plus_one + challenges.beta * evals.h_2_next_eval);
-                tmp += alpha_powers[1] * plookup_constant;
-            }
+            //     let plookup_constant = *lagrange_n_eval
+            //         * (evals.h_1_eval - evals.h_2_next_eval - alpha_powers[0])
+            //         - challenges.alpha * lagrange_1_eval
+            //         - alpha_powers[1]
+            //             * (challenges.zeta - self.domain.group_gen_inv)
+            //             * evals.prod_next_eval
+            //             * (gamma_mul_beta_plus_one
+            //                 + evals.h_1_eval
+            //                 + challenges.beta * evals.h_1_next_eval)
+            //             * (gamma_mul_beta_plus_one + challenges.beta * evals.h_2_next_eval);
+            //     tmp += alpha_powers[1] * plookup_constant;
+            // }
 
             result += current_alpha_bases * tmp;
         }
@@ -502,26 +503,26 @@ where
                 challenges.v,
             );
 
-            // Add Plookup polynomial commitments
-            if let Some(proof_lkup) = batch_proof.plookup_proofs_vec[i].as_ref() {
-                // add commitments to be evaluated at point `zeta`
-                let plookup_comms = Self::plookup_open_poly_comms(proof_lkup, vk)?;
-                for &comm in plookup_comms.iter() {
-                    buffer_v_and_uv_basis.push(v_base);
-                    Self::add_poly_comm(&mut scalars_and_bases, &mut v_base, comm.0, challenges.v);
-                }
+            // // Add Plookup polynomial commitments
+            // if let Some(proof_lkup) = batch_proof.plookup_proofs_vec[i].as_ref() {
+            //     // add commitments to be evaluated at point `zeta`
+            //     let plookup_comms = Self::plookup_open_poly_comms(proof_lkup, vk)?;
+            //     for &comm in plookup_comms.iter() {
+            //         buffer_v_and_uv_basis.push(v_base);
+            //         Self::add_poly_comm(&mut scalars_and_bases, &mut v_base, comm.0, challenges.v);
+            //     }
 
-                // add commitments to be evaluated at point `zeta * g`
-                let plookup_shifted_comms = Self::plookup_shifted_open_poly_comms(
-                    proof_lkup,
-                    vk,
-                    &batch_proof.wires_poly_comms_vec[i],
-                )?;
-                for &comm in plookup_shifted_comms.iter() {
-                    buffer_v_and_uv_basis.push(uv_base);
-                    Self::add_poly_comm(&mut scalars_and_bases, &mut uv_base, comm.0, challenges.v);
-                }
-            }
+            //     // add commitments to be evaluated at point `zeta * g`
+            //     let plookup_shifted_comms = Self::plookup_shifted_open_poly_comms(
+            //         proof_lkup,
+            //         vk,
+            //         &batch_proof.wires_poly_comms_vec[i],
+            //     )?;
+            //     for &comm in plookup_shifted_comms.iter() {
+            //         buffer_v_and_uv_basis.push(uv_base);
+            //         Self::add_poly_comm(&mut scalars_and_bases, &mut uv_base, comm.0, challenges.v);
+            //     }
+            // }
         }
 
         Ok((scalars_and_bases, buffer_v_and_uv_basis))
@@ -622,67 +623,67 @@ where
                 scalars_and_bases.push(s * current_alpha_bases, poly.0);
             }
 
-            // Add Plookup related commitments
-            if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
-                let lookup_evals = &lookup_proof.poly_evals;
-                let merged_lookup_x = eval_merged_lookup_witness::<E>(
-                    challenges.tau,
-                    w_evals[5],
-                    w_evals[0],
-                    w_evals[1],
-                    w_evals[2],
-                    lookup_evals.q_lookup_eval,
-                    lookup_evals.q_dom_sep_eval,
-                );
-                let merged_table_x = eval_merged_table::<E>(
-                    challenges.tau,
-                    lookup_evals.range_table_eval,
-                    lookup_evals.key_table_eval,
-                    lookup_evals.q_lookup_eval,
-                    w_evals[3],
-                    w_evals[4],
-                    lookup_evals.table_dom_sep_eval,
-                );
-                let merged_table_xw = eval_merged_table::<E>(
-                    challenges.tau,
-                    lookup_evals.range_table_next_eval,
-                    lookup_evals.key_table_next_eval,
-                    lookup_evals.q_lookup_next_eval,
-                    lookup_evals.w_3_next_eval,
-                    lookup_evals.w_4_next_eval,
-                    lookup_evals.table_dom_sep_next_eval,
-                );
+            // // Add Plookup related commitments
+            // if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
+            //     let lookup_evals = &lookup_proof.poly_evals;
+            //     let merged_lookup_x = eval_merged_lookup_witness::<E>(
+            //         challenges.tau,
+            //         w_evals[5],
+            //         w_evals[0],
+            //         w_evals[1],
+            //         w_evals[2],
+            //         lookup_evals.q_lookup_eval,
+            //         lookup_evals.q_dom_sep_eval,
+            //     );
+            //     let merged_table_x = eval_merged_table::<E>(
+            //         challenges.tau,
+            //         lookup_evals.range_table_eval,
+            //         lookup_evals.key_table_eval,
+            //         lookup_evals.q_lookup_eval,
+            //         w_evals[3],
+            //         w_evals[4],
+            //         lookup_evals.table_dom_sep_eval,
+            //     );
+            //     let merged_table_xw = eval_merged_table::<E>(
+            //         challenges.tau,
+            //         lookup_evals.range_table_next_eval,
+            //         lookup_evals.key_table_next_eval,
+            //         lookup_evals.q_lookup_next_eval,
+            //         lookup_evals.w_3_next_eval,
+            //         lookup_evals.w_4_next_eval,
+            //         lookup_evals.table_dom_sep_next_eval,
+            //     );
 
-                // coefficient for prod_lookup_poly(X):
-                // coeff_lin_poly = alpha^4 * L1(x) +
-                //                  alpha^5 * Ln(x) +
-                //                  alpha^6 * (x - w^{n-1}) * (1+beta) * (gamma + lookup_w_eval)
-                //                  * (gamma(1+beta) + table_x + beta * table_xw),
-                let mut coeff = alpha_powers[2] * lagrange_1_eval
-                    + alpha_powers[3] * lagrange_n_eval
-                    + alpha_powers[4]
-                        * (challenges.zeta - self.domain.group_gen_inv)
-                        * beta_plus_one
-                        * (challenges.gamma + merged_lookup_x)
-                        * (gamma_mul_beta_plus_one
-                            + merged_table_x
-                            + challenges.beta * merged_table_xw);
-                coeff = current_alpha_bases * coeff;
-                scalars_and_bases.push(coeff, lookup_proof.prod_lookup_poly_comm.0);
+            //     // coefficient for prod_lookup_poly(X):
+            //     // coeff_lin_poly = alpha^4 * L1(x) +
+            //     //                  alpha^5 * Ln(x) +
+            //     //                  alpha^6 * (x - w^{n-1}) * (1+beta) * (gamma + lookup_w_eval)
+            //     //                  * (gamma(1+beta) + table_x + beta * table_xw),
+            //     let mut coeff = alpha_powers[2] * lagrange_1_eval
+            //         + alpha_powers[3] * lagrange_n_eval
+            //         + alpha_powers[4]
+            //             * (challenges.zeta - self.domain.group_gen_inv)
+            //             * beta_plus_one
+            //             * (challenges.gamma + merged_lookup_x)
+            //             * (gamma_mul_beta_plus_one
+            //                 + merged_table_x
+            //                 + challenges.beta * merged_table_xw);
+            //     coeff = current_alpha_bases * coeff;
+            //     scalars_and_bases.push(coeff, lookup_proof.prod_lookup_poly_comm.0);
 
-                // coefficient for h2(X):
-                // coeff_lin_poly = alpha_base * alpha^6 * (w^{n-1} - x)
-                //                  * prod_lookup_poly_xw
-                //                  * [gamma(1+beta) + h1_x + beta * h1_xw]
-                let coeff = current_alpha_bases
-                    * alpha_powers[4]
-                    * (self.domain.group_gen_inv - challenges.zeta)
-                    * lookup_evals.prod_next_eval
-                    * (gamma_mul_beta_plus_one
-                        + lookup_evals.h_1_eval
-                        + challenges.beta * lookup_evals.h_1_next_eval);
-                scalars_and_bases.push(coeff, lookup_proof.h_poly_comms[1].0);
-            }
+            //     // coefficient for h2(X):
+            //     // coeff_lin_poly = alpha_base * alpha^6 * (w^{n-1} - x)
+            //     //                  * prod_lookup_poly_xw
+            //     //                  * [gamma(1+beta) + h1_x + beta * h1_xw]
+            //     let coeff = current_alpha_bases
+            //         * alpha_powers[4]
+            //         * (self.domain.group_gen_inv - challenges.zeta)
+            //         * lookup_evals.prod_next_eval
+            //         * (gamma_mul_beta_plus_one
+            //             + lookup_evals.h_1_eval
+            //             + challenges.beta * lookup_evals.h_1_next_eval);
+            //     scalars_and_bases.push(coeff, lookup_proof.h_poly_comms[1].0);
+            // }
         }
 
         // Add splitted quotient commitments
@@ -710,15 +711,15 @@ where
     pub(crate) fn aggregate_evaluations(
         lin_poly_constant: &E::Fr,
         poly_evals_vec: &[ProofEvaluations<E::Fr>],
-        plookup_proofs_vec: &[Option<PlookupProof<E>>],
+        // plookup_proofs_vec: &[Option<PlookupProof<E>>],
         buffer_v_and_uv_basis: &[E::Fr],
     ) -> Result<E::Fr, PlonkError> {
-        assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
+        // assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
 
         let mut result: E::Fr = lin_poly_constant.neg();
         let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
 
-        for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
+        for poly_evals in poly_evals_vec.iter() {
             // evaluations at point `zeta`
             for &wire_eval in poly_evals.wires_evals.iter() {
                 Self::add_pcs_eval(
@@ -747,30 +748,30 @@ where
                 poly_evals.perm_next_eval,
             );
 
-            // add Plookup related polynomial evaluations
-            if let Some(proof_lk) = plookup_proof {
-                let evals = &proof_lk.poly_evals;
-                // evaluations at point `zeta`
-                for &eval in evals.evals_vec().iter() {
-                    Self::add_pcs_eval(
-                        &mut result,
-                        v_and_uv_basis
-                            .next()
-                            .ok_or(PlonkError::IteratorOutOfRange)?,
-                        eval,
-                    );
-                }
-                // evaluations at point `zeta * g`
-                for &next_eval in evals.next_evals_vec().iter() {
-                    Self::add_pcs_eval(
-                        &mut result,
-                        v_and_uv_basis
-                            .next()
-                            .ok_or(PlonkError::IteratorOutOfRange)?,
-                        next_eval,
-                    );
-                }
-            }
+            // // add Plookup related polynomial evaluations
+            // if let Some(proof_lk) = plookup_proof {
+            //     let evals = &proof_lk.poly_evals;
+            //     // evaluations at point `zeta`
+            //     for &eval in evals.evals_vec().iter() {
+            //         Self::add_pcs_eval(
+            //             &mut result,
+            //             v_and_uv_basis
+            //                 .next()
+            //                 .ok_or(PlonkError::IteratorOutOfRange)?,
+            //             eval,
+            //         );
+            //     }
+            //     // evaluations at point `zeta * g`
+            //     for &next_eval in evals.next_evals_vec().iter() {
+            //         Self::add_pcs_eval(
+            //             &mut result,
+            //             v_and_uv_basis
+            //                 .next()
+            //                 .ok_or(PlonkError::IteratorOutOfRange)?,
+            //             next_eval,
+            //         );
+            //     }
+            // }
         }
         // ensure all the buffer has been consumed
         if v_and_uv_basis.next().is_some() {
@@ -824,43 +825,43 @@ where
         (lagrange_1_eval, lagrange_n_eval)
     }
 
-    #[inline]
-    /// Return the list of polynomial commitments to be opened at point `zeta`.
-    /// The order should be consistent with the prover side.
-    fn plookup_open_poly_comms(
-        proof: &PlookupProof<E>,
-        vk: &VerifyingKey<E>,
-    ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        Ok(vec![
-            vk.plookup_vk.as_ref().unwrap().range_table_comm,
-            vk.plookup_vk.as_ref().unwrap().key_table_comm,
-            proof.h_poly_comms[0],
-            *vk.q_lookup_comm()?,
-            vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
-            vk.plookup_vk.as_ref().unwrap().q_dom_sep_comm,
-        ])
-    }
+    // #[inline]
+    // /// Return the list of polynomial commitments to be opened at point `zeta`.
+    // /// The order should be consistent with the prover side.
+    // fn plookup_open_poly_comms(
+    //     proof: &PlookupProof<E>,
+    //     vk: &VerifyingKey<E>,
+    // ) -> Result<Vec<Commitment<E>>, PlonkError> {
+    //     Ok(vec![
+    //         vk.plookup_vk.as_ref().unwrap().range_table_comm,
+    //         vk.plookup_vk.as_ref().unwrap().key_table_comm,
+    //         proof.h_poly_comms[0],
+    //         *vk.q_lookup_comm()?,
+    //         vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
+    //         vk.plookup_vk.as_ref().unwrap().q_dom_sep_comm,
+    //     ])
+    // }
 
-    #[inline]
-    /// Return the list of polynomial commitments to be opened at point `zeta *
-    /// g`. The order should be consistent with the prover side.
-    fn plookup_shifted_open_poly_comms(
-        proof: &PlookupProof<E>,
-        vk: &VerifyingKey<E>,
-        wires_poly_comms: &[Commitment<E>],
-    ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        Ok(vec![
-            proof.prod_lookup_poly_comm,
-            vk.plookup_vk.as_ref().unwrap().range_table_comm,
-            vk.plookup_vk.as_ref().unwrap().key_table_comm,
-            proof.h_poly_comms[0],
-            proof.h_poly_comms[1],
-            *vk.q_lookup_comm()?,
-            wires_poly_comms[3],
-            wires_poly_comms[4],
-            vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
-        ])
-    }
+    // #[inline]
+    // /// Return the list of polynomial commitments to be opened at point `zeta *
+    // /// g`. The order should be consistent with the prover side.
+    // fn plookup_shifted_open_poly_comms(
+    //     proof: &PlookupProof<E>,
+    //     vk: &VerifyingKey<E>,
+    //     wires_poly_comms: &[Commitment<E>],
+    // ) -> Result<Vec<Commitment<E>>, PlonkError> {
+    //     Ok(vec![
+    //         proof.prod_lookup_poly_comm,
+    //         vk.plookup_vk.as_ref().unwrap().range_table_comm,
+    //         vk.plookup_vk.as_ref().unwrap().key_table_comm,
+    //         proof.h_poly_comms[0],
+    //         proof.h_poly_comms[1],
+    //         *vk.q_lookup_comm()?,
+    //         wires_poly_comms[3],
+    //         wires_poly_comms[4],
+    //         vk.plookup_vk.as_ref().unwrap().table_dom_sep_comm,
+    //     ])
+    // }
 
     /// Evaluate public input polynomial at point `z`.
     /// Define the following as

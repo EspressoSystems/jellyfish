@@ -9,10 +9,10 @@ use crate::{
     circuit::{
         customized::{
             ecc::{Point, SWToTEConParam},
-            ultraplonk::{
-                mod_arith::FpElemVar,
-                plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
-            },
+            // ultraplonk::{
+            //     mod_arith::FpElemVar,
+            //     plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
+            // },
         },
         PlonkCircuit,
     },
@@ -80,8 +80,8 @@ pub struct Proof<E: PairingEngine> {
     /// Polynomial evaluations.
     pub(crate) poly_evals: ProofEvaluations<E::Fr>,
 
-    /// The partial proof for Plookup argument
-    pub(crate) plookup_proof: Option<PlookupProof<E>>,
+    // /// The partial proof for Plookup argument
+    // pub(crate) plookup_proof: Option<PlookupProof<E>>,
 }
 
 impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
@@ -149,7 +149,7 @@ where
                 opening_proof,
                 shifted_opening_proof,
                 poly_evals,
-                plookup_proof: None,
+                // plookup_proof: None,
             })
         } else {
             Err(SnarkError::ParameterError(
@@ -185,9 +185,9 @@ where
     P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
 {
     fn from(proof: Proof<E>) -> Self {
-        if proof.plookup_proof.is_some() {
-            panic!("Only support TurboPlonk for now.");
-        }
+        // if proof.plookup_proof.is_some() {
+        //     panic!("Only support TurboPlonk for now.");
+        // }
         let poly_evals_scalars: Vec<E::Fr> = proof.poly_evals.into();
 
         // NOTE: order of these fields must match deserialization
@@ -216,20 +216,20 @@ where
     }
 }
 
-/// A Plookup argument proof.
-#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:PairingEngine"))]
-pub struct PlookupProof<E: PairingEngine> {
-    /// The commitments for the polynomials that interpolate the sorted
-    /// concatenation of the lookup table and the witnesses in the lookup gates.
-    pub(crate) h_poly_comms: Vec<Commitment<E>>,
+// /// A Plookup argument proof.
+// #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+// #[derivative(Hash(bound = "E:PairingEngine"))]
+// pub struct PlookupProof<E: PairingEngine> {
+//     /// The commitments for the polynomials that interpolate the sorted
+//     /// concatenation of the lookup table and the witnesses in the lookup gates.
+//     pub(crate) h_poly_comms: Vec<Commitment<E>>,
 
-    /// The product accumulation polynomial commitment for the Plookup argument
-    pub(crate) prod_lookup_poly_comm: Commitment<E>,
+//     /// The product accumulation polynomial commitment for the Plookup argument
+//     pub(crate) prod_lookup_poly_comm: Commitment<E>,
 
-    /// Polynomial evaluations.
-    pub(crate) poly_evals: PlookupEvaluations<E::Fr>,
-}
+//     /// Polynomial evaluations.
+//     pub(crate) poly_evals: PlookupEvaluations<E::Fr>,
+// }
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
 #[tagged_blob("BATCHPROOF")]
@@ -245,8 +245,8 @@ pub struct BatchProof<E: PairingEngine> {
     /// The list of polynomial evaluations.
     pub(crate) poly_evals_vec: Vec<ProofEvaluations<E::Fr>>,
 
-    /// The list of partial proofs for Plookup argument
-    pub(crate) plookup_proofs_vec: Vec<Option<PlookupProof<E>>>,
+    // /// The list of partial proofs for Plookup argument
+    // pub(crate) plookup_proofs_vec: Vec<Option<PlookupProof<E>>>,
 
     /// Splitted quotient polynomial commitments.
     pub(crate) split_quot_poly_comms: Vec<Commitment<E>>,
@@ -275,7 +275,7 @@ impl<E: PairingEngine> BatchProof<E> {
             wires_poly_comms_vec: vec![vec![Commitment::default(); num_wire_types]; n],
             prod_perm_poly_comms_vec: vec![Commitment::default(); n],
             poly_evals_vec: vec![ProofEvaluations::default(); n],
-            plookup_proofs_vec: vec![None; n],
+            // plookup_proofs_vec: vec![None; n],
             split_quot_poly_comms: vec![Commitment::default(); num_wire_types],
             opening_proof: Commitment::default(),
             shifted_opening_proof: Commitment::default(),
@@ -289,7 +289,7 @@ impl<E: PairingEngine> From<Proof<E>> for BatchProof<E> {
             wires_poly_comms_vec: vec![proof.wires_poly_comms],
             prod_perm_poly_comms_vec: vec![proof.prod_perm_poly_comm],
             poly_evals_vec: vec![proof.poly_evals],
-            plookup_proofs_vec: vec![proof.plookup_proof],
+            // plookup_proofs_vec: vec![proof.plookup_proof],
             split_quot_poly_comms: proof.split_quot_poly_comms,
             opening_proof: proof.opening_proof,
             shifted_opening_proof: proof.shifted_opening_proof,
@@ -297,110 +297,110 @@ impl<E: PairingEngine> From<Proof<E>> for BatchProof<E> {
     }
 }
 
-impl<T: PrimeField> ProofEvaluations<T> {
-    /// create variables for the ProofEvaluations who's field
-    /// is smaller than plonk circuit field.
-    /// The output wires are in the FpElemVar form.
+// impl<T: PrimeField> ProofEvaluations<T> {
+//     /// create variables for the ProofEvaluations who's field
+//     /// is smaller than plonk circuit field.
+//     /// The output wires are in the FpElemVar form.
 
-    pub(crate) fn create_variables<F>(
-        &self,
-        circuit: &mut PlonkCircuit<F>,
-        m: usize,
-        two_power_m: Option<F>,
-    ) -> Result<ProofEvaluationsVar<F>, PlonkError>
-    where
-        F: RescueParameter + SWToTEConParam,
-    {
-        if T::size_in_bits() >= F::size_in_bits() {
-            return Err(PlonkError::InvalidParameters(format!(
-                "circuit field size {} is not greater than Plookup Evaluation field size {}",
-                F::size_in_bits(),
-                T::size_in_bits()
-            )));
-        }
-        let wires_evals = self
-            .wires_evals
-            .iter()
-            .map(|x| {
-                FpElemVar::new_from_field_element(circuit, &field_switching(x), m, two_power_m)
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        let wire_sigma_evals = self
-            .wire_sigma_evals
-            .iter()
-            .map(|x| {
-                FpElemVar::new_from_field_element(circuit, &field_switching(x), m, two_power_m)
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(ProofEvaluationsVar {
-            wires_evals,
-            wire_sigma_evals,
-            perm_next_eval: FpElemVar::new_from_field_element(
-                circuit,
-                &field_switching(&self.perm_next_eval),
-                m,
-                two_power_m,
-            )?,
-        })
-    }
-}
+//     pub(crate) fn create_variables<F>(
+//         &self,
+//         circuit: &mut PlonkCircuit<F>,
+//         m: usize,
+//         two_power_m: Option<F>,
+//     ) -> Result<ProofEvaluationsVar<F>, PlonkError>
+//     where
+//         F: RescueParameter + SWToTEConParam,
+//     {
+//         if T::size_in_bits() >= F::size_in_bits() {
+//             return Err(PlonkError::InvalidParameters(format!(
+//                 "circuit field size {} is not greater than Plookup Evaluation field size {}",
+//                 F::size_in_bits(),
+//                 T::size_in_bits()
+//             )));
+//         }
+//         let wires_evals = self
+//             .wires_evals
+//             .iter()
+//             .map(|x| {
+//                 FpElemVar::new_from_field_element(circuit, &field_switching(x), m, two_power_m)
+//             })
+//             .collect::<Result<Vec<_>, _>>()?;
+//         let wire_sigma_evals = self
+//             .wire_sigma_evals
+//             .iter()
+//             .map(|x| {
+//                 FpElemVar::new_from_field_element(circuit, &field_switching(x), m, two_power_m)
+//             })
+//             .collect::<Result<Vec<_>, _>>()?;
+//         Ok(ProofEvaluationsVar {
+//             wires_evals,
+//             wire_sigma_evals,
+//             perm_next_eval: FpElemVar::new_from_field_element(
+//                 circuit,
+//                 &field_switching(&self.perm_next_eval),
+//                 m,
+//                 two_power_m,
+//             )?,
+//         })
+//     }
+// }
 
-impl<E: PairingEngine> BatchProof<E> {
-    /// Create a `BatchProofVar` variable from a `BatchProof`.
-    pub fn create_variables<F, P>(
-        &self,
-        circuit: &mut PlonkCircuit<F>,
-        m: usize,
-        two_power_m: Option<F>,
-    ) -> Result<BatchProofVar<F>, PlonkError>
-    where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
-    {
-        let mut wires_poly_comms_vec = Vec::new();
-        for e in self.wires_poly_comms_vec.iter() {
-            let mut tmp = Vec::new();
-            for f in e.iter() {
-                let p: Point<F> = (&f.0).into();
-                tmp.push(circuit.create_point_variable(p)?);
-            }
-            wires_poly_comms_vec.push(tmp);
-        }
-        let mut prod_perm_poly_comms_vec = Vec::new();
-        for e in self.prod_perm_poly_comms_vec.iter() {
-            let p: Point<F> = (&e.0).into();
-            prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)?);
-        }
+// impl<E: PairingEngine> BatchProof<E> {
+//     /// Create a `BatchProofVar` variable from a `BatchProof`.
+//     pub fn create_variables<F, P>(
+//         &self,
+//         circuit: &mut PlonkCircuit<F>,
+//         m: usize,
+//         two_power_m: Option<F>,
+//     ) -> Result<BatchProofVar<F>, PlonkError>
+//     where
+//         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+//         F: RescueParameter + SWToTEConParam,
+//         P: SWModelParameters<BaseField = F> + Clone,
+//     {
+//         let mut wires_poly_comms_vec = Vec::new();
+//         for e in self.wires_poly_comms_vec.iter() {
+//             let mut tmp = Vec::new();
+//             for f in e.iter() {
+//                 let p: Point<F> = (&f.0).into();
+//                 tmp.push(circuit.create_point_variable(p)?);
+//             }
+//             wires_poly_comms_vec.push(tmp);
+//         }
+//         let mut prod_perm_poly_comms_vec = Vec::new();
+//         for e in self.prod_perm_poly_comms_vec.iter() {
+//             let p: Point<F> = (&e.0).into();
+//             prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)?);
+//         }
 
-        let poly_evals_vec = self
-            .poly_evals_vec
-            .iter()
-            .map(|x| x.create_variables(circuit, m, two_power_m))
-            .collect::<Result<Vec<_>, _>>()?;
+//         let poly_evals_vec = self
+//             .poly_evals_vec
+//             .iter()
+//             .map(|x| x.create_variables(circuit, m, two_power_m))
+//             .collect::<Result<Vec<_>, _>>()?;
 
-        let mut split_quot_poly_comms = Vec::new();
-        for e in self.split_quot_poly_comms.iter() {
-            let p: Point<F> = (&e.0).into();
-            split_quot_poly_comms.push(circuit.create_point_variable(p)?);
-        }
+//         let mut split_quot_poly_comms = Vec::new();
+//         for e in self.split_quot_poly_comms.iter() {
+//             let p: Point<F> = (&e.0).into();
+//             split_quot_poly_comms.push(circuit.create_point_variable(p)?);
+//         }
 
-        let p: Point<F> = (&self.opening_proof.0).into();
-        let opening_proof = circuit.create_point_variable(p)?;
+//         let p: Point<F> = (&self.opening_proof.0).into();
+//         let opening_proof = circuit.create_point_variable(p)?;
 
-        let p: Point<F> = (&self.shifted_opening_proof.0).into();
-        let shifted_opening_proof = circuit.create_point_variable(p)?;
+//         let p: Point<F> = (&self.shifted_opening_proof.0).into();
+//         let shifted_opening_proof = circuit.create_point_variable(p)?;
 
-        Ok(BatchProofVar {
-            wires_poly_comms_vec,
-            prod_perm_poly_comms_vec,
-            poly_evals_vec,
-            split_quot_poly_comms,
-            opening_proof,
-            shifted_opening_proof,
-        })
-    }
-}
+//         Ok(BatchProofVar {
+//             wires_poly_comms_vec,
+//             prod_perm_poly_comms_vec,
+//             poly_evals_vec,
+//             split_quot_poly_comms,
+//             opening_proof,
+//             shifted_opening_proof,
+//         })
+//     }
+// }
 
 /// A struct that stores the polynomial evaluations in a Plonk proof.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, CanonicalSerialize, CanonicalDeserialize)]
@@ -563,26 +563,26 @@ pub struct ProvingKey<'a, E: PairingEngine> {
     /// The verifying key. It is used by prover to initialize transcripts.
     pub vk: VerifyingKey<E>,
 
-    /// Proving key for Plookup, None if not support lookup.
-    pub(crate) plookup_pk: Option<PlookupProvingKey<E>>,
+    // /// Proving key for Plookup, None if not support lookup.
+    // pub(crate) plookup_pk: Option<PlookupProvingKey<E>>,
 }
 
-/// Preprocessed prover parameters used to compute Plookup proofs for a certain
-/// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupProvingKey<E: PairingEngine> {
-    /// Range table polynomial.
-    pub(crate) range_table_poly: DensePolynomial<E::Fr>,
+// /// Preprocessed prover parameters used to compute Plookup proofs for a certain
+// /// circuit.
+// #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+// pub struct PlookupProvingKey<E: PairingEngine> {
+//     /// Range table polynomial.
+//     pub(crate) range_table_poly: DensePolynomial<E::Fr>,
 
-    /// Key table polynomial.
-    pub(crate) key_table_poly: DensePolynomial<E::Fr>,
+//     /// Key table polynomial.
+//     pub(crate) key_table_poly: DensePolynomial<E::Fr>,
 
-    /// Table domain separation polynomial.
-    pub(crate) table_dom_sep_poly: DensePolynomial<E::Fr>,
+//     /// Table domain separation polynomial.
+//     pub(crate) table_dom_sep_poly: DensePolynomial<E::Fr>,
 
-    /// Lookup domain separation selector polynomial.
-    pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
-}
+//     /// Lookup domain separation selector polynomial.
+//     pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
+// }
 
 impl<'a, E: PairingEngine> ProvingKey<'a, E> {
     /// The size of the evaluation domain. Should be a power of two.
@@ -601,9 +601,9 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
 
     /// The lookup selector polynomial
     pub(crate) fn q_lookup_poly(&self) -> Result<&DensePolynomial<E::Fr>, PlonkError> {
-        if self.plookup_pk.is_none() {
-            return Err(SnarkLookupUnsupported.into());
-        }
+        // if self.plookup_pk.is_none() {
+        //     return Err(SnarkLookupUnsupported.into());
+        // }
         Ok(self.selectors.last().unwrap())
     }
 
@@ -628,9 +628,9 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
             )
             .into());
         }
-        if self.plookup_pk.is_some() || other_pk.plookup_pk.is_some() {
-            return Err(ParameterError("cannot merge UltraPlonk proving keys".to_string()).into());
-        }
+        // if self.plookup_pk.is_some() || other_pk.plookup_pk.is_some() {
+        //     return Err(ParameterError("cannot merge UltraPlonk proving keys".to_string()).into());
+        // }
         let sigmas: Vec<DensePolynomial<E::Fr>> = self
             .sigmas
             .iter()
@@ -649,7 +649,7 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
             selectors,
             commit_key: self.commit_key.clone(),
             vk: self.vk.merge(&other_pk.vk)?,
-            plookup_pk: None,
+            // plookup_pk: None,
         })
     }
 }
@@ -680,8 +680,8 @@ pub struct VerifyingKey<E: PairingEngine> {
     /// A flag indicating whether the key is a merged key.
     pub(crate) is_merged: bool,
 
-    /// Plookup verifying key, None if not support lookup.
-    pub(crate) plookup_vk: Option<PlookupVerifyingKey<E>>,
+    // /// Plookup verifying key, None if not support lookup.
+    // pub(crate) plookup_vk: Option<PlookupVerifyingKey<E>>,
 }
 
 impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
@@ -692,9 +692,9 @@ where
     P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr> + Clone,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
-        if vk.plookup_vk.is_some() {
-            panic!("Only support TurboPlonk VerifyingKey for now.");
-        }
+        // if vk.plookup_vk.is_some() {
+        //     panic!("Only support TurboPlonk VerifyingKey for now.");
+        // }
 
         [
             vec![E::Fq::from(vk.domain_size as u64)],
@@ -743,24 +743,24 @@ where
     }
 }
 
-/// Preprocessed verifier parameters used to verify Plookup proofs for a certain
-/// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupVerifyingKey<E: PairingEngine> {
-    /// Range table polynomial commitment. The commitment is not hiding.
-    pub(crate) range_table_comm: Commitment<E>,
+// /// Preprocessed verifier parameters used to verify Plookup proofs for a certain
+// /// circuit.
+// #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+// pub struct PlookupVerifyingKey<E: PairingEngine> {
+//     /// Range table polynomial commitment. The commitment is not hiding.
+//     pub(crate) range_table_comm: Commitment<E>,
 
-    /// Key table polynomial commitment. The commitment is not hiding.
-    pub(crate) key_table_comm: Commitment<E>,
+//     /// Key table polynomial commitment. The commitment is not hiding.
+//     pub(crate) key_table_comm: Commitment<E>,
 
-    /// Table domain separation polynomial commitment. The commitment is not
-    /// hiding.
-    pub(crate) table_dom_sep_comm: Commitment<E>,
+//     /// Table domain separation polynomial commitment. The commitment is not
+//     /// hiding.
+//     pub(crate) table_dom_sep_comm: Commitment<E>,
 
-    /// Lookup domain separation selector polynomial commitment. The commitment
-    /// is not hiding.
-    pub(crate) q_dom_sep_comm: Commitment<E>,
-}
+//     /// Lookup domain separation selector polynomial commitment. The commitment
+//     /// is not hiding.
+//     pub(crate) q_dom_sep_comm: Commitment<E>,
+// }
 
 impl<E: PairingEngine> VerifyingKey<E> {
     /// Create a dummy TurboPlonk verification key for a circuit with
@@ -775,7 +775,7 @@ impl<E: PairingEngine> VerifyingKey<E> {
             k: compute_coset_representatives(num_wire_types, Some(domain_size)),
             open_key: OpenKey::default(),
             is_merged: false,
-            plookup_vk: None,
+            // plookup_vk: None,
         }
     }
     /// Merge with another TurboPlonk verifying key to obtain a new TurboPlonk
@@ -799,11 +799,11 @@ impl<E: PairingEngine> VerifyingKey<E> {
             )
             .into());
         }
-        if self.plookup_vk.is_some() || other_vk.plookup_vk.is_some() {
-            return Err(
-                ParameterError("cannot merge UltraPlonk verifying keys".to_string()).into(),
-            );
-        }
+        // if self.plookup_vk.is_some() || other_vk.plookup_vk.is_some() {
+        //     return Err(
+        //         ParameterError("cannot merge UltraPlonk verifying keys".to_string()).into(),
+        //     );
+        // }
         let sigma_comms: Vec<Commitment<E>> = self
             .sigma_comms
             .iter()
@@ -824,16 +824,16 @@ impl<E: PairingEngine> VerifyingKey<E> {
             selector_comms,
             k: self.k.clone(),
             open_key: self.open_key.clone(),
-            plookup_vk: None,
+            // plookup_vk: None,
             is_merged: true,
         })
     }
 
     /// The lookup selector polynomial commitment
     pub(crate) fn q_lookup_comm(&self) -> Result<&Commitment<E>, PlonkError> {
-        if self.plookup_vk.is_none() {
-            return Err(SnarkLookupUnsupported.into());
-        }
+        // if self.plookup_vk.is_none() {
+        //     return Err(SnarkLookupUnsupported.into());
+        // }
         Ok(self.selector_comms.last().unwrap())
     }
 }
@@ -933,39 +933,39 @@ pub(crate) fn trim<E: PairingEngine>(
     (powers, vk)
 }
 
-// Utility function for computing merged table evaluations.
-#[inline]
-pub(crate) fn eval_merged_table<E: PairingEngine>(
-    tau: E::Fr,
-    range_eval: E::Fr,
-    key_eval: E::Fr,
-    q_lookup_eval: E::Fr,
-    w3_eval: E::Fr,
-    w4_eval: E::Fr,
-    table_dom_sep_eval: E::Fr,
-) -> E::Fr {
-    range_eval
-        + q_lookup_eval
-            * tau
-            * (table_dom_sep_eval + tau * (key_eval + tau * (w3_eval + tau * w4_eval)))
-}
+// // Utility function for computing merged table evaluations.
+// #[inline]
+// pub(crate) fn eval_merged_table<E: PairingEngine>(
+//     tau: E::Fr,
+//     range_eval: E::Fr,
+//     key_eval: E::Fr,
+//     q_lookup_eval: E::Fr,
+//     w3_eval: E::Fr,
+//     w4_eval: E::Fr,
+//     table_dom_sep_eval: E::Fr,
+// ) -> E::Fr {
+//     range_eval
+//         + q_lookup_eval
+//             * tau
+//             * (table_dom_sep_eval + tau * (key_eval + tau * (w3_eval + tau * w4_eval)))
+// }
 
-// Utility function for computing merged lookup witness evaluations.
-#[inline]
-pub(crate) fn eval_merged_lookup_witness<E: PairingEngine>(
-    tau: E::Fr,
-    w_range_eval: E::Fr,
-    w_0_eval: E::Fr,
-    w_1_eval: E::Fr,
-    w_2_eval: E::Fr,
-    q_lookup_eval: E::Fr,
-    q_dom_sep_eval: E::Fr,
-) -> E::Fr {
-    w_range_eval
-        + q_lookup_eval
-            * tau
-            * (q_dom_sep_eval + tau * (w_0_eval + tau * (w_1_eval + tau * w_2_eval)))
-}
+// // Utility function for computing merged lookup witness evaluations.
+// #[inline]
+// pub(crate) fn eval_merged_lookup_witness<E: PairingEngine>(
+//     tau: E::Fr,
+//     w_range_eval: E::Fr,
+//     w_0_eval: E::Fr,
+//     w_1_eval: E::Fr,
+//     w_2_eval: E::Fr,
+//     q_lookup_eval: E::Fr,
+//     q_dom_sep_eval: E::Fr,
+// ) -> E::Fr {
+//     w_range_eval
+//         + q_lookup_eval
+//             * tau
+//             * (q_dom_sep_eval + tau * (w_0_eval + tau * (w_1_eval + tau * w_2_eval)))
+// }
 
 #[cfg(test)]
 mod test {
