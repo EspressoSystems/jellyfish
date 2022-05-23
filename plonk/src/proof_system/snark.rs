@@ -343,6 +343,9 @@ where
 
         // Initialize transcript
         let mut transcript = T::new(b"PlonkProof");
+        // The extra init message makes the system vulnerable to transcript extension
+        // attacks when transcript is not instantiated correctly.
+        // There is a WIP pr to fix this.
         if let Some(msg) = extra_transcript_init_msg {
             transcript.append_message(EXTRA_TRANSCRIPT_MSG_LABEL, &msg)?;
         }
