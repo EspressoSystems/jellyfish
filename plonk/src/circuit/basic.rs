@@ -10,7 +10,7 @@ use crate::{
     circuit::gates::*,
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
     errors::{CircuitError::*, PlonkError},
-    PlonkType, PredicateCircuitType,
+    PredicateCircuitType,
 };
 use ark_ff::{FftField, PrimeField};
 use ark_poly::{
@@ -18,28 +18,6 @@ use ark_poly::{
 };
 use ark_std::{boxed::Box, format, string::ToString, vec, vec::Vec};
 use rayon::prelude::*;
-
-/// Hardcoded parameters for Plonk systems.
-#[derive(Debug, Clone, Copy)]
-struct PlonkParams {
-    /// The Plonk type of the circuit.
-    plonk_type: PlonkType,
-}
-
-impl PlonkParams {
-    fn init(plonk_type: PlonkType, range_bit_len: Option<usize>) -> Result<Self, PlonkError> {
-        if plonk_type == PlonkType::TurboPlonk {
-            return Ok(Self { plonk_type });
-        }
-        if range_bit_len.is_none() {
-            return Err(
-                ParameterError("range bit len cannot be none for UltraPlonk".to_string()).into(),
-            );
-        }
-
-        Ok(Self { plonk_type })
-    }
-}
 
 /// A specific Plonk circuit instantiation.
 #[derive(Debug, Clone)]
@@ -82,21 +60,17 @@ where
     /// arithmetization, by default it is a domain with size 1 (only with
     /// element 0).
     eval_domain: Radix2EvaluationDomain<F>,
-
-    /// The Plonk parameters.
-    plonk_params: PlonkParams,
 }
 
 impl<F: FftField> Default for PlonkCircuit<F> {
     fn default() -> Self {
-        let params = PlonkParams::init(PlonkType::TurboPlonk, None).unwrap();
-        Self::new(params)
+        Self::new()
     }
 }
 
 impl<F: FftField> PlonkCircuit<F> {
-    /// Construct a new circuit with type `plonk_type`.
-    fn new(plonk_params: PlonkParams) -> Self {
+    /// Construct a new TurboPlonk circuit
+    pub fn new() -> Self {
         let zero = F::zero();
         let one = F::one();
         let mut circuit = Self {
@@ -109,25 +83,13 @@ impl<F: FftField> PlonkCircuit<F> {
 
             wire_permutation: vec![],
             extended_id_permutation: vec![],
-            num_wire_types: GATE_WIDTH
-                + 1
-                + match plonk_params.plonk_type {
-                    PlonkType::TurboPlonk => 0,
-                    // PlonkType::UltraPlonk => 1,
-                },
+            num_wire_types: GATE_WIDTH + 1,
             eval_domain: Radix2EvaluationDomain::new(1).unwrap(),
-            plonk_params,
         };
         // Constrain variables `0`/`1` to have value 0/1.
         circuit.constant_gate(0, zero).unwrap(); // safe unwrap
         circuit.constant_gate(1, one).unwrap(); // safe unwrap
         circuit
-    }
-
-    /// Construct a new TurboPlonk circuit.
-    pub fn new_turbo_plonk() -> Self {
-        let plonk_params = PlonkParams::init(PlonkType::TurboPlonk, None).unwrap(); // safe unwrap
-        Self::new(plonk_params)
     }
 
     /// Insert a general (algebraic) gate
@@ -721,9 +683,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         &mut self,
         circuit_type: PredicateCircuitType,
     ) -> Result<(), PlonkError> {
-        if self.plonk_params.plonk_type != PlonkType::TurboPlonk {
-            return Err(WrongPlonkType.into());
-        }
         self.finalize_for_arithmetization()?;
         // double the domain size
         let n = self.eval_domain_size()?;
@@ -784,14 +743,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
                 self.eval_domain_size()?,
                 other.eval_domain_size()?
             ))
-            .into());
-        }
-        if self.plonk_params.plonk_type != PlonkType::TurboPlonk
-            || other.plonk_params.plonk_type != PlonkType::TurboPlonk
-        {
-            return Err(ParameterError(
-                "do not support merging non-TurboPlonk circuits.".to_string(),
-            )
             .into());
         }
         if self.num_inputs() != other.num_inputs() {
@@ -862,7 +813,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
             extended_id_permutation: self.extended_id_permutation.clone(),
             num_wire_types: self.num_wire_types,
             eval_domain: self.eval_domain,
-            plonk_params: self.plonk_params,
         })
     }
 }
@@ -1009,7 +959,7 @@ pub(crate) mod test {
     }
 
     fn test_circuit_trait_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         // Create secret variables.
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(1u32))?;
@@ -1058,7 +1008,7 @@ pub(crate) mod test {
     }
 
     fn test_add_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(1u32))?;
         let c = circuit.add(a, b)?;
@@ -1084,7 +1034,7 @@ pub(crate) mod test {
     }
 
     fn test_sub_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(1u32))?;
         let c = circuit.sub(a, b)?;
@@ -1110,7 +1060,7 @@ pub(crate) mod test {
     }
 
     fn test_mul_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(2u32))?;
         let c = circuit.mul(a, b)?;
@@ -1135,7 +1085,7 @@ pub(crate) mod test {
         test_equal_gate_helper::<Fq377>()
     }
     fn test_equal_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(3u32))?;
         circuit.equal_gate(a, b)?;
@@ -1160,7 +1110,7 @@ pub(crate) mod test {
     }
 
     fn test_bool_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(0u32))?;
         circuit.bool_gate(a)?;
 
@@ -1183,7 +1133,7 @@ pub(crate) mod test {
         test_constant_helper::<Fq377>()
     }
     fn test_constant_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(10u32))?;
         circuit.constant_gate(a, F::from(10u32))?;
 
@@ -1209,7 +1159,7 @@ pub(crate) mod test {
     }
 
     fn test_io_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let b = circuit.create_variable(F::from(0u32))?;
         let a = circuit.create_public_variable(F::from(1u32))?;
         circuit.bool_gate(a)?;
@@ -1257,7 +1207,7 @@ pub(crate) mod test {
         test_io_gate_multi_inputs_helper::<Fq377>()
     }
     fn test_io_gate_multi_inputs_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let a = circuit.create_public_variable(F::from(1u32))?;
         let b = circuit.create_public_variable(F::from(2u32))?;
         let c = circuit.create_public_variable(F::from(3u32))?;
@@ -1289,7 +1239,7 @@ pub(crate) mod test {
 
     fn create_turbo_plonk_instance<F: PrimeField>() -> Result<(PlonkCircuit<F>, Vec<F>), PlonkError>
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_public_variable(F::from(1u32))?;
         circuit.constant_gate(a, F::from(3u32))?;
@@ -1313,7 +1263,7 @@ pub(crate) mod test {
     }
 
     fn test_compute_extended_permutation_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(2u32))?;
         let b = circuit.create_public_variable(F::from(3u32))?;
         let c = circuit.add(a, b)?;
@@ -1401,7 +1351,7 @@ pub(crate) mod test {
     }
 
     fn test_finalized_flag_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         // Should not call arithmetization methods before finalizing the circuit.
         assert!(circuit.compute_selector_polynomials().is_err());
         assert!(circuit.compute_extended_permutation_polynomials().is_err());

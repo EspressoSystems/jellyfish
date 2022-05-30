@@ -308,7 +308,7 @@ mod test {
     use jf_rescue::RescueParameter;
 
     fn check_merkle_path<F: PrimeField>(is_left_child: u8, is_right_child: u8, accept: bool) {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let zero = F::zero();
         let one = F::one();
         let node = MerkleNodeBooleanEncoding::new(
@@ -400,7 +400,7 @@ mod test {
 
     fn gen_permutation_circuit_and_vars<F: PrimeField>(
     ) -> (PlonkCircuit<F>, Variable, Variable, Variable) {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let mut prng = ark_std::test_rng();
         let node = circuit.create_variable(F::rand(&mut prng)).unwrap();
         let sib1 = circuit.create_variable(F::rand(&mut prng)).unwrap();
@@ -456,7 +456,7 @@ mod test {
         test_merkle_root_helper::<Fq377>();
     }
     fn test_merkle_root_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         //// Happy path
 
@@ -492,7 +492,7 @@ mod test {
         //// Bad path:
         //// The circuit cannot be satisfied if an internal node has a left child with
         //// zero value.
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let uid_var = circuit.create_variable(uid).unwrap();
         let comm_var = circuit.create_variable(comm).unwrap();

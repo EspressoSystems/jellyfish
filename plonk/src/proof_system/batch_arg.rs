@@ -216,7 +216,7 @@ pub(crate) fn new_mergeable_circuit_for_test<E: PairingEngine>(
     i: usize,
     circuit_type: PredicateCircuitType,
 ) -> Result<PlonkCircuit<E::Fr>, PlonkError> {
-    let mut circuit = PlonkCircuit::new_turbo_plonk();
+    let mut circuit = PlonkCircuit::new();
     let shared_pub_var = circuit.create_public_variable(shared_public_input)?;
     let mut var = shared_pub_var;
     if circuit_type == PredicateCircuitType::BirthPredicate {

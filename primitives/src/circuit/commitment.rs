@@ -53,7 +53,7 @@ mod tests {
 
     macro_rules! test_commit_circuit {
         ($base_field:tt) => {
-            let mut circuit: PlonkCircuit<$base_field> = PlonkCircuit::new_turbo_plonk();
+            let mut circuit: PlonkCircuit<$base_field> = PlonkCircuit::new();
             let mut prng = ark_std::test_rng();
             let blinding = $base_field::rand(&mut prng);
             let blinding_var = circuit.create_variable(blinding).unwrap();

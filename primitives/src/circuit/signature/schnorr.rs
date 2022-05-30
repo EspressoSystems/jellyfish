@@ -283,7 +283,7 @@ mod tests {
         F: RescueParameter,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let vk_var = circuit.create_signature_vk_variable(vk)?;
         let sig_var = circuit.create_signature_variable(sig)?;
         let msg_var: Vec<Variable> = msg
@@ -303,7 +303,7 @@ mod tests {
         F: RescueParameter,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let vk_var = circuit.create_signature_vk_variable(vk)?;
         let sig_var = circuit.create_signature_variable(sig)?;
         let msg_var: Vec<Variable> = msg

@@ -106,7 +106,7 @@ where
     // We instantiate a turbo plonk circuit.
     //
     // Here we only need turbo plonk since we are not using plookups.
-    let mut circuit = PlonkCircuit::<EmbedCurve::BaseField>::new_turbo_plonk();
+    let mut circuit = PlonkCircuit::<EmbedCurve::BaseField>::new();
 
     // Step 2:
     // now we create variables for each input to the circuit.

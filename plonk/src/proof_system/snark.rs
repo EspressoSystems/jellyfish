@@ -464,7 +464,7 @@ pub mod test {
             rescue::RescueTranscript, solidity::SolidityTranscript, standard::StandardTranscript,
             PlonkTranscript,
         },
-        PlonkType, PredicateCircuitType,
+        PredicateCircuitType,
     };
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
@@ -495,11 +495,8 @@ pub mod test {
     pub(crate) fn gen_circuit_for_test<F: PrimeField>(
         m: usize,
         a0: usize,
-        plonk_type: PlonkType,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut cs: PlonkCircuit<F> = match plonk_type {
-            PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-        };
+        let mut cs: PlonkCircuit<F> = PlonkCircuit::new();
         // Create variables
         let mut a = vec![];
         for i in a0..(a0 + 4 * m) {
@@ -534,19 +531,19 @@ pub mod test {
 
     #[test]
     fn test_preprocessing() -> Result<(), PlonkError> {
-        test_preprocessing_helper::<Bn254, Fq254, _>(PlonkType::TurboPlonk)?;
-        test_preprocessing_helper::<Bls12_377, Fq377, _>(PlonkType::TurboPlonk)?;
-        test_preprocessing_helper::<Bls12_381, Fq381, _>(PlonkType::TurboPlonk)?;
-        test_preprocessing_helper::<BW6_761, Fq761, _>(PlonkType::TurboPlonk)
+        test_preprocessing_helper::<Bn254, Fq254, _>()?;
+        test_preprocessing_helper::<Bls12_377, Fq377, _>()?;
+        test_preprocessing_helper::<Bls12_381, Fq381, _>()?;
+        test_preprocessing_helper::<BW6_761, Fq761, _>()
     }
-    fn test_preprocessing_helper<E, F, P>(plonk_type: PlonkType) -> Result<(), PlonkError>
+    fn test_preprocessing_helper<E, F, P>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWModelParameters<BaseField = F> + Clone,
     {
         let rng = &mut ark_std::test_rng();
-        let circuit = gen_circuit_for_test(5, 6, plonk_type)?;
+        let circuit = gen_circuit_for_test(5, 6)?;
         let domain_size = circuit.eval_domain_size()?;
         let num_inputs = circuit.num_inputs();
         let selectors = circuit.compute_selector_polynomials()?;
@@ -591,37 +588,25 @@ pub mod test {
     #[test]
     fn test_plonk_proof_system() -> Result<(), PlonkError> {
         // merlin transcripts
-        test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>()?;
 
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
 
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
 
-        test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
         // rescue transcripts
         // currently only available for bls12-377
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
 
         // solidity-friendly keccak256 transcripts
         // currently only needed for CAPE using bls12-381
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
         Ok(())
     }
 
-    fn test_plonk_proof_system_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
+    fn test_plonk_proof_system_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -639,7 +624,7 @@ pub mod test {
             .map(|i| {
                 let m = 2 + i / 3;
                 let a0 = 1 + i % 3;
-                gen_circuit_for_test(m, a0, plonk_type)
+                gen_circuit_for_test(m, a0)
             })
             .collect::<Result<Vec<_>, PlonkError>>()?;
         // 3. Preprocessing
@@ -797,36 +782,22 @@ pub mod test {
     #[test]
     fn test_inconsistent_pub_input_len() -> Result<(), PlonkError> {
         // merlin transcripts
-        test_inconsistent_pub_input_len_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_inconsistent_pub_input_len_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_inconsistent_pub_input_len_helper::<Bn254, Fq254, _, StandardTranscript>()?;
+        test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
+        test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
+        test_inconsistent_pub_input_len_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
         // rescue transcripts
         // currently only available for bls12-377
-        test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
 
         // Solidity-friendly keccak256 transcript
-        test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
 
         Ok(())
     }
 
-    fn test_inconsistent_pub_input_len_helper<E, F, P, T>(
-        plonk_type: PlonkType,
-    ) -> Result<(), PlonkError>
+    fn test_inconsistent_pub_input_len_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -840,15 +811,11 @@ pub mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         // 2. Create circuits
-        let mut cs1: PlonkCircuit<E::Fr> = match plonk_type {
-            PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-        };
+        let mut cs1: PlonkCircuit<E::Fr> = PlonkCircuit::new();
         let var = cs1.create_variable(E::Fr::from(1u8))?;
         cs1.constant_gate(var, E::Fr::from(1u8))?;
         cs1.finalize_for_arithmetization()?;
-        let mut cs2: PlonkCircuit<E::Fr> = match plonk_type {
-            PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-        };
+        let mut cs2: PlonkCircuit<E::Fr> = PlonkCircuit::new();
         cs2.create_public_variable(E::Fr::from(1u8))?;
         cs2.finalize_for_arithmetization()?;
 
@@ -875,36 +842,22 @@ pub mod test {
     #[test]
     fn test_plonk_prover_polynomials() -> Result<(), PlonkError> {
         // merlin transcripts
-        test_plonk_prover_polynomials_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_prover_polynomials_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_prover_polynomials_helper::<Bn254, Fq254, _, StandardTranscript>()?;
+        test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
+        test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
+        test_plonk_prover_polynomials_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
         // rescue transcripts
         // currently only available for bls12-377
-        test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
 
         // Solidity-friendly keccak256 transcript
-        test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
 
         Ok(())
     }
 
-    fn test_plonk_prover_polynomials_helper<E, F, P, T>(
-        plonk_type: PlonkType,
-    ) -> Result<(), PlonkError>
+    fn test_plonk_prover_polynomials_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -918,7 +871,7 @@ pub mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         // 2. Create the circuit
-        let circuit = gen_circuit_for_test(10, 3, plonk_type)?;
+        let circuit = gen_circuit_for_test(10, 3)?;
         assert!(circuit.num_gates() <= n);
 
         // 3. Preprocessing
@@ -1080,7 +1033,7 @@ pub mod test {
         P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
     {
         let rng = &mut ark_std::test_rng();
-        let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
+        let circuit = gen_circuit_for_test(3, 4)?;
         let max_degree = 80;
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
@@ -1098,22 +1051,22 @@ pub mod test {
     #[test]
     fn test_serde() -> Result<(), PlonkError> {
         // merlin transcripts
-        test_serde_helper::<Bn254, Fq254, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        test_serde_helper::<Bls12_377, Fq377, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        test_serde_helper::<Bls12_381, Fq381, _, StandardTranscript>(PlonkType::TurboPlonk)?;
-        test_serde_helper::<BW6_761, Fq761, _, StandardTranscript>(PlonkType::TurboPlonk)?;
+        test_serde_helper::<Bn254, Fq254, _, StandardTranscript>()?;
+        test_serde_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
+        test_serde_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
+        test_serde_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
         // rescue transcripts
         // currently only available for bls12-377
-        test_serde_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(PlonkType::TurboPlonk)?;
+        test_serde_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
 
         // Solidity-friendly keccak256 transcript
-        test_serde_helper::<Bls12_381, Fq381, _, SolidityTranscript>(PlonkType::TurboPlonk)?;
+        test_serde_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
 
         Ok(())
     }
 
-    fn test_serde_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
+    fn test_serde_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -1121,7 +1074,7 @@ pub mod test {
         T: PlonkTranscript<F>,
     {
         let rng = &mut ark_std::test_rng();
-        let circuit = gen_circuit_for_test(3, 4, plonk_type)?;
+        let circuit = gen_circuit_for_test(3, 4)?;
         let max_degree = 80;
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
@@ -1154,29 +1107,17 @@ pub mod test {
     #[test]
     fn test_key_aggregation_and_batch_prove() -> Result<(), PlonkError> {
         // merlin transcripts
-        test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
+        test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>()?;
+        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
+        test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
+        test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
         // rescue transcripts
         // currently only available for bls12-377
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )
+        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()
     }
 
-    fn test_key_aggregation_and_batch_prove_helper<E, F, P, T>(
-        plonk_type: PlonkType,
-    ) -> Result<(), PlonkError>
+    fn test_key_aggregation_and_batch_prove_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -1191,7 +1132,7 @@ pub mod test {
 
         // 2. Create many circuits with same domain size
         let circuits = (6..13)
-            .map(|i| gen_circuit_for_test::<E::Fr>(i, i, plonk_type))
+            .map(|i| gen_circuit_for_test::<E::Fr>(i, i))
             .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
         let cs_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
 
@@ -1312,7 +1253,7 @@ pub mod test {
         a0: usize,
         circuit_type: PredicateCircuitType,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut cs: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut cs: PlonkCircuit<F> = PlonkCircuit::new();
         // Create variables
         let mut a = vec![];
         for i in a0..(a0 + 4 * m) {

@@ -632,7 +632,7 @@ pub(crate) mod test {
     }
 
     fn test_logic_or_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let zero_var = circuit.zero();
         let one_var = circuit.one();
         // Good path
@@ -652,7 +652,7 @@ pub(crate) mod test {
     }
 
     fn build_logic_or_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
         circuit.logic_or_gate(a, b)?;
@@ -669,7 +669,7 @@ pub(crate) mod test {
     }
 
     fn test_logic_and_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let zero_var = circuit.zero();
         let one_var = circuit.one();
         // Good path
@@ -698,7 +698,7 @@ pub(crate) mod test {
     }
 
     fn build_logic_and_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
         circuit.logic_and(a, b)?;
@@ -714,7 +714,7 @@ pub(crate) mod test {
         test_is_equal_helper::<Fq377>()
     }
     fn test_is_equal_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
         let b = circuit.create_variable(val)?;
@@ -738,7 +738,7 @@ pub(crate) mod test {
     }
 
     fn build_is_equal_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
         circuit.check_equal(a, b)?;
@@ -754,7 +754,7 @@ pub(crate) mod test {
         test_check_is_zero_helper::<Fq377>()
     }
     fn test_check_is_zero_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
         let a_zero_eq = circuit.check_is_zero(a)?;
@@ -780,7 +780,7 @@ pub(crate) mod test {
     }
 
     fn build_check_is_zero_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         circuit.check_is_zero(a)?;
         circuit.finalize_for_arithmetization()?;
@@ -795,7 +795,7 @@ pub(crate) mod test {
         test_quad_poly_gate_helper::<Fq377>()
     }
     fn test_quad_poly_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let q_lc = [F::from(2u32), F::from(3u32), F::from(5u32), F::from(2u32)];
         let q_mul = [F::one(), F::from(2u8)];
         let q_o = F::one();
@@ -855,7 +855,7 @@ pub(crate) mod test {
     fn build_quad_poly_gate_circuit<F: PrimeField>(
         wires: [F; GATE_WIDTH + 1],
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let wires: Vec<_> = wires
             .iter()
             .map(|val| circuit.create_variable(*val).unwrap())
@@ -877,7 +877,7 @@ pub(crate) mod test {
         test_lc_helper::<Fq377>()
     }
     fn test_lc_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let wire_in_1: Vec<_> = [
             F::from(23u32),
             F::from(8u32),
@@ -914,7 +914,7 @@ pub(crate) mod test {
     }
 
     fn build_lc_circuit<F: PrimeField>(wires_in: [F; 4]) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let wires_in: Vec<_> = wires_in
             .iter()
             .map(|val| circuit.create_variable(*val).unwrap())
@@ -934,7 +934,7 @@ pub(crate) mod test {
     }
 
     fn test_mul_add_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let wire_in_1: Vec<_> = [
             F::from(23u32),
             F::from(8u32),
@@ -976,7 +976,7 @@ pub(crate) mod test {
     fn build_mul_add_circuit<F: PrimeField>(
         wires_in: [F; 4],
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let wires_in: Vec<_> = wires_in
             .iter()
             .map(|val| circuit.create_variable(*val).unwrap())
@@ -996,7 +996,7 @@ pub(crate) mod test {
     }
 
     fn test_conditional_select_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let bit_true = circuit.create_variable(F::one())?;
         let bit_false = circuit.create_variable(F::zero())?;
         let x_0 = circuit.create_variable(F::from(23u32))?;
@@ -1034,7 +1034,7 @@ pub(crate) mod test {
         x_0: F,
         x_1: F,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let bit_var = circuit.create_variable(bit)?;
         let x_0_var = circuit.create_variable(x_0)?;
         let x_1_var = circuit.create_variable(x_1)?;
@@ -1052,7 +1052,7 @@ pub(crate) mod test {
     }
 
     fn test_sum_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let mut vars = vec![];
         for i in 0..11 {
             vars.push(circuit.create_variable(F::from(i as u32))?);
@@ -1093,7 +1093,7 @@ pub(crate) mod test {
     }
 
     fn build_sum_circuit<F: PrimeField>(vals: Vec<F>) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let mut vars = vec![];
         for val in vals {
             vars.push(circuit.create_variable(val)?);
@@ -1112,7 +1112,7 @@ pub(crate) mod test {
     }
 
     fn test_unpack_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::one())?;
         let b = circuit.create_variable(F::from(1023u32))?;
 
@@ -1134,7 +1134,7 @@ pub(crate) mod test {
         test_range_gate_helper::<Fq377>()
     }
     fn test_range_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::one())?;
         let b = circuit.create_variable(F::from(1023u32))?;
 
@@ -1167,7 +1167,7 @@ pub(crate) mod test {
     }
 
     fn build_range_gate_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a_var = circuit.create_variable(a)?;
         circuit.range_gate(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
@@ -1182,7 +1182,7 @@ pub(crate) mod test {
         test_check_in_range_helper::<Fq377>()
     }
     fn test_check_in_range_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(1023u32))?;
 
         let b1 = circuit.check_in_range(a, 5)?;
@@ -1210,7 +1210,7 @@ pub(crate) mod test {
     }
 
     fn build_check_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a_var = circuit.create_variable(a)?;
         circuit.check_in_range(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
@@ -1227,7 +1227,7 @@ pub(crate) mod test {
 
     fn test_arithmetization_helper<F: PrimeField>() -> Result<(), PlonkError> {
         // Create the circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         // is_equal gate
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
@@ -1280,12 +1280,12 @@ pub(crate) mod test {
     }
     fn test_non_zero_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
         // Create the circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let non_zero_var = circuit.create_variable(F::from(2_u32))?;
         let _ = circuit.non_zero_gate(non_zero_var);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let zero_var = circuit.create_variable(F::from(0_u32))?;
         let _ = circuit.non_zero_gate(zero_var);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1307,7 +1307,7 @@ pub(crate) mod test {
         let x11 = x.pow(&[11]);
 
         // Create a satisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         let x_var = circuit.create_variable(x)?;
         let x_to_11_var = circuit.create_variable(x11)?;
@@ -1317,7 +1317,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         let y_var = circuit.create_variable(y)?;
         let x_to_11_var = circuit.create_variable(x11)?;
@@ -1327,7 +1327,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let x_var = circuit.create_variable(x)?;
         let y_var = circuit.create_variable(y)?;
 
@@ -1352,7 +1352,7 @@ pub(crate) mod test {
         let x11 = x.pow(&[11]);
 
         // Create a satisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let x_var = circuit.create_variable(x)?;
         let x_to_11_var = circuit.create_variable(x11)?;
 
@@ -1360,7 +1360,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let y_var = circuit.create_variable(y)?;
         let x_to_11_var = circuit.create_variable(x11)?;
 
@@ -1368,7 +1368,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let x_var = circuit.create_variable(x)?;
         let y = circuit.create_variable(y)?;
 

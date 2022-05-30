@@ -28,13 +28,6 @@ pub mod transcript;
 pub mod testing_apis;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Enum for each type of Plonk scheme.
-pub enum PlonkType {
-    /// TurboPlonk
-    TurboPlonk,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 /// Enum for each type of mergeable circuit. We can only merge circuits from
 /// different types.
 pub enum PredicateCircuitType {

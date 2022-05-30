@@ -148,10 +148,7 @@ where
 mod tests {
 
     use super::*;
-    use crate::{
-        circuit::{customized::ecc::Point, Circuit},
-        PlonkType,
-    };
+    use crate::circuit::{customized::ecc::Point, Circuit};
     use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
     use ark_ec::{
         msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
@@ -166,10 +163,10 @@ mod tests {
 
     #[test]
     fn test_variable_base_multi_scalar_mul() -> Result<(), PlonkError> {
-        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::TurboPlonk)?;
+        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>()?;
+        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>()?;
+        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>()?;
+        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>()?;
 
         // // uncomment the following code to dump the circuit comparison to screen
         // assert!(false);
@@ -177,9 +174,7 @@ mod tests {
         Ok(())
     }
 
-    fn test_variable_base_multi_scalar_mul_helper<F, P>(
-        plonk_type: PlonkType,
-    ) -> Result<(), PlonkError>
+    fn test_variable_base_multi_scalar_mul_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
@@ -187,9 +182,7 @@ mod tests {
         let mut rng = ark_std::test_rng();
 
         for dim in [1, 2, 4, 8, 16, 32, 64, 128] {
-            let mut circuit: PlonkCircuit<F> = match plonk_type {
-                PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-            };
+            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
             // bases and scalars
             let bases: Vec<GroupAffine<P>> =

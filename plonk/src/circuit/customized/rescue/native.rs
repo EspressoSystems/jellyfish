@@ -716,7 +716,7 @@ mod tests {
         test_add_constant_state_helper::<FqEd381>();
     }
     fn test_add_constant_state_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
 
         let state = RescueVector::from(&[F::from(12_u32), F::one(), F::one(), F::one()]);
         let constant = RescueVector::from(&[F::zero(), F::one(), F::one(), F::one()]);
@@ -756,7 +756,7 @@ mod tests {
         test_state_inversion_helper::<FqEd381>()
     }
     fn test_state_inversion_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
 
         let state =
             RescueVector::from(&[F::from(12u32), F::from(2u32), F::from(8u32), F::from(9u32)]);
@@ -785,7 +785,7 @@ mod tests {
     }
 
     fn test_affine_transformation_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let (state_in, matrix, constant) = gen_state_matrix_constant();
 
@@ -810,7 +810,7 @@ mod tests {
         test_non_linear_transformation_helper::<FqEd381>();
     }
     fn test_non_linear_transformation_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let (state_in, matrix, constant) = gen_state_matrix_constant();
 
@@ -835,7 +835,7 @@ mod tests {
         test_rescue_perm_helper::<FqEd381>();
     }
     fn test_rescue_perm_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let state_in =
             RescueVector::from(&[F::from(1u32), F::from(2u32), F::from(3u32), F::from(4u32)]);
@@ -860,7 +860,7 @@ mod tests {
     }
 
     fn test_add_state_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let state1 = RescueVector::from(&[
             F::from(12_u32),
@@ -921,7 +921,7 @@ mod tests {
     }
 
     fn test_prp_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let prp = PRP::default();
         let mut prng = ark_std::test_rng();
         let key_vec = RescueVector::from(&[
@@ -967,7 +967,7 @@ mod tests {
         test_rescue_sponge_no_padding_single_output_helper::<FqEd381>();
     }
     fn test_rescue_sponge_no_padding_single_output_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
 
         let mut prng = ark_std::test_rng();
         let data = (0..2 * RATE).map(|_| F::rand(&mut prng)).collect_vec();
@@ -990,7 +990,7 @@ mod tests {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // If the data length is not a multiple of RATE==3 then an error is triggered
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let size = 2 * RATE + 1; // Non multiple of RATE
         let data = (0..size).map(|_| F::rand(&mut prng)).collect_vec();
@@ -1011,7 +1011,7 @@ mod tests {
         test_rescue_sponge_no_padding_helper::<FqEd381>();
     }
     fn test_rescue_sponge_no_padding_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
 
         let rate = 3;
 
@@ -1055,7 +1055,7 @@ mod tests {
         }
 
         // bad path: incorrect number of inputs
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let input_vec = vec![
             F::from(11_u32),
             F::from(144_u32),
@@ -1080,7 +1080,7 @@ mod tests {
     fn test_rescue_sponge_with_padding_helper<F: RescueParameter>() {
         for input_len in 1..10 {
             for output_len in 1..10 {
-                let mut circuit = PlonkCircuit::new_turbo_plonk();
+                let mut circuit = PlonkCircuit::new();
 
                 let input_vec: Vec<F> = (0..input_len).map(|i| F::from((i + 10) as u32)).collect();
                 let input_var: Vec<Variable> = input_vec
@@ -1125,7 +1125,7 @@ mod tests {
         test_fsks_helper::<FqEd381>();
     }
     fn test_fsks_helper<F: RescueParameter>() {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let mut prng = ark_std::test_rng();
         let key = F::rand(&mut prng);
         let key_var = circuit.create_variable(key).unwrap();
