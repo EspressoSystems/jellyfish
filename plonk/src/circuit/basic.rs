@@ -10,7 +10,6 @@ use crate::{
     circuit::gates::*,
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
     errors::{CircuitError::*, PlonkError},
-    PredicateCircuitType,
 };
 use ark_ff::{FftField, PrimeField};
 use ark_poly::{
@@ -658,15 +657,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         if self.is_finalized() {
             return Ok(());
         }
-        // let num_slots_needed = match self.support_lookup() {
-        //     false => self.num_gates(),
-        //     true => max(
-        //         self.num_gates(),
-        //         max(self.range_size()?, self.wire_variables[RANGE_WIRE_ID].len())
-        //             + self.num_table_elems()
-        //             + 1,
-        //     ), // range gates and lookup gates need to have separate slots
-        // };
         self.eval_domain =
             Radix2EvaluationDomain::new(self.num_gates()).ok_or(PlonkError::DomainCreationError)?;
         self.pad()?;
@@ -674,146 +664,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.compute_wire_permutation();
         self.compute_extended_id_permutation();
         Ok(())
-    }
-
-    /// Finalize the setup of a mergeable circuit.
-    /// Two circuits can be merged only if they are with different circuit types
-    /// The method only supports TurboPlonk circuits.
-    pub fn finalize_for_mergeable_circuit(
-        &mut self,
-        circuit_type: PredicateCircuitType,
-    ) -> Result<(), PlonkError> {
-        self.finalize_for_arithmetization()?;
-        // double the domain size
-        let n = self.eval_domain_size()?;
-        self.eval_domain =
-            Radix2EvaluationDomain::new(2 * n).ok_or(PlonkError::DomainCreationError)?;
-        // pad dummy gates/wires in slots [n..2n)
-        for _ in 0..n {
-            self.gates.push(Box::new(PaddingGate));
-        }
-        for wire_id in 0..self.num_wire_types() {
-            self.wire_variables[wire_id].resize(2 * n, self.zero());
-        }
-        if circuit_type == PredicateCircuitType::BirthPredicate {
-            // update wire permutation
-            let mut wire_perm = vec![(self.num_wire_types, 0usize); self.num_wire_types * 2 * n];
-            for i in 0..self.num_wire_types {
-                for j in 0..n {
-                    wire_perm[i * 2 * n + j] = self.wire_permutation[i * n + j];
-                }
-            }
-            self.wire_permutation = wire_perm;
-        } else {
-            // reverse the gate indices.
-            self.gates.reverse();
-            for wire_id in 0..self.num_wire_types() {
-                self.wire_variables[wire_id].reverse();
-            }
-            for io_gate in self.pub_input_gate_ids.iter_mut() {
-                *io_gate = 2 * n - 1 - *io_gate;
-            }
-            // update wire_permutation
-            let mut wire_perm = vec![(self.num_wire_types, 0usize); self.num_wire_types * 2 * n];
-            for i in 0..self.num_wire_types {
-                for j in 0..n {
-                    let (wire_id, gate_id) = self.wire_permutation[i * n + j];
-                    // the new gate index is the reverse of the original gate index
-                    let gate_id = 2 * n - 1 - gate_id;
-                    wire_perm[i * 2 * n + 2 * n - 1 - j] = (wire_id, gate_id);
-                }
-            }
-            self.wire_permutation = wire_perm;
-        }
-        // need to recompute extended_id_permutation because the domain has changed.
-        self.compute_extended_id_permutation();
-        Ok(())
-    }
-
-    /// Merge a type A circuit with a type B circuit.
-    /// Both circuits should have been finalized before.
-    /// The method only supports TurboPlonk circuits.
-    #[allow(dead_code)]
-    pub(crate) fn merge(&self, other: &Self) -> Result<Self, PlonkError> {
-        self.check_finalize_flag(true)?;
-        other.check_finalize_flag(true)?;
-        if self.eval_domain_size()? != other.eval_domain_size()? {
-            return Err(ParameterError(format!(
-                "cannot merge circuits with different domain sizes: {}, {}",
-                self.eval_domain_size()?,
-                other.eval_domain_size()?
-            ))
-            .into());
-        }
-        if self.num_inputs() != other.num_inputs() {
-            return Err(ParameterError(format!(
-                "self.num_inputs = {} different from other.num_inputs = {}",
-                self.num_inputs(),
-                other.num_inputs()
-            ))
-            .into());
-        }
-        if self.pub_input_gate_ids[0] != 0 {
-            return Err(ParameterError("the first circuit is not type A".to_string()).into());
-        }
-        if other.pub_input_gate_ids[0] != other.eval_domain_size()? - 1 {
-            return Err(ParameterError("the second circuit is not type B".to_string()).into());
-        }
-        let num_vars = self.num_vars + other.num_vars;
-        let witness: Vec<F> = [self.witness.as_slice(), other.witness.as_slice()].concat();
-        let pub_input_gate_ids: Vec<usize> = [
-            self.pub_input_gate_ids.as_slice(),
-            other.pub_input_gate_ids.as_slice(),
-        ]
-        .concat();
-
-        // merge gates and wire variables
-        // the first circuit occupies the first n gates, the second circuit
-        // occupies the last n gates.
-        let n = self.eval_domain_size()? / 2;
-        let mut gates = vec![];
-        let mut wire_variables = [vec![], vec![], vec![], vec![], vec![], vec![]];
-        for (j, gate) in self.gates.iter().take(n).enumerate() {
-            gates.push((*gate).clone());
-            for (i, wire_vars) in wire_variables
-                .iter_mut()
-                .enumerate()
-                .take(self.num_wire_types)
-            {
-                wire_vars.push(self.wire_variable(i, j));
-            }
-        }
-        for (j, gate) in other.gates.iter().skip(n).enumerate() {
-            gates.push((*gate).clone());
-            for (i, wire_vars) in wire_variables
-                .iter_mut()
-                .enumerate()
-                .take(self.num_wire_types)
-            {
-                wire_vars.push(other.wire_variable(i, n + j) + self.num_vars);
-            }
-        }
-
-        // merge wire_permutation
-        let mut wire_permutation = vec![(0usize, 0usize); self.num_wire_types * 2 * n];
-        for i in 0..self.num_wire_types {
-            for j in 0..n {
-                wire_permutation[i * 2 * n + j] = self.wire_permutation[i * 2 * n + j];
-                wire_permutation[i * 2 * n + n + j] = other.wire_permutation[i * 2 * n + n + j];
-            }
-        }
-
-        Ok(Self {
-            num_vars,
-            witness,
-            gates,
-            wire_variables,
-            pub_input_gate_ids,
-            wire_permutation,
-            extended_id_permutation: self.extended_id_permutation.clone(),
-            num_wire_types: self.num_wire_types,
-            eval_domain: self.eval_domain,
-        })
     }
 }
 

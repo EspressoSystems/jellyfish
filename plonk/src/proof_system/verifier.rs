@@ -337,16 +337,14 @@ where
         }
 
         let mut result = E::Fr::zero();
-        for (poly_evals, (&pi, (&vk, &current_alpha_bases))) in
+        for (poly_evals, (&pi, (&_vk, &current_alpha_bases))) in
             batch_proof.poly_evals_vec.iter().zip(
-                // batch_proof.plookup_proofs_vec.iter().zip(
                 public_inputs
                     .iter()
                     .zip(verify_keys.iter().zip(alpha_bases.iter())),
-                // ),
             )
         {
-            let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vanish_eval, vk.is_merged)?
+            let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vanish_eval)?
                 - alpha_powers[0] * lagrange_1_eval;
             let num_wire_types = GATE_WIDTH + 1;
             let first_w_evals = &poly_evals.wires_evals[..num_wire_types - 1];
@@ -655,44 +653,27 @@ where
     ///
     /// \sum_{i=0..l} L_{i,H}(z) * pub_input[i].
     ///
-    /// For merged circuits, the evaluation is:
-    /// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] + \sum_{i=0..l/2} L_{n-i,H}(z)
-    /// * pub_input[l/2+i]
-    ///
     /// TODO: reuse the lagrange values
     fn evaluate_pi_poly(
         &self,
         pub_input: &[E::Fr],
         z: &E::Fr,
         vanish_eval: &E::Fr,
-        circuit_is_merged: bool,
     ) -> Result<E::Fr, PlonkError> {
         // If z is a root of the vanishing polynomial, directly return zero.
         if vanish_eval.is_zero() {
             return Ok(E::Fr::zero());
         }
-        let len = match circuit_is_merged {
-            false => pub_input.len(),
-            true => pub_input.len() / 2,
-        };
 
         let vanish_eval_div_n = E::Fr::from(self.domain.size() as u32)
             .inverse()
             .ok_or(PlonkError::DivisionError)?
             * (*vanish_eval);
         let mut result = E::Fr::zero();
-        for (i, val) in pub_input.iter().take(len).enumerate() {
+        for (i, val) in pub_input.iter().take(pub_input.len()).enumerate() {
             let lagrange_i =
                 vanish_eval_div_n * self.domain.element(i) / (*z - self.domain.element(i));
             result += lagrange_i * val;
-        }
-        if circuit_is_merged {
-            let n = self.domain.size();
-            for (i, val) in pub_input.iter().skip(len).enumerate() {
-                let lagrange_n_minus_i = vanish_eval_div_n * self.domain.element(n - i - 1)
-                    / (*z - self.domain.element(n - i - 1));
-                result += lagrange_n_minus_i * val;
-            }
         }
         Ok(result)
     }

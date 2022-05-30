@@ -108,7 +108,6 @@ where
             sigma_comms,
             k: compute_coset_representatives(circuit.num_wire_types(), Some(domain_size)),
             open_key,
-            is_merged: false,
         };
 
         // Compute ProvingKey (which includes the VerifyingKey)
@@ -464,7 +463,6 @@ pub mod test {
             rescue::RescueTranscript, solidity::SolidityTranscript, standard::StandardTranscript,
             PlonkTranscript,
         },
-        PredicateCircuitType,
     };
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
@@ -1105,19 +1103,19 @@ pub mod test {
     }
 
     #[test]
-    fn test_key_aggregation_and_batch_prove() -> Result<(), PlonkError> {
+    fn test_batch_prove() -> Result<(), PlonkError> {
         // merlin transcripts
-        test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>()?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
-        test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
+        test_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>()?;
+        test_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
+        test_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
+        test_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
         // rescue transcripts
         // currently only available for bls12-377
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()
+        test_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()
     }
 
-    fn test_key_aggregation_and_batch_prove_helper<E, F, P, T>() -> Result<(), PlonkError>
+    fn test_batch_prove_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -1146,63 +1144,6 @@ pub mod test {
         }
         let pks_ref: Vec<&ProvingKey<E>> = prove_keys.iter().collect();
         let vks_ref: Vec<&VerifyingKey<E>> = verify_keys.iter().collect();
-
-        // 4. Batch Proving and verification
-        check_batch_prove_and_verify::<_, _, _, _, T>(rng, &cs_ref, &pks_ref, &vks_ref)?;
-
-        // Batch proving with circuit/key aggregation
-        //
-        // 2. Create circuits
-        let type_a_circuits: Vec<PlonkCircuit<E::Fr>> = (6..13)
-            .map(|i| gen_mergeable_circuit(i, i, PredicateCircuitType::BirthPredicate))
-            .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
-        let type_b_circuits = (6..13)
-            .map(|i| gen_mergeable_circuit(i, i, PredicateCircuitType::DeathPredicate))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
-        // merge circuits
-        let circuits = type_a_circuits
-            .iter()
-            .zip(type_b_circuits.iter())
-            .map(|(cs_a, cs_b)| cs_a.merge(cs_b))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
-        let cs_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
-
-        // 3. Preprocessing
-        let mut pks_type_a = vec![];
-        let mut vks_type_a = vec![];
-        for cs_a in type_a_circuits.iter() {
-            let (pk, vk) = PlonkKzgSnark::<E>::preprocess(&srs, cs_a)?;
-            pks_type_a.push(pk);
-            vks_type_a.push(vk);
-        }
-        let mut pks_type_b = vec![];
-        let mut vks_type_b = vec![];
-        for cs_b in type_b_circuits.iter() {
-            let (pk, vk) = PlonkKzgSnark::<E>::preprocess(&srs, cs_b)?;
-            pks_type_b.push(pk);
-            vks_type_b.push(vk);
-        }
-        // merge proving keys
-        let pks = pks_type_a
-            .iter()
-            .zip(pks_type_b.iter())
-            .map(|(pk_a, pk_b)| pk_a.merge(pk_b))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
-        // merge verification keys
-        let vks = vks_type_a
-            .iter()
-            .zip(vks_type_b.iter())
-            .map(|(vk_a, vk_b)| vk_a.merge(vk_b))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
-        // check that the merged keys are correct
-        for (cs, vk) in circuits.iter().zip(vks.iter()) {
-            let (_, mut expected_vk) = PlonkKzgSnark::<E>::preprocess(&srs, cs)?;
-            expected_vk.is_merged = true;
-            assert_eq!(*vk, expected_vk);
-        }
-
-        let pks_ref: Vec<&ProvingKey<E>> = pks.iter().collect();
-        let vks_ref: Vec<&VerifyingKey<E>> = vks.iter().collect();
 
         // 4. Batch Proving and verification
         check_batch_prove_and_verify::<_, _, _, _, T>(rng, &cs_ref, &pks_ref, &vks_ref)?;
@@ -1246,42 +1187,5 @@ pub mod test {
         );
 
         Ok(())
-    }
-
-    fn gen_mergeable_circuit<F: PrimeField>(
-        m: usize,
-        a0: usize,
-        circuit_type: PredicateCircuitType,
-    ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut cs: PlonkCircuit<F> = PlonkCircuit::new();
-        // Create variables
-        let mut a = vec![];
-        for i in a0..(a0 + 4 * m) {
-            a.push(cs.create_variable(F::from(i as u64))?);
-        }
-        let b = vec![
-            cs.create_public_variable(F::from(m as u64 * 2))?,
-            cs.create_public_variable(F::from(a0 as u64 * 2 + m as u64 * 4 - 1))?,
-        ];
-        let c = cs.create_public_variable(
-            (cs.witness(b[1])? + cs.witness(a[0])?) * (cs.witness(b[1])? - cs.witness(a[0])?),
-        )?;
-
-        // Create gates:
-        // 1. a0 + ... + a_{4*m-1} = b0 * b1
-        // 2. (b1 + a0) * (b1 - a0) = c
-        // 3. b0 = 2 * m
-        let mut acc = cs.zero();
-        a.iter().for_each(|&elem| acc = cs.add(acc, elem).unwrap());
-        let b_mul = cs.mul(b[0], b[1])?;
-        cs.equal_gate(acc, b_mul)?;
-        let b1_plus_a0 = cs.add(b[1], a[0])?;
-        let b1_minus_a0 = cs.sub(b[1], a[0])?;
-        cs.mul_gate(b1_plus_a0, b1_minus_a0, c)?;
-        cs.constant_gate(b[0], F::from(m as u64 * 2))?;
-
-        cs.finalize_for_mergeable_circuit(circuit_type)?;
-
-        Ok(cs)
     }
 }

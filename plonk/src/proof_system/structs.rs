@@ -8,10 +8,7 @@
 use crate::{
     circuit::customized::ecc::{Point, SWToTEConParam},
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
-    errors::{
-        PlonkError,
-        SnarkError::{self, ParameterError},
-    },
+    errors::SnarkError,
 };
 use ark_ec::{
     msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters,
@@ -23,7 +20,6 @@ use ark_serialize::*;
 use ark_std::{
     collections::HashMap,
     convert::{TryFrom, TryInto},
-    format,
     string::ToString,
     vec,
     vec::Vec,
@@ -358,48 +354,6 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
     pub(crate) fn k(&self) -> &[E::Fr] {
         &self.vk.k
     }
-
-    /// Merge with another TurboPlonk proving key to obtain a new TurboPlonk
-    /// proving key. Return error if any of the following holds:
-    /// 1. the other proving key has a different domain size;
-    /// 2. the circuit underlying the other key has different number of inputs;
-    /// 3. the key or the other key is not a TurboPlonk key.
-    #[allow(dead_code)]
-    pub(crate) fn merge(&self, other_pk: &Self) -> Result<Self, PlonkError> {
-        if self.domain_size() != other_pk.domain_size() {
-            return Err(ParameterError(format!(
-                "mismatched domain size ({} vs {}) when merging proving keys",
-                self.domain_size(),
-                other_pk.domain_size()
-            ))
-            .into());
-        }
-        if self.num_inputs() != other_pk.num_inputs() {
-            return Err(ParameterError(
-                "mismatched number of public inputs when merging proving keys".to_string(),
-            )
-            .into());
-        }
-        let sigmas: Vec<DensePolynomial<E::Fr>> = self
-            .sigmas
-            .iter()
-            .zip(other_pk.sigmas.iter())
-            .map(|(poly1, poly2)| poly1 + poly2)
-            .collect();
-        let selectors: Vec<DensePolynomial<E::Fr>> = self
-            .selectors
-            .iter()
-            .zip(other_pk.selectors.iter())
-            .map(|(poly1, poly2)| poly1 + poly2)
-            .collect();
-
-        Ok(Self {
-            sigmas,
-            selectors,
-            commit_key: self.commit_key.clone(),
-            vk: self.vk.merge(&other_pk.vk)?,
-        })
-    }
 }
 
 /// Preprocessed verifier parameters used to verify Plonk proofs for a certain
@@ -424,9 +378,6 @@ pub struct VerifyingKey<E: PairingEngine> {
 
     /// KZG PCS opening key.
     pub open_key: OpenKey<E>,
-
-    /// A flag indicating whether the key is a merged key.
-    pub(crate) is_merged: bool,
 }
 
 impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
@@ -496,52 +447,7 @@ impl<E: PairingEngine> VerifyingKey<E> {
             selector_comms: vec![Commitment::default(); N_TURBO_PLONK_SELECTORS],
             k: compute_coset_representatives(num_wire_types, Some(domain_size)),
             open_key: OpenKey::default(),
-            is_merged: false,
         }
-    }
-    /// Merge with another TurboPlonk verifying key to obtain a new TurboPlonk
-    /// verifying key. Return error if any of the following holds:
-    /// 1. the other verifying key has a different domain size;
-    /// 2. the circuit underlying the other key has different number of inputs.
-    /// 3. the key or the other key is not a TurboPlonk key.
-    pub(crate) fn merge(&self, other_vk: &Self) -> Result<Self, PlonkError> {
-        if self.is_merged || other_vk.is_merged {
-            return Err(ParameterError("cannot merge a merged key again".to_string()).into());
-        }
-        if self.domain_size != other_vk.domain_size {
-            return Err(ParameterError(
-                "mismatched domain size when merging verifying keys".to_string(),
-            )
-            .into());
-        }
-        if self.num_inputs != other_vk.num_inputs {
-            return Err(ParameterError(
-                "mismatched number of public inputs when merging verifying keys".to_string(),
-            )
-            .into());
-        }
-        let sigma_comms: Vec<Commitment<E>> = self
-            .sigma_comms
-            .iter()
-            .zip(other_vk.sigma_comms.iter())
-            .map(|(com1, com2)| Commitment(com1.0 + com2.0))
-            .collect();
-        let selector_comms: Vec<Commitment<E>> = self
-            .selector_comms
-            .iter()
-            .zip(other_vk.selector_comms.iter())
-            .map(|(com1, com2)| Commitment(com1.0 + com2.0))
-            .collect();
-
-        Ok(Self {
-            domain_size: self.domain_size,
-            num_inputs: self.num_inputs + other_vk.num_inputs,
-            sigma_comms,
-            selector_comms,
-            k: self.k.clone(),
-            open_key: self.open_key.clone(),
-            is_merged: true,
-        })
     }
 }
 

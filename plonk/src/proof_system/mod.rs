@@ -11,7 +11,6 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
-pub mod batch_arg;
 pub(crate) mod prover;
 pub(crate) mod snark;
 pub mod structs;

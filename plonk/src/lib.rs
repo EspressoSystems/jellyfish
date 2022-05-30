@@ -26,13 +26,3 @@ pub mod transcript;
 
 #[cfg(feature = "test_apis")]
 pub mod testing_apis;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Enum for each type of mergeable circuit. We can only merge circuits from
-/// different types.
-pub enum PredicateCircuitType {
-    /// First type
-    BirthPredicate,
-    /// Second type
-    DeathPredicate,
-}
