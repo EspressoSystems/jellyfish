@@ -4,17 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! This module implements three different types of transcripts that are
-//! supported.
-
-pub(crate) mod rescue;
-pub(crate) mod solidity;
-pub(crate) mod standard;
-
-pub use rescue::RescueTranscript;
-pub use solidity::SolidityTranscript;
-pub use standard::StandardTranscript;
-
+//! This module implements Fiat-Shamir transcripts
 use crate::{
     errors::PlonkError,
     proof_system::structs::{ProofEvaluations, VerifyingKey},
@@ -25,17 +15,12 @@ use ark_ec::{
 use ark_ff::PrimeField;
 use ark_poly_commit::kzg10::Commitment;
 use jf_utils::to_bytes;
+use merlin::Transcript;
 
 /// Defines transcript APIs.
 ///
 /// It has an associated type `F` which defines the native
 /// field for the snark circuit.
-///
-/// The transcript can be either a Merlin transcript
-/// (instantiated with Sha-3/keccak), or a Rescue transcript
-/// (instantiated with Rescue hash), or a Solidity-friendly transcript
-/// (instantiated with Keccak256 hash).
-/// The second is only used for recursive snarks.
 pub trait PlonkTranscript<F> {
     /// Create a new plonk transcript.
     fn new(label: &'static [u8]) -> Self;
@@ -171,4 +156,34 @@ pub trait PlonkTranscript<F> {
     fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine;
+}
+
+/// A wrapper of `merlin::Transcript`.
+pub struct StandardTranscript(Transcript);
+
+impl<F> PlonkTranscript<F> for StandardTranscript {
+    /// create a new plonk transcript
+    fn new(label: &'static [u8]) -> Self {
+        Self(Transcript::new(label))
+    }
+
+    // append the message to the transcript
+    fn append_message(&mut self, label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
+        self.0.append_message(label, msg);
+
+        Ok(())
+    }
+
+    // generate the challenge for the current transcript
+    // and append it to the transcript
+    fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
+    where
+        E: PairingEngine,
+    {
+        let mut buf = [0u8; 64];
+        self.0.challenge_bytes(label, &mut buf);
+        let challenge = E::Fr::from_le_bytes_mod_order(&buf);
+        self.0.append_message(label, &to_bytes!(&challenge)?);
+        Ok(challenge)
+    }
 }
