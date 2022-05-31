@@ -13,7 +13,7 @@ use super::{
 };
 use crate::{
     circuit::{customized::ecc::SWToTEConParam, Arithmetization},
-    constants::{compute_coset_representatives, EXTRA_TRANSCRIPT_MSG_LABEL},
+    constants::compute_coset_representatives,
     errors::{PlonkError, SnarkError::ParameterError},
     proof_system::structs::UniversalSrs,
     transcript::*,
@@ -132,8 +132,7 @@ where
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {
-        let (batch_proof, ..) =
-            Self::batch_prove_internal::<_, _, T>(prng, circuits, prove_keys, None)?;
+        let (batch_proof, ..) = Self::batch_prove_internal::<_, _, T>(prng, circuits, prove_keys)?;
         Ok(batch_proof)
     }
 
@@ -150,8 +149,7 @@ where
             return Err(ParameterError("empty verification keys".to_string()).into());
         }
         let verifier = Verifier::new(verify_keys[0].domain_size)?;
-        let pcs_info =
-            verifier.prepare_pcs_info::<T>(verify_keys, public_inputs, batch_proof, &None)?;
+        let pcs_info = verifier.prepare_pcs_info::<T>(verify_keys, public_inputs, batch_proof)?;
         if !Verifier::batch_verify_opening_proofs::<T>(
             &verify_keys[0].open_key, // all open_key are the same
             &[pcs_info],
@@ -166,22 +164,16 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::Fr]],
         proofs: &[&Proof<E>],
-        extra_transcript_init_msgs: &[Option<Vec<u8>>],
     ) -> Result<(), PlonkError>
     where
         T: PlonkTranscript<F>,
     {
-        if public_inputs.len() != proofs.len()
-            || verify_keys.len() != proofs.len()
-            || extra_transcript_init_msgs.len() != proofs.len()
-        {
+        if public_inputs.len() != proofs.len() || verify_keys.len() != proofs.len() {
             return Err(ParameterError(format!(
-                "verify_keys.len: {}, public_inputs.len: {}, proofs.len: {}, \
-                 extra_transcript_msg.len: {}",
+                "verify_keys.len: {}, public_inputs.len: {}, proofs.len: {}",
                 verify_keys.len(),
                 public_inputs.len(),
                 proofs.len(),
-                extra_transcript_init_msgs.len()
             ))
             .into());
         }
@@ -195,15 +187,9 @@ where
             .par_iter()
             .zip(proofs.par_iter())
             .zip(public_inputs.par_iter())
-            .zip(extra_transcript_init_msgs.par_iter())
-            .map(|(((&vk, &proof), &pub_input), extra_msg)| {
+            .map(|((&vk, &proof), &pub_input)| {
                 let verifier = Verifier::new(vk.domain_size)?;
-                verifier.prepare_pcs_info::<T>(
-                    &[vk],
-                    &[pub_input],
-                    &(*proof).clone().into(),
-                    extra_msg,
-                )
+                verifier.prepare_pcs_info::<T>(&[vk], &[pub_input], &(*proof).clone().into())
             })
             .collect::<Result<Vec<_>, PlonkError>>()?;
 
@@ -229,7 +215,6 @@ where
         prng: &mut R,
         circuits: &[&C],
         prove_keys: &[&ProvingKey<'a, E>],
-        extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<(BatchProof<E>, Vec<Oracles<E::Fr>>, Challenges<E::Fr>), PlonkError>
     where
         C: Arithmetization<E::Fr>,
@@ -282,9 +267,6 @@ where
 
         // Initialize transcript
         let mut transcript = T::new(b"PlonkProof");
-        if let Some(msg) = extra_transcript_init_msg {
-            transcript.append_message(EXTRA_TRANSCRIPT_MSG_LABEL, &msg)?;
-        }
         for (pk, circuit) in prove_keys.iter().zip(circuits.iter()) {
             transcript.append_vk_and_pub_input(&pk.vk, &circuit.public_input()?)?;
         }
@@ -408,19 +390,14 @@ where
         prng: &mut R,
         circuit: &C,
         prove_key: &Self::ProvingKey,
-        extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<Self::Proof, PlonkError>
     where
         C: Arithmetization<E::Fr>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {
-        let (batch_proof, ..) = Self::batch_prove_internal::<_, _, T>(
-            prng,
-            &[circuit],
-            &[prove_key],
-            extra_transcript_init_msg,
-        )?;
+        let (batch_proof, ..) =
+            Self::batch_prove_internal::<_, _, T>(prng, &[circuit], &[prove_key])?;
         Ok(Proof {
             wires_poly_comms: batch_proof.wires_poly_comms_vec[0].clone(),
             prod_perm_poly_comm: batch_proof.prod_perm_poly_comms_vec[0],
@@ -435,17 +412,11 @@ where
         verify_key: &Self::VerifyingKey,
         public_input: &[E::Fr],
         proof: &Self::Proof,
-        extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<(), PlonkError>
     where
         T: PlonkTranscript<F>,
     {
-        Self::batch_verify::<T>(
-            &[verify_key],
-            &[public_input],
-            &[proof],
-            &[extra_transcript_init_msg],
-        )
+        Self::batch_verify::<T>(&[verify_key], &[public_input], &[proof])
     }
 }
 
@@ -478,9 +449,7 @@ pub mod test {
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{
         convert::TryInto,
-        format,
         rand::{CryptoRng, RngCore},
-        string::ToString,
         test_rng, vec,
         vec::Vec,
     };
@@ -630,18 +599,9 @@ pub mod test {
         let (pk2, vk2) = PlonkKzgSnark::<E>::preprocess(&srs, &circuits[3])?;
         // 4. Proving
         let mut proofs = vec![];
-        let mut extra_msgs = vec![];
         for (i, cs) in circuits.iter().enumerate() {
             let pk_ref = if i < 3 { &pk1 } else { &pk2 };
-            let extra_msg = if i % 2 == 0 {
-                None
-            } else {
-                Some(format!("extra message: {}", i).into_bytes())
-            };
-            proofs.push(
-                PlonkKzgSnark::<E>::prove::<_, _, T>(rng, cs, pk_ref, extra_msg.clone()).unwrap(),
-            );
-            extra_msgs.push(extra_msg);
+            proofs.push(PlonkKzgSnark::<E>::prove::<_, _, T>(rng, cs, pk_ref).unwrap());
         }
 
         // 5. Verification
@@ -651,31 +611,11 @@ pub mod test {
             .collect::<Result<Vec<Vec<E::Fr>>, PlonkError>>()?;
         for (i, proof) in proofs.iter().enumerate() {
             let vk_ref = if i < 3 { &vk1 } else { &vk2 };
-            assert!(PlonkKzgSnark::<E>::verify::<T>(
-                vk_ref,
-                &public_inputs[i],
-                proof,
-                extra_msgs[i].clone(),
-            )
-            .is_ok());
+            assert!(PlonkKzgSnark::<E>::verify::<T>(vk_ref, &public_inputs[i], proof,).is_ok());
             // Inconsistent proof should fail the verification.
             let mut bad_pub_input = public_inputs[i].clone();
             bad_pub_input[0] = E::Fr::from(0u8);
-            assert!(PlonkKzgSnark::<E>::verify::<T>(
-                vk_ref,
-                &bad_pub_input,
-                proof,
-                extra_msgs[i].clone(),
-            )
-            .is_err());
-            // Incorrect extra transcript message should fail
-            assert!(PlonkKzgSnark::<E>::verify::<T>(
-                vk_ref,
-                &bad_pub_input,
-                proof,
-                Some("wrong message".to_string().into_bytes()),
-            )
-            .is_err());
+            assert!(PlonkKzgSnark::<E>::verify::<T>(vk_ref, &bad_pub_input, proof,).is_err());
 
             // Incorrect proof [W_z] = 0, [W_z*g] = 0
             // attack against some vulnerable implementation described in:
@@ -683,13 +623,9 @@ pub mod test {
             let mut bad_proof = proof.clone();
             bad_proof.opening_proof = Commitment::default();
             bad_proof.shifted_opening_proof = Commitment::default();
-            assert!(PlonkKzgSnark::<E>::verify::<T>(
-                vk_ref,
-                &public_inputs[i],
-                &bad_proof,
-                extra_msgs[i].clone(),
-            )
-            .is_err());
+            assert!(
+                PlonkKzgSnark::<E>::verify::<T>(vk_ref, &public_inputs[i], &bad_proof,).is_err()
+            );
         }
 
         // 6. Batch verification
@@ -699,80 +635,41 @@ pub mod test {
             .map(|pub_input| &pub_input[..])
             .collect();
         let mut proofs_ref: Vec<&Proof<E>> = proofs.iter().collect();
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref,
-            &extra_msgs,
-        )
-        .is_ok());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks, &public_inputs_ref, &proofs_ref,).is_ok()
+        );
 
         // Inconsistent params
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks[..5],
-            &public_inputs_ref,
-            &proofs_ref,
-            &extra_msgs,
-        )
-        .is_err());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks[..5], &public_inputs_ref, &proofs_ref,)
+                .is_err()
+        );
 
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref[..5],
-            &proofs_ref,
-            &extra_msgs,
-        )
-        .is_err());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks, &public_inputs_ref[..5], &proofs_ref,)
+                .is_err()
+        );
 
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref[..5],
-            &extra_msgs,
-        )
-        .is_err());
-
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref,
-            &vec![None; vks.len()],
-        )
-        .is_err());
-
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref,
-            &vec![],
-        )
-        .is_err());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks, &public_inputs_ref, &proofs_ref[..5],)
+                .is_err()
+        );
 
         // Empty params
-        assert!(
-            PlonkKzgSnark::<E>::batch_verify::<T>(&vec![], &vec![], &vec![], &vec![],).is_err()
-        );
+        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(&vec![], &vec![], &vec![]).is_err());
 
         // Error paths
         let tmp_pi_ref = public_inputs_ref[0];
         public_inputs_ref[0] = public_inputs_ref[1];
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref,
-            &extra_msgs,
-        )
-        .is_err());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks, &public_inputs_ref, &proofs_ref,).is_err()
+        );
         public_inputs_ref[0] = tmp_pi_ref;
 
         proofs_ref[0] = proofs_ref[1];
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref,
-            &extra_msgs,
-        )
-        .is_err());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks, &public_inputs_ref, &proofs_ref,).is_err()
+        );
 
         Ok(())
     }
@@ -822,17 +719,15 @@ pub mod test {
         let (pk2, vk2) = PlonkKzgSnark::<E>::preprocess(&srs, &cs2)?;
 
         // 4. Proving
-        assert!(PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &cs2, &pk1, None).is_err());
-        let proof2 = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &cs2, &pk2, None)?;
+        assert!(PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &cs2, &pk1).is_err());
+        let proof2 = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &cs2, &pk2)?;
 
         // 5. Verification
-        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[E::Fr::from(1u8)], &proof2, None,).is_ok());
+        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[E::Fr::from(1u8)], &proof2).is_ok());
         // wrong verification key
-        assert!(
-            PlonkKzgSnark::<E>::verify::<T>(&vk1, &[E::Fr::from(1u8)], &proof2, None,).is_err()
-        );
+        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk1, &[E::Fr::from(1u8)], &proof2).is_err());
         // wrong public input
-        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[], &proof2, None).is_err());
+        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[], &proof2).is_err());
 
         Ok(())
     }
@@ -877,7 +772,7 @@ pub mod test {
 
         // 4. Proving
         let (_, oracles, challenges) =
-            PlonkKzgSnark::<E>::batch_prove_internal::<_, _, T>(rng, &[&circuit], &[&pk], None)?;
+            PlonkKzgSnark::<E>::batch_prove_internal::<_, _, T>(rng, &[&circuit], &[&pk])?;
 
         // 5. Check that the targeted polynomials evaluate to zero on the vanishing set.
         check_plonk_prover_polynomials(&oracles[0], &pk, &challenges)?;
@@ -1036,8 +931,7 @@ pub mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         let (pk, _) = PlonkKzgSnark::<E>::preprocess(&srs, &circuit)?;
-        let proof =
-            PlonkKzgSnark::<E>::prove::<_, _, StandardTranscript>(rng, &circuit, &pk, None)?;
+        let proof = PlonkKzgSnark::<E>::prove::<_, _, StandardTranscript>(rng, &circuit, &pk)?;
 
         let base_fields: Vec<E::Fq> = proof.clone().into();
         let res: Proof<E> = base_fields.try_into()?;
@@ -1077,7 +971,7 @@ pub mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         let (pk, vk) = PlonkKzgSnark::<E>::preprocess(&srs, &circuit)?;
-        let proof = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &circuit, &pk, None)?;
+        let proof = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &circuit, &pk)?;
 
         let mut ser_bytes = Vec::new();
         srs.serialize(&mut ser_bytes)?;

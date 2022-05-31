@@ -66,7 +66,6 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::Fr]],
         batch_proof: &BatchProof<E>,
-        extra_transcript_init_msg: &Option<Vec<u8>>,
     ) -> Result<PcsInfo<E>, PlonkError>
     where
         T: PlonkTranscript<F>,
@@ -102,12 +101,7 @@ where
         }
 
         // compute challenges and evaluations
-        let challenges = Self::compute_challenges::<T>(
-            verify_keys,
-            public_inputs,
-            batch_proof,
-            extra_transcript_init_msg,
-        )?;
+        let challenges = Self::compute_challenges::<T>(verify_keys, public_inputs, batch_proof)?;
 
         // pre-compute alpha related values
         let alpha_2 = challenges.alpha.square();
@@ -242,7 +236,6 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::Fr]],
         batch_proof: &BatchProof<E>,
-        extra_transcript_init_msg: &Option<Vec<u8>>,
     ) -> Result<Challenges<E::Fr>, PlonkError>
     where
         T: PlonkTranscript<F>,
@@ -257,9 +250,6 @@ where
             .into());
         }
         let mut transcript = T::new(b"PlonkProof");
-        if let Some(msg) = extra_transcript_init_msg {
-            transcript.append_message(EXTRA_TRANSCRIPT_MSG_LABEL, msg)?;
-        }
         for (&vk, &pi) in verify_keys.iter().zip(public_inputs.iter()) {
             transcript.append_vk_and_pub_input(vk, pi)?;
         }

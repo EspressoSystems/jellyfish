@@ -49,10 +49,8 @@ macro_rules! plonk_prove_bench {
         let start = ark_std::time::Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
-            let _ = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(
-                rng, &cs, &pk, None,
-            )
-            .unwrap();
+            let _ = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk)
+                .unwrap();
         }
 
         println!(
@@ -81,16 +79,14 @@ macro_rules! plonk_verify_bench {
 
         let (pk, vk) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
-        let proof =
-            PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk, None)
-                .unwrap();
+        let proof = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk)
+            .unwrap();
 
         let start = ark_std::time::Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
-            let _ =
-                PlonkKzgSnark::<$bench_curve>::verify::<StandardTranscript>(&vk, &[], &proof, None)
-                    .unwrap();
+            let _ = PlonkKzgSnark::<$bench_curve>::verify::<StandardTranscript>(&vk, &[], &proof)
+                .unwrap();
         }
 
         println!(
@@ -119,9 +115,8 @@ macro_rules! plonk_batch_verify_bench {
 
         let (pk, vk) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
-        let proof =
-            PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk, None)
-                .unwrap();
+        let proof = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk)
+            .unwrap();
 
         let vks = vec![&vk; $num_proofs];
         let pub_input = vec![];
@@ -135,7 +130,6 @@ macro_rules! plonk_batch_verify_bench {
                 &vks,
                 &public_inputs_ref[..],
                 &proofs_ref,
-                &vec![None; vks.len()],
             )
             .unwrap();
         }
