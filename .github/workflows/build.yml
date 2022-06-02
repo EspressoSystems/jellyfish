@@ -7,8 +7,9 @@ on:
   pull_request:
     branches:
       - main
+      - turbo-plonk
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -65,21 +66,21 @@ jobs:
         run: cargo test --no-run -- --ignored
 
       - name: Test
-        run: bash ./scripts/run_tests.sh      
-      
+        run: bash ./scripts/run_tests.sh
+
       - name: Example
         run: cargo run --release --example proof_of_exp
 
-      - name: Generate Documentation
-        run: |
-          cargo doc --no-deps --lib --release
-          cp -R target/doc public
-          echo '<meta http-equiv="refresh" content="0; url=jf_plonk">' > public/index.html
+      # - name: Generate Documentation
+      #   run: |
+      #     cargo doc --no-deps --lib --release
+      #     cp -R target/doc public
+      #     echo '<meta http-equiv="refresh" content="0; url=jf_plonk">' > public/index.html
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          cname: jellyfish.docs.espressosys.com
+      # - name: Deploy
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   if: ${{ github.ref == 'refs/heads/main' }}
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./public
+      #     cname: jellyfish.docs.espressosys.com

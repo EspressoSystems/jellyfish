@@ -16,13 +16,10 @@ use crate::{
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{borrow::ToOwned, boxed::Box, cmp::Ordering, format, string::ToString, vec::Vec};
-use num_bigint::BigUint;
 
 pub mod ecc;
 mod gates;
 pub mod rescue;
-pub mod transcript;
-pub mod ultraplonk;
 
 impl<F> PlonkCircuit<F>
 where
@@ -462,192 +459,13 @@ where
         let x_to_10 = self.mul(x_to_5, x_to_5)?;
         self.mul_gate(x_to_10, x, x_to_11)
     }
-
-    /// Obtain the truncation of the input.
-    /// Constrain that the input and output values congruent modulo
-    /// 2^bit_length. Return error if the input is invalid.
-    pub fn truncate(&mut self, a: Variable, bit_length: usize) -> Result<Variable, PlonkError> {
-        self.check_var_bound(a)?;
-        let a_val = self.witness(a)?;
-        let a_uint: BigUint = a_val.into();
-        let modulus = F::from(2u8).pow(&[bit_length as u64]);
-        let modulus_uint: BigUint = modulus.into();
-        let res = F::from(a_uint % modulus_uint);
-        let b = self.create_variable(res)?;
-        self.truncate_gate(a, b, bit_length)?;
-        Ok(b)
-    }
-
-    /// Truncation gate.
-    /// Constrain that b == a modulo 2^bit_length.
-    /// Return error if the inputs are invalid; or b >= 2^bit_length.
-    pub fn truncate_gate(
-        &mut self,
-        a: Variable,
-        b: Variable,
-        bit_length: usize,
-    ) -> Result<(), PlonkError> {
-        if !self.support_lookup() {
-            return Err(PlonkError::InvalidParameters(
-                "does not support range table".to_string(),
-            ));
-        }
-
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-
-        let a_val = self.witness(a)?;
-        let b_val = self.witness(b)?;
-        let modulus = F::from(2u8).pow(&[bit_length as u64]);
-        let modulus_uint: BigUint = modulus.into();
-
-        if b_val >= modulus {
-            return Err(PlonkError::InvalidParameters(
-                "Truncation error: b is greater than 2^bit_length".to_string(),
-            ));
-        }
-
-        let native_field_bit_length = F::size_in_bits();
-        if native_field_bit_length <= bit_length {
-            return Err(PlonkError::InvalidParameters(
-                "Truncation error: native field is not greater than truncation target".to_string(),
-            ));
-        }
-
-        let bit_length_non_lookup_range = bit_length % self.range_bit_len()?;
-        let bit_length_lookup_component = bit_length - bit_length_non_lookup_range;
-
-        // we need to show that a and b satisfy the following
-        // relationship:
-        // (1) b = a mod modulus
-        // where
-        // * a is native_field_bit_length bits
-        // * b is bit_length bits
-        //
-        // which is
-        // (2) a = b + z * modulus
-        // for some z, where
-        // * z < 2^(native_field_bit_length - bit_length)
-        //
-        // So we set delta_length = native_field_bit_length - bit_length
-
-        let delta_length = native_field_bit_length - bit_length;
-        let delta_length_non_lookup_range = delta_length % self.range_bit_len()?;
-        let delta_length_lookup_component = delta_length - delta_length_non_lookup_range;
-
-        // Now (2) becomes
-        // (3) a = b1 + b2 * 2^bit_length_lookup_component
-        //       + modulus * (z1 + 2^delta_length_lookup_component * z2)
-        // with
-        //   b1 < 2^bit_length_lookup_component
-        //   b2 < 2^bit_length_non_lookup_range
-        //   z1 < 2^delta_length_lookup_component
-        //   z2 < 2^delta_length_non_lookup_range
-
-        // The concrete statements we need to prove becomes
-        // (4) b = b1 + b2 * 2^bit_length_lookup_component
-        // (5) a = b + modulus * z1
-        //       + modulus * 2^delta_length_lookup_component * z2
-        // (6) b1 < 2^bit_length_lookup_component
-        // (7) b2 < 2^bit_length_non_lookup_range
-        // (8) z1 < 2^delta_length_lookup_component
-        // (9) z2 < 2^delta_length_non_lookup_range
-
-        // step 1. setup the constants
-        let two_to_bit_length_lookup_component =
-            F::from(2u8).pow(&[bit_length_lookup_component as u64]);
-        let two_to_bit_length_lookup_component_uint: BigUint =
-            two_to_bit_length_lookup_component.into();
-
-        let two_to_delta_length_lookup_component =
-            F::from(2u8).pow(&[delta_length_lookup_component as u64]);
-        let two_to_delta_length_lookup_component_uint: BigUint =
-            two_to_delta_length_lookup_component.into();
-
-        let modulus_mul_two_to_delta_length_lookup_component_uint =
-            &two_to_delta_length_lookup_component_uint * &modulus_uint;
-        let modulus_mul_two_to_delta_length_lookup_component =
-            F::from(modulus_mul_two_to_delta_length_lookup_component_uint);
-
-        // step 2. get the intermediate data in the clear
-        let a_uint: BigUint = a_val.into();
-        let b_uint: BigUint = b_val.into();
-        let b1_uint = &b_uint % &two_to_bit_length_lookup_component_uint;
-        let b2_uint = &b_uint / &two_to_bit_length_lookup_component_uint;
-
-        let z_uint = (&a_uint - &b_uint) / &modulus_uint;
-        let z1_uint = &z_uint % &two_to_delta_length_lookup_component_uint;
-        let z2_uint = &z_uint / &two_to_delta_length_lookup_component_uint;
-
-        // step 3. create intermediate variables
-        let b1_var = self.create_variable(F::from(b1_uint))?;
-        let b2_var = self.create_variable(F::from(b2_uint))?;
-        let z1_var = self.create_variable(F::from(z1_uint))?;
-        let z2_var = self.create_variable(F::from(z2_uint))?;
-
-        // step 4. prove equations (4) - (9)
-        // (4) b = b1 + b2 * 2^bit_length_lookup_component
-        let wires = [b1_var, b2_var, self.zero(), self.zero(), b];
-        let coeffs = [
-            F::one(),
-            two_to_bit_length_lookup_component,
-            F::zero(),
-            F::zero(),
-        ];
-        self.lc_gate(&wires, &coeffs)?;
-
-        // (5) a = b + modulus * z1
-        //       + modulus * 2^delta_length_lookup_component * z2
-        let wires = [b, z1_var, z2_var, self.zero(), a];
-        let coeffs = [
-            F::one(),
-            modulus,
-            modulus_mul_two_to_delta_length_lookup_component,
-            F::zero(),
-        ];
-        self.lc_gate(&wires, &coeffs)?;
-
-        // (6) b1 < 2^bit_length_lookup_component
-        // note that bit_length_lookup_component is public information
-        // so we don't need to add a selection gate here
-        if bit_length_lookup_component != 0 {
-            self.range_gate_with_lookup(b1_var, bit_length_lookup_component)?;
-        }
-
-        // (7) b2 < 2^bit_length_non_lookup_range
-        // note that bit_length_non_lookup_range is public information
-        // so we don't need to add a selection gate here
-        if bit_length_non_lookup_range != 0 {
-            self.range_gate(b2_var, bit_length_non_lookup_range)?;
-        }
-
-        // (8) z1 < 2^delta_length_lookup_component
-        // note that delta_length_lookup_component is public information
-        // so we don't need to add a selection gate here
-        if delta_length_lookup_component != 0 {
-            self.range_gate_with_lookup(z1_var, delta_length_lookup_component)?;
-        }
-
-        // (9) z2 < 2^delta_length_non_lookup_range
-        // note that delta_length_non_lookup_range is public information
-        // so we don't need to add a selection gate here
-        if delta_length_non_lookup_range != 0 {
-            self.range_gate(z2_var, delta_length_non_lookup_range)?;
-        }
-
-        Ok(())
-    }
 }
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain a variable to be within the [0, 2^`bit_len`) range
     /// Return error if the variable is invalid.
     pub fn range_gate(&mut self, a: Variable, bit_len: usize) -> Result<(), PlonkError> {
-        if self.support_lookup() && bit_len % self.range_bit_len()? == 0 {
-            self.range_gate_with_lookup(a, bit_len)?;
-        } else {
-            self.range_gate_internal(a, bit_len)?;
-        }
+        self.range_gate_internal(a, bit_len)?;
         Ok(())
     }
 
@@ -814,7 +632,7 @@ pub(crate) mod test {
     }
 
     fn test_logic_or_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let zero_var = circuit.zero();
         let one_var = circuit.one();
         // Good path
@@ -834,7 +652,7 @@ pub(crate) mod test {
     }
 
     fn build_logic_or_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
         circuit.logic_or_gate(a, b)?;
@@ -851,7 +669,7 @@ pub(crate) mod test {
     }
 
     fn test_logic_and_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let zero_var = circuit.zero();
         let one_var = circuit.one();
         // Good path
@@ -880,7 +698,7 @@ pub(crate) mod test {
     }
 
     fn build_logic_and_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
         circuit.logic_and(a, b)?;
@@ -896,7 +714,7 @@ pub(crate) mod test {
         test_is_equal_helper::<Fq377>()
     }
     fn test_is_equal_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
         let b = circuit.create_variable(val)?;
@@ -920,7 +738,7 @@ pub(crate) mod test {
     }
 
     fn build_is_equal_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         let b = circuit.create_variable(b)?;
         circuit.check_equal(a, b)?;
@@ -936,7 +754,7 @@ pub(crate) mod test {
         test_check_is_zero_helper::<Fq377>()
     }
     fn test_check_is_zero_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
         let a_zero_eq = circuit.check_is_zero(a)?;
@@ -962,7 +780,7 @@ pub(crate) mod test {
     }
 
     fn build_check_is_zero_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let a = circuit.create_variable(a)?;
         circuit.check_is_zero(a)?;
         circuit.finalize_for_arithmetization()?;
@@ -977,7 +795,7 @@ pub(crate) mod test {
         test_quad_poly_gate_helper::<Fq377>()
     }
     fn test_quad_poly_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let q_lc = [F::from(2u32), F::from(3u32), F::from(5u32), F::from(2u32)];
         let q_mul = [F::one(), F::from(2u8)];
         let q_o = F::one();
@@ -1037,7 +855,7 @@ pub(crate) mod test {
     fn build_quad_poly_gate_circuit<F: PrimeField>(
         wires: [F; GATE_WIDTH + 1],
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let wires: Vec<_> = wires
             .iter()
             .map(|val| circuit.create_variable(*val).unwrap())
@@ -1059,7 +877,7 @@ pub(crate) mod test {
         test_lc_helper::<Fq377>()
     }
     fn test_lc_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let wire_in_1: Vec<_> = [
             F::from(23u32),
             F::from(8u32),
@@ -1096,7 +914,7 @@ pub(crate) mod test {
     }
 
     fn build_lc_circuit<F: PrimeField>(wires_in: [F; 4]) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let wires_in: Vec<_> = wires_in
             .iter()
             .map(|val| circuit.create_variable(*val).unwrap())
@@ -1116,7 +934,7 @@ pub(crate) mod test {
     }
 
     fn test_mul_add_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let wire_in_1: Vec<_> = [
             F::from(23u32),
             F::from(8u32),
@@ -1158,7 +976,7 @@ pub(crate) mod test {
     fn build_mul_add_circuit<F: PrimeField>(
         wires_in: [F; 4],
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let wires_in: Vec<_> = wires_in
             .iter()
             .map(|val| circuit.create_variable(*val).unwrap())
@@ -1178,7 +996,7 @@ pub(crate) mod test {
     }
 
     fn test_conditional_select_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let bit_true = circuit.create_variable(F::one())?;
         let bit_false = circuit.create_variable(F::zero())?;
         let x_0 = circuit.create_variable(F::from(23u32))?;
@@ -1216,7 +1034,7 @@ pub(crate) mod test {
         x_0: F,
         x_1: F,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let bit_var = circuit.create_variable(bit)?;
         let x_0_var = circuit.create_variable(x_0)?;
         let x_1_var = circuit.create_variable(x_1)?;
@@ -1234,7 +1052,7 @@ pub(crate) mod test {
     }
 
     fn test_sum_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let mut vars = vec![];
         for i in 0..11 {
             vars.push(circuit.create_variable(F::from(i as u32))?);
@@ -1275,7 +1093,7 @@ pub(crate) mod test {
     }
 
     fn build_sum_circuit<F: PrimeField>(vals: Vec<F>) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let mut vars = vec![];
         for val in vals {
             vars.push(circuit.create_variable(val)?);
@@ -1294,7 +1112,7 @@ pub(crate) mod test {
     }
 
     fn test_unpack_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::one())?;
         let b = circuit.create_variable(F::from(1023u32))?;
 
@@ -1316,7 +1134,7 @@ pub(crate) mod test {
         test_range_gate_helper::<Fq377>()
     }
     fn test_range_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::one())?;
         let b = circuit.create_variable(F::from(1023u32))?;
 
@@ -1349,7 +1167,7 @@ pub(crate) mod test {
     }
 
     fn build_range_gate_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a_var = circuit.create_variable(a)?;
         circuit.range_gate(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
@@ -1364,7 +1182,7 @@ pub(crate) mod test {
         test_check_in_range_helper::<Fq377>()
     }
     fn test_check_in_range_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a = circuit.create_variable(F::from(1023u32))?;
 
         let b1 = circuit.check_in_range(a, 5)?;
@@ -1392,7 +1210,7 @@ pub(crate) mod test {
     }
 
     fn build_check_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let a_var = circuit.create_variable(a)?;
         circuit.check_in_range(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
@@ -1409,7 +1227,7 @@ pub(crate) mod test {
 
     fn test_arithmetization_helper<F: PrimeField>() -> Result<(), PlonkError> {
         // Create the circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         // is_equal gate
         let val = F::from(31415u32);
         let a = circuit.create_variable(val)?;
@@ -1462,12 +1280,12 @@ pub(crate) mod test {
     }
     fn test_non_zero_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
         // Create the circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let non_zero_var = circuit.create_variable(F::from(2_u32))?;
         let _ = circuit.non_zero_gate(non_zero_var);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let zero_var = circuit.create_variable(F::from(0_u32))?;
         let _ = circuit.non_zero_gate(zero_var);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1489,7 +1307,7 @@ pub(crate) mod test {
         let x11 = x.pow(&[11]);
 
         // Create a satisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         let x_var = circuit.create_variable(x)?;
         let x_to_11_var = circuit.create_variable(x11)?;
@@ -1499,7 +1317,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         let y_var = circuit.create_variable(y)?;
         let x_to_11_var = circuit.create_variable(x11)?;
@@ -1509,7 +1327,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let x_var = circuit.create_variable(x)?;
         let y_var = circuit.create_variable(y)?;
 
@@ -1534,7 +1352,7 @@ pub(crate) mod test {
         let x11 = x.pow(&[11]);
 
         // Create a satisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let x_var = circuit.create_variable(x)?;
         let x_to_11_var = circuit.create_variable(x11)?;
 
@@ -1542,7 +1360,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let y_var = circuit.create_variable(y)?;
         let x_to_11_var = circuit.create_variable(x11)?;
 
@@ -1550,88 +1368,12 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Create an unsatisfied circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let x_var = circuit.create_variable(x)?;
         let y = circuit.create_variable(y)?;
 
         circuit.power_11_gate(x_var, y)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_truncation_gate() -> Result<(), PlonkError> {
-        test_truncation_gate_helper::<FqEd254>()?;
-        test_truncation_gate_helper::<FqEd377>()?;
-        test_truncation_gate_helper::<FqEd381>()?;
-        test_truncation_gate_helper::<Fq377>()
-    }
-    fn test_truncation_gate_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let mut rng = test_rng();
-        let x = F::rand(&mut rng);
-        let x_uint: BigUint = x.into();
-
-        // Create a satisfied circuit
-        for len in [80, 100, 201, 248] {
-            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
-            let x_var = circuit.create_variable(x)?;
-            let modulus = F::from(2u8).pow(&[len as u64]);
-            let modulus_uint: BigUint = modulus.into();
-            let y_var = circuit.truncate(x_var, len)?;
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            let y = circuit.witness(y_var)?;
-            assert!(y < modulus);
-            assert_eq!(y, F::from(&x_uint % &modulus_uint))
-        }
-
-        // more tests
-        for minus_len in 1..=16 {
-            let len = F::size_in_bits() - minus_len;
-            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
-            let x_var = circuit.create_variable(x)?;
-            let modulus = F::from(2u8).pow(&[len as u64]);
-            let modulus_uint: BigUint = modulus.into();
-            let y_var = circuit.truncate(x_var, len)?;
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            let y = circuit.witness(y_var)?;
-            assert!(y < modulus);
-            assert_eq!(y, F::from(&x_uint % &modulus_uint))
-        }
-
-        // Bad path: b > 2^bit_len
-        {
-            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
-            let x = F::rand(&mut rng);
-            let x_var = circuit.create_variable(x)?;
-            let y = F::rand(&mut rng);
-            let y_var = circuit.create_variable(y)?;
-
-            assert!(circuit.truncate_gate(x_var, y_var, 16).is_err());
-        }
-
-        // Bad path: b!= a % 2^bit_len
-        {
-            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
-            let x = F::rand(&mut rng);
-            let x_var = circuit.create_variable(x)?;
-            let y = F::one();
-            let y_var = circuit.create_variable(y)?;
-            circuit.truncate_gate(x_var, y_var, 192)?;
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-
-        // Bad path: bit_len = F::size_in_bits()
-        {
-            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
-            let x = F::rand(&mut rng);
-            let x_var = circuit.create_variable(x)?;
-            let y = F::one();
-            let y_var = circuit.create_variable(y)?;
-            assert!(circuit
-                .truncate_gate(x_var, y_var, F::size_in_bits())
-                .is_err());
-        }
 
         Ok(())
     }

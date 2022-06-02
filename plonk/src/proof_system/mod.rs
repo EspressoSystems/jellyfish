@@ -7,11 +7,7 @@
 //! Interfaces for Plonk-based proof systems
 use crate::{circuit::Arithmetization, errors::PlonkError};
 use ark_ec::PairingEngine;
-use ark_std::{
-    rand::{CryptoRng, RngCore},
-    vec::Vec,
-};
-pub mod batch_arg;
+use ark_std::rand::{CryptoRng, RngCore};
 pub(crate) mod prover;
 pub(crate) mod snark;
 pub mod structs;
@@ -48,17 +44,10 @@ pub trait Snark<E: PairingEngine> {
     /// Compute a SNARK proof of a circuit `circuit`, using the corresponding
     /// proving key `prove_key`. The witness used to
     /// generate the proof can be obtained from `circuit`.
-    ///
-    /// `extra_transcript_init_msg` is the optional message to be
-    /// appended to the transcript during its initialization before obtaining
-    /// any challenges. This field allows application-specific data bound to the
-    /// resulting proof without any check on the data. It does not incur any
-    /// additional cost in proof size or prove time.
     fn prove<C, R, T>(
-        prng: &mut R,
+        rng: &mut R,
         circuit: &C,
         prove_key: &Self::ProvingKey,
-        extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<Self::Proof, PlonkError>
     where
         C: Arithmetization<E::Fr>,
@@ -67,12 +56,9 @@ pub trait Snark<E: PairingEngine> {
 
     /// Verify a SNARK proof `proof` of the circuit `circuit`, with respect to
     /// the public input `pub_input`.
-    ///
-    /// `extra_transcript_init_msg`: refer to documentation of `prove`
     fn verify<T: PlonkTranscript<E::Fq>>(
         verify_key: &Self::VerifyingKey,
         public_input: &[E::Fr],
         proof: &Self::Proof,
-        extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<(), PlonkError>;
 }

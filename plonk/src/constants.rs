@@ -22,10 +22,6 @@ pub(crate) const N_MUL_SELECTORS: usize = 2;
 pub(crate) const N_TURBO_PLONK_SELECTORS: usize = 13;
 
 /// Proof-system-related constants.
-///
-/// label for the extra data field to be appended to the transcript during
-/// initialization
-pub(crate) const EXTRA_TRANSCRIPT_MSG_LABEL: &[u8] = b"extra info";
 
 /// Compute the ratio between the quotient polynomial domain size and
 /// the vanishing polynomial domain size

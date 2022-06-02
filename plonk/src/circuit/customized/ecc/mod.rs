@@ -24,7 +24,6 @@ use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
 
 mod conversion;
-mod glv;
 mod msm;
 pub use conversion::*;
 pub use msm::*;
@@ -477,18 +476,7 @@ where
         self.check_var_bound(scalar)?;
         self.check_point_var_bound(base)?;
 
-        if self.support_lookup()
-            && P::ScalarField::size_in_bits() == 253
-            && P::BaseField::size_in_bits() == 255
-        {
-            // bandersnatch glv multiplication
-            // FIXME: we do not have an easier flag to tell if a parameter
-            // is bandersnatch or not, yet.
-            self.glv_mul::<P>(scalar, base)
-        } else {
-            // non-bandersantch multiplication
-            msm::MultiScalarMultiplicationCircuit::<F, P>::msm(self, &[*base], &[scalar])
-        }
+        msm::MultiScalarMultiplicationCircuit::<F, P>::msm(self, &[*base], &[scalar])
     }
 
     /// Obtain a variable of the result of a variable base scalar
@@ -621,7 +609,7 @@ mod test {
         F: PrimeField + ?Sized,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p1 = circuit.create_point_variable(Point(F::zero(), F::one()))?;
         let p2 = circuit.create_point_variable(Point(F::from(2353u32), F::one()))?;
         let p1_check = circuit.is_neutral_point::<P>(&p1)?;
@@ -649,7 +637,7 @@ mod test {
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p = circuit.create_point_variable(point)?;
         circuit.is_neutral_point::<P>(&p)?;
         circuit.finalize_for_arithmetization()?;
@@ -658,7 +646,7 @@ mod test {
 
     macro_rules! test_on_curve_gate {
         ($fq:tt, $param:tt, $pt:tt) => {
-            let mut circuit: PlonkCircuit<$fq> = PlonkCircuit::new_turbo_plonk();
+            let mut circuit: PlonkCircuit<$fq> = PlonkCircuit::new();
             let p1 = circuit.create_point_variable(Point($fq::zero(), $fq::one()))?;
             circuit.on_curve_gate::<$param>(&p1)?;
             let p2 = circuit.create_point_variable($pt)?;
@@ -752,7 +740,7 @@ mod test {
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p = circuit.create_point_variable(point)?;
         circuit.on_curve_gate::<P>(&p)?;
         circuit.finalize_for_arithmetization()?;
@@ -778,7 +766,7 @@ mod test {
         let p2 = GroupAffine::<P>::rand(&mut rng);
         let p3 = p1 + p2;
 
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
         let p2_var = circuit.create_point_variable(Point::from(p2))?;
         let p3_var = circuit.ecc_add::<P>(&p1_var, &p2_var)?;
@@ -814,7 +802,7 @@ mod test {
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p1_var = circuit.create_point_variable(p1)?;
         let p2_var = circuit.create_point_variable(p2)?;
         circuit.ecc_add::<P>(&p1_var, &p2_var)?;
@@ -841,7 +829,7 @@ mod test {
         let p2 = GroupAffine::<P>::rand(&mut rng);
         let p3 = GroupAffine::<P>::rand(&mut rng);
 
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         let select_p0 = circuit.quaternary_point_select::<P>(
             circuit.zero(),
@@ -927,7 +915,7 @@ mod test {
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let b0_var = circuit.create_variable(b0)?;
         let b1_var = circuit.create_variable(b1)?;
 
@@ -963,7 +951,7 @@ mod test {
         let mut rng = ark_std::test_rng();
         let p = GroupAffine::<P>::rand(&mut rng);
 
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let p1_var = circuit.create_point_variable(Point::from(p))?;
         let p2_var = circuit.create_point_variable(Point::from(p))?;
         circuit.point_equal_gate(&p1_var, &p2_var)?;
@@ -988,7 +976,7 @@ mod test {
         p1: Point<F>,
         p2: Point<F>,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p1_var = circuit.create_point_variable(p1)?;
         let p2_var = circuit.create_point_variable(p2)?;
         circuit.point_equal_gate(&p1_var, &p2_var)?;
@@ -1015,7 +1003,7 @@ mod test {
         let p2 = p1;
         let p3 = GroupAffine::<P>::rand(&mut rng);
 
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
         let p2_var = circuit.create_point_variable(Point::from(p2))?;
         let p3_var = circuit.create_point_variable(Point::from(p3))?;
@@ -1046,7 +1034,7 @@ mod test {
         p2: Point<F>,
         p3: Point<F>,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
         let p2_var = circuit.create_point_variable(Point::from(p2))?;
         let p3_var = circuit.create_point_variable(Point::from(p3))?;
@@ -1127,7 +1115,7 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut rng = ark_std::test_rng();
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         for _ in 0..6 {
             let mut base = GroupAffine::<P>::rand(&mut rng);
@@ -1159,7 +1147,7 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut rng = ark_std::test_rng();
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let base = GroupAffine::<P>::rand(&mut rng);
         let scalar_var = circuit.create_variable(scalar)?;
         circuit.fixed_base_scalar_mul(scalar_var, &base)?;
@@ -1185,7 +1173,7 @@ mod test {
         let p1 = GroupAffine::<P>::rand(&mut rng);
         let p2 = GroupAffine::<P>::rand(&mut rng);
 
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let p0_var = circuit.create_point_variable(Point::from(p0))?;
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
         let select_p0 = circuit.binary_point_vars_select(circuit.zero(), &p0_var, &p1_var)?;
@@ -1242,7 +1230,7 @@ mod test {
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let b_var = circuit.create_variable(b)?;
         let p0_var = circuit.create_point_variable(p0)?;
         let p1_var = circuit.create_point_variable(p1)?;
@@ -1265,7 +1253,7 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut rng = ark_std::test_rng();
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
         for _ in 0..6 {
             let mut base = GroupAffine::<P>::rand(&mut rng);
@@ -1323,7 +1311,7 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut rng = ark_std::test_rng();
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let non_bit_var = circuit.create_variable(F::from(2u8))?;
         let base = GroupAffine::<P>::rand(&mut rng);
         let base_var = circuit.create_point_variable(Point::from(base))?;
@@ -1354,7 +1342,7 @@ mod test {
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
         let scalar_var = circuit.create_variable(scalar)?;
         let base_var = circuit.create_point_variable(base)?;
         circuit.variable_base_scalar_mul::<P>(scalar_var, &base_var)?;

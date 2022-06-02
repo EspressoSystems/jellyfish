@@ -281,7 +281,7 @@ mod tests {
         F: RescueParameter,
         P: TEModelParameters<BaseField = F> + Clone,
     {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
         let mut prng = ark_std::test_rng();
         let key = RescueVector::from(&[
             F::rand(&mut prng),
@@ -344,7 +344,7 @@ mod tests {
         F: RescueParameter,
         P: TEModelParameters<BaseField = F> + Clone,
     {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new();
 
         let mut prng = ark_std::test_rng();
 
@@ -431,7 +431,7 @@ mod tests {
             .enc_key_ref()
             .encrypt(rng, &data);
         // Create circuit
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::new();
         let ctxts_var = circuit.create_ciphertext_variable(&ctxts).unwrap();
         // Check ciphertexts
         assert_eq!(

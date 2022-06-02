@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Interfaces for Plonk-based constraint systems
-use crate::errors::{CircuitError::LookupUnsupported, PlonkError};
+use crate::errors::PlonkError;
 use ark_ff::{FftField, Field};
 use ark_poly::univariate::DensePolynomial;
 use ark_std::vec::Vec;
@@ -122,16 +122,7 @@ pub trait Circuit<F: Field> {
 
     /// Pad the circuit with n dummy gates
     fn pad_gate(&mut self, n: usize);
-
-    /// Plookup-related methods.
-    /// Return true if the circuit support lookup gates.
-    fn support_lookup(&self) -> bool;
 }
-
-// The sorted concatenation of the lookup table and the witness values to be
-// checked in lookup gates. It also includes 2 polynomials that interpolate the
-// sorted vector.
-pub(crate) type SortedLookupVecAndPolys<F> = (Vec<F>, DensePolynomial<F>, DensePolynomial<F>);
 
 /// An interface that transforms Plonk circuits to polynomial used by
 /// Plonk-based SNARKs.
@@ -169,71 +160,4 @@ pub trait Arithmetization<F: FftField>: Circuit<F> {
     /// Return an error if the circuit has not been finalized yet.
     /// The IO gates of the circuit are guaranteed to be in the front.
     fn compute_pub_input_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError>;
-
-    /// Plookup-related methods
-    /// Return default errors if the constraint system does not support lookup
-    /// gates.
-    ///
-    /// Compute and return the polynomial that interpolates the range table
-    /// elements. Return an error if the circuit does not support lookup or
-    /// has not been finalized yet.
-    fn compute_range_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
-
-    /// Compute and return the polynomial that interpolates the key table
-    /// elements. Return an error if the circuit does not support lookup or
-    /// has not been finalized yet.
-    fn compute_key_table_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
-
-    /// Compute and return the polynomial that interpolates the table domain
-    /// sepration ids. Return an error if the circuit does not support
-    /// lookup or has not been finalized.
-    fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
-
-    /// Compute and return the polynomial that interpolates the lookup domain
-    /// sepration selectors for the lookup gates. Return an error if the
-    /// circuit does not support lookup or has not been finalized.
-    fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
-
-    /// Compute and return the combined lookup table vector given random
-    /// challenge `tau`.
-    fn compute_merged_lookup_table(&self, _tau: F) -> Result<Vec<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
-
-    /// Compute the sorted concatenation of the (merged) lookup table and the
-    /// witness values to be checked in lookup gates. Return the sorted
-    /// vector and 2 polynomials that interpolate the vector. Return an
-    /// error if the circuit does not support lookup or has not been
-    /// finalized yet.
-    fn compute_lookup_sorted_vec_polynomials(
-        &self,
-        _tau: F,
-        _lookup_table: &[F],
-    ) -> Result<SortedLookupVecAndPolys<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
-
-    /// Compute and return the product polynomial for Plookup arguments.
-    /// `beta` and `gamma` are random challenges, `sorted_vec` is the sorted
-    /// concatenation of the lookup table and the lookup witnesses.
-    /// Return an error if the circuit does not support lookup or
-    /// has not been finalized yet.
-    fn compute_lookup_prod_polynomial(
-        &self,
-        _tau: &F,
-        _beta: &F,
-        _gamma: &F,
-        _lookup_table: &[F],
-        _sorted_vec: &[F],
-    ) -> Result<DensePolynomial<F>, PlonkError> {
-        Err(LookupUnsupported.into())
-    }
 }

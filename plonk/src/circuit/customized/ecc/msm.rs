@@ -6,18 +6,14 @@
 
 //! This module implements multi-scalar-multiplication circuits.
 
-use super::{Point, PointVariable};
+use super::PointVariable;
 use crate::{
-    circuit::{Circuit, PlonkCircuit, Variable},
+    circuit::{PlonkCircuit, Variable},
     errors::PlonkError,
 };
-use ark_ec::{
-    group::Group, twisted_edwards_extended::GroupProjective, ModelParameters,
-    TEModelParameters as Parameters,
-};
-use ark_ff::{BigInteger, PrimeField};
-use ark_std::{format, vec, vec::Vec};
-use jf_utils::fq_to_fr;
+use ark_ec::{ModelParameters, TEModelParameters as Parameters};
+use ark_ff::PrimeField;
+use ark_std::format;
 
 /// Compute the multi-scalar-multiplications in circuit.
 pub trait MultiScalarMultiplicationCircuit<F, P>
@@ -78,11 +74,7 @@ where
             )));
         }
 
-        if self.support_lookup() {
-            msm_pippenger::<F, P>(self, bases, scalars, scalar_bit_length)
-        } else {
-            msm_naive::<F, P>(self, bases, scalars, scalar_bit_length)
-        }
+        msm_naive::<F, P>(self, bases, scalars, scalar_bit_length)
     }
 }
 
@@ -152,229 +144,11 @@ where
     Ok(res)
 }
 
-// A variant of Pippenger MSM.
-//
-// Some typical result on BW6-761 curve is shown below (i.e. the circuit
-// simulates BLS12-377 curve operations). More results are available in the test
-// function.
-//
-// number of basis: 1
-// #variables: 887
-// #constraints: 783
-//
-// number of basis: 2
-// #variables: 1272
-// #constraints: 1064
-//
-// number of basis: 4
-// #variables: 2042
-// #constraints: 1626
-//
-// number of basis: 8
-// #variables: 3582
-// #constraints: 2750
-//
-// number of basis: 16
-// #variables: 6662
-// #constraints: 4998
-//
-// number of basis: 32
-// #variables: 12822
-// #constraints: 9494
-//
-// number of basis: 64
-// #variables: 25142
-// #constraints: 18486
-//
-// number of basis: 128
-// #variables: 49782
-// #constraints: 36470
-fn msm_pippenger<F, P>(
-    circuit: &mut PlonkCircuit<F>,
-    bases: &[PointVariable],
-    scalars: &[Variable],
-    scalar_bit_length: usize,
-) -> Result<PointVariable, PlonkError>
-where
-    F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
-{
-    // ================================================
-    // check inputs
-    // ================================================
-    for (&scalar, base) in scalars.iter().zip(bases.iter()) {
-        circuit.check_var_bound(scalar)?;
-        circuit.check_point_var_bound(base)?;
-    }
-
-    // ================================================
-    // set up parameters
-    // ================================================
-    let c = if scalar_bit_length < 32 {
-        3
-    } else {
-        ln_without_floats(scalar_bit_length)
-    };
-
-    // ================================================
-    // compute lookup tables and window sums
-    // ================================================
-    let point_zero_var = circuit.neutral_point_variable();
-    // Each window is of size `c`.
-    // We divide up the bits 0..scalar_bit_length into windows of size `c`, and
-    // in parallel process each such window.
-    let mut window_sums = Vec::new();
-    for (base_var, &scalar_var) in bases.iter().zip(scalars.iter()) {
-        // decompose scalar into c-bit scalars
-        let decomposed_scalar_vars =
-            decompose_scalar_var(circuit, scalar_var, c, scalar_bit_length)?;
-
-        // create point table [0 * base, 1 * base, ..., (2^c-1) * base]
-        let mut table_point_vars = vec![point_zero_var, *base_var];
-        for _ in 0..((1 << c) - 2) {
-            let point_var = circuit.ecc_add::<P>(base_var, table_point_vars.last().unwrap())?;
-            table_point_vars.push(point_var);
-        }
-
-        // create lookup point variables
-        let mut lookup_point_vars = Vec::new();
-        for &scalar_var in decomposed_scalar_vars.iter() {
-            let lookup_point = compute_scalar_mul_value::<F, P>(circuit, scalar_var, base_var)?;
-            let lookup_point_var = circuit.create_point_variable(lookup_point)?;
-            lookup_point_vars.push(lookup_point_var);
-        }
-
-        create_point_lookup_gates(
-            circuit,
-            &table_point_vars,
-            &decomposed_scalar_vars,
-            &lookup_point_vars,
-        )?;
-
-        // update window sums
-        if window_sums.is_empty() {
-            window_sums = lookup_point_vars;
-        } else {
-            for (window_sum_mut, lookup_point_var) in
-                window_sums.iter_mut().zip(lookup_point_vars.iter())
-            {
-                *window_sum_mut = circuit.ecc_add::<P>(window_sum_mut, lookup_point_var)?;
-            }
-        }
-    }
-
-    // ================================================
-    // performing additions
-    // ================================================
-    // We store the sum for the lowest window.
-    let lowest = *window_sums.first().unwrap();
-
-    // We're traversing windows from high to low.
-    let b = &window_sums[1..]
-        .iter()
-        .rev()
-        .fold(point_zero_var, |mut total, sum_i| {
-            // total += sum_i
-            total = circuit.ecc_add::<P>(&total, sum_i).unwrap();
-            for _ in 0..c {
-                // double
-                total = circuit.ecc_add::<P>(&total, &total).unwrap();
-            }
-            total
-        });
-    circuit.ecc_add::<P>(&lowest, b)
-}
-
-#[inline]
-fn create_point_lookup_gates<F>(
-    circuit: &mut PlonkCircuit<F>,
-    table_point_vars: &[PointVariable],
-    lookup_scalar_vars: &[Variable],
-    lookup_point_vars: &[PointVariable],
-) -> Result<(), PlonkError>
-where
-    F: PrimeField,
-{
-    let table_vars: Vec<(Variable, Variable)> = table_point_vars
-        .iter()
-        .map(|p| (p.get_x(), p.get_y()))
-        .collect();
-    let lookup_vars: Vec<(Variable, Variable, Variable)> = lookup_scalar_vars
-        .iter()
-        .zip(lookup_point_vars.iter())
-        .map(|(&s, pt)| (s, pt.get_x(), pt.get_y()))
-        .collect();
-    circuit.create_table_and_lookup_variables(&lookup_vars, &table_vars)
-}
-
-#[inline]
-/// Decompose a `scalar_bit_length`-bit scalar `s` into many c-bit scalar
-/// variables `{s0, ..., s_m}` such that `s = \sum_{j=0..m} 2^{cj} * s_j`
-fn decompose_scalar_var<F>(
-    circuit: &mut PlonkCircuit<F>,
-    scalar_var: Variable,
-    c: usize,
-    scalar_bit_length: usize,
-) -> Result<Vec<Variable>, PlonkError>
-where
-    F: PrimeField,
-{
-    // create witness
-    let m = (scalar_bit_length - 1) / c + 1;
-    let mut scalar_val = circuit.witness(scalar_var)?.into_repr();
-    let decomposed_scalar_vars = (0..m)
-        .map(|_| {
-            // We mod the remaining bits by 2^{window size}, thus taking `c` bits.
-            let scalar_u64 = scalar_val.as_ref()[0] % (1 << c);
-            // We right-shift by c bits, thus getting rid of the
-            // lower bits.
-            scalar_val.divn(c as u32);
-            circuit.create_variable(F::from(scalar_u64))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-
-    // create circuit
-    let range_size = F::from((1 << c) as u32);
-    circuit.decompose_vars_gate(decomposed_scalar_vars.clone(), scalar_var, range_size)?;
-
-    Ok(decomposed_scalar_vars)
-}
-
-#[inline]
-/// Compute the value of scalar multiplication `witness(scalar_var) *
-/// witness(base_var)`. This function does not add any constraints.
-fn compute_scalar_mul_value<F, P>(
-    circuit: &PlonkCircuit<F>,
-    scalar_var: Variable,
-    base_var: &PointVariable,
-) -> Result<Point<F>, PlonkError>
-where
-    F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
-{
-    let curve_point: GroupProjective<P> = circuit.point_witness(base_var)?.into();
-    let scalar = fq_to_fr::<F, P>(&circuit.witness(scalar_var)?);
-    let res = Group::mul(&curve_point, &scalar);
-    Ok(res.into())
-}
-
-/// The result of this function is only approximately `ln(a)`
-/// [`Explanation of usage`]
-///
-/// [`Explanation of usage`]: https://github.com/scipr-lab/zexe/issues/79#issue-556220473
-fn ln_without_floats(a: usize) -> usize {
-    // log2(a) * ln(2)
-    (ark_std::log2(a) * 69 / 100) as usize
-}
-
 #[cfg(test)]
 mod tests {
 
     use super::*;
-    use crate::{
-        circuit::{customized::ecc::Point, Circuit},
-        PlonkType,
-    };
+    use crate::circuit::{customized::ecc::Point, Circuit};
     use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
     use ark_ec::{
         msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
@@ -387,18 +161,12 @@ mod tests {
     use ark_std::vec::Vec;
     use jf_utils::fr_to_fq;
 
-    const RANGE_BIT_LEN_FOR_TEST: usize = 8;
-
     #[test]
     fn test_variable_base_multi_scalar_mul() -> Result<(), PlonkError> {
-        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::UltraPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::UltraPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::UltraPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::UltraPlonk)?;
+        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>()?;
+        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>()?;
+        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>()?;
+        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>()?;
 
         // // uncomment the following code to dump the circuit comparison to screen
         // assert!(false);
@@ -406,9 +174,7 @@ mod tests {
         Ok(())
     }
 
-    fn test_variable_base_multi_scalar_mul_helper<F, P>(
-        plonk_type: PlonkType,
-    ) -> Result<(), PlonkError>
+    fn test_variable_base_multi_scalar_mul_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
@@ -416,10 +182,7 @@ mod tests {
         let mut rng = ark_std::test_rng();
 
         for dim in [1, 2, 4, 8, 16, 32, 64, 128] {
-            let mut circuit: PlonkCircuit<F> = match plonk_type {
-                PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
-                PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST),
-            };
+            let mut circuit: PlonkCircuit<F> = PlonkCircuit::new();
 
             // bases and scalars
             let bases: Vec<GroupAffine<P>> =
