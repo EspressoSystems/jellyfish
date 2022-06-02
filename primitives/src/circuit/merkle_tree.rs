@@ -9,7 +9,6 @@
 //! Circuit implementation of a Merkle tree.
 
 use crate::merkle_tree::{AccMemberWitness, MerklePath, MerkleTree, NodePos, NodeValue};
-use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_plonk::{
@@ -105,13 +104,12 @@ pub struct AccMemberWitnessVar {
 }
 
 impl AccMemberWitnessVar {
-    pub fn new<F, P>(
+    pub fn new<F>(
         circuit: &mut PlonkCircuit<F>,
         acc_member_witness: &AccMemberWitness<F>,
     ) -> Result<Self, PlonkError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F> + Clone,
     {
         Ok(Self {
             uid: circuit.create_variable(F::from(acc_member_witness.uid as u64))?,

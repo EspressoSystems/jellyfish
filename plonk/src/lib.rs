@@ -26,3 +26,13 @@ pub mod transcript;
 
 #[cfg(feature = "test_apis")]
 pub mod testing_apis;
+
+/// crate prelude consisting important traits and structs
+pub mod prelude {
+    pub use crate::{
+        circuit::{Arithmetization, Circuit, PlonkCircuit},
+        errors::PlonkError,
+        proof_system::{structs::*, PlonkKzgSnark, Snark},
+        transcript::{PlonkTranscript, StandardTranscript},
+    };
+}

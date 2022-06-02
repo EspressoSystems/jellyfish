@@ -1,0 +1,19 @@
+[package]
+name = "jf-zprice"
+description = "Plonk-DIZK ZPrice instructions and testing vectors."
+version = "0.1.0"
+authors = ["Espresso Systems <zprice@espressosys.com>"]
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+jf-plonk = { path = "../plonk" }
+jf-primitives = { path = "../primitives" }
+jf-utils = { path = "../utilities" }
+jf-rescue = { path = "../rescue" }
+
+ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
+# ark-ed-on-bls12-381 = { version = "0.3.0", default-features = false }
+ark-std = { version = "0.3.0", default-features = false }
+
+rand_chacha = { version = "0.3.1" }
