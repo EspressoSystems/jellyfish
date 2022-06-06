@@ -17,3 +17,11 @@ ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curv
 ark-std = { version = "0.3.0", default-features = false }
 
 rand_chacha = { version = "0.3.1" }
+
+[dev-dependencies]
+criterion = "0.3"
+rand = "^0.8"
+
+[[bench]]
+name = "zprice_benchmark"
+harness = false
