@@ -2,7 +2,6 @@ use ark_bls12_381::{Bls12_381, Fr};
 use ark_std::rand::{CryptoRng, RngCore};
 use criterion::{criterion_group, criterion_main, Criterion};
 use jf_plonk::prelude::*;
-use jf_zprice::generate_circuit;
 
 fn prove<C, R>(
     rng: &mut R,
@@ -23,15 +22,11 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
     // Build a circuit with randomly sampled satisfying assignments
-    let circuit = generate_circuit(&mut rng).unwrap();
+    let circuit = jf_zprice::generate_circuit(&mut rng).unwrap();
 
-    // FIXME: change these to load from files instead
-    let srs_size = circuit.srs_size().unwrap();
-    let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut rng).unwrap();
-
-    // Then, we generate the proving key and verification key from the SRS and
-    // circuit.
-    let (pk, vk) = PlonkKzgSnark::<Bls12_381>::preprocess(&srs, &circuit).unwrap();
+    // load pre-generated proving key and verification key from files
+    let pk = jf_zprice::load_proving_key(None);
+    let vk = jf_zprice::load_verification_key(None);
 
     // verify the proof against the public inputs.
     let proof = prove(&mut rng, &circuit, &pk).unwrap();

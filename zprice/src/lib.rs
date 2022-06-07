@@ -13,6 +13,9 @@
 #[cfg(test)]
 extern crate std;
 
+mod serde;
+pub use serde::*;
+
 use ark_bls12_381::Fr;
 use ark_std::{rand::Rng, vec, UniformRand};
 use jf_plonk::prelude::*;
@@ -27,6 +30,8 @@ pub const TREE_HEIGHT: u8 = 5;
 pub const NUM_MEMBERSHIP_PROOFS: usize = 10;
 
 /// generate a gigantic circuit (with random, satisfiable wire assignments)
+///
+/// num_constraint = num_memebership_proof * (157 * tree_height + 149)
 pub fn generate_circuit<R: Rng>(rng: &mut R) -> Result<PlonkCircuit<Fr>, PlonkError> {
     let mut leaves = vec![];
     let mut merkle_proofs = vec![];
