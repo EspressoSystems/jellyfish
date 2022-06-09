@@ -5,4 +5,5 @@ members = [
   "primitives",
   "utilities",
   "utilities_derive",
+  "zprice",
 ]

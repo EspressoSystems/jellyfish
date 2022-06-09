@@ -430,10 +430,7 @@ pub mod test {
             structs::{Challenges, Oracles, Proof, ProvingKey, UniversalSrs, VerifyingKey},
             PlonkKzgSnark, Snark,
         },
-        transcript::{
-            rescue::RescueTranscript, solidity::SolidityTranscript, standard::StandardTranscript,
-            PlonkTranscript,
-        },
+        transcript::{PlonkTranscript, StandardTranscript},
     };
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
@@ -563,13 +560,6 @@ pub mod test {
 
         test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
-
-        // solidity-friendly keccak256 transcripts
-        // currently only needed for CAPE using bls12-381
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
         Ok(())
     }
 
@@ -682,13 +672,6 @@ pub mod test {
         test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
         test_inconsistent_pub_input_len_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_inconsistent_pub_input_len_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
-
-        // Solidity-friendly keccak256 transcript
-        test_inconsistent_pub_input_len_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
-
         Ok(())
     }
 
@@ -739,13 +722,6 @@ pub mod test {
         test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
         test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
         test_plonk_prover_polynomials_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
-
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_plonk_prover_polynomials_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
-
-        // Solidity-friendly keccak256 transcript
-        test_plonk_prover_polynomials_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
 
         Ok(())
     }
@@ -948,13 +924,6 @@ pub mod test {
         test_serde_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
         test_serde_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
 
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_serde_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
-
-        // Solidity-friendly keccak256 transcript
-        test_serde_helper::<Bls12_381, Fq381, _, SolidityTranscript>()?;
-
         Ok(())
     }
 
@@ -1003,10 +972,7 @@ pub mod test {
         test_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>()?;
         test_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>()?;
         test_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>()?;
-
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()
+        Ok(())
     }
 
     fn test_batch_prove_helper<E, F, P, T>() -> Result<(), PlonkError>
