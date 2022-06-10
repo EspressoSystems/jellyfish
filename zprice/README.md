@@ -22,6 +22,8 @@ where
     R: CryptoRng + RngCore,
 ```
 
+Note that due to the resource limitation, and also to prevent accidental DoS, the benchmark will be terminate once a TIME_LIMIT is hit. This limit is tentatively set to 12 hours, and subject to change.
+
 Apparently, you could start with reading our current non-GPU-accelerated version of the prover implementation at `PlonkKzgSnark::prove()` in file `jellyfish/plonk/src/proof_system/snark.rs`,
 then optimizing it and building a Spark-like library in Rust to distribute and parallelize computation across multiple GPUs.
 
