@@ -205,6 +205,39 @@ pub mod tagged_blob {
         let bytes = deserialize_with_tag(T::tag().as_str(), deserializer)?;
         Ok((bytes, Default::default()))
     }
+
+    #[cfg(test)]
+    mod test {
+        use crate as jf_utils;
+        use ark_serialize::*;
+        use jf_utils::tagged_blob;
+        use std::vec::Vec;
+
+        #[tagged_blob("A")]
+        #[derive(Debug, Clone, PartialEq, Eq, CanonicalDeserialize, CanonicalSerialize)]
+        pub struct A(Vec<u8>);
+
+        #[test]
+        fn test_tagged_blob_static_str() {
+            let a = A(Vec::new());
+            let str = serde_json::to_string(&a).unwrap();
+            assert_eq!(str, r#""A~AAAAAAAAAABr""#);
+        }
+
+        mod tags {
+            pub const B: &str = "B";
+        }
+        #[tagged_blob(tags::B)]
+        #[derive(Debug, Clone, PartialEq, Eq, CanonicalDeserialize, CanonicalSerialize)]
+        pub struct B(Vec<u8>);
+
+        #[test]
+        fn test_tagged_blob_const_str() {
+            let b = B(Vec::new());
+            let str = serde_json::to_string(&b).unwrap();
+            assert_eq!(str, r#""B~AAAAAAAAAADg""#);
+        }
+    }
 }
 
 /// Serializers for finite field elements.

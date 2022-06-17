@@ -11,7 +11,7 @@ extern crate proc_macro;
 use ark_std::format;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, Item, NestedMeta};
+use syn::{parse_macro_input, AttributeArgs, Item, Meta, NestedMeta};
 
 /// Derive serdes for a type which serializes as a binary blob.
 ///
@@ -89,9 +89,10 @@ pub fn tagged_blob(args: TokenStream, input: TokenStream) -> TokenStream {
         _ => panic!("expected struct or enum"),
     };
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-    let tag = match args.as_slice() {
+    let tag: &dyn quote::ToTokens = match args.as_slice() {
         [NestedMeta::Lit(tag)] => tag,
-        _ => panic!("tagged_blob takes one argument, the tag, as a string literal"),
+        [NestedMeta::Meta(Meta::Path(path))] => path,
+        x => panic!("tagged_blob takes one argument, the tag, as a string literal or expression, found {:?}", x),
     };
     let serde_str = format!("jf_utils::TaggedBlob<{}>", quote!(#name #ty_generics));
     let output = quote! {
