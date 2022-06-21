@@ -37,6 +37,7 @@ derivative = { version = "2", features = ["use_core"] }
 rand_chacha = { version = "0.3.1", default-features = false }
 sha2 = { version = "0.10.1", default-features = false }
 digest = { version = "0.10.1", default-features = false }
+espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.1.1" }
 
 [dev-dependencies]
 rand_chacha = "^0.3"

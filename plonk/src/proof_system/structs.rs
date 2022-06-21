@@ -37,6 +37,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use espresso_systems_common::jellyfish as tag;
 use jf_rescue::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
@@ -57,7 +58,7 @@ pub(crate) type CommitKey<'a, E> = Powers<'a, E>;
 pub type OpenKey<E> = VerifierKey<E>;
 
 /// A Plonk SNARK proof.
-#[tagged_blob("PROOF")]
+#[tagged_blob(tag::PROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
 pub struct Proof<E: PairingEngine> {
@@ -232,7 +233,7 @@ pub struct PlookupProof<E: PairingEngine> {
 }
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
-#[tagged_blob("BATCHPROOF")]
+#[tagged_blob(tag::BATCHPROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
 pub struct BatchProof<E: PairingEngine> {

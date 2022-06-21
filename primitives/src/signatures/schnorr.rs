@@ -23,6 +23,7 @@ use ark_std::{
     string::ToString,
     vec,
 };
+use espresso_systems_common::jellyfish as tag;
 use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
 use zeroize::Zeroize;
@@ -120,7 +121,7 @@ impl<F: PrimeField> SignKey<F> {
 
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
-#[tagged_blob("SCHNORRVERKEY")]
+#[tagged_blob(tag::SCHNORRVERKEY)]
 #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
 #[derivative(Default(bound = "P: Parameters"))]
@@ -186,7 +187,7 @@ impl<P: Parameters + Clone> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
-#[tagged_blob("SIGNKEYPAIR")]
+#[tagged_blob(tag::SIGNKEYPAIR)]
 #[derive(Clone, Default, CanonicalSerialize, CanonicalDeserialize, PartialEq, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
 pub struct KeyPair<P>
@@ -202,7 +203,7 @@ where
 // =====================================================
 
 /// The signature of Schnorr signature scheme
-#[tagged_blob("SIG")]
+#[tagged_blob(tag::SIG)]
 #[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Debug(bound = "P: Parameters"))]
 #[derivative(Default(bound = "P: Parameters"))]

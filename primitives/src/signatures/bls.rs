@@ -19,6 +19,7 @@ use ark_std::{
     One, UniformRand,
 };
 use core::marker::PhantomData;
+use espresso_systems_common::jellyfish as tag;
 use jf_utils::{multi_pairing, tagged_blob};
 
 /// BLS signature scheme.
@@ -28,14 +29,14 @@ pub struct BLSSignatureScheme<P: Bls12Parameters> {
 }
 
 /// BLS public verification key
-#[tagged_blob("BLSVERKEY")]
+#[tagged_blob(tag::BLSVERKEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Clone(bound = "P: Bls12Parameters"))]
 #[derivative(Default(bound = "P: Bls12Parameters"))]
 pub struct BLSVerKey<P: Bls12Parameters>(pub(crate) GroupAffine<P::G2Parameters>);
 
 /// Signing key for BLS signature.
-#[tagged_blob("BLSSIGNINGKEY")]
+#[tagged_blob(tag::BLSSIGNINGKEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Clone(bound = "P: Bls12Parameters"))]
 #[derivative(Default(bound = "P: Bls12Parameters"))]
@@ -44,7 +45,7 @@ pub struct BLSSignKey<P: Bls12Parameters>(
 );
 
 /// Signing key for BLS signature.
-#[tagged_blob("BLSSIG")]
+#[tagged_blob(tag::BLSSIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Clone(bound = "P: Bls12Parameters"))]
 #[derivative(Default(bound = "P: Bls12Parameters"))]

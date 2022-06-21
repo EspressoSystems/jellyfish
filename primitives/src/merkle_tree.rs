@@ -29,6 +29,7 @@ use ark_std::{
     vec::Vec,
 };
 use core::{convert::TryFrom, fmt::Debug};
+use espresso_systems_common::jellyfish as tag;
 use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::tagged_blob;
 use serde::{Deserialize, Serialize};
@@ -189,7 +190,7 @@ impl<F: PrimeField> MerklePath<F> {
 }
 
 /// Represents the value for a node in the merkle tree.
-#[tagged_blob("NODE")]
+#[tagged_blob(tag::NODE)]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]
@@ -817,7 +818,7 @@ where
 }
 
 /// Data struct for a merkle leaf.
-#[tagged_blob("LEAF")]
+#[tagged_blob(tag::LEAF)]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]
