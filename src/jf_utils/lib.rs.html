@@ -46,7 +46,7 @@
 <span class="comment">// You should have received a copy of the MIT License</span>
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
-<span class="attribute">#![<span class="ident">no_std</span>]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">test</span>), <span class="ident">no_std</span>)]</span>
 
 <span class="kw">mod</span> <span class="ident">conversion</span>;
 <span class="kw">mod</span> <span class="ident">macros</span>;

@@ -988,6 +988,7 @@
 <span id="983">983</span>
 <span id="984">984</span>
 <span id="985">985</span>
+<span id="986">986</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1027,6 +1028,7 @@
     <span class="ident">vec</span>,
     <span class="ident">vec::Vec</span>,
 };
+<span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish</span> <span class="kw">as</span> <span class="ident">tag</span>;
 <span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">field_switching</span>, <span class="ident">fq_to_fr</span>, <span class="ident">fr_to_fq</span>, <span class="ident">tagged_blob</span>};
 
@@ -1047,7 +1049,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OpenKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VerifierKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// A Plonk SNARK proof.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;PROOF&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::PROOF</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;E:PairingEngine&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
@@ -1222,7 +1224,7 @@
 }
 
 <span class="doccomment">/// An aggregated SNARK proof that batchly proving multiple instances.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;BATCHPROOF&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BATCHPROOF</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;E:PairingEngine&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {

@@ -594,6 +594,7 @@
 <span id="589">589</span>
 <span id="590">590</span>
 <span id="591">591</span>
+<span id="592">592</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -619,6 +620,7 @@
     <span class="ident">string::ToString</span>,
     <span class="ident">vec</span>,
 };
+<span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish</span> <span class="kw">as</span> <span class="ident">tag</span>;
 <span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>};
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">fq_to_fr</span>, <span class="ident">fq_to_fr_with_mask</span>, <span class="ident">fr_to_fq</span>, <span class="ident">tagged_blob</span>};
 <span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
@@ -716,7 +718,7 @@
 
 <span class="doccomment">/// Signature public verification key</span>
 <span class="comment">// derive zeroize here so that keypair can be zeroized</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;SCHNORRVERKEY&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::SCHNORRVERKEY</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
@@ -782,7 +784,7 @@
 
 <span class="doccomment">/// Signature secret key pair used to sign messages</span>
 <span class="comment">// make sure sk can be zeroized</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;SIGNKEYPAIR&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::SIGNKEYPAIR</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">PartialEq</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
@@ -798,7 +800,7 @@
 <span class="comment">// =====================================================</span>
 
 <span class="doccomment">/// The signature of Schnorr signature scheme</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;SIG&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::SIG</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>

@@ -174,6 +174,7 @@
 <span id="169">169</span>
 <span id="170">170</span>
 <span id="171">171</span>
+<span id="172">172</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Placeholder for BLS signature.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SignatureScheme</span>;
@@ -195,6 +196,7 @@
     <span class="ident">One</span>, <span class="ident">UniformRand</span>,
 };
 <span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
+<span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish</span> <span class="kw">as</span> <span class="ident">tag</span>;
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">multi_pairing</span>, <span class="ident">tagged_blob</span>};
 
 <span class="doccomment">/// BLS signature scheme.</span>
@@ -204,14 +206,14 @@
 }
 
 <span class="doccomment">/// BLS public verification key</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;BLSVERKEY&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BLSVERKEY</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BLSVerKey</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Bls12Parameters</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P::G2Parameters</span><span class="op">&gt;</span>);
 
 <span class="doccomment">/// Signing key for BLS signature.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;BLSSIGNINGKEY&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BLSSIGNINGKEY</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
@@ -220,7 +222,7 @@
 );
 
 <span class="doccomment">/// Signing key for BLS signature.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;BLSSIG&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BLSSIG</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>

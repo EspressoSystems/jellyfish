@@ -2297,6 +2297,7 @@
 <span id="2292">2292</span>
 <span id="2293">2293</span>
 <span id="2294">2294</span>
+<span id="2295">2295</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -2328,6 +2329,7 @@
     <span class="ident">vec::Vec</span>,
 };
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">convert::TryFrom</span>, <span class="ident">fmt::Debug</span>};
+<span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish</span> <span class="kw">as</span> <span class="ident">tag</span>;
 <span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::tagged_blob</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -2488,7 +2490,7 @@
 }
 
 <span class="doccomment">/// Represents the value for a node in the merkle tree.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;NODE&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::NODE</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Default</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Copy</span>,
 )]</span>
@@ -3116,7 +3118,7 @@
 }
 
 <span class="doccomment">/// Data struct for a merkle leaf.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;LEAF&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::LEAF</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Default</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Copy</span>,
 )]</span>
