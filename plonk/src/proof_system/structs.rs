@@ -328,13 +328,13 @@ where
 #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct ProvingKey<'a, E: PairingEngine> {
     /// Extended permutation (sigma) polynomials.
-    pub(crate) sigmas: Vec<DensePolynomial<E::Fr>>,
+    pub sigmas: Vec<DensePolynomial<E::Fr>>,
 
     /// Selector polynomials.
-    pub(crate) selectors: Vec<DensePolynomial<E::Fr>>,
+    pub selectors: Vec<DensePolynomial<E::Fr>>,
 
-    // KZG PCS committing key.
-    pub(crate) commit_key: CommitKey<'a, E>,
+    /// KZG PCS committing key.
+    pub commit_key: CommitKey<'a, E>,
 
     /// The verifying key. It is used by prover to initialize transcripts.
     pub vk: VerifyingKey<E>,
@@ -342,16 +342,16 @@ pub struct ProvingKey<'a, E: PairingEngine> {
 
 impl<'a, E: PairingEngine> ProvingKey<'a, E> {
     /// The size of the evaluation domain. Should be a power of two.
-    pub(crate) fn domain_size(&self) -> usize {
+    pub fn domain_size(&self) -> usize {
         self.vk.domain_size
     }
     /// The number of public inputs.
     #[allow(dead_code)]
-    pub(crate) fn num_inputs(&self) -> usize {
+    pub fn num_inputs(&self) -> usize {
         self.vk.num_inputs
     }
     /// The constants K0, ..., K4 that ensure wire subsets are disjoint.
-    pub(crate) fn k(&self) -> &[E::Fr] {
+    pub fn k(&self) -> &[E::Fr] {
         &self.vk.k
     }
 }
