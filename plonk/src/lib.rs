@@ -31,7 +31,7 @@ pub mod testing_apis;
 pub mod prelude {
     pub use crate::{
         circuit::{Arithmetization, Circuit, PlonkCircuit},
-        errors::PlonkError,
+        errors::{PlonkError, SnarkError},
         proof_system::{structs::*, PlonkKzgSnark, Snark},
         transcript::{PlonkTranscript, StandardTranscript},
     };
