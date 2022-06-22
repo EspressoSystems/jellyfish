@@ -37,7 +37,8 @@ impl<E: PairingEngine> UniversalSrs<E> {
     }
 }
 
-/// Key for committing to and creating evaluation proofs (alias to kzg10::Powers).
+/// Key for committing to and creating evaluation proofs
+/// (alias to kzg10::Powers).
 pub type CommitKey<'a, E> = Powers<'a, E>;
 
 /// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
