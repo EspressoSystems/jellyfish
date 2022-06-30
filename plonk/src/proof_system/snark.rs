@@ -429,6 +429,7 @@ where
         // Round 3
         challenges.alpha = transcript.get_and_append_challenge::<E>(b"alpha")?;
         let (split_quot_poly_comms, split_quot_polys) = prover.run_3rd_round(
+            prng,
             &prove_keys[0].commit_key,
             prove_keys,
             &challenges,

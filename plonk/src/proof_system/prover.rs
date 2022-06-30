@@ -17,7 +17,7 @@ use crate::{
     proof_system::structs::CommitKey,
 };
 use ark_ec::PairingEngine;
-use ark_ff::{FftField, Field, One, Zero};
+use ark_ff::{FftField, Field, One, UniformRand, Zero};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, UVPolynomial,
@@ -162,8 +162,9 @@ impl<E: PairingEngine> Prover<E> {
     /// Round 3: Return the splitted quotient polynomials and their commitments.
     /// Note that the first `num_wire_types`-1 splitted quotient polynomials
     /// have degree `domain_size`+1.
-    pub(crate) fn run_3rd_round(
+    pub(crate) fn run_3rd_round<R: CryptoRng + RngCore>(
         &self,
+        prng: &mut R,
         ck: &CommitKey<E>,
         pks: &[&ProvingKey<E>],
         challenges: &Challenges<E::Fr>,
@@ -172,7 +173,7 @@ impl<E: PairingEngine> Prover<E> {
     ) -> Result<CommitmentsAndPolys<E>, PlonkError> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
-        let split_quot_polys = self.split_quotient_polynomial(&quot_poly, num_wire_types)?;
+        let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
         let split_quot_poly_comms = Self::commit_polynomials(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
@@ -895,8 +896,9 @@ impl<E: PairingEngine> Prover<E> {
 
     /// Split the quotient polynomial into `num_wire_types` polynomials.
     /// The first `num_wire_types`-1 polynomials have degree `domain_size`+1.
-    fn split_quotient_polynomial(
+    fn split_quotient_polynomial<R: CryptoRng + RngCore>(
         &self,
+        prng: &mut R,
         quot_poly: &DensePolynomial<E::Fr>,
         num_wire_types: usize,
     ) -> Result<Vec<DensePolynomial<E::Fr>>, PlonkError> {
@@ -905,7 +907,7 @@ impl<E: PairingEngine> Prover<E> {
             return Err(WrongQuotientPolyDegree(quot_poly.degree(), expected_degree).into());
         }
         let n = self.domain.size();
-        let split_quot_polys = (0..num_wire_types)
+        let mut split_quot_polys: Vec<DensePolynomial<E::Fr>> = (0..num_wire_types)
             .into_par_iter()
             .map(|i| {
                 let end = if i < num_wire_types - 1 {
@@ -919,6 +921,29 @@ impl<E: PairingEngine> Prover<E> {
                 )
             })
             .collect();
+
+        // mask splitting polynomials
+        // t'(X) = t(X) - b_last + b_now * X^(n+2)
+        // with t'_lowest(X) = t_lowest(X) - 0 + b_now * X^(n+2)
+        // and t'_highest(X) = t_highest(X) - b_last
+        let mut last_randomizer = E::Fr::zero();
+        split_quot_polys
+            .iter_mut()
+            .take(num_wire_types - 1)
+            .for_each(|poly| {
+                let now_randomizer = E::Fr::rand(prng);
+
+                let mut coeffs = vec![E::Fr::zero(); n + 3];
+                coeffs[0] = last_randomizer.neg();
+                coeffs[n + 2] = now_randomizer;
+                *poly += &DensePolynomial::from_coefficients_vec(coeffs);
+
+                last_randomizer = now_randomizer;
+            });
+        // mask the highest splitting poly
+        split_quot_polys[num_wire_types - 1] +=
+            &DensePolynomial::from_coefficients_vec(vec![last_randomizer.neg()]);
+
         Ok(split_quot_polys)
     }
 
@@ -1108,7 +1133,7 @@ mod test {
         let rng = &mut test_rng();
         let bad_quot_poly = DensePolynomial::<E::Fr>::rand(25, rng);
         assert!(prover
-            .split_quotient_polynomial(&bad_quot_poly, GATE_WIDTH + 1)
+            .split_quotient_polynomial(rng, &bad_quot_poly, GATE_WIDTH + 1)
             .is_err());
         Ok(())
     }
