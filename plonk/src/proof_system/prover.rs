@@ -896,6 +896,14 @@ impl<E: PairingEngine> Prover<E> {
 
     /// Split the quotient polynomial into `num_wire_types` polynomials.
     /// The first `num_wire_types`-1 polynomials have degree `domain_size`+1.
+    ///
+    /// Let t(X) be the input quotient polynomial, t_i(X) be the output
+    /// splitting polynomials. t(X) = \sum_{i=0}^{num_wire_types}
+    /// X^{i*(n+2)} * t_i(X)
+    ///
+    /// NOTE: we have a step polynomial of X^(n+2) instead of X^n as in the
+    /// GWC19 paper to achieve better balance among degrees of all splitting
+    /// polynomials (especially the highest-degree/last one).
     fn split_quotient_polynomial<R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
@@ -907,6 +915,8 @@ impl<E: PairingEngine> Prover<E> {
             return Err(WrongQuotientPolyDegree(quot_poly.degree(), expected_degree).into());
         }
         let n = self.domain.size();
+        // compute the splitting polynomials t'_i(X) s.t. t(X) =
+        // \sum_{i=0}^{num_wire_types} X^{i*(n+2)} * t'_i(X)
         let mut split_quot_polys: Vec<DensePolynomial<E::Fr>> = (0..num_wire_types)
             .into_par_iter()
             .map(|i| {
@@ -922,10 +932,10 @@ impl<E: PairingEngine> Prover<E> {
             })
             .collect();
 
-        // mask splitting polynomials
-        // t'(X) = t(X) - b_last + b_now * X^(n+2)
-        // with t'_lowest(X) = t_lowest(X) - 0 + b_now * X^(n+2)
-        // and t'_highest(X) = t_highest(X) - b_last
+        // mask splitting polynomials t_i(X), for i in {0..num_wire_types}.
+        // t_i(X) = t'_i(X) - b_last_i + b_now_i * X^(n+2)
+        // with t_lowest_i(X) = t_lowest_i(X) - 0 + b_now_i * X^(n+2)
+        // and t_highest_i(X) = t_highest_i(X) - b_last_i
         let mut last_randomizer = E::Fr::zero();
         split_quot_polys
             .iter_mut()
@@ -933,16 +943,14 @@ impl<E: PairingEngine> Prover<E> {
             .for_each(|poly| {
                 let now_randomizer = E::Fr::rand(prng);
 
-                let mut coeffs = vec![E::Fr::zero(); n + 3];
-                coeffs[0] = last_randomizer.neg();
-                coeffs[n + 2] = now_randomizer;
-                *poly += &DensePolynomial::from_coefficients_vec(coeffs);
+                poly.coeffs[0] -= last_randomizer;
+                assert_eq!(poly.degree(), n + 1);
+                poly.coeffs.push(now_randomizer);
 
                 last_randomizer = now_randomizer;
             });
         // mask the highest splitting poly
-        split_quot_polys[num_wire_types - 1] +=
-            &DensePolynomial::from_coefficients_vec(vec![last_randomizer.neg()]);
+        split_quot_polys[num_wire_types - 1].coeffs[0] -= last_randomizer;
 
         Ok(split_quot_polys)
     }
