@@ -2,6 +2,8 @@
 
 ## Pending
 
+- Splitting polynomials are masked to ensure zero-knowledge of Plonk (#76)
+
 ## v0.1.2
 
 ### Improvements

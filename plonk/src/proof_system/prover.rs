@@ -17,7 +17,7 @@ use crate::{
     proof_system::structs::CommitKey,
 };
 use ark_ec::PairingEngine;
-use ark_ff::{FftField, Field, One, Zero};
+use ark_ff::{FftField, Field, One, UniformRand, Zero};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, UVPolynomial,
@@ -162,8 +162,9 @@ impl<E: PairingEngine> Prover<E> {
     /// Round 3: Return the splitted quotient polynomials and their commitments.
     /// Note that the first `num_wire_types`-1 splitted quotient polynomials
     /// have degree `domain_size`+1.
-    pub(crate) fn run_3rd_round(
+    pub(crate) fn run_3rd_round<R: CryptoRng + RngCore>(
         &self,
+        prng: &mut R,
         ck: &CommitKey<E>,
         pks: &[&ProvingKey<E>],
         challenges: &Challenges<E::Fr>,
@@ -172,7 +173,7 @@ impl<E: PairingEngine> Prover<E> {
     ) -> Result<CommitmentsAndPolys<E>, PlonkError> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
-        let split_quot_polys = self.split_quotient_polynomial(&quot_poly, num_wire_types)?;
+        let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
         let split_quot_poly_comms = Self::commit_polynomials(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
@@ -895,8 +896,17 @@ impl<E: PairingEngine> Prover<E> {
 
     /// Split the quotient polynomial into `num_wire_types` polynomials.
     /// The first `num_wire_types`-1 polynomials have degree `domain_size`+1.
-    fn split_quotient_polynomial(
+    ///
+    /// Let t(X) be the input quotient polynomial, t_i(X) be the output
+    /// splitting polynomials. t(X) = \sum_{i=0}^{num_wire_types}
+    /// X^{i*(n+2)} * t_i(X)
+    ///
+    /// NOTE: we have a step polynomial of X^(n+2) instead of X^n as in the
+    /// GWC19 paper to achieve better balance among degrees of all splitting
+    /// polynomials (especially the highest-degree/last one).
+    fn split_quotient_polynomial<R: CryptoRng + RngCore>(
         &self,
+        prng: &mut R,
         quot_poly: &DensePolynomial<E::Fr>,
         num_wire_types: usize,
     ) -> Result<Vec<DensePolynomial<E::Fr>>, PlonkError> {
@@ -905,7 +915,9 @@ impl<E: PairingEngine> Prover<E> {
             return Err(WrongQuotientPolyDegree(quot_poly.degree(), expected_degree).into());
         }
         let n = self.domain.size();
-        let split_quot_polys = (0..num_wire_types)
+        // compute the splitting polynomials t'_i(X) s.t. t(X) =
+        // \sum_{i=0}^{num_wire_types} X^{i*(n+2)} * t'_i(X)
+        let mut split_quot_polys: Vec<DensePolynomial<E::Fr>> = (0..num_wire_types)
             .into_par_iter()
             .map(|i| {
                 let end = if i < num_wire_types - 1 {
@@ -919,6 +931,27 @@ impl<E: PairingEngine> Prover<E> {
                 )
             })
             .collect();
+
+        // mask splitting polynomials t_i(X), for i in {0..num_wire_types}.
+        // t_i(X) = t'_i(X) - b_last_i + b_now_i * X^(n+2)
+        // with t_lowest_i(X) = t_lowest_i(X) - 0 + b_now_i * X^(n+2)
+        // and t_highest_i(X) = t_highest_i(X) - b_last_i
+        let mut last_randomizer = E::Fr::zero();
+        split_quot_polys
+            .iter_mut()
+            .take(num_wire_types - 1)
+            .for_each(|poly| {
+                let now_randomizer = E::Fr::rand(prng);
+
+                poly.coeffs[0] -= last_randomizer;
+                assert_eq!(poly.degree(), n + 1);
+                poly.coeffs.push(now_randomizer);
+
+                last_randomizer = now_randomizer;
+            });
+        // mask the highest splitting poly
+        split_quot_polys[num_wire_types - 1].coeffs[0] -= last_randomizer;
+
         Ok(split_quot_polys)
     }
 
@@ -1108,7 +1141,7 @@ mod test {
         let rng = &mut test_rng();
         let bad_quot_poly = DensePolynomial::<E::Fr>::rand(25, rng);
         assert!(prover
-            .split_quotient_polynomial(&bad_quot_poly, GATE_WIDTH + 1)
+            .split_quotient_polynomial(rng, &bad_quot_poly, GATE_WIDTH + 1)
             .is_err());
         Ok(())
     }
