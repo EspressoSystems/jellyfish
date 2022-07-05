@@ -34,18 +34,19 @@ pub struct SolidityTranscript {
 }
 
 impl<F> PlonkTranscript<F> for SolidityTranscript {
-    /// Create a new plonk transcript. `label` is omitted for efficiency.
-    fn new(_label: &'static [u8]) -> Self {
+    /// Create a new plonk transcript.
+    fn new(label: &'static [u8]) -> Self {
         SolidityTranscript {
-            transcript: Vec::new(),
+            transcript: label.to_vec(),
             state: [0u8; KECCAK256_STATE_SIZE],
         }
     }
 
-    /// Append the message to the transcript. `_label` is omitted for
-    /// efficiency.
-    fn append_message(&mut self, _label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
-        // We remove the labels for better efficiency
+    /// Append the message to the transcript.
+    fn append_message(&mut self, label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
+        self.transcript.extend_from_slice(label);
+        self.transcript
+            .extend_from_slice(msg.len().to_le_bytes().as_ref());
         self.transcript.extend_from_slice(msg);
         Ok(())
     }
@@ -53,10 +54,12 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript. `_label` is omitted for
     /// efficiency.
-    fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
+    fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine,
     {
+        self.transcript.extend_from_slice(label);
+
         // 1. state = keccak256(state|transcript|0) || keccak256(state|transcript|1)
         let input0 = [self.state.as_ref(), self.transcript.as_ref(), &[0u8]].concat();
         let input1 = [self.state.as_ref(), self.transcript.as_ref(), &[1u8]].concat();
