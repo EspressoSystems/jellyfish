@@ -18,7 +18,7 @@ use ark_poly::{
 };
 use ark_std::{
     boxed::Box,
-    cmp::max,
+    cmp::{max, Ordering},
     collections::{HashMap, HashSet},
     format,
     string::ToString,
@@ -489,6 +489,26 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         let wire_vars = &[a, b, 0, 0, 0];
         self.insert_gate(wire_vars, Box::new(EqualityGate))?;
         Ok(())
+    }
+
+    fn enforce_cmp(
+        &mut self,
+        a: Variable,
+        b: Variable,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError> {
+        Ok(())
+    }
+
+    fn is_cmp(
+        &mut self,
+        a: Variable,
+        b: Variable,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<Variable, PlonkError> {
+        Ok(self.zero())
     }
 
     fn pad_gate(&mut self, n: usize) {
