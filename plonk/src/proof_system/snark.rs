@@ -12,7 +12,7 @@ use super::{
         PlookupVerifyingKey, Proof, ProvingKey, VerifyingKey,
     },
     verifier::Verifier,
-    Snark,
+    UniversalSNARK,
 };
 use crate::{
     circuit::{customized::ecc::SWToTEConParam, Arithmetization},
@@ -37,9 +37,9 @@ use jf_rescue::RescueParameter;
 use rayon::prelude::*;
 
 /// A Plonk instantiated with KZG PCS
-pub struct PlonkKzgSnark<'a, E: PairingEngine>(PhantomData<&'a E>);
+pub struct PlonkKzgSnark<E: PairingEngine>(PhantomData<E>);
 
-impl<'a, E, F, P> PlonkKzgSnark<'a, E>
+impl<E, F, P> PlonkKzgSnark<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
@@ -51,137 +51,11 @@ where
         Self(PhantomData)
     }
 
-    /// Generate the universal SRS for the argument system.
-    /// This setup is for trusted party to run, and mostly only used for
-    /// testing purpose. In practice, a MPC flavor of the setup will be carried
-    /// out to have higher assurance on the "toxic waste"/trapdoor being thrown
-    /// away to ensure soundness of the argument system.
-    pub fn universal_setup<R: RngCore>(
-        max_degree: usize,
-        rng: &mut R,
-    ) -> Result<UniversalSrs<E>, PlonkError> {
-        let srs = KZG10::<E, DensePolynomial<E::Fr>>::setup(max_degree, false, rng)?;
-        Ok(UniversalSrs(srs))
-    }
-
-    // TODO: (alex) move back to Snark trait when `trait PolynomialCommitment` is
-    // implemented for KZG10
-    /// Input a circuit and the SRS, precompute the proving key and verification
-    /// key.
-    pub fn preprocess<C: Arithmetization<E::Fr>>(
-        srs: &'a UniversalSrs<E>,
-        circuit: &C,
-    ) -> Result<(ProvingKey<'a, E>, VerifyingKey<E>), PlonkError> {
-        // Make sure the SRS can support the circuit (with hiding degree of 2 for zk)
-        let domain_size = circuit.eval_domain_size()?;
-        let srs_size = circuit.srs_size()?;
-        let num_inputs = circuit.num_inputs();
-        if srs.0.max_degree() < circuit.srs_size()? {
-            return Err(PlonkError::IndexTooLarge);
-        }
-        // 1. Compute selector and permutation polynomials.
-        let selectors_polys = circuit.compute_selector_polynomials()?;
-        let sigma_polys = circuit.compute_extended_permutation_polynomials()?;
-
-        // Compute Plookup proving key if support lookup.
-        let plookup_pk = if circuit.support_lookup() {
-            let range_table_poly = circuit.compute_range_table_polynomial()?;
-            let key_table_poly = circuit.compute_key_table_polynomial()?;
-            let table_dom_sep_poly = circuit.compute_table_dom_sep_polynomial()?;
-            let q_dom_sep_poly = circuit.compute_q_dom_sep_polynomial()?;
-            Some(PlookupProvingKey {
-                range_table_poly,
-                key_table_poly,
-                table_dom_sep_poly,
-                q_dom_sep_poly,
-            })
-        } else {
-            None
-        };
-
-        // 2. Compute VerifyingKey
-        let (commit_key, open_key) = trim(&srs.0, srs_size);
-        let selector_comms: Vec<_> = selectors_polys
-            .par_iter()
-            .map(|poly| {
-                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                Ok(comm)
-            })
-            .collect::<Result<Vec<_>, PlonkError>>()?
-            .into_iter()
-            .collect();
-        let sigma_comms: Vec<_> = sigma_polys
-            .par_iter()
-            .map(|poly| {
-                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                Ok(comm)
-            })
-            .collect::<Result<Vec<_>, PlonkError>>()?
-            .into_iter()
-            .collect();
-        // Compute Plookup verifying key if support lookup.
-        let plookup_vk = match circuit.support_lookup() {
-            false => None,
-            true => Some(PlookupVerifyingKey {
-                range_table_comm: KZG10::commit(
-                    &commit_key,
-                    &plookup_pk.as_ref().unwrap().range_table_poly,
-                    None,
-                    None,
-                )?
-                .0,
-                key_table_comm: KZG10::commit(
-                    &commit_key,
-                    &plookup_pk.as_ref().unwrap().key_table_poly,
-                    None,
-                    None,
-                )?
-                .0,
-                table_dom_sep_comm: KZG10::commit(
-                    &commit_key,
-                    &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
-                    None,
-                    None,
-                )?
-                .0,
-                q_dom_sep_comm: KZG10::commit(
-                    &commit_key,
-                    &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
-                    None,
-                    None,
-                )?
-                .0,
-            }),
-        };
-
-        let vk = VerifyingKey {
-            domain_size,
-            num_inputs,
-            selector_comms,
-            sigma_comms,
-            k: compute_coset_representatives(circuit.num_wire_types(), Some(domain_size)),
-            open_key,
-            plookup_vk,
-            is_merged: false,
-        };
-
-        // Compute ProvingKey (which includes the VerifyingKey)
-        let pk = ProvingKey {
-            sigmas: sigma_polys,
-            selectors: selectors_polys,
-            commit_key,
-            vk: vk.clone(),
-            plookup_pk,
-        };
-
-        Ok((pk, vk))
-    }
-
     /// Generate an aggregated Plonk proof for multiple instances.
     pub fn batch_prove<C, R, T>(
         prng: &mut R,
         circuits: &[&C],
-        prove_keys: &[&ProvingKey<'a, E>],
+        prove_keys: &[&ProvingKey<E>],
     ) -> Result<BatchProof<E>, PlonkError>
     where
         C: Arithmetization<E::Fr>,
@@ -284,7 +158,7 @@ where
     fn batch_prove_internal<C, R, T>(
         prng: &mut R,
         circuits: &[&C],
-        prove_keys: &[&ProvingKey<'a, E>],
+        prove_keys: &[&ProvingKey<E>],
         extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<(BatchProof<E>, Vec<Oracles<E::Fr>>, Challenges<E::Fr>), PlonkError>
     where
@@ -539,17 +413,136 @@ where
     }
 }
 
-impl<'a, E, F, P> Snark<E> for PlonkKzgSnark<'a, E>
+impl<E, F, P> UniversalSNARK<E> for PlonkKzgSnark<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWModelParameters<BaseField = F> + Clone,
 {
     type Proof = Proof<E>;
-
-    type ProvingKey = ProvingKey<'a, E>;
-
+    type ProvingKey = ProvingKey<E>;
     type VerifyingKey = VerifyingKey<E>;
+    type UniversalSRS = UniversalSrs<E>;
+    type Error = PlonkError;
+
+    fn universal_setup<R: RngCore + CryptoRng>(
+        max_degree: usize,
+        rng: &mut R,
+    ) -> Result<Self::UniversalSRS, Self::Error> {
+        let srs = KZG10::<E, DensePolynomial<E::Fr>>::setup(max_degree, false, rng)?;
+        Ok(UniversalSrs(srs))
+    }
+
+    /// Input a circuit and the SRS, precompute the proving key and verification
+    /// key.
+    fn preprocess<C: Arithmetization<E::Fr>>(
+        srs: &UniversalSrs<E>,
+        circuit: &C,
+    ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error> {
+        // Make sure the SRS can support the circuit (with hiding degree of 2 for zk)
+        let domain_size = circuit.eval_domain_size()?;
+        let srs_size = circuit.srs_size()?;
+        let num_inputs = circuit.num_inputs();
+        if srs.0.max_degree() < circuit.srs_size()? {
+            return Err(PlonkError::IndexTooLarge);
+        }
+        // 1. Compute selector and permutation polynomials.
+        let selectors_polys = circuit.compute_selector_polynomials()?;
+        let sigma_polys = circuit.compute_extended_permutation_polynomials()?;
+
+        // Compute Plookup proving key if support lookup.
+        let plookup_pk = if circuit.support_lookup() {
+            let range_table_poly = circuit.compute_range_table_polynomial()?;
+            let key_table_poly = circuit.compute_key_table_polynomial()?;
+            let table_dom_sep_poly = circuit.compute_table_dom_sep_polynomial()?;
+            let q_dom_sep_poly = circuit.compute_q_dom_sep_polynomial()?;
+            Some(PlookupProvingKey {
+                range_table_poly,
+                key_table_poly,
+                table_dom_sep_poly,
+                q_dom_sep_poly,
+            })
+        } else {
+            None
+        };
+
+        // 2. Compute VerifyingKey
+        let (commit_key, open_key) = trim(&srs.0, srs_size);
+        let selector_comms: Vec<_> = selectors_polys
+            .par_iter()
+            .map(|poly| {
+                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                Ok(comm)
+            })
+            .collect::<Result<Vec<_>, PlonkError>>()?
+            .into_iter()
+            .collect();
+        let sigma_comms: Vec<_> = sigma_polys
+            .par_iter()
+            .map(|poly| {
+                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                Ok(comm)
+            })
+            .collect::<Result<Vec<_>, PlonkError>>()?
+            .into_iter()
+            .collect();
+        // Compute Plookup verifying key if support lookup.
+        let plookup_vk = match circuit.support_lookup() {
+            false => None,
+            true => Some(PlookupVerifyingKey {
+                range_table_comm: KZG10::commit(
+                    &commit_key,
+                    &plookup_pk.as_ref().unwrap().range_table_poly,
+                    None,
+                    None,
+                )?
+                .0,
+                key_table_comm: KZG10::commit(
+                    &commit_key,
+                    &plookup_pk.as_ref().unwrap().key_table_poly,
+                    None,
+                    None,
+                )?
+                .0,
+                table_dom_sep_comm: KZG10::commit(
+                    &commit_key,
+                    &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
+                    None,
+                    None,
+                )?
+                .0,
+                q_dom_sep_comm: KZG10::commit(
+                    &commit_key,
+                    &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
+                    None,
+                    None,
+                )?
+                .0,
+            }),
+        };
+
+        let vk = VerifyingKey {
+            domain_size,
+            num_inputs,
+            selector_comms,
+            sigma_comms,
+            k: compute_coset_representatives(circuit.num_wire_types(), Some(domain_size)),
+            open_key,
+            plookup_vk,
+            is_merged: false,
+        };
+
+        // Compute ProvingKey (which includes the VerifyingKey)
+        let pk = ProvingKey {
+            sigmas: sigma_polys,
+            selectors: selectors_polys,
+            commit_key: commit_key.into(),
+            vk: vk.clone(),
+            plookup_pk,
+        };
+
+        Ok((pk, vk))
+    }
 
     /// Compute a Plonk proof.
     /// Refer to Sec 8.4 of <https://eprint.iacr.org/2019/953.pdf>
@@ -561,7 +554,7 @@ where
         circuit: &C,
         prove_key: &Self::ProvingKey,
         extra_transcript_init_msg: Option<Vec<u8>>,
-    ) -> Result<Self::Proof, PlonkError>
+    ) -> Result<Self::Proof, Self::Error>
     where
         C: Arithmetization<E::Fr>,
         R: CryptoRng + RngCore,
@@ -589,7 +582,7 @@ where
         public_input: &[E::Fr],
         proof: &Self::Proof,
         extra_transcript_init_msg: Option<Vec<u8>>,
-    ) -> Result<(), PlonkError>
+    ) -> Result<(), Self::Error>
     where
         T: PlonkTranscript<F>,
     {
@@ -613,7 +606,7 @@ pub mod test {
                 eval_merged_lookup_witness, eval_merged_table, Challenges, Oracles, Proof,
                 ProvingKey, UniversalSrs, VerifyingKey,
             },
-            PlonkKzgSnark, Snark,
+            PlonkKzgSnark, UniversalSNARK,
         },
         transcript::{
             rescue::RescueTranscript, solidity::SolidityTranscript, standard::StandardTranscript,
@@ -631,7 +624,7 @@ pub mod test {
         univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
         UVPolynomial,
     };
-    use ark_poly_commit::kzg10::{Commitment, KZG10};
+    use ark_poly_commit::kzg10::{Commitment, Powers, KZG10};
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{
         convert::TryInto,
@@ -777,20 +770,23 @@ pub mod test {
             .iter()
             .zip(vk.selector_comms.iter())
             .for_each(|(p, &p_comm)| {
-                let (expected_comm, _) = KZG10::commit(&pk.commit_key, p, None, None).unwrap();
+                let powers: Powers<'_, E> = (&pk.commit_key).into();
+                let (expected_comm, _) = KZG10::commit(&powers, p, None, None).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
         sigmas
             .iter()
             .zip(vk.sigma_comms.iter())
             .for_each(|(p, &p_comm)| {
-                let (expected_comm, _) = KZG10::commit(&pk.commit_key, p, None, None).unwrap();
+                let powers: Powers<'_, E> = (&pk.commit_key).into();
+                let (expected_comm, _) = KZG10::commit(&powers, p, None, None).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
         // check plookup verification key
         if plonk_type == PlonkType::UltraPlonk {
+            let powers: Powers<'_, E> = (&pk.commit_key).into();
             let (expected_comm, _) = KZG10::commit(
-                &pk.commit_key,
+                &powers,
                 &pk.plookup_pk.as_ref().unwrap().range_table_poly,
                 None,
                 None,
@@ -802,7 +798,7 @@ pub mod test {
             );
 
             let (expected_comm, _) = KZG10::commit(
-                &pk.commit_key,
+                &powers,
                 &pk.plookup_pk.as_ref().unwrap().key_table_poly,
                 None,
                 None,

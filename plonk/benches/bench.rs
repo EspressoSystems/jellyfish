@@ -16,7 +16,7 @@ use ark_ff::PrimeField;
 use jf_plonk::{
     circuit::{Circuit, PlonkCircuit},
     errors::PlonkError,
-    proof_system::{PlonkKzgSnark, Snark},
+    proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
     PlonkType,
 };

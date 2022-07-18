@@ -52,7 +52,29 @@ impl<E: PairingEngine> UniversalSrs<E> {
     }
 }
 
-pub(crate) type CommitKey<'a, E> = Powers<'a, E>;
+#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+pub(crate) struct CommitKey<E: PairingEngine> {
+    pub(crate) powers_of_g: Vec<E::G1Affine>,
+}
+
+impl<E: PairingEngine> From<Powers<'_, E>> for CommitKey<E> {
+    fn from(powers: Powers<'_, E>) -> Self {
+        Self {
+            powers_of_g: powers.powers_of_g.to_vec(),
+        }
+    }
+}
+
+impl<'a, E: PairingEngine> From<&CommitKey<E>> for Powers<'a, E> {
+    fn from(ck: &CommitKey<E>) -> Self {
+        // We didn't use hiding variant of KZG, thus leave powers_of_gamma_g
+        // empty
+        Self {
+            powers_of_g: ark_std::borrow::Cow::Owned(ck.powers_of_g.clone()),
+            powers_of_gamma_g: ark_std::borrow::Cow::Owned(Vec::new()),
+        }
+    }
+}
 
 /// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
 pub type OpenKey<E> = VerifierKey<E>;
@@ -551,7 +573,7 @@ impl<F: Field> PlookupEvaluations<F> {
 /// Preprocessed prover parameters used to compute Plonk proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<'a, E: PairingEngine> {
+pub struct ProvingKey<E: PairingEngine> {
     /// Extended permutation (sigma) polynomials.
     pub(crate) sigmas: Vec<DensePolynomial<E::Fr>>,
 
@@ -559,7 +581,7 @@ pub struct ProvingKey<'a, E: PairingEngine> {
     pub(crate) selectors: Vec<DensePolynomial<E::Fr>>,
 
     // KZG PCS committing key.
-    pub(crate) commit_key: CommitKey<'a, E>,
+    pub(crate) commit_key: CommitKey<E>,
 
     /// The verifying key. It is used by prover to initialize transcripts.
     pub vk: VerifyingKey<E>,
@@ -585,7 +607,7 @@ pub struct PlookupProvingKey<E: PairingEngine> {
     pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
 }
 
-impl<'a, E: PairingEngine> ProvingKey<'a, E> {
+impl<E: PairingEngine> ProvingKey<E> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) fn domain_size(&self) -> usize {
         self.vk.domain_size

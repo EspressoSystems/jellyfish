@@ -462,7 +462,7 @@ mod test {
         circuit::Circuit,
         proof_system::{
             batch_arg::{new_mergeable_circuit_for_test, BatchArgument},
-            PlonkKzgSnark,
+            PlonkKzgSnark, UniversalSNARK,
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
