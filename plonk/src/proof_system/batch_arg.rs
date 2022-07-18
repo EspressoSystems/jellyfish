@@ -42,7 +42,7 @@ pub struct Instance<E: PairingEngine> {
     _circuit_type: MergeableCircuitType,
 }
 
-impl<'a, E: PairingEngine> Instance<E> {
+impl<E: PairingEngine> Instance<E> {
     /// Get verification key by reference.
     pub fn verify_key_ref(&self) -> &VerifyingKey<E> {
         &self.prove_key.vk

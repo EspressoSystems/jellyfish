@@ -436,7 +436,7 @@ where
     /// Input a circuit and the SRS, precompute the proving key and verification
     /// key.
     fn preprocess<C: Arithmetization<E::Fr>>(
-        srs: &UniversalSrs<E>,
+        srs: &Self::UniversalSRS,
         circuit: &C,
     ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error> {
         // Make sure the SRS can support the circuit (with hiding degree of 2 for zk)
@@ -550,7 +550,7 @@ where
     /// `circuit` and `prove_key` has to be consistent (with the same evaluation
     /// domain etc.), otherwise return error.
     fn prove<C, R, T>(
-        prng: &mut R,
+        rng: &mut R,
         circuit: &C,
         prove_key: &Self::ProvingKey,
         extra_transcript_init_msg: Option<Vec<u8>>,
@@ -561,7 +561,7 @@ where
         T: PlonkTranscript<F>,
     {
         let (batch_proof, ..) = Self::batch_prove_internal::<_, _, T>(
-            prng,
+            rng,
             &[circuit],
             &[prove_key],
             extra_transcript_init_msg,

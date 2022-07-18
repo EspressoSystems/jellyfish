@@ -65,12 +65,12 @@ impl<E: PairingEngine> From<Powers<'_, E>> for CommitKey<E> {
     }
 }
 
-impl<'a, E: PairingEngine> From<&CommitKey<E>> for Powers<'a, E> {
-    fn from(ck: &CommitKey<E>) -> Self {
-        // We didn't use hiding variant of KZG, thus leave powers_of_gamma_g
-        // empty
+impl<'a, E: PairingEngine> From<&'a CommitKey<E>> for Powers<'a, E> {
+    fn from(ck: &'a CommitKey<E>) -> Self {
         Self {
-            powers_of_g: ark_std::borrow::Cow::Owned(ck.powers_of_g.clone()),
+            // Copy-on-write ensure reference passing as smart pointer for read-only access
+            powers_of_g: ark_std::borrow::Cow::Borrowed(&ck.powers_of_g),
+            // didn't use hiding variant of KZG, thus leave it empty
             powers_of_gamma_g: ark_std::borrow::Cow::Owned(Vec::new()),
         }
     }
