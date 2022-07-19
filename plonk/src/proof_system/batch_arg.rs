@@ -11,7 +11,7 @@ use crate::{
     proof_system::{
         structs::{BatchProof, OpenKey, ProvingKey, ScalarsAndBases, UniversalSrs, VerifyingKey},
         verifier::Verifier,
-        PlonkKzgSnark,
+        PlonkKzgSnark, UniversalSNARK,
     },
     transcript::PlonkTranscript,
     MergeableCircuitType,
@@ -30,19 +30,19 @@ use jf_rescue::RescueParameter;
 use jf_utils::multi_pairing;
 
 /// A batching argument.
-pub struct BatchArgument<'a, E: PairingEngine>(PhantomData<&'a E>);
+pub struct BatchArgument<E: PairingEngine>(PhantomData<E>);
 
 /// A circuit instance that consists of the corresponding proving
 /// key/verification key/circuit.
 #[derive(Clone)]
-pub struct Instance<'a, E: PairingEngine> {
+pub struct Instance<E: PairingEngine> {
     // TODO: considering giving instance an ID
-    prove_key: ProvingKey<'a, E>, // the verification key can be obtained inside the proving key.
+    prove_key: ProvingKey<E>, // the verification key can be obtained inside the proving key.
     circuit: PlonkCircuit<E::Fr>,
     _circuit_type: MergeableCircuitType,
 }
 
-impl<'a, E: PairingEngine> Instance<'a, E> {
+impl<E: PairingEngine> Instance<E> {
     /// Get verification key by reference.
     pub fn verify_key_ref(&self) -> &VerifyingKey<E> {
         &self.prove_key.vk
@@ -54,7 +54,7 @@ impl<'a, E: PairingEngine> Instance<'a, E> {
     }
 }
 
-impl<'a, E, F, P> BatchArgument<'a, E>
+impl<E, F, P> BatchArgument<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
@@ -62,10 +62,10 @@ where
 {
     /// Setup the circuit and the proving key for a (mergeable) instance.
     pub fn setup_instance(
-        srs: &'a UniversalSrs<E>,
+        srs: &UniversalSrs<E>,
         mut circuit: PlonkCircuit<E::Fr>,
         circuit_type: MergeableCircuitType,
-    ) -> Result<Instance<'a, E>, PlonkError> {
+    ) -> Result<Instance<E>, PlonkError> {
         circuit.finalize_for_mergeable_circuit(circuit_type)?;
         let (prove_key, _) = PlonkKzgSnark::preprocess(srs, &circuit)?;
         Ok(Instance {
@@ -78,8 +78,8 @@ where
     /// Prove satisfiability of multiple instances in a batch.
     pub fn batch_prove<R, T>(
         prng: &mut R,
-        instances_type_a: &[Instance<'a, E>],
-        instances_type_b: &[Instance<'a, E>],
+        instances_type_a: &[Instance<E>],
+        instances_type_b: &[Instance<E>],
     ) -> Result<BatchProof<E>, PlonkError>
     where
         R: CryptoRng + RngCore,
@@ -175,7 +175,7 @@ where
     }
 }
 
-impl<'a, E> BatchArgument<'a, E>
+impl<E> BatchArgument<E>
 where
     E: PairingEngine,
 {

@@ -23,7 +23,7 @@ use ark_poly::{
     Radix2EvaluationDomain, UVPolynomial,
 };
 use ark_poly_commit::{
-    kzg10::{Commitment, Randomness, KZG10},
+    kzg10::{Commitment, Powers, Randomness, KZG10},
     PCRandomness,
 };
 use ark_std::{
@@ -471,7 +471,9 @@ impl<E: PairingEngine> Prover<E> {
         ck: &CommitKey<E>,
         poly: &DensePolynomial<E::Fr>,
     ) -> Result<Commitment<E>, PlonkError> {
-        let (poly_comm, _) = KZG10::commit(ck, poly, None, None).map_err(PlonkError::PcsError)?;
+        let powers: Powers<'_, E> = ck.into();
+        let (poly_comm, _) =
+            KZG10::commit(&powers, poly, None, None).map_err(PlonkError::PcsError)?;
         Ok(poly_comm)
     }
 

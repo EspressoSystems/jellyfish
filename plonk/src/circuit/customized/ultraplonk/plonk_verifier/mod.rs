@@ -321,7 +321,7 @@ mod test {
         proof_system::{
             batch_arg::{new_mergeable_circuit_for_test, BatchArgument},
             structs::BatchProof,
-            PlonkKzgSnark,
+            PlonkKzgSnark, UniversalSNARK,
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };

@@ -44,6 +44,8 @@ pub enum PlonkError {
     PublicInputsDoNotMatch,
 }
 
+impl ark_std::error::Error for PlonkError {}
+
 #[cfg(feature = "std")]
 impl std::error::Error for PlonkError {}
 
