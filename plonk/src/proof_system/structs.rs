@@ -25,12 +25,11 @@ use crate::{
 use ark_ec::{
     msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters,
 };
-use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
+use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
 use ark_std::{
-    collections::HashMap,
     convert::{TryFrom, TryInto},
     format,
     string::ToString,
@@ -892,33 +891,38 @@ pub(crate) struct PlookupOracles<F: FftField> {
 /// The vector representation of bases and corresponding scalars.
 #[derive(Debug)]
 pub(crate) struct ScalarsAndBases<E: PairingEngine> {
-    pub(crate) base_scalar_map: HashMap<E::G1Affine, E::Fr>,
+    pub(crate) base_scalar_map: Vec<(E::G1Affine, E::Fr)>,
 }
 
 impl<E: PairingEngine> ScalarsAndBases<E> {
     pub(crate) fn new() -> Self {
         Self {
-            base_scalar_map: HashMap::new(),
+            base_scalar_map: Vec::new(),
         }
     }
     /// Insert a base point and the corresponding scalar.
     pub(crate) fn push(&mut self, scalar: E::Fr, base: E::G1Affine) {
-        let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
-        *entry_scalar += scalar;
+        for (b, s) in self.base_scalar_map.iter_mut() {
+            if *b == base {
+                *s += scalar;
+                return;
+            }
+        }
+        self.base_scalar_map.push((base, scalar));
     }
     /// Add a list of scalars and bases into self, where each scalar is
     /// multiplied by a constant c.
     pub(crate) fn merge(&mut self, c: E::Fr, scalars_and_bases: &Self) {
-        for (&base, scalar) in &scalars_and_bases.base_scalar_map {
-            self.push(c * scalar, base);
+        for (base, scalar) in &scalars_and_bases.base_scalar_map {
+            self.push(c * scalar, *base);
         }
     }
     /// Compute the multi-scalar multiplication.
     pub(crate) fn multi_scalar_mul(&self) -> E::G1Projective {
         let mut bases = vec![];
         let mut scalars = vec![];
-        for (&base, scalar) in &self.base_scalar_map {
-            bases.push(base);
+        for (base, scalar) in &self.base_scalar_map {
+            bases.push(*base);
             scalars.push(scalar.into_repr());
         }
         VariableBaseMSM::multi_scalar_mul(&bases, &scalars)

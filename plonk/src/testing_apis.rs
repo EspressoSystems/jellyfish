@@ -22,7 +22,7 @@ use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelPara
 use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_poly_commit::kzg10::Commitment;
-use ark_std::{collections::HashMap, vec::Vec};
+use ark_std::vec::Vec;
 use jf_rescue::RescueParameter;
 
 /// A wrapper of crate::proof_system::structs::Challenges
@@ -68,7 +68,7 @@ impl<F: Field> From<Challenges<F>> for structs::Challenges<F> {
 /// A wrapper of crate::proof_system::structs::ScalarsAndBases
 #[derive(Debug, Clone)]
 pub struct ScalarsAndBases<E: PairingEngine> {
-    pub base_scalar_map: HashMap<E::G1Affine, E::Fr>,
+    pub base_scalar_map: Vec<(E::G1Affine, E::Fr)>,
 }
 
 impl<E: PairingEngine> From<structs::ScalarsAndBases<E>> for ScalarsAndBases<E> {

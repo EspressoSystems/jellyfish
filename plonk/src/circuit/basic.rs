@@ -19,7 +19,7 @@ use ark_poly::{
 use ark_std::{
     boxed::Box,
     cmp::max,
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     format,
     string::ToString,
     vec,
@@ -321,7 +321,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                 self.check_range_gate(idx)?
             }
             // key-value map lookup gates
-            let mut key_val_table = HashSet::new();
+            let mut key_val_table = BTreeSet::new();
             key_val_table.insert((F::zero(), F::zero(), F::zero(), F::zero()));
             let q_lookup_vec = self.q_lookup();
             let q_dom_sep_vec = self.q_dom_sep();
@@ -1335,7 +1335,7 @@ where
             .into());
         }
         // only the first n-1 variables are for lookup
-        let mut lookup_map = HashMap::<F, usize>::new();
+        let mut lookup_map = BTreeMap::<F, usize>::new();
         let q_lookup_vec = self.q_lookup();
         let q_dom_sep_vec = self.q_dom_sep();
         for i in 0..(n - 1) {
