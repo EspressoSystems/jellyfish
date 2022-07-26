@@ -9,7 +9,6 @@
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{marker::PhantomData, string::String, vec::Vec};
 use serde::{Deserialize, Serialize};
-use snafu::Snafu;
 use tagged_base64::{TaggedBase64, Tb64Error};
 
 /// A helper for converting CanonicalSerde bytes to standard Serde bytes.
@@ -116,10 +115,9 @@ impl<T: Tagged + CanonicalSerialize + CanonicalDeserialize> From<&T> for TaggedB
     }
 }
 
-#[derive(Debug, Snafu)]
+#[derive(Debug)]
 pub enum TaggedBlobError {
     Base64Error {
-        #[snafu(source(false))]
         source: Tb64Error,
     },
     DeserializationError {
