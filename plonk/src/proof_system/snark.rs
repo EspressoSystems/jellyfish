@@ -34,6 +34,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_rescue::RescueParameter;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 /// A Plonk instantiated with KZG PCS
@@ -121,21 +122,43 @@ where
             );
         }
 
-        let pcs_infos = verify_keys
-            .par_iter()
-            .zip(proofs.par_iter())
-            .zip(public_inputs.par_iter())
-            .zip(extra_transcript_init_msgs.par_iter())
-            .map(|(((&vk, &proof), &pub_input), extra_msg)| {
-                let verifier = Verifier::new(vk.domain_size)?;
-                verifier.prepare_pcs_info::<T>(
-                    &[vk],
-                    &[pub_input],
-                    &(*proof).clone().into(),
-                    extra_msg,
-                )
-            })
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+        let pcs_infos;
+        #[cfg(feature = "parallel")]
+        {
+            pcs_infos = verify_keys
+                .par_iter()
+                .zip(proofs.par_iter())
+                .zip(public_inputs.par_iter())
+                .zip(extra_transcript_init_msgs.par_iter())
+                .map(|(((&vk, &proof), &pub_input), extra_msg)| {
+                    let verifier = Verifier::new(vk.domain_size)?;
+                    verifier.prepare_pcs_info::<T>(
+                        &[vk],
+                        &[pub_input],
+                        &(*proof).clone().into(),
+                        extra_msg,
+                    )
+                })
+                .collect::<Result<Vec<_>, PlonkError>>()?;
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            pcs_infos = verify_keys
+                .iter()
+                .zip(proofs.iter())
+                .zip(public_inputs.iter())
+                .zip(extra_transcript_init_msgs.iter())
+                .map(|(((&vk, &proof), &pub_input), extra_msg)| {
+                    let verifier = Verifier::new(vk.domain_size)?;
+                    verifier.prepare_pcs_info::<T>(
+                        &[vk],
+                        &[pub_input],
+                        &(*proof).clone().into(),
+                        extra_msg,
+                    )
+                })
+                .collect::<Result<Vec<_>, PlonkError>>()?;
+        }
 
         if !Verifier::batch_verify_opening_proofs::<T>(
             &verify_keys[0].open_key, // all open_key are the same
@@ -468,24 +491,51 @@ where
 
         // 2. Compute VerifyingKey
         let (commit_key, open_key) = trim(&srs.0, srs_size);
-        let selector_comms: Vec<_> = selectors_polys
-            .par_iter()
-            .map(|poly| {
-                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                Ok(comm)
-            })
-            .collect::<Result<Vec<_>, PlonkError>>()?
-            .into_iter()
-            .collect();
-        let sigma_comms: Vec<_> = sigma_polys
-            .par_iter()
-            .map(|poly| {
-                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                Ok(comm)
-            })
-            .collect::<Result<Vec<_>, PlonkError>>()?
-            .into_iter()
-            .collect();
+        let selector_comms;
+        let sigma_comms;
+        #[cfg(feature = "parallel")]
+        {
+            selector_comms = selectors_polys
+                .par_iter()
+                .map(|poly| {
+                    let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                    Ok(comm)
+                })
+                .collect::<Result<Vec<_>, PlonkError>>()?
+                .into_iter()
+                .collect();
+            sigma_comms = sigma_polys
+                .par_iter()
+                .map(|poly| {
+                    let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                    Ok(comm)
+                })
+                .collect::<Result<Vec<_>, PlonkError>>()?
+                .into_iter()
+                .collect();
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            selector_comms = selectors_polys
+                .iter()
+                .map(|poly| {
+                    let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                    Ok(comm)
+                })
+                .collect::<Result<Vec<_>, PlonkError>>()?
+                .into_iter()
+                .collect();
+            sigma_comms = sigma_polys
+                .iter()
+                .map(|poly| {
+                    let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                    Ok(comm)
+                })
+                .collect::<Result<Vec<_>, PlonkError>>()?
+                .into_iter()
+                .collect();
+        }
+
         // Compute Plookup verifying key if support lookup.
         let plookup_vk = match circuit.support_lookup() {
             false => None,

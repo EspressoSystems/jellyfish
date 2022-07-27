@@ -40,5 +40,5 @@ quickcheck = "1.0.0"
 criterion = "0.3.1"
 
 [features]
-default = [] # no_std support
+default = []
 std = []

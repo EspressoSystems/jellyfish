@@ -32,6 +32,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 type CommitmentsAndPolys<E> = (
@@ -191,17 +192,37 @@ impl<E: PairingEngine> Prover<E> {
         online_oracles: &Oracles<E::Fr>,
         num_wire_types: usize,
     ) -> ProofEvaluations<E::Fr> {
-        let wires_evals: Vec<E::Fr> = online_oracles
-            .wire_polys
-            .par_iter()
-            .map(|poly| poly.evaluate(&challenges.zeta))
-            .collect();
-        let wire_sigma_evals: Vec<E::Fr> = pk
-            .sigmas
-            .par_iter()
-            .take(num_wire_types - 1)
-            .map(|poly| poly.evaluate(&challenges.zeta))
-            .collect();
+        let wires_evals: Vec<E::Fr>;
+        let wire_sigma_evals: Vec<E::Fr>;
+
+        #[cfg(feature = "parallel")]
+        {
+            wires_evals = online_oracles
+                .wire_polys
+                .par_iter()
+                .map(|poly| poly.evaluate(&challenges.zeta))
+                .collect();
+            wire_sigma_evals = pk
+                .sigmas
+                .par_iter()
+                .take(num_wire_types - 1)
+                .map(|poly| poly.evaluate(&challenges.zeta))
+                .collect();
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            wires_evals = online_oracles
+                .wire_polys
+                .iter()
+                .map(|poly| poly.evaluate(&challenges.zeta))
+                .collect();
+            wire_sigma_evals = pk
+                .sigmas
+                .iter()
+                .take(num_wire_types - 1)
+                .map(|poly| poly.evaluate(&challenges.zeta))
+                .collect();
+        }
         let perm_next_eval = online_oracles
             .prod_perm_poly
             .evaluate(&(challenges.zeta * self.domain.group_gen));
@@ -458,11 +479,23 @@ impl<E: PairingEngine> Prover<E> {
         ck: &CommitKey<E>,
         polys: &[DensePolynomial<E::Fr>],
     ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        let poly_comms = polys
-            .par_iter()
-            .map(|poly| Self::commit_polynomial(ck, poly))
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(poly_comms)
+        #[cfg(feature = "parallel")]
+        {
+            let poly_comms = polys
+                .par_iter()
+                .map(|poly| Self::commit_polynomial(ck, poly))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(poly_comms)
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            let poly_comms = polys
+                .iter()
+                .map(|poly| Self::commit_polynomial(ck, poly))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(poly_comms)
+        }
     }
 
     /// Commit a polynomial.
@@ -541,22 +574,48 @@ impl<E: PairingEngine> Prover<E> {
             let lookup_flag = pk.plookup_pk.is_some();
 
             // Compute coset evaluations.
-            let selectors_coset_fft: Vec<Vec<E::Fr>> = pk
-                .selectors
-                .par_iter()
-                .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                .collect();
-            let sigmas_coset_fft: Vec<Vec<E::Fr>> = pk
-                .sigmas
-                .par_iter()
-                .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                .collect();
+            let selectors_coset_fft: Vec<Vec<E::Fr>>;
+            let sigmas_coset_fft: Vec<Vec<E::Fr>>;
+            let wire_polys_coset_fft: Vec<Vec<E::Fr>>;
 
-            let wire_polys_coset_fft: Vec<Vec<E::Fr>> = oracles
-                .wire_polys
-                .par_iter()
-                .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                .collect();
+            #[cfg(feature = "parallel")]
+            {
+                selectors_coset_fft = pk
+                    .selectors
+                    .par_iter()
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
+                sigmas_coset_fft = pk
+                    .sigmas
+                    .par_iter()
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
+                wire_polys_coset_fft = oracles
+                    .wire_polys
+                    .par_iter()
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
+            }
+
+            #[cfg(not(feature = "parallel"))]
+            {
+                selectors_coset_fft = pk
+                    .selectors
+                    .iter()
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
+                sigmas_coset_fft = pk
+                    .sigmas
+                    .iter()
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
+                wire_polys_coset_fft = oracles
+                    .wire_polys
+                    .iter()
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
+            }
+
             // TODO: (binyi) we can also compute below in parallel with
             // `wire_polys_coset_fft`.
             let prod_perm_poly_coset_fft =
@@ -585,12 +644,25 @@ impl<E: PairingEngine> Prover<E> {
                 let key_table_coset_fft = self
                     .quot_domain
                     .coset_fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
-                let h_coset_ffts: Vec<Vec<E::Fr>> = oracles
-                    .plookup_oracles
-                    .h_polys
-                    .par_iter()
-                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                    .collect();
+                let h_coset_ffts: Vec<Vec<E::Fr>>;
+                #[cfg(feature = "parallel")]
+                {
+                    h_coset_ffts = oracles
+                        .plookup_oracles
+                        .h_polys
+                        .par_iter()
+                        .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                        .collect();
+                }
+                #[cfg(not(feature = "parallel"))]
+                {
+                    h_coset_ffts = oracles
+                        .plookup_oracles
+                        .h_polys
+                        .iter()
+                        .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                        .collect();
+                }
                 let prod_lookup_poly_coset_fft = self
                     .quot_domain
                     .coset_fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
@@ -607,58 +679,70 @@ impl<E: PairingEngine> Prover<E> {
             };
 
             // Compute coset evaluations of the quotient polynomial.
-            let quot_poly_coset_evals: Vec<E::Fr> = (0..m)
-                .into_par_iter()
-                .map(|i| {
-                    let w: Vec<E::Fr> = (0..num_wire_types)
-                        .map(|j| wire_polys_coset_fft[j][i])
-                        .collect();
-                    let w_next: Vec<E::Fr> = (0..num_wire_types)
-                        .map(|j| wire_polys_coset_fft[j][(i + domain_size_ratio) % m])
-                        .collect();
+            let quot_poly_coset_evals: Vec<E::Fr>;
+            let quot_poly_coset_eval_fn = |i| {
+                let w: Vec<E::Fr> = (0..num_wire_types)
+                    .map(|j| wire_polys_coset_fft[j][i])
+                    .collect();
+                let w_next: Vec<E::Fr> = (0..num_wire_types)
+                    .map(|j| wire_polys_coset_fft[j][(i + domain_size_ratio) % m])
+                    .collect();
 
-                    let t_circ = Self::compute_quotient_circuit_contribution(
-                        i,
-                        &w,
-                        &pub_input_poly_coset_fft[i],
-                        &selectors_coset_fft,
-                    );
-                    let (t_perm_1, t_perm_2) = Self::compute_quotient_copy_constraint_contribution(
+                let t_circ = Self::compute_quotient_circuit_contribution(
+                    i,
+                    &w,
+                    &pub_input_poly_coset_fft[i],
+                    &selectors_coset_fft,
+                );
+                let (t_perm_1, t_perm_2) = Self::compute_quotient_copy_constraint_contribution(
+                    i,
+                    self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                    pk,
+                    &w,
+                    &prod_perm_poly_coset_fft[i],
+                    &prod_perm_poly_coset_fft[(i + domain_size_ratio) % m],
+                    challenges,
+                    &sigmas_coset_fft,
+                );
+                let mut t1 = t_circ + t_perm_1;
+                let mut t2 = t_perm_2;
+
+                // add Plookup-related terms
+                if lookup_flag {
+                    let (t_lookup_1, t_lookup_2) = self.compute_quotient_plookup_contribution(
                         i,
                         self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
                         pk,
                         &w,
-                        &prod_perm_poly_coset_fft[i],
-                        &prod_perm_poly_coset_fft[(i + domain_size_ratio) % m],
+                        &w_next,
+                        h_coset_ffts.as_ref().unwrap(),
+                        prod_lookup_poly_coset_fft.as_ref().unwrap(),
+                        range_table_coset_fft.as_ref().unwrap(),
+                        key_table_coset_fft.as_ref().unwrap(),
+                        selectors_coset_fft.last().unwrap(), /* TODO: add a method to extract
+                                                              * q_lookup_coset_fft */
+                        table_dom_sep_coset_fft.as_ref().unwrap(),
+                        q_dom_sep_coset_fft.as_ref().unwrap(),
                         challenges,
-                        &sigmas_coset_fft,
                     );
-                    let mut t1 = t_circ + t_perm_1;
-                    let mut t2 = t_perm_2;
+                    t1 += t_lookup_1;
+                    t2 += t_lookup_2;
+                }
+                t1 * z_h_inv[i % domain_size_ratio] + t2
+            };
 
-                    // add Plookup-related terms
-                    if lookup_flag {
-                        let (t_lookup_1, t_lookup_2) = self.compute_quotient_plookup_contribution(
-                            i,
-                            self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
-                            pk,
-                            &w,
-                            &w_next,
-                            h_coset_ffts.as_ref().unwrap(),
-                            prod_lookup_poly_coset_fft.as_ref().unwrap(),
-                            range_table_coset_fft.as_ref().unwrap(),
-                            key_table_coset_fft.as_ref().unwrap(),
-                            selectors_coset_fft.last().unwrap(), // TODO: add a method to extract q_lookup_coset_fft
-                            table_dom_sep_coset_fft.as_ref().unwrap(),
-                            q_dom_sep_coset_fft.as_ref().unwrap(),
-                            challenges,
-                        );
-                        t1 += t_lookup_1;
-                        t2 += t_lookup_2;
-                    }
-                    t1 * z_h_inv[i % domain_size_ratio] + t2
-                })
-                .collect();
+            #[cfg(feature = "parallel")]
+            {
+                quot_poly_coset_evals = (0..m)
+                    .into_par_iter()
+                    .map(quot_poly_coset_eval_fn)
+                    .collect();
+            }
+            #[cfg(not(feature = "parallel"))]
+            {
+                quot_poly_coset_evals = (0..m).into_iter().map(quot_poly_coset_eval_fn).collect();
+            }
+
             for (a, b) in quot_poly_coset_evals_sum
                 .iter_mut()
                 .zip(quot_poly_coset_evals.iter())
@@ -919,20 +1003,31 @@ impl<E: PairingEngine> Prover<E> {
         let n = self.domain.size();
         // compute the splitting polynomials t'_i(X) s.t. t(X) =
         // \sum_{i=0}^{num_wire_types} X^{i*(n+2)} * t'_i(X)
-        let mut split_quot_polys: Vec<DensePolynomial<E::Fr>> = (0..num_wire_types)
-            .into_par_iter()
-            .map(|i| {
-                let end = if i < num_wire_types - 1 {
-                    (i + 1) * (n + 2)
-                } else {
-                    quot_poly.degree() + 1
-                };
-                // Degree-(n+1) polynomial has n + 2 coefficients.
-                DensePolynomial::<E::Fr>::from_coefficients_slice(
-                    &quot_poly.coeffs[i * (n + 2)..end],
-                )
-            })
-            .collect();
+        let mut split_quot_polys: Vec<DensePolynomial<E::Fr>>;
+        let split_quot_poly_fn = |i| {
+            let end = if i < num_wire_types - 1 {
+                (i + 1) * (n + 2)
+            } else {
+                quot_poly.degree() + 1
+            };
+            // Degree-(n+1) polynomial has n + 2 coefficients.
+            DensePolynomial::<E::Fr>::from_coefficients_slice(&quot_poly.coeffs[i * (n + 2)..end])
+        };
+
+        #[cfg(feature = "parallel")]
+        {
+            split_quot_polys = (0..num_wire_types)
+                .into_par_iter()
+                .map(split_quot_poly_fn)
+                .collect();
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            split_quot_polys = (0..num_wire_types)
+                .into_iter()
+                .map(split_quot_poly_fn)
+                .collect();
+        }
 
         // mask splitting polynomials t_i(X), for i in {0..num_wire_types}.
         // t_i(X) = t'_i(X) - b_last_i + b_now_i * X^(n+2)
@@ -1109,9 +1204,19 @@ impl<E: PairingEngine> Prover<E> {
 
     #[inline]
     fn mul_poly(poly: &DensePolynomial<E::Fr>, coeff: &E::Fr) -> DensePolynomial<E::Fr> {
-        DensePolynomial::<E::Fr>::from_coefficients_vec(
-            poly.coeffs.par_iter().map(|c| *coeff * c).collect(),
-        )
+        #[cfg(feature = "parallel")]
+        {
+            DensePolynomial::<E::Fr>::from_coefficients_vec(
+                poly.coeffs.par_iter().map(|c| *coeff * c).collect(),
+            )
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            DensePolynomial::<E::Fr>::from_coefficients_vec(
+                poly.coeffs.iter().map(|c| *coeff * c).collect(),
+            )
+        }
     }
 }
 

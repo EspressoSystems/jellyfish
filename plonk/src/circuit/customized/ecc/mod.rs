@@ -572,15 +572,25 @@ fn compute_base_points<E: AffineCurve + Group>(
     // base3 = (3*B, 3*4*B, ..., 3*4^(l-1)*B)
     let mut bases3 = vec![b];
 
-    rayon::join(
-        || {
-            rayon::join(
-                || fill_bases(&mut bases1, len).ok(),
-                || fill_bases(&mut bases2, len).ok(),
-            )
-        },
-        || fill_bases(&mut bases3, len).ok(),
-    );
+    #[cfg(feature = "parallel")]
+    {
+        rayon::join(
+            || {
+                rayon::join(
+                    || fill_bases(&mut bases1, len).ok(),
+                    || fill_bases(&mut bases2, len).ok(),
+                )
+            },
+            || fill_bases(&mut bases3, len).ok(),
+        );
+    }
+
+    #[cfg(not(feature = "parallel"))]
+    {
+        fill_bases(&mut bases1, len).ok();
+        fill_bases(&mut bases2, len).ok();
+        fill_bases(&mut bases3, len).ok();
+    }
 
     // converting GroupAffine -> Points here.
     // Cannot do it earlier: in `fill_bases` we need to do `double`
