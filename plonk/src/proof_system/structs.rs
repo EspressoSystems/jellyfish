@@ -25,7 +25,7 @@ use crate::{
 use ark_ec::{
     msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters,
 };
-use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField};
+use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
@@ -36,7 +36,8 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use espresso_systems_common::jellyfish as tag;
+use espresso_systems_common::jellyfish::tag;
+use hashbrown::HashMap;
 use jf_rescue::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
@@ -891,25 +892,21 @@ pub(crate) struct PlookupOracles<F: FftField> {
 /// The vector representation of bases and corresponding scalars.
 #[derive(Debug)]
 pub(crate) struct ScalarsAndBases<E: PairingEngine> {
-    pub(crate) base_scalar_map: Vec<(E::G1Affine, E::Fr)>,
+    pub(crate) base_scalar_map: HashMap<E::G1Affine, E::Fr>,
 }
 
 impl<E: PairingEngine> ScalarsAndBases<E> {
     pub(crate) fn new() -> Self {
         Self {
-            base_scalar_map: Vec::new(),
+            base_scalar_map: HashMap::new(),
         }
     }
     /// Insert a base point and the corresponding scalar.
     pub(crate) fn push(&mut self, scalar: E::Fr, base: E::G1Affine) {
-        for (b, s) in self.base_scalar_map.iter_mut() {
-            if *b == base {
-                *s += scalar;
-                return;
-            }
-        }
-        self.base_scalar_map.push((base, scalar));
+        let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
+        *entry_scalar += scalar;
     }
+
     /// Add a list of scalars and bases into self, where each scalar is
     /// multiplied by a constant c.
     pub(crate) fn merge(&mut self, c: E::Fr, scalars_and_bases: &Self) {
