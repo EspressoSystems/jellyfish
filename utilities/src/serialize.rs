@@ -8,6 +8,7 @@
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{marker::PhantomData, string::String, vec::Vec};
+use displaydoc::Display;
 use serde::{Deserialize, Serialize};
 use tagged_base64::{TaggedBase64, Tb64Error};
 
@@ -115,11 +116,11 @@ impl<T: Tagged + CanonicalSerialize + CanonicalDeserialize> From<&T> for TaggedB
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
 pub enum TaggedBlobError {
-    Base64Error {
-        source: Tb64Error,
-    },
+    /// TaggedBase64 parsing failure
+    Base64Error { source: Tb64Error },
+    /// CanonicalSerialize failure
     DeserializationError {
         source: ark_serialize::SerializationError,
     },
