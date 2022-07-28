@@ -65,6 +65,9 @@ jobs:
       - name: Check Ignored Tests
         run: cargo test --no-run -- --ignored
 
+      - name: Check no_std compilation
+        run: cargo test --no-run --no-default-features
+
       - name: Test
         run: bash ./scripts/run_tests.sh
 

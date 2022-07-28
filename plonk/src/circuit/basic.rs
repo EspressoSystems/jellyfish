@@ -10,6 +10,7 @@ use crate::{
     circuit::{gates::*, SortedLookupVecAndPolys},
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
     errors::{CircuitError::*, PlonkError},
+    par_utils::parallelizable_slice_iter,
     MergeableCircuitType, PlonkType,
 };
 use ark_ff::{FftField, PrimeField};
@@ -1094,24 +1095,9 @@ where
             .into());
         }
         // order: (lc, mul, hash, o, c, ecc) as specified in spec
-        let selector_polys;
-        #[cfg(feature = "parallel")]
-        {
-            selector_polys = self
-                .all_selectors()
-                .par_iter()
-                .map(|selector| DensePolynomial::from_coefficients_vec(domain.ifft(selector)))
-                .collect();
-        }
-        #[cfg(not(feature = "parallel"))]
-        {
-            selector_polys = self
-                .all_selectors()
-                .iter()
-                .map(|selector| DensePolynomial::from_coefficients_vec(domain.ifft(selector)))
-                .collect();
-        }
-
+        let selector_polys = parallelizable_slice_iter(&self.all_selectors())
+            .map(|selector| DensePolynomial::from_coefficients_vec(domain.ifft(selector)))
+            .collect();
         Ok(selector_polys)
     }
 
@@ -1123,29 +1109,14 @@ where
         let n = domain.size();
         let extended_perm = self.compute_extended_permutation()?;
 
-        let extended_perm_polys: Vec<DensePolynomial<F>>;
-        #[cfg(feature = "parallel")]
-        {
-            extended_perm_polys = (0..self.num_wire_types)
-                .into_par_iter()
+        let extended_perm_polys: Vec<DensePolynomial<F>> =
+            parallelizable_slice_iter(&(0..self.num_wire_types).collect::<Vec<_>>()) // current par_utils only support slice iterator, not range iterator.
                 .map(|i| {
                     DensePolynomial::from_coefficients_vec(
                         domain.ifft(&extended_perm[i * n..(i + 1) * n]),
                     )
                 })
                 .collect();
-        }
-        #[cfg(not(feature = "parallel"))]
-        {
-            extended_perm_polys = (0..self.num_wire_types)
-                .into_iter()
-                .map(|i| {
-                    DensePolynomial::from_coefficients_vec(
-                        domain.ifft(&extended_perm[i * n..(i + 1) * n]),
-                    )
-                })
-                .collect();
-        }
 
         Ok(extended_perm_polys)
     }
@@ -1190,33 +1161,14 @@ where
             .into());
         }
         let witness = &self.witness;
-        let wire_polys: Vec<DensePolynomial<F>>;
-        #[cfg(feature = "parallel")]
-        {
-            wire_polys = self
-                .wire_variables
-                .par_iter()
-                .take(self.num_wire_types())
-                .map(|wire_vars| {
-                    let mut wire_vec: Vec<F> = wire_vars.iter().map(|&var| witness[var]).collect();
-                    domain.ifft_in_place(&mut wire_vec);
-                    DensePolynomial::from_coefficients_vec(wire_vec)
-                })
-                .collect();
-        }
-        #[cfg(not(feature = "parallel"))]
-        {
-            wire_polys = self
-                .wire_variables
-                .iter()
-                .take(self.num_wire_types())
-                .map(|wire_vars| {
-                    let mut wire_vec: Vec<F> = wire_vars.iter().map(|&var| witness[var]).collect();
-                    domain.ifft_in_place(&mut wire_vec);
-                    DensePolynomial::from_coefficients_vec(wire_vec)
-                })
-                .collect();
-        }
+        let wire_polys: Vec<DensePolynomial<F>> = parallelizable_slice_iter(&self.wire_variables)
+            .take(self.num_wire_types())
+            .map(|wire_vars| {
+                let mut wire_vec: Vec<F> = wire_vars.iter().map(|&var| witness[var]).collect();
+                domain.ifft_in_place(&mut wire_vec);
+                DensePolynomial::from_coefficients_vec(wire_vec)
+            })
+            .collect();
 
         assert_eq!(wire_polys.len(), self.num_wire_types());
         Ok(wire_polys)
