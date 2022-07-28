@@ -18,6 +18,7 @@ use crate::{
     circuit::{customized::ecc::SWToTEConParam, Arithmetization},
     constants::{compute_coset_representatives, EXTRA_TRANSCRIPT_MSG_LABEL},
     errors::{PlonkError, SnarkError::ParameterError},
+    par_utils::parallelizable_slice_iter,
     proof_system::structs::UniversalSrs,
     transcript::*,
 };
@@ -34,6 +35,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_rescue::RescueParameter;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 /// A Plonk instantiated with KZG PCS
@@ -121,11 +123,10 @@ where
             );
         }
 
-        let pcs_infos = verify_keys
-            .par_iter()
-            .zip(proofs.par_iter())
-            .zip(public_inputs.par_iter())
-            .zip(extra_transcript_init_msgs.par_iter())
+        let pcs_infos = parallelizable_slice_iter(verify_keys)
+            .zip(parallelizable_slice_iter(proofs))
+            .zip(parallelizable_slice_iter(public_inputs))
+            .zip(parallelizable_slice_iter(extra_transcript_init_msgs))
             .map(|(((&vk, &proof), &pub_input), extra_msg)| {
                 let verifier = Verifier::new(vk.domain_size)?;
                 verifier.prepare_pcs_info::<T>(
@@ -468,8 +469,7 @@ where
 
         // 2. Compute VerifyingKey
         let (commit_key, open_key) = trim(&srs.0, srs_size);
-        let selector_comms: Vec<_> = selectors_polys
-            .par_iter()
+        let selector_comms = parallelizable_slice_iter(&selectors_polys)
             .map(|poly| {
                 let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
                 Ok(comm)
@@ -477,8 +477,7 @@ where
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
-        let sigma_comms: Vec<_> = sigma_polys
-            .par_iter()
+        let sigma_comms = parallelizable_slice_iter(&sigma_polys)
             .map(|poly| {
                 let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
                 Ok(comm)
@@ -486,6 +485,7 @@ where
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
+
         // Compute Plookup verifying key if support lookup.
         let plookup_vk = match circuit.support_lookup() {
             false => None,

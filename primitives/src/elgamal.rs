@@ -26,10 +26,8 @@ use ark_std::{
 };
 use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
 use jf_utils::pad_with_zeros;
-use rayon::{
-    iter::{IndexedParallelIterator, ParallelIterator},
-    prelude::ParallelSliceMut,
-};
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 use zeroize::Zeroize;
 
 // =====================================================
@@ -309,28 +307,37 @@ where
     // temporarily append dummy padding element
     pad_with_zeros(&mut output, STATE_SIZE);
 
-    output
-        .par_chunks_exact_mut(STATE_SIZE)
-        .enumerate()
-        .for_each(|(i, output_chunk)| {
-            let stream_chunk = prp.prp_with_round_keys(
-                &round_keys,
-                &RescueVector::from(&[
-                    nonce.add(F::from(i as u64)),
-                    F::zero(),
-                    F::zero(),
-                    F::zero(),
-                ]),
-            );
-            for (output_elem, stream_elem) in
-                output_chunk.iter_mut().zip(stream_chunk.elems().iter())
-            {
-                match direction {
-                    Direction::Encrypt => output_elem.add_assign(stream_elem),
-                    Direction::Decrypt => output_elem.sub_assign(stream_elem),
-                }
+    let round_fn = |(idx, output_chunk): (usize, &mut [F])| {
+        let stream_chunk = prp.prp_with_round_keys(
+            &round_keys,
+            &RescueVector::from(&[
+                nonce.add(F::from(idx as u64)),
+                F::zero(),
+                F::zero(),
+                F::zero(),
+            ]),
+        );
+        for (output_elem, stream_elem) in output_chunk.iter_mut().zip(stream_chunk.elems().iter()) {
+            match direction {
+                Direction::Encrypt => output_elem.add_assign(stream_elem),
+                Direction::Decrypt => output_elem.sub_assign(stream_elem),
             }
-        });
+        }
+    };
+    #[cfg(feature = "parallel")]
+    {
+        output
+            .par_chunks_exact_mut(STATE_SIZE)
+            .enumerate()
+            .for_each(round_fn);
+    }
+    #[cfg(not(feature = "parallel"))]
+    {
+        output
+            .chunks_exact_mut(STATE_SIZE)
+            .enumerate()
+            .for_each(round_fn);
+    }
     // remove dummy padding elements
     output.truncate(data.len());
     output

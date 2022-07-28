@@ -46,9 +46,6 @@ pub enum PlonkError {
 
 impl ark_std::error::Error for PlonkError {}
 
-#[cfg(feature = "std")]
-impl std::error::Error for PlonkError {}
-
 impl From<ark_poly_commit::Error> for PlonkError {
     fn from(e: ark_poly_commit::Error) -> Self {
         Self::PcsError(e)

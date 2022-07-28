@@ -9,16 +9,16 @@ license = "MIT"
 [dependencies]
 
 # ark
-ark-ff = { version = "0.3.0", default-features = false }
+ark-ff = "0.3.0"
 ark-std = { version = "0.3.0", default-features = false }
-ark-ec = { version = "0.3.0", default-features = false }
-ark-serialize = { version = "0.3.0", default-features = false }
+ark-ec = "0.3.0"
+ark-serialize = "0.3.0"
 
 # ark curves
-ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
-ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, features = ["curve"], rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
-ark-ed-on-bls12-381 = { version = "0.3.0", default-features = false }
+ark-bls12-381 = "0.3.0"
+ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
+ark-ed-on-bls12-381 = "0.3.0"
 
 # jellyfish
 jf-plonk = { path = "../plonk" }
@@ -26,10 +26,10 @@ jf-rescue = { path = "../rescue" }
 jf-utils = { path = "../utilities" }
 
 # others
-rayon = { version = "1.5.0", default-features = false }
+rayon = { version = "1.5.0", optional = true }
 zeroize = { version = "1.3", default-features = false }
 itertools = { version = "0.10.1", default-features = false, features = [ "use_alloc" ] }
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
 generic-array = { version = "^0.14", default-features = false }
 crypto_box = { version = "0.7.1", default-features = false, features = [ "u64_backend", "alloc" ] }
 displaydoc = { version = "0.2.3", default-features = false }
@@ -37,23 +37,24 @@ derivative = { version = "2", features = ["use_core"] }
 rand_chacha = { version = "0.3.1", default-features = false }
 sha2 = { version = "0.10.1", default-features = false }
 digest = { version = "0.10.1", default-features = false }
-espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.1.1" }
+espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }
 
 [dev-dependencies]
-rand_chacha = "^0.3"
 bincode = "1.0"
 quickcheck = "1.0.0"
 criterion = "0.3.1"
 
 # ark curves
-ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-ed-on-bn254 = { version = "0.3.0", default-features = false }
-ark-bn254 = { version = "0.3.0", default-features = false, features = ["curve"] }
-ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ed-on-bn254 = "0.3.0"
+ark-bn254 = "0.3.0"
+ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 
 [[bench]]
 name = "merkle_path"
 harness = false
 
 [features]
+default = [ "parallel" ]
 std = []
+parallel = [ "jf-plonk/parallel", "rayon" ]

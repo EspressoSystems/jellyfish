@@ -29,7 +29,7 @@ use ark_std::{
     vec::Vec,
 };
 use core::{convert::TryFrom, fmt::Debug};
-use espresso_systems_common::jellyfish as tag;
+use espresso_systems_common::jellyfish::tag;
 use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::tagged_blob;
 use serde::{Deserialize, Serialize};

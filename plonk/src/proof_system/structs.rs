@@ -30,14 +30,14 @@ use ark_poly::univariate::DensePolynomial;
 use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
 use ark_std::{
-    collections::HashMap,
     convert::{TryFrom, TryInto},
     format,
     string::ToString,
     vec,
     vec::Vec,
 };
-use espresso_systems_common::jellyfish as tag;
+use espresso_systems_common::jellyfish::tag;
+use hashbrown::HashMap;
 use jf_rescue::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
@@ -906,19 +906,20 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
         let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
         *entry_scalar += scalar;
     }
+
     /// Add a list of scalars and bases into self, where each scalar is
     /// multiplied by a constant c.
     pub(crate) fn merge(&mut self, c: E::Fr, scalars_and_bases: &Self) {
-        for (&base, scalar) in &scalars_and_bases.base_scalar_map {
-            self.push(c * scalar, base);
+        for (base, scalar) in &scalars_and_bases.base_scalar_map {
+            self.push(c * scalar, *base);
         }
     }
     /// Compute the multi-scalar multiplication.
     pub(crate) fn multi_scalar_mul(&self) -> E::G1Projective {
         let mut bases = vec![];
         let mut scalars = vec![];
-        for (&base, scalar) in &self.base_scalar_map {
-            bases.push(base);
+        for (base, scalar) in &self.base_scalar_map {
+            bases.push(*base);
             scalars.push(scalar.into_repr());
         }
         VariableBaseMSM::multi_scalar_mul(&bases, &scalars)

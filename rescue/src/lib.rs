@@ -5,6 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 #![deny(missing_docs)]
+#![cfg_attr(not(feature = "std"), no_std)]
 //! This module implements Rescue hash function over the following fields
 //! - bls12_377 base field
 //! - ed_on_bls12_377 base field
