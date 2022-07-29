@@ -19,7 +19,7 @@ use ark_std::{
     One, UniformRand,
 };
 use core::marker::PhantomData;
-use espresso_systems_common::jellyfish as tag;
+use espresso_systems_common::jellyfish::tag;
 use jf_utils::{multi_pairing, tagged_blob};
 
 /// BLS signature scheme.

@@ -30,14 +30,14 @@ use ark_poly::univariate::DensePolynomial;
 use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
 use ark_std::{
-    collections::HashMap,
     convert::{TryFrom, TryInto},
     format,
     string::ToString,
     vec,
     vec::Vec,
 };
-use espresso_systems_common::jellyfish as tag;
+use espresso_systems_common::jellyfish::tag;
+use hashbrown::HashMap;
 use jf_rescue::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
@@ -52,7 +52,29 @@ impl<E: PairingEngine> UniversalSrs<E> {
     }
 }
 
-pub(crate) type CommitKey<'a, E> = Powers<'a, E>;
+#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+pub(crate) struct CommitKey<E: PairingEngine> {
+    pub(crate) powers_of_g: Vec<E::G1Affine>,
+}
+
+impl<E: PairingEngine> From<Powers<'_, E>> for CommitKey<E> {
+    fn from(powers: Powers<'_, E>) -> Self {
+        Self {
+            powers_of_g: powers.powers_of_g.to_vec(),
+        }
+    }
+}
+
+impl<'a, E: PairingEngine> From<&'a CommitKey<E>> for Powers<'a, E> {
+    fn from(ck: &'a CommitKey<E>) -> Self {
+        Self {
+            // Copy-on-write ensure reference passing as smart pointer for read-only access
+            powers_of_g: ark_std::borrow::Cow::Borrowed(&ck.powers_of_g),
+            // didn't use hiding variant of KZG, thus leave it empty
+            powers_of_gamma_g: ark_std::borrow::Cow::Owned(Vec::new()),
+        }
+    }
+}
 
 /// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
 pub type OpenKey<E> = VerifierKey<E>;
@@ -551,7 +573,7 @@ impl<F: Field> PlookupEvaluations<F> {
 /// Preprocessed prover parameters used to compute Plonk proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<'a, E: PairingEngine> {
+pub struct ProvingKey<E: PairingEngine> {
     /// Extended permutation (sigma) polynomials.
     pub(crate) sigmas: Vec<DensePolynomial<E::Fr>>,
 
@@ -559,7 +581,7 @@ pub struct ProvingKey<'a, E: PairingEngine> {
     pub(crate) selectors: Vec<DensePolynomial<E::Fr>>,
 
     // KZG PCS committing key.
-    pub(crate) commit_key: CommitKey<'a, E>,
+    pub(crate) commit_key: CommitKey<E>,
 
     /// The verifying key. It is used by prover to initialize transcripts.
     pub vk: VerifyingKey<E>,
@@ -585,7 +607,7 @@ pub struct PlookupProvingKey<E: PairingEngine> {
     pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
 }
 
-impl<'a, E: PairingEngine> ProvingKey<'a, E> {
+impl<E: PairingEngine> ProvingKey<E> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) fn domain_size(&self) -> usize {
         self.vk.domain_size
@@ -884,19 +906,20 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
         let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
         *entry_scalar += scalar;
     }
+
     /// Add a list of scalars and bases into self, where each scalar is
     /// multiplied by a constant c.
     pub(crate) fn merge(&mut self, c: E::Fr, scalars_and_bases: &Self) {
-        for (&base, scalar) in &scalars_and_bases.base_scalar_map {
-            self.push(c * scalar, base);
+        for (base, scalar) in &scalars_and_bases.base_scalar_map {
+            self.push(c * scalar, *base);
         }
     }
     /// Compute the multi-scalar multiplication.
     pub(crate) fn multi_scalar_mul(&self) -> E::G1Projective {
         let mut bases = vec![];
         let mut scalars = vec![];
-        for (&base, scalar) in &self.base_scalar_map {
-            bases.push(base);
+        for (base, scalar) in &self.base_scalar_map {
+            bases.push(*base);
             scalars.push(scalar.into_repr());
         }
         VariableBaseMSM::multi_scalar_mul(&bases, &scalars)

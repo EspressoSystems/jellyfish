@@ -9,6 +9,8 @@
 //! The functions and structs in this file should not be used for other
 //! purposes.
 
+#![allow(missing_docs)]
+
 use crate::{
     circuit::customized::ecc::SWToTEConParam,
     errors::PlonkError,
@@ -22,7 +24,8 @@ use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelPara
 use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_poly_commit::kzg10::Commitment;
-use ark_std::{collections::HashMap, vec::Vec};
+use ark_std::vec::Vec;
+use hashbrown::HashMap;
 use jf_rescue::RescueParameter;
 
 /// A wrapper of crate::proof_system::structs::Challenges

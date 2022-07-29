@@ -23,7 +23,7 @@ use ark_std::{
     string::ToString,
     vec,
 };
-use espresso_systems_common::jellyfish as tag;
+use espresso_systems_common::jellyfish::tag;
 use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
 use zeroize::Zeroize;

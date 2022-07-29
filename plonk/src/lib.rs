@@ -21,6 +21,7 @@ extern crate derivative;
 pub mod circuit;
 pub mod constants;
 pub mod errors;
+pub(crate) mod par_utils;
 pub mod proof_system;
 pub mod transcript;
 

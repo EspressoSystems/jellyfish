@@ -22,7 +22,7 @@ use ark_std::{rand::SeedableRng, UniformRand};
 use jf_plonk::{
     circuit::{customized::ecc::Point, Arithmetization, Circuit, PlonkCircuit},
     errors::PlonkError,
-    proof_system::{PlonkKzgSnark, Snark},
+    proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
 };
 use jf_utils::fr_to_fq;

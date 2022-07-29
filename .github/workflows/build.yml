@@ -7,8 +7,9 @@ on:
   pull_request:
     branches:
       - main
+      - cap-rollup
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -64,9 +65,12 @@ jobs:
       - name: Check Ignored Tests
         run: cargo test --no-run -- --ignored
 
+      - name: Check no_std compilation
+        run: cargo test --no-run --no-default-features
+
       - name: Test
-        run: bash ./scripts/run_tests.sh      
-      
+        run: bash ./scripts/run_tests.sh
+
       - name: Example
         run: cargo run --release --example proof_of_exp
 
