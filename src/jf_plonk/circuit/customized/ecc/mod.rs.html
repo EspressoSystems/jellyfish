@@ -1367,6 +1367,16 @@
 <span id="1362">1362</span>
 <span id="1363">1363</span>
 <span id="1364">1364</span>
+<span id="1365">1365</span>
+<span id="1366">1366</span>
+<span id="1367">1367</span>
+<span id="1368">1368</span>
+<span id="1369">1369</span>
+<span id="1370">1370</span>
+<span id="1371">1371</span>
+<span id="1372">1372</span>
+<span id="1373">1373</span>
+<span id="1374">1374</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1941,15 +1951,25 @@
     <span class="comment">// base3 = (3*B, 3*4*B, ..., 3*4^(l-1)*B)</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bases3</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">b</span>];
 
-    <span class="ident">rayon::join</span>(
-        <span class="op">|</span><span class="op">|</span> {
-            <span class="ident">rayon::join</span>(
-                <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases1</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
-                <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases2</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
-            )
-        },
-        <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases3</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
-    );
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
+    {
+        <span class="ident">rayon::join</span>(
+            <span class="op">|</span><span class="op">|</span> {
+                <span class="ident">rayon::join</span>(
+                    <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases1</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
+                    <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases2</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
+                )
+            },
+            <span class="op">|</span><span class="op">|</span> <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases3</span>, <span class="ident">len</span>).<span class="ident">ok</span>(),
+        );
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>))]</span>
+    {
+        <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases1</span>, <span class="ident">len</span>).<span class="ident">ok</span>();
+        <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases2</span>, <span class="ident">len</span>).<span class="ident">ok</span>();
+        <span class="ident">fill_bases</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bases3</span>, <span class="ident">len</span>).<span class="ident">ok</span>();
+    }
 
     <span class="comment">// converting GroupAffine -&gt; Points here.</span>
     <span class="comment">// Cannot do it earlier: in `fill_bases` we need to do `double`</span>

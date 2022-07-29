@@ -1121,6 +1121,7 @@
 <span id="1116">1116</span>
 <span id="1117">1117</span>
 <span id="1118">1118</span>
+<span id="1119">1119</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1128,6 +1129,7 @@
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
 <span class="doccomment">//! This module implements Rescue hash function over the following fields</span>
 <span class="doccomment">//! - bls12_377 base field</span>
 <span class="doccomment">//! - ed_on_bls12_377 base field</span>

@@ -81,6 +81,20 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -88,9 +102,11 @@
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
 <span class="doccomment">//! Interfaces for Plonk-based proof systems</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">circuit::Arithmetization</span>, <span class="ident">errors::PlonkError</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::circuit::Arithmetization</span>;
 <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{
+    <span class="ident">error::Error</span>,
+    <span class="ident">fmt::Debug</span>,
     <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
     <span class="ident">vec::Vec</span>,
 };
@@ -102,8 +118,10 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transcript::PlonkTranscript</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">snark::PlonkKzgSnark</span>;
 
-<span class="doccomment">/// An interface for SNARKs.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Snark</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
+<span class="comment">// TODO: (alex) should we name it `PlonkishSNARK` instead? since we use</span>
+<span class="comment">// `PlonkTranscript` on prove and verify.</span>
+<span class="doccomment">/// An interface for SNARKs with universal setup.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">UniversalSNARK</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The SNARK proof computed by the prover.</span>
     <span class="kw">type</span> <span class="ident">Proof</span>: <span class="ident">Clone</span>;
 
@@ -115,18 +133,28 @@
     <span class="doccomment">/// specific circuit.</span>
     <span class="kw">type</span> <span class="ident">VerifyingKey</span>: <span class="ident">Clone</span>;
 
-    <span class="comment">// TODO: (alex) add back when `trait PolynomialCommitment` is implemented for</span>
-    <span class="comment">// KZG10, and the following can be compiled so that the Snark trait can be</span>
-    <span class="comment">// generic over prime field F.</span>
-    <span class="comment">// pub type UniversalSrs&lt;F, PC&gt; = &lt;PC as PolynomialCommitment&lt;F,</span>
-    <span class="comment">// DensePolynomial&lt;F&gt;&gt;&gt;::UniversalParams;</span>
-    <span class="comment">//</span>
-    <span class="comment">// /// Compute the proving/verifying keys from the circuit `circuit`.</span>
-    <span class="comment">// fn preprocess&lt;C: Arithmetization&lt;F&gt;&gt;(</span>
-    <span class="comment">//     &amp;self,</span>
-    <span class="comment">//     srs: &amp;UniversalSrs&lt;F, PC&gt;,</span>
-    <span class="comment">//     circuit: &amp;C,</span>
-    <span class="comment">// ) -&gt; Result&lt;(Self::ProvingKey, Self::VerifyingKey), PlonkError&gt;;</span>
+    <span class="doccomment">/// Universal Structured Reference String from `universal_setup`, used for</span>
+    <span class="doccomment">/// all subsequent circuit-specific preprocessing</span>
+    <span class="kw">type</span> <span class="ident">UniversalSRS</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span>;
+
+    <span class="doccomment">/// SNARK related error</span>
+    <span class="kw">type</span> <span class="ident">Error</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Error</span>;
+
+    <span class="doccomment">/// Generate the universal SRS for the argument system.</span>
+    <span class="doccomment">/// This setup is for trusted party to run, and mostly only used for</span>
+    <span class="doccomment">/// testing purpose. In practice, a MPC flavor of the setup will be carried</span>
+    <span class="doccomment">/// out to have higher assurance on the &quot;toxic waste&quot;/trapdoor being thrown</span>
+    <span class="doccomment">/// away to ensure soundness of the argument system.</span>
+    <span class="kw">fn</span> <span class="ident">universal_setup</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
+        <span class="ident">max_degree</span>: <span class="ident">usize</span>,
+        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::UniversalSRS</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Circuit-specific preprocessing to compute the proving/verifying keys.</span>
+    <span class="kw">fn</span> <span class="ident">preprocess</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+        <span class="ident">srs</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::UniversalSRS</span>,
+        <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::ProvingKey</span>, <span class="ident"><span class="self">Self</span>::VerifyingKey</span>), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Compute a SNARK proof of a circuit `circuit`, using the corresponding</span>
     <span class="doccomment">/// proving key `prove_key`. The witness used to</span>
@@ -138,11 +166,11 @@
     <span class="doccomment">/// resulting proof without any check on the data. It does not incur any</span>
     <span class="doccomment">/// additional cost in proof size or prove time.</span>
     <span class="kw">fn</span> <span class="ident">prove</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
         <span class="ident">prove_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::ProvingKey</span>,
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
@@ -157,7 +185,7 @@
         <span class="ident">public_input</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Proof</span>,
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.1 (e092d0b6b 2022-07-16)" ></div>

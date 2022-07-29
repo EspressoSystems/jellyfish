@@ -1716,10 +1716,6 @@
 <span id="1711">1711</span>
 <span id="1712">1712</span>
 <span id="1713">1713</span>
-<span id="1714">1714</span>
-<span id="1715">1715</span>
-<span id="1716">1716</span>
-<span id="1717">1717</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1734,12 +1730,13 @@
         <span class="ident">PlookupVerifyingKey</span>, <span class="ident">Proof</span>, <span class="ident">ProvingKey</span>, <span class="ident">VerifyingKey</span>,
     },
     <span class="ident">verifier::Verifier</span>,
-    <span class="ident">Snark</span>,
+    <span class="ident">UniversalSNARK</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{<span class="ident">customized::ecc::SWToTEConParam</span>, <span class="ident">Arithmetization</span>},
     <span class="ident">constants</span>::{<span class="ident">compute_coset_representatives</span>, <span class="ident">EXTRA_TRANSCRIPT_MSG_LABEL</span>},
     <span class="ident">errors</span>::{<span class="ident">PlonkError</span>, <span class="ident">SnarkError::ParameterError</span>},
+    <span class="ident">par_utils::parallelizable_slice_iter</span>,
     <span class="ident">proof_system::structs::UniversalSrs</span>,
     <span class="ident">transcript</span>::<span class="kw-2">*</span>,
 };
@@ -1756,12 +1753,13 @@
     <span class="ident">vec::Vec</span>,
 };
 <span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rayon::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// A Plonk instantiated with KZG PCS</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PlonkKzgSnark</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">E</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PlonkKzgSnark</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">PlonkKzgSnark</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">PlonkKzgSnark</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
@@ -1773,137 +1771,11 @@
         <span class="self">Self</span>(<span class="ident">PhantomData</span>)
     }
 
-    <span class="doccomment">/// Generate the universal SRS for the argument system.</span>
-    <span class="doccomment">/// This setup is for trusted party to run, and mostly only used for</span>
-    <span class="doccomment">/// testing purpose. In practice, a MPC flavor of the setup will be carried</span>
-    <span class="doccomment">/// out to have higher assurance on the &quot;toxic waste&quot;/trapdoor being thrown</span>
-    <span class="doccomment">/// away to ensure soundness of the argument system.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">universal_setup</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">max_degree</span>: <span class="ident">usize</span>,
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">KZG10</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::setup</span>(<span class="ident">max_degree</span>, <span class="bool-val">false</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">UniversalSrs</span>(<span class="ident">srs</span>))
-    }
-
-    <span class="comment">// TODO: (alex) move back to Snark trait when `trait PolynomialCommitment` is</span>
-    <span class="comment">// implemented for KZG10</span>
-    <span class="doccomment">/// Input a circuit and the SRS, precompute the proving key and verification</span>
-    <span class="doccomment">/// key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">preprocess</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">srs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="comment">// Make sure the SRS can support the circuit (with hiding degree of 2 for zk)</span>
-        <span class="kw">let</span> <span class="ident">domain_size</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">eval_domain_size</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">srs_size</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">srs_size</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">num_inputs</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">num_inputs</span>();
-        <span class="kw">if</span> <span class="ident">srs</span>.<span class="number">0</span>.<span class="ident">max_degree</span>() <span class="op">&lt;</span> <span class="ident">circuit</span>.<span class="ident">srs_size</span>()<span class="question-mark">?</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IndexTooLarge</span>);
-        }
-        <span class="comment">// 1. Compute selector and permutation polynomials.</span>
-        <span class="kw">let</span> <span class="ident">selectors_polys</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_selector_polynomials</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">sigma_polys</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_extended_permutation_polynomials</span>()<span class="question-mark">?</span>;
-
-        <span class="comment">// Compute Plookup proving key if support lookup.</span>
-        <span class="kw">let</span> <span class="ident">plookup_pk</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">circuit</span>.<span class="ident">support_lookup</span>() {
-            <span class="kw">let</span> <span class="ident">range_table_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_range_table_polynomial</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">key_table_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_key_table_polynomial</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">table_dom_sep_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_table_dom_sep_polynomial</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">q_dom_sep_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_q_dom_sep_polynomial</span>()<span class="question-mark">?</span>;
-            <span class="prelude-val">Some</span>(<span class="ident">PlookupProvingKey</span> {
-                <span class="ident">range_table_poly</span>,
-                <span class="ident">key_table_poly</span>,
-                <span class="ident">table_dom_sep_poly</span>,
-                <span class="ident">q_dom_sep_poly</span>,
-            })
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        };
-
-        <span class="comment">// 2. Compute VerifyingKey</span>
-        <span class="kw">let</span> (<span class="ident">commit_key</span>, <span class="ident">open_key</span>) <span class="op">=</span> <span class="ident">trim</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>.<span class="number">0</span>, <span class="ident">srs_size</span>);
-        <span class="kw">let</span> <span class="ident">selector_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">selectors_polys</span>
-            .<span class="ident">par_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> {
-                <span class="kw">let</span> (<span class="ident">comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">commit_key</span>, <span class="ident">poly</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">comm</span>)
-            })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">sigma_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">sigma_polys</span>
-            .<span class="ident">par_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> {
-                <span class="kw">let</span> (<span class="ident">comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">commit_key</span>, <span class="ident">poly</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">comm</span>)
-            })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">collect</span>();
-        <span class="comment">// Compute Plookup verifying key if support lookup.</span>
-        <span class="kw">let</span> <span class="ident">plookup_vk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">circuit</span>.<span class="ident">support_lookup</span>() {
-            <span class="bool-val">false</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="bool-val">true</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">PlookupVerifyingKey</span> {
-                <span class="ident">range_table_comm</span>: <span class="ident">KZG10::commit</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
-                    <span class="prelude-val">None</span>,
-                    <span class="prelude-val">None</span>,
-                )<span class="question-mark">?</span>
-                .<span class="number">0</span>,
-                <span class="ident">key_table_comm</span>: <span class="ident">KZG10::commit</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">key_table_poly</span>,
-                    <span class="prelude-val">None</span>,
-                    <span class="prelude-val">None</span>,
-                )<span class="question-mark">?</span>
-                .<span class="number">0</span>,
-                <span class="ident">table_dom_sep_comm</span>: <span class="ident">KZG10::commit</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">table_dom_sep_poly</span>,
-                    <span class="prelude-val">None</span>,
-                    <span class="prelude-val">None</span>,
-                )<span class="question-mark">?</span>
-                .<span class="number">0</span>,
-                <span class="ident">q_dom_sep_comm</span>: <span class="ident">KZG10::commit</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">q_dom_sep_poly</span>,
-                    <span class="prelude-val">None</span>,
-                    <span class="prelude-val">None</span>,
-                )<span class="question-mark">?</span>
-                .<span class="number">0</span>,
-            }),
-        };
-
-        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">VerifyingKey</span> {
-            <span class="ident">domain_size</span>,
-            <span class="ident">num_inputs</span>,
-            <span class="ident">selector_comms</span>,
-            <span class="ident">sigma_comms</span>,
-            <span class="ident">k</span>: <span class="ident">compute_coset_representatives</span>(<span class="ident">circuit</span>.<span class="ident">num_wire_types</span>(), <span class="prelude-val">Some</span>(<span class="ident">domain_size</span>)),
-            <span class="ident">open_key</span>,
-            <span class="ident">plookup_vk</span>,
-            <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
-        };
-
-        <span class="comment">// Compute ProvingKey (which includes the VerifyingKey)</span>
-        <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">ProvingKey</span> {
-            <span class="ident">sigmas</span>: <span class="ident">sigma_polys</span>,
-            <span class="ident">selectors</span>: <span class="ident">selectors_polys</span>,
-            <span class="ident">commit_key</span>,
-            <span class="ident">vk</span>: <span class="ident">vk</span>.<span class="ident">clone</span>(),
-            <span class="ident">plookup_pk</span>,
-        };
-
-        <span class="prelude-val">Ok</span>((<span class="ident">pk</span>, <span class="ident">vk</span>))
-    }
-
     <span class="doccomment">/// Generate an aggregated Plonk proof for multiple instances.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">batch_prove</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuits</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">C</span>],
-        <span class="ident">prove_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>],
+        <span class="ident">prove_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
@@ -1969,11 +1841,10 @@
             );
         }
 
-        <span class="kw">let</span> <span class="ident">pcs_infos</span> <span class="op">=</span> <span class="ident">verify_keys</span>
-            .<span class="ident">par_iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">proofs</span>.<span class="ident">par_iter</span>())
-            .<span class="ident">zip</span>(<span class="ident">public_inputs</span>.<span class="ident">par_iter</span>())
-            .<span class="ident">zip</span>(<span class="ident">extra_transcript_init_msgs</span>.<span class="ident">par_iter</span>())
+        <span class="kw">let</span> <span class="ident">pcs_infos</span> <span class="op">=</span> <span class="ident">parallelizable_slice_iter</span>(<span class="ident">verify_keys</span>)
+            .<span class="ident">zip</span>(<span class="ident">parallelizable_slice_iter</span>(<span class="ident">proofs</span>))
+            .<span class="ident">zip</span>(<span class="ident">parallelizable_slice_iter</span>(<span class="ident">public_inputs</span>))
+            .<span class="ident">zip</span>(<span class="ident">parallelizable_slice_iter</span>(<span class="ident">extra_transcript_init_msgs</span>))
             .<span class="ident">map</span>(<span class="op">|</span>(((<span class="kw-2">&amp;</span><span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">proof</span>), <span class="kw-2">&amp;</span><span class="ident">pub_input</span>), <span class="ident">extra_msg</span>)<span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">verifier</span> <span class="op">=</span> <span class="ident">Verifier::new</span>(<span class="ident">vk</span>.<span class="ident">domain_size</span>)<span class="question-mark">?</span>;
                 <span class="ident">verifier</span>.<span class="ident">prepare_pcs_info</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
@@ -2006,7 +1877,7 @@
     <span class="kw">fn</span> <span class="ident">batch_prove_internal</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuits</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">C</span>],
-        <span class="ident">prove_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>],
+        <span class="ident">prove_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -2261,17 +2132,135 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Snark</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkKzgSnark</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">UniversalSNARK</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkKzgSnark</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
     <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
 {
     <span class="kw">type</span> <span class="ident">Proof</span> <span class="op">=</span> <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-
-    <span class="kw">type</span> <span class="ident">ProvingKey</span> <span class="op">=</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span>;
-
+    <span class="kw">type</span> <span class="ident">ProvingKey</span> <span class="op">=</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">VerifyingKey</span> <span class="op">=</span> <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">UniversalSRS</span> <span class="op">=</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">PlonkError</span>;
+
+    <span class="kw">fn</span> <span class="ident">universal_setup</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
+        <span class="ident">max_degree</span>: <span class="ident">usize</span>,
+        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::UniversalSRS</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">KZG10</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::setup</span>(<span class="ident">max_degree</span>, <span class="bool-val">false</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">UniversalSrs</span>(<span class="ident">srs</span>))
+    }
+
+    <span class="doccomment">/// Input a circuit and the SRS, precompute the proving key and verification</span>
+    <span class="doccomment">/// key.</span>
+    <span class="kw">fn</span> <span class="ident">preprocess</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+        <span class="ident">srs</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::UniversalSRS</span>,
+        <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::ProvingKey</span>, <span class="ident"><span class="self">Self</span>::VerifyingKey</span>), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+        <span class="comment">// Make sure the SRS can support the circuit (with hiding degree of 2 for zk)</span>
+        <span class="kw">let</span> <span class="ident">domain_size</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">eval_domain_size</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">srs_size</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">srs_size</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">num_inputs</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">num_inputs</span>();
+        <span class="kw">if</span> <span class="ident">srs</span>.<span class="number">0</span>.<span class="ident">max_degree</span>() <span class="op">&lt;</span> <span class="ident">circuit</span>.<span class="ident">srs_size</span>()<span class="question-mark">?</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IndexTooLarge</span>);
+        }
+        <span class="comment">// 1. Compute selector and permutation polynomials.</span>
+        <span class="kw">let</span> <span class="ident">selectors_polys</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_selector_polynomials</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">sigma_polys</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_extended_permutation_polynomials</span>()<span class="question-mark">?</span>;
+
+        <span class="comment">// Compute Plookup proving key if support lookup.</span>
+        <span class="kw">let</span> <span class="ident">plookup_pk</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">circuit</span>.<span class="ident">support_lookup</span>() {
+            <span class="kw">let</span> <span class="ident">range_table_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_range_table_polynomial</span>()<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">key_table_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_key_table_polynomial</span>()<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">table_dom_sep_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_table_dom_sep_polynomial</span>()<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">q_dom_sep_poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_q_dom_sep_polynomial</span>()<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(<span class="ident">PlookupProvingKey</span> {
+                <span class="ident">range_table_poly</span>,
+                <span class="ident">key_table_poly</span>,
+                <span class="ident">table_dom_sep_poly</span>,
+                <span class="ident">q_dom_sep_poly</span>,
+            })
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
+
+        <span class="comment">// 2. Compute VerifyingKey</span>
+        <span class="kw">let</span> (<span class="ident">commit_key</span>, <span class="ident">open_key</span>) <span class="op">=</span> <span class="ident">trim</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>.<span class="number">0</span>, <span class="ident">srs_size</span>);
+        <span class="kw">let</span> <span class="ident">selector_comms</span> <span class="op">=</span> <span class="ident">parallelizable_slice_iter</span>(<span class="kw-2">&amp;</span><span class="ident">selectors_polys</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> {
+                <span class="kw">let</span> (<span class="ident">comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">commit_key</span>, <span class="ident">poly</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="ident">comm</span>)
+            })
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>
+            .<span class="ident">into_iter</span>()
+            .<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="ident">sigma_comms</span> <span class="op">=</span> <span class="ident">parallelizable_slice_iter</span>(<span class="kw-2">&amp;</span><span class="ident">sigma_polys</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> {
+                <span class="kw">let</span> (<span class="ident">comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">commit_key</span>, <span class="ident">poly</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="ident">comm</span>)
+            })
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>
+            .<span class="ident">into_iter</span>()
+            .<span class="ident">collect</span>();
+
+        <span class="comment">// Compute Plookup verifying key if support lookup.</span>
+        <span class="kw">let</span> <span class="ident">plookup_vk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">circuit</span>.<span class="ident">support_lookup</span>() {
+            <span class="bool-val">false</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="bool-val">true</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">PlookupVerifyingKey</span> {
+                <span class="ident">range_table_comm</span>: <span class="ident">KZG10::commit</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="prelude-val">None</span>,
+                )<span class="question-mark">?</span>
+                .<span class="number">0</span>,
+                <span class="ident">key_table_comm</span>: <span class="ident">KZG10::commit</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">key_table_poly</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="prelude-val">None</span>,
+                )<span class="question-mark">?</span>
+                .<span class="number">0</span>,
+                <span class="ident">table_dom_sep_comm</span>: <span class="ident">KZG10::commit</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">table_dom_sep_poly</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="prelude-val">None</span>,
+                )<span class="question-mark">?</span>
+                .<span class="number">0</span>,
+                <span class="ident">q_dom_sep_comm</span>: <span class="ident">KZG10::commit</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">commit_key</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">q_dom_sep_poly</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="prelude-val">None</span>,
+                )<span class="question-mark">?</span>
+                .<span class="number">0</span>,
+            }),
+        };
+
+        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">VerifyingKey</span> {
+            <span class="ident">domain_size</span>,
+            <span class="ident">num_inputs</span>,
+            <span class="ident">selector_comms</span>,
+            <span class="ident">sigma_comms</span>,
+            <span class="ident">k</span>: <span class="ident">compute_coset_representatives</span>(<span class="ident">circuit</span>.<span class="ident">num_wire_types</span>(), <span class="prelude-val">Some</span>(<span class="ident">domain_size</span>)),
+            <span class="ident">open_key</span>,
+            <span class="ident">plookup_vk</span>,
+            <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
+        };
+
+        <span class="comment">// Compute ProvingKey (which includes the VerifyingKey)</span>
+        <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">ProvingKey</span> {
+            <span class="ident">sigmas</span>: <span class="ident">sigma_polys</span>,
+            <span class="ident">selectors</span>: <span class="ident">selectors_polys</span>,
+            <span class="ident">commit_key</span>: <span class="ident">commit_key</span>.<span class="ident">into</span>(),
+            <span class="ident">vk</span>: <span class="ident">vk</span>.<span class="ident">clone</span>(),
+            <span class="ident">plookup_pk</span>,
+        };
+
+        <span class="prelude-val">Ok</span>((<span class="ident">pk</span>, <span class="ident">vk</span>))
+    }
 
     <span class="doccomment">/// Compute a Plonk proof.</span>
     <span class="doccomment">/// Refer to Sec 8.4 of &lt;https://eprint.iacr.org/2019/953.pdf&gt;</span>
@@ -2279,18 +2268,18 @@
     <span class="doccomment">/// `circuit` and `prove_key` has to be consistent (with the same evaluation</span>
     <span class="doccomment">/// domain etc.), otherwise return error.</span>
     <span class="kw">fn</span> <span class="ident">prove</span><span class="op">&lt;</span><span class="ident">C</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
+        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
         <span class="ident">circuit</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
         <span class="ident">prove_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::ProvingKey</span>,
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Arithmetization</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> (<span class="ident">batch_proof</span>, ..) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::batch_prove_internal</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-            <span class="ident">prng</span>,
+            <span class="ident">rng</span>,
             <span class="kw-2">&amp;</span>[<span class="ident">circuit</span>],
             <span class="kw-2">&amp;</span>[<span class="ident">prove_key</span>],
             <span class="ident">extra_transcript_init_msg</span>,
@@ -2311,7 +2300,7 @@
         <span class="ident">public_input</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
         <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Proof</span>,
         <span class="ident">extra_transcript_init_msg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
@@ -2335,7 +2324,7 @@
                 <span class="ident">eval_merged_lookup_witness</span>, <span class="ident">eval_merged_table</span>, <span class="ident">Challenges</span>, <span class="ident">Oracles</span>, <span class="ident">Proof</span>,
                 <span class="ident">ProvingKey</span>, <span class="ident">UniversalSrs</span>, <span class="ident">VerifyingKey</span>,
             },
-            <span class="ident">PlonkKzgSnark</span>, <span class="ident">Snark</span>,
+            <span class="ident">PlonkKzgSnark</span>, <span class="ident">UniversalSNARK</span>,
         },
         <span class="ident">transcript</span>::{
             <span class="ident">rescue::RescueTranscript</span>, <span class="ident">solidity::SolidityTranscript</span>, <span class="ident">standard::StandardTranscript</span>,
@@ -2353,7 +2342,7 @@
         <span class="ident">univariate::DensePolynomial</span>, <span class="ident">EvaluationDomain</span>, <span class="ident">Polynomial</span>, <span class="ident">Radix2EvaluationDomain</span>,
         <span class="ident">UVPolynomial</span>,
     };
-    <span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10</span>::{<span class="ident">Commitment</span>, <span class="ident">KZG10</span>};
+    <span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10</span>::{<span class="ident">Commitment</span>, <span class="ident">Powers</span>, <span class="ident">KZG10</span>};
     <span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
     <span class="kw">use</span> <span class="ident">ark_std</span>::{
         <span class="ident">convert::TryInto</span>,
@@ -2499,20 +2488,23 @@
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">vk</span>.<span class="ident">selector_comms</span>.<span class="ident">iter</span>())
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">p_comm</span>)<span class="op">|</span> {
-                <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>, <span class="ident">p</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">powers</span>: <span class="ident">Powers</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>).<span class="ident">into</span>();
+                <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">powers</span>, <span class="ident">p</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
                 <span class="macro">assert_eq!</span>(<span class="ident">expected_comm</span>, <span class="ident">p_comm</span>);
             });
         <span class="ident">sigmas</span>
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">vk</span>.<span class="ident">sigma_comms</span>.<span class="ident">iter</span>())
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">p_comm</span>)<span class="op">|</span> {
-                <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>, <span class="ident">p</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">powers</span>: <span class="ident">Powers</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>).<span class="ident">into</span>();
+                <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(<span class="kw-2">&amp;</span><span class="ident">powers</span>, <span class="ident">p</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
                 <span class="macro">assert_eq!</span>(<span class="ident">expected_comm</span>, <span class="ident">p_comm</span>);
             });
         <span class="comment">// check plookup verification key</span>
         <span class="kw">if</span> <span class="ident">plonk_type</span> <span class="op">==</span> <span class="ident">PlonkType::UltraPlonk</span> {
+            <span class="kw">let</span> <span class="ident">powers</span>: <span class="ident">Powers</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>).<span class="ident">into</span>();
             <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(
-                <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>,
+                <span class="kw-2">&amp;</span><span class="ident">powers</span>,
                 <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">range_table_poly</span>,
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,
@@ -2524,7 +2516,7 @@
             );
 
             <span class="kw">let</span> (<span class="ident">expected_comm</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">KZG10::commit</span>(
-                <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">commit_key</span>,
+                <span class="kw-2">&amp;</span><span class="ident">powers</span>,
                 <span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">key_table_poly</span>,
                 <span class="prelude-val">None</span>,
                 <span class="prelude-val">None</span>,

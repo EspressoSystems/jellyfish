@@ -290,7 +290,6 @@
 <span id="285">285</span>
 <span id="286">286</span>
 <span id="287">287</span>
-<span id="288">288</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -301,8 +300,8 @@
 
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">string::String</span>, <span class="ident">vec::Vec</span>};
+<span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">snafu::Snafu</span>;
 <span class="kw">use</span> <span class="ident">tagged_base64</span>::{<span class="ident">TaggedBase64</span>, <span class="ident">Tb64Error</span>};
 
 <span class="doccomment">/// A helper for converting CanonicalSerde bytes to standard Serde bytes.</span>
@@ -409,12 +408,11 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Snafu</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TaggedBlobError</span> {
-    <span class="ident">Base64Error</span> {
-        <span class="attribute">#[<span class="ident">snafu</span>(<span class="ident">source</span>(<span class="bool-val">false</span>))]</span>
-        <span class="ident">source</span>: <span class="ident">Tb64Error</span>,
-    },
+    <span class="doccomment">/// TaggedBase64 parsing failure</span>
+    <span class="ident">Base64Error</span> { <span class="ident">source</span>: <span class="ident">Tb64Error</span> },
+    <span class="doccomment">/// CanonicalSerialize failure</span>
     <span class="ident">DeserializationError</span> {
         <span class="ident">source</span>: <span class="ident">ark_serialize::SerializationError</span>,
     },
