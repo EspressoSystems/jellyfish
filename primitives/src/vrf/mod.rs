@@ -6,7 +6,7 @@ pub mod blsvrf;
 pub mod ecvrf;
 
 /// A trait for VRF proof, evaluation and verification.
-pub trait Vrf<VrfHasher, P> {
+pub trait Vrf<VrfHasher> {
     /// ciphersuite identifier
     const CS_ID: &'static str;
 
@@ -72,7 +72,7 @@ mod tests {
     use super::*;
     use ark_std::{rand::prelude::StdRng, test_rng};
 
-    pub(crate) fn sign_and_verify<V: Vrf<H, P>, H, P>(message: &V::Input) {
+    pub(crate) fn sign_and_verify<V: Vrf<H>, H>(message: &V::Input) {
         let rng = &mut test_rng();
         let parameters = V::param_gen(Some(rng)).unwrap();
         let (sk, pk) = V::key_gen(&parameters, rng).unwrap();
@@ -88,10 +88,7 @@ mod tests {
         assert!(V::verify(&parameters, &vrf_proof, &pk, &message).unwrap());
     }
 
-    pub(crate) fn failed_verification<V: Vrf<H, P>, H, P>(
-        message: &V::Input,
-        bad_message: &V::Input,
-    ) {
+    pub(crate) fn failed_verification<V: Vrf<H>, H>(message: &V::Input, bad_message: &V::Input) {
         let rng = &mut test_rng();
         let parameters = V::param_gen(Some(rng)).unwrap();
         let (sk, pk) = V::key_gen(&parameters, rng).unwrap();

@@ -4,32 +4,21 @@ use super::Vrf;
 use crate::{
     constants::CS_ID_BLS_VRF_NAIVE,
     errors::PrimitivesError,
-    hash_to_group::SWHashToGroup,
     signatures::{
         bls::{BLSSignKey, BLSSignature, BLSVerKey},
         BLSSignatureScheme, SignatureScheme,
     },
 };
-use ark_ec::bls12::Bls12Parameters;
-use ark_serialize::CanonicalSerialize;
-use ark_std::{
-    marker::PhantomData,
-    rand::{CryptoRng, RngCore},
-    vec::Vec,
-};
+use ark_std::rand::{CryptoRng, RngCore};
 use digest::Digest;
 
 /// BLS VRF scheme.
 /// Optimized for signature size, i.e.: PK in G2 and sig in G1
-pub struct BLSVRFScheme<P: Bls12Parameters> {
-    pairing_friend_curve: PhantomData<P>,
-}
+pub struct BLSVRFScheme;
 
-impl<H, P> Vrf<H, P> for BLSVRFScheme<P>
+impl<H> Vrf<H> for BLSVRFScheme
 where
     H: Digest,
-    P: Bls12Parameters,
-    P::G1Parameters: SWHashToGroup,
 {
     const CS_ID: &'static str = CS_ID_BLS_VRF_NAIVE;
 
@@ -40,13 +29,13 @@ where
     type PublicParameter = ();
 
     /// VRF public key.
-    type PublicKey = BLSVerKey<P>;
+    type PublicKey = BLSVerKey;
 
     /// VRF secret key.
-    type SecretKey = BLSSignKey<P>;
+    type SecretKey = BLSSignKey;
 
     /// VRF signature.
-    type Proof = BLSSignature<P>;
+    type Proof = BLSSignature;
 
     /// The input of VRF proof.
     type Input = [u8; 32];
@@ -66,7 +55,7 @@ where
         pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SecretKey, Self::PublicKey), PrimitivesError> {
-        <BLSSignatureScheme<P> as SignatureScheme>::key_gen(pp, prng)
+        <BLSSignatureScheme as SignatureScheme>::key_gen(pp, prng)
     }
 
     /// Creates the VRF proof associated with a VRF secret key.
@@ -76,7 +65,7 @@ where
         input: &Self::Input,
         prng: &mut R,
     ) -> Result<Self::Proof, PrimitivesError> {
-        <BLSSignatureScheme<P> as SignatureScheme>::sign(pp, secret_key, input, prng)
+        <BLSSignatureScheme as SignatureScheme>::sign(pp, secret_key, input, prng)
     }
 
     /// Computes the VRF output associated with a VRF proof.
@@ -84,8 +73,10 @@ where
         _pp: &Self::PublicParameter,
         proof: &Self::Proof,
     ) -> Result<Self::Output, PrimitivesError> {
-        let mut proof_serialized = Vec::new();
-        proof.0.serialize_uncompressed(&mut proof_serialized)?;
+        let proof_serialized = proof.serialize();
+        // let mut proof_serialized = Vec::new();
+        // proof.serialize()
+        // proof.0.serialize_uncompressed(&mut proof_serialized)?;
         let mut hasher = H::new();
         hasher.update(&proof_serialized);
         let mut output = [0u8; 32];
@@ -100,11 +91,9 @@ where
         public_key: &Self::PublicKey,
         input: &Self::Input,
     ) -> Result<bool, PrimitivesError> {
-        if <BLSSignatureScheme<P> as SignatureScheme>::verify(pp, public_key, input, proof).is_err()
-        {
+        if <BLSSignatureScheme as SignatureScheme>::verify(pp, public_key, input, proof).is_err() {
             return Ok(false);
         }
-
         Ok(true)
     }
 }
@@ -113,22 +102,13 @@ where
 mod test {
     use super::*;
     use crate::vrf::tests::{failed_verification, sign_and_verify};
-    use ark_bls12_377::Parameters as Param377;
-    use ark_bls12_381::Parameters as Param381;
     use sha2::Sha256;
-
-    macro_rules! test_bls_vrf {
-        ($curve_param:tt) => {
-            let message = [0u8; 32];
-            let message_bad = [1u8; 32];
-            sign_and_verify::<BLSVRFScheme<$curve_param>, Sha256, _>(&message);
-            failed_verification::<BLSVRFScheme<$curve_param>, Sha256, _>(&message, &message_bad);
-        };
-    }
 
     #[test]
     fn test_bls_vrf() {
-        test_bls_vrf!(Param377);
-        test_bls_vrf!(Param381);
+        let message = [0u8; 32];
+        let message_bad = [1u8; 32];
+        sign_and_verify::<BLSVRFScheme, Sha256>(&message);
+        failed_verification::<BLSVRFScheme, Sha256>(&message, &message_bad);
     }
 }
