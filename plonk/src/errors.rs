@@ -74,7 +74,7 @@ impl From<jf_rescue::errors::RescueError> for PlonkError {
 #[derive(Display, Debug)]
 pub enum SnarkError {
     #[rustfmt::skip]
-    /// The quotient polynomial has wrong degree: {0}, expected: {1}. Suspect: circuit is not satisfied.
+    /// Suspect: circuit is not satisfied. The quotient polynomial has wrong degree: {0}, expected: {1}. 
     WrongQuotientPolyDegree(usize, usize),
     /// Invalid parameters: {0}
     ParameterError(String),
