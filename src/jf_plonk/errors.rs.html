@@ -213,7 +213,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Display</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SnarkError</span> {
     <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-    <span class="doccomment">/// The quotient polynomial has wrong degree: {0}, expected: {1}. Suspect: circuit is not satisfied.</span>
+    <span class="doccomment">/// Suspect: circuit is not satisfied. The quotient polynomial has wrong degree: {0}, expected: {1}. </span>
     <span class="ident">WrongQuotientPolyDegree</span>(<span class="ident">usize</span>, <span class="ident">usize</span>),
     <span class="doccomment">/// Invalid parameters: {0}</span>
     <span class="ident">ParameterError</span>(<span class="ident">String</span>),
