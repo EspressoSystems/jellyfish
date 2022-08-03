@@ -17,9 +17,15 @@ use ark_ff::{FftField, PrimeField};
 use ark_poly::{
     domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, UVPolynomial,
 };
-use ark_std::{boxed::Box, cmp::max, format, string::ToString, vec, vec::Vec};
-use hashbrown::{HashMap, HashSet};
-#[cfg(feature = "parallel")]
+use ark_std::{
+    boxed::Box,
+    cmp::{max, Ordering},
+    collections::{HashMap, HashSet},
+    format,
+    string::ToString,
+    vec,
+    vec::Vec,
+};
 use rayon::prelude::*;
 
 /// The wire type identifier for range gates.
@@ -484,6 +490,26 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         let wire_vars = &[a, b, 0, 0, 0];
         self.insert_gate(wire_vars, Box::new(EqualityGate))?;
         Ok(())
+    }
+
+    fn enforce_cmp(
+        &mut self,
+        a: Variable,
+        b: Variable,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError> {
+        Ok(())
+    }
+
+    fn is_cmp(
+        &mut self,
+        a: Variable,
+        b: Variable,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<Variable, PlonkError> {
+        Ok(self.zero())
     }
 
     fn pad_gate(&mut self, n: usize) {

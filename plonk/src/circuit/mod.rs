@@ -5,10 +5,11 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Interfaces for Plonk-based constraint systems
+
 use crate::errors::{CircuitError::LookupUnsupported, PlonkError};
 use ark_ff::{FftField, Field};
 use ark_poly::univariate::DensePolynomial;
-use ark_std::vec::Vec;
+use ark_std::{cmp::Ordering, vec::Vec};
 
 pub mod basic;
 pub mod customized;
@@ -119,6 +120,27 @@ pub trait Circuit<F: Field> {
     /// Constrain two variables to have the same value.
     /// Return error if the input variables are invalid.
     fn equal_gate(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>;
+
+    /// Enforce comparison between `a` and `b`, if `should_also_check_equality =
+    /// true`, check `a<=b` or `a>=b`.
+    fn enforce_cmp(
+        &mut self,
+        a: Variable,
+        b: Variable,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError>;
+
+    /// Check the ordering between `a` and `b`, returns the index of variable
+    /// `1` if result is true; `0` if result is false;
+    /// If `should_also_check_equality = true`, check `a<=b` or `a>=b`.
+    fn is_cmp(
+        &mut self,
+        a: Variable,
+        b: Variable,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<Variable, PlonkError>;
 
     /// Pad the circuit with n dummy gates
     fn pad_gate(&mut self, n: usize);
