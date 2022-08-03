@@ -74,9 +74,6 @@ where
         proof: &Self::Proof,
     ) -> Result<Self::Output, PrimitivesError> {
         let proof_serialized = proof.serialize();
-        // let mut proof_serialized = Vec::new();
-        // proof.serialize()
-        // proof.0.serialize_uncompressed(&mut proof_serialized)?;
         let mut hasher = H::new();
         hasher.update(&proof_serialized);
         let mut output = [0u8; 32];
