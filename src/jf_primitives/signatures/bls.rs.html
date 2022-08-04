@@ -100,155 +100,39 @@
 <span id="95">95</span>
 <span id="96">96</span>
 <span id="97">97</span>
-<span id="98">98</span>
-<span id="99">99</span>
-<span id="100">100</span>
-<span id="101">101</span>
-<span id="102">102</span>
-<span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
-<span id="129">129</span>
-<span id="130">130</span>
-<span id="131">131</span>
-<span id="132">132</span>
-<span id="133">133</span>
-<span id="134">134</span>
-<span id="135">135</span>
-<span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
-<span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
-<span id="156">156</span>
-<span id="157">157</span>
-<span id="158">158</span>
-<span id="159">159</span>
-<span id="160">160</span>
-<span id="161">161</span>
-<span id="162">162</span>
-<span id="163">163</span>
-<span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
-<span id="169">169</span>
-<span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Placeholder for BLS signature.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! BLS Signature Scheme</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SignatureScheme</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">constants::CS_ID_BLS_SIG_NAIVE</span>, <span class="ident">errors::PrimitivesError</span>, <span class="ident">hash_to_group::SWHashToGroup</span>,
-};
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{
-    <span class="ident">bls12</span>::{<span class="ident">Bls12</span>, <span class="ident">Bls12Parameters</span>},
-    <span class="ident">short_weierstrass_jacobian::GroupAffine</span>,
-    <span class="ident">AffineCurve</span>, <span class="ident">ModelParameters</span>, <span class="ident">ProjectiveCurve</span>,
-};
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">Fp12</span>, <span class="ident">PrimeField</span>};
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">constants::CS_ID_BLS_SIG_NAIVE</span>, <span class="ident">errors::PrimitivesError</span>};
+
 <span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">io::Read</span>,
-    <span class="ident">ops::Neg</span>,
+    <span class="ident">format</span>,
     <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">string::ToString</span>,
-    <span class="ident">One</span>, <span class="ident">UniformRand</span>,
 };
-<span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish::tag</span>;
-<span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">multi_pairing</span>, <span class="ident">tagged_blob</span>};
 
-<span class="doccomment">/// BLS signature scheme.</span>
-<span class="doccomment">/// Optimized for signature size, i.e.: PK in G2 and sig in G1</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BLSSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Bls12Parameters</span><span class="op">&gt;</span> {
-    <span class="ident">pairing_friend_curve</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-}
+<span class="kw">use</span> <span class="ident">blst</span>::{<span class="ident">min_sig</span>::<span class="kw-2">*</span>, <span class="ident">BLST_ERROR</span>};
 
-<span class="doccomment">/// BLS public verification key</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BLSVERKEY</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BLSVerKey</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Bls12Parameters</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P::G2Parameters</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">blst::min_sig</span>::{
+    <span class="ident">PublicKey</span> <span class="kw">as</span> <span class="ident">BLSVerKey</span>, <span class="ident">SecretKey</span> <span class="kw">as</span> <span class="ident">BLSSignKey</span>, <span class="ident">Signature</span> <span class="kw">as</span> <span class="ident">BLSSignature</span>,
+};
 
-<span class="doccomment">/// Signing key for BLS signature.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BLSSIGNINGKEY</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BLSSignKey</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Bls12Parameters</span><span class="op">&gt;</span>(
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::ScalarField</span>,
-);
+<span class="doccomment">/// BLS signature scheme. Imports blst library.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BLSSignatureScheme</span>;
 
-<span class="doccomment">/// Signing key for BLS signature.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BLSSIG</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Bls12Parameters&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BLSSignature</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Bls12Parameters</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P::G1Parameters</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureScheme</span> <span class="kw">for</span> <span class="ident">BLSSignatureScheme</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Bls12Parameters</span>,
-    <span class="ident">P::G1Parameters</span>: <span class="ident">SWHashToGroup</span>,
-{
+<span class="kw">impl</span> <span class="ident">SignatureScheme</span> <span class="kw">for</span> <span class="ident">BLSSignatureScheme</span> {
     <span class="kw">const</span> <span class="ident">CS_ID</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="ident">CS_ID_BLS_SIG_NAIVE</span>;
 
-    <span class="doccomment">/// Signing key.</span>
-    <span class="kw">type</span> <span class="ident">SigningKey</span> <span class="op">=</span> <span class="ident">BLSSignKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// Verification key</span>
-    <span class="kw">type</span> <span class="ident">VerificationKey</span> <span class="op">=</span> <span class="ident">BLSVerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// Public Parameter</span>
-    <span class="doccomment">/// For BLS signatures, we want to use default</span>
-    <span class="doccomment">/// prime subgroup generators. So here we don&#39;t need</span>
-    <span class="doccomment">/// to specify which PP it is.</span>
+    <span class="doccomment">/// Public parameter</span>
     <span class="kw">type</span> <span class="ident">PublicParameter</span> <span class="op">=</span> ();
 
+    <span class="doccomment">/// Signing key</span>
+    <span class="kw">type</span> <span class="ident">SigningKey</span> <span class="op">=</span> <span class="ident">BLSSignKey</span>;
+
+    <span class="doccomment">/// Verification key</span>
+    <span class="kw">type</span> <span class="ident">VerificationKey</span> <span class="op">=</span> <span class="ident">BLSVerKey</span>;
+
     <span class="doccomment">/// Signature</span>
-    <span class="kw">type</span> <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">BLSSignature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">BLSSignature</span>;
 
     <span class="doccomment">/// A message is &amp;\[MessageUnit\]</span>
     <span class="kw">type</span> <span class="ident">MessageUnit</span> <span class="op">=</span> <span class="ident">u8</span>;
@@ -266,15 +150,13 @@
         <span class="ident">_pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
         <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::SigningKey</span>, <span class="ident"><span class="self">Self</span>::VerificationKey</span>), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="comment">// TODO: absorb ciphersuite_id in prng</span>
-        <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">BLSSignKey</span>(<span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">ModelParameters</span><span class="op">&gt;</span><span class="ident">::ScalarField::rand</span>(
-            <span class="ident">prng</span>,
-        ));
-        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">BLSVerKey</span>(
-            <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P::G2Parameters</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>()
-                .<span class="ident">mul</span>(<span class="ident">sk</span>.<span class="number">0</span>)
-                .<span class="ident">into_affine</span>(),
-        );
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ikm</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
+        <span class="ident">prng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ikm</span>);
+        <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">SecretKey::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">ikm</span>, <span class="kw-2">&amp;</span>[]) {
+            <span class="prelude-val">Ok</span>(<span class="ident">sk</span>) =&gt; <span class="ident">sk</span>,
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::InternalError</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>))),
+        };
+        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">sk</span>.<span class="ident">sk_to_pk</span>();
         <span class="prelude-val">Ok</span>((<span class="ident">sk</span>, <span class="ident">vk</span>))
     }
 
@@ -285,11 +167,7 @@
         <span class="ident">msg</span>: <span class="ident">M</span>,
         <span class="ident">_prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hm</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">SWHashToGroup</span><span class="op">&gt;</span><span class="ident">::hash_to_group</span>(
-            <span class="ident">msg</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">CS_ID_BLS_SIG_NAIVE</span>.<span class="ident">as_ref</span>(),
-        )<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">BLSSignature</span>(<span class="ident">hm</span>.<span class="ident">mul</span>(<span class="kw-2">&amp;</span><span class="ident">sk</span>.<span class="number">0</span>.<span class="ident">into_repr</span>()).<span class="ident">into_affine</span>()))
+        <span class="prelude-val">Ok</span>(<span class="ident">sk</span>.<span class="ident">sign</span>(<span class="ident">msg</span>.<span class="ident">as_ref</span>(), <span class="ident"><span class="self">Self</span>::CS_ID</span>.<span class="ident">as_bytes</span>(), <span class="kw-2">&amp;</span>[]))
     }
 
     <span class="doccomment">/// Verify a signature.</span>
@@ -299,25 +177,9 @@
         <span class="ident">msg</span>: <span class="ident">M</span>,
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Signature</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hm</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">P::G1Parameters</span> <span class="kw">as</span> <span class="ident">SWHashToGroup</span><span class="op">&gt;</span><span class="ident">::hash_to_group</span>(
-            <span class="ident">msg</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">CS_ID_BLS_SIG_NAIVE</span>.<span class="ident">as_ref</span>(),
-        )<span class="question-mark">?</span>;
-
-        <span class="kw">if</span> <span class="ident">multi_pairing</span>::<span class="op">&lt;</span><span class="ident">Bls12</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-            [<span class="ident">hm</span>.<span class="ident">into_affine</span>(), <span class="ident">sig</span>.<span class="number">0</span>].<span class="ident">as_ref</span>(),
-            [
-                <span class="ident">vk</span>.<span class="number">0</span>.<span class="ident">neg</span>(),
-                <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P::G2Parameters</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>(),
-            ]
-            .<span class="ident">as_ref</span>(),
-        ) <span class="op">==</span> <span class="ident">Fp12</span>::<span class="op">&lt;</span><span class="ident">P::Fp12Params</span><span class="op">&gt;</span><span class="ident">::one</span>()
-        {
-            <span class="prelude-val">Ok</span>(())
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::VerificationError</span>(
-                <span class="string">&quot;Signature verification error&quot;</span>.<span class="ident">to_string</span>(),
-            ))
+        <span class="kw">match</span> <span class="ident">sig</span>.<span class="ident">verify</span>(<span class="bool-val">false</span>, <span class="ident">msg</span>.<span class="ident">as_ref</span>(), <span class="ident"><span class="self">Self</span>::CS_ID</span>.<span class="ident">as_bytes</span>(), <span class="kw-2">&amp;</span>[], <span class="ident">vk</span>, <span class="bool-val">true</span>) {
+            <span class="ident">BLST_ERROR::BLST_SUCCESS</span> =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="ident">e</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::VerificationError</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>))),
         }
     }
 }
@@ -326,25 +188,13 @@
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::signatures::tests</span>::{<span class="ident">failed_verification</span>, <span class="ident">sign_and_verify</span>};
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Parameters</span> <span class="kw">as</span> <span class="ident">Param377</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_381::Parameters</span> <span class="kw">as</span> <span class="ident">Param381</span>;
-
-    <span class="macro">macro_rules!</span> <span class="ident">test_signature</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span>:<span class="ident">tt</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="string">&quot;this is a test message&quot;</span>;
-            <span class="kw">let</span> <span class="ident">message_bad</span> <span class="op">=</span> <span class="string">&quot;this is a wrong message&quot;</span>;
-            <span class="ident">sign_and_verify</span>::<span class="op">&lt;</span><span class="ident">BLSSignatureScheme</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">message</span>.<span class="ident">as_ref</span>());
-            <span class="ident">failed_verification</span>::<span class="op">&lt;</span><span class="ident">BLSSignatureScheme</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">curve_param</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-                <span class="ident">message</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">message_bad</span>.<span class="ident">as_ref</span>(),
-            );
-        };
-    }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_bls_sig</span>() {
-        <span class="macro">test_signature!</span>(<span class="ident">Param377</span>);
-        <span class="macro">test_signature!</span>(<span class="ident">Param381</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="string">&quot;this is a test message&quot;</span>;
+        <span class="kw">let</span> <span class="ident">message_bad</span> <span class="op">=</span> <span class="string">&quot;this is a wrong message&quot;</span>;
+        <span class="ident">sign_and_verify</span>::<span class="op">&lt;</span><span class="ident">BLSSignatureScheme</span><span class="op">&gt;</span>(<span class="ident">message</span>.<span class="ident">as_ref</span>());
+        <span class="ident">failed_verification</span>::<span class="op">&lt;</span><span class="ident">BLSSignatureScheme</span><span class="op">&gt;</span>(<span class="ident">message</span>.<span class="ident">as_ref</span>(), <span class="ident">message_bad</span>.<span class="ident">as_ref</span>());
     }
 }
 </code></pre></div>

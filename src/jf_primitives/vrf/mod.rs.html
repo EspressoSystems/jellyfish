@@ -103,9 +103,6 @@
 <span id="98">98</span>
 <span id="99">99</span>
 <span id="100">100</span>
-<span id="101">101</span>
-<span id="102">102</span>
-<span id="103">103</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for verifiable random functions.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
@@ -114,7 +111,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ecvrf</span>;
 
 <span class="doccomment">/// A trait for VRF proof, evaluation and verification.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">VrfHasher</span>, <span class="ident">P</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">VrfHasher</span><span class="op">&gt;</span> {
     <span class="doccomment">/// ciphersuite identifier</span>
     <span class="kw">const</span> <span class="ident">CS_ID</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
 
@@ -180,7 +177,7 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">rand::prelude::StdRng</span>, <span class="ident">test_rng</span>};
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">sign_and_verify</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">P</span><span class="op">&gt;</span>, <span class="ident">H</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">sign_and_verify</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>) {
         <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">V::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">V::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
@@ -196,10 +193,7 @@
         <span class="macro">assert!</span>(<span class="ident">V::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>).<span class="ident">unwrap</span>());
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">failed_verification</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">P</span><span class="op">&gt;</span>, <span class="ident">H</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>,
-        <span class="ident">bad_message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>,
-    ) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">failed_verification</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>, <span class="ident">bad_message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>) {
         <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
         <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">V::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">V::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
