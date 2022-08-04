@@ -5,6 +5,7 @@
 - Splitting polynomials are masked to ensure zero-knowledge of Plonk (#76)
 - Refactored `UniversalSNARK` trait (#80, #87)
 - Restore `no_std` compliance (#85, #87)
+- Use [blst](https://github.com/supranational/blst) library for BLS signature/VRF (#89)
 
 ## v0.1.2
 
