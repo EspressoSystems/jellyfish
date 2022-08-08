@@ -48,7 +48,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         // add linear combination gates
-        self.decompose_vars_gate(reprs_le_vars, a, F::from(range_size as u64))?;
+        self.decomposition_gate(reprs_le_vars, a, F::from(range_size as u64))?;
 
         Ok(())
     }

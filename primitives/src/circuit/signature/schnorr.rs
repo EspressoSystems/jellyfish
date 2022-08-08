@@ -20,7 +20,7 @@ use jf_plonk::{
             ecc::{Point, PointVariable},
             rescue::RescueGadget,
         },
-        Circuit, PlonkCircuit, Variable,
+        BoolVar, Circuit, PlonkCircuit, Variable,
     },
     errors::PlonkError,
 };
@@ -159,7 +159,7 @@ where
         vk: &VerKeyVar,
         sig_point: &PointVariable,
         msg: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError>;
+    ) -> Result<Vec<BoolVar>, PlonkError>;
 }
 
 impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
@@ -172,7 +172,7 @@ where
         vk: &VerKeyVar,
         sig_point: &PointVariable,
         msg: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError> {
+    ) -> Result<Vec<BoolVar>, PlonkError> {
         let instance_description = F::from_be_bytes_mod_order(CS_ID_SCHNORR.as_ref());
         // TODO: create `inst_desc_var` and the constant gate *only once* during the
         // entire circuit construction.

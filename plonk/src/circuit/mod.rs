@@ -18,6 +18,16 @@ pub use basic::PlonkCircuit;
 
 /// An index to one of the witness values.
 pub type Variable = usize;
+/// An index to a witness value of boolean type.
+#[derive(Debug, Clone, Copy)]
+pub struct BoolVar(usize);
+
+impl From<BoolVar> for Variable {
+    fn from(bv: BoolVar) -> Self {
+        bv.0
+    }
+}
+
 /// An index to a gate in circuit.
 pub type GateId = usize;
 /// An index to the type of gate wires.
@@ -56,11 +66,12 @@ pub trait Circuit<F: Field> {
     fn create_variable(&mut self, val: F) -> Result<Variable, PlonkError>;
 
     /// Add a bool variable to the circuit; return the index of the variable.
-    fn create_bool_variable(&mut self, val: bool) -> Result<Variable, PlonkError> {
+    fn create_bool_variable(&mut self, val: bool) -> Result<BoolVar, PlonkError> {
         let val_scalar = if val { F::one() } else { F::zero() };
         let var = self.create_variable(val_scalar)?;
+        // FIXME: (alex) should I enforce this in `BoolVar::create()` instead?
         self.bool_gate(var)?;
-        Ok(var)
+        Ok(BoolVar(var))
     }
 
     /// Add a public input variable; return the index of the variable.

@@ -715,23 +715,6 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
-    // Check whether the variable `var` is a boolean value
-    // this is used to return error to invalid parameter early in the circuit
-    // building development lifecycle, it should NOT be used as a circuit constraint
-    // for which you should use bool_gate() instead
-    #[inline]
-    pub(crate) fn check_bool(&self, var: Variable) -> Result<(), PlonkError> {
-        let val = self.witness(var)?;
-        if val != F::zero() && val != F::one() {
-            Err(ParameterError(
-                "Expecting a boolean value, something is wrong with your circuit logic".to_string(),
-            )
-            .into())
-        } else {
-            Ok(())
-        }
-    }
-
     // Return the variable that maps to a wire `(i, j)` where i is the wire type and
     // j is the gate index. If gate `j` is a padded dummy gate, return zero
     // variable.

@@ -8,7 +8,7 @@
 //! related, rescue-based transcript and lookup table etc.
 
 use self::gates::*;
-use super::{Circuit, PlonkCircuit, PlonkError, Variable};
+use super::{BoolVar, Circuit, PlonkCircuit, PlonkError, Variable};
 use crate::{
     circuit::gates::{ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate},
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
@@ -235,18 +235,18 @@ where
     /// one. Return error if variables are invalid.
     pub fn conditional_select(
         &mut self,
-        b: Variable,
+        b: BoolVar,
         x_0: Variable,
         x_1: Variable,
     ) -> Result<Variable, PlonkError> {
-        self.check_var_bound(b)?;
+        self.check_var_bound(b.into())?;
         self.check_var_bound(x_0)?;
         self.check_var_bound(x_1)?;
 
         // y = x_bit
-        let y = if self.witness(b)? == F::zero() {
+        let y = if self.witness(b.into())? == F::zero() {
             self.create_variable(self.witness(x_0)?)?
-        } else if self.witness(b)? == F::one() {
+        } else if self.witness(b.into())? == F::one() {
             self.create_variable(self.witness(x_1)?)?
         } else {
             return Err(CircuitError::ParameterError(
@@ -254,7 +254,7 @@ where
             )
             .into());
         };
-        let wire_vars = [b, x_0, b, x_1, y];
+        let wire_vars = [b.into(), x_0, b.into(), x_1, y];
         self.insert_gate(&wire_vars, Box::new(CondSelectGate))?;
         Ok(y)
     }
@@ -655,7 +655,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// range [0, 2^`bit_len`). Return error if the variable is invalid.
     /// TODO: optimize the gate for UltraPlonk.
     pub fn check_in_range(&mut self, a: Variable, bit_len: usize) -> Result<Variable, PlonkError> {
-        let a_bit_le = self.unpack(a, F::size_in_bits())?;
+        let a_bit_le: Vec<BoolVar> = self.unpack(a, F::size_in_bits())?;
+        let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
         // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
         // zeroes.
         let higher_bit_sum = self.sum(&a_bit_le[bit_len..])?;
@@ -666,7 +667,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Return a list of variables [b0, ..., b_`bit_len`] which is the binary
     /// representation of `a`.
     /// Return error if the `a` is not the range of [0, 2^`bit_len`).
-    pub fn unpack(&mut self, a: Variable, bit_len: usize) -> Result<Vec<Variable>, PlonkError> {
+    pub fn unpack(&mut self, a: Variable, bit_len: usize) -> Result<Vec<BoolVar>, PlonkError> {
         if bit_len < F::size_in_bits() && self.witness(a)? >= F::from(2u32).pow([bit_len as u64]) {
             return Err(CircuitError::ParameterError(
                 "Failed to unpack variable to a range of smaller than 2^bit_len".to_string(),
@@ -681,7 +682,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         &mut self,
         a: Variable,
         bit_len: usize,
-    ) -> Result<Vec<Variable>, PlonkError> {
+    ) -> Result<Vec<BoolVar>, PlonkError> {
         self.check_var_bound(a)?;
         if bit_len == 0 {
             return Err(CircuitError::ParameterError(
@@ -701,7 +702,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
         // convert to variable in the circuit from the vector of boolean as binary
         // representation
-        let a_bits_le: Vec<Variable> = a_bits_le
+        let a_bits_le: Vec<BoolVar> = a_bits_le
             .iter()
             .take(bit_len) // since little-endian, truncate would remove MSBs
             .map(|&b| {
@@ -709,18 +710,33 @@ impl<F: PrimeField> PlonkCircuit<F> {
             })
             .collect::<Result<Vec<_>, PlonkError>>()?;
 
-        self.decompose_vars_gate(a_bits_le.clone(), a, F::from(2u8))?;
+        self.binary_decomposition_gate(a_bits_le.clone(), a)?;
 
         Ok(a_bits_le)
     }
 
-    pub(crate) fn decompose_vars_gate(
+    fn binary_decomposition_gate(
         &mut self,
-        mut padded: Vec<Variable>,
+        a_bits_le: Vec<BoolVar>,
+        a: Variable,
+    ) -> Result<(), PlonkError> {
+        let a_chunks_le: Vec<Variable> = a_bits_le.into_iter().map(|b| b.into()).collect();
+        self.decomposition_gate(a_chunks_le, a, 2u8.into())?;
+        Ok(())
+    }
+
+    /// a general decomposition gate (not necessarily binary decomposition)
+    /// where `a` are enforced to decomposed to `a_chunks_le` which consists
+    /// of chunks (multiple bits) in little-endian order and
+    /// each chunk \in [0, `range_size`)
+    pub(crate) fn decomposition_gate(
+        &mut self,
+        a_chunks_le: Vec<Variable>,
         a: Variable,
         range_size: F,
     ) -> Result<(), PlonkError> {
         // ensure (padded_len - 1) % 3 = 0
+        let mut padded = a_chunks_le;
         let len = padded.len();
         let rate = GATE_WIDTH - 1; // rate at which lc add each round
         let padded_len = next_multiple(len - 1, rate)? + 1;
@@ -1179,8 +1195,8 @@ pub(crate) mod test {
 
     fn test_conditional_select_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let bit_true = circuit.create_variable(F::one())?;
-        let bit_false = circuit.create_variable(F::zero())?;
+        let bit_true = circuit.create_bool_variable(true)?;
+        let bit_false = circuit.create_bool_variable(false)?;
         let x_0 = circuit.create_variable(F::from(23u32))?;
         let x_1 = circuit.create_variable(F::from(24u32))?;
         let select_true = circuit.conditional_select(bit_true, x_0, x_1)?;
@@ -1190,11 +1206,8 @@ pub(crate) mod test {
         assert_eq!(circuit.witness(select_false)?, circuit.witness(x_0)?);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-        // if bit is NOT a boolean variable, should fail
-        let non_bool = circuit.create_variable(F::from(2u32))?;
-        assert!(circuit.conditional_select(non_bool, x_0, x_1).is_err());
         // if mess up the wire value, should fail
-        *circuit.witness_mut(bit_false) = F::one();
+        *circuit.witness_mut(bit_false.into()) = F::one();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
         assert!(circuit
@@ -1204,20 +1217,19 @@ pub(crate) mod test {
         // build two fixed circuits with different variable assignments, checking that
         // the arithmetized extended permutation polynomial is variable
         // independent
-        let circuit_1 = build_conditional_select_circuit(F::one(), F::from(23u32), F::from(24u32))?;
-        let circuit_2 =
-            build_conditional_select_circuit(F::zero(), F::from(99u32), F::from(98u32))?;
+        let circuit_1 = build_conditional_select_circuit(true, F::from(23u32), F::from(24u32))?;
+        let circuit_2 = build_conditional_select_circuit(false, F::from(99u32), F::from(98u32))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
         Ok(())
     }
 
     fn build_conditional_select_circuit<F: PrimeField>(
-        bit: F,
+        bit: bool,
         x_0: F,
         x_1: F,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let bit_var = circuit.create_variable(bit)?;
+        let bit_var = circuit.create_bool_variable(bit)?;
         let x_0_var = circuit.create_variable(x_0)?;
         let x_1_var = circuit.create_variable(x_1)?;
         circuit.conditional_select(bit_var, x_0_var, x_1_var)?;
@@ -1430,7 +1442,7 @@ pub(crate) mod test {
         circuit.lc(&wire_in.try_into().unwrap(), &coeffs)?;
 
         // conditional select gate
-        let bit_true = circuit.create_variable(F::one())?;
+        let bit_true = circuit.create_bool_variable(true)?;
         let x_0 = circuit.create_variable(F::from(23u32))?;
         let x_1 = circuit.create_variable(F::from(24u32))?;
         circuit.conditional_select(bit_true, x_0, x_1)?;
