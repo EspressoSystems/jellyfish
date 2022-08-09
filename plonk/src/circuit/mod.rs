@@ -32,7 +32,7 @@ impl BoolVar {
     /// Create a `BoolVar` without any check. Be careful!
     /// This is an internal API, shouldn't be used unless you know what you are
     /// doing. Normally you should only construct `BoolVar` through
-    /// `Circuit::create_bool_variable()`.
+    /// `Circuit::create_boolean_variable()`.
     pub(crate) fn new_unchecked(inner: usize) -> Self {
         Self(inner)
     }
@@ -76,7 +76,7 @@ pub trait Circuit<F: Field> {
     fn create_variable(&mut self, val: F) -> Result<Variable, PlonkError>;
 
     /// Add a bool variable to the circuit; return the index of the variable.
-    fn create_bool_variable(&mut self, val: bool) -> Result<BoolVar, PlonkError> {
+    fn create_boolean_variable(&mut self, val: bool) -> Result<BoolVar, PlonkError> {
         let val_scalar = if val { F::one() } else { F::zero() };
         let var = self.create_variable(val_scalar)?;
         self.bool_gate(var)?;

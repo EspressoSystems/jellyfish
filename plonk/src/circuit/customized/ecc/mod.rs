@@ -268,13 +268,7 @@ where
         self.check_point_var_bound(point1)?;
         let x_eq = self.check_equal(point0.0, point1.0)?;
         let y_eq = self.check_equal(point0.1, point1.1)?;
-
-        let res = self.create_bool_variable_unchecked(
-            self.witness(x_eq.into())? * self.witness(y_eq.into())?,
-        )?;
-        self.mul_gate(x_eq.into(), y_eq.into(), res.into())?;
-
-        Ok(res)
+        self.logic_and(x_eq, y_eq)
     }
 }
 
@@ -330,9 +324,9 @@ where
 
         let b = {
             if self.point_witness(point_var)? == Point::from(GroupAffine::<P>::zero()) {
-                self.create_bool_variable(true)?
+                self.create_boolean_variable(true)?
             } else {
-                self.create_bool_variable(false)?
+                self.create_boolean_variable(false)?
             }
         };
 
@@ -914,8 +908,8 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let b0_var = circuit.create_bool_variable(b0)?;
-        let b1_var = circuit.create_bool_variable(b1)?;
+        let b0_var = circuit.create_boolean_variable(b0)?;
+        let b1_var = circuit.create_boolean_variable(b1)?;
 
         let mut rng = ark_std::test_rng();
         let p1 = GroupAffine::<P>::rand(&mut rng);
@@ -1216,7 +1210,7 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let b_var = circuit.create_bool_variable(b)?;
+        let b_var = circuit.create_boolean_variable(b)?;
         let p0_var = circuit.create_point_variable(p0)?;
         let p1_var = circuit.create_point_variable(p1)?;
         circuit.binary_point_vars_select(b_var, &p0_var, &p1_var)?;

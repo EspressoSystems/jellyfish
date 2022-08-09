@@ -248,8 +248,8 @@ where
                 Ok(MerkleNodeVars {
                     sibling1: self.create_variable(node.sibling1.0)?,
                     sibling2: self.create_variable(node.sibling2.0)?,
-                    is_left_child: self.create_bool_variable(node.is_left_child)?,
-                    is_right_child: self.create_bool_variable(node.is_right_child)?,
+                    is_left_child: self.create_boolean_variable(node.is_left_child)?,
+                    is_right_child: self.create_boolean_variable(node.is_right_child)?,
                 })
             })
             .collect::<Result<Vec<MerkleNodeVars>, PlonkError>>()?;
@@ -355,8 +355,8 @@ mod test {
     ) {
         let zero = F::zero();
 
-        let node_is_left = circuit.create_bool_variable(is_left).unwrap();
-        let node_is_right = circuit.create_bool_variable(is_right).unwrap();
+        let node_is_left = circuit.create_boolean_variable(is_left).unwrap();
+        let node_is_right = circuit.create_boolean_variable(is_right).unwrap();
 
         let node = input_vars[0];
         let sib1 = input_vars[1];

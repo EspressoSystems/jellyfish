@@ -269,7 +269,10 @@ impl<F: FftField> PlonkCircuit<F> {
     /// You should absolutely sure about what you are doing.
     /// You should normally only use this API if you already enforce `v` to be a
     /// boolean value using other constraints.
-    pub(crate) fn create_bool_variable_unchecked(&mut self, a: F) -> Result<BoolVar, PlonkError> {
+    pub(crate) fn create_boolean_variable_unchecked(
+        &mut self,
+        a: F,
+    ) -> Result<BoolVar, PlonkError> {
         let var = self.create_variable(a)?;
         Ok(BoolVar::new_unchecked(var))
     }

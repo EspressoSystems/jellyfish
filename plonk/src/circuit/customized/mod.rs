@@ -348,7 +348,7 @@ where
                 })?,
             )
         };
-        let y = self.create_bool_variable_unchecked(y)?;
+        let y = self.create_boolean_variable_unchecked(y)?;
         let a_inv = self.create_variable(a_inv)?;
 
         // constraint 1: 1 - a * a^(-1) = y, i.e., a * a^(-1) + 1 * y = 1
@@ -381,8 +381,8 @@ where
     /// the index of the variable. Return error if the input variables are
     /// invalid.
     pub fn logic_and(&mut self, a: BoolVar, b: BoolVar) -> Result<BoolVar, PlonkError> {
-        let c =
-            self.create_bool_variable_unchecked(self.witness(a.into())? * self.witness(b.into())?)?;
+        let c = self
+            .create_boolean_variable_unchecked(self.witness(a.into())? * self.witness(b.into())?)?;
         self.mul_gate(a.into(), b.into(), c.into())?;
         Ok(c)
     }
@@ -414,7 +414,7 @@ where
         let b_val = self.witness(b.into())?;
         let c_val = a_val + b_val - a_val * b_val;
 
-        let c = self.create_bool_variable_unchecked(c_val)?;
+        let c = self.create_boolean_variable_unchecked(c_val)?;
         let wire_vars = &[a.into(), b.into(), 0, 0, c.into()];
         self.insert_gate(wire_vars, Box::new(LogicOrValueGate))?;
 
@@ -709,7 +709,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             .iter()
             .take(bit_len) // since little-endian, truncate would remove MSBs
             .map(|&b| {
-                self.create_bool_variable(b)
+                self.create_boolean_variable(b)
             })
             .collect::<Result<Vec<_>, PlonkError>>()?;
 
@@ -857,8 +857,8 @@ pub(crate) mod test {
         b: bool,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_bool_variable(a)?;
-        let b = circuit.create_bool_variable(b)?;
+        let a = circuit.create_boolean_variable(a)?;
+        let b = circuit.create_boolean_variable(b)?;
         circuit.logic_or_gate(a, b)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -906,8 +906,8 @@ pub(crate) mod test {
         b: bool,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_bool_variable(a)?;
-        let b = circuit.create_bool_variable(b)?;
+        let a = circuit.create_boolean_variable(a)?;
+        let b = circuit.create_boolean_variable(b)?;
         circuit.logic_and(a, b)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -1239,7 +1239,7 @@ pub(crate) mod test {
         x_1: F,
     ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let bit_var = circuit.create_bool_variable(bit)?;
+        let bit_var = circuit.create_boolean_variable(bit)?;
         let x_0_var = circuit.create_variable(x_0)?;
         let x_1_var = circuit.create_variable(x_1)?;
         circuit.conditional_select(bit_var, x_0_var, x_1_var)?;
@@ -1452,7 +1452,7 @@ pub(crate) mod test {
         circuit.lc(&wire_in.try_into().unwrap(), &coeffs)?;
 
         // conditional select gate
-        let bit_true = circuit.create_bool_variable(true)?;
+        let bit_true = circuit.create_boolean_variable(true)?;
         let x_0 = circuit.create_variable(F::from(23u32))?;
         let x_1 = circuit.create_variable(F::from(24u32))?;
         circuit.conditional_select(bit_true, x_0, x_1)?;

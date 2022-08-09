@@ -459,7 +459,7 @@ where
 
     let k1_var = circuit.create_variable(int_to_fq!(k1_int))?;
     let k2_var = circuit.create_variable(int_to_fq!(k2_int))?;
-    let k2_sign_var = circuit.create_bool_variable(is_k2_positive)?;
+    let k2_sign_var = circuit.create_boolean_variable(is_k2_positive)?;
 
     let t_var = circuit.create_variable(int_to_fq!(t_int))?;
 
