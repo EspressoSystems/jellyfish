@@ -313,17 +313,17 @@ where
 
     /// Constrain that `a` is true or `b` is true.
     /// Return error if variables are invalid.
-    pub fn logic_or_gate(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError> {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        let wire_vars = &[a, b, 0, 0, 0];
+    pub fn logic_or_gate(&mut self, a: BoolVar, b: BoolVar) -> Result<(), PlonkError> {
+        self.check_var_bound(a.into())?;
+        self.check_var_bound(b.into())?;
+        let wire_vars = &[a.into(), b.into(), 0, 0, 0];
         self.insert_gate(wire_vars, Box::new(LogicOrGate))?;
         Ok(())
     }
 
     /// Obtain a bool variable representing whether two input variables are
     /// equal. Return error if variables are invalid.
-    pub fn check_equal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
+    pub fn check_equal(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError> {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
         let delta = self.sub(a, b)?;
@@ -332,7 +332,7 @@ where
 
     /// Obtain a bool variable representing whether input variable is zero.
     /// Return error if the input variable is invalid.
-    pub fn check_is_zero(&mut self, a: Variable) -> Result<Variable, PlonkError> {
+    pub fn check_is_zero(&mut self, a: Variable) -> Result<BoolVar, PlonkError> {
         self.check_var_bound(a)?;
 
         // y is the bit indicating if a == zero
@@ -348,16 +348,16 @@ where
                 })?,
             )
         };
-        let y = self.create_variable(y)?;
+        let y = self.create_bool_variable_unchecked(y)?;
         let a_inv = self.create_variable(a_inv)?;
 
         // constraint 1: 1 - a * a^(-1) = y, i.e., a * a^(-1) + 1 * y = 1
         self.mul_add_gate(
-            &[a, a_inv, self.one(), y, self.one()],
+            &[a, a_inv, self.one(), y.into(), self.one()],
             &[F::one(), F::one()],
         )?;
         // constraint 2: multiplication y * a = 0
-        self.mul_gate(y, a, self.zero())?;
+        self.mul_gate(y.into(), a, self.zero())?;
         Ok(y)
     }
 
@@ -370,26 +370,27 @@ where
         self.mul_gate(var, inv_var, one_var)
     }
 
-    /// Assuming value represented by `a` is boolean, obtain a
-    /// variable representing the result of a logic negation gate. Return the
-    /// index of the variable. Return error if the input variable is invalid.
-    pub fn logic_neg(&mut self, a: Variable) -> Result<Variable, PlonkError> {
-        self.check_is_zero(a)
+    /// Obtain a variable representing the result of a logic negation gate.
+    /// Return the index of the variable. Return error if the input variable
+    /// is invalid.
+    pub fn logic_neg(&mut self, a: BoolVar) -> Result<BoolVar, PlonkError> {
+        self.check_is_zero(a.into())
     }
 
-    /// Assuming values represented by `a` and `b` are boolean, obtain a
-    /// variable representing the result of a logic AND gate. Return the
-    /// index of the variable. Return error if the input variables are
+    /// Obtain a variable representing the result of a logic AND gate. Return
+    /// the index of the variable. Return error if the input variables are
     /// invalid.
-    pub fn logic_and(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
-        self.mul(a, b)
+    pub fn logic_and(&mut self, a: BoolVar, b: BoolVar) -> Result<BoolVar, PlonkError> {
+        let c =
+            self.create_bool_variable_unchecked(self.witness(a.into())? * self.witness(b.into())?)?;
+        self.mul_gate(a.into(), b.into(), c.into())?;
+        Ok(c)
     }
 
-    /// Given a list of boolean variables, obtain a
-    /// variable representing the result of a logic AND gate. Return the
-    /// index of the variable. Return error if the input variables are
-    /// invalid.
-    pub fn logic_and_all(&mut self, vars: &[Variable]) -> Result<Variable, PlonkError> {
+    /// Given a list of boolean variables, obtain a variable representing the
+    /// result of a logic AND gate. Return the index of the variable. Return
+    /// error if the input variables are invalid.
+    pub fn logic_and_all(&mut self, vars: &[BoolVar]) -> Result<BoolVar, PlonkError> {
         if vars.is_empty() {
             return Err(PlonkError::InvalidParameters(
                 "logic_and_all: empty variable list".to_string(),
@@ -402,19 +403,21 @@ where
         Ok(res)
     }
 
-    /// Assuming values represented by `a` and `b` are boolean, obtain a
-    /// variable representing the result of a logic OR gate. Return the
+    /// Obtain a variable representing the result of a logic OR gate. Return the
     /// index of the variable. Return error if the input variables are
     /// invalid.
-    pub fn logic_or(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        let a_val = self.witness(a)?;
-        let b_val = self.witness(b)?;
+    pub fn logic_or(&mut self, a: BoolVar, b: BoolVar) -> Result<BoolVar, PlonkError> {
+        self.check_var_bound(a.into())?;
+        self.check_var_bound(b.into())?;
+
+        let a_val = self.witness(a.into())?;
+        let b_val = self.witness(b.into())?;
         let c_val = a_val + b_val - a_val * b_val;
-        let c = self.create_variable(c_val)?;
-        let wire_vars = &[a, b, 0, 0, c];
+
+        let c = self.create_bool_variable_unchecked(c_val)?;
+        let wire_vars = &[a.into(), b.into(), 0, 0, c.into()];
         self.insert_gate(wire_vars, Box::new(LogicOrValueGate))?;
+
         Ok(c)
     }
 
@@ -654,7 +657,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Return a boolean variable indicating whether variable `a` is in the
     /// range [0, 2^`bit_len`). Return error if the variable is invalid.
     /// TODO: optimize the gate for UltraPlonk.
-    pub fn check_in_range(&mut self, a: Variable, bit_len: usize) -> Result<Variable, PlonkError> {
+    pub fn check_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, PlonkError> {
         let a_bit_le: Vec<BoolVar> = self.unpack(a, F::size_in_bits())?;
         let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
         // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
@@ -831,28 +834,31 @@ pub(crate) mod test {
 
     fn test_logic_or_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let zero_var = circuit.zero();
-        let one_var = circuit.one();
+        let false_var = circuit.create_bool_variable(false)?;
+        let true_var = circuit.create_bool_variable(true)?;
         // Good path
-        circuit.logic_or_gate(zero_var, one_var)?;
-        circuit.logic_or_gate(one_var, zero_var)?;
-        circuit.logic_or_gate(one_var, one_var)?;
+        circuit.logic_or_gate(false_var, true_var)?;
+        circuit.logic_or_gate(true_var, false_var)?;
+        circuit.logic_or_gate(true_var, true_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         // Error path
-        circuit.logic_or_gate(zero_var, zero_var)?;
+        circuit.logic_or_gate(false_var, false_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
-        let circuit_1 = build_logic_or_circuit(F::one(), F::one())?;
-        let circuit_2 = build_logic_or_circuit(F::zero(), F::one())?;
+        let circuit_1 = build_logic_or_circuit(true, true)?;
+        let circuit_2 = build_logic_or_circuit(false, true)?;
         test_variable_independence_for_circuit::<F>(circuit_1, circuit_2)?;
 
         Ok(())
     }
 
-    fn build_logic_or_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
+    fn build_logic_or_circuit<F: PrimeField>(
+        a: bool,
+        b: bool,
+    ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(a)?;
-        let b = circuit.create_variable(b)?;
+        let a = circuit.create_bool_variable(a)?;
+        let b = circuit.create_bool_variable(b)?;
         circuit.logic_or_gate(a, b)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -868,37 +874,40 @@ pub(crate) mod test {
 
     fn test_logic_and_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let zero_var = circuit.zero();
-        let one_var = circuit.one();
+        let false_var = circuit.false_var();
+        let true_var = circuit.true_var();
         // Good path
-        let a = circuit.logic_and(zero_var, one_var)?;
-        assert_eq!(F::zero(), circuit.witness(a)?);
-        let b = circuit.logic_and(one_var, zero_var)?;
-        assert_eq!(F::zero(), circuit.witness(b)?);
-        let c = circuit.logic_and(one_var, one_var)?;
-        assert_eq!(F::one(), circuit.witness(c)?);
-        let d = circuit.logic_and_all(&[zero_var, one_var, one_var])?;
-        assert_eq!(F::zero(), circuit.witness(d)?);
-        let e = circuit.logic_and_all(&[one_var, one_var, one_var])?;
-        assert_eq!(F::one(), circuit.witness(e)?);
+        let a = circuit.logic_and(false_var, true_var)?;
+        assert_eq!(F::zero(), circuit.witness(a.into())?);
+        let b = circuit.logic_and(true_var, false_var)?;
+        assert_eq!(F::zero(), circuit.witness(b.into())?);
+        let c = circuit.logic_and(true_var, true_var)?;
+        assert_eq!(F::one(), circuit.witness(c.into())?);
+        let d = circuit.logic_and_all(&[false_var, true_var, true_var])?;
+        assert_eq!(F::zero(), circuit.witness(d.into())?);
+        let e = circuit.logic_and_all(&[true_var, true_var, true_var])?;
+        assert_eq!(F::one(), circuit.witness(e.into())?);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         // Error path
-        *circuit.witness_mut(e) = F::zero();
+        *circuit.witness_mut(e.into()) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        *circuit.witness_mut(e) = F::one();
+        *circuit.witness_mut(e.into()) = F::one();
         assert!(circuit.logic_and_all(&[]).is_err());
 
-        let circuit_1 = build_logic_and_circuit(F::one(), F::one())?;
-        let circuit_2 = build_logic_and_circuit(F::zero(), F::one())?;
+        let circuit_1 = build_logic_and_circuit(true, true)?;
+        let circuit_2 = build_logic_and_circuit(false, true)?;
         test_variable_independence_for_circuit::<F>(circuit_1, circuit_2)?;
 
         Ok(())
     }
 
-    fn build_logic_and_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, PlonkError> {
+    fn build_logic_and_circuit<F: PrimeField>(
+        a: bool,
+        b: bool,
+    ) -> Result<PlonkCircuit<F>, PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(a)?;
-        let b = circuit.create_variable(b)?;
+        let a = circuit.create_bool_variable(a)?;
+        let b = circuit.create_bool_variable(b)?;
         circuit.logic_and(a, b)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -920,8 +929,8 @@ pub(crate) mod test {
         let a_zero_eq = circuit.check_equal(a, circuit.zero())?;
 
         // check circuit
-        assert_eq!(circuit.witness(a_b_eq)?, F::one());
-        assert_eq!(circuit.witness(a_zero_eq)?, F::zero());
+        assert_eq!(circuit.witness(a_b_eq.into())?, F::one());
+        assert_eq!(circuit.witness(a_zero_eq.into())?, F::zero());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(b) = val + F::one();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -959,12 +968,12 @@ pub(crate) mod test {
         let zero_zero_eq = circuit.check_is_zero(circuit.zero())?;
 
         // check circuit
-        assert_eq!(circuit.witness(a_zero_eq)?, F::zero());
-        assert_eq!(circuit.witness(zero_zero_eq)?, F::one());
+        assert_eq!(circuit.witness(a_zero_eq.into())?, F::zero());
+        assert_eq!(circuit.witness(zero_zero_eq.into())?, F::one());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        *circuit.witness_mut(zero_zero_eq) = F::zero();
+        *circuit.witness_mut(zero_zero_eq.into()) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        *circuit.witness_mut(zero_zero_eq) = F::one();
+        *circuit.witness_mut(zero_zero_eq.into()) = F::one();
         *circuit.witness_mut(a) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
@@ -1382,9 +1391,9 @@ pub(crate) mod test {
         let b1 = circuit.check_in_range(a, 5)?;
         let b2 = circuit.check_in_range(a, 10)?;
         let b3 = circuit.check_in_range(a, 0)?;
-        assert_eq!(circuit.witness(b1)?, F::zero());
-        assert_eq!(circuit.witness(b2)?, F::one());
-        assert_eq!(circuit.witness(b3)?, F::zero());
+        assert_eq!(circuit.witness(b1.into())?, F::zero());
+        assert_eq!(circuit.witness(b2.into())?, F::one());
+        assert_eq!(circuit.witness(b3.into())?, F::zero());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // if mess up the wire value, should fail

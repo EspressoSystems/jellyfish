@@ -263,12 +263,18 @@ where
         &mut self,
         point0: &PointVariable,
         point1: &PointVariable,
-    ) -> Result<Variable, PlonkError> {
+    ) -> Result<BoolVar, PlonkError> {
         self.check_point_var_bound(point0)?;
         self.check_point_var_bound(point1)?;
         let x_eq = self.check_equal(point0.0, point1.0)?;
         let y_eq = self.check_equal(point0.1, point1.1)?;
-        self.mul(x_eq, y_eq)
+
+        let res = self.create_bool_variable_unchecked(
+            self.witness(x_eq.into())? * self.witness(y_eq.into())?,
+        )?;
+        self.mul_gate(x_eq.into(), y_eq.into(), res.into())?;
+
+        Ok(res)
     }
 }
 
@@ -299,24 +305,24 @@ where
     fn neutral_point_gate(
         &mut self,
         point_var: &PointVariable,
-        expected_neutral: Variable,
+        expected_neutral: BoolVar,
     ) -> Result<(), PlonkError> {
         self.check_point_var_bound(point_var)?;
-        self.check_var_bound(expected_neutral)?;
+        self.check_var_bound(expected_neutral.into())?;
 
         // constraint 1: b_x = is_equal(x, 0);
         let b_x = self.check_equal(point_var.0, self.zero())?;
         // constraint 2: b_y = is_equal(y, 1);
         let b_y = self.check_equal(point_var.1, self.one())?;
         // constraint 3: b = b_x * b_y;
-        self.mul_gate(b_x, b_y, expected_neutral)?;
+        self.mul_gate(b_x.into(), b_y.into(), expected_neutral.into())?;
         Ok(())
     }
 
     /// Obtain a boolean variable indicating whether a point is the neutral
     /// point (0, 1) Return variable with value 1 if it is, or 0 otherwise
     /// Return error if input variables are invalid
-    pub fn is_neutral_point<P>(&mut self, point_var: &PointVariable) -> Result<Variable, PlonkError>
+    pub fn is_neutral_point<P>(&mut self, point_var: &PointVariable) -> Result<BoolVar, PlonkError>
     where
         P: Parameters<BaseField = F> + Clone,
     {
@@ -324,9 +330,9 @@ where
 
         let b = {
             if self.point_witness(point_var)? == Point::from(GroupAffine::<P>::zero()) {
-                self.create_variable(F::one())?
+                self.create_bool_variable(true)?
             } else {
-                self.create_variable(F::zero())?
+                self.create_bool_variable(false)?
             }
         };
 
@@ -636,8 +642,8 @@ mod test {
         let p1_check = circuit.is_neutral_point::<P>(&p1)?;
         let p2_check = circuit.is_neutral_point::<P>(&p2)?;
 
-        assert_eq!(circuit.witness(p1_check)?, F::one());
-        assert_eq!(circuit.witness(p2_check)?, F::zero());
+        assert_eq!(circuit.witness(p1_check.into())?, F::one());
+        assert_eq!(circuit.witness(p2_check.into())?, F::zero());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(p1.0) = F::one();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1002,8 +1008,8 @@ mod test {
         let p1_p2_eq = circuit.check_equal_point(&p1_var, &p2_var)?;
         let p1_p3_eq = circuit.check_equal_point(&p1_var, &p3_var)?;
 
-        assert_eq!(circuit.witness(p1_p2_eq)?, F::one());
-        assert_eq!(circuit.witness(p1_p3_eq)?, F::zero());
+        assert_eq!(circuit.witness(p1_p2_eq.into())?, F::one());
+        assert_eq!(circuit.witness(p1_p3_eq.into())?, F::zero());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(p2_var.0) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());

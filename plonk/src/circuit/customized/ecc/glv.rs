@@ -514,7 +514,8 @@ where
     };
 
     //  (f.3) either f.1 or f.2 is satisfied
-    let sat = circuit.conditional_select(k2_sign_var, k2_is_neg_sat, k2_is_pos_sat)?;
+    let sat =
+        circuit.conditional_select(k2_sign_var, k2_is_neg_sat.into(), k2_is_pos_sat.into())?;
     circuit.enforce_true(sat)?;
 
     //  (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2
@@ -544,7 +545,8 @@ where
     };
 
     //  (g.3) either g.1 or g.2 is satisfied
-    let sat = circuit.conditional_select(k2_sign_var, k2_is_neg_sat, k2_is_pos_sat)?;
+    let sat =
+        circuit.conditional_select(k2_sign_var, k2_is_neg_sat.into(), k2_is_pos_sat.into())?;
     circuit.enforce_true(sat)?;
 
     // extract the output

@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Basic instantiations of Plonk-based constraint systems
-use super::{Arithmetization, Circuit, GateId, Variable, WireId};
+use super::{Arithmetization, BoolVar, Circuit, GateId, Variable, WireId};
 use crate::{
     circuit::{gates::*, SortedLookupVecAndPolys},
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
@@ -263,6 +263,15 @@ impl<F: FftField> PlonkCircuit<F> {
     /// The range size of UltraPlonk range gates.
     pub fn range_size(&self) -> Result<usize, PlonkError> {
         Ok(1 << self.range_bit_len()?)
+    }
+
+    /// creating a `BoolVar` without checking if `v` is a boolean value!
+    /// You should absolutely sure about what you are doing.
+    /// You should normally only use this API if you already enforce `v` to be a
+    /// boolean value using other constraints.
+    pub(crate) fn create_bool_variable_unchecked(&mut self, a: F) -> Result<BoolVar, PlonkError> {
+        let var = self.create_variable(a)?;
+        Ok(BoolVar::new_unchecked(var))
     }
 }
 

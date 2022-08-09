@@ -70,7 +70,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<Variable, PlonkError>;
+    ) -> Result<BoolVar, PlonkError>;
 
     /// Create a signature variable from a signature `sig`.
     fn create_signature_variable(&mut self, sig: &Signature<P>)
@@ -111,7 +111,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<Variable, PlonkError> {
+    ) -> Result<BoolVar, PlonkError> {
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
         self.check_equal_point(&p1, &p2)
     }
@@ -316,6 +316,6 @@ mod tests {
             &msg_var,
             &sig_var,
         )?;
-        Ok((circuit, bit))
+        Ok((circuit, bit.into()))
     }
 }
