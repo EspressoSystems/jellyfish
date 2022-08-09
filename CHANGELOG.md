@@ -6,6 +6,7 @@
 - Refactored `UniversalSNARK` trait (#80, #87)
 - Restore `no_std` compliance (#85, #87)
 - Use [blst](https://github.com/supranational/blst) library for BLS signature/VRF (#89)
+- Introduce `struct BoolVar` whenever necessary and possible (#91)
 
 ## v0.1.2
 
