@@ -18,6 +18,26 @@ pub use basic::PlonkCircuit;
 
 /// An index to one of the witness values.
 pub type Variable = usize;
+/// An index to a witness value of boolean type.
+#[derive(Debug, Clone, Copy)]
+pub struct BoolVar(usize);
+
+impl From<BoolVar> for Variable {
+    fn from(bv: BoolVar) -> Self {
+        bv.0
+    }
+}
+
+impl BoolVar {
+    /// Create a `BoolVar` without any check. Be careful!
+    /// This is an internal API, shouldn't be used unless you know what you are
+    /// doing. Normally you should only construct `BoolVar` through
+    /// `Circuit::create_boolean_variable()`.
+    pub(crate) fn new_unchecked(inner: usize) -> Self {
+        Self(inner)
+    }
+}
+
 /// An index to a gate in circuit.
 pub type GateId = usize;
 /// An index to the type of gate wires.
@@ -56,11 +76,11 @@ pub trait Circuit<F: Field> {
     fn create_variable(&mut self, val: F) -> Result<Variable, PlonkError>;
 
     /// Add a bool variable to the circuit; return the index of the variable.
-    fn create_bool_variable(&mut self, val: bool) -> Result<Variable, PlonkError> {
+    fn create_boolean_variable(&mut self, val: bool) -> Result<BoolVar, PlonkError> {
         let val_scalar = if val { F::one() } else { F::zero() };
         let var = self.create_variable(val_scalar)?;
         self.bool_gate(var)?;
-        Ok(var)
+        Ok(BoolVar(var))
     }
 
     /// Add a public input variable; return the index of the variable.
@@ -74,6 +94,16 @@ pub trait Circuit<F: Field> {
 
     /// Return a default variable with value one.
     fn one(&self) -> Variable;
+
+    /// Return a default variable with value `false` (namely zero).
+    fn false_var(&self) -> BoolVar {
+        BoolVar::new_unchecked(self.zero())
+    }
+
+    /// Return a default variable with value `true` (namely one).
+    fn true_var(&self) -> BoolVar {
+        BoolVar::new_unchecked(self.one())
+    }
 
     /// Return the witness value of variable `idx`.
     /// Return error if the input variable is invalid.

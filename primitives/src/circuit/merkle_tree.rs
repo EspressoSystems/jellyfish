@@ -13,7 +13,7 @@ use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_plonk::{
-    circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
+    circuit::{customized::rescue::RescueGadget, BoolVar, Circuit, PlonkCircuit, Variable},
     errors::PlonkError,
 };
 use jf_rescue::RescueParameter;
@@ -22,16 +22,16 @@ use jf_rescue::RescueParameter;
 struct MerkleNodeBooleanEncoding<F: PrimeField> {
     sibling1: NodeValue<F>,
     sibling2: NodeValue<F>,
-    is_left_child: u8,
-    is_right_child: u8,
+    is_left_child: bool,
+    is_right_child: bool,
 }
 
 impl<F: PrimeField> MerkleNodeBooleanEncoding<F> {
     fn new(
         sibling1: NodeValue<F>,
         sibling2: NodeValue<F>,
-        is_left_child: u8,
-        is_right_child: u8,
+        is_left_child: bool,
+        is_right_child: bool,
     ) -> Self {
         MerkleNodeBooleanEncoding {
             sibling1,
@@ -60,13 +60,13 @@ impl<F: PrimeField> From<&MerklePath<F>> for MerklePathBooleanEncoding<F> {
         for node in path.nodes.iter() {
             let circuit_node = match node.pos {
                 NodePos::Left => {
-                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, 1_u8, 0_u8)
+                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, true, false)
                 },
                 NodePos::Middle => {
-                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, 0_u8, 0_u8)
+                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, false, false)
                 },
                 NodePos::Right => {
-                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, 0_u8, 1_u8)
+                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, false, true)
                 },
             };
             nodes.push(circuit_node);
@@ -81,8 +81,8 @@ impl<F: PrimeField> From<&MerklePath<F>> for MerklePathBooleanEncoding<F> {
 pub struct MerkleNodeVars {
     pub sibling1: Variable,
     pub sibling2: Variable,
-    pub is_left_child: Variable,
-    pub is_right_child: Variable,
+    pub is_left_child: BoolVar,
+    pub is_right_child: BoolVar,
 }
 
 #[derive(Debug)]
@@ -134,8 +134,8 @@ trait MerkleTreeHelperGadget<F: PrimeField> {
         node: Variable,
         sib1: Variable,
         sib2: Variable,
-        node_is_left: Variable,
-        node_is_right: Variable,
+        node_is_left: BoolVar,
+        node_is_right: BoolVar,
     ) -> Result<[Variable; 3], PlonkError>;
 
     /// Ensure that the position of each node of the path is correctly encoded
@@ -221,8 +221,8 @@ where
         node: Variable,
         sib1: Variable,
         sib2: Variable,
-        node_is_left: Variable,
-        node_is_right: Variable,
+        node_is_left: BoolVar,
+        node_is_right: BoolVar,
     ) -> Result<[Variable; 3], PlonkError> {
         let one = F::one();
         let left_node = self.conditional_select(node_is_left, sib1, node)?;
@@ -248,8 +248,8 @@ where
                 Ok(MerkleNodeVars {
                     sibling1: self.create_variable(node.sibling1.0)?,
                     sibling2: self.create_variable(node.sibling2.0)?,
-                    is_left_child: self.create_variable(F::from(node.is_left_child as u32))?,
-                    is_right_child: self.create_variable(F::from(node.is_right_child as u32))?,
+                    is_left_child: self.create_boolean_variable(node.is_left_child)?,
+                    is_right_child: self.create_boolean_variable(node.is_right_child)?,
                 })
             })
             .collect::<Result<Vec<MerkleNodeVars>, PlonkError>>()?;
@@ -257,11 +257,10 @@ where
         // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
         // boolean
         for node in nodes.iter() {
-            self.bool_gate(node.is_left_child)?;
-            self.bool_gate(node.is_right_child)?;
             // Boolean constrain `is_left_child + is_right_child` because a node
             // can either be the left or the right child of its parent
-            let left_plus_right = self.add(node.is_left_child, node.is_right_child)?;
+            let left_plus_right =
+                self.add(node.is_left_child.into(), node.is_right_child.into())?;
             self.bool_gate(left_plus_right)?;
         }
 
@@ -307,7 +306,7 @@ mod test {
     use jf_plonk::circuit::{Circuit, PlonkCircuit, Variable};
     use jf_rescue::RescueParameter;
 
-    fn check_merkle_path<F: PrimeField>(is_left_child: u8, is_right_child: u8, accept: bool) {
+    fn check_merkle_path<F: PrimeField>(is_left_child: bool, is_right_child: bool, accept: bool) {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let zero = F::zero();
         let one = F::one();
@@ -338,18 +337,13 @@ mod test {
         // Happy path:
         // `is_left_child`,`is_right_child` and `is_left_child + is_right_child` are
         // boolean
-        check_merkle_path::<F>(1, 0, true);
-        check_merkle_path::<F>(0, 1, true);
-        check_merkle_path::<F>(0, 0, true);
-
-        // Circuit cannot be satisfied when `is_left_child` (or `is_right_child`) is not
-        // boolean
-        check_merkle_path::<F>(2, 0, false);
-        check_merkle_path::<F>(0, 2, false);
+        check_merkle_path::<F>(true, false, true);
+        check_merkle_path::<F>(false, true, true);
+        check_merkle_path::<F>(false, false, true);
 
         // Circuit cannot be satisfied when `is_left_child + is_right_child` is not
         // boolean
-        check_merkle_path::<F>(1, 1, false);
+        check_merkle_path::<F>(true, true, false);
     }
 
     fn check_permute<F: PrimeField>(
@@ -360,17 +354,9 @@ mod test {
         expected_output_vars: &[Variable],
     ) {
         let zero = F::zero();
-        let one = F::one();
 
-        let node_is_left = match is_left {
-            false => circuit.create_variable(zero).unwrap(),
-            true => circuit.create_variable(one).unwrap(),
-        };
-
-        let node_is_right = match is_right {
-            false => circuit.create_variable(zero).unwrap(),
-            true => circuit.create_variable(one).unwrap(),
-        };
+        let node_is_left = circuit.create_boolean_variable(is_left).unwrap();
+        let node_is_right = circuit.create_boolean_variable(is_right).unwrap();
 
         let node = input_vars[0];
         let sib1 = input_vars[1];

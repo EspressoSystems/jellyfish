@@ -335,7 +335,7 @@ where
 
     // create circuit
     let range_size = F::from((1 << c) as u32);
-    circuit.decompose_vars_gate(decomposed_scalar_vars.clone(), scalar_var, range_size)?;
+    circuit.decomposition_gate(decomposed_scalar_vars.clone(), scalar_var, range_size)?;
 
     Ok(decomposed_scalar_vars)
 }
