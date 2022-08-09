@@ -834,8 +834,8 @@ pub(crate) mod test {
 
     fn test_logic_or_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let false_var = circuit.create_bool_variable(false)?;
-        let true_var = circuit.create_bool_variable(true)?;
+        let false_var = circuit.false_var();
+        let true_var = circuit.true_var();
         // Good path
         circuit.logic_or_gate(false_var, true_var)?;
         circuit.logic_or_gate(true_var, false_var)?;
@@ -1204,8 +1204,9 @@ pub(crate) mod test {
 
     fn test_conditional_select_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let bit_true = circuit.create_bool_variable(true)?;
-        let bit_false = circuit.create_bool_variable(false)?;
+        let bit_true = circuit.true_var();
+        let bit_false = circuit.false_var();
+
         let x_0 = circuit.create_variable(F::from(23u32))?;
         let x_1 = circuit.create_variable(F::from(24u32))?;
         let select_true = circuit.conditional_select(bit_true, x_0, x_1)?;

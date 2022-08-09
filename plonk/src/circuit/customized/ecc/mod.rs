@@ -857,8 +857,8 @@ mod test {
         let p3 = GroupAffine::<P>::rand(&mut rng);
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let false_var = circuit.create_bool_variable(false)?;
-        let true_var = circuit.create_bool_variable(true)?;
+        let false_var = circuit.false_var();
+        let true_var = circuit.true_var();
 
         let select_p0 = circuit.quaternary_point_select::<P>(
             false_var,
@@ -1174,8 +1174,8 @@ mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p0_var = circuit.create_point_variable(Point::from(p0))?;
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
-        let true_var = circuit.create_bool_variable(true)?;
-        let false_var = circuit.create_bool_variable(false)?;
+        let true_var = circuit.true_var();
+        let false_var = circuit.false_var();
 
         let select_p0 = circuit.binary_point_vars_select(false_var, &p0_var, &p1_var)?;
         assert_eq!(circuit.point_witness(&select_p0)?, Point::from(p0));
