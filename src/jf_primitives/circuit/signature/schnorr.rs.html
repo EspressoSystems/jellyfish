@@ -346,7 +346,7 @@
             <span class="ident">ecc</span>::{<span class="ident">Point</span>, <span class="ident">PointVariable</span>},
             <span class="ident">rescue::RescueGadget</span>,
         },
-        <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+        <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
     },
     <span class="ident">errors::PlonkError</span>,
 };
@@ -396,7 +396,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Create a signature variable from a signature `sig`.</span>
     <span class="kw">fn</span> <span class="ident">create_signature_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>)
@@ -437,7 +437,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">p1</span>, <span class="ident">p2</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::verify_sig_core</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="ident">msg</span>, <span class="ident">sig</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_equal_point</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)
     }
@@ -485,7 +485,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">sig_point</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -498,7 +498,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">sig_point</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">CS_ID_SCHNORR</span>.<span class="ident">as_ref</span>());
         <span class="comment">// TODO: create `inst_desc_var` and the constant gate *only once* during the</span>
         <span class="comment">// entire circuit construction.</span>
@@ -642,7 +642,7 @@
             <span class="kw-2">&amp;</span><span class="ident">msg_var</span>,
             <span class="kw-2">&amp;</span><span class="ident">sig_var</span>,
         )<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">circuit</span>, <span class="ident">bit</span>))
+        <span class="prelude-val">Ok</span>((<span class="ident">circuit</span>, <span class="ident">bit</span>.<span class="ident">into</span>()))
     }
 }
 </code></pre></div>

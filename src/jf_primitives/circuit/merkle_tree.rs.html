@@ -513,20 +513,6 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -542,7 +528,7 @@
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
 <span class="kw">use</span> <span class="ident">jf_plonk</span>::{
-    <span class="ident">circuit</span>::{<span class="ident">customized::rescue::RescueGadget</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
+    <span class="ident">circuit</span>::{<span class="ident">customized::rescue::RescueGadget</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
     <span class="ident">errors::PlonkError</span>,
 };
 <span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
@@ -551,16 +537,16 @@
 <span class="kw">struct</span> <span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
     <span class="ident">sibling1</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">sibling2</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">is_left_child</span>: <span class="ident">u8</span>,
-    <span class="ident">is_right_child</span>: <span class="ident">u8</span>,
+    <span class="ident">is_left_child</span>: <span class="ident">bool</span>,
+    <span class="ident">is_right_child</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">sibling1</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">sibling2</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">is_left_child</span>: <span class="ident">u8</span>,
-        <span class="ident">is_right_child</span>: <span class="ident">u8</span>,
+        <span class="ident">is_left_child</span>: <span class="ident">bool</span>,
+        <span class="ident">is_right_child</span>: <span class="ident">bool</span>,
     ) -&gt; <span class="self">Self</span> {
         <span class="ident">MerkleNodeBooleanEncoding</span> {
             <span class="ident">sibling1</span>,
@@ -589,13 +575,13 @@
         <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">path</span>.<span class="ident">nodes</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">circuit_node</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">node</span>.<span class="ident">pos</span> {
                 <span class="ident">NodePos::Left</span> =&gt; {
-                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="number">1_u8</span>, <span class="number">0_u8</span>)
+                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>)
                 },
                 <span class="ident">NodePos::Middle</span> =&gt; {
-                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="number">0_u8</span>, <span class="number">0_u8</span>)
+                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>)
                 },
                 <span class="ident">NodePos::Right</span> =&gt; {
-                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="number">0_u8</span>, <span class="number">1_u8</span>)
+                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>)
                 },
             };
             <span class="ident">nodes</span>.<span class="ident">push</span>(<span class="ident">circuit_node</span>);
@@ -610,8 +596,8 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MerkleNodeVars</span> {
     <span class="kw">pub</span> <span class="ident">sibling1</span>: <span class="ident">Variable</span>,
     <span class="kw">pub</span> <span class="ident">sibling2</span>: <span class="ident">Variable</span>,
-    <span class="kw">pub</span> <span class="ident">is_left_child</span>: <span class="ident">Variable</span>,
-    <span class="kw">pub</span> <span class="ident">is_right_child</span>: <span class="ident">Variable</span>,
+    <span class="kw">pub</span> <span class="ident">is_left_child</span>: <span class="ident">BoolVar</span>,
+    <span class="kw">pub</span> <span class="ident">is_right_child</span>: <span class="ident">BoolVar</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -663,8 +649,8 @@
         <span class="ident">node</span>: <span class="ident">Variable</span>,
         <span class="ident">sib1</span>: <span class="ident">Variable</span>,
         <span class="ident">sib2</span>: <span class="ident">Variable</span>,
-        <span class="ident">node_is_left</span>: <span class="ident">Variable</span>,
-        <span class="ident">node_is_right</span>: <span class="ident">Variable</span>,
+        <span class="ident">node_is_left</span>: <span class="ident">BoolVar</span>,
+        <span class="ident">node_is_right</span>: <span class="ident">BoolVar</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">PlonkError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Ensure that the position of each node of the path is correctly encoded</span>
@@ -750,8 +736,8 @@
         <span class="ident">node</span>: <span class="ident">Variable</span>,
         <span class="ident">sib1</span>: <span class="ident">Variable</span>,
         <span class="ident">sib2</span>: <span class="ident">Variable</span>,
-        <span class="ident">node_is_left</span>: <span class="ident">Variable</span>,
-        <span class="ident">node_is_right</span>: <span class="ident">Variable</span>,
+        <span class="ident">node_is_left</span>: <span class="ident">BoolVar</span>,
+        <span class="ident">node_is_right</span>: <span class="ident">BoolVar</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">F::one</span>();
         <span class="kw">let</span> <span class="ident">left_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conditional_select</span>(<span class="ident">node_is_left</span>, <span class="ident">sib1</span>, <span class="ident">node</span>)<span class="question-mark">?</span>;
@@ -777,8 +763,8 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">MerkleNodeVars</span> {
                     <span class="ident">sibling1</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>.<span class="number">0</span>)<span class="question-mark">?</span>,
                     <span class="ident">sibling2</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">node</span>.<span class="ident">sibling2</span>.<span class="number">0</span>)<span class="question-mark">?</span>,
-                    <span class="ident">is_left_child</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span> <span class="kw">as</span> <span class="ident">u32</span>))<span class="question-mark">?</span>,
-                    <span class="ident">is_right_child</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">node</span>.<span class="ident">is_right_child</span> <span class="kw">as</span> <span class="ident">u32</span>))<span class="question-mark">?</span>,
+                    <span class="ident">is_left_child</span>: <span class="self">self</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>)<span class="question-mark">?</span>,
+                    <span class="ident">is_right_child</span>: <span class="self">self</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">node</span>.<span class="ident">is_right_child</span>)<span class="question-mark">?</span>,
                 })
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
@@ -786,11 +772,10 @@
         <span class="comment">// `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are</span>
         <span class="comment">// boolean</span>
         <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span>.<span class="ident">iter</span>() {
-            <span class="self">self</span>.<span class="ident">bool_gate</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">bool_gate</span>(<span class="ident">node</span>.<span class="ident">is_right_child</span>)<span class="question-mark">?</span>;
             <span class="comment">// Boolean constrain `is_left_child + is_right_child` because a node</span>
             <span class="comment">// can either be the left or the right child of its parent</span>
-            <span class="kw">let</span> <span class="ident">left_plus_right</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>, <span class="ident">node</span>.<span class="ident">is_right_child</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">left_plus_right</span> <span class="op">=</span>
+                <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>.<span class="ident">into</span>(), <span class="ident">node</span>.<span class="ident">is_right_child</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">bool_gate</span>(<span class="ident">left_plus_right</span>)<span class="question-mark">?</span>;
         }
 
@@ -836,7 +821,7 @@
     <span class="kw">use</span> <span class="ident">jf_plonk::circuit</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
     <span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
 
-    <span class="kw">fn</span> <span class="ident">check_merkle_path</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">is_left_child</span>: <span class="ident">u8</span>, <span class="ident">is_right_child</span>: <span class="ident">u8</span>, <span class="ident">accept</span>: <span class="ident">bool</span>) {
+    <span class="kw">fn</span> <span class="ident">check_merkle_path</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">is_left_child</span>: <span class="ident">bool</span>, <span class="ident">is_right_child</span>: <span class="ident">bool</span>, <span class="ident">accept</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">F::zero</span>();
         <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">F::one</span>();
@@ -867,18 +852,13 @@
         <span class="comment">// Happy path:</span>
         <span class="comment">// `is_left_child`,`is_right_child` and `is_left_child + is_right_child` are</span>
         <span class="comment">// boolean</span>
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="number">1</span>, <span class="number">0</span>, <span class="bool-val">true</span>);
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="number">0</span>, <span class="number">1</span>, <span class="bool-val">true</span>);
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="bool-val">true</span>);
-
-        <span class="comment">// Circuit cannot be satisfied when `is_left_child` (or `is_right_child`) is not</span>
-        <span class="comment">// boolean</span>
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="number">2</span>, <span class="number">0</span>, <span class="bool-val">false</span>);
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="number">0</span>, <span class="number">2</span>, <span class="bool-val">false</span>);
+        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
+        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>);
+        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
 
         <span class="comment">// Circuit cannot be satisfied when `is_left_child + is_right_child` is not</span>
         <span class="comment">// boolean</span>
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="number">1</span>, <span class="number">1</span>, <span class="bool-val">false</span>);
+        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">check_permute</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
@@ -889,17 +869,9 @@
         <span class="ident">expected_output_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
     ) {
         <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">F::zero</span>();
-        <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">F::one</span>();
 
-        <span class="kw">let</span> <span class="ident">node_is_left</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">is_left</span> {
-            <span class="bool-val">false</span> =&gt; <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">zero</span>).<span class="ident">unwrap</span>(),
-            <span class="bool-val">true</span> =&gt; <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">one</span>).<span class="ident">unwrap</span>(),
-        };
-
-        <span class="kw">let</span> <span class="ident">node_is_right</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">is_right</span> {
-            <span class="bool-val">false</span> =&gt; <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">zero</span>).<span class="ident">unwrap</span>(),
-            <span class="bool-val">true</span> =&gt; <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">one</span>).<span class="ident">unwrap</span>(),
-        };
+        <span class="kw">let</span> <span class="ident">node_is_left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">is_left</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">node_is_right</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">is_right</span>).<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">input_vars</span>[<span class="number">0</span>];
         <span class="kw">let</span> <span class="ident">sib1</span> <span class="op">=</span> <span class="ident">input_vars</span>[<span class="number">1</span>];

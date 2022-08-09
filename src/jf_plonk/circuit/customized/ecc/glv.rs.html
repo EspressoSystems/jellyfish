@@ -721,11 +721,6 @@
 <span id="716">716</span>
 <span id="717">717</span>
 <span id="718">718</span>
-<span id="719">719</span>
-<span id="720">720</span>
-<span id="721">721</span>
-<span id="722">722</span>
-<span id="723">723</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -735,7 +730,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{
         <span class="ident">customized::ecc</span>::{<span class="ident">MultiScalarMultiplicationCircuit</span>, <span class="ident">PointVariable</span>},
-        <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+        <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
     },
     <span class="ident">errors::PlonkError</span>,
 };
@@ -821,17 +816,10 @@
         <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">scalar</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">base</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">k_vars</span> <span class="op">=</span> <span class="ident">scalar_decomposition_gate</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">scalar</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> (<span class="ident">s1_var</span>, <span class="ident">s2_var</span>, <span class="ident">s2_sign_var</span>) <span class="op">=</span> <span class="ident">scalar_decomposition_gate</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">scalar</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">endo_base_var</span> <span class="op">=</span> <span class="ident">endomorphism_circuit</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">base</span>)<span class="question-mark">?</span>;
-        <span class="ident">multi_scalar_mul_circuit</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-            <span class="self">self</span>,
-            <span class="ident">base</span>,
-            <span class="ident">k_vars</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">endo_base_var</span>,
-            <span class="ident">k_vars</span>[<span class="number">1</span>],
-            <span class="ident">k_vars</span>[<span class="number">2</span>],
-        )
+        <span class="ident">multi_scalar_mul_circuit</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">base</span>, <span class="ident">s1_var</span>, <span class="kw-2">&amp;</span><span class="ident">endo_base_var</span>, <span class="ident">s2_var</span>, <span class="ident">s2_sign_var</span>)
     }
 }
 
@@ -842,7 +830,7 @@
     <span class="ident">scalar_1</span>: <span class="ident">Variable</span>,
     <span class="ident">endo_base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
     <span class="ident">scalar_2</span>: <span class="ident">Variable</span>,
-    <span class="ident">scalar_2_sign_var</span>: <span class="ident">Variable</span>,
+    <span class="ident">scalar_2_sign_var</span>: <span class="ident">BoolVar</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
@@ -1001,7 +989,7 @@
 <span class="kw">fn</span> <span class="ident">scalar_decomposition_gate</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">S</span><span class="op">&gt;</span>(
     <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">s_var</span>: <span class="kw-2">&amp;</span><span class="ident">Variable</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>([<span class="ident">Variable</span>; <span class="number">3</span>]), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Variable</span>, <span class="ident">Variable</span>, <span class="ident">BoolVar</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
     <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">S</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
@@ -1194,7 +1182,7 @@
 
     <span class="kw">let</span> <span class="ident">k1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">k1_int</span>))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">k2_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">k2_int</span>))<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">k2_sign_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_bool_variable</span>(<span class="ident">is_k2_positive</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">k2_sign_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">is_k2_positive</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">t_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">t_int</span>))<span class="question-mark">?</span>;
 
@@ -1249,7 +1237,8 @@
     };
 
     <span class="comment">//  (f.3) either f.1 or f.2 is satisfied</span>
-    <span class="kw">let</span> <span class="ident">sat</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">conditional_select</span>(<span class="ident">k2_sign_var</span>, <span class="ident">k2_is_neg_sat</span>, <span class="ident">k2_is_pos_sat</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">sat</span> <span class="op">=</span>
+        <span class="ident">circuit</span>.<span class="ident">conditional_select</span>(<span class="ident">k2_sign_var</span>, <span class="ident">k2_is_neg_sat</span>.<span class="ident">into</span>(), <span class="ident">k2_is_pos_sat</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
     <span class="ident">circuit</span>.<span class="ident">enforce_true</span>(<span class="ident">sat</span>)<span class="question-mark">?</span>;
 
     <span class="comment">//  (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2</span>
@@ -1279,11 +1268,12 @@
     };
 
     <span class="comment">//  (g.3) either g.1 or g.2 is satisfied</span>
-    <span class="kw">let</span> <span class="ident">sat</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">conditional_select</span>(<span class="ident">k2_sign_var</span>, <span class="ident">k2_is_neg_sat</span>, <span class="ident">k2_is_pos_sat</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">sat</span> <span class="op">=</span>
+        <span class="ident">circuit</span>.<span class="ident">conditional_select</span>(<span class="ident">k2_sign_var</span>, <span class="ident">k2_is_neg_sat</span>.<span class="ident">into</span>(), <span class="ident">k2_is_pos_sat</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
     <span class="ident">circuit</span>.<span class="ident">enforce_true</span>(<span class="ident">sat</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// extract the output</span>
-    <span class="prelude-val">Ok</span>([<span class="ident">k1_var</span>, <span class="ident">k2_var</span>, <span class="ident">k2_sign_var</span>])
+    <span class="prelude-val">Ok</span>((<span class="ident">k1_var</span>, <span class="ident">k2_var</span>, <span class="ident">k2_sign_var</span>))
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
@@ -1430,15 +1420,15 @@
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">16</span>);
             <span class="kw">let</span> <span class="ident">scalar_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">scalar</span>)).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span>
+            <span class="kw">let</span> (<span class="ident">k1_var</span>, <span class="ident">k2_var</span>, <span class="ident">k2_sign_var</span>) <span class="op">=</span>
                 <span class="ident">scalar_decomposition_gate</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">EdwardsParameters</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">scalar_var</span>)
                     .<span class="ident">unwrap</span>();
 
-            <span class="kw">let</span> <span class="ident">k1_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">res</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">k1_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">k1_var</span>).<span class="ident">unwrap</span>();
             <span class="macro">assert_eq!</span>(<span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Fq</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">k1</span>), <span class="ident">k1_rec</span>);
 
-            <span class="kw">let</span> <span class="ident">k2_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">res</span>[<span class="number">1</span>]).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">k2_sign</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">res</span>[<span class="number">2</span>]).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">k2_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">k2_var</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">k2_sign</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">k2_sign_var</span>.<span class="ident">into</span>()).<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">k2_with_sign_rec</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">k2_sign</span> <span class="op">==</span> <span class="ident">Fq::one</span>() {
                 <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">k2_rec</span>)
             } <span class="kw">else</span> {

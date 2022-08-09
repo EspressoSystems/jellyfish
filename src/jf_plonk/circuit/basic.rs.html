@@ -2154,11 +2154,6 @@
 <span id="2149">2149</span>
 <span id="2150">2150</span>
 <span id="2151">2151</span>
-<span id="2152">2152</span>
-<span id="2153">2153</span>
-<span id="2154">2154</span>
-<span id="2155">2155</span>
-<span id="2156">2156</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -2166,7 +2161,7 @@
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
 <span class="doccomment">//! Basic instantiations of Plonk-based constraint systems</span>
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Arithmetization</span>, <span class="ident">Circuit</span>, <span class="ident">GateId</span>, <span class="ident">Variable</span>, <span class="ident">WireId</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Arithmetization</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">GateId</span>, <span class="ident">Variable</span>, <span class="ident">WireId</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">circuit</span>::{<span class="ident">gates</span>::<span class="kw-2">*</span>, <span class="ident">SortedLookupVecAndPolys</span>},
     <span class="ident">constants</span>::{<span class="ident">compute_coset_representatives</span>, <span class="ident">GATE_WIDTH</span>, <span class="ident">N_MUL_SELECTORS</span>},
@@ -2424,6 +2419,18 @@
     <span class="doccomment">/// The range size of UltraPlonk range gates.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">range_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span>)
+    }
+
+    <span class="doccomment">/// creating a `BoolVar` without checking if `v` is a boolean value!</span>
+    <span class="doccomment">/// You should absolutely sure about what you are doing.</span>
+    <span class="doccomment">/// You should normally only use this API if you already enforce `v` to be a</span>
+    <span class="doccomment">/// boolean value using other constraints.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">create_boolean_variable_unchecked</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">a</span>: <span class="ident">F</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">BoolVar::new_unchecked</span>(<span class="ident">var</span>))
     }
 }
 
@@ -2874,23 +2881,6 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WrongPlonkType</span>.<span class="ident">into</span>());
         }
         <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="comment">// Check whether the variable `var` is a boolean value</span>
-    <span class="comment">// this is used to return error to invalid parameter early in the circuit</span>
-    <span class="comment">// building development lifecycle, it should NOT be used as a circuit constraint</span>
-    <span class="comment">// for which you should use bool_gate() instead</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">check_bool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">var</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">var</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">val</span> <span class="op">!</span><span class="op">=</span> <span class="ident">F::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">val</span> <span class="op">!</span><span class="op">=</span> <span class="ident">F::one</span>() {
-            <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
-                <span class="string">&quot;Expecting a boolean value, something is wrong with your circuit logic&quot;</span>.<span class="ident">to_string</span>(),
-            )
-            .<span class="ident">into</span>())
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(())
-        }
     }
 
     <span class="comment">// Return the variable that maps to a wire `(i, j)` where i is the wire type and</span>

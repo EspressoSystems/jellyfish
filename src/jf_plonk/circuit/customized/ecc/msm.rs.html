@@ -827,7 +827,7 @@
 
     <span class="comment">// create circuit</span>
     <span class="kw">let</span> <span class="ident">range_size</span> <span class="op">=</span> <span class="ident">F::from</span>((<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">c</span>) <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">circuit</span>.<span class="ident">decompose_vars_gate</span>(<span class="ident">decomposed_scalar_vars</span>.<span class="ident">clone</span>(), <span class="ident">scalar_var</span>, <span class="ident">range_size</span>)<span class="question-mark">?</span>;
+    <span class="ident">circuit</span>.<span class="ident">decomposition_gate</span>(<span class="ident">decomposed_scalar_vars</span>.<span class="ident">clone</span>(), <span class="ident">scalar_var</span>, <span class="ident">range_size</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">decomposed_scalar_vars</span>)
 }
