@@ -13,7 +13,7 @@ use crate::{
     par_utils::parallelizable_slice_iter,
     MergeableCircuitType, PlonkType,
 };
-use ark_ff::{FftField, PrimeField};
+use ark_ff::{BigInteger, BitIteratorBE, FftField, PrimeField};
 use ark_poly::{
     domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, UVPolynomial,
 };
@@ -498,8 +498,17 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         b: Variable,
         ordering: Ordering,
         should_also_check_equality: bool,
-    ) -> Result<(), PlonkError> {
-        Ok(())
+    ) -> Result<(), PlonkError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        self.check_var_bound(b)?;
+        match ordering {
+            Ordering::Equal => self.equal_gate(a, b),
+            Ordering::Less => Ok(()),
+            Ordering::Greater => Ok(()),
+        }
     }
 
     fn is_cmp(
@@ -508,8 +517,31 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         b: Variable,
         ordering: Ordering,
         should_also_check_equality: bool,
-    ) -> Result<Variable, PlonkError> {
-        Ok(self.zero())
+    ) -> Result<Variable, PlonkError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        self.check_var_bound(b)?;
+        match ordering {
+            Ordering::Less => {
+                if should_also_check_equality {
+                    let c = self.is_less_than_internal(b, a)?;
+                    self.logic_neg(c)
+                } else {
+                    self.is_less_than_internal(a, b)
+                }
+            },
+            Ordering::Greater => {
+                if should_also_check_equality {
+                    let c = self.is_less_than_internal(a, b)?;
+                    self.logic_neg(c)
+                } else {
+                    self.is_less_than_internal(b, a)
+                }
+            },
+            Ordering::Equal => self.check_equal(a, b),
+        }
     }
 
     fn pad_gate(&mut self, n: usize) {
@@ -1444,6 +1476,80 @@ impl<F: PrimeField> PlonkCircuit<F> {
             + q_lookup_val
                 * tau
                 * (q_dom_sep_val + tau * (lookup_key + tau * (lookup_val_1 + tau * lookup_val_2))))
+    }
+}
+
+/// Private helper functions for comparison gate
+impl<F: PrimeField> PlonkCircuit<F> {
+    /// Return a variable indicating whether `a` < `b`.
+    fn is_less_than_internal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
+        let a_le_const =
+            self.is_leq_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
+        let b_le_const =
+            self.is_leq_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
+        let b_greater_const = self.logic_neg(b_le_const)?;
+        // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
+        let msb_check = self.logic_and(a_le_const, b_greater_const)?;
+
+        let msb_eq = self.check_equal(a_le_const, b_le_const)?;
+        let c = self.sub(a, b)?;
+        let cmp_result =
+            self.is_leq_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+        let cmp_result = self.logic_and(msb_eq, cmp_result)?;
+
+        let result = self.logic_or(msb_check, cmp_result)?;
+        Ok(result)
+    }
+
+    /// Helper function to check whether `a` is no greater
+    /// than a given constant. Let N = F::size_in_bits()
+    /// It uses N negation gates and N AND/OR gates.
+    fn is_leq_constant_internal(
+        &mut self,
+        a: Variable,
+        constant: &F,
+    ) -> Result<Variable, PlonkError> {
+        let a_bits_le = self.unpack(a, F::size_in_bits())?;
+        let const_bits_le = constant.into_repr().to_bits_le();
+        let const_bits_length = const_bits_le.len();
+
+        // Stack for constructing the comparison gate
+        let mut current_run = Vec::new();
+        // Iterate from LSB to MSB. If current bit of constant is 0
+        // push a NOT(a) to the stack. Otherwise, wrap and clear the
+        // current stack using an k-ary AND gate, OR the result with
+        // a NOT(a) and push it back to the stack.
+        const_bits_le
+            .into_iter()
+            .zip(a_bits_le[..const_bits_length].into_iter())
+            .try_for_each(|(b, a)| -> Result<(), PlonkError> {
+                if b {
+                    let c = self.logic_neg(*a)?;
+                    let d = self.logic_and_all(&current_run)?;
+                    let c = self.logic_or(c, d)?;
+                    current_run.clear();
+                    current_run.push(c);
+                } else {
+                    let c = self.logic_neg(*a)?;
+                    current_run.push(c);
+                }
+                Ok(())
+            })?;
+        // If bits length of `a` is too long, check whether the most significant
+        // bits of `a` is 0.
+        a_bits_le[const_bits_length..]
+            .into_iter()
+            .rev()
+            .try_for_each(|a| -> Result<(), PlonkError> {
+                let c = self.logic_neg(*a)?;
+                current_run.push(c);
+                Ok(())
+            })?;
+        if current_run.len() == 1 {
+            Ok(current_run[0])
+        } else {
+            self.logic_and_all(&current_run)
+        }
     }
 }
 

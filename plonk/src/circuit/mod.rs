@@ -7,7 +7,7 @@
 //! Interfaces for Plonk-based constraint systems
 
 use crate::errors::{CircuitError::LookupUnsupported, PlonkError};
-use ark_ff::{FftField, Field};
+use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::univariate::DensePolynomial;
 use ark_std::{cmp::Ordering, vec::Vec};
 
@@ -129,7 +129,9 @@ pub trait Circuit<F: Field> {
         b: Variable,
         ordering: Ordering,
         should_also_check_equality: bool,
-    ) -> Result<(), PlonkError>;
+    ) -> Result<(), PlonkError>
+    where
+        F: PrimeField;
 
     /// Check the ordering between `a` and `b`, returns the index of variable
     /// `1` if result is true; `0` if result is false;
@@ -140,7 +142,9 @@ pub trait Circuit<F: Field> {
         b: Variable,
         ordering: Ordering,
         should_also_check_equality: bool,
-    ) -> Result<Variable, PlonkError>;
+    ) -> Result<Variable, PlonkError>
+    where
+        F: PrimeField;
 
     /// Pad the circuit with n dummy gates
     fn pad_gate(&mut self, n: usize);
