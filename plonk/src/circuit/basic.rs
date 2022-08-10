@@ -506,8 +506,22 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         self.check_var_bound(b)?;
         match ordering {
             Ordering::Equal => self.equal_gate(a, b),
-            Ordering::Less => Ok(()),
-            Ordering::Greater => Ok(()),
+            Ordering::Less => {
+                if should_also_check_equality {
+                    let c = self.is_less_than_internal(b, a)?;
+                    self.zero_gate(c)
+                } else {
+                    self.enforce_less_than_internal(a, b)
+                }
+            },
+            Ordering::Greater => {
+                if should_also_check_equality {
+                    let c = self.is_less_than_internal(a, b)?;
+                    self.zero_gate(c)
+                } else {
+                    self.enforce_less_than_internal(b, a)
+                }
+            },
         }
     }
 
@@ -524,6 +538,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
         match ordering {
+            Ordering::Equal => self.check_equal(a, b),
             Ordering::Less => {
                 if should_also_check_equality {
                     let c = self.is_less_than_internal(b, a)?;
@@ -540,7 +555,6 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                     self.is_less_than_internal(b, a)
                 }
             },
-            Ordering::Equal => self.check_equal(a, b),
         }
     }
 
@@ -1497,8 +1511,26 @@ impl<F: PrimeField> PlonkCircuit<F> {
             self.is_leq_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
-        let result = self.logic_or(msb_check, cmp_result)?;
-        Ok(result)
+        self.logic_or(msb_check, cmp_result)
+    }
+
+    /// Constrain that `a` < `b`
+    fn enforce_less_than_internal(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError> {
+        let a_le_const =
+            self.is_leq_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
+        let b_le_const =
+            self.is_leq_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
+        let b_greater_const = self.logic_neg(b_le_const)?;
+        // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
+        let msb_check = self.logic_and(a_le_const, b_greater_const)?;
+
+        let msb_eq = self.check_equal(a_le_const, b_le_const)?;
+        let c = self.sub(a, b)?;
+        let cmp_result =
+            self.is_leq_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+        let cmp_result = self.logic_and(msb_eq, cmp_result)?;
+
+        self.logic_or_gate(msb_check, cmp_result)
     }
 
     /// Helper function to check whether `a` is no greater

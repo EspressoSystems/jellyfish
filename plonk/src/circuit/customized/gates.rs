@@ -331,3 +331,19 @@ where
         self.table_dom_sep
     }
 }
+
+/// An zero gate
+#[derive(Debug, Clone)]
+pub struct ZeroGate;
+
+impl<F> Gate<F> for ZeroGate
+where
+    F: Field,
+{
+    fn name(&self) -> &'static str {
+        "Zero Gate"
+    }
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
+        [F::one(), F::zero(), F::zero(), F::zero()]
+    }
+}

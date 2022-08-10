@@ -8,7 +8,7 @@
 //! related, rescue-based transcript and lookup table etc.
 
 use self::gates::*;
-use super::{Circuit, PlonkCircuit, PlonkError, Variable};
+use super::{gates::MultiplicationGate, Circuit, PlonkCircuit, PlonkError, Variable};
 use crate::{
     circuit::gates::{ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate},
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
@@ -359,6 +359,14 @@ where
         // constraint 2: multiplication y * a = 0
         self.mul_gate(y, a, self.zero())?;
         Ok(y)
+    }
+
+    /// Constrain a variable to be non-zero.
+    /// Return error if the variable is invalid.
+    pub fn zero_gate(&mut self, var: Variable) -> Result<(), PlonkError> {
+        self.check_var_bound(var)?;
+        let wire_vars = [var, 0, 0, 0, 0];
+        self.insert_gate(&wire_vars, Box::new(ZeroGate))
     }
 
     /// Constrain a variable to be non-zero.
