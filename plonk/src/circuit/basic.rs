@@ -523,7 +523,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                     self.enforce_leq_internal(a, b)
                 } else {
                     let c = self.is_leq_internal(b, a)?;
-                    self.zero_gate(c)
+                    self.zero_gate(c.0)
                 }
             },
             Ordering::Greater => {
@@ -531,7 +531,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                     self.enforce_leq_internal(b, a)
                 } else {
                     let c = self.is_leq_internal(a, b)?;
-                    self.zero_gate(c)
+                    self.zero_gate(c.0)
                 }
             },
         }
@@ -543,7 +543,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         b: Variable,
         ordering: Ordering,
         should_also_check_equality: bool,
-    ) -> Result<Variable, PlonkError>
+    ) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField,
     {
@@ -1491,7 +1491,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 /// Private helper functions for comparison gate
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Return a variable indicating whether `a` <= `b`.
-    fn is_leq_internal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
+    fn is_leq_internal(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError> {
         let a_le_const =
             self.is_leq_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
         let b_le_const =
@@ -1502,7 +1502,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // Check whether `a` and `b` are both <= (q-1)/2 or
         // are both > (q-1)/2
-        let msb_eq = self.check_equal(a_le_const, b_le_const)?;
+        let msb_eq = self.check_equal(a_le_const.0, b_le_const.0)?;
         // If so, check whether (b-a) <= (q-1)/2
         let c = self.sub(b, a)?;
         let cmp_result =
@@ -1524,7 +1524,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // Check whether `a` and `b` are both <= (q-1)/2 or
         // are both > (q-1)/2
-        let msb_eq = self.check_equal(a_le_const, b_le_const)?;
+        let msb_eq = self.check_equal(a_le_const.0, b_le_const.0)?;
         // If so, check whether (b-a) <= (q-1)/2
         let c = self.sub(b, a)?;
         let cmp_result =
@@ -1541,7 +1541,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         &mut self,
         a: Variable,
         constant: &F,
-    ) -> Result<Variable, PlonkError> {
+    ) -> Result<BoolVar, PlonkError> {
         let a_bits_le = self.unpack(a, F::size_in_bits())?;
         let const_bits_le = constant.into_repr().to_bits_le();
         let bits_length = const_bits_le.len().max(a_bits_le.len());
@@ -1939,7 +1939,7 @@ pub(crate) mod test {
         let c = circuit.is_cmp(a, b, ordering, should_also_check_equality)?;
         let expected_result = F::from(if ord == ordering { 1u32 } else { 0u32 });
         // Check circuits.
-        assert_eq!(circuit.witness(c)?, expected_result);
+        assert_eq!(circuit.witness(c.0)?, expected_result);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(b) = F::from(1u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1966,7 +1966,7 @@ pub(crate) mod test {
             },
         );
         // Check circuits.
-        assert_eq!(circuit.witness(c)?, expected_result);
+        assert_eq!(circuit.witness(c.0)?, expected_result);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(b) = F::from(1u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());

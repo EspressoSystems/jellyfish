@@ -172,7 +172,7 @@ pub trait Circuit<F: Field> {
         b: Variable,
         ordering: Ordering,
         should_also_check_equality: bool,
-    ) -> Result<Variable, PlonkError>
+    ) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField;
 
