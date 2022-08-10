@@ -20,7 +20,7 @@ use jf_plonk::{
             ecc::{Point, PointVariable},
             rescue::RescueGadget,
         },
-        Circuit, PlonkCircuit, Variable,
+        BoolVar, Circuit, PlonkCircuit, Variable,
     },
     errors::PlonkError,
 };
@@ -70,7 +70,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<Variable, PlonkError>;
+    ) -> Result<BoolVar, PlonkError>;
 
     /// Create a signature variable from a signature `sig`.
     fn create_signature_variable(&mut self, sig: &Signature<P>)
@@ -111,7 +111,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<Variable, PlonkError> {
+    ) -> Result<BoolVar, PlonkError> {
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
         self.check_equal_point(&p1, &p2)
     }
@@ -159,7 +159,7 @@ where
         vk: &VerKeyVar,
         sig_point: &PointVariable,
         msg: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError>;
+    ) -> Result<Vec<BoolVar>, PlonkError>;
 }
 
 impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
@@ -172,7 +172,7 @@ where
         vk: &VerKeyVar,
         sig_point: &PointVariable,
         msg: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError> {
+    ) -> Result<Vec<BoolVar>, PlonkError> {
         let instance_description = F::from_be_bytes_mod_order(CS_ID_SCHNORR.as_ref());
         // TODO: create `inst_desc_var` and the constant gate *only once* during the
         // entire circuit construction.
@@ -316,6 +316,6 @@ mod tests {
             &msg_var,
             &sig_var,
         )?;
-        Ok((circuit, bit))
+        Ok((circuit, bit.into()))
     }
 }

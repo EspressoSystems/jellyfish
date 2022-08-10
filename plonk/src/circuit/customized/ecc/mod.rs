@@ -9,7 +9,7 @@
 
 use super::gates::*;
 use crate::{
-    circuit::{gates::Gate, Circuit, PlonkCircuit, Variable},
+    circuit::{gates::Gate, BoolVar, Circuit, PlonkCircuit, Variable},
     errors::{CircuitError, PlonkError},
 };
 use ark_ec::{
@@ -180,19 +180,20 @@ where
     /// variables, that would ultimately failed to build a correct circuit.
     fn quaternary_point_select<P: Parameters<BaseField = F> + Clone>(
         &mut self,
-        b0: Variable,
-        b1: Variable,
+        b0: BoolVar,
+        b1: BoolVar,
         point1: &Point<F>,
         point2: &Point<F>,
         point3: &Point<F>,
     ) -> Result<PointVariable, PlonkError> {
-        self.check_var_bound(b0)?;
-        self.check_var_bound(b1)?;
-        self.check_bool(b0)?;
-        self.check_bool(b1)?;
+        self.check_var_bound(b0.into())?;
+        self.check_var_bound(b1.into())?;
 
         let selected_point = {
-            let selected = match (self.witness(b0)? == F::one(), self.witness(b1)? == F::one()) {
+            let selected = match (
+                self.witness(b0.into())? == F::one(),
+                self.witness(b1.into())? == F::one(),
+            ) {
                 (false, false) => Point::from(GroupAffine::<P>::zero()),
                 (true, false) => point1.to_owned(),
                 (false, true) => point2.to_owned(),
@@ -201,7 +202,7 @@ where
             // create new point with the same (x, y) coordinates
             self.create_point_variable(selected)?
         };
-        let wire_vars_x = [b0, b1, 0, 0, selected_point.0];
+        let wire_vars_x = [b0.into(), b1.into(), 0, 0, selected_point.0];
         self.insert_gate(
             &wire_vars_x,
             Box::new(QuaternaryPointSelectXGate {
@@ -210,7 +211,7 @@ where
                 x3: point3.0,
             }),
         )?;
-        let wire_vars_y = [b0, b1, 0, 0, selected_point.1];
+        let wire_vars_y = [b0.into(), b1.into(), 0, 0, selected_point.1];
         self.insert_gate(
             &wire_vars_y,
             Box::new(QuaternaryPointSelectYGate {
@@ -229,14 +230,13 @@ where
     /// Return error if invalid input parameters are provided.
     fn binary_point_vars_select(
         &mut self,
-        b: Variable,
+        b: BoolVar,
         point0: &PointVariable,
         point1: &PointVariable,
     ) -> Result<PointVariable, PlonkError> {
-        self.check_var_bound(b)?;
+        self.check_var_bound(b.into())?;
         self.check_point_var_bound(point0)?;
         self.check_point_var_bound(point1)?;
-        self.check_bool(b)?;
 
         let selected_x = self.conditional_select(b, point0.0, point1.0)?;
         let selected_y = self.conditional_select(b, point0.1, point1.1)?;
@@ -263,12 +263,12 @@ where
         &mut self,
         point0: &PointVariable,
         point1: &PointVariable,
-    ) -> Result<Variable, PlonkError> {
+    ) -> Result<BoolVar, PlonkError> {
         self.check_point_var_bound(point0)?;
         self.check_point_var_bound(point1)?;
         let x_eq = self.check_equal(point0.0, point1.0)?;
         let y_eq = self.check_equal(point0.1, point1.1)?;
-        self.mul(x_eq, y_eq)
+        self.logic_and(x_eq, y_eq)
     }
 }
 
@@ -299,24 +299,24 @@ where
     fn neutral_point_gate(
         &mut self,
         point_var: &PointVariable,
-        expected_neutral: Variable,
+        expected_neutral: BoolVar,
     ) -> Result<(), PlonkError> {
         self.check_point_var_bound(point_var)?;
-        self.check_var_bound(expected_neutral)?;
+        self.check_var_bound(expected_neutral.into())?;
 
         // constraint 1: b_x = is_equal(x, 0);
         let b_x = self.check_equal(point_var.0, self.zero())?;
         // constraint 2: b_y = is_equal(y, 1);
         let b_y = self.check_equal(point_var.1, self.one())?;
         // constraint 3: b = b_x * b_y;
-        self.mul_gate(b_x, b_y, expected_neutral)?;
+        self.mul_gate(b_x.into(), b_y.into(), expected_neutral.into())?;
         Ok(())
     }
 
     /// Obtain a boolean variable indicating whether a point is the neutral
     /// point (0, 1) Return variable with value 1 if it is, or 0 otherwise
     /// Return error if input variables are invalid
-    pub fn is_neutral_point<P>(&mut self, point_var: &PointVariable) -> Result<Variable, PlonkError>
+    pub fn is_neutral_point<P>(&mut self, point_var: &PointVariable) -> Result<BoolVar, PlonkError>
     where
         P: Parameters<BaseField = F> + Clone,
     {
@@ -324,9 +324,9 @@ where
 
         let b = {
             if self.point_witness(point_var)? == Point::from(GroupAffine::<P>::zero()) {
-                self.create_variable(F::one())?
+                self.create_boolean_variable(true)?
             } else {
-                self.create_variable(F::zero())?
+                self.create_boolean_variable(false)?
             }
         };
 
@@ -497,12 +497,11 @@ where
     /// Currently only supports GroupAffine::<P>.
     pub fn variable_base_binary_scalar_mul<P: Parameters<BaseField = F> + Clone>(
         &mut self,
-        scalar_bits_le: &[Variable],
+        scalar_bits_le: &[BoolVar],
         base: &PointVariable,
     ) -> Result<PointVariable, PlonkError> {
         for &bit in scalar_bits_le {
-            self.check_var_bound(bit)?;
-            self.check_bool(bit)?;
+            self.check_var_bound(bit.into())?;
         }
         self.check_point_var_bound(base)?;
 
@@ -637,8 +636,8 @@ mod test {
         let p1_check = circuit.is_neutral_point::<P>(&p1)?;
         let p2_check = circuit.is_neutral_point::<P>(&p2)?;
 
-        assert_eq!(circuit.witness(p1_check)?, F::one());
-        assert_eq!(circuit.witness(p2_check)?, F::zero());
+        assert_eq!(circuit.witness(p1_check.into())?, F::one());
+        assert_eq!(circuit.witness(p2_check.into())?, F::zero());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(p1.0) = F::one();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -852,10 +851,12 @@ mod test {
         let p3 = GroupAffine::<P>::rand(&mut rng);
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let false_var = circuit.false_var();
+        let true_var = circuit.true_var();
 
         let select_p0 = circuit.quaternary_point_select::<P>(
-            circuit.zero(),
-            circuit.zero(),
+            false_var,
+            false_var,
             &Point::from(p1),
             &Point::from(p2),
             &Point::from(p3),
@@ -865,24 +866,24 @@ mod test {
             Point(circuit.witness(select_p0.0)?, circuit.witness(select_p0.1)?)
         );
         let select_p1 = circuit.quaternary_point_select::<P>(
-            circuit.one(),
-            circuit.zero(),
+            true_var,
+            false_var,
             &Point::from(p1),
             &Point::from(p2),
             &Point::from(p3),
         )?;
         assert_eq!(Point::from(p1), circuit.point_witness(&select_p1)?);
         let select_p2 = circuit.quaternary_point_select::<P>(
-            circuit.zero(),
-            circuit.one(),
+            false_var,
+            true_var,
             &Point::from(p1),
             &Point::from(p2),
             &Point::from(p3),
         )?;
         assert_eq!(Point::from(p2), circuit.point_witness(&select_p2)?);
         let select_p3 = circuit.quaternary_point_select::<P>(
-            circuit.one(),
-            circuit.one(),
+            true_var,
+            true_var,
             &Point::from(p1),
             &Point::from(p2),
             &Point::from(p3),
@@ -891,55 +892,24 @@ mod test {
 
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-        // non binary b0, b1 should fail
-        let two = circuit.create_variable(F::from(2u32))?;
-        assert!(circuit
-            .quaternary_point_select::<P>(
-                two,
-                1,
-                &Point::from(p1),
-                &Point::from(p2),
-                &Point::from(p3)
-            )
-            .is_err());
-        assert!(circuit
-            .quaternary_point_select::<P>(
-                0,
-                two,
-                &Point::from(p1),
-                &Point::from(p2),
-                &Point::from(p3)
-            )
-            .is_err());
-
         *circuit.witness_mut(select_p3.0) = p2.x;
         *circuit.witness_mut(select_p3.1) = p2.y;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
-        assert!(circuit
-            .quaternary_point_select::<P>(
-                0,
-                circuit.num_vars(),
-                &Point::from(p1),
-                &Point::from(p2),
-                &Point::from(p3)
-            )
-            .is_err());
 
-        let circuit_1 = build_quaternary_select_gate::<F, P>(F::zero(), F::zero())?;
-        let circuit_2 = build_quaternary_select_gate::<F, P>(F::one(), F::one())?;
+        let circuit_1 = build_quaternary_select_gate::<F, P>(false, false)?;
+        let circuit_2 = build_quaternary_select_gate::<F, P>(true, true)?;
         customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
         Ok(())
     }
 
-    fn build_quaternary_select_gate<F, P>(b0: F, b1: F) -> Result<PlonkCircuit<F>, PlonkError>
+    fn build_quaternary_select_gate<F, P>(b0: bool, b1: bool) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
         P: Parameters<BaseField = F> + Clone,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let b0_var = circuit.create_variable(b0)?;
-        let b1_var = circuit.create_variable(b1)?;
+        let b0_var = circuit.create_boolean_variable(b0)?;
+        let b1_var = circuit.create_boolean_variable(b1)?;
 
         let mut rng = ark_std::test_rng();
         let p1 = GroupAffine::<P>::rand(&mut rng);
@@ -1032,8 +1002,8 @@ mod test {
         let p1_p2_eq = circuit.check_equal_point(&p1_var, &p2_var)?;
         let p1_p3_eq = circuit.check_equal_point(&p1_var, &p3_var)?;
 
-        assert_eq!(circuit.witness(p1_p2_eq)?, F::one());
-        assert_eq!(circuit.witness(p1_p3_eq)?, F::zero());
+        assert_eq!(circuit.witness(p1_p2_eq.into())?, F::one());
+        assert_eq!(circuit.witness(p1_p3_eq.into())?, F::zero());
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(p2_var.0) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1198,43 +1168,30 @@ mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p0_var = circuit.create_point_variable(Point::from(p0))?;
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
-        let select_p0 = circuit.binary_point_vars_select(circuit.zero(), &p0_var, &p1_var)?;
+        let true_var = circuit.true_var();
+        let false_var = circuit.false_var();
+
+        let select_p0 = circuit.binary_point_vars_select(false_var, &p0_var, &p1_var)?;
         assert_eq!(circuit.point_witness(&select_p0)?, Point::from(p0));
-        let select_p1 = circuit.binary_point_vars_select(circuit.one(), &p0_var, &p1_var)?;
+        let select_p1 = circuit.binary_point_vars_select(true_var, &p0_var, &p1_var)?;
         assert_eq!(circuit.point_witness(&select_p1)?, Point::from(p1));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-        // non boolean selection variable should fail
-        let two = circuit.create_variable(F::from(2u32))?;
-        assert!(circuit
-            .binary_point_vars_select(two, &p0_var, &p1_var)
-            .is_err());
         // wrong witness should fail
         *circuit.witness_mut(p1_var.0) = F::rand(&mut rng);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
         assert!(circuit
             .binary_point_vars_select(
-                circuit.zero(),
-                &PointVariable(circuit.num_vars(), p0_var.1),
-                &p1_var
-            )
-            .is_err());
-        assert!(circuit
-            .binary_point_vars_select(
-                circuit.zero(),
+                false_var,
                 &p0_var,
                 &PointVariable(p1_var.0, circuit.num_vars()),
             )
             .is_err());
 
-        let circuit_1 = build_binary_point_vars_select_circuit::<F, P>(
-            F::one(),
-            Point::from(p0),
-            Point::from(p1),
-        )?;
+        let circuit_1 =
+            build_binary_point_vars_select_circuit::<F, P>(true, Point::from(p0), Point::from(p1))?;
         let circuit_2 = build_binary_point_vars_select_circuit::<F, P>(
-            F::zero(),
+            false,
             Point::from(p1),
             Point::from(p2),
         )?;
@@ -1244,7 +1201,7 @@ mod test {
     }
 
     fn build_binary_point_vars_select_circuit<F, P>(
-        b: F,
+        b: bool,
         p0: Point<F>,
         p1: Point<F>,
     ) -> Result<PlonkCircuit<F>, PlonkError>
@@ -1253,7 +1210,7 @@ mod test {
         P: Parameters<BaseField = F> + Clone,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let b_var = circuit.create_variable(b)?;
+        let b_var = circuit.create_boolean_variable(b)?;
         let p0_var = circuit.create_point_variable(p0)?;
         let p1_var = circuit.create_point_variable(p1)?;
         circuit.binary_point_vars_select(b_var, &p0_var, &p1_var)?;
@@ -1313,45 +1270,6 @@ mod test {
             Point::from(GroupAffine::<P>::rand(&mut rng)),
         )?;
         customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    // Given `test_variable_base_scalar_mul`, we don't need to further test
-    // `variable_base_binary_scalar_mul`'s good paths.
-    #[test]
-    fn test_variable_base_binary_scalar_mul_errors() -> Result<(), PlonkError> {
-        test_variable_base_binary_scalar_mul_errors_helper::<FqEd354, Param254>()?;
-        test_variable_base_binary_scalar_mul_errors_helper::<FqEd377, Param377>()?;
-        test_variable_base_binary_scalar_mul_errors_helper::<FqEd381, Param381>()?;
-        test_variable_base_binary_scalar_mul_errors_helper::<FqEd381b, Param381b>()?;
-        test_variable_base_binary_scalar_mul_errors_helper::<Fq377, Param761>()
-    }
-    fn test_variable_base_binary_scalar_mul_errors_helper<F, P>() -> Result<(), PlonkError>
-    where
-        F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
-    {
-        let mut rng = ark_std::test_rng();
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let non_bit_var = circuit.create_variable(F::from(2u8))?;
-        let base = GroupAffine::<P>::rand(&mut rng);
-        let base_var = circuit.create_point_variable(Point::from(base))?;
-        // Binary scalar variables out of bound
-        assert!(circuit
-            .variable_base_binary_scalar_mul::<P>(&[circuit.one(), circuit.num_vars()], &base_var)
-            .is_err());
-        // Base point out of bound
-        assert!(circuit
-            .variable_base_binary_scalar_mul::<P>(
-                &[circuit.zero(), circuit.one()],
-                &PointVariable(circuit.num_vars(), circuit.num_vars())
-            )
-            .is_err());
-        // Non-binary scalar variables
-        assert!(circuit
-            .variable_base_binary_scalar_mul::<P>(&[circuit.one(), non_bit_var], &base_var)
-            .is_err());
 
         Ok(())
     }

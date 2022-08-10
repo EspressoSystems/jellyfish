@@ -1,77 +1,36 @@
-//! Placeholder for BLS signature.
+//! BLS Signature Scheme
 
 use super::SignatureScheme;
-use crate::{
-    constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError, hash_to_group::SWHashToGroup,
-};
-use ark_ec::{
-    bls12::{Bls12, Bls12Parameters},
-    short_weierstrass_jacobian::GroupAffine,
-    AffineCurve, ModelParameters, ProjectiveCurve,
-};
-use ark_ff::{Fp12, PrimeField};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError, Write};
+use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError};
+
 use ark_std::{
-    io::Read,
-    ops::Neg,
+    format,
     rand::{CryptoRng, RngCore},
-    string::ToString,
-    One, UniformRand,
 };
-use core::marker::PhantomData;
-use espresso_systems_common::jellyfish::tag;
-use jf_utils::{multi_pairing, tagged_blob};
 
-/// BLS signature scheme.
-/// Optimized for signature size, i.e.: PK in G2 and sig in G1
-pub struct BLSSignatureScheme<P: Bls12Parameters> {
-    pairing_friend_curve: PhantomData<P>,
-}
+use blst::{min_sig::*, BLST_ERROR};
 
-/// BLS public verification key
-#[tagged_blob(tag::BLSVERKEY)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Clone(bound = "P: Bls12Parameters"))]
-#[derivative(Default(bound = "P: Bls12Parameters"))]
-pub struct BLSVerKey<P: Bls12Parameters>(pub(crate) GroupAffine<P::G2Parameters>);
+pub use blst::min_sig::{
+    PublicKey as BLSVerKey, SecretKey as BLSSignKey, Signature as BLSSignature,
+};
 
-/// Signing key for BLS signature.
-#[tagged_blob(tag::BLSSIGNINGKEY)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Clone(bound = "P: Bls12Parameters"))]
-#[derivative(Default(bound = "P: Bls12Parameters"))]
-pub struct BLSSignKey<P: Bls12Parameters>(
-    pub(crate) <P::G1Parameters as ModelParameters>::ScalarField,
-);
+/// BLS signature scheme. Imports blst library.
+pub struct BLSSignatureScheme;
 
-/// Signing key for BLS signature.
-#[tagged_blob(tag::BLSSIG)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Clone(bound = "P: Bls12Parameters"))]
-#[derivative(Default(bound = "P: Bls12Parameters"))]
-pub struct BLSSignature<P: Bls12Parameters>(pub(crate) GroupAffine<P::G1Parameters>);
-
-impl<P> SignatureScheme for BLSSignatureScheme<P>
-where
-    P: Bls12Parameters,
-    P::G1Parameters: SWHashToGroup,
-{
+impl SignatureScheme for BLSSignatureScheme {
     const CS_ID: &'static str = CS_ID_BLS_SIG_NAIVE;
 
-    /// Signing key.
-    type SigningKey = BLSSignKey<P>;
-
-    /// Verification key
-    type VerificationKey = BLSVerKey<P>;
-
-    /// Public Parameter
-    /// For BLS signatures, we want to use default
-    /// prime subgroup generators. So here we don't need
-    /// to specify which PP it is.
+    /// Public parameter
     type PublicParameter = ();
 
+    /// Signing key
+    type SigningKey = BLSSignKey;
+
+    /// Verification key
+    type VerificationKey = BLSVerKey;
+
     /// Signature
-    type Signature = BLSSignature<P>;
+    type Signature = BLSSignature;
 
     /// A message is &\[MessageUnit\]
     type MessageUnit = u8;
@@ -89,15 +48,13 @@ where
         _pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        // TODO: absorb ciphersuite_id in prng
-        let sk = BLSSignKey(<P::G1Parameters as ModelParameters>::ScalarField::rand(
-            prng,
-        ));
-        let vk = BLSVerKey(
-            GroupAffine::<P::G2Parameters>::prime_subgroup_generator()
-                .mul(sk.0)
-                .into_affine(),
-        );
+        let mut ikm = [0u8; 32];
+        prng.fill_bytes(&mut ikm);
+        let sk = match SecretKey::key_gen(&ikm, &[]) {
+            Ok(sk) => sk,
+            Err(e) => return Err(PrimitivesError::InternalError(format!("{:?}", e))),
+        };
+        let vk = sk.sk_to_pk();
         Ok((sk, vk))
     }
 
@@ -108,11 +65,7 @@ where
         msg: M,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
-        let hm = <P::G1Parameters as SWHashToGroup>::hash_to_group(
-            msg.as_ref(),
-            CS_ID_BLS_SIG_NAIVE.as_ref(),
-        )?;
-        Ok(BLSSignature(hm.mul(&sk.0.into_repr()).into_affine()))
+        Ok(sk.sign(msg.as_ref(), Self::CS_ID.as_bytes(), &[]))
     }
 
     /// Verify a signature.
@@ -122,25 +75,9 @@ where
         msg: M,
         sig: &Self::Signature,
     ) -> Result<(), PrimitivesError> {
-        let hm = <P::G1Parameters as SWHashToGroup>::hash_to_group(
-            msg.as_ref(),
-            CS_ID_BLS_SIG_NAIVE.as_ref(),
-        )?;
-
-        if multi_pairing::<Bls12<P>>(
-            [hm.into_affine(), sig.0].as_ref(),
-            [
-                vk.0.neg(),
-                GroupAffine::<P::G2Parameters>::prime_subgroup_generator(),
-            ]
-            .as_ref(),
-        ) == Fp12::<P::Fp12Params>::one()
-        {
-            Ok(())
-        } else {
-            Err(PrimitivesError::VerificationError(
-                "Signature verification error".to_string(),
-            ))
+        match sig.verify(false, msg.as_ref(), Self::CS_ID.as_bytes(), &[], vk, true) {
+            BLST_ERROR::BLST_SUCCESS => Ok(()),
+            e => Err(PrimitivesError::VerificationError(format!("{:?}", e))),
         }
     }
 }
@@ -149,24 +86,12 @@ where
 mod test {
     use super::*;
     use crate::signatures::tests::{failed_verification, sign_and_verify};
-    use ark_bls12_377::Parameters as Param377;
-    use ark_bls12_381::Parameters as Param381;
-
-    macro_rules! test_signature {
-        ($curve_param:tt) => {
-            let message = "this is a test message";
-            let message_bad = "this is a wrong message";
-            sign_and_verify::<BLSSignatureScheme<$curve_param>>(message.as_ref());
-            failed_verification::<BLSSignatureScheme<$curve_param>>(
-                message.as_ref(),
-                message_bad.as_ref(),
-            );
-        };
-    }
 
     #[test]
     fn test_bls_sig() {
-        test_signature!(Param377);
-        test_signature!(Param381);
+        let message = "this is a test message";
+        let message_bad = "this is a wrong message";
+        sign_and_verify::<BLSSignatureScheme>(message.as_ref());
+        failed_verification::<BLSSignatureScheme>(message.as_ref(), message_bad.as_ref());
     }
 }

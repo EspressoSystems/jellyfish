@@ -7,7 +7,7 @@
 use crate::{
     circuit::{
         customized::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
-        Circuit, PlonkCircuit, Variable,
+        BoolVar, Circuit, PlonkCircuit, Variable,
     },
     errors::PlonkError,
 };
@@ -93,17 +93,10 @@ where
         self.check_var_bound(scalar)?;
         self.check_point_var_bound(base)?;
 
-        let k_vars = scalar_decomposition_gate::<_, P, _>(self, &scalar)?;
+        let (s1_var, s2_var, s2_sign_var) = scalar_decomposition_gate::<_, P, _>(self, &scalar)?;
 
         let endo_base_var = endomorphism_circuit::<_, P>(self, base)?;
-        multi_scalar_mul_circuit::<_, P>(
-            self,
-            base,
-            k_vars[0],
-            &endo_base_var,
-            k_vars[1],
-            k_vars[2],
-        )
+        multi_scalar_mul_circuit::<_, P>(self, base, s1_var, &endo_base_var, s2_var, s2_sign_var)
     }
 }
 
@@ -114,7 +107,7 @@ fn multi_scalar_mul_circuit<F, P>(
     scalar_1: Variable,
     endo_base: &PointVariable,
     scalar_2: Variable,
-    scalar_2_sign_var: Variable,
+    scalar_2_sign_var: BoolVar,
 ) -> Result<PointVariable, PlonkError>
 where
     F: PrimeField,
@@ -273,7 +266,7 @@ macro_rules! int_to_fq {
 fn scalar_decomposition_gate<F, P, S>(
     circuit: &mut PlonkCircuit<F>,
     s_var: &Variable,
-) -> Result<([Variable; 3]), PlonkError>
+) -> Result<(Variable, Variable, BoolVar), PlonkError>
 where
     F: PrimeField,
     P: TEModelParameters<BaseField = F, ScalarField = S> + Clone,
@@ -466,7 +459,7 @@ where
 
     let k1_var = circuit.create_variable(int_to_fq!(k1_int))?;
     let k2_var = circuit.create_variable(int_to_fq!(k2_int))?;
-    let k2_sign_var = circuit.create_bool_variable(is_k2_positive)?;
+    let k2_sign_var = circuit.create_boolean_variable(is_k2_positive)?;
 
     let t_var = circuit.create_variable(int_to_fq!(t_int))?;
 
@@ -521,7 +514,8 @@ where
     };
 
     //  (f.3) either f.1 or f.2 is satisfied
-    let sat = circuit.conditional_select(k2_sign_var, k2_is_neg_sat, k2_is_pos_sat)?;
+    let sat =
+        circuit.conditional_select(k2_sign_var, k2_is_neg_sat.into(), k2_is_pos_sat.into())?;
     circuit.enforce_true(sat)?;
 
     //  (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2
@@ -551,11 +545,12 @@ where
     };
 
     //  (g.3) either g.1 or g.2 is satisfied
-    let sat = circuit.conditional_select(k2_sign_var, k2_is_neg_sat, k2_is_pos_sat)?;
+    let sat =
+        circuit.conditional_select(k2_sign_var, k2_is_neg_sat.into(), k2_is_pos_sat.into())?;
     circuit.enforce_true(sat)?;
 
     // extract the output
-    Ok([k1_var, k2_var, k2_sign_var])
+    Ok((k1_var, k2_var, k2_sign_var))
 }
 
 #[cfg(test)]
@@ -702,15 +697,15 @@ mod tests {
 
             let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_ultra_plonk(16);
             let scalar_var = circuit.create_variable(field_switching(&scalar)).unwrap();
-            let res =
+            let (k1_var, k2_var, k2_sign_var) =
                 scalar_decomposition_gate::<_, EdwardsParameters, _>(&mut circuit, &scalar_var)
                     .unwrap();
 
-            let k1_rec = circuit.witness(res[0]).unwrap();
+            let k1_rec = circuit.witness(k1_var).unwrap();
             assert_eq!(field_switching::<_, Fq>(&k1), k1_rec);
 
-            let k2_rec = circuit.witness(res[1]).unwrap();
-            let k2_sign = circuit.witness(res[2]).unwrap();
+            let k2_rec = circuit.witness(k2_var).unwrap();
+            let k2_sign = circuit.witness(k2_sign_var.into()).unwrap();
             let k2_with_sign_rec = if k2_sign == Fq::one() {
                 field_switching::<_, Fr>(&k2_rec)
             } else {
