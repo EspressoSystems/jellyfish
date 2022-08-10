@@ -1859,10 +1859,12 @@ pub(crate) mod test {
         should_also_check_equality: bool,
     ) -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(F::from(3u32))?;
-        let b = circuit.create_variable(F::from(4u32))?;
+        let val_a = F::from(F::modulus_minus_one_div_two()).add(F::one());
+        let val_b = F::from(F::modulus_minus_one_div_two()).mul(F::from(2u32));
+        let ord = val_a.cmp(&val_b);
+        let a = circuit.create_variable(val_a)?;
+        let b = circuit.create_variable(val_b)?;
         circuit.enforce_cmp(a, b, ordering, should_also_check_equality)?;
-        let ord = 3u32.cmp(&4u32);
         let expected_ok = ord == ordering;
         // Check circuits.
         if expected_ok {
@@ -1934,10 +1936,12 @@ pub(crate) mod test {
         should_also_check_equality: bool,
     ) -> Result<(), PlonkError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(F::from(3u32))?;
-        let b = circuit.create_variable(F::from(4u32))?;
+        let val_a = F::from(F::modulus_minus_one_div_two()).add(F::one());
+        let val_b = F::from(F::modulus_minus_one_div_two()).mul(F::from(2u32));
+        let ord = val_a.cmp(&val_b);
+        let a = circuit.create_variable(val_a)?;
+        let b = circuit.create_variable(val_b)?;
         let c = circuit.is_cmp(a, b, ordering, should_also_check_equality)?;
-        let ord = 3u32.cmp(&4u32);
         let expected_result = F::from(if ord == ordering { 1u32 } else { 0u32 });
         // Check circuits.
         assert_eq!(circuit.witness(c)?, expected_result);
