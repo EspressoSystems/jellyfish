@@ -13,7 +13,7 @@ use crate::{
     par_utils::parallelizable_slice_iter,
     MergeableCircuitType, PlonkType,
 };
-use ark_ff::{BigInteger, BitIteratorBE, FftField, PrimeField};
+use ark_ff::{BigInteger, FftField, PrimeField};
 use ark_poly::{
     domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, UVPolynomial,
 };
@@ -508,18 +508,18 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
             Ordering::Equal => self.equal_gate(a, b),
             Ordering::Less => {
                 if should_also_check_equality {
-                    let c = self.is_less_than_internal(b, a)?;
-                    self.zero_gate(c)
+                    self.enforce_leq_internal(a, b)
                 } else {
-                    self.enforce_less_than_internal(a, b)
+                    let c = self.is_leq_internal(b, a)?;
+                    self.zero_gate(c)
                 }
             },
             Ordering::Greater => {
                 if should_also_check_equality {
-                    let c = self.is_less_than_internal(a, b)?;
-                    self.zero_gate(c)
+                    self.enforce_leq_internal(b, a)
                 } else {
-                    self.enforce_less_than_internal(b, a)
+                    let c = self.is_leq_internal(a, b)?;
+                    self.zero_gate(c)
                 }
             },
         }
@@ -541,18 +541,18 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
             Ordering::Equal => self.check_equal(a, b),
             Ordering::Less => {
                 if should_also_check_equality {
-                    let c = self.is_less_than_internal(b, a)?;
-                    self.logic_neg(c)
+                    self.is_leq_internal(a, b)
                 } else {
-                    self.is_less_than_internal(a, b)
+                    let c = self.is_leq_internal(b, a)?;
+                    self.logic_neg(c)
                 }
             },
             Ordering::Greater => {
                 if should_also_check_equality {
-                    let c = self.is_less_than_internal(a, b)?;
-                    self.logic_neg(c)
+                    self.is_leq_internal(b, a)
                 } else {
-                    self.is_less_than_internal(b, a)
+                    let c = self.is_leq_internal(a, b)?;
+                    self.logic_neg(c)
                 }
             },
         }
@@ -1495,8 +1495,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 /// Private helper functions for comparison gate
 impl<F: PrimeField> PlonkCircuit<F> {
-    /// Return a variable indicating whether `a` < `b`.
-    fn is_less_than_internal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
+    /// Return a variable indicating whether `a` <= `b`.
+    fn is_leq_internal(&mut self, a: Variable, b: Variable) -> Result<Variable, PlonkError> {
         let a_le_const =
             self.is_leq_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
         let b_le_const =
@@ -1505,8 +1505,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
         let msb_check = self.logic_and(a_le_const, b_greater_const)?;
 
+        // Check whether `a` and `b` are both <= (q-1)/2 or
+        // are both > (q-1)/2
         let msb_eq = self.check_equal(a_le_const, b_le_const)?;
-        let c = self.sub(a, b)?;
+        // If so, check whether (b-a) <= (q-1)/2
+        let c = self.sub(b, a)?;
         let cmp_result =
             self.is_leq_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
@@ -1514,18 +1517,21 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.logic_or(msb_check, cmp_result)
     }
 
-    /// Constrain that `a` < `b`
-    fn enforce_less_than_internal(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError> {
+    /// Constrain that `a` <= `b`
+    fn enforce_leq_internal(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError> {
         let a_le_const =
             self.is_leq_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
         let b_le_const =
             self.is_leq_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
-        let b_greater_const = self.logic_neg(b_le_const)?;
+        let b_ge_const = self.logic_neg(b_le_const)?;
         // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
-        let msb_check = self.logic_and(a_le_const, b_greater_const)?;
+        let msb_check = self.logic_and(a_le_const, b_ge_const)?;
 
+        // Check whether `a` and `b` are both <= (q-1)/2 or
+        // are both > (q-1)/2
         let msb_eq = self.check_equal(a_le_const, b_le_const)?;
-        let c = self.sub(a, b)?;
+        // If so, check whether (b-a) <= (q-1)/2
+        let c = self.sub(b, a)?;
         let cmp_result =
             self.is_leq_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
@@ -1543,7 +1549,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ) -> Result<Variable, PlonkError> {
         let a_bits_le = self.unpack(a, F::size_in_bits())?;
         let const_bits_le = constant.into_repr().to_bits_le();
-        let const_bits_length = const_bits_le.len();
+        let bits_length = const_bits_le.len().max(a_bits_le.len());
 
         // Stack for constructing the comparison gate
         let mut current_run = Vec::new();
@@ -1553,7 +1559,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // a NOT(a) and push it back to the stack.
         const_bits_le
             .into_iter()
-            .zip(a_bits_le[..const_bits_length].into_iter())
+            .take(bits_length)
+            .zip(a_bits_le.iter().take(bits_length))
             .try_for_each(|(b, a)| -> Result<(), PlonkError> {
                 if b {
                     let c = self.logic_neg(*a)?;
@@ -1569,9 +1576,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
             })?;
         // If bits length of `a` is too long, check whether the most significant
         // bits of `a` is 0.
-        a_bits_le[const_bits_length..]
-            .into_iter()
-            .rev()
+        a_bits_le
+            .iter()
+            .skip(bits_length)
             .try_for_each(|a| -> Result<(), PlonkError> {
                 let c = self.logic_neg(*a)?;
                 current_run.push(c);
@@ -1796,6 +1803,177 @@ pub(crate) mod test {
         assert!(circuit
             .constant_gate(circuit.num_vars(), F::from(0u32))
             .is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_enforce_cmp() -> Result<(), PlonkError> {
+        let orderings = [
+            ark_std::cmp::Ordering::Less,
+            ark_std::cmp::Ordering::Greater,
+            ark_std::cmp::Ordering::Equal,
+        ];
+        let bools = [false, true];
+
+        orderings
+            .iter()
+            .try_for_each(|ord| -> Result<(), PlonkError> {
+                bools.iter().try_for_each(
+                    |should_also_check_for_equality| -> Result<(), PlonkError> {
+                        test_enforce_cmp_helper_diff::<FqEd254>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_diff::<FqEd377>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_diff::<FqEd381>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_diff::<Fq377>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_same::<FqEd254>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_same::<FqEd377>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_same::<FqEd381>(
+                            *ord,
+                            *should_also_check_for_equality,
+                        )?;
+                        test_enforce_cmp_helper_same::<Fq377>(*ord, *should_also_check_for_equality)
+                    },
+                )
+            })
+    }
+    fn test_enforce_cmp_helper_diff<F: PrimeField>(
+        ordering: ark_std::cmp::Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError> {
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let a = circuit.create_variable(F::from(3u32))?;
+        let b = circuit.create_variable(F::from(4u32))?;
+        circuit.enforce_cmp(a, b, ordering, should_also_check_equality)?;
+        let ord = 3u32.cmp(&4u32);
+        let expected_ok = ord == ordering;
+        // Check circuits.
+        if expected_ok {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        *circuit.witness_mut(b) = F::from(1u32);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        // Check variable out of bound error.
+        assert!(circuit.equal_gate(circuit.num_vars(), a).is_err());
+
+        Ok(())
+    }
+    fn test_enforce_cmp_helper_same<F: PrimeField>(
+        ordering: ark_std::cmp::Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError> {
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let a = circuit.create_variable(F::from(3u32))?;
+        let b = circuit.create_variable(F::from(3u32))?;
+        circuit.enforce_cmp(a, b, ordering, should_also_check_equality)?;
+
+        let expected_ok = should_also_check_equality || ordering == ark_std::cmp::Ordering::Equal;
+        // Check circuits.
+        if expected_ok {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        *circuit.witness_mut(b) = F::from(1u32);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        // Check variable out of bound error.
+        assert!(circuit.equal_gate(circuit.num_vars(), a).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_is_cmp() -> Result<(), PlonkError> {
+        let orderings = [
+            ark_std::cmp::Ordering::Less,
+            ark_std::cmp::Ordering::Greater,
+            ark_std::cmp::Ordering::Equal,
+        ];
+        let bools = [false, true];
+
+        orderings
+            .iter()
+            .try_for_each(|ord| -> Result<(), PlonkError> {
+                bools.iter().try_for_each(
+                    |should_also_check_for_equality| -> Result<(), PlonkError> {
+                        test_is_cmp_helper_diff::<FqEd254>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_diff::<FqEd377>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_diff::<FqEd381>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_diff::<Fq377>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_same::<FqEd254>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_same::<FqEd377>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_same::<FqEd381>(*ord, *should_also_check_for_equality)?;
+                        test_is_cmp_helper_same::<Fq377>(*ord, *should_also_check_for_equality)
+                    },
+                )
+            })
+    }
+    fn test_is_cmp_helper_diff<F: PrimeField>(
+        ordering: ark_std::cmp::Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError> {
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let a = circuit.create_variable(F::from(3u32))?;
+        let b = circuit.create_variable(F::from(4u32))?;
+        let c = circuit.is_cmp(a, b, ordering, should_also_check_equality)?;
+        let ord = 3u32.cmp(&4u32);
+        let expected_result = F::from(if ord == ordering { 1u32 } else { 0u32 });
+        // Check circuits.
+        assert_eq!(circuit.witness(c)?, expected_result);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        *circuit.witness_mut(b) = F::from(1u32);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        // Check variable out of bound error.
+        assert!(circuit.equal_gate(circuit.num_vars(), a).is_err());
+
+        Ok(())
+    }
+    fn test_is_cmp_helper_same<F: PrimeField>(
+        ordering: ark_std::cmp::Ordering,
+        should_also_check_equality: bool,
+    ) -> Result<(), PlonkError> {
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let a = circuit.create_variable(F::from(3u32))?;
+        let b = circuit.create_variable(F::from(3u32))?;
+        let c = circuit.is_cmp(a, b, ordering, should_also_check_equality)?;
+
+        let expected_result = F::from(
+            if ordering == ark_std::cmp::Ordering::Equal || should_also_check_equality {
+                1u32
+            } else {
+                0u32
+            },
+        );
+        // Check circuits.
+        assert_eq!(circuit.witness(c)?, expected_result);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        *circuit.witness_mut(b) = F::from(1u32);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        // Check variable out of bound error.
+        assert!(circuit.equal_gate(circuit.num_vars(), a).is_err());
 
         Ok(())
     }

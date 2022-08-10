@@ -8,7 +8,7 @@
 //! related, rescue-based transcript and lookup table etc.
 
 use self::gates::*;
-use super::{gates::MultiplicationGate, Circuit, PlonkCircuit, PlonkError, Variable};
+use super::{Circuit, PlonkCircuit, PlonkError, Variable};
 use crate::{
     circuit::gates::{ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate},
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
