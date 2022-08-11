@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["mod_arith","Modular arithmetic gates"],["plonk_verifier","Circuits for Plonk verifiers."]]});
+window.SIDEBAR_ITEMS = {"mod":[["mod_arith","Modular arithmetic gates"],["plonk_verifier","Circuits for Plonk verifiers."]]};

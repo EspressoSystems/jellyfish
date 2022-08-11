@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["CommitmentGadget","Circuit implementation of the commitment scheme."]]});
+window.SIDEBAR_ITEMS = {"trait":[["CommitmentGadget","Circuit implementation of the commitment scheme."]]};

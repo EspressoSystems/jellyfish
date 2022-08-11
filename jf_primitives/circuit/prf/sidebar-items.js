@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["PrfGadget","Circuit implementation of a PRF."]]});
+window.SIDEBAR_ITEMS = {"trait":[["PrfGadget","Circuit implementation of a PRF."]]};

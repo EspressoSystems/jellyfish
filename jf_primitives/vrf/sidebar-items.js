@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["blsvrf","BLS signature based VRF"],["ecvrf","Place holder for ECVRF"]],"trait":[["Vrf","A trait for VRF proof, evaluation and verification."]]});
+window.SIDEBAR_ITEMS = {"mod":[["blsvrf","BLS signature based VRF"],["ecvrf","Place holder for ECVRF"]],"trait":[["Vrf","A trait for VRF proof, evaluation and verification."]]};

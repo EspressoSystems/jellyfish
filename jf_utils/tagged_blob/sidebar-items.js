@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["deserialize",""],["deserialize_with_tag",""],["serialize",""],["serialize_with_tag",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["deserialize",""],["deserialize_with_tag",""],["serialize",""],["serialize_with_tag",""]]};

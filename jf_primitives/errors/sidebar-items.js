@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["PrimitivesError","A `enum` specifying the possible failure modes of the primitives."]]});
+window.SIDEBAR_ITEMS = {"enum":[["PrimitivesError","A `enum` specifying the possible failure modes of the primitives."]]};

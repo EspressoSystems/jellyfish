@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PlonkCircuit","A specific Plonk circuit instantiation."]]});
+window.SIDEBAR_ITEMS = {"struct":[["PlonkCircuit","A specific Plonk circuit instantiation."]]};
