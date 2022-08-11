@@ -42,7 +42,7 @@ use jf_rescue::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
 /// Universal Structured Reference String for PlonkKzgSnark
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct UniversalSrs<E: PairingEngine>(pub(crate) UniversalParams<E>);
 
 impl<E: PairingEngine> UniversalSrs<E> {
@@ -592,7 +592,7 @@ pub struct ProvingKey<E: PairingEngine> {
 
 /// Preprocessed prover parameters used to compute Plookup proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct PlookupProvingKey<E: PairingEngine> {
     /// Range table polynomial.
     pub(crate) range_table_poly: DensePolynomial<E::Fr>,
@@ -679,7 +679,7 @@ impl<E: PairingEngine> ProvingKey<E> {
 
 /// Preprocessed verifier parameters used to verify Plonk proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct VerifyingKey<E: PairingEngine> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) domain_size: usize,
@@ -768,7 +768,7 @@ where
 
 /// Preprocessed verifier parameters used to verify Plookup proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct PlookupVerifyingKey<E: PairingEngine> {
     /// Range table polynomial commitment. The commitment is not hiding.
     pub(crate) range_table_comm: Commitment<E>,
