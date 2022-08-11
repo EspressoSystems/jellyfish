@@ -20,7 +20,7 @@ macro_rules! to_big_int {
     };
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Copy)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Copy)]
 /// A field element represented by:
 /// p = p.0 + 2^m * p.1.
 /// The struct is useful in modular multiplication

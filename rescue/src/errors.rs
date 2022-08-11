@@ -14,7 +14,7 @@ use ark_std::string::String;
 use displaydoc::Display;
 
 /// Various error modes.
-#[derive(Debug, Display, PartialEq)]
+#[derive(Debug, Display, Eq, PartialEq)]
 pub enum RescueError {
     /// Bad parameter in function call, {0}
     ParameterError(String),
