@@ -29,7 +29,7 @@ mod msm;
 pub use conversion::*;
 pub use msm::*;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 /// An elliptic curve point in twisted Edwards affine form (x, y).
 pub struct Point<F: PrimeField>(F, F);
 

@@ -92,7 +92,7 @@ pub trait RescueParameter: PrimeField {
     const PERMUTATION_ROUND_KEYS: [[&'static [u8]; 4]; 25];
 }
 
-#[derive(Clone, Debug, PartialEq, Copy)]
+#[derive(Clone, Debug, Eq, PartialEq, Copy)]
 /// Data type for rescue prp inputs, keys and internal data
 pub struct RescueVector<F> {
     pub(crate) vec: [F; STATE_SIZE],
