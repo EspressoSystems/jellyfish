@@ -19,7 +19,7 @@ use ark_poly::{
 };
 use ark_std::{
     boxed::Box,
-    cmp::{max, Ordering},
+    cmp::max,
     collections::{HashMap, HashSet},
     format,
     string::ToString,
@@ -1564,7 +1564,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             .chain(ark_std::iter::repeat(false))
             .take(a_bits_le.len())
             .zip(a_bits_le.iter())
-            .skip_while(|(b, a)| *b)
+            .skip_while(|(b, _)| *b)
             .try_fold(
                 BoolVar(self.one()),
                 |current, (b, a)| -> Result<BoolVar, PlonkError> {
@@ -1794,6 +1794,140 @@ pub(crate) mod test {
             .constant_gate(circuit.num_vars(), F::from(0u32))
             .is_err());
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_cmp_gates() -> Result<(), PlonkError> {
+        test_cmp_helper::<FqEd254>()?;
+        test_cmp_helper::<FqEd377>()?;
+        test_cmp_helper::<FqEd381>()?;
+        test_cmp_helper::<Fq377>()
+    }
+
+    fn test_cmp_helper<F: PrimeField>() -> Result<(), PlonkError> {
+        let list = [
+            (F::from(1u32), F::from(2u32)),
+            (
+                F::from(F::modulus_minus_one_div_two()).add(F::one()),
+                F::from(2u32),
+            ),
+            (
+                F::from(F::modulus_minus_one_div_two()).add(F::one()),
+                F::from(F::modulus_minus_one_div_two()).mul(F::from(2u32)),
+            ),
+        ];
+        list.iter()
+            .try_for_each(|(a, b)| -> Result<(), PlonkError> {
+                test_is_le(a, b)?;
+                test_is_leq(a, b)?;
+                test_is_ge(a, b)?;
+                test_is_geq(a, b)?;
+                test_enforce_le(a, b)?;
+                test_enforce_leq(a, b)?;
+                test_enforce_ge(a, b)?;
+                test_enforce_geq(a, b)?;
+                test_is_le(b, a)?;
+                test_is_leq(b, a)?;
+                test_is_ge(b, a)?;
+                test_is_geq(b, a)?;
+                test_enforce_le(b, a)?;
+                test_enforce_leq(b, a)?;
+                test_enforce_ge(b, a)?;
+                test_enforce_geq(b, a)
+            })
+    }
+
+    fn test_is_le<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        let expected_result = F::from(if a < b { 1u32 } else { 0u32 });
+
+        let c = circuit.is_le(a, b)?;
+        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_is_leq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        let expected_result = F::from(if a <= b { 1u32 } else { 0u32 });
+
+        let c = circuit.is_leq(a, b)?;
+        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_is_ge<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        let expected_result = F::from(if a > b { 1u32 } else { 0u32 });
+
+        let c = circuit.is_ge(a, b)?;
+        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_is_geq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        let expected_result = F::from(if a >= b { 1u32 } else { 0u32 });
+
+        let c = circuit.is_geq(a, b)?;
+        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_enforce_le<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        circuit.enforce_le(a, b)?;
+        if a < b {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_enforce_leq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        circuit.enforce_leq(a, b)?;
+        if a <= b {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_enforce_ge<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        circuit.enforce_ge(a, b)?;
+        if a > b {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_enforce_geq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let a = circuit.create_variable(a.clone())?;
+        let b = circuit.create_variable(b.clone())?;
+        circuit.enforce_geq(a, b)?;
+        if a >= b {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
         Ok(())
     }
 

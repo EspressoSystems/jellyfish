@@ -9,7 +9,7 @@
 use crate::errors::{CircuitError::LookupUnsupported, PlonkError};
 use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::univariate::DensePolynomial;
-use ark_std::{cmp::Ordering, vec::Vec};
+use ark_std::vec::Vec;
 
 pub mod basic;
 pub mod customized;
