@@ -361,7 +361,7 @@ where
         Ok(y)
     }
 
-    /// Constrain a variable to be non-zero.
+    /// Constrain a variable to be zero.
     /// Return error if the variable is invalid.
     pub fn zero_gate(&mut self, var: Variable) -> Result<(), PlonkError> {
         self.check_var_bound(var)?;

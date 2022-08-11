@@ -151,28 +151,43 @@ pub trait Circuit<F: Field> {
     /// Return error if the input variables are invalid.
     fn equal_gate(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>;
 
-    /// Enforce comparison between `a` and `b`, if `should_also_check_equality =
-    /// true`, check `a<=b` or `a>=b`.
-    fn enforce_cmp(
-        &mut self,
-        a: Variable,
-        b: Variable,
-        ordering: Ordering,
-        should_also_check_equality: bool,
-    ) -> Result<(), PlonkError>
+    /// Constrain that `a` < `b`.
+    fn enforce_le(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
     where
         F: PrimeField;
 
-    /// Check the ordering between `a` and `b`, returns the index of variable
-    /// `1` if result is true; `0` if result is false;
-    /// If `should_also_check_equality = true`, check `a<=b` or `a>=b`.
-    fn is_cmp(
-        &mut self,
-        a: Variable,
-        b: Variable,
-        ordering: Ordering,
-        should_also_check_equality: bool,
-    ) -> Result<BoolVar, PlonkError>
+    /// Constrain that`a` <= `b`.
+    fn enforce_leq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField;
+
+    /// Constrain that `a` > `b`.
+    fn enforce_ge(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField;
+
+    /// Constrain that `a` >= `b`.
+    fn enforce_geq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField;
+
+    /// Returns a `BoolVar` indicating whether `a` < `b`.
+    fn is_le(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField;
+
+    /// Returns a `BoolVar` indicating whether `a` <= `b`.
+    fn is_leq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField;
+
+    /// Returns a `BoolVar` indicating whether `a` > `b`.
+    fn is_ge(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField;
+
+    /// Returns a `BoolVar` indicating whether `a` >= `b`.
+    fn is_geq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField;
 
