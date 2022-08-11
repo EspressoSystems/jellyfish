@@ -1559,26 +1559,24 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // Iterating from LSB to MSB. Skip the front consecutive 1's.
         // Put an OR gate for bit 0 and an AND gate for bit 1.
-        const_bits_le
+        let mut zipped = const_bits_le
             .into_iter()
             .chain(ark_std::iter::repeat(false))
             .take(a_bits_le.len())
             .zip(a_bits_le.iter())
-            .skip_while(|(b, _)| *b)
-            .try_fold(
-                BoolVar(self.one()),
-                |current, (b, a)| -> Result<BoolVar, PlonkError> {
-                    if b {
-                        self.logic_and(*a, current)
-                    } else {
-                        if current.0 == self.one() {
-                            Ok(*a)
-                        } else {
-                            self.logic_or(*a, current)
-                        }
-                    }
-                },
-            )
+            .skip_while(|(b, _)| *b);
+        if let Some((_, &var)) = zipped.next() {
+            zipped.try_fold(var, |current, (b, a)| -> Result<BoolVar, PlonkError> {
+                if b {
+                    self.logic_and(*a, current)
+                } else {
+                    self.logic_or(*a, current)
+                }
+            })
+        } else {
+            // the constant is all one
+            Ok(BoolVar(self.zero()))
+        }
     }
 }
 
@@ -1807,6 +1805,7 @@ pub(crate) mod test {
 
     fn test_cmp_helper<F: PrimeField>() -> Result<(), PlonkError> {
         let list = [
+            (F::from(5u32), F::from(5u32)),
             (F::from(1u32), F::from(2u32)),
             (
                 F::from(F::modulus_minus_one_div_two()).add(F::one()),
@@ -1840,54 +1839,55 @@ pub(crate) mod test {
 
     fn test_is_le<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a < b { F::one() } else { F::zero() };
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
-        let expected_result = F::from(if a < b { 1u32 } else { 0u32 });
 
         let c = circuit.is_le(a, b)?;
-        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.witness(c.0)?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
     fn test_is_leq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a <= b { F::one() } else { F::zero() };
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
-        let expected_result = F::from(if a <= b { 1u32 } else { 0u32 });
 
         let c = circuit.is_leq(a, b)?;
-        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.witness(c.0)?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
     fn test_is_ge<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a > b { F::one() } else { F::zero() };
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
-        let expected_result = F::from(if a > b { 1u32 } else { 0u32 });
 
         let c = circuit.is_ge(a, b)?;
-        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.witness(c.0)?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
     fn test_is_geq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a >= b { F::one() } else { F::zero() };
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
-        let expected_result = F::from(if a >= b { 1u32 } else { 0u32 });
 
         let c = circuit.is_geq(a, b)?;
-        assert_eq!(circuit.witness(c.0)?, expected_result);
+        assert!(circuit.witness(c.0)?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
     fn test_enforce_le<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a < b;
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
         circuit.enforce_le(a, b)?;
-        if a < b {
+        if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1896,10 +1896,11 @@ pub(crate) mod test {
     }
     fn test_enforce_leq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a <= b;
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
         circuit.enforce_leq(a, b)?;
-        if a <= b {
+        if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1908,10 +1909,11 @@ pub(crate) mod test {
     }
     fn test_enforce_ge<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a > b;
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
         circuit.enforce_ge(a, b)?;
-        if a > b {
+        if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1920,10 +1922,11 @@ pub(crate) mod test {
     }
     fn test_enforce_geq<F: PrimeField>(a: &F, b: &F) -> Result<(), PlonkError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a >= b;
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
         circuit.enforce_geq(a, b)?;
-        if a >= b {
+        if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
