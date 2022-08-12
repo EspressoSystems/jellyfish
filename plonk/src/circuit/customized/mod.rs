@@ -361,14 +361,6 @@ where
         Ok(y)
     }
 
-    /// Constrain a variable to be zero.
-    /// Return error if the variable is invalid.
-    pub fn zero_gate(&mut self, var: Variable) -> Result<(), PlonkError> {
-        self.check_var_bound(var)?;
-        let wire_vars = [var, 0, 0, 0, 0];
-        self.insert_gate(&wire_vars, Box::new(ZeroGate))
-    }
-
     /// Constrain a variable to be non-zero.
     /// Return error if the variable is invalid.
     pub fn non_zero_gate(&mut self, var: Variable) -> Result<(), PlonkError> {

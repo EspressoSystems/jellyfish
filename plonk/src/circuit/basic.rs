@@ -504,7 +504,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         Ok(())
     }
 
-    fn enforce_le(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    fn enforce_lt(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
     where
         F: PrimeField,
     {
@@ -513,36 +513,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         self.enforce_le_internal(a, b)
     }
 
-    fn enforce_leq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
-    where
-        F: PrimeField,
-    {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        let c = self.is_le_internal(b, a)?;
-        self.zero_gate(c.0)
-    }
-
-    fn enforce_ge(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
-    where
-        F: PrimeField,
-    {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        self.enforce_le_internal(b, a)
-    }
-
-    fn enforce_geq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
-    where
-        F: PrimeField,
-    {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        let c = self.is_le_internal(a, b)?;
-        self.zero_gate(c.0)
-    }
-
-    fn is_le(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    fn is_lt(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField,
     {
@@ -551,6 +522,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         self.is_le_internal(a, b)
     }
 
+    // TODO: move this function to trait's default implementation
     fn is_leq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField,
@@ -561,15 +533,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         self.logic_neg(c)
     }
 
-    fn is_ge(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
-    where
-        F: PrimeField,
-    {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        self.is_le_internal(b, a)
-    }
-
+    // TODO: move this function to trait's default implementation
     fn is_geq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField,
@@ -943,7 +907,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let n = self.eval_domain.size();
 
         // The extended wire permutation can be computed as
-        // extended_perm[i] = id[wire_perm[i].0 * n + wire_perm[i].1]
+        // extended_perm[i] = id[wire_perm[i].into() * n + wire_perm[i].1]
         let extended_perm: Vec<F> = self
             .wire_permutation
             .iter()
@@ -1518,7 +1482,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let msb_check = self.logic_and(a_leq_const, b_ge_const)?;
         // Check whether `a` and `b` are both <= (q-1)/2 or
         // are both > (q-1)/2
-        let msb_eq = self.check_equal(a_ge_const.0, b_ge_const.0)?;
+        let msb_eq = self.check_equal(a_ge_const.into(), b_ge_const.into())?;
         Ok((msb_check, msb_eq))
     }
 
@@ -1843,8 +1807,8 @@ pub(crate) mod test {
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
 
-        let c = circuit.is_le(a, b)?;
-        assert!(circuit.witness(c.0)?.eq(&expected_result));
+        let c = circuit.is_lt(a, b)?;
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
@@ -1855,7 +1819,7 @@ pub(crate) mod test {
         let b = circuit.create_variable(b.clone())?;
 
         let c = circuit.is_leq(a, b)?;
-        assert!(circuit.witness(c.0)?.eq(&expected_result));
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
@@ -1865,8 +1829,8 @@ pub(crate) mod test {
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
 
-        let c = circuit.is_ge(a, b)?;
-        assert!(circuit.witness(c.0)?.eq(&expected_result));
+        let c = circuit.is_gt(a, b)?;
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
@@ -1877,7 +1841,7 @@ pub(crate) mod test {
         let b = circuit.create_variable(b.clone())?;
 
         let c = circuit.is_geq(a, b)?;
-        assert!(circuit.witness(c.0)?.eq(&expected_result));
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
@@ -1886,7 +1850,7 @@ pub(crate) mod test {
         let expected_result = a < b;
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
-        circuit.enforce_le(a, b)?;
+        circuit.enforce_lt(a, b)?;
         if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
@@ -1912,7 +1876,7 @@ pub(crate) mod test {
         let expected_result = a > b;
         let a = circuit.create_variable(a.clone())?;
         let b = circuit.create_variable(b.clone())?;
-        circuit.enforce_ge(a, b)?;
+        circuit.enforce_gt(a, b)?;
         if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {

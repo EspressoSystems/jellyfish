@@ -152,27 +152,38 @@ pub trait Circuit<F: Field> {
     fn equal_gate(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>;
 
     /// Constrain that `a` < `b`.
-    fn enforce_le(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    fn enforce_lt(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
     where
         F: PrimeField;
 
     /// Constrain that`a` <= `b`.
     fn enforce_leq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
     where
-        F: PrimeField;
+        F: PrimeField,
+    {
+        let c = self.is_lt(b, a)?;
+        self.constant_gate(c.0, F::zero())
+    }
 
     /// Constrain that `a` > `b`.
-    fn enforce_ge(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    fn enforce_gt(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
     where
-        F: PrimeField;
+        F: PrimeField,
+    {
+        self.enforce_lt(b, a)
+    }
 
     /// Constrain that `a` >= `b`.
     fn enforce_geq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
     where
-        F: PrimeField;
+        F: PrimeField,
+    {
+        let c = self.is_lt(a, b)?;
+        self.constant_gate(c.into(), F::zero())
+    }
 
     /// Returns a `BoolVar` indicating whether `a` < `b`.
-    fn is_le(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    fn is_lt(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
     where
         F: PrimeField;
 
@@ -182,9 +193,12 @@ pub trait Circuit<F: Field> {
         F: PrimeField;
 
     /// Returns a `BoolVar` indicating whether `a` > `b`.
-    fn is_ge(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    fn is_gt(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
     where
-        F: PrimeField;
+        F: PrimeField,
+    {
+        self.is_lt(b, a)
+    }
 
     /// Returns a `BoolVar` indicating whether `a` >= `b`.
     fn is_geq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
