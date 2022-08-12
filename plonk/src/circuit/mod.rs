@@ -5,8 +5,9 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Interfaces for Plonk-based constraint systems
+
 use crate::errors::{CircuitError::LookupUnsupported, PlonkError};
-use ark_ff::{FftField, Field};
+use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::univariate::DensePolynomial;
 use ark_std::vec::Vec;
 
@@ -149,6 +150,60 @@ pub trait Circuit<F: Field> {
     /// Constrain two variables to have the same value.
     /// Return error if the input variables are invalid.
     fn equal_gate(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>;
+
+    /// Constrain that `a` < `b`.
+    fn enforce_lt(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField;
+
+    /// Constrain that`a` <= `b`.
+    fn enforce_leq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField,
+    {
+        let c = self.is_lt(b, a)?;
+        self.constant_gate(c.0, F::zero())
+    }
+
+    /// Constrain that `a` > `b`.
+    fn enforce_gt(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField,
+    {
+        self.enforce_lt(b, a)
+    }
+
+    /// Constrain that `a` >= `b`.
+    fn enforce_geq(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError>
+    where
+        F: PrimeField,
+    {
+        let c = self.is_lt(a, b)?;
+        self.constant_gate(c.into(), F::zero())
+    }
+
+    /// Returns a `BoolVar` indicating whether `a` < `b`.
+    fn is_lt(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField;
+
+    /// Returns a `BoolVar` indicating whether `a` <= `b`.
+    fn is_leq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField;
+
+    /// Returns a `BoolVar` indicating whether `a` > `b`.
+    fn is_gt(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField,
+    {
+        self.is_lt(b, a)
+    }
+
+    /// Returns a `BoolVar` indicating whether `a` >= `b`.
+    fn is_geq(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
+    where
+        F: PrimeField;
 
     /// Pad the circuit with n dummy gates
     fn pad_gate(&mut self, n: usize);
