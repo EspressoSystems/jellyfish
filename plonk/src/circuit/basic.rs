@@ -510,7 +510,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
     {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
-        self.enforce_le_internal(a, b)
+        self.enforce_lt_internal(a, b)
     }
 
     fn is_lt(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError>
@@ -519,7 +519,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
     {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
-        self.is_le_internal(a, b)
+        self.is_lt_internal(a, b)
     }
 
     // TODO: move this function to trait's default implementation
@@ -529,7 +529,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
     {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
-        let c = self.is_le_internal(b, a)?;
+        let c = self.is_lt_internal(b, a)?;
         self.logic_neg(c)
     }
 
@@ -540,7 +540,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
     {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
-        let c = self.is_le_internal(a, b)?;
+        let c = self.is_lt_internal(a, b)?;
         self.logic_neg(c)
     }
 
@@ -1473,38 +1473,38 @@ impl<F: PrimeField> PlonkCircuit<F> {
         a: Variable,
         b: Variable,
     ) -> Result<(BoolVar, BoolVar), PlonkError> {
-        let a_ge_const =
-            self.is_ge_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
-        let b_ge_const =
-            self.is_ge_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
-        let a_leq_const = self.logic_neg(a_ge_const)?;
+        let a_gt_const =
+            self.is_gt_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
+        let b_gt_const =
+            self.is_gt_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
+        let a_leq_const = self.logic_neg(a_gt_const)?;
         // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
-        let msb_check = self.logic_and(a_leq_const, b_ge_const)?;
+        let msb_check = self.logic_and(a_leq_const, b_gt_const)?;
         // Check whether `a` and `b` are both <= (q-1)/2 or
         // are both > (q-1)/2
-        let msb_eq = self.check_equal(a_ge_const.into(), b_ge_const.into())?;
+        let msb_eq = self.check_equal(a_gt_const.into(), b_gt_const.into())?;
         Ok((msb_check, msb_eq))
     }
 
     /// Return a variable indicating whether `a` < `b`.
-    fn is_le_internal(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError> {
+    fn is_lt_internal(&mut self, a: Variable, b: Variable) -> Result<BoolVar, PlonkError> {
         let (msb_check, msb_eq) = self.msb_check_internal(a, b)?;
         // check whether (a-b) > (q-1)/2
         let c = self.sub(a, b)?;
         let cmp_result =
-            self.is_ge_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+            self.is_gt_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
         self.logic_or(msb_check, cmp_result)
     }
 
     /// Constrain that `a` < `b`
-    fn enforce_le_internal(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError> {
+    fn enforce_lt_internal(&mut self, a: Variable, b: Variable) -> Result<(), PlonkError> {
         let (msb_check, msb_eq) = self.msb_check_internal(a, b)?;
         // check whether (a-b) <= (q-1)/2
         let c = self.sub(a, b)?;
         let cmp_result =
-            self.is_ge_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+            self.is_gt_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
         self.logic_or_gate(msb_check, cmp_result)
@@ -1513,7 +1513,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Helper function to check whether `a` is greater than a given
     /// constant. Let N = F::size_in_bits(), it assumes that the
     /// constant < 2^N. And it uses at most N AND/OR gates.
-    fn is_ge_constant_internal(
+    fn is_gt_constant_internal(
         &mut self,
         a: Variable,
         constant: &F,
