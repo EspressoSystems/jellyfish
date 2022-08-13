@@ -59,7 +59,7 @@ where
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         // to enable a more efficient verifier circuit, we remove
         // the following messages (c.f. merlin transcript)
@@ -109,7 +109,7 @@ where
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         // convert the SW form commitments into TE form
         let te_point: Point<F> = (&comm.0).into();

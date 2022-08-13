@@ -47,7 +47,7 @@ pub struct SignatureVar {
 pub trait SignatureGadget<F, P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     /// Signature verification circuit
     /// * `vk` - signature verification key variable.
@@ -92,7 +92,7 @@ where
 impl<F, P> SignatureGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn verify_signature(
         &mut self,
@@ -151,7 +151,7 @@ where
 trait SignatureHelperGadget<F, P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     // Return signature hash challenge in little-endian binary form.
     fn challenge_bits(
@@ -165,7 +165,7 @@ where
 impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn challenge_bits(
         &mut self,
@@ -217,7 +217,7 @@ mod tests {
     fn test_dsa_circuit_helper<F, P>() -> Result<(), PlonkError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let keypair = KeyPair::<P>::generate(&mut rng);
@@ -281,7 +281,7 @@ mod tests {
     ) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let vk_var = circuit.create_signature_vk_variable(vk)?;
@@ -301,7 +301,7 @@ mod tests {
     ) -> Result<(PlonkCircuit<F>, Variable), PlonkError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
         let vk_var = circuit.create_signature_vk_variable(vk)?;

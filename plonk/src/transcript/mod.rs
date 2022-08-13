@@ -48,7 +48,7 @@ pub trait PlonkTranscript<F> {
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(
             self,
@@ -111,7 +111,7 @@ pub trait PlonkTranscript<F> {
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         for comm in comms.iter() {
             self.append_commitment(label, comm)?;
@@ -127,7 +127,7 @@ pub trait PlonkTranscript<F> {
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
     }

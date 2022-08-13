@@ -23,7 +23,8 @@ fn edwards_coeff_d<P: Parameters>() -> P::BaseField {
 }
 
 /// A gate for checking a point conforming the twisted Edwards curve equation
-#[derive(Clone)]
+#[derive(Derivative)]
+#[derivative(Clone(bound = "P: Parameters"))]
 pub struct EdwardsCurveEquationGate<P: Parameters> {
     pub(crate) _phantom: PhantomData<P>,
 }
@@ -31,7 +32,7 @@ pub struct EdwardsCurveEquationGate<P: Parameters> {
 impl<F, P> Gate<F> for EdwardsCurveEquationGate<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn name(&self) -> &'static str {
         "Curve Equation Gate"
@@ -51,7 +52,8 @@ where
 }
 
 /// A gate for point addition on x-coordinate between two Curve Points
-#[derive(Clone)]
+#[derive(Derivative)]
+#[derivative(Clone(bound = "P: Parameters"))]
 pub struct CurvePointXAdditionGate<P: Parameters> {
     pub(crate) _phantom: PhantomData<P>,
 }
@@ -59,7 +61,7 @@ pub struct CurvePointXAdditionGate<P: Parameters> {
 impl<F, P> Gate<F> for CurvePointXAdditionGate<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn name(&self) -> &'static str {
         "Point Addition X-coordinate Gate"
@@ -77,7 +79,8 @@ where
 }
 
 /// A gate for point addition on y-coordinate between two Curve Points
-#[derive(Clone)]
+#[derive(Derivative)]
+#[derivative(Clone(bound = "P: Parameters"))]
 pub struct CurvePointYAdditionGate<P: Parameters> {
     pub(crate) _phantom: PhantomData<P>,
 }
@@ -85,7 +88,7 @@ pub struct CurvePointYAdditionGate<P: Parameters> {
 impl<F, P> Gate<F> for CurvePointYAdditionGate<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn name(&self) -> &'static str {
         "Point Addition Y-coordinate Gate"

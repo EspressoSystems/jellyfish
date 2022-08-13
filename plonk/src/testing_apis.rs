@@ -171,7 +171,7 @@ impl<E, F, P> Verifier<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Construct a Plonk verifier that uses a domain with size `domain_size`.
     pub fn new(domain_size: usize) -> Result<Self, PlonkError> {

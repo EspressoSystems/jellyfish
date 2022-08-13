@@ -36,7 +36,7 @@ pub struct Point<F: PrimeField>(F, F);
 impl<F, P> From<GroupAffine<P>> for Point<F>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn from(p: GroupAffine<P>) -> Self {
         if p.is_zero() {
@@ -87,7 +87,7 @@ impl<F: PrimeField> Point<F> {
 impl<F, P> From<GroupProjective<P>> for Point<F>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn from(p: GroupProjective<P>) -> Self {
         let affine_repr = p.into_affine();
@@ -98,7 +98,7 @@ where
 impl<F, P> From<Point<F>> for GroupAffine<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn from(p: Point<F>) -> Self {
         Self::new(p.0, p.1)
@@ -108,7 +108,7 @@ where
 impl<F, P> From<Point<F>> for GroupProjective<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn from(p: Point<F>) -> Self {
         let affine_point: GroupAffine<P> = p.into();
@@ -178,7 +178,7 @@ where
     /// parameters.
     /// A bad PointVariable would be returned if (b0, b1) are not boolean
     /// variables, that would ultimately failed to build a correct circuit.
-    fn quaternary_point_select<P: Parameters<BaseField = F> + Clone>(
+    fn quaternary_point_select<P: Parameters<BaseField = F>>(
         &mut self,
         b0: BoolVar,
         b1: BoolVar,
@@ -318,7 +318,7 @@ where
     /// Return error if input variables are invalid
     pub fn is_neutral_point<P>(&mut self, point_var: &PointVariable) -> Result<BoolVar, PlonkError>
     where
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         self.check_point_var_bound(point_var)?;
 
@@ -339,7 +339,7 @@ where
     /// scalar field
     ///
     /// Returns error if input variables are invalid
-    pub fn on_curve_gate<P: Parameters<BaseField = F> + Clone>(
+    pub fn on_curve_gate<P: Parameters<BaseField = F>>(
         &mut self,
         point_var: &PointVariable,
     ) -> Result<(), PlonkError> {
@@ -361,7 +361,7 @@ where
     /// Currently only supports GroupAffine::<P> addition.
     ///
     /// Returns error if the input variables are invalid.
-    fn ecc_add_gate<P: Parameters<BaseField = F> + Clone>(
+    fn ecc_add_gate<P: Parameters<BaseField = F>>(
         &mut self,
         point_a: &PointVariable,
         point_b: &PointVariable,
@@ -397,7 +397,7 @@ where
     /// Currently only supports GroupAffine::<P> addition.
     ///
     /// Returns error if inputs are invalid
-    pub fn ecc_add<P: Parameters<BaseField = F> + Clone>(
+    pub fn ecc_add<P: Parameters<BaseField = F>>(
         &mut self,
         point_a: &PointVariable,
         point_b: &PointVariable,
@@ -420,7 +420,7 @@ where
 
     /// Obtain the fixed-based scalar multiplication result of `scalar` * `Base`
     /// Currently only supports GroupAffine::<P> scalar multiplication.
-    pub fn fixed_base_scalar_mul<P: Parameters<BaseField = F> + Clone>(
+    pub fn fixed_base_scalar_mul<P: Parameters<BaseField = F>>(
         &mut self,
         scalar: Variable,
         base: &GroupAffine<P>,
@@ -469,7 +469,7 @@ where
     /// multiplication. both `scalar` and `base` are variables.
     /// Currently only supports GroupAffine::<P>.
     /// If the parameter is bandersnatch, we will use GLV multiplication.
-    pub fn variable_base_scalar_mul<P: Parameters<BaseField = F> + Clone>(
+    pub fn variable_base_scalar_mul<P: Parameters<BaseField = F>>(
         &mut self,
         scalar: Variable,
         base: &PointVariable,
@@ -495,7 +495,7 @@ where
     /// multiplication. Both `scalar_bits_le` and `base` are variables,
     /// where `scalar_bits_le` is the little-endian form of the scalar.
     /// Currently only supports GroupAffine::<P>.
-    pub fn variable_base_binary_scalar_mul<P: Parameters<BaseField = F> + Clone>(
+    pub fn variable_base_binary_scalar_mul<P: Parameters<BaseField = F>>(
         &mut self,
         scalar_bits_le: &[BoolVar],
         base: &PointVariable,
@@ -628,7 +628,7 @@ mod test {
     fn test_is_neutral_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField + ?Sized,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p1 = circuit.create_point_variable(Point(F::zero(), F::one()))?;
@@ -656,7 +656,7 @@ mod test {
     fn build_is_neutral_circuit<F, P>(point: Point<F>) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p = circuit.create_point_variable(point)?;
@@ -759,7 +759,7 @@ mod test {
     fn build_on_curve_gate_circuit<F, P>(point: Point<F>) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p = circuit.create_point_variable(point)?;
@@ -780,7 +780,7 @@ mod test {
     fn test_curve_point_addition_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let p1 = GroupAffine::<P>::rand(&mut rng);
@@ -821,7 +821,7 @@ mod test {
     ) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p1_var = circuit.create_point_variable(p1)?;
@@ -843,7 +843,7 @@ mod test {
     fn test_quaternary_point_select_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let p1 = GroupAffine::<P>::rand(&mut rng);
@@ -905,7 +905,7 @@ mod test {
     fn build_quaternary_select_gate<F, P>(b0: bool, b1: bool) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let b0_var = circuit.create_boolean_variable(b0)?;
@@ -938,7 +938,7 @@ mod test {
     fn test_point_equal_gate_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let p = GroupAffine::<P>::rand(&mut rng);
@@ -988,7 +988,7 @@ mod test {
     fn test_is_equal_point_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let p1 = GroupAffine::<P>::rand(&mut rng);
@@ -1048,12 +1048,12 @@ mod test {
     fn test_compute_fixed_bases_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         fn check_base_list<F, P>(bases: &[GroupAffine<P>])
         where
             F: PrimeField,
-            P: Parameters<BaseField = F> + Clone,
+            P: Parameters<BaseField = F>,
         {
             bases
                 .windows(2)
@@ -1104,7 +1104,7 @@ mod test {
     fn test_fixed_based_scalar_mul_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
@@ -1136,7 +1136,7 @@ mod test {
     fn build_fixed_based_scalar_mul_circuit<F, P>(scalar: F) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
@@ -1158,7 +1158,7 @@ mod test {
     fn test_binary_point_vars_select_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let p0 = GroupAffine::<P>::rand(&mut rng);
@@ -1207,7 +1207,7 @@ mod test {
     ) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let b_var = circuit.create_boolean_variable(b)?;
@@ -1229,7 +1229,7 @@ mod test {
     fn test_variable_base_scalar_mul_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
@@ -1280,7 +1280,7 @@ mod test {
     ) -> Result<PlonkCircuit<F>, PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let scalar_var = circuit.create_variable(scalar)?;
