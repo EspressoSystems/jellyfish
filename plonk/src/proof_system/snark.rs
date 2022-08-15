@@ -45,7 +45,7 @@ impl<E, F, P> PlonkKzgSnark<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     #[allow(clippy::new_without_default)]
     /// A new Plonk KZG SNARK
@@ -418,7 +418,7 @@ impl<E, F, P> UniversalSNARK<E> for PlonkKzgSnark<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     type Proof = Proof<E>;
     type ProvingKey = ProvingKey<E>;
@@ -720,7 +720,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
     {
         let rng = &mut ark_std::test_rng();
         let circuit = gen_circuit_for_test(5, 6, plonk_type)?;
@@ -862,7 +862,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1082,7 +1082,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1177,7 +1177,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1439,7 +1439,7 @@ pub mod test {
     where
         E: PairingEngine<G1Affine = GroupAffine<P>>,
         E::Fq: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
+        P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
     {
         let rng = &mut ark_std::test_rng();
         let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
@@ -1484,7 +1484,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         let rng = &mut ark_std::test_rng();
@@ -1547,7 +1547,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1645,7 +1645,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {

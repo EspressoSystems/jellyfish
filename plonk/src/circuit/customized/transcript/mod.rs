@@ -296,7 +296,7 @@ mod tests {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 

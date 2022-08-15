@@ -85,7 +85,7 @@ where
 {
     /// Perform GLV multiplication in circuit (which costs a few less
     /// constraints).
-    pub fn glv_mul<P: TEModelParameters<BaseField = F> + Clone>(
+    pub fn glv_mul<P: TEModelParameters<BaseField = F>>(
         &mut self,
         scalar: Variable,
         base: &PointVariable,
@@ -111,7 +111,7 @@ fn multi_scalar_mul_circuit<F, P>(
 ) -> Result<PointVariable, PlonkError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     let endo_base_neg = circuit.inverse_point(endo_base)?;
     let endo_base =
@@ -129,7 +129,7 @@ where
 fn endomorphism<F, P>(base: &Point<F>) -> Point<F>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     let x = base.get_x();
     let y = base.get_y();
@@ -154,7 +154,7 @@ fn endomorphism_circuit<F, P>(
 ) -> Result<PointVariable, PlonkError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     let base = circuit.point_witness(point_var)?;
     let endo_point = endomorphism::<_, P>(&base);
@@ -269,7 +269,7 @@ fn scalar_decomposition_gate<F, P, S>(
 ) -> Result<(Variable, Variable, BoolVar), PlonkError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F, ScalarField = S> + Clone,
+    P: TEModelParameters<BaseField = F, ScalarField = S>,
     S: PrimeField,
 {
     // the order of scalar field
@@ -588,7 +588,7 @@ mod tests {
     fn test_glv_helper<F, P>() -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
 

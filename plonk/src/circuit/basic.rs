@@ -17,15 +17,9 @@ use ark_ff::{BigInteger, FftField, PrimeField};
 use ark_poly::{
     domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, UVPolynomial,
 };
-use ark_std::{
-    boxed::Box,
-    cmp::max,
-    collections::{HashMap, HashSet},
-    format,
-    string::ToString,
-    vec,
-    vec::Vec,
-};
+use ark_std::{boxed::Box, cmp::max, format, string::ToString, vec, vec::Vec};
+use hashbrown::{HashMap, HashSet};
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 /// The wire type identifier for range gates.

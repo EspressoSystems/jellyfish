@@ -111,7 +111,7 @@ impl AccMemberWitnessVar {
     ) -> Result<Self, PlonkError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         Ok(Self {
             uid: circuit.create_variable(F::from(acc_member_witness.uid as u64))?,

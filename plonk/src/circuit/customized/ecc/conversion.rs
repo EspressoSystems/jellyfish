@@ -22,7 +22,7 @@ use ark_ff::{BigInteger256, BigInteger384, BigInteger768, PrimeField};
 impl<F, P> From<&SWAffine<P>> for Point<F>
 where
     F: PrimeField + SWToTEConParam,
-    P: SWParam<BaseField = F> + Clone,
+    P: SWParam<BaseField = F>,
 {
     fn from(p: &SWAffine<P>) -> Self {
         // this function is only correct for BLS12-377

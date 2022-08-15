@@ -483,8 +483,8 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone + TEModelParameters,
-        Q: TEParam<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup

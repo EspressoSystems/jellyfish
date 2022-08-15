@@ -32,6 +32,7 @@ rand_chacha = { version = "0.3.1" }
 sha3 = "^0.10"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }
 hashbrown = "0.12.3"
+dyn-clone = "^1.0"
 
 [dependencies.ark-poly-commit]
 git = "https://github.com/arkworks-rs/poly-commit/"

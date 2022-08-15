@@ -110,7 +110,7 @@ pub struct Proof<E: PairingEngine> {
 impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
 where
     E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
+    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
 {
     type Error = SnarkError;
 
@@ -205,7 +205,7 @@ where
 impl<E, P> From<Proof<E>> for Vec<E::Fq>
 where
     E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
+    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
 {
     fn from(proof: Proof<E>) -> Self {
         if proof.plookup_proof.is_some() {
@@ -379,7 +379,7 @@ impl<E: PairingEngine> BatchProof<E> {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
     {
         let mut wires_poly_comms_vec = Vec::new();
         for e in self.wires_poly_comms_vec.iter() {
@@ -711,8 +711,8 @@ impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
 where
     E: PairingEngine<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>, Fqe = Fp2<F>>,
     F: Fp2Parameters<Fp = E::Fq>,
-    P1: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
-    P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr> + Clone,
+    P1: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
+    P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr>,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
         if vk.plookup_vk.is_some() {
@@ -746,7 +746,7 @@ impl<E, F, P> VerifyingKey<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Convert the group elements to a list of scalars that represent the
     /// Twisted Edwards coordinates.

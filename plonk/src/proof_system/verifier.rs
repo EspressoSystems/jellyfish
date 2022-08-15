@@ -53,7 +53,7 @@ impl<E, F, P> Verifier<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Construct a Plonk verifier that uses a domain with size `domain_size`.
     pub(crate) fn new(domain_size: usize) -> Result<Self, PlonkError> {
@@ -785,7 +785,7 @@ impl<E, F, P> Verifier<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Merge a polynomial commitment into the aggregated polynomial commitment
     /// (in the ScalarAndBases form), update the random combiner afterward.

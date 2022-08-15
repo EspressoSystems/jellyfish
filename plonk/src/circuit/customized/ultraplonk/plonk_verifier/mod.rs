@@ -62,7 +62,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + SWToTEConParam,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         let sigma_comms = verify_key
             .sigma_comms
@@ -106,7 +106,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
     ) -> Result<Self, PlonkError>
     where
         F: PrimeField,
-        P: TEParam<BaseField = F> + Clone,
+        P: TEParam<BaseField = F>,
     {
         if self.is_merged || other.is_merged {
             return Err(ParameterError("cannot merge a merged key again".to_string()).into());
@@ -161,7 +161,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWParam<BaseField = F> + Clone + TEParam,
+        P: SWParam<BaseField = F> + TEParam,
     {
         if merged_vks.is_empty() {
             return Err(ParameterError("empty merged verification keys".to_string()).into());
@@ -293,7 +293,7 @@ where
     ) -> Result<Vec<VerifyingKeyVar<E>>, PlonkError>
     where
         E: PairingEngine,
-        P: TEParam<BaseField = F> + Clone,
+        P: TEParam<BaseField = F>,
     {
         if vk_type_a_vars.len() != vk_type_b_vars.len() {
             return Err(ParameterError(format!(
@@ -342,8 +342,8 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + RescueParameter + SWToTEConParam,
-        P: SWParam<BaseField = F> + Clone,
-        Q: TEParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
+        Q: TEParam<BaseField = F>,
     {
         // Simulate universal setup
         let rng = &mut test_rng();
@@ -434,7 +434,7 @@ mod test {
     ) where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + SWToTEConParam,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         for (comm_var, comm) in vk_var.sigma_comms.iter().zip(vk.sigma_comms.iter()) {
             let expected_comm = Point::from(&comm.0);
@@ -456,8 +456,8 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone + TEModelParameters,
-        Q: TEParam<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         let rng = &mut test_rng();
@@ -695,7 +695,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone + TEModelParameters,
+        P: SWModelParameters<BaseField = F> + TEModelParameters,
     {
         let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
@@ -751,8 +751,8 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone + TEModelParameters,
-        Q: TEParam<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         let rng = &mut test_rng();

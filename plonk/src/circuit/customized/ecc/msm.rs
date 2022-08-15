@@ -23,7 +23,7 @@ use jf_utils::fq_to_fr;
 pub trait MultiScalarMultiplicationCircuit<F, P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     /// Compute the multi-scalar-multiplications.
     /// Use pippenger when the circuit supports lookup;
@@ -48,7 +48,7 @@ where
 impl<F, P> MultiScalarMultiplicationCircuit<F, P> for PlonkCircuit<F>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn msm(
         &mut self,
@@ -133,7 +133,7 @@ fn msm_naive<F, P>(
 ) -> Result<PointVariable, PlonkError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     circuit.check_vars_bound(scalars)?;
     for base in bases.iter() {
@@ -197,7 +197,7 @@ fn msm_pippenger<F, P>(
 ) -> Result<PointVariable, PlonkError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     // ================================================
     // check inputs
@@ -350,7 +350,7 @@ fn compute_scalar_mul_value<F, P>(
 ) -> Result<Point<F>, PlonkError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     let curve_point: GroupProjective<P> = circuit.point_witness(base_var)?.into();
     let scalar = fq_to_fr::<F, P>(&circuit.witness(scalar_var)?);
@@ -411,7 +411,7 @@ mod tests {
     ) -> Result<(), PlonkError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F> + Clone,
+        P: Parameters<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
 

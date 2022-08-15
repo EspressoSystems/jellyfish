@@ -167,7 +167,7 @@ where
 pub trait ElGamalEncryptionGadget<F, P>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     /// Compute the gadget that check a correct Elgamal encryption
     /// * `pk_vars` - variables corresponding to the encryption public key
@@ -197,7 +197,7 @@ where
 impl<F, P> ElGamalEncryptionGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     fn elgamal_encrypt(
         &mut self,
@@ -279,7 +279,7 @@ mod tests {
     fn apply_counter_mode_stream_no_padding_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F> + Clone,
+        P: TEModelParameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let mut prng = ark_std::test_rng();
@@ -342,7 +342,7 @@ mod tests {
     fn test_elgamal_hybrid_encrypt_circuit_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F> + Clone,
+        P: TEModelParameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
@@ -422,7 +422,7 @@ mod tests {
     fn test_create_ciphertext_variable_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F> + Clone,
+        P: TEModelParameters<BaseField = F>,
     {
         // Prepare ciphertext
         let rng = &mut ark_std::test_rng();

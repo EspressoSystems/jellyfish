@@ -94,7 +94,7 @@ fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
     X: TEAffine<EmbedCurve>,
 ) -> Result<PlonkCircuit<EmbedCurve::BaseField>, PlonkError>
 where
-    EmbedCurve: TEModelParameters + Clone,
+    EmbedCurve: TEModelParameters,
     <EmbedCurve as ModelParameters>::BaseField: PrimeField,
     PairingCurve: PairingEngine,
 {

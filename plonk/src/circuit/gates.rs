@@ -9,11 +9,12 @@ use ark_ff::Field;
 use ark_std::boxed::Box;
 use core::fmt;
 use downcast_rs::Downcast;
+use dyn_clone::DynClone;
 
 use crate::constants::{GATE_WIDTH, N_MUL_SELECTORS};
 
 /// Describes a gate with getter for all selectors configuration
-pub trait Gate<F: Field>: Downcast + GateClone<F> {
+pub trait Gate<F: Field>: Downcast + DynClone {
     /// Get the name of a gate.
     fn name(&self) -> &'static str;
     /// Selectors for linear combination.
@@ -59,24 +60,9 @@ pub trait Gate<F: Field>: Downcast + GateClone<F> {
 }
 impl_downcast!(Gate<F> where F: Field);
 
-/// Clone a Gate.
-pub trait GateClone<F: Field> {
-    /// Clone a Gate.
-    fn clone_box(&self) -> Box<dyn Gate<F>>;
-}
-
-impl<T, F: Field> GateClone<F> for T
-where
-    T: 'static + Gate<F> + Clone,
-{
-    fn clone_box(&self) -> Box<dyn Gate<F>> {
-        Box::new(self.clone())
-    }
-}
-
 impl<F: Field> Clone for Box<dyn Gate<F>> {
     fn clone(&self) -> Box<dyn Gate<F>> {
-        self.clone_box()
+        dyn_clone::clone_box(&**self)
     }
 }
 
