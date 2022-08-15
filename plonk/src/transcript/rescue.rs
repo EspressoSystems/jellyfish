@@ -11,9 +11,8 @@ use crate::{
     errors::PlonkError,
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
-use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
-};
+use ark_ec::PairingEngine;
+use ark_ff::ToConstraintField;
 use ark_poly_commit::kzg10::Commitment;
 use ark_std::vec::Vec;
 use jf_rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE};
@@ -52,14 +51,14 @@ where
         }
     }
 
-    fn append_vk_and_pub_input<E, P>(
+    fn append_vk_and_pub_input<E>(
         &mut self,
         vk: &VerifyingKey<E>,
         pub_input: &[E::Fr],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F>,
+        E: PairingEngine<Fq = F>,
+        E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     {
         // to enable a more efficient verifier circuit, we remove
         // the following messages (c.f. merlin transcript)
@@ -69,16 +68,16 @@ where
         //  - wire subsets separators
 
         // selector commitments
-        for com in vk.selector_comms.iter() {
+        for &com in vk.selector_comms.iter() {
             // convert the SW form commitments into TE form
-            let te_point: Point<F> = (&com.0).into();
+            let te_point: Point<F> = com.into();
             self.transcript.push(te_point.get_x());
             self.transcript.push(te_point.get_y());
         }
         // sigma commitments
-        for com in vk.sigma_comms.iter() {
+        for &com in vk.sigma_comms.iter() {
             // convert the SW form commitments into TE form
-            let te_point: Point<F> = (&com.0).into();
+            let te_point: Point<F> = com.into();
             self.transcript.push(te_point.get_x());
             self.transcript.push(te_point.get_y());
         }
@@ -102,17 +101,17 @@ where
 
     /// Append a single commitment to the transcript. `_label` is omitted for
     /// efficiency.
-    fn append_commitment<E, P>(
+    fn append_commitment<E>(
         &mut self,
         _label: &'static [u8],
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F>,
+        E: PairingEngine<Fq = F>,
+        E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     {
         // convert the SW form commitments into TE form
-        let te_point: Point<F> = (&comm.0).into();
+        let te_point: Point<F> = (*comm).into();
         // push the x and y coordinate of comm (in twisted
         // edwards form) to the transcript
 

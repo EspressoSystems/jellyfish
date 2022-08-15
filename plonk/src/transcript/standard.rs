@@ -8,14 +8,14 @@
 use super::PlonkTranscript;
 use crate::errors::PlonkError;
 use ark_ec::PairingEngine;
-use ark_ff::PrimeField;
+use ark_ff::{Field, PrimeField};
 use jf_utils::to_bytes;
 use merlin::Transcript;
 
 /// A wrapper of `merlin::Transcript`.
 pub struct StandardTranscript(Transcript);
 
-impl<F> PlonkTranscript<F> for StandardTranscript {
+impl<F: Field> PlonkTranscript<F> for StandardTranscript {
     /// create a new plonk transcript
     fn new(label: &'static [u8]) -> Self {
         Self(Transcript::new(label))

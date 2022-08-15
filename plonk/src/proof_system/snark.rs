@@ -23,7 +23,7 @@ use crate::{
     transcript::*,
 };
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
-use ark_ff::{Field, One};
+use ark_ff::{Field, One, ToConstraintField};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly_commit::{kzg10::KZG10, PCUniversalParams};
 use ark_std::{
@@ -41,11 +41,11 @@ use rayon::prelude::*;
 /// A Plonk instantiated with KZG PCS
 pub struct PlonkKzgSnark<E: PairingEngine>(PhantomData<E>);
 
-impl<E, F, P> PlonkKzgSnark<E>
+impl<E, F> PlonkKzgSnark<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: PairingEngine<Fq = F>,
+    E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
 {
     #[allow(clippy::new_without_default)]
     /// A new Plonk KZG SNARK

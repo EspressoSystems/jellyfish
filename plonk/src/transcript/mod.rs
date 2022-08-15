@@ -19,10 +19,8 @@ use crate::{
     errors::PlonkError,
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
-use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
-};
-use ark_ff::PrimeField;
+use ark_ec::PairingEngine;
+use ark_ff::{Field, PrimeField, ToConstraintField};
 use ark_poly_commit::kzg10::Commitment;
 use jf_utils::to_bytes;
 
@@ -36,19 +34,19 @@ use jf_utils::to_bytes;
 /// (instantiated with Rescue hash), or a Solidity-friendly transcript
 /// (instantiated with Keccak256 hash).
 /// The second is only used for recursive snarks.
-pub trait PlonkTranscript<F> {
+pub trait PlonkTranscript<F: Field> {
     /// Create a new plonk transcript.
     fn new(label: &'static [u8]) -> Self;
 
     /// Append the verification key and the public input to the transcript.
-    fn append_vk_and_pub_input<E, P>(
+    fn append_vk_and_pub_input<E>(
         &mut self,
         vk: &VerifyingKey<E>,
         pub_input: &[E::Fr],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F>,
+        E: PairingEngine<Fq = F>,
+        E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     {
         <Self as PlonkTranscript<F>>::append_message(
             self,
@@ -104,14 +102,14 @@ pub trait PlonkTranscript<F> {
     fn append_message(&mut self, label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError>;
 
     /// Append a slice of commitments to the transcript.
-    fn append_commitments<E, P>(
+    fn append_commitments<E>(
         &mut self,
         label: &'static [u8],
         comms: &[Commitment<E>],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F>,
+        E: PairingEngine<Fq = F>,
+        E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     {
         for comm in comms.iter() {
             self.append_commitment(label, comm)?;
@@ -120,14 +118,14 @@ pub trait PlonkTranscript<F> {
     }
 
     /// Append a single commitment to the transcript.
-    fn append_commitment<E, P>(
+    fn append_commitment<E>(
         &mut self,
         label: &'static [u8],
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F>,
+        E: PairingEngine<Fq = F>,
+        E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
     }

@@ -16,10 +16,11 @@ use ark_ec::{
     group::Group,
     short_weierstrass_jacobian::GroupAffine as SWGroupAffine,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ModelParameters, ProjectiveCurve, SWModelParameters,
+    AffineCurve, ModelParameters, PairingEngine, ProjectiveCurve, SWModelParameters,
     TEModelParameters as Parameters,
 };
-use ark_ff::{PrimeField, Zero};
+use ark_ff::{Field, PrimeField, ToConstraintField, Zero};
+use ark_poly_commit::kzg10::Commitment;
 use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
 
@@ -49,6 +50,16 @@ where
         } else {
             Point(p.x, p.y)
         }
+    }
+}
+
+impl<E: PairingEngine> From<Commitment<E>> for Point<<E::Fq as Field>::BasePrimeField>
+where
+    <E as PairingEngine>::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
+{
+    fn from(cm: Commitment<E>) -> Self {
+        let fe = <Commitment<E> as ToConstraintField<<E::Fq as Field>::BasePrimeField>>::to_field_elements(&cm).unwrap();
+        Point(fe[0], fe[1])
     }
 }
 

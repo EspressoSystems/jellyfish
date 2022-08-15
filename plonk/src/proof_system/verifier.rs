@@ -14,8 +14,8 @@ use crate::{
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::*,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
-use ark_ff::{Field, One, Zero};
+use ark_ec::PairingEngine;
+use ark_ff::{Field, One, ToConstraintField, Zero};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_poly_commit::kzg10::Commitment;
 use ark_std::{format, vec, vec::Vec};
@@ -49,11 +49,11 @@ pub(crate) struct Verifier<E: PairingEngine> {
     pub(crate) domain: Radix2EvaluationDomain<E::Fr>,
 }
 
-impl<E, F, P> Verifier<E>
+impl<E, F> Verifier<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: PairingEngine<Fq = F>,
+    E::G1Affine: ToConstraintField<<E as PairingEngine>::Fq>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
 {
     /// Construct a Plonk verifier that uses a domain with size `domain_size`.
     pub(crate) fn new(domain_size: usize) -> Result<Self, PlonkError> {
@@ -781,11 +781,10 @@ where
 }
 
 /// Private helper methods
-impl<E, F, P> Verifier<E>
+impl<E, F> Verifier<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: PairingEngine<Fq = F>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
 {
     /// Merge a polynomial commitment into the aggregated polynomial commitment
     /// (in the ScalarAndBases form), update the random combiner afterward.

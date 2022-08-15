@@ -8,7 +8,7 @@
 use super::PlonkTranscript;
 use crate::{constants::KECCAK256_STATE_SIZE, errors::PlonkError};
 use ark_ec::PairingEngine;
-use ark_ff::PrimeField;
+use ark_ff::{Field, PrimeField};
 use ark_std::vec::Vec;
 use sha3::{Digest, Keccak256};
 
@@ -33,7 +33,7 @@ pub struct SolidityTranscript {
     state: [u8; KECCAK256_STATE_SIZE], // 64 bytes state size
 }
 
-impl<F> PlonkTranscript<F> for SolidityTranscript {
+impl<F: Field> PlonkTranscript<F> for SolidityTranscript {
     /// Create a new plonk transcript. `label` is omitted for efficiency.
     fn new(_label: &'static [u8]) -> Self {
         SolidityTranscript {
