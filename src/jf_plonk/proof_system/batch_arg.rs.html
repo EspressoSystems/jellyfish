@@ -468,7 +468,7 @@
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Setup the circuit and the proving key for a (mergeable) instance.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">setup_instance</span>(
@@ -655,7 +655,7 @@
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
     <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
 {
@@ -706,7 +706,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>

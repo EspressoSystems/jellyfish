@@ -1764,7 +1764,7 @@
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::new_without_default</span>)]</span>
     <span class="doccomment">/// A new Plonk KZG SNARK</span>
@@ -2137,7 +2137,7 @@
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="kw">type</span> <span class="ident">Proof</span> <span class="op">=</span> <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">ProvingKey</span> <span class="op">=</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
@@ -2439,7 +2439,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">gen_circuit_for_test</span>(<span class="number">5</span>, <span class="number">6</span>, <span class="ident">plonk_type</span>)<span class="question-mark">?</span>;
@@ -2581,7 +2581,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
@@ -2801,7 +2801,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
@@ -2896,7 +2896,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
@@ -3158,7 +3158,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">E::Fq</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">gen_circuit_for_test</span>(<span class="number">3</span>, <span class="number">4</span>, <span class="ident">PlonkType::TurboPlonk</span>)<span class="question-mark">?</span>;
@@ -3203,7 +3203,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
@@ -3266,7 +3266,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// 1. Simulate universal setup</span>
@@ -3364,7 +3364,7 @@
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
         <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     {

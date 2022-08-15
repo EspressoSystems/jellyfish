@@ -265,7 +265,7 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
             <span class="self">self</span>,
@@ -328,7 +328,7 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">for</span> <span class="ident">comm</span> <span class="kw">in</span> <span class="ident">comms</span>.<span class="ident">iter</span>() {
             <span class="self">self</span>.<span class="ident">append_commitment</span>(<span class="ident">label</span>, <span class="ident">comm</span>)<span class="question-mark">?</span>;
@@ -344,7 +344,7 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(<span class="self">self</span>, <span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">comm</span>)<span class="question-mark">?</span>)
     }

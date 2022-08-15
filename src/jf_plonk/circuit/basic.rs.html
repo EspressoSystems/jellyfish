@@ -2416,12 +2416,6 @@
 <span id="2410">2410</span>
 <span id="2411">2411</span>
 <span id="2412">2412</span>
-<span id="2413">2413</span>
-<span id="2414">2414</span>
-<span id="2415">2415</span>
-<span id="2416">2416</span>
-<span id="2417">2417</span>
-<span id="2418">2418</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -2441,15 +2435,9 @@
 <span class="kw">use</span> <span class="ident">ark_poly</span>::{
     <span class="ident">domain::Radix2EvaluationDomain</span>, <span class="ident">univariate::DensePolynomial</span>, <span class="ident">EvaluationDomain</span>, <span class="ident">UVPolynomial</span>,
 };
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">boxed::Box</span>,
-    <span class="ident">cmp::max</span>,
-    <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>},
-    <span class="ident">format</span>,
-    <span class="ident">string::ToString</span>,
-    <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
-};
+<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">boxed::Box</span>, <span class="ident">cmp::max</span>, <span class="ident">format</span>, <span class="ident">string::ToString</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
+<span class="kw">use</span> <span class="ident">hashbrown</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rayon::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// The wire type identifier for range gates.</span>

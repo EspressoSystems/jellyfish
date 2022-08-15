@@ -620,7 +620,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ElGamalEncryptionGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Compute the gadget that check a correct Elgamal encryption</span>
     <span class="doccomment">/// * `pk_vars` - variables corresponding to the encryption public key</span>
@@ -650,7 +650,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">ElGamalEncryptionGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="kw">fn</span> <span class="ident">elgamal_encrypt</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -732,7 +732,7 @@
     <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
@@ -795,7 +795,7 @@
     <span class="kw">fn</span> <span class="ident">test_elgamal_hybrid_encrypt_circuit_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
 
@@ -875,7 +875,7 @@
     <span class="kw">fn</span> <span class="ident">test_create_ciphertext_variable_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="comment">// Prepare ciphertext</span>
         <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();

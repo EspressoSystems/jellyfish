@@ -809,7 +809,7 @@
 {
     <span class="doccomment">/// Perform GLV multiplication in circuit (which costs a few less</span>
     <span class="doccomment">/// constraints).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">glv_mul</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">glv_mul</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">scalar</span>: <span class="ident">Variable</span>,
         <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
@@ -835,7 +835,7 @@
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="kw">let</span> <span class="ident">endo_base_neg</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="ident">endo_base</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">endo_base</span> <span class="op">=</span>
@@ -853,7 +853,7 @@
 <span class="kw">fn</span> <span class="ident">endomorphism</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">base</span>.<span class="ident">get_x</span>();
     <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">base</span>.<span class="ident">get_y</span>();
@@ -878,7 +878,7 @@
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">endo_point</span> <span class="op">=</span> <span class="ident">endomorphism</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>);
@@ -993,7 +993,7 @@
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Variable</span>, <span class="ident">Variable</span>, <span class="ident">BoolVar</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">S</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">S</span><span class="op">&gt;</span>,
     <span class="ident">S</span>: <span class="ident">PrimeField</span>,
 {
     <span class="comment">// the order of scalar field</span>
@@ -1312,7 +1312,7 @@
     <span class="kw">fn</span> <span class="ident">test_glv_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
 

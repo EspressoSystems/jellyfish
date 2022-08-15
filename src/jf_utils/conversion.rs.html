@@ -183,7 +183,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fr_to_fq</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">scalar</span>: <span class="kw-2">&amp;</span><span class="ident">P::ScalarField</span>) -&gt; <span class="ident">F</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">ModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">ModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="comment">// sanity checks:</span>
     <span class="comment">// ensure | jubjub scalar field | &lt;= | BLS Scalar field |</span>
@@ -204,7 +204,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fq_to_fr</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="ident">P::ScalarField</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">ModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">P</span>: <span class="ident">ModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
 {
     <span class="ident">P::ScalarField::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>())
 }

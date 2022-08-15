@@ -627,7 +627,7 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     {
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">uid</span>: <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">acc_member_witness</span>.<span class="ident">uid</span> <span class="kw">as</span> <span class="ident">u64</span>))<span class="question-mark">?</span>,
