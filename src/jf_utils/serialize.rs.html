@@ -286,11 +286,6 @@
 <span id="280">280</span>
 <span id="281">281</span>
 <span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -320,20 +315,15 @@
     }
 }
 
-<span class="comment">// TODO: (alex) improve this code, currently very naive matcher expression</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">deserialize_canonical_bytes</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">CanonicalBytes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">bytes</span>: <span class="ident">CanonicalBytes</span>) -&gt; <span class="self">Self</span> {
-                <span class="ident">ark_serialize::CanonicalDeserialize::deserialize</span>(<span class="ident">bytes</span>.<span class="number">0</span>.<span class="ident">as_slice</span>())
-                    .<span class="ident">expect</span>(<span class="string">&quot;fail to deserialize canonical bytes&quot;</span>)
-            }
-        }
+        <span class="macro">deserialize_canonical_bytes!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&lt;</span><span class="op">&gt;</span>);
     };
 
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span> <span class="op">&lt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>:<span class="ident">lifetime</span> <span class="op">&gt;</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">CanonicalBytes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span><span class="op">&gt;</span> {
+    <span class="comment">// match MyStruct&lt;&#39;a, &#39;b, T: MyTrait, R: MyTrait2, ...&gt; where any number of lifetime and generic parameters</span>
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span> <span class="op">&lt;</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>:<span class="ident">lifetime</span> ),<span class="op">*</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span> ),<span class="op">*</span> <span class="op">&gt;</span>) =&gt; {
+        <span class="kw">impl</span><span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>),<span class="op">*</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>: <span class="macro-nonterminal">$</span><span class="kw">trait</span> ),<span class="kw-2">*</span><span class="op">&gt;</span> <span class="macro-nonterminal">From</span><span class="op">&lt;</span><span class="ident">CanonicalBytes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>),<span class="op">*</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> ),<span class="kw-2">*</span><span class="op">&gt;</span> {
             <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">bytes</span>: <span class="ident">CanonicalBytes</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">ark_serialize::CanonicalDeserialize::deserialize</span>(<span class="ident">bytes</span>.<span class="number">0</span>.<span class="ident">as_slice</span>())
                     .<span class="ident">expect</span>(<span class="string">&quot;fail to deserialize canonical bytes&quot;</span>)
