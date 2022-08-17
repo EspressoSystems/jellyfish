@@ -17,6 +17,7 @@ extern crate std;
 extern crate derivative;
 
 pub mod aead;
+pub mod circuit;
 pub mod commitment;
 pub mod constants;
 pub mod elgamal;

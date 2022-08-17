@@ -6,9 +6,9 @@
 
 use crate::{elgamal, signatures::schnorr};
 use ark_ec::{models::TEModelParameters, ProjectiveCurve, TEModelParameters as Parameters};
-use ark_ff::PrimeField;
-// use ark_std::vec::Vec;
-// use jf_relation::Variable;
+use ark_ff::{FpParameters, PrimeField};
+use ark_std::vec::Vec;
+use jf_relation::Variable;
 
 impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
 where
@@ -31,33 +31,33 @@ where
     }
 }
 
-// #[inline]
-// pub(crate) fn pad_with(vec: &mut Vec<Variable>, multiple: usize, var: Variable) {
-//     let len = vec.len();
-//     let new_len = if len % multiple == 0 {
-//         len
-//     } else {
-//         len + multiple - len % multiple
-//     };
-//     vec.resize(new_len, var);
-// }
+#[inline]
+pub(crate) fn pad_with(vec: &mut Vec<Variable>, multiple: usize, var: Variable) {
+    let len = vec.len();
+    let new_len = if len % multiple == 0 {
+        len
+    } else {
+        len + multiple - len % multiple
+    };
+    vec.resize(new_len, var);
+}
 
-// #[inline]
-// pub(crate) fn field_byte_len<F: PrimeField>() -> usize {
-//     ((F::Params::MODULUS_BITS + 7) / 8) as usize
-// }
+#[inline]
+pub(crate) fn field_byte_len<F: PrimeField>() -> usize {
+    ((F::Params::MODULUS_BITS + 7) / 8) as usize
+}
 
-// #[inline]
-// pub(crate) fn field_bit_len<F: PrimeField>() -> usize {
-//     F::Params::MODULUS_BITS as usize
-// }
+#[inline]
+pub(crate) fn field_bit_len<F: PrimeField>() -> usize {
+    F::Params::MODULUS_BITS as usize
+}
 
-// #[inline]
-// pub(crate) fn challenge_bit_len<F: PrimeField>() -> usize {
-//     // Our challenge is of size 248 bits
-//     // This is enough for a soundness error of 2^-128
-//     (field_byte_len::<F>() - 1) << 3
-// }
+#[inline]
+pub(crate) fn challenge_bit_len<F: PrimeField>() -> usize {
+    // Our challenge is of size 248 bits
+    // This is enough for a soundness error of 2^-128
+    (field_byte_len::<F>() - 1) << 3
+}
 
 #[inline]
 pub(crate) fn curve_cofactor<P: TEModelParameters>() -> u64 {

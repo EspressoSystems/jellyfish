@@ -11,7 +11,10 @@ use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelPara
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
-use jf_primitives::rescue::{circuit::RescueGadget, RescueParameter, STATE_SIZE};
+use jf_primitives::{
+    circuit::rescue::RescueGadget,
+    rescue::{RescueParameter, STATE_SIZE},
+};
 use jf_relation::{
     customized::{
         ecc::{PointVariable, SWToTEConParam},

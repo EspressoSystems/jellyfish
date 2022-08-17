@@ -6,13 +6,13 @@
 
 //! Circuit implementation of the commitment scheme.
 
-use crate::utils::pad_with;
-use ark_std::vec;
-use jf_plonk::{
-    circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
-    errors::PlonkError,
+use crate::{
+    circuit::rescue::RescueGadget,
+    rescue::{RescueParameter, RATE},
+    utils::pad_with,
 };
-use jf_rescue::{RescueParameter, RATE};
+use ark_std::vec;
+use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
 /// Circuit implementation of the commitment scheme.
 pub trait CommitmentGadget {
@@ -23,14 +23,14 @@ pub trait CommitmentGadget {
     /// * `returns` a variable that refers to the commitment value
     /// The underlying the commitment instance is bound to a specific length.
     /// Hence input length must match it.
-    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, PlonkError>;
+    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, CircuitError>;
 }
 
 impl<F> CommitmentGadget for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
-    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, PlonkError> {
+    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, CircuitError> {
         let mut msg = vec![blinding];
         msg.extend_from_slice(input);
         pad_with(&mut msg, RATE, self.zero());
@@ -49,7 +49,7 @@ mod tests {
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
     use itertools::Itertools;
-    use jf_plonk::circuit::{Circuit, PlonkCircuit, Variable};
+    use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     macro_rules! test_commit_circuit {
         ($base_field:tt) => {

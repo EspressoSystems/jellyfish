@@ -19,7 +19,6 @@
 //! Those three place holders should never be used.
 
 #![deny(warnings)]
-pub mod circuit;
 pub mod errors;
 mod rescue_constants;
 

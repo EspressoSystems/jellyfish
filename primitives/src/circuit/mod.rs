@@ -9,4 +9,5 @@ pub mod commitment;
 pub mod elgamal;
 pub mod merkle_tree;
 pub mod prf;
+pub mod rescue;
 pub mod signature;
