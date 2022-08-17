@@ -25,6 +25,5 @@ pub fn parallelizable_slice_iter<T: Sync>(data: &[T]) -> rayon::slice::Iter<T> {
 
 #[cfg(not(feature = "parallel"))]
 pub fn parallelizable_slice_iter<T>(data: &[T]) -> ark_std::slice::Iter<T> {
-    use ark_std::iter::IntoIterator;
     data.iter()
 }

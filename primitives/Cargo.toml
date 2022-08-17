@@ -25,7 +25,7 @@ ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751
 
 # jellyfish
 jf-utils = { path = "../utilities" }
-jf-relation = { path = "../relation" }
+jf-relation = { path = "../relation", default-features = false }
 
 # blst
 blst = "0.3.10"
@@ -65,4 +65,4 @@ harness = false
 [features]
 default = [ "parallel" ]
 std = []
-parallel = [ "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel", "rayon" ]
+parallel = [ "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel", "jf-relation/parallel", "rayon" ]
