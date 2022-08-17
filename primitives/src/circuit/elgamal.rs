@@ -249,8 +249,10 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        circuit::elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
-        circuit::rescue::RescueGadget,
+        circuit::{
+            elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
+            rescue::RescueGadget,
+        },
         elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
         rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };

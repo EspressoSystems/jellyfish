@@ -835,7 +835,8 @@ mod test {
 
     // two circuit with the same statement should have the same extended permutation
     // polynomials even with different variable assignment
-    // TODO(Chengyu): Copied from crate `jf-relation`, can we remove this redundancy?
+    // TODO(Chengyu): Copied from crate `jf-relation`, can we remove this
+    // redundancy?
     pub(crate) fn test_variable_independence_for_circuit<F: PrimeField>(
         circuit_1: PlonkCircuit<F>,
         circuit_2: PlonkCircuit<F>,

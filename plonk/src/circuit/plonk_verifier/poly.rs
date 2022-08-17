@@ -5,8 +5,10 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Circuits for the polynomial evaluations within Plonk verifiers.
-use crate::circuit::plonk_verifier::*;
-use crate::errors::{PlonkError, SnarkError::ParameterError};
+use crate::{
+    circuit::plonk_verifier::*,
+    errors::{PlonkError, SnarkError::ParameterError},
+};
 use ark_ec::PairingEngine;
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
