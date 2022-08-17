@@ -7,11 +7,13 @@
 //! This module implements a pseudo random function that is derived from
 //! the rescue hash function.
 
-use crate::errors::PrimitivesError;
+use crate::{
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, STATE_SIZE},
+};
 use ark_ff::PrimeField;
 use ark_serialize::*;
 use ark_std::{borrow::ToOwned, format, string::ToString, vec::Vec};
-use jf_rescue::{Permutation, RescueParameter, STATE_SIZE};
 use jf_utils::pad_with_zeros;
 use zeroize::Zeroize;
 
@@ -104,16 +106,16 @@ mod tests {
             let mut prng = ark_std::test_rng();
             let prf = PRF::new(1, 15);
             let key = prf.key_gen(&mut prng);
-            let mut input = vec![$tr::one()];
-            let out = prf.eval(&key, &mut input);
+            let input = vec![$tr::one()];
+            let out = prf.eval(&key, &input);
             assert!(out.is_ok());
 
-            let mut input = vec![];
-            let out = prf.eval(&key, &mut input);
+            let input = vec![];
+            let out = prf.eval(&key, &input);
             assert!(out.is_err());
 
-            let mut input = vec![$tr::one(); 2];
-            let out = prf.eval(&key, &mut input);
+            let input = vec![$tr::one(); 2];
+            let out = prf.eval(&key, &input);
             assert!(out.is_err());
         };
     }

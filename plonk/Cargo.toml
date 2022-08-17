@@ -8,7 +8,8 @@ license = "MIT"
 
 [dependencies]
 jf-utils = { path = "../utilities" }
-jf-rescue = { path = "../rescue" }
+jf-relation = { path = "../relation" }
+jf-primitives = { path = "../primitives" }
 
 ark-std = { version = "0.3.0", default-features = false }
 ark-serialize = "0.3.0"
@@ -27,7 +28,7 @@ downcast-rs = { version = "1.2.0", default-features = false }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 displaydoc = { version = "0.2.3", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
-num-bigint = { version = "0.4", default-features = false}
+num-bigint = { version = "0.4", default-features = false }
 rand_chacha = { version = "0.3.1" }
 sha3 = "^0.10"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }

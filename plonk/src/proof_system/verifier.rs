@@ -8,7 +8,6 @@ use super::structs::{
     BatchProof, Challenges, PlookupProof, ProofEvaluations, ScalarsAndBases, VerifyingKey,
 };
 use crate::{
-    circuit::customized::ecc::SWToTEConParam,
     constants::*,
     errors::{PlonkError, SnarkError::ParameterError},
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
@@ -20,7 +19,8 @@ use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_poly_commit::kzg10::Commitment;
 use ark_std::{format, vec, vec::Vec};
 use core::ops::Neg;
-use jf_rescue::RescueParameter;
+use jf_primitives::rescue::RescueParameter;
+use jf_relation::customized::ecc::SWToTEConParam;
 use jf_utils::multi_pairing;
 
 /// (Aggregated) polynomial commitment evaluation info.

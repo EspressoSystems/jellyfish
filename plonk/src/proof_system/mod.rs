@@ -5,7 +5,6 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Interfaces for Plonk-based proof systems
-use crate::circuit::Arithmetization;
 use ark_ec::PairingEngine;
 use ark_std::{
     error::Error,
@@ -13,6 +12,7 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
+use jf_relation::Arithmetization;
 pub mod batch_arg;
 pub(crate) mod prover;
 pub(crate) mod snark;

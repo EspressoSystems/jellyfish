@@ -14,10 +14,8 @@ use rand_chacha::ChaChaRng;
 // Circuit-related constants.
 // ==========================
 
-/// The number of input wires.
-pub const GATE_WIDTH: usize = 4;
-/// The number of multiplication selectors.
-pub(crate) const N_MUL_SELECTORS: usize = 2;
+// Gate Width
+pub use jf_relation::constants::GATE_WIDTH;
 /// The number of TurboPlonk selectors.
 pub(crate) const N_TURBO_PLONK_SELECTORS: usize = 13;
 

@@ -19,11 +19,13 @@ ark-bls12-381 = "0.3.0"
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
 ark-ed-on-bls12-381 = "0.3.0"
+ark-ed-on-bn254 = "0.3.0"
+ark-bn254 = "0.3.0"
+ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 
 # jellyfish
-jf-plonk = { path = "../plonk" }
-jf-rescue = { path = "../rescue" }
 jf-utils = { path = "../utilities" }
+jf-relation = { path = "../relation" }
 
 # blst
 blst = "0.3.10"
@@ -48,6 +50,9 @@ quickcheck = "1.0.0"
 criterion = "0.3.1"
 
 # ark curves
+ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-bls12-381 = "0.3.0"
+ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af"}
 ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bn254 = "0.3.0"
 ark-bn254 = "0.3.0"
@@ -60,4 +65,4 @@ harness = false
 [features]
 default = [ "parallel" ]
 std = []
-parallel = [ "jf-plonk/parallel", "rayon" ]
+parallel = [ "ark-ff/parallel", "ark-ec/parallel", "rayon" ]

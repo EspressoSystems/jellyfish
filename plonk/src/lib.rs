@@ -13,36 +13,16 @@
 extern crate std;
 
 #[macro_use]
-extern crate downcast_rs;
-
-#[macro_use]
 extern crate derivative;
 
+/// Customized circuit
 pub mod circuit;
 pub mod constants;
 pub mod errors;
-pub(crate) mod par_utils;
 pub mod proof_system;
 pub mod transcript;
 
+pub use jf_relation::PlonkType;
+
 #[cfg(feature = "test_apis")]
 pub mod testing_apis;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Enum for each type of Plonk scheme.
-pub enum PlonkType {
-    /// TurboPlonk
-    TurboPlonk,
-    /// TurboPlonk that supports Plookup
-    UltraPlonk,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-/// Enum for each type of mergeable circuit. We can only merge circuits from
-/// different types.
-pub enum MergeableCircuitType {
-    /// First type
-    TypeA,
-    /// Second type
-    TypeB,
-}

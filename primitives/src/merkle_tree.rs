@@ -14,7 +14,10 @@
 //! for an element (uid,elem) is obtained as H(0,uid,elem).
 //! The tree height is fixed during initial instantiation and a new leaf will
 //! be inserted at the leftmost available slot in the tree.
-use crate::errors::PrimitivesError;
+use crate::{
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter},
+};
 use ark_ff::{BigInteger, Field, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
@@ -30,7 +33,6 @@ use ark_std::{
 };
 use core::{convert::TryFrom, fmt::Debug};
 use espresso_systems_common::jellyfish::tag;
-use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::tagged_blob;
 use serde::{Deserialize, Serialize};
 
@@ -1876,7 +1878,7 @@ mod mt_tests {
     {
         let proof = mt_state.get_leaf(pos).expect_ok().unwrap().1;
         let rt = root_value.unwrap_or_else(|| mt_state.root.value());
-        let new_proof = MerkleLeafProof::new(elem, proof.path.clone());
+        let new_proof = MerkleLeafProof::new(elem, proof.path);
         assert_eq!(
             MerkleTree::check_proof(rt, pos, &new_proof).is_ok(),
             expected_res
@@ -2039,7 +2041,7 @@ mod mt_tests {
             let evil_proof2 = MerkleLeafProof::new(
                 evil_val,
                 MerklePath {
-                    nodes: vec![evil_leaf_node2, evil_proof_node.clone()]
+                    nodes: vec![evil_leaf_node2, evil_proof_node]
                         .into_iter()
                         .chain(proof.path.nodes.iter().cloned())
                         .collect(),

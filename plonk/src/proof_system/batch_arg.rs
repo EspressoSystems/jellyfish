@@ -6,7 +6,6 @@
 
 //! An argument system that proves/verifies multiple instances in a batch.
 use crate::{
-    circuit::{customized::ecc::SWToTEConParam, Circuit, PlonkCircuit},
     errors::{PlonkError, SnarkError::ParameterError},
     proof_system::{
         structs::{BatchProof, OpenKey, ProvingKey, ScalarsAndBases, UniversalSrs, VerifyingKey},
@@ -14,7 +13,6 @@ use crate::{
         PlonkKzgSnark, UniversalSNARK,
     },
     transcript::PlonkTranscript,
-    MergeableCircuitType,
 };
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
 use ark_ff::One;
@@ -26,7 +24,8 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
+use jf_primitives::rescue::RescueParameter;
+use jf_relation::{customized::ecc::SWToTEConParam, Circuit, MergeableCircuitType, PlonkCircuit};
 use jf_utils::multi_pairing;
 
 /// A batching argument.
@@ -96,13 +95,13 @@ where
             .iter()
             .zip(instances_type_b.iter())
             .map(|(pred_a, pred_b)| pred_a.prove_key.merge(&pred_b.prove_key))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         let circuits = instances_type_a
             .iter()
             .zip(instances_type_b.iter())
             .map(|(pred_a, pred_b)| pred_a.circuit.merge(&pred_b.circuit))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
         let pks_ref: Vec<&ProvingKey<E>> = pks.iter().collect();
         let circuits_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
 
@@ -257,20 +256,18 @@ where
         let circuit = new_mergeable_circuit_for_test::<E>(
             shared_public_input,
             i,
-            crate::MergeableCircuitType::TypeA,
+            MergeableCircuitType::TypeA,
         )?;
-        let instance =
-            BatchArgument::setup_instance(srs, circuit, crate::MergeableCircuitType::TypeA)?;
+        let instance = BatchArgument::setup_instance(srs, circuit, MergeableCircuitType::TypeA)?;
         vks_type_a.push(instance.verify_key_ref().clone());
         instances_type_a.push(instance);
 
         let circuit = new_mergeable_circuit_for_test::<E>(
             shared_public_input,
             i,
-            crate::MergeableCircuitType::TypeB,
+            MergeableCircuitType::TypeB,
         )?;
-        let instance =
-            BatchArgument::setup_instance(srs, circuit, crate::MergeableCircuitType::TypeB)?;
+        let instance = BatchArgument::setup_instance(srs, circuit, MergeableCircuitType::TypeB)?;
         vks_type_b.push(instance.verify_key_ref().clone());
         instances_type_b.push(instance);
     }
@@ -313,19 +310,19 @@ mod test {
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
                 i,
-                crate::MergeableCircuitType::TypeA,
+                MergeableCircuitType::TypeA,
             )?;
             let instance =
-                BatchArgument::setup_instance(&srs, circuit, crate::MergeableCircuitType::TypeA)?;
+                BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeA)?;
             instances_type_a.push(instance);
 
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
                 i,
-                crate::MergeableCircuitType::TypeB,
+                MergeableCircuitType::TypeB,
             )?;
             let instance =
-                BatchArgument::setup_instance(&srs, circuit, crate::MergeableCircuitType::TypeB)?;
+                BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeB)?;
             instances_type_b.push(instance);
         }
 
@@ -364,7 +361,7 @@ mod test {
             &batch_proof,
             blinding_factor,
         )?;
-        assert_eq!(BatchArgument::decide(open_key_ref, inner1, inner2)?, true);
+        assert!(BatchArgument::decide(open_key_ref, inner1, inner2)?);
         // error paths
         // empty merged_vks
         assert!(BatchArgument::partial_verify::<T>(

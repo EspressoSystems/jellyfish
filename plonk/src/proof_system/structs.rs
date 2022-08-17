@@ -6,16 +6,7 @@
 
 //! Data structures used in Plonk proof systems
 use crate::{
-    circuit::{
-        customized::{
-            ecc::{Point, SWToTEConParam},
-            ultraplonk::{
-                mod_arith::FpElemVar,
-                plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
-            },
-        },
-        PlonkCircuit,
-    },
+    circuit::plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
     errors::{
         PlonkError,
@@ -38,7 +29,14 @@ use ark_std::{
 };
 use espresso_systems_common::jellyfish::tag;
 use hashbrown::HashMap;
-use jf_rescue::RescueParameter;
+use jf_primitives::rescue::RescueParameter;
+use jf_relation::{
+    customized::{
+        ecc::{Point, SWToTEConParam},
+        ultraplonk::mod_arith::FpElemVar,
+    },
+    PlonkCircuit,
+};
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
 /// Universal Structured Reference String for PlonkKzgSnark

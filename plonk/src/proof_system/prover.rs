@@ -11,10 +11,8 @@ use super::structs::{
     PlookupOracles, ProofEvaluations, ProvingKey,
 };
 use crate::{
-    circuit::Arithmetization,
-    constants::{domain_size_ratio, GATE_WIDTH},
+    constants::domain_size_ratio,
     errors::{PlonkError, SnarkError::*},
-    par_utils::parallelizable_slice_iter,
     proof_system::structs::CommitKey,
 };
 use ark_ec::PairingEngine;
@@ -33,6 +31,8 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use jf_relation::{constants::GATE_WIDTH, Arithmetization};
+use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
