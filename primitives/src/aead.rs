@@ -15,7 +15,7 @@ use ark_std::{
     vec::Vec,
 };
 use crypto_box::{
-    aead::{Aead, Nonce, Payload},
+    aead::{Aead, AeadCore, Nonce, Payload},
     ChaChaBox,
 };
 use generic_array::{typenum::U24, GenericArray};
@@ -82,19 +82,16 @@ impl EncKey {
     /// during encryption will cause decryption to fail, which is useful if you
     /// would like to "bind" the ciphertext to some identifier, like a
     /// digital signature key.
-    pub fn encrypt<R>(
+    pub fn encrypt(
         &self,
-        rng: &mut R,
+        mut rng: impl RngCore + CryptoRng,
         message: &[u8],
         aad: &[u8],
-    ) -> Result<Ciphertext, PrimitivesError>
-    where
-        R: RngCore + CryptoRng,
-    {
-        let nonce = crypto_box::generate_nonce(rng);
+    ) -> Result<Ciphertext, PrimitivesError> {
+        let nonce = ChaChaBox::generate_nonce(&mut rng);
 
         // generate an ephemeral key pair as the virtual sender to derive the crypto box
-        let ephemeral_sk = crypto_box::SecretKey::generate(rng);
+        let ephemeral_sk = crypto_box::SecretKey::generate(&mut rng);
         let ephemeral_pk = EncKey(crypto_box::PublicKey::from(&ephemeral_sk));
         let my_box = ChaChaBox::new(&self.0, &ephemeral_sk);
 
