@@ -27,20 +27,15 @@ impl<T: ark_serialize::CanonicalSerialize> From<T> for CanonicalBytes {
     }
 }
 
-// TODO: (alex) improve this code, currently very naive matcher expression
 #[macro_export]
 macro_rules! deserialize_canonical_bytes {
     ($t:ident) => {
-        impl From<CanonicalBytes> for $t {
-            fn from(bytes: CanonicalBytes) -> Self {
-                ark_serialize::CanonicalDeserialize::deserialize(bytes.0.as_slice())
-                    .expect("fail to deserialize canonical bytes")
-            }
-        }
+        deserialize_canonical_bytes!($t<>);
     };
 
-    ($t:ident < $lt:lifetime >) => {
-        impl<$lt> From<CanonicalBytes> for $t<$lt> {
+    // match MyStruct<'a, 'b, T: MyTrait, R: MyTrait2, ...> where any number of lifetime and generic parameters
+    ($t:ident < $( $lt:lifetime ),* $( $T:ident : $trait:ident ),* >) => {
+        impl<$($lt),* $( $T: $trait ),*> From<CanonicalBytes> for $t<$($lt),* $( $T ),*> {
             fn from(bytes: CanonicalBytes) -> Self {
                 ark_serialize::CanonicalDeserialize::deserialize(bytes.0.as_slice())
                     .expect("fail to deserialize canonical bytes")

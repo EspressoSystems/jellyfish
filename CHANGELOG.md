@@ -8,6 +8,7 @@
 - Use [blst](https://github.com/supranational/blst) library for BLS signature/VRF (#89)
 - Introduce `struct BoolVar` whenever necessary and possible (#91)
 - Introduce comparison gates (#81)
+- More general input to `deserialize_canonical_bytes!()` (#108)
 
 ## v0.1.2
 
