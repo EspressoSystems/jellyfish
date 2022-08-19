@@ -7,7 +7,7 @@
 //! Data structures used in Plonk proof systems
 use crate::{
     circuit::plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
-    constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
+    constants::{compute_coset_representatives},
     errors::{
         PlonkError,
         SnarkError::{self, ParameterError, SnarkLookupUnsupported},
@@ -31,7 +31,8 @@ use espresso_systems_common::jellyfish::tag;
 use hashbrown::HashMap;
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
-    customized::{
+    constants::{GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
+    gadgets::{
         ecc::{Point, SWToTEConParam},
         ultraplonk::mod_arith::FpElemVar,
     },

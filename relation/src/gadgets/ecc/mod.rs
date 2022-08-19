@@ -7,8 +7,8 @@
 //! Elliptic curve related gates and gadgets. Including both native and
 //! non-native fields.
 
-use super::gates::*;
-use crate::{errors::CircuitError, gates::Gate, BoolVar, Circuit, PlonkCircuit, Variable};
+use crate::gates::*;
+use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
     group::Group,
     short_weierstrass_jacobian::GroupAffine as SWGroupAffine,
@@ -266,8 +266,8 @@ where
     ) -> Result<BoolVar, CircuitError> {
         self.check_point_var_bound(point0)?;
         self.check_point_var_bound(point1)?;
-        let x_eq = self.check_equal(point0.0, point1.0)?;
-        let y_eq = self.check_equal(point0.1, point1.1)?;
+        let x_eq = self.is_equal(point0.0, point1.0)?;
+        let y_eq = self.is_equal(point0.1, point1.1)?;
         self.logic_and(x_eq, y_eq)
     }
 }
@@ -305,9 +305,9 @@ where
         self.check_var_bound(expected_neutral.into())?;
 
         // constraint 1: b_x = is_equal(x, 0);
-        let b_x = self.check_equal(point_var.0, self.zero())?;
+        let b_x = self.is_equal(point_var.0, self.zero())?;
         // constraint 2: b_y = is_equal(y, 1);
-        let b_y = self.check_equal(point_var.1, self.one())?;
+        let b_y = self.is_equal(point_var.1, self.one())?;
         // constraint 3: b = b_x * b_y;
         self.mul_gate(b_x.into(), b_y.into(), expected_neutral.into())?;
         Ok(())
@@ -607,7 +607,7 @@ fn compute_base_points<E: AffineCurve + Group>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{customized, Circuit};
+    use crate::{gadgets, Circuit};
     use ark_bls12_377::{g1::Parameters as Param761, Fq as Fq377};
     use ark_ec::TEModelParameters as Parameters;
     use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377};
@@ -650,7 +650,7 @@ mod test {
 
         let circuit_1 = build_is_neutral_circuit::<F, P>(Point(F::zero(), F::one()))?;
         let circuit_2 = build_is_neutral_circuit::<F, P>(Point(F::one(), F::zero()))?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
@@ -688,7 +688,7 @@ mod test {
                 build_on_curve_gate_circuit::<_, $param>(Point($fq::zero(), $fq::one()))?;
             let circuit_2 =
                 build_on_curve_gate_circuit::<_, $param>(Point($fq::from(5u32), $fq::from(89u32)))?;
-            customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+            gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
         };
     }
 
@@ -812,7 +812,7 @@ mod test {
             build_curve_point_addition_circuit::<F, P>(Point::from(p1), Point::from(p2))?;
         let circuit_2 =
             build_curve_point_addition_circuit::<F, P>(Point::from(p3), Point::from(p4))?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
@@ -900,7 +900,7 @@ mod test {
 
         let circuit_1 = build_quaternary_select_gate::<F, P>(false, false)?;
         let circuit_2 = build_quaternary_select_gate::<F, P>(true, true)?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
         Ok(())
     }
 
@@ -964,7 +964,7 @@ mod test {
         let new_p = GroupAffine::<P>::rand(&mut rng);
         let circuit_1 = build_point_equal_circuit(Point::from(p), Point::from(p))?;
         let circuit_2 = build_point_equal_circuit(Point::from(new_p), Point::from(new_p))?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
@@ -1021,7 +1021,7 @@ mod test {
             build_is_equal_point_circuit(Point::from(p1), Point::from(p2), Point::from(p3))?;
         let circuit_2 =
             build_is_equal_point_circuit(Point::from(p3), Point::from(p3), Point::from(p1))?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
@@ -1134,7 +1134,7 @@ mod test {
 
         let circuit_1 = build_fixed_based_scalar_mul_circuit::<F, P>(F::from(87u32))?;
         let circuit_2 = build_fixed_based_scalar_mul_circuit::<F, P>(F::from(2u32))?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
         Ok(())
     }
 
@@ -1202,7 +1202,7 @@ mod test {
             Point::from(p1),
             Point::from(p2),
         )?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
@@ -1276,7 +1276,7 @@ mod test {
             F::from(314u32),
             Point::from(GroupAffine::<P>::rand(&mut rng)),
         )?;
-        customized::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
+        gadgets::test::test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }

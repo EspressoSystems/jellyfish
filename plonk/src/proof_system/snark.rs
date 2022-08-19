@@ -33,7 +33,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_primitives::rescue::RescueParameter;
-use jf_relation::{customized::ecc::SWToTEConParam, Arithmetization};
+use jf_relation::{gadgets::ecc::SWToTEConParam, Arithmetization};
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -598,7 +598,6 @@ where
 #[cfg(test)]
 pub mod test {
     use crate::{
-        constants::GATE_WIDTH,
         errors::PlonkError,
         proof_system::{
             structs::{
@@ -636,8 +635,8 @@ pub mod test {
     use core::ops::{Mul, Neg};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{
-        customized::ecc::SWToTEConParam, Arithmetization, Circuit, MergeableCircuitType,
-        PlonkCircuit,
+        constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
+        MergeableCircuitType, PlonkCircuit,
     };
 
     // Different `m`s lead to different circuits.

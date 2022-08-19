@@ -5,8 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::{
-    customized::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     errors::CircuitError,
+    gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 use ark_ec::{twisted_edwards_extended::GroupProjective, ProjectiveCurve, TEModelParameters};
@@ -495,7 +495,7 @@ where
         let right_coeff = [lambda_1, F::one(), F::zero(), F::zero()];
         let right_var = circuit.lc(&right_wire, &right_coeff)?;
 
-        circuit.check_equal(left_var, right_var)?
+        circuit.is_equal(left_var, right_var)?
     };
 
     let k2_is_neg_sat = {
@@ -508,7 +508,7 @@ where
         let right_wire = [*s_var, t_var, circuit.zero(), circuit.zero()];
         let right_coeff = [F::one(), r1, F::zero(), F::zero()];
         let right_var = circuit.lc(&right_wire, &right_coeff)?;
-        circuit.check_equal(left_var, right_var)?
+        circuit.is_equal(left_var, right_var)?
     };
 
     //  (f.3) either f.1 or f.2 is satisfied
@@ -527,7 +527,7 @@ where
 
         let right_var = circuit.mul_constant(t_var, &r2)?;
 
-        circuit.check_equal(left_var, right_var)?
+        circuit.is_equal(left_var, right_var)?
     };
 
     let k2_is_neg_sat = {
@@ -539,7 +539,7 @@ where
 
         let right_var = circuit.mul_constant(k2_var, &lambda_2)?;
 
-        circuit.check_equal(left_var, right_var)?
+        circuit.is_equal(left_var, right_var)?
     };
 
     //  (g.3) either g.1 or g.2 is satisfied
@@ -568,7 +568,7 @@ fn get_bits(a: &[bool]) -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{customized::ecc::Point, errors::CircuitError, Circuit, PlonkCircuit};
+    use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
     use ark_ec::{twisted_edwards_extended::GroupAffine, TEModelParameters as Parameters};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsParameters, Fq, Fr};
     use ark_ff::{BigInteger, One, PrimeField, UniformRand};

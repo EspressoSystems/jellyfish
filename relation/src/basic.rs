@@ -1470,7 +1470,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let msb_check = self.logic_and(a_leq_const, b_gt_const)?;
         // Check whether `a` and `b` are both <= (q-1)/2 or
         // are both > (q-1)/2
-        let msb_eq = self.check_equal(a_gt_const.into(), b_gt_const.into())?;
+        let msb_eq = self.is_equal(a_gt_const.into(), b_gt_const.into())?;
         Ok((msb_check, msb_eq))
     }
 

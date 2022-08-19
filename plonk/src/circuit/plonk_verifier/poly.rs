@@ -15,7 +15,7 @@ use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, string::ToString, vec, vec::Vec, One};
 use jf_relation::{
     constants::GATE_WIDTH,
-    customized::ultraplonk::mod_arith::{FpElem, FpElemVar},
+    gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
     PlonkCircuit,
 };
 use jf_utils::field_switching;

@@ -4,6 +4,8 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+//! Implementation of ECC related gates
+
 use core::marker::PhantomData;
 
 use crate::{
@@ -11,12 +13,8 @@ use crate::{
     gates::Gate,
 };
 use ark_ec::TEModelParameters as Parameters;
-use ark_ff::{Field, PrimeField};
+use ark_ff::PrimeField;
 use derivative::Derivative;
-
-////////////////////////////////////////////////////////////
-// ECC related gates ///////////////////////////////////////
-////////////////////////////////////////////////////////////
 
 #[inline]
 fn edwards_coeff_d<P: Parameters>() -> P::BaseField {
@@ -161,177 +159,5 @@ where
     }
     fn q_o(&self) -> F {
         F::one()
-    }
-}
-
-////////////////////////////////////////////////////////////
-// Other arithmetic gates //////////////////////////////////
-////////////////////////////////////////////////////////////
-
-/// A deg-2 polynomial gate
-#[derive(Clone)]
-pub struct QuadPolyGate<F: Field> {
-    pub(crate) q_lc: [F; GATE_WIDTH],
-    pub(crate) q_mul: [F; N_MUL_SELECTORS],
-    pub(crate) q_o: F,
-    pub(crate) q_c: F,
-}
-impl<F> Gate<F> for QuadPolyGate<F>
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Deg-2 Polynomial Gate"
-    }
-    fn q_lc(&self) -> [F; GATE_WIDTH] {
-        self.q_lc
-    }
-    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
-        self.q_mul
-    }
-    fn q_o(&self) -> F {
-        self.q_o
-    }
-    fn q_c(&self) -> F {
-        self.q_c
-    }
-}
-
-/// A linear combination gate
-#[derive(Clone)]
-pub struct LinCombGate<F: Field> {
-    pub(crate) coeffs: [F; GATE_WIDTH],
-}
-impl<F> Gate<F> for LinCombGate<F>
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Linear Combination Gate"
-    }
-    fn q_lc(&self) -> [F; GATE_WIDTH] {
-        self.coeffs
-    }
-    fn q_o(&self) -> F {
-        F::one()
-    }
-}
-
-/// A multiplication-then-addition gate
-#[derive(Clone)]
-pub struct MulAddGate<F: Field> {
-    pub(crate) coeffs: [F; N_MUL_SELECTORS],
-}
-impl<F> Gate<F> for MulAddGate<F>
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Multiplication-then-addition Gate"
-    }
-    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
-        self.coeffs
-    }
-    fn q_o(&self) -> F {
-        F::one()
-    }
-}
-
-/// A gate for conditional selection
-#[derive(Clone)]
-pub struct CondSelectGate;
-
-impl<F> Gate<F> for CondSelectGate
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Conditional Selection Gate"
-    }
-    fn q_lc(&self) -> [F; GATE_WIDTH] {
-        [F::zero(), F::one(), F::zero(), F::zero()]
-    }
-    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
-        [-F::one(), F::one()]
-    }
-    fn q_o(&self) -> F {
-        F::one()
-    }
-}
-
-/// A gate for logic OR
-#[derive(Clone)]
-pub struct LogicOrGate;
-
-impl<F> Gate<F> for LogicOrGate
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Logic OR Gate"
-    }
-    fn q_lc(&self) -> [F; GATE_WIDTH] {
-        [F::one(), F::one(), F::zero(), F::zero()]
-    }
-    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
-        [-F::one(), F::zero()]
-    }
-    fn q_c(&self) -> F {
-        -F::one()
-    }
-}
-
-/// A gate for computing the logic OR value of 2 variables
-#[derive(Clone)]
-pub struct LogicOrValueGate;
-
-impl<F> Gate<F> for LogicOrValueGate
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Logic OR Value Gate"
-    }
-    fn q_lc(&self) -> [F; GATE_WIDTH] {
-        [F::one(), F::one(), F::zero(), F::zero()]
-    }
-    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
-        [-F::one(), F::zero()]
-    }
-    fn q_o(&self) -> F {
-        F::one()
-    }
-}
-
-//////////////////////////////////////////////////
-// Lookup gates //////////////////////////////////
-//////////////////////////////////////////////////
-
-/// An UltraPlonk lookup gate
-#[derive(Debug, Clone)]
-pub struct LookupGate<F: Field> {
-    pub(crate) q_dom_sep: F,
-    pub(crate) table_dom_sep: F,
-    pub(crate) table_key: F,
-}
-
-impl<F> Gate<F> for LookupGate<F>
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "UltraPlonk Lookup Gate"
-    }
-    fn q_lookup(&self) -> F {
-        F::one()
-    }
-    fn q_dom_sep(&self) -> F {
-        self.q_dom_sep
-    }
-    fn table_key(&self) -> F {
-        self.table_key
-    }
-    fn table_dom_sep(&self) -> F {
-        self.table_dom_sep
     }
 }

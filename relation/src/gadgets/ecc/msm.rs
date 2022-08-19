@@ -368,7 +368,7 @@ fn ln_without_floats(a: usize) -> usize {
 mod tests {
 
     use super::*;
-    use crate::{customized::ecc::Point, Circuit, PlonkType};
+    use crate::{gadgets::ecc::Point, Circuit, PlonkType};
     use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
     use ark_ec::{
         msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,

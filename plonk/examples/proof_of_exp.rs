@@ -24,7 +24,7 @@ use jf_plonk::{
     proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
 };
-use jf_relation::{customized::ecc::Point, Arithmetization, Circuit, PlonkCircuit};
+use jf_relation::{gadgets::ecc::Point, Arithmetization, Circuit, PlonkCircuit};
 use jf_utils::fr_to_fq;
 use rand_chacha::ChaCha20Rng;
 

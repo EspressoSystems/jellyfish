@@ -4,27 +4,22 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Customized gates and gadgets for rescue hash related, elliptic curve
-//! related, rescue-based transcript and lookup table etc.
+//! Implementation of circuit arithmetic gadgets
 
-use self::gates::*;
-use super::{
+use super::utils::next_multiple;
+use crate::{
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
-    gates::{ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate},
-    BoolVar, Circuit, CircuitError, PlonkCircuit, Variable,
+    errors::CircuitError,
+    gates::{
+        ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate, LinCombGate, MulAddGate,
+        QuadPolyGate,
+    },
+    Circuit, PlonkCircuit, Variable,
 };
-use ark_ff::{BigInteger, PrimeField};
-use ark_std::{borrow::ToOwned, boxed::Box, cmp::Ordering, format, string::ToString, vec::Vec};
+use ark_ff::PrimeField;
 use num_bigint::BigUint;
 
-pub mod ecc;
-mod gates;
-pub mod ultraplonk;
-
-impl<F> PlonkCircuit<F>
-where
-    F: PrimeField,
-{
+impl<F: PrimeField> PlonkCircuit<F> {
     /// Arithmetic gates
     ///
     /// Quadratic polynomial gate: q1 * a + q2 * b + q3 * c + q4 * d + q12 * a *
@@ -227,33 +222,6 @@ where
         Ok(sum)
     }
 
-    /// Obtain a variable that equals `x_0` if `b` is zero, or `x_1` if `b` is
-    /// one. Return error if variables are invalid.
-    pub fn conditional_select(
-        &mut self,
-        b: BoolVar,
-        x_0: Variable,
-        x_1: Variable,
-    ) -> Result<Variable, CircuitError> {
-        self.check_var_bound(b.into())?;
-        self.check_var_bound(x_0)?;
-        self.check_var_bound(x_1)?;
-
-        // y = x_bit
-        let y = if self.witness(b.into())? == F::zero() {
-            self.create_variable(self.witness(x_0)?)?
-        } else if self.witness(b.into())? == F::one() {
-            self.create_variable(self.witness(x_1)?)?
-        } else {
-            return Err(CircuitError::ParameterError(
-                "b in Conditional Selection gate is not a boolean variable".to_string(),
-            ));
-        };
-        let wire_vars = [b.into(), x_0, b.into(), x_1, y];
-        self.insert_gate(&wire_vars, Box::new(CondSelectGate))?;
-        Ok(y)
-    }
-
     /// Constrain variable `y` to the addition of `a` and `c`, where `c` is a
     /// constant value Return error if the input variables are invalid.
     fn add_constant_gate(&mut self, x: Variable, c: F, y: Variable) -> Result<(), CircuitError> {
@@ -285,7 +253,12 @@ where
 
     /// Constrain variable `y` to the product of `a` and `c`, where `c` is a
     /// constant value Return error if the input variables are invalid.
-    fn mul_constant_gate(&mut self, x: Variable, c: F, y: Variable) -> Result<(), CircuitError> {
+    pub fn mul_constant_gate(
+        &mut self,
+        x: Variable,
+        c: F,
+        y: Variable,
+    ) -> Result<(), CircuitError> {
         self.check_var_bound(x)?;
         self.check_var_bound(y)?;
 
@@ -310,130 +283,6 @@ where
         self.mul_constant_gate(input_var, *elem, output_var)?;
 
         Ok(output_var)
-    }
-
-    /// Logic gates
-
-    /// Constrain that `a` is true or `b` is true.
-    /// Return error if variables are invalid.
-    pub fn logic_or_gate(&mut self, a: BoolVar, b: BoolVar) -> Result<(), CircuitError> {
-        self.check_var_bound(a.into())?;
-        self.check_var_bound(b.into())?;
-        let wire_vars = &[a.into(), b.into(), 0, 0, 0];
-        self.insert_gate(wire_vars, Box::new(LogicOrGate))?;
-        Ok(())
-    }
-
-    /// Obtain a bool variable representing whether two input variables are
-    /// equal. Return error if variables are invalid.
-    pub fn check_equal(&mut self, a: Variable, b: Variable) -> Result<BoolVar, CircuitError> {
-        self.check_var_bound(a)?;
-        self.check_var_bound(b)?;
-        let delta = self.sub(a, b)?;
-        self.check_is_zero(delta)
-    }
-
-    /// Obtain a bool variable representing whether input variable is zero.
-    /// Return error if the input variable is invalid.
-    pub fn check_is_zero(&mut self, a: Variable) -> Result<BoolVar, CircuitError> {
-        self.check_var_bound(a)?;
-
-        // y is the bit indicating if a == zero
-        // a_inv is the inverse of a when it's not 0
-        let a_val = self.witness(a)?;
-        let (y, a_inv) = if a_val.is_zero() {
-            (F::one(), F::zero())
-        } else {
-            (
-                F::zero(),
-                a_val.inverse().ok_or_else(|| {
-                    CircuitError::FieldAlgebraError("Unable to find inverse".to_string())
-                })?,
-            )
-        };
-        let y = self.create_boolean_variable_unchecked(y)?;
-        let a_inv = self.create_variable(a_inv)?;
-
-        // constraint 1: 1 - a * a^(-1) = y, i.e., a * a^(-1) + 1 * y = 1
-        self.mul_add_gate(
-            &[a, a_inv, self.one(), y.into(), self.one()],
-            &[F::one(), F::one()],
-        )?;
-        // constraint 2: multiplication y * a = 0
-        self.mul_gate(y.into(), a, self.zero())?;
-        Ok(y)
-    }
-
-    /// Constrain a variable to be non-zero.
-    /// Return error if the variable is invalid.
-    pub fn non_zero_gate(&mut self, var: Variable) -> Result<(), CircuitError> {
-        let inverse = self.witness(var)?.inverse().unwrap_or_else(F::zero);
-        let inv_var = self.create_variable(inverse)?;
-        let one_var = self.one();
-        self.mul_gate(var, inv_var, one_var)
-    }
-
-    /// Obtain a variable representing the result of a logic negation gate.
-    /// Return the index of the variable. Return error if the input variable
-    /// is invalid.
-    pub fn logic_neg(&mut self, a: BoolVar) -> Result<BoolVar, CircuitError> {
-        self.check_is_zero(a.into())
-    }
-
-    /// Obtain a variable representing the result of a logic AND gate. Return
-    /// the index of the variable. Return error if the input variables are
-    /// invalid.
-    pub fn logic_and(&mut self, a: BoolVar, b: BoolVar) -> Result<BoolVar, CircuitError> {
-        let c = self
-            .create_boolean_variable_unchecked(self.witness(a.into())? * self.witness(b.into())?)?;
-        self.mul_gate(a.into(), b.into(), c.into())?;
-        Ok(c)
-    }
-
-    /// Given a list of boolean variables, obtain a variable representing the
-    /// result of a logic AND gate. Return the index of the variable. Return
-    /// error if the input variables are invalid.
-    pub fn logic_and_all(&mut self, vars: &[BoolVar]) -> Result<BoolVar, CircuitError> {
-        if vars.is_empty() {
-            return Err(CircuitError::ParameterError(
-                "logic_and_all: empty variable list".to_string(),
-            ));
-        }
-        let mut res = vars[0];
-        for &var in vars.iter().skip(1) {
-            res = self.logic_and(res, var)?;
-        }
-        Ok(res)
-    }
-
-    /// Obtain a variable representing the result of a logic OR gate. Return the
-    /// index of the variable. Return error if the input variables are
-    /// invalid.
-    pub fn logic_or(&mut self, a: BoolVar, b: BoolVar) -> Result<BoolVar, CircuitError> {
-        self.check_var_bound(a.into())?;
-        self.check_var_bound(b.into())?;
-
-        let a_val = self.witness(a.into())?;
-        let b_val = self.witness(b.into())?;
-        let c_val = a_val + b_val - a_val * b_val;
-
-        let c = self.create_boolean_variable_unchecked(c_val)?;
-        let wire_vars = &[a.into(), b.into(), 0, 0, c.into()];
-        self.insert_gate(wire_vars, Box::new(LogicOrValueGate))?;
-
-        Ok(c)
-    }
-
-    /// Assuming values represented by `a` is boolean.
-    /// Constrain `a` is true
-    pub fn enforce_true(&mut self, a: Variable) -> Result<(), CircuitError> {
-        self.constant_gate(a, F::one())
-    }
-
-    /// Assuming values represented by `a` is boolean.
-    /// Constrain `a` is false
-    pub fn enforce_false(&mut self, a: Variable) -> Result<(), CircuitError> {
-        self.constant_gate(a, F::zero())
     }
 
     /// Return a variable to be the 11th power of the input variable.
@@ -645,353 +494,19 @@ where
     }
 }
 
-impl<F: PrimeField> PlonkCircuit<F> {
-    /// Constrain a variable to be within the [0, 2^`bit_len`) range
-    /// Return error if the variable is invalid.
-    pub fn range_gate(&mut self, a: Variable, bit_len: usize) -> Result<(), CircuitError> {
-        if self.support_lookup() && bit_len % self.range_bit_len()? == 0 {
-            self.range_gate_with_lookup(a, bit_len)?;
-        } else {
-            self.range_gate_internal(a, bit_len)?;
-        }
-        Ok(())
-    }
-
-    /// Return a boolean variable indicating whether variable `a` is in the
-    /// range [0, 2^`bit_len`). Return error if the variable is invalid.
-    /// TODO: optimize the gate for UltraPlonk.
-    pub fn check_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, CircuitError> {
-        let a_bit_le: Vec<BoolVar> = self.unpack(a, F::size_in_bits())?;
-        let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
-        // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
-        // zeroes.
-        let higher_bit_sum = self.sum(&a_bit_le[bit_len..])?;
-        self.check_is_zero(higher_bit_sum)
-    }
-
-    /// Obtain the `bit_len`-long binary representation of variable `a`
-    /// Return a list of variables [b0, ..., b_`bit_len`] which is the binary
-    /// representation of `a`.
-    /// Return error if the `a` is not the range of [0, 2^`bit_len`).
-    pub fn unpack(&mut self, a: Variable, bit_len: usize) -> Result<Vec<BoolVar>, CircuitError> {
-        if bit_len < F::size_in_bits() && self.witness(a)? >= F::from(2u32).pow([bit_len as u64]) {
-            return Err(CircuitError::ParameterError(
-                "Failed to unpack variable to a range of smaller than 2^bit_len".to_string(),
-            ));
-        }
-        self.range_gate_internal(a, bit_len)
-    }
-
-    // internal of a range check gate
-    fn range_gate_internal(
-        &mut self,
-        a: Variable,
-        bit_len: usize,
-    ) -> Result<Vec<BoolVar>, CircuitError> {
-        self.check_var_bound(a)?;
-        if bit_len == 0 {
-            return Err(CircuitError::ParameterError(
-                "Only allows positive bit length for range upper bound".to_string(),
-            ));
-        }
-
-        let a_bits_le: Vec<bool> = self.witness(a)?.into_repr().to_bits_le();
-        if bit_len > a_bits_le.len() {
-            return Err(CircuitError::ParameterError(format!(
-                "Maximum field bit size: {}, requested range upper bound bit len: {}",
-                a_bits_le.len(),
-                bit_len
-            )));
-        }
-        // convert to variable in the circuit from the vector of boolean as binary
-        // representation
-        let a_bits_le: Vec<BoolVar> = a_bits_le
-            .iter()
-            .take(bit_len) // since little-endian, truncate would remove MSBs
-            .map(|&b| {
-                self.create_boolean_variable(b)
-            })
-            .collect::<Result<Vec<_>, CircuitError>>()?;
-
-        self.binary_decomposition_gate(a_bits_le.clone(), a)?;
-
-        Ok(a_bits_le)
-    }
-
-    fn binary_decomposition_gate(
-        &mut self,
-        a_bits_le: Vec<BoolVar>,
-        a: Variable,
-    ) -> Result<(), CircuitError> {
-        let a_chunks_le: Vec<Variable> = a_bits_le.into_iter().map(|b| b.into()).collect();
-        self.decomposition_gate(a_chunks_le, a, 2u8.into())?;
-        Ok(())
-    }
-
-    /// a general decomposition gate (not necessarily binary decomposition)
-    /// where `a` are enforced to decomposed to `a_chunks_le` which consists
-    /// of chunks (multiple bits) in little-endian order and
-    /// each chunk \in [0, `range_size`)
-    pub(crate) fn decomposition_gate(
-        &mut self,
-        a_chunks_le: Vec<Variable>,
-        a: Variable,
-        range_size: F,
-    ) -> Result<(), CircuitError> {
-        // ensure (padded_len - 1) % 3 = 0
-        let mut padded = a_chunks_le;
-        let len = padded.len();
-        let rate = GATE_WIDTH - 1; // rate at which lc add each round
-        let padded_len = next_multiple(len - 1, rate)? + 1;
-        padded.resize(padded_len, self.zero());
-
-        let range_size_square = range_size.square();
-        let range_size_cube = range_size * range_size_square;
-        let coeffs = [range_size_cube, range_size_square, range_size, F::one()];
-        let mut accum = padded[padded_len - 1];
-        for i in 1..padded_len / rate {
-            accum = self.lc(
-                &[
-                    accum,
-                    padded[padded_len - 1 - rate * i + 2],
-                    padded[padded_len - 1 - rate * i + 1],
-                    padded[padded_len - 1 - rate * i],
-                ],
-                &coeffs,
-            )?;
-        }
-        // final round
-        let wires = [accum, padded[2], padded[1], padded[0], a];
-        self.lc_gate(&wires, &coeffs)?;
-
-        Ok(())
-    }
-}
-
-// helper function to find the next multiple of `divisor` for `current` value
-pub(crate) fn next_multiple(current: usize, divisor: usize) -> Result<usize, CircuitError> {
-    if divisor == 0 || divisor == 1 {
-        return Err(CircuitError::InternalError(
-            "can only be a multiple of divisor >= 2".to_string(),
-        ));
-    }
-    match current.cmp(&divisor) {
-        Ordering::Equal => Ok(current),
-        Ordering::Less => Ok(divisor),
-        Ordering::Greater => Ok((current / divisor + 1) * divisor),
-    }
-}
-
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::{Arithmetization, Circuit};
+    use crate::{
+        constants::GATE_WIDTH, errors::CircuitError,
+        gadgets::test::test_variable_independence_for_circuit, Circuit, PlonkCircuit,
+    };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_std::{convert::TryInto, test_rng, vec};
-
-    // two circuit with the same statement should have the same extended permutation
-    // polynomials even with different variable assignment
-    pub(crate) fn test_variable_independence_for_circuit<F: PrimeField>(
-        circuit_1: PlonkCircuit<F>,
-        circuit_2: PlonkCircuit<F>,
-    ) -> Result<(), CircuitError> {
-        assert_eq!(circuit_1.num_gates(), circuit_2.num_gates());
-        assert_eq!(circuit_1.num_vars(), circuit_2.num_vars());
-        // Check extended permutation polynomials
-        let sigma_polys_1 = circuit_1.compute_extended_permutation_polynomials()?;
-        let sigma_polys_2 = circuit_2.compute_extended_permutation_polynomials()?;
-        sigma_polys_1
-            .iter()
-            .zip(sigma_polys_2.iter())
-            .for_each(|(p1, p2)| assert_eq!(p1, p2));
-        Ok(())
-    }
-
-    #[test]
-    fn test_helper_next_multiple() -> Result<(), CircuitError> {
-        assert!(next_multiple(5, 0).is_err());
-        assert!(next_multiple(5, 1).is_err());
-
-        assert_eq!(next_multiple(5, 2)?, 6);
-        assert_eq!(next_multiple(5, 3)?, 6);
-        assert_eq!(next_multiple(5, 4)?, 8);
-        assert_eq!(next_multiple(5, 5)?, 5);
-        assert_eq!(next_multiple(5, 11)?, 11);
-        Ok(())
-    }
-
-    #[test]
-    fn test_logic_or() -> Result<(), CircuitError> {
-        test_logic_or_helper::<FqEd254>()?;
-        test_logic_or_helper::<FqEd377>()?;
-        test_logic_or_helper::<FqEd381>()?;
-        test_logic_or_helper::<Fq377>()
-    }
-
-    fn test_logic_or_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let false_var = circuit.false_var();
-        let true_var = circuit.true_var();
-        // Good path
-        circuit.logic_or_gate(false_var, true_var)?;
-        circuit.logic_or_gate(true_var, false_var)?;
-        circuit.logic_or_gate(true_var, true_var)?;
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        // Error path
-        circuit.logic_or_gate(false_var, false_var)?;
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-
-        let circuit_1 = build_logic_or_circuit(true, true)?;
-        let circuit_2 = build_logic_or_circuit(false, true)?;
-        test_variable_independence_for_circuit::<F>(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    fn build_logic_or_circuit<F: PrimeField>(
-        a: bool,
-        b: bool,
-    ) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_boolean_variable(a)?;
-        let b = circuit.create_boolean_variable(b)?;
-        circuit.logic_or_gate(a, b)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
-
-    #[test]
-    fn test_logic_and() -> Result<(), CircuitError> {
-        test_logic_and_helper::<FqEd254>()?;
-        test_logic_and_helper::<FqEd377>()?;
-        test_logic_and_helper::<FqEd381>()?;
-        test_logic_and_helper::<Fq377>()
-    }
-
-    fn test_logic_and_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let false_var = circuit.false_var();
-        let true_var = circuit.true_var();
-        // Good path
-        let a = circuit.logic_and(false_var, true_var)?;
-        assert_eq!(F::zero(), circuit.witness(a.into())?);
-        let b = circuit.logic_and(true_var, false_var)?;
-        assert_eq!(F::zero(), circuit.witness(b.into())?);
-        let c = circuit.logic_and(true_var, true_var)?;
-        assert_eq!(F::one(), circuit.witness(c.into())?);
-        let d = circuit.logic_and_all(&[false_var, true_var, true_var])?;
-        assert_eq!(F::zero(), circuit.witness(d.into())?);
-        let e = circuit.logic_and_all(&[true_var, true_var, true_var])?;
-        assert_eq!(F::one(), circuit.witness(e.into())?);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        // Error path
-        *circuit.witness_mut(e.into()) = F::zero();
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        *circuit.witness_mut(e.into()) = F::one();
-        assert!(circuit.logic_and_all(&[]).is_err());
-
-        let circuit_1 = build_logic_and_circuit(true, true)?;
-        let circuit_2 = build_logic_and_circuit(false, true)?;
-        test_variable_independence_for_circuit::<F>(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    fn build_logic_and_circuit<F: PrimeField>(
-        a: bool,
-        b: bool,
-    ) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_boolean_variable(a)?;
-        let b = circuit.create_boolean_variable(b)?;
-        circuit.logic_and(a, b)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
-
-    #[test]
-    fn test_is_equal() -> Result<(), CircuitError> {
-        test_is_equal_helper::<FqEd254>()?;
-        test_is_equal_helper::<FqEd377>()?;
-        test_is_equal_helper::<FqEd381>()?;
-        test_is_equal_helper::<Fq377>()
-    }
-    fn test_is_equal_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let val = F::from(31415u32);
-        let a = circuit.create_variable(val)?;
-        let b = circuit.create_variable(val)?;
-        let a_b_eq = circuit.check_equal(a, b)?;
-        let a_zero_eq = circuit.check_equal(a, circuit.zero())?;
-
-        // check circuit
-        assert_eq!(circuit.witness(a_b_eq.into())?, F::one());
-        assert_eq!(circuit.witness(a_zero_eq.into())?, F::zero());
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        *circuit.witness_mut(b) = val + F::one();
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
-        assert!(circuit.check_equal(circuit.num_vars(), a).is_err());
-
-        let circuit_1 = build_is_equal_circuit(F::one(), F::one())?;
-        let circuit_2 = build_is_equal_circuit(F::zero(), F::one())?;
-        test_variable_independence_for_circuit(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    fn build_is_equal_circuit<F: PrimeField>(a: F, b: F) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(a)?;
-        let b = circuit.create_variable(b)?;
-        circuit.check_equal(a, b)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
-
-    #[test]
-    fn test_check_is_zero() -> Result<(), CircuitError> {
-        test_check_is_zero_helper::<FqEd254>()?;
-        test_check_is_zero_helper::<FqEd377>()?;
-        test_check_is_zero_helper::<FqEd381>()?;
-        test_check_is_zero_helper::<Fq377>()
-    }
-    fn test_check_is_zero_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let val = F::from(31415u32);
-        let a = circuit.create_variable(val)?;
-        let a_zero_eq = circuit.check_is_zero(a)?;
-        let zero_zero_eq = circuit.check_is_zero(circuit.zero())?;
-
-        // check circuit
-        assert_eq!(circuit.witness(a_zero_eq.into())?, F::zero());
-        assert_eq!(circuit.witness(zero_zero_eq.into())?, F::one());
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        *circuit.witness_mut(zero_zero_eq.into()) = F::zero();
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        *circuit.witness_mut(zero_zero_eq.into()) = F::one();
-        *circuit.witness_mut(a) = F::zero();
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
-        assert!(circuit.check_is_zero(circuit.num_vars()).is_err());
-
-        let circuit_1 = build_check_is_zero_circuit(F::one())?;
-        let circuit_2 = build_check_is_zero_circuit(F::zero())?;
-        test_variable_independence_for_circuit(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    fn build_check_is_zero_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(a)?;
-        circuit.check_is_zero(a)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
+    use ark_ff::PrimeField;
+    use ark_std::{convert::TryInto, test_rng};
+    use num_bigint::BigUint;
 
     #[test]
     fn test_quad_poly_gate() -> Result<(), CircuitError> {
@@ -1194,59 +709,6 @@ mod test {
     }
 
     #[test]
-    fn test_conditional_select() -> Result<(), CircuitError> {
-        test_conditional_select_helper::<FqEd254>()?;
-        test_conditional_select_helper::<FqEd377>()?;
-        test_conditional_select_helper::<FqEd381>()?;
-        test_conditional_select_helper::<Fq377>()
-    }
-
-    fn test_conditional_select_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let bit_true = circuit.true_var();
-        let bit_false = circuit.false_var();
-
-        let x_0 = circuit.create_variable(F::from(23u32))?;
-        let x_1 = circuit.create_variable(F::from(24u32))?;
-        let select_true = circuit.conditional_select(bit_true, x_0, x_1)?;
-        let select_false = circuit.conditional_select(bit_false, x_0, x_1)?;
-
-        assert_eq!(circuit.witness(select_true)?, circuit.witness(x_1)?);
-        assert_eq!(circuit.witness(select_false)?, circuit.witness(x_0)?);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-        // if mess up the wire value, should fail
-        *circuit.witness_mut(bit_false.into()) = F::one();
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
-        assert!(circuit
-            .conditional_select(bit_false, circuit.num_vars(), x_1)
-            .is_err());
-
-        // build two fixed circuits with different variable assignments, checking that
-        // the arithmetized extended permutation polynomial is variable
-        // independent
-        let circuit_1 = build_conditional_select_circuit(true, F::from(23u32), F::from(24u32))?;
-        let circuit_2 = build_conditional_select_circuit(false, F::from(99u32), F::from(98u32))?;
-        test_variable_independence_for_circuit(circuit_1, circuit_2)?;
-        Ok(())
-    }
-
-    fn build_conditional_select_circuit<F: PrimeField>(
-        bit: bool,
-        x_0: F,
-        x_1: F,
-    ) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let bit_var = circuit.create_boolean_variable(bit)?;
-        let x_0_var = circuit.create_variable(x_0)?;
-        let x_1_var = circuit.create_variable(x_1)?;
-        circuit.conditional_select(bit_var, x_0_var, x_1_var)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
-
-    #[test]
     fn test_sum() -> Result<(), CircuitError> {
         test_sum_helper::<FqEd254>()?;
         test_sum_helper::<FqEd377>()?;
@@ -1304,196 +766,6 @@ mod test {
         circuit.sum(&vars[..])?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
-    }
-
-    #[test]
-    fn test_unpack() -> Result<(), CircuitError> {
-        test_unpack_helper::<FqEd254>()?;
-        test_unpack_helper::<FqEd377>()?;
-        test_unpack_helper::<FqEd381>()?;
-        test_unpack_helper::<Fq377>()
-    }
-
-    fn test_unpack_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(F::one())?;
-        let b = circuit.create_variable(F::from(1023u32))?;
-
-        circuit.range_gate(a, 1)?;
-        let a_le = circuit.unpack(a, 3)?;
-        assert_eq!(a_le.len(), 3);
-        let b_le = circuit.unpack(b, 10)?;
-        assert_eq!(b_le.len(), 10);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        assert!(circuit.unpack(b, 9).is_err());
-        Ok(())
-    }
-
-    #[test]
-    fn test_range_gate() -> Result<(), CircuitError> {
-        test_range_gate_helper::<FqEd254>()?;
-        test_range_gate_helper::<FqEd377>()?;
-        test_range_gate_helper::<FqEd381>()?;
-        test_range_gate_helper::<Fq377>()
-    }
-    fn test_range_gate_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(F::one())?;
-        let b = circuit.create_variable(F::from(1023u32))?;
-
-        circuit.range_gate(a, 1)?;
-        circuit.range_gate(a, 3)?;
-        circuit.range_gate(b, 10)?;
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        circuit.range_gate(b, 9)?;
-        assert!(circuit.range_gate(a, 0).is_err());
-        // non-positive bit length is undefined, thus fail
-        assert!(circuit.range_gate(a, 0).is_err());
-        // bit length bigger than that of a field element (bit length takes 256 or 381
-        // bits)
-        let bit_len = (F::size_in_bits() / 8 + 1) * 8;
-        assert!(circuit.range_gate(a, bit_len + 1).is_err());
-        // if mess up the wire value, should fail
-        *circuit.witness_mut(b) = F::from(1024u32);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
-        assert!(circuit.range_gate(circuit.num_vars(), 10).is_err());
-
-        // build two fixed circuits with different variable assignments, checking that
-        // the arithmetized extended permutation polynomial is variable
-        // independent
-        let circuit_1 = build_range_gate_circuit(F::from(314u32))?;
-        let circuit_2 = build_range_gate_circuit(F::from(489u32))?;
-        test_variable_independence_for_circuit(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    fn build_range_gate_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a_var = circuit.create_variable(a)?;
-        circuit.range_gate(a_var, 10)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
-
-    #[test]
-    fn test_check_in_range() -> Result<(), CircuitError> {
-        test_check_in_range_helper::<FqEd254>()?;
-        test_check_in_range_helper::<FqEd377>()?;
-        test_check_in_range_helper::<FqEd381>()?;
-        test_check_in_range_helper::<Fq377>()
-    }
-    fn test_check_in_range_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a = circuit.create_variable(F::from(1023u32))?;
-
-        let b1 = circuit.check_in_range(a, 5)?;
-        let b2 = circuit.check_in_range(a, 10)?;
-        let b3 = circuit.check_in_range(a, 0)?;
-        assert_eq!(circuit.witness(b1.into())?, F::zero());
-        assert_eq!(circuit.witness(b2.into())?, F::one());
-        assert_eq!(circuit.witness(b3.into())?, F::zero());
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-        // if mess up the wire value, should fail
-        *circuit.witness_mut(a) = F::from(1024u32);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        // Check variable out of bound error.
-        assert!(circuit.check_in_range(circuit.num_vars(), 10).is_err());
-
-        // build two fixed circuits with different variable assignments, checking that
-        // the arithmetized extended permutation polynomial is variable
-        // independent
-        let circuit_1 = build_check_in_range_circuit(F::from(314u32))?;
-        let circuit_2 = build_check_in_range_circuit(F::from(1489u32))?;
-        test_variable_independence_for_circuit(circuit_1, circuit_2)?;
-
-        Ok(())
-    }
-
-    fn build_check_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, CircuitError> {
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let a_var = circuit.create_variable(a)?;
-        circuit.check_in_range(a_var, 10)?;
-        circuit.finalize_for_arithmetization()?;
-        Ok(circuit)
-    }
-
-    #[test]
-    fn test_arithmetization() -> Result<(), CircuitError> {
-        test_arithmetization_helper::<FqEd254>()?;
-        test_arithmetization_helper::<FqEd377>()?;
-        test_arithmetization_helper::<FqEd381>()?;
-        test_arithmetization_helper::<Fq377>()
-    }
-
-    fn test_arithmetization_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        // Create the circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        // is_equal gate
-        let val = F::from(31415u32);
-        let a = circuit.create_variable(val)?;
-        let b = circuit.create_variable(val)?;
-        circuit.check_equal(a, b)?;
-
-        // lc gate
-        let wire_in: Vec<_> = [
-            F::from(23u32),
-            F::from(8u32),
-            F::from(1u32),
-            -F::from(20u32),
-        ]
-        .iter()
-        .map(|val| circuit.create_variable(*val).unwrap())
-        .collect();
-        let coeffs = [F::from(2u32), F::from(3u32), F::from(5u32), F::from(2u32)];
-        circuit.lc(&wire_in.try_into().unwrap(), &coeffs)?;
-
-        // conditional select gate
-        let bit_true = circuit.create_boolean_variable(true)?;
-        let x_0 = circuit.create_variable(F::from(23u32))?;
-        let x_1 = circuit.create_variable(F::from(24u32))?;
-        circuit.conditional_select(bit_true, x_0, x_1)?;
-
-        // range gate
-        let b = circuit.create_variable(F::from(1023u32))?;
-        circuit.range_gate(b, 10)?;
-
-        // sum gate
-        let mut vars = vec![];
-        for i in 0..11 {
-            vars.push(circuit.create_variable(F::from(i as u32))?);
-        }
-        circuit.sum(&vars[..vars.len()])?;
-
-        // Finalize the circuit
-        circuit.finalize_for_arithmetization()?;
-        let pub_inputs = vec![];
-        crate::basic::test::test_arithmetization_for_circuit(circuit, pub_inputs)?;
-        Ok(())
-    }
-
-    #[test]
-    fn test_non_zero_gate() -> Result<(), CircuitError> {
-        test_non_zero_gate_helper::<FqEd254>()?;
-        test_non_zero_gate_helper::<FqEd377>()?;
-        test_non_zero_gate_helper::<FqEd381>()?;
-        test_non_zero_gate_helper::<Fq377>()
-    }
-    fn test_non_zero_gate_helper<F: PrimeField>() -> Result<(), CircuitError> {
-        // Create the circuit
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let non_zero_var = circuit.create_variable(F::from(2_u32))?;
-        let _ = circuit.non_zero_gate(non_zero_var);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let zero_var = circuit.create_variable(F::from(0_u32))?;
-        let _ = circuit.non_zero_gate(zero_var);
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-
-        Ok(())
     }
 
     #[test]
@@ -1654,6 +926,60 @@ mod test {
                 .is_err());
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_arithmetization() -> Result<(), CircuitError> {
+        test_arithmetization_helper::<FqEd254>()?;
+        test_arithmetization_helper::<FqEd377>()?;
+        test_arithmetization_helper::<FqEd381>()?;
+        test_arithmetization_helper::<Fq377>()
+    }
+
+    fn test_arithmetization_helper<F: PrimeField>() -> Result<(), CircuitError> {
+        // Create the circuit
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        // is_equal gate
+        let val = F::from(31415u32);
+        let a = circuit.create_variable(val)?;
+        let b = circuit.create_variable(val)?;
+        circuit.is_equal(a, b)?;
+
+        // lc gate
+        let wire_in: Vec<_> = [
+            F::from(23u32),
+            F::from(8u32),
+            F::from(1u32),
+            -F::from(20u32),
+        ]
+        .iter()
+        .map(|val| circuit.create_variable(*val).unwrap())
+        .collect();
+        let coeffs = [F::from(2u32), F::from(3u32), F::from(5u32), F::from(2u32)];
+        circuit.lc(&wire_in.try_into().unwrap(), &coeffs)?;
+
+        // conditional select gate
+        let bit_true = circuit.create_boolean_variable(true)?;
+        let x_0 = circuit.create_variable(F::from(23u32))?;
+        let x_1 = circuit.create_variable(F::from(24u32))?;
+        circuit.conditional_select(bit_true, x_0, x_1)?;
+
+        // range gate
+        let b = circuit.create_variable(F::from(1023u32))?;
+        circuit.range_gate(b, 10)?;
+
+        // sum gate
+        let mut vars = vec![];
+        for i in 0..11 {
+            vars.push(circuit.create_variable(F::from(i as u32))?);
+        }
+        circuit.sum(&vars[..vars.len()])?;
+
+        // Finalize the circuit
+        circuit.finalize_for_arithmetization()?;
+        let pub_inputs = vec![];
+        crate::basic::test::test_arithmetization_for_circuit(circuit, pub_inputs)?;
         Ok(())
     }
 }

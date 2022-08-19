@@ -4,87 +4,11 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Implementations of various Gates.
-use ark_ff::Field;
-use ark_std::boxed::Box;
-use core::fmt;
-use downcast_rs::{impl_downcast, Downcast};
-use dyn_clone::DynClone;
+//! Implementation of arithmetic gates
 
+use super::Gate;
 use crate::constants::{GATE_WIDTH, N_MUL_SELECTORS};
-
-/// Describes a gate with getter for all selectors configuration
-pub trait Gate<F: Field>: Downcast + DynClone {
-    /// Get the name of a gate.
-    fn name(&self) -> &'static str;
-    /// Selectors for linear combination.
-    fn q_lc(&self) -> [F; GATE_WIDTH] {
-        [F::zero(); GATE_WIDTH]
-    }
-    /// Selectors for Rescue hashes.
-    fn q_hash(&self) -> [F; GATE_WIDTH] {
-        [F::zero(); GATE_WIDTH]
-    }
-    /// Selectors for multiplication.
-    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
-        [F::zero(); N_MUL_SELECTORS]
-    }
-    /// The selector for elliptic curve operation.
-    fn q_ecc(&self) -> F {
-        F::zero()
-    }
-    /// Constant selector.
-    fn q_c(&self) -> F {
-        F::zero()
-    }
-    /// Output wire selector.
-    fn q_o(&self) -> F {
-        F::zero()
-    }
-    /// UltraPlonk lookup selector.
-    fn q_lookup(&self) -> F {
-        F::zero()
-    }
-    /// UltraPlonk lookup domain separation selector.
-    fn q_dom_sep(&self) -> F {
-        F::zero()
-    }
-    /// UltraPlonk table keys.
-    fn table_key(&self) -> F {
-        F::zero()
-    }
-    /// UltraPlonk table domain separation ids
-    fn table_dom_sep(&self) -> F {
-        F::zero()
-    }
-}
-impl_downcast!(Gate<F> where F: Field);
-
-impl<F: Field> Clone for Box<dyn Gate<F>> {
-    fn clone(&self) -> Box<dyn Gate<F>> {
-        dyn_clone::clone_box(&**self)
-    }
-}
-
-impl<F: Field> fmt::Debug for (dyn Gate<F> + 'static) {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // TODO: (alex) add more context for debug
-        f.write_str(self.name())
-    }
-}
-
-/// A empty gate for circuit padding
-#[derive(Debug, Clone)]
-pub struct PaddingGate;
-
-impl<F> Gate<F> for PaddingGate
-where
-    F: Field,
-{
-    fn name(&self) -> &'static str {
-        "Padding Gate"
-    }
-}
+use ark_ff::Field;
 
 /// A constant gate
 #[derive(Debug, Clone)]
@@ -273,6 +197,97 @@ impl<F: Field> Gate<F> for FifthRootGate {
         [F::one(), F::zero(), F::zero(), F::zero()]
     }
 
+    fn q_o(&self) -> F {
+        F::one()
+    }
+}
+
+/// A deg-2 polynomial gate
+#[derive(Clone)]
+pub struct QuadPolyGate<F: Field> {
+    pub(crate) q_lc: [F; GATE_WIDTH],
+    pub(crate) q_mul: [F; N_MUL_SELECTORS],
+    pub(crate) q_o: F,
+    pub(crate) q_c: F,
+}
+impl<F> Gate<F> for QuadPolyGate<F>
+where
+    F: Field,
+{
+    fn name(&self) -> &'static str {
+        "Deg-2 Polynomial Gate"
+    }
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
+        self.q_lc
+    }
+    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
+        self.q_mul
+    }
+    fn q_o(&self) -> F {
+        self.q_o
+    }
+    fn q_c(&self) -> F {
+        self.q_c
+    }
+}
+
+/// A linear combination gate
+#[derive(Clone)]
+pub struct LinCombGate<F: Field> {
+    pub(crate) coeffs: [F; GATE_WIDTH],
+}
+impl<F> Gate<F> for LinCombGate<F>
+where
+    F: Field,
+{
+    fn name(&self) -> &'static str {
+        "Linear Combination Gate"
+    }
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
+        self.coeffs
+    }
+    fn q_o(&self) -> F {
+        F::one()
+    }
+}
+
+/// A multiplication-then-addition gate
+#[derive(Clone)]
+pub struct MulAddGate<F: Field> {
+    pub(crate) coeffs: [F; N_MUL_SELECTORS],
+}
+impl<F> Gate<F> for MulAddGate<F>
+where
+    F: Field,
+{
+    fn name(&self) -> &'static str {
+        "Multiplication-then-addition Gate"
+    }
+    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
+        self.coeffs
+    }
+    fn q_o(&self) -> F {
+        F::one()
+    }
+}
+
+/// A gate for conditional selection
+#[derive(Clone)]
+pub struct CondSelectGate;
+
+impl<F> Gate<F> for CondSelectGate
+where
+    F: Field,
+{
+    fn name(&self) -> &'static str {
+        "Conditional Selection Gate"
+    }
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
+        [F::zero(), F::one(), F::zero(), F::zero()]
+    }
+    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
+        [-F::one(), F::one()]
+    }
     fn q_o(&self) -> F {
         F::one()
     }

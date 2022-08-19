@@ -10,15 +10,6 @@ use ark_ff::{FftParameters, PrimeField};
 use ark_std::{rand::SeedableRng, vec, vec::Vec};
 use rand_chacha::ChaChaRng;
 
-// ==========================
-// Circuit-related constants.
-// ==========================
-
-// Gate Width
-pub use jf_relation::constants::GATE_WIDTH;
-/// The number of TurboPlonk selectors.
-pub(crate) const N_TURBO_PLONK_SELECTORS: usize = 13;
-
 /// Proof-system-related constants.
 ///
 /// label for the extra data field to be appended to the transcript during

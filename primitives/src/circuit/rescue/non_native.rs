@@ -16,8 +16,8 @@ use ark_ff::{BigInteger, FpParameters, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
 use jf_relation::{
-    customized::ultraplonk::mod_arith::{FpElem, FpElemVar},
     errors::CircuitError::{self, ParameterError},
+    gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
     Circuit, PlonkCircuit,
 };
 use jf_utils::{compute_len_to_next_multiple, field_switching};
@@ -744,7 +744,7 @@ mod tests {
     use ark_std::{vec, vec::Vec};
     use itertools::Itertools;
     use jf_relation::{
-        customized::ultraplonk::mod_arith::{FpElem, FpElemVar},
+        gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
         Circuit, PlonkCircuit,
     };
     use jf_utils::field_switching;

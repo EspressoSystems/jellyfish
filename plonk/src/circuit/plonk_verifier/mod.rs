@@ -17,11 +17,11 @@ use ark_ff::{BigInteger, FpParameters, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
-    customized::{
+    errors::CircuitError,
+    gadgets::{
         ecc::{MultiScalarMultiplicationCircuit, Point, PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
-    errors::CircuitError,
     Circuit, PlonkCircuit, Variable,
 };
 
@@ -337,7 +337,7 @@ mod test {
     use ark_ec::{ProjectiveCurve, SWModelParameters, TEModelParameters};
     use ark_std::{test_rng, vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
-    use jf_relation::{customized::ecc::Point, Arithmetization, Circuit, MergeableCircuitType};
+    use jf_relation::{gadgets::ecc::Point, Arithmetization, Circuit, MergeableCircuitType};
     use jf_utils::field_switching;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;

@@ -6,7 +6,7 @@
 
 //! Lookup gates over variable tables.
 
-use crate::{customized::gates::LookupGate, errors::CircuitError, Circuit, PlonkCircuit, Variable};
+use crate::{errors::CircuitError, gates::LookupGate, Circuit, PlonkCircuit, Variable};
 use ark_ff::PrimeField;
 use ark_std::{boxed::Box, cmp::max};
 

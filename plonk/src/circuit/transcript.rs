@@ -16,11 +16,11 @@ use jf_primitives::{
     rescue::{RescueParameter, STATE_SIZE},
 };
 use jf_relation::{
-    customized::{
+    errors::CircuitError::{self, ParameterError},
+    gadgets::{
         ecc::{PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::FpElemVar,
     },
-    errors::CircuitError::{self, ParameterError},
     Circuit, PlonkCircuit, Variable,
 };
 
@@ -237,7 +237,7 @@ mod tests {
     use ark_ec::{AffineCurve, ProjectiveCurve};
     use ark_poly_commit::kzg10::{Commitment, VerifierKey};
     use ark_std::{format, test_rng, UniformRand};
-    use jf_relation::customized::ecc::Point;
+    use jf_relation::gadgets::ecc::Point;
     use jf_utils::{bytes_to_field_elements, field_switching};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;

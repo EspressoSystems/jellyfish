@@ -7,8 +7,8 @@
 //! Modular arithmetic gates
 use crate::{
     constants::GATE_WIDTH,
-    customized::next_multiple,
     errors::CircuitError::{self, ParameterError},
+    gadgets::utils::next_multiple,
     Circuit, PlonkCircuit, Variable,
 };
 use ark_ff::PrimeField;
@@ -887,7 +887,7 @@ fn div_rem<F: PrimeField>(a: &F, b: &F) -> (F, F) {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::customized::test::test_variable_independence_for_circuit;
+    use crate::gadgets::test::test_variable_independence_for_circuit;
     use ark_bls12_377::{Fq as Fq377, Fr as Fr377};
     use ark_ed_on_bls12_377::{Fq as FqEd377, Fr as FrEd377};
     use ark_ed_on_bls12_381::Fq as FqEd381;

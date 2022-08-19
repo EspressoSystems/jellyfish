@@ -18,7 +18,7 @@ use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
-    customized::{
+    gadgets::{
         ecc::{PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },

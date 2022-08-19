@@ -17,8 +17,8 @@ use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParamete
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
-    customized::ecc::{Point, PointVariable},
     errors::CircuitError,
+    gadgets::ecc::{Point, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 use jf_utils::fr_to_fq;
