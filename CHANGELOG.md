@@ -9,6 +9,15 @@
 - Introduce `struct BoolVar` whenever necessary and possible (#91)
 - Introduce comparison gates (#81)
 - More general input to `deserialize_canonical_bytes!()` (#108)
+- Codebase refactor (#110)
+    - Remove `jf-rescue` crate, rescue hash function now resides in `jf-primitives/rescue`.
+    - Circuit definition now has a standalone crate `jf-relation`.
+        - Basic and customized circuit gates are defined in `jf-relation`.
+        - Customized/advanced circuit implementations are located in their own crates.
+            - Plonk related circuits, `transcript` and `plonk-verifier` are now in `jf-plonk/circuit`.
+            - Primitive circuits, including `commitment`, `el gamal` etc. remains in `jf-primitives/circuit`.
+            - Circuit for rescue hash function is now in `jf-primitives/circuit/rescue`.
+    - `par-utils` is moved to `jf-utils`.
 
 ## v0.1.2
 
