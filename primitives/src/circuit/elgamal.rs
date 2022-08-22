@@ -224,7 +224,7 @@ where
 
     fn create_enc_key_variable(&mut self, pk: &EncKey<P>) -> Result<EncKeyVars, CircuitError> {
         let point = Point::from(pk.key.into_affine());
-        let point_variable = self.create_point_variable(point)?;
+        let point_variable = self.create_point_variable(&point)?;
         Ok(EncKeyVars(point_variable))
     }
 
@@ -233,7 +233,7 @@ where
         ctxts: &Ciphertext<P>,
     ) -> Result<ElGamalHybridCtxtVars, CircuitError> {
         let ephemeral =
-            self.create_point_variable(Point::from(ctxts.ephemeral.key.into_affine()))?;
+            self.create_point_variable(&Point::from(ctxts.ephemeral.key.into_affine()))?;
         let symm_ctxts = ctxts
             .data
             .iter()

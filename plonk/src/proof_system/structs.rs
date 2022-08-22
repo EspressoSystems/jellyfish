@@ -7,7 +7,6 @@
 //! Data structures used in Plonk proof systems
 use crate::{
     circuit::plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
-    constants::{compute_coset_representatives},
     errors::{
         PlonkError,
         SnarkError::{self, ParameterError, SnarkLookupUnsupported},
@@ -31,7 +30,7 @@ use espresso_systems_common::jellyfish::tag;
 use hashbrown::HashMap;
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
-    constants::{GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
+    constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
     gadgets::{
         ecc::{Point, SWToTEConParam},
         ultraplonk::mod_arith::FpElemVar,
@@ -385,14 +384,14 @@ impl<E: PairingEngine> BatchProof<E> {
             let mut tmp = Vec::new();
             for f in e.iter() {
                 let p: Point<F> = (&f.0).into();
-                tmp.push(circuit.create_point_variable(p)?);
+                tmp.push(circuit.create_point_variable(&p)?);
             }
             wires_poly_comms_vec.push(tmp);
         }
         let mut prod_perm_poly_comms_vec = Vec::new();
         for e in self.prod_perm_poly_comms_vec.iter() {
             let p: Point<F> = (&e.0).into();
-            prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)?);
+            prod_perm_poly_comms_vec.push(circuit.create_point_variable(&p)?);
         }
 
         let poly_evals_vec = self
@@ -404,14 +403,14 @@ impl<E: PairingEngine> BatchProof<E> {
         let mut split_quot_poly_comms = Vec::new();
         for e in self.split_quot_poly_comms.iter() {
             let p: Point<F> = (&e.0).into();
-            split_quot_poly_comms.push(circuit.create_point_variable(p)?);
+            split_quot_poly_comms.push(circuit.create_point_variable(&p)?);
         }
 
         let p: Point<F> = (&self.opening_proof.0).into();
-        let opening_proof = circuit.create_point_variable(p)?;
+        let opening_proof = circuit.create_point_variable(&p)?;
 
         let p: Point<F> = (&self.shifted_opening_proof.0).into();
-        let shifted_opening_proof = circuit.create_point_variable(p)?;
+        let shifted_opening_proof = circuit.create_point_variable(&p)?;
 
         Ok(BatchProofVar {
             wires_poly_comms_vec,

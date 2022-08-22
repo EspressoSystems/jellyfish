@@ -4,16 +4,17 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Customized gates and gadgets for rescue hash related, elliptic curve
-//! related, rescue-based transcript and lookup table etc.
+//! Gates and gadgets implementations
 
 pub mod ecc;
 pub mod ultraplonk;
 
 mod arithmetic;
+mod cmp;
 mod logic;
 mod range;
 pub use arithmetic::*;
+pub use cmp::*;
 pub use logic::*;
 pub use range::*;
 

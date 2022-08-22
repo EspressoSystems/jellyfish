@@ -7,8 +7,7 @@
 //! Elliptic curve related gates and gadgets. Including both native and
 //! non-native fields.
 
-use crate::gates::*;
-use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
+use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
     group::Group,
     short_weierstrass_jacobian::GroupAffine as SWGroupAffine,
@@ -130,10 +129,7 @@ impl PointVariable {
 }
 
 // ECC related gates
-impl<F> PlonkCircuit<F>
-where
-    F: PrimeField,
-{
+impl<F: PrimeField> PlonkCircuit<F> {
     /// Return the witness point for the circuit
     pub fn point_witness(&self, point_var: &PointVariable) -> Result<Point<F>, CircuitError> {
         self.check_point_var_bound(point_var)?;
@@ -145,7 +141,7 @@ where
     /// Add a new EC point (as witness) to the circuit
     pub fn create_point_variable(
         &mut self,
-        point: Point<F>,
+        point: &Point<F>,
     ) -> Result<PointVariable, CircuitError> {
         let x_var = self.create_variable(point.0)?;
         let y_var = self.create_variable(point.1)?;
@@ -200,7 +196,7 @@ where
                 (true, true) => point3.to_owned(),
             };
             // create new point with the same (x, y) coordinates
-            self.create_point_variable(selected)?
+            self.create_point_variable(&selected)?
         };
         let wire_vars_x = [b0.into(), b1.into(), 0, 0, selected_point.0];
         self.insert_gate(
@@ -272,10 +268,7 @@ where
     }
 }
 
-impl<F> PlonkCircuit<F>
-where
-    F: PrimeField,
-{
+impl<F: PrimeField> PlonkCircuit<F> {
     /// Inverse a point variable
     pub fn inverse_point(
         &mut self,
@@ -415,7 +408,7 @@ where
         let z = d * x_1 * y_1 * x_2 * y_2; // temporary intermediate value
         let x_3 = (x_1 * y_2 + x_2 * y_1) / (F::one() + z);
         let y_3 = (-P::COEFF_A * x_1 * x_2 + y_2 * y_1) / (F::one() - z);
-        let point_c = self.create_point_variable(Point(x_3, y_3))?;
+        let point_c = self.create_point_variable(&Point(x_3, y_3))?;
         self.ecc_add_gate::<P>(point_a, point_b, &point_c)?;
 
         Ok(point_c)
@@ -520,10 +513,7 @@ where
 }
 
 // private helper functions
-impl<F> PlonkCircuit<F>
-where
-    F: PrimeField,
-{
+impl<F: PrimeField> PlonkCircuit<F> {
     fn check_point_var_bound(&self, point_var: &PointVariable) -> Result<(), CircuitError> {
         self.check_var_bound(point_var.0)?;
         self.check_var_bound(point_var.1)?;
@@ -633,8 +623,8 @@ mod test {
         P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p1 = circuit.create_point_variable(Point(F::zero(), F::one()))?;
-        let p2 = circuit.create_point_variable(Point(F::from(2353u32), F::one()))?;
+        let p1 = circuit.create_point_variable(&Point(F::zero(), F::one()))?;
+        let p2 = circuit.create_point_variable(&Point(F::from(2353u32), F::one()))?;
         let p1_check = circuit.is_neutral_point::<P>(&p1)?;
         let p2_check = circuit.is_neutral_point::<P>(&p2)?;
 
@@ -661,7 +651,7 @@ mod test {
         P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p = circuit.create_point_variable(point)?;
+        let p = circuit.create_point_variable(&point)?;
         circuit.is_neutral_point::<P>(&p)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -670,13 +660,13 @@ mod test {
     macro_rules! test_on_curve_gate {
         ($fq:tt, $param:tt, $pt:tt) => {
             let mut circuit: PlonkCircuit<$fq> = PlonkCircuit::new_turbo_plonk();
-            let p1 = circuit.create_point_variable(Point($fq::zero(), $fq::one()))?;
+            let p1 = circuit.create_point_variable(&Point($fq::zero(), $fq::one()))?;
             circuit.on_curve_gate::<$param>(&p1)?;
-            let p2 = circuit.create_point_variable($pt)?;
+            let p2 = circuit.create_point_variable(&$pt)?;
             circuit.on_curve_gate::<$param>(&p2)?;
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-            let p3 = circuit.create_point_variable(Point($fq::one(), $fq::one()))?;
+            let p3 = circuit.create_point_variable(&Point($fq::one(), $fq::one()))?;
             circuit.on_curve_gate::<$param>(&p3)?;
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
             // Check variable out of bound error.
@@ -764,7 +754,7 @@ mod test {
         P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p = circuit.create_point_variable(point)?;
+        let p = circuit.create_point_variable(&point)?;
         circuit.on_curve_gate::<P>(&p)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -790,8 +780,8 @@ mod test {
         let p3 = p1 + p2;
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p1_var = circuit.create_point_variable(Point::from(p1))?;
-        let p2_var = circuit.create_point_variable(Point::from(p2))?;
+        let p1_var = circuit.create_point_variable(&Point::from(p1))?;
+        let p2_var = circuit.create_point_variable(&Point::from(p2))?;
         let p3_var = circuit.ecc_add::<P>(&p1_var, &p2_var)?;
 
         assert_eq!(circuit.witness(p3_var.0)?, p3.x);
@@ -826,8 +816,8 @@ mod test {
         P: Parameters<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p1_var = circuit.create_point_variable(p1)?;
-        let p2_var = circuit.create_point_variable(p2)?;
+        let p1_var = circuit.create_point_variable(&p1)?;
+        let p2_var = circuit.create_point_variable(&p2)?;
         circuit.ecc_add::<P>(&p1_var, &p2_var)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -949,8 +939,8 @@ mod test {
         let p = GroupAffine::<P>::rand(&mut rng);
 
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let p1_var = circuit.create_point_variable(Point::from(p))?;
-        let p2_var = circuit.create_point_variable(Point::from(p))?;
+        let p1_var = circuit.create_point_variable(&Point::from(p))?;
+        let p2_var = circuit.create_point_variable(&Point::from(p))?;
         circuit.point_equal_gate(&p1_var, &p2_var)?;
 
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -974,8 +964,8 @@ mod test {
         p2: Point<F>,
     ) -> Result<PlonkCircuit<F>, CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p1_var = circuit.create_point_variable(p1)?;
-        let p2_var = circuit.create_point_variable(p2)?;
+        let p1_var = circuit.create_point_variable(&p1)?;
+        let p2_var = circuit.create_point_variable(&p2)?;
         circuit.point_equal_gate(&p1_var, &p2_var)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -1001,9 +991,9 @@ mod test {
         let p3 = GroupAffine::<P>::rand(&mut rng);
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p1_var = circuit.create_point_variable(Point::from(p1))?;
-        let p2_var = circuit.create_point_variable(Point::from(p2))?;
-        let p3_var = circuit.create_point_variable(Point::from(p3))?;
+        let p1_var = circuit.create_point_variable(&Point::from(p1))?;
+        let p2_var = circuit.create_point_variable(&Point::from(p2))?;
+        let p3_var = circuit.create_point_variable(&Point::from(p3))?;
         let p1_p2_eq = circuit.check_equal_point(&p1_var, &p2_var)?;
         let p1_p3_eq = circuit.check_equal_point(&p1_var, &p3_var)?;
 
@@ -1032,9 +1022,9 @@ mod test {
         p3: Point<F>,
     ) -> Result<PlonkCircuit<F>, CircuitError> {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
-        let p1_var = circuit.create_point_variable(p1)?;
-        let p2_var = circuit.create_point_variable(p2)?;
-        let p3_var = circuit.create_point_variable(p3)?;
+        let p1_var = circuit.create_point_variable(&p1)?;
+        let p2_var = circuit.create_point_variable(&p2)?;
+        let p3_var = circuit.create_point_variable(&p3)?;
         circuit.check_equal_point(&p1_var, &p2_var)?;
         circuit.check_equal_point(&p1_var, &p3_var)?;
         circuit.finalize_for_arithmetization()?;
@@ -1173,8 +1163,8 @@ mod test {
         let p2 = GroupAffine::<P>::rand(&mut rng);
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        let p0_var = circuit.create_point_variable(Point::from(p0))?;
-        let p1_var = circuit.create_point_variable(Point::from(p1))?;
+        let p0_var = circuit.create_point_variable(&Point::from(p0))?;
+        let p1_var = circuit.create_point_variable(&Point::from(p1))?;
         let true_var = circuit.true_var();
         let false_var = circuit.false_var();
 
@@ -1218,8 +1208,8 @@ mod test {
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let b_var = circuit.create_boolean_variable(b)?;
-        let p0_var = circuit.create_point_variable(p0)?;
-        let p1_var = circuit.create_point_variable(p1)?;
+        let p0_var = circuit.create_point_variable(&p0)?;
+        let p1_var = circuit.create_point_variable(&p1)?;
         circuit.binary_point_vars_select(b_var, &p0_var, &p1_var)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
@@ -1245,7 +1235,7 @@ mod test {
             let mut base = GroupAffine::<P>::rand(&mut rng);
             let s = P::ScalarField::rand(&mut rng);
             let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-            let base_var = circuit.create_point_variable(Point::from(base))?;
+            let base_var = circuit.create_point_variable(&Point::from(base))?;
             base *= s;
             let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
             assert_eq!(Point::from(base), circuit.point_witness(&result)?);
@@ -1255,7 +1245,7 @@ mod test {
         let base = GroupAffine::<P>::rand(&mut rng);
         let s = P::ScalarField::rand(&mut rng);
         let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-        let base_var = circuit.create_point_variable(Point::from(base))?;
+        let base_var = circuit.create_point_variable(&Point::from(base))?;
         // wrong witness should fail
         *circuit.witness_mut(2) = F::rand(&mut rng);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
@@ -1291,7 +1281,7 @@ mod test {
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let scalar_var = circuit.create_variable(scalar)?;
-        let base_var = circuit.create_point_variable(base)?;
+        let base_var = circuit.create_point_variable(&base)?;
         circuit.variable_base_scalar_mul::<P>(scalar_var, &base_var)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)

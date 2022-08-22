@@ -20,7 +20,7 @@ use ark_poly_commit::kzg10::Commitment;
 use ark_std::{format, vec, vec::Vec};
 use core::ops::Neg;
 use jf_primitives::rescue::RescueParameter;
-use jf_relation::{gadgets::ecc::SWToTEConParam, constants::GATE_WIDTH};
+use jf_relation::{constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam};
 use jf_utils::multi_pairing;
 
 /// (Aggregated) polynomial commitment evaluation info.

@@ -65,4 +65,5 @@ harness = false
 [features]
 default = [ "parallel" ]
 std = []
-parallel = [ "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel", "jf-relation/parallel", "rayon" ]
+parallel = [ "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel", 
+            "jf-relation/parallel", "rayon" ]

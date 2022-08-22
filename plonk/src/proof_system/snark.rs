@@ -15,7 +15,7 @@ use super::{
     UniversalSNARK,
 };
 use crate::{
-    constants::{compute_coset_representatives, EXTRA_TRANSCRIPT_MSG_LABEL},
+    constants::{EXTRA_TRANSCRIPT_MSG_LABEL},
     errors::{PlonkError, SnarkError::ParameterError},
     proof_system::structs::UniversalSrs,
     transcript::*,
@@ -33,7 +33,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_primitives::rescue::RescueParameter;
-use jf_relation::{gadgets::ecc::SWToTEConParam, Arithmetization};
+use jf_relation::{constants::compute_coset_representatives, gadgets::ecc::SWToTEConParam, Arithmetization};
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

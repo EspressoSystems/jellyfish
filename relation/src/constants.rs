@@ -27,7 +27,7 @@ pub const N_TURBO_PLONK_SELECTORS: usize = 13;
 /// searching.
 #[inline]
 #[allow(non_snake_case)]
-pub(crate) fn compute_coset_representatives<F: PrimeField>(
+pub fn compute_coset_representatives<F: PrimeField>(
     num_wire_types: usize,
     coset_size: Option<usize>,
 ) -> Vec<F> {

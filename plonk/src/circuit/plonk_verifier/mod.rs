@@ -67,12 +67,12 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         let sigma_comms = verify_key
             .sigma_comms
             .iter()
-            .map(|comm| circuit.create_point_variable(Point::from(&comm.0)))
+            .map(|comm| circuit.create_point_variable(&Point::from(&comm.0)))
             .collect::<Result<Vec<_>, CircuitError>>()?;
         let selector_comms = verify_key
             .selector_comms
             .iter()
-            .map(|comm| circuit.create_point_variable(Point::from(&comm.0)))
+            .map(|comm| circuit.create_point_variable(&Point::from(&comm.0)))
             .collect::<Result<Vec<_>, CircuitError>>()?;
         Ok(Self {
             sigma_comms,

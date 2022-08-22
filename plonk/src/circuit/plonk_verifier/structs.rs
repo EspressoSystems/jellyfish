@@ -7,11 +7,11 @@
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use jf_relation::{
+    errors::CircuitError,
     gadgets::{
         ecc::PointVariable,
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
-    errors::CircuitError,
     PlonkCircuit, Variable,
 };
 

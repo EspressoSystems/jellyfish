@@ -120,13 +120,13 @@ where
     ) -> Result<SignatureVar, CircuitError> {
         let sig_var = SignatureVar {
             s: self.create_variable(fr_to_fq::<F, P>(&sig.s))?,
-            R: self.create_point_variable(Point::from(sig.R))?,
+            R: self.create_point_variable(&Point::from(sig.R))?,
         };
         Ok(sig_var)
     }
 
     fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, CircuitError> {
-        let vk_var = VerKeyVar(self.create_point_variable(Point::from(vk.0))?);
+        let vk_var = VerKeyVar(self.create_point_variable(&Point::from(vk.0))?);
         Ok(vk_var)
     }
 

@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Implementation of circuit logic gadgets
+//! Logic related circuit implementations
 
 use ark_ff::PrimeField;
 
