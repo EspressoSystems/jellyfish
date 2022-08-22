@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Arithmetic related circuit implementations
+//! Circuit implementation for arithmetic extensions
 
 use super::utils::next_multiple;
 use crate::{
@@ -979,7 +979,7 @@ mod test {
         // Finalize the circuit
         circuit.finalize_for_arithmetization()?;
         let pub_inputs = vec![];
-        crate::basic::test::test_arithmetization_for_circuit(circuit, pub_inputs)?;
+        super::super::basic::test::test_arithmetization_for_circuit(circuit, pub_inputs)?;
         Ok(())
     }
 }

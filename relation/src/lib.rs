@@ -5,7 +5,6 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 /// Interfaces for Plonk-based constraint systems
-pub mod basic;
 pub mod constants;
 pub mod errors;
 pub mod gadgets;
@@ -14,4 +13,4 @@ pub mod gates;
 pub mod circuit;
 pub use circuit::*;
 
-pub use basic::PlonkCircuit;
+pub use gadgets::PlonkCircuit;
