@@ -539,8 +539,8 @@ where
                 &vec_fp_elem,
                 &constant_fp_elem[i],
             )?;
-            self.equal_gate(output_fp_elem[i].components().0, output_var2.components().0)?;
-            self.equal_gate(output_fp_elem[i].components().1, output_var2.components().1)?;
+            self.enforce_equal(output_fp_elem[i].components().0, output_var2.components().0)?;
+            self.enforce_equal(output_fp_elem[i].components().1, output_var2.components().1)?;
         }
         Ok(RescueNonNativeStateVar {
             state: output_fp_elem,

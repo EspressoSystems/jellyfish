@@ -10,7 +10,5 @@ pub mod errors;
 pub mod gadgets;
 pub mod gates;
 
-pub mod circuit;
-pub use circuit::*;
-
-pub use gadgets::PlonkCircuit;
+pub mod constraint_system;
+pub use constraint_system::*;

@@ -128,13 +128,13 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Assuming values represented by `a` is boolean.
     /// Constrain `a` is true
     pub fn enforce_true(&mut self, a: Variable) -> Result<(), CircuitError> {
-        self.constant_gate(a, F::one())
+        self.enforce_constant(a, F::one())
     }
 
     /// Assuming values represented by `a` is boolean.
     /// Constrain `a` is false
     pub fn enforce_false(&mut self, a: Variable) -> Result<(), CircuitError> {
-        self.constant_gate(a, F::zero())
+        self.enforce_constant(a, F::zero())
     }
 
     /// Obtain a variable that equals `x_0` if `b` is zero, or `x_1` if `b` is

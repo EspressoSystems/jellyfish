@@ -41,8 +41,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // x^11 = y
         let y = self.non_native_power_11_gen::<T>(x)?;
-        self.equal_gate(x_to_11.components().0, y.components().0)?;
-        self.equal_gate(x_to_11.components().1, y.components().1)
+        self.enforce_equal(x_to_11.components().0, y.components().0)?;
+        self.enforce_equal(x_to_11.components().1, y.components().1)
     }
 
     /// generate a non-native circuit for the statement x^11 = y
@@ -227,7 +227,7 @@ mod test {
         let x11_var = x11_split_vars.convert_to_var(&mut circuit)?;
 
         // good path
-        circuit.equal_gate(x11_var, y_var)?;
+        circuit.enforce_equal(x11_var, y_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // bad path: wrong witness should fail
@@ -239,7 +239,7 @@ mod test {
         // bad path: wrong value should fail
         let y_wrong = F::rand(&mut rng);
         let y_wrong_var = circuit.create_variable(y_wrong)?;
-        circuit.equal_gate(x11_var, y_wrong_var)?;
+        circuit.enforce_equal(x11_var, y_wrong_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         Ok(())
@@ -271,7 +271,7 @@ mod test {
         let x5_var = x5_split_vars.convert_to_var(&mut circuit)?;
 
         // good path
-        circuit.equal_gate(x5_var, y_var)?;
+        circuit.enforce_equal(x5_var, y_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // bad path: wrong witness should fail
@@ -283,7 +283,7 @@ mod test {
         // bad path: wrong value should fail
         let y_wrong = F::rand(&mut rng);
         let y_wrong_var = circuit.create_variable(y_wrong)?;
-        circuit.equal_gate(x5_var, y_wrong_var)?;
+        circuit.enforce_equal(x5_var, y_wrong_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         Ok(())
@@ -396,7 +396,7 @@ mod test {
 
         // good path: the circuit is satisfied
         let res_var2 = circuit.create_variable(res_p)?;
-        circuit.equal_gate(res_var, res_var2)?;
+        circuit.enforce_equal(res_var, res_var2)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // bad path: wrong witness should fail
@@ -408,7 +408,7 @@ mod test {
         // bad path: wrong value should fail
         let res_var3 = F::rand(&mut rng);
         let res_var3 = circuit.create_variable(res_var3)?;
-        circuit.equal_gate(res_var, res_var3)?;
+        circuit.enforce_equal(res_var, res_var3)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         Ok(())

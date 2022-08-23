@@ -261,7 +261,7 @@ where
             // can either be the left or the right child of its parent
             let left_plus_right =
                 self.add(node.is_left_child.into(), node.is_right_child.into())?;
-            self.bool_gate(left_plus_right)?;
+            self.enforce_bool(left_plus_right)?;
         }
 
         Ok(MerklePathVars { nodes })

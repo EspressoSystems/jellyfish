@@ -128,7 +128,7 @@ where
     // Step 3:
     // Connect the wires.
     let X_var_computed = circuit.variable_base_scalar_mul::<EmbedCurve>(x_var, &G_var)?;
-    circuit.point_equal_gate(&X_var_computed, &X_var)?;
+    circuit.enforce_point_equal(&X_var_computed, &X_var)?;
 
     // Sanity check: the circuit must be satisfied.
     assert!(circuit

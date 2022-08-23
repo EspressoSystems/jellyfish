@@ -674,11 +674,11 @@ pub mod test {
         let mut acc = cs.zero();
         a.iter().for_each(|&elem| acc = cs.add(acc, elem).unwrap());
         let b_mul = cs.mul(b[0], b[1])?;
-        cs.equal_gate(acc, b_mul)?;
+        cs.enforce_equal(acc, b_mul)?;
         let b1_plus_a0 = cs.add(b[1], a[0])?;
         let b1_minus_a0 = cs.sub(b[1], a[0])?;
         cs.mul_gate(b1_plus_a0, b1_minus_a0, c)?;
-        cs.constant_gate(b[0], F::from(m as u64 * 2))?;
+        cs.enforce_constant(b[0], F::from(m as u64 * 2))?;
 
         if plonk_type == PlonkType::UltraPlonk {
             // Create range gates
@@ -1096,7 +1096,7 @@ pub mod test {
             PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(2),
         };
         let var = cs1.create_variable(E::Fr::from(1u8))?;
-        cs1.constant_gate(var, E::Fr::from(1u8))?;
+        cs1.enforce_constant(var, E::Fr::from(1u8))?;
         cs1.finalize_for_arithmetization()?;
         let mut cs2: PlonkCircuit<E::Fr> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
@@ -1699,11 +1699,11 @@ pub mod test {
         let mut acc = cs.zero();
         a.iter().for_each(|&elem| acc = cs.add(acc, elem).unwrap());
         let b_mul = cs.mul(b[0], b[1])?;
-        cs.equal_gate(acc, b_mul)?;
+        cs.enforce_equal(acc, b_mul)?;
         let b1_plus_a0 = cs.add(b[1], a[0])?;
         let b1_minus_a0 = cs.sub(b[1], a[0])?;
         cs.mul_gate(b1_plus_a0, b1_minus_a0, c)?;
-        cs.constant_gate(b[0], F::from(m as u64 * 2))?;
+        cs.enforce_constant(b[0], F::from(m as u64 * 2))?;
 
         cs.finalize_for_mergeable_circuit(circuit_type)?;
 

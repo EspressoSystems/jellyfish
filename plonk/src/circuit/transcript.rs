@@ -357,7 +357,7 @@ mod tests {
             for e in sigma_comms.iter() {
                 // convert point into TE form
                 let p: Point<F> = (&e.0).into();
-                sigma_comms_vars.push(circuit.create_point_variable(&p).unwrap());
+                sigma_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
             // selector commitments
@@ -368,7 +368,7 @@ mod tests {
             for e in selector_comms.iter() {
                 // convert point into TE form
                 let p: Point<F> = (&e.0).into();
-                selector_comms_vars.push(circuit.create_point_variable(&p).unwrap());
+                selector_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
             // k

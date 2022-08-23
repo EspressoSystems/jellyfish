@@ -237,7 +237,7 @@ where
         let mut lookup_point_vars = Vec::new();
         for &scalar_var in decomposed_scalar_vars.iter() {
             let lookup_point = compute_scalar_mul_value::<F, P>(circuit, scalar_var, base_var)?;
-            let lookup_point_var = circuit.create_point_variable(&lookup_point)?;
+            let lookup_point_var = circuit.create_point_variable(lookup_point)?;
             lookup_point_vars.push(lookup_point_var);
         }
 
@@ -429,7 +429,7 @@ mod tests {
             let bases_point: Vec<Point<F>> = bases.iter().map(|x| (*x).into()).collect();
             let bases_vars: Vec<PointVariable> = bases_point
                 .iter()
-                .map(|x| circuit.create_point_variable(x))
+                .map(|x| circuit.create_point_variable(*x))
                 .collect::<Result<Vec<_>, _>>()?;
             let scalar_vars: Vec<Variable> = scalars
                 .iter()

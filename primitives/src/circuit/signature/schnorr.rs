@@ -100,7 +100,7 @@ where
     ) -> Result<(), CircuitError> {
         // p1 = s * G, p2 = sig.R + c * VK
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
-        self.point_equal_gate(&p1, &p2)?;
+        self.enforce_point_equal(&p1, &p2)?;
         Ok(())
     }
 
@@ -111,7 +111,7 @@ where
         sig: &SignatureVar,
     ) -> Result<BoolVar, CircuitError> {
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
-        self.check_equal_point(&p1, &p2)
+        self.is_point_equal(&p1, &p2)
     }
 
     fn create_signature_variable(
@@ -120,13 +120,13 @@ where
     ) -> Result<SignatureVar, CircuitError> {
         let sig_var = SignatureVar {
             s: self.create_variable(fr_to_fq::<F, P>(&sig.s))?,
-            R: self.create_point_variable(&Point::from(sig.R))?,
+            R: self.create_point_variable(Point::from(sig.R))?,
         };
         Ok(sig_var)
     }
 
     fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, CircuitError> {
-        let vk_var = VerKeyVar(self.create_point_variable(&Point::from(vk.0))?);
+        let vk_var = VerKeyVar(self.create_point_variable(Point::from(vk.0))?);
         Ok(vk_var)
     }
 
@@ -175,7 +175,7 @@ where
         // TODO: create `inst_desc_var` and the constant gate *only once* during the
         // entire circuit construction.
         let inst_desc_var = self.create_variable(instance_description)?;
-        self.constant_gate(inst_desc_var, instance_description)?;
+        self.enforce_constant(inst_desc_var, instance_description)?;
         let mut chal_input = vec![
             inst_desc_var,
             vk.0.get_x(),

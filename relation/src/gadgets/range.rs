@@ -15,7 +15,7 @@ use ark_ff::{BigInteger, PrimeField};
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain a variable to be within the [0, 2^`bit_len`) range
     /// Return error if the variable is invalid.
-    pub fn range_gate(&mut self, a: Variable, bit_len: usize) -> Result<(), CircuitError> {
+    pub fn enforce_in_range(&mut self, a: Variable, bit_len: usize) -> Result<(), CircuitError> {
         if self.support_lookup() && bit_len % self.range_bit_len()? == 0 {
             self.range_gate_with_lookup(a, bit_len)?;
         } else {
@@ -27,7 +27,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Return a boolean variable indicating whether variable `a` is in the
     /// range [0, 2^`bit_len`). Return error if the variable is invalid.
     /// TODO: optimize the gate for UltraPlonk.
-    pub fn check_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, CircuitError> {
+    pub fn is_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, CircuitError> {
         let a_bit_le: Vec<BoolVar> = self.unpack(a, F::size_in_bits())?;
         let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
         // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
@@ -49,6 +49,48 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.range_gate_internal(a, bit_len)
     }
 
+    /// a general decomposition gate (not necessarily binary decomposition)
+    /// where `a` are enforced to decomposed to `a_chunks_le` which consists
+    /// of chunks (multiple bits) in little-endian order and
+    /// each chunk \in [0, `range_size`)
+    pub(crate) fn decomposition_gate(
+        &mut self,
+        a_chunks_le: Vec<Variable>,
+        a: Variable,
+        range_size: F,
+    ) -> Result<(), CircuitError> {
+        // ensure (padded_len - 1) % 3 = 0
+        let mut padded = a_chunks_le;
+        let len = padded.len();
+        let rate = GATE_WIDTH - 1; // rate at which lc add each round
+        let padded_len = next_multiple(len - 1, rate)? + 1;
+        padded.resize(padded_len, self.zero());
+
+        let range_size_square = range_size.square();
+        let range_size_cube = range_size * range_size_square;
+        let coeffs = [range_size_cube, range_size_square, range_size, F::one()];
+        let mut accum = padded[padded_len - 1];
+        for i in 1..padded_len / rate {
+            accum = self.lc(
+                &[
+                    accum,
+                    padded[padded_len - 1 - rate * i + 2],
+                    padded[padded_len - 1 - rate * i + 1],
+                    padded[padded_len - 1 - rate * i],
+                ],
+                &coeffs,
+            )?;
+        }
+        // final round
+        let wires = [accum, padded[2], padded[1], padded[0], a];
+        self.lc_gate(&wires, &coeffs)?;
+
+        Ok(())
+    }
+}
+
+/// Private helper function for range gate
+impl<F: PrimeField> PlonkCircuit<F> {
     // internal of a range check gate
     fn range_gate_internal(
         &mut self,
@@ -94,45 +136,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.decomposition_gate(a_chunks_le, a, 2u8.into())?;
         Ok(())
     }
-
-    /// a general decomposition gate (not necessarily binary decomposition)
-    /// where `a` are enforced to decomposed to `a_chunks_le` which consists
-    /// of chunks (multiple bits) in little-endian order and
-    /// each chunk \in [0, `range_size`)
-    pub(crate) fn decomposition_gate(
-        &mut self,
-        a_chunks_le: Vec<Variable>,
-        a: Variable,
-        range_size: F,
-    ) -> Result<(), CircuitError> {
-        // ensure (padded_len - 1) % 3 = 0
-        let mut padded = a_chunks_le;
-        let len = padded.len();
-        let rate = GATE_WIDTH - 1; // rate at which lc add each round
-        let padded_len = next_multiple(len - 1, rate)? + 1;
-        padded.resize(padded_len, self.zero());
-
-        let range_size_square = range_size.square();
-        let range_size_cube = range_size * range_size_square;
-        let coeffs = [range_size_cube, range_size_square, range_size, F::one()];
-        let mut accum = padded[padded_len - 1];
-        for i in 1..padded_len / rate {
-            accum = self.lc(
-                &[
-                    accum,
-                    padded[padded_len - 1 - rate * i + 2],
-                    padded[padded_len - 1 - rate * i + 1],
-                    padded[padded_len - 1 - rate * i],
-                ],
-                &coeffs,
-            )?;
-        }
-        // final round
-        let wires = [accum, padded[2], padded[1], padded[0], a];
-        self.lc_gate(&wires, &coeffs)?;
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -160,7 +163,7 @@ mod test {
         let a = circuit.create_variable(F::one())?;
         let b = circuit.create_variable(F::from(1023u32))?;
 
-        circuit.range_gate(a, 1)?;
+        circuit.enforce_in_range(a, 1)?;
         let a_le = circuit.unpack(a, 3)?;
         assert_eq!(a_le.len(), 3);
         let b_le = circuit.unpack(b, 10)?;
@@ -182,23 +185,23 @@ mod test {
         let a = circuit.create_variable(F::one())?;
         let b = circuit.create_variable(F::from(1023u32))?;
 
-        circuit.range_gate(a, 1)?;
-        circuit.range_gate(a, 3)?;
-        circuit.range_gate(b, 10)?;
+        circuit.enforce_in_range(a, 1)?;
+        circuit.enforce_in_range(a, 3)?;
+        circuit.enforce_in_range(b, 10)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        circuit.range_gate(b, 9)?;
-        assert!(circuit.range_gate(a, 0).is_err());
+        circuit.enforce_in_range(b, 9)?;
+        assert!(circuit.enforce_in_range(a, 0).is_err());
         // non-positive bit length is undefined, thus fail
-        assert!(circuit.range_gate(a, 0).is_err());
+        assert!(circuit.enforce_in_range(a, 0).is_err());
         // bit length bigger than that of a field element (bit length takes 256 or 381
         // bits)
         let bit_len = (F::size_in_bits() / 8 + 1) * 8;
-        assert!(circuit.range_gate(a, bit_len + 1).is_err());
+        assert!(circuit.enforce_in_range(a, bit_len + 1).is_err());
         // if mess up the wire value, should fail
         *circuit.witness_mut(b) = F::from(1024u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
-        assert!(circuit.range_gate(circuit.num_vars(), 10).is_err());
+        assert!(circuit.enforce_in_range(circuit.num_vars(), 10).is_err());
 
         // build two fixed circuits with different variable assignments, checking that
         // the arithmetized extended permutation polynomial is variable
@@ -213,7 +216,7 @@ mod test {
     fn build_range_gate_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a_var = circuit.create_variable(a)?;
-        circuit.range_gate(a_var, 10)?;
+        circuit.enforce_in_range(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
     }
@@ -229,9 +232,9 @@ mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(1023u32))?;
 
-        let b1 = circuit.check_in_range(a, 5)?;
-        let b2 = circuit.check_in_range(a, 10)?;
-        let b3 = circuit.check_in_range(a, 0)?;
+        let b1 = circuit.is_in_range(a, 5)?;
+        let b2 = circuit.is_in_range(a, 10)?;
+        let b3 = circuit.is_in_range(a, 0)?;
         assert_eq!(circuit.witness(b1.into())?, F::zero());
         assert_eq!(circuit.witness(b2.into())?, F::one());
         assert_eq!(circuit.witness(b3.into())?, F::zero());
@@ -241,7 +244,7 @@ mod test {
         *circuit.witness_mut(a) = F::from(1024u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         // Check variable out of bound error.
-        assert!(circuit.check_in_range(circuit.num_vars(), 10).is_err());
+        assert!(circuit.is_in_range(circuit.num_vars(), 10).is_err());
 
         // build two fixed circuits with different variable assignments, checking that
         // the arithmetized extended permutation polynomial is variable
@@ -256,7 +259,7 @@ mod test {
     fn build_check_in_range_circuit<F: PrimeField>(a: F) -> Result<PlonkCircuit<F>, CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a_var = circuit.create_variable(a)?;
-        circuit.check_in_range(a_var, 10)?;
+        circuit.is_in_range(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
     }

@@ -231,8 +231,8 @@ impl<F: PrimeField> FpElemVar<F> {
                 "m or two_power_m do not match".to_string(),
             ));
         }
-        circuit.equal_gate(self.components().0, other.components().0)?;
-        circuit.equal_gate(self.components().1, other.components().1)
+        circuit.enforce_equal(self.components().0, other.components().0)?;
+        circuit.enforce_equal(self.components().1, other.components().1)
     }
 }
 
@@ -950,7 +950,7 @@ mod test {
         let p_var = circuit.create_variable(p)?;
         let fp_elem_var = FpElemVar::new_unchecked(&mut circuit, p_var, m, None)?;
         let q_var = fp_elem_var.convert_to_var(&mut circuit)?;
-        circuit.equal_gate(p_var, q_var)?;
+        circuit.enforce_equal(p_var, q_var)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Error path

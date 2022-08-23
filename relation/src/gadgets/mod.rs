@@ -6,11 +6,8 @@
 
 //! Gates and gadgets implementations
 
-pub mod basic;
 pub mod ecc;
 pub mod ultraplonk;
-
-pub use basic::PlonkCircuit;
 
 mod arithmetic;
 mod cmp;

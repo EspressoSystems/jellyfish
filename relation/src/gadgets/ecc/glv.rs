@@ -156,7 +156,7 @@ where
 {
     let base = circuit.point_witness(point_var)?;
     let endo_point = endomorphism::<_, P>(&base);
-    let endo_point_var = circuit.create_point_variable(&endo_point)?;
+    let endo_point_var = circuit.create_point_variable(endo_point)?;
 
     let b = F::from_le_bytes_mod_order(COEFF_B.as_ref());
     let c = F::from_le_bytes_mod_order(COEFF_C.as_ref());
@@ -470,14 +470,14 @@ where
     // ============================================
     //  (a) k1 < 2^128
     //  (b) k2 < 2^128
-    circuit.range_gate(k1_var, 128)?;
-    circuit.range_gate(k2_var, 128)?;
+    circuit.enforce_in_range(k1_var, 128)?;
+    circuit.enforce_in_range(k2_var, 128)?;
 
     //  (c) tmp1 = 0        <- implied by tmp = 2^128 * tmp2
     //  (d) tmp2 < 2^128
     //  (e) tmp = tmp1 + 2^128 tmp2
     circuit.mul_constant_gate(tmp2_var, two_to_128, tmp_var)?;
-    circuit.range_gate(tmp2_var, 128)?;
+    circuit.enforce_in_range(tmp2_var, 128)?;
 
     // ============================================
     // step 4. equality proofs
@@ -594,7 +594,7 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(&Point::from(base))?;
+                let base_var = circuit.create_point_variable(Point::from(base))?;
                 base *= s;
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
@@ -608,7 +608,7 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(&Point::from(base))?;
+                let base_var = circuit.create_point_variable(Point::from(base))?;
                 base *= s;
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
@@ -623,7 +623,7 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(&Point::from(base))?;
+                let base_var = circuit.create_point_variable(Point::from(base))?;
                 base *= s;
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
@@ -638,7 +638,7 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(&Point::from(base))?;
+                let base_var = circuit.create_point_variable(Point::from(base))?;
                 base *= s;
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
@@ -669,7 +669,7 @@ mod tests {
         assert_eq!(t, endo_point);
 
         let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_turbo_plonk();
-        let point_var = circuit.create_point_variable(&base_point).unwrap();
+        let point_var = circuit.create_point_variable(base_point).unwrap();
         let endo_var =
             endomorphism_circuit::<_, EdwardsParameters>(&mut circuit, &point_var).unwrap();
         let endo_point_rec = circuit.point_witness(&endo_var).unwrap();

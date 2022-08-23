@@ -26,7 +26,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         F: PrimeField,
     {
         let c = self.is_lt(b, a)?;
-        self.constant_gate(c.0, F::zero())
+        self.enforce_constant(c.0, F::zero())
     }
 
     /// Constrain that `a` > `b`.
@@ -43,7 +43,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         F: PrimeField,
     {
         let c = self.is_lt(a, b)?;
-        self.constant_gate(c.into(), F::zero())
+        self.enforce_constant(c.into(), F::zero())
     }
 
     /// Returns a `BoolVar` indicating whether `a` < `b`.

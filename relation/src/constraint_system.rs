@@ -4,15 +4,13 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Basic instantiations of Plonk-based constraint systems
+//! Definitions and constructions of plonk constraint system
 use crate::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
     errors::{CircuitError, CircuitError::*},
     gates::*,
-    Arithmetization, BoolVar, Circuit, GateId, MergeableCircuitType, PlonkType,
-    SortedLookupVecAndPolys, Variable, WireId,
 };
-use ark_ff::{FftField, PrimeField};
+use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{
     domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, UVPolynomial,
 };
@@ -21,6 +19,276 @@ use hashbrown::{HashMap, HashSet};
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
+
+/// An index to a gate in circuit.
+pub type GateId = usize;
+/// An index to the type of gate wires.
+/// There are 4 different types of input gate wires (with indices 0..3),
+/// 1 type of output gate wires (with index 4), and 1 type of lookup gate wires
+/// (with index 5).
+pub type WireId = usize;
+/// An index to one of the witness values.
+pub type Variable = usize;
+/// An index to a witness value of boolean type.
+#[derive(Debug, Clone, Copy)]
+pub struct BoolVar(pub usize);
+
+impl From<BoolVar> for Variable {
+    fn from(bv: BoolVar) -> Self {
+        bv.0
+    }
+}
+
+impl BoolVar {
+    /// Create a `BoolVar` without any check. Be careful!
+    /// This is an internal API, shouldn't be used unless you know what you are
+    /// doing. Normally you should only construct `BoolVar` through
+    /// `Circuit::create_boolean_variable()`.
+    pub(crate) fn new_unchecked(inner: usize) -> Self {
+        Self(inner)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+/// Enum for each type of Plonk scheme.
+pub enum PlonkType {
+    /// TurboPlonk
+    TurboPlonk,
+    /// TurboPlonk that supports Plookup
+    UltraPlonk,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+/// Enum for each type of mergeable circuit. We can only merge circuits from
+/// different types.
+pub enum MergeableCircuitType {
+    /// First type
+    TypeA,
+    /// Second type
+    TypeB,
+}
+
+/// An interface for Plonk constraint systems.
+pub trait Circuit<F: Field> {
+    /// The number of constraints.
+    fn num_gates(&self) -> usize;
+
+    /// The number of variables.
+    fn num_vars(&self) -> usize;
+
+    /// The number of public input variables.
+    fn num_inputs(&self) -> usize;
+
+    /// The number of wire types of the circuit.
+    /// E.g., UltraPlonk has 4 different types of input wires, 1 type of output
+    /// wires, and 1 type of lookup wires.
+    fn num_wire_types(&self) -> usize;
+
+    /// The list of public input values.
+    fn public_input(&self) -> Result<Vec<F>, CircuitError>;
+
+    /// Check circuit satisfiability against a public input.
+    fn check_circuit_satisfiability(&self, pub_input: &[F]) -> Result<(), CircuitError>;
+
+    /// Add a constant variable to the circuit; return the index of the
+    /// variable.
+    fn create_constant_variable(&mut self, val: F) -> Result<Variable, CircuitError>;
+
+    /// Add a variable to the circuit; return the index of the variable.
+    fn create_variable(&mut self, val: F) -> Result<Variable, CircuitError>;
+
+    /// Add a bool variable to the circuit; return the index of the variable.
+    fn create_boolean_variable(&mut self, val: bool) -> Result<BoolVar, CircuitError> {
+        let val_scalar = if val { F::one() } else { F::zero() };
+        let var = self.create_variable(val_scalar)?;
+        self.enforce_bool(var)?;
+        Ok(BoolVar(var))
+    }
+
+    /// Add a public input variable; return the index of the variable.
+    fn create_public_variable(&mut self, val: F) -> Result<Variable, CircuitError>;
+
+    /// Set a variable to a public variable
+    fn set_variable_public(&mut self, var: Variable) -> Result<(), CircuitError>;
+
+    /// Return a default variable with value zero.
+    fn zero(&self) -> Variable;
+
+    /// Return a default variable with value one.
+    fn one(&self) -> Variable;
+
+    /// Return a default variable with value `false` (namely zero).
+    fn false_var(&self) -> BoolVar {
+        BoolVar::new_unchecked(self.zero())
+    }
+
+    /// Return a default variable with value `true` (namely one).
+    fn true_var(&self) -> BoolVar {
+        BoolVar::new_unchecked(self.one())
+    }
+
+    /// Return the witness value of variable `idx`.
+    /// Return error if the input variable is invalid.
+    fn witness(&self, idx: Variable) -> Result<F, CircuitError>;
+
+    /// Common gates that should be implemented in any constraint systems.
+    ///
+    /// Constrain a variable to a constant.
+    /// Return error if `var` is an invalid variable.
+    fn enforce_constant(&mut self, var: Variable, constant: F) -> Result<(), CircuitError>;
+
+    /// Constrain variable `c` to the addition of `a` and `b`.
+    /// Return error if the input variables are invalid.
+    fn add_gate(&mut self, a: Variable, b: Variable, c: Variable) -> Result<(), CircuitError>;
+
+    /// Obtain a variable representing an addition.
+    /// Return the index of the variable.
+    /// Return error if the input variables are invalid.
+    fn add(&mut self, a: Variable, b: Variable) -> Result<Variable, CircuitError>;
+
+    /// Constrain variable `c` to the subtraction of `a` and `b`.
+    /// Return error if the input variables are invalid.
+    fn sub_gate(&mut self, a: Variable, b: Variable, c: Variable) -> Result<(), CircuitError>;
+
+    /// Obtain a variable representing a subtraction.
+    /// Return the index of the variable.
+    /// Return error if the input variables are invalid.
+    fn sub(&mut self, a: Variable, b: Variable) -> Result<Variable, CircuitError>;
+
+    /// Constrain variable `c` to the multiplication of `a` and `b`.
+    /// Return error if the input variables are invalid.
+    fn mul_gate(&mut self, a: Variable, b: Variable, c: Variable) -> Result<(), CircuitError>;
+
+    /// Obtain a variable representing a multiplication.
+    /// Return the index of the variable.
+    /// Return error if the input variables are invalid.
+    fn mul(&mut self, a: Variable, b: Variable) -> Result<Variable, CircuitError>;
+
+    /// Constrain a variable to a bool.
+    /// Return error if the input is invalid.
+    fn enforce_bool(&mut self, a: Variable) -> Result<(), CircuitError>;
+
+    /// Constrain two variables to have the same value.
+    /// Return error if the input variables are invalid.
+    fn enforce_equal(&mut self, a: Variable, b: Variable) -> Result<(), CircuitError>;
+
+    /// Pad the circuit with n dummy gates
+    fn pad_gates(&mut self, n: usize);
+
+    /// Plookup-related methods.
+    /// Return true if the circuit support lookup gates.
+    fn support_lookup(&self) -> bool;
+}
+
+// The sorted concatenation of the lookup table and the witness values to be
+// checked in lookup gates. It also includes 2 polynomials that interpolate the
+// sorted vector.
+pub(crate) type SortedLookupVecAndPolys<F> = (Vec<F>, DensePolynomial<F>, DensePolynomial<F>);
+
+/// An interface that transforms Plonk circuits to polynomial used by
+/// Plonk-based SNARKs.
+pub trait Arithmetization<F: FftField>: Circuit<F> {
+    /// The required SRS size for the circuit.
+    fn srs_size(&self) -> Result<usize, CircuitError>;
+
+    /// Get the size of the evaluation domain for arithmetization (after circuit
+    /// has been finalized).
+    fn eval_domain_size(&self) -> Result<usize, CircuitError>;
+
+    /// Compute and return selector polynomials.
+    /// Return an error if the circuit has not been finalized yet.
+    fn compute_selector_polynomials(&self) -> Result<Vec<DensePolynomial<F>>, CircuitError>;
+
+    /// Compute and return extended permutation polynomials.
+    /// Return an error if the circuit has not been finalized yet.
+    fn compute_extended_permutation_polynomials(
+        &self,
+    ) -> Result<Vec<DensePolynomial<F>>, CircuitError>;
+
+    /// Compute and return the product polynomial for permutation arguments.
+    /// Return an error if the circuit has not been finalized yet.
+    fn compute_prod_permutation_polynomial(
+        &self,
+        beta: &F,
+        gamma: &F,
+    ) -> Result<DensePolynomial<F>, CircuitError>;
+
+    /// Compute and return the list of wiring witness polynomials.
+    /// Return an error if the circuit has not been finalized yet.
+    fn compute_wire_polynomials(&self) -> Result<Vec<DensePolynomial<F>>, CircuitError>;
+
+    /// Compute and return the public input polynomial.
+    /// Return an error if the circuit has not been finalized yet.
+    /// The IO gates of the circuit are guaranteed to be in the front.
+    fn compute_pub_input_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError>;
+
+    /// Plookup-related methods
+    /// Return default errors if the constraint system does not support lookup
+    /// gates.
+    ///
+    /// Compute and return the polynomial that interpolates the range table
+    /// elements. Return an error if the circuit does not support lookup or
+    /// has not been finalized yet.
+    fn compute_range_table_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+
+    /// Compute and return the polynomial that interpolates the key table
+    /// elements. Return an error if the circuit does not support lookup or
+    /// has not been finalized yet.
+    fn compute_key_table_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+
+    /// Compute and return the polynomial that interpolates the table domain
+    /// sepration ids. Return an error if the circuit does not support
+    /// lookup or has not been finalized.
+    fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+
+    /// Compute and return the polynomial that interpolates the lookup domain
+    /// sepration selectors for the lookup gates. Return an error if the
+    /// circuit does not support lookup or has not been finalized.
+    fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+
+    /// Compute and return the combined lookup table vector given random
+    /// challenge `tau`.
+    fn compute_merged_lookup_table(&self, _tau: F) -> Result<Vec<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+
+    /// Compute the sorted concatenation of the (merged) lookup table and the
+    /// witness values to be checked in lookup gates. Return the sorted
+    /// vector and 2 polynomials that interpolate the vector. Return an
+    /// error if the circuit does not support lookup or has not been
+    /// finalized yet.
+    fn compute_lookup_sorted_vec_polynomials(
+        &self,
+        _tau: F,
+        _lookup_table: &[F],
+    ) -> Result<SortedLookupVecAndPolys<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+
+    /// Compute and return the product polynomial for Plookup arguments.
+    /// `beta` and `gamma` are random challenges, `sorted_vec` is the sorted
+    /// concatenation of the lookup table and the lookup witnesses.
+    /// Return an error if the circuit does not support lookup or
+    /// has not been finalized yet.
+    fn compute_lookup_prod_polynomial(
+        &self,
+        _tau: &F,
+        _beta: &F,
+        _gamma: &F,
+        _lookup_table: &[F],
+        _sorted_vec: &[F],
+    ) -> Result<DensePolynomial<F>, CircuitError> {
+        Err(CircuitError::LookupUnsupported)
+    }
+}
 
 /// The wire type identifier for range gates.
 const RANGE_WIRE_ID: usize = 5;
@@ -152,8 +420,8 @@ impl<F: FftField> PlonkCircuit<F> {
             table_gate_ids: vec![],
         };
         // Constrain variables `0`/`1` to have value 0/1.
-        circuit.constant_gate(0, zero).unwrap(); // safe unwrap
-        circuit.constant_gate(1, one).unwrap(); // safe unwrap
+        circuit.enforce_constant(0, zero).unwrap(); // safe unwrap
+        circuit.enforce_constant(1, one).unwrap(); // safe unwrap
         circuit
     }
 
@@ -374,7 +642,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
 
     fn create_constant_variable(&mut self, val: F) -> Result<Variable, CircuitError> {
         let var = self.create_variable(val)?;
-        self.constant_gate(var, val)?;
+        self.enforce_constant(var, val)?;
         Ok(var)
     }
 
@@ -417,7 +685,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         Ok(self.witness[idx])
     }
 
-    fn constant_gate(&mut self, var: Variable, constant: F) -> Result<(), CircuitError> {
+    fn enforce_constant(&mut self, var: Variable, constant: F) -> Result<(), CircuitError> {
         self.check_var_bound(var)?;
 
         let wire_vars = &[0, 0, 0, 0, var];
@@ -482,7 +750,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         Ok(c)
     }
 
-    fn bool_gate(&mut self, a: Variable) -> Result<(), CircuitError> {
+    fn enforce_bool(&mut self, a: Variable) -> Result<(), CircuitError> {
         self.check_var_bound(a)?;
 
         let wire_vars = &[a, a, 0, 0, a];
@@ -490,7 +758,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         Ok(())
     }
 
-    fn equal_gate(&mut self, a: Variable, b: Variable) -> Result<(), CircuitError> {
+    fn enforce_equal(&mut self, a: Variable, b: Variable) -> Result<(), CircuitError> {
         self.check_var_bound(a)?;
         self.check_var_bound(b)?;
 
@@ -499,7 +767,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         Ok(())
     }
 
-    fn pad_gate(&mut self, n: usize) {
+    fn pad_gates(&mut self, n: usize) {
         // TODO: FIXME
         // this is interesting...
         // if we insert a PaddingGate
@@ -1412,10 +1680,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 #[cfg(test)]
 pub(crate) mod test {
-    use crate::{
-        constants::compute_coset_representatives, errors::CircuitError, Arithmetization, Circuit,
-        PlonkCircuit,
-    };
+    use super::{Arithmetization, Circuit, PlonkCircuit};
+    use crate::{constants::compute_coset_representatives, errors::CircuitError};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -1438,9 +1704,9 @@ pub(crate) mod test {
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(1u32))?;
         // Constant gate: a = 3.
-        circuit.constant_gate(a, F::from(3u32))?;
+        circuit.enforce_constant(a, F::from(3u32))?;
         // Bool gate: b is bool.
-        circuit.bool_gate(b)?;
+        circuit.enforce_bool(b)?;
         // Addition gate: c = a + b = 4.
         let c = circuit.add(a, b)?;
         // Subtraction gate: d = a - b = 2.
@@ -1450,7 +1716,7 @@ pub(crate) mod test {
         // Create public variables.
         let f = circuit.create_public_variable(F::from(8u32))?;
         // Equality gate: e = f = 8
-        circuit.equal_gate(e, f)?;
+        circuit.enforce_equal(e, f)?;
 
         // Check the number of gates:
         // 2 constant gates for default 0/1, 6 arithmetic gates, 1 io gate.
@@ -1562,7 +1828,7 @@ pub(crate) mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_variable(F::from(3u32))?;
-        circuit.equal_gate(a, b)?;
+        circuit.enforce_equal(a, b)?;
 
         // Check circuits.
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -1570,7 +1836,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Check variable out of bound error.
-        assert!(circuit.equal_gate(circuit.num_vars(), a).is_err());
+        assert!(circuit.enforce_equal(circuit.num_vars(), a).is_err());
 
         Ok(())
     }
@@ -1586,7 +1852,7 @@ pub(crate) mod test {
     fn test_bool_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(0u32))?;
-        circuit.bool_gate(a)?;
+        circuit.enforce_bool(a)?;
 
         // Check circuits.
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -1594,7 +1860,7 @@ pub(crate) mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Check variable out of bound error.
-        assert!(circuit.bool_gate(circuit.num_vars()).is_err());
+        assert!(circuit.enforce_bool(circuit.num_vars()).is_err());
 
         Ok(())
     }
@@ -1609,7 +1875,7 @@ pub(crate) mod test {
     fn test_constant_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(10u32))?;
-        circuit.constant_gate(a, F::from(10u32))?;
+        circuit.enforce_constant(a, F::from(10u32))?;
 
         // Check circuits.
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -1618,7 +1884,7 @@ pub(crate) mod test {
 
         // Check variable out of bound error.
         assert!(circuit
-            .constant_gate(circuit.num_vars(), F::from(0u32))
+            .enforce_constant(circuit.num_vars(), F::from(0u32))
             .is_err());
 
         Ok(())
@@ -1636,8 +1902,8 @@ pub(crate) mod test {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let b = circuit.create_variable(F::from(0u32))?;
         let a = circuit.create_public_variable(F::from(1u32))?;
-        circuit.bool_gate(a)?;
-        circuit.bool_gate(b)?;
+        circuit.enforce_bool(a)?;
+        circuit.enforce_bool(b)?;
         circuit.set_variable_public(b)?;
 
         // Different valid public inputs should all pass the circuit check.
@@ -1716,13 +1982,13 @@ pub(crate) mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_public_variable(F::from(1u32))?;
-        circuit.constant_gate(a, F::from(3u32))?;
-        circuit.bool_gate(b)?;
+        circuit.enforce_constant(a, F::from(3u32))?;
+        circuit.enforce_bool(b)?;
         let c = circuit.add(a, b)?;
         let d = circuit.sub(a, b)?;
         let e = circuit.mul(c, d)?;
         let f = circuit.create_public_variable(F::from(8u32))?;
-        circuit.equal_gate(e, f)?;
+        circuit.enforce_equal(e, f)?;
 
         Ok((circuit, vec![F::from(1u32), F::from(8u32)]))
     }
@@ -1732,13 +1998,13 @@ pub(crate) mod test {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(4);
         let a = circuit.create_variable(F::from(3u32))?;
         let b = circuit.create_public_variable(F::from(1u32))?;
-        circuit.constant_gate(a, F::from(3u32))?;
-        circuit.bool_gate(b)?;
+        circuit.enforce_constant(a, F::from(3u32))?;
+        circuit.enforce_bool(b)?;
         let c = circuit.add(a, b)?;
         let d = circuit.sub(a, b)?;
         let e = circuit.mul(c, d)?;
         let f = circuit.create_public_variable(F::from(8u32))?;
-        circuit.equal_gate(e, f)?;
+        circuit.enforce_equal(e, f)?;
 
         // Add range gates
         circuit.add_range_check_variable(b)?;
@@ -1904,9 +2170,9 @@ pub(crate) mod test {
         assert!(circuit.add_gate(0, 0, 0).is_err());
         assert!(circuit.sub_gate(0, 0, 0).is_err());
         assert!(circuit.mul_gate(0, 0, 0).is_err());
-        assert!(circuit.constant_gate(0, F::one()).is_err());
-        assert!(circuit.bool_gate(0).is_err());
-        assert!(circuit.equal_gate(0, 0).is_err());
+        assert!(circuit.enforce_constant(0, F::one()).is_err());
+        assert!(circuit.enforce_bool(0).is_err());
+        assert!(circuit.enforce_equal(0, 0).is_err());
 
         Ok(())
     }
@@ -1947,9 +2213,9 @@ pub(crate) mod test {
         assert!(circuit.add_gate(0, 0, 0).is_err());
         assert!(circuit.sub_gate(0, 0, 0).is_err());
         assert!(circuit.mul_gate(0, 0, 0).is_err());
-        assert!(circuit.constant_gate(0, F::one()).is_err());
-        assert!(circuit.bool_gate(0).is_err());
-        assert!(circuit.equal_gate(0, 0).is_err());
+        assert!(circuit.enforce_constant(0, F::one()).is_err());
+        assert!(circuit.enforce_bool(0).is_err());
+        assert!(circuit.enforce_equal(0, 0).is_err());
         // Plookup-related methods
         assert!(circuit.add_range_check_variable(0).is_err());
 

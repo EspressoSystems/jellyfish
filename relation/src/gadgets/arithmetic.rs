@@ -473,7 +473,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // note that bit_length_non_lookup_range is public information
         // so we don't need to add a selection gate here
         if bit_length_non_lookup_range != 0 {
-            self.range_gate(b2_var, bit_length_non_lookup_range)?;
+            self.enforce_in_range(b2_var, bit_length_non_lookup_range)?;
         }
 
         // (8) z1 < 2^delta_length_lookup_component
@@ -487,7 +487,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // note that delta_length_non_lookup_range is public information
         // so we don't need to add a selection gate here
         if delta_length_non_lookup_range != 0 {
-            self.range_gate(z2_var, delta_length_non_lookup_range)?;
+            self.enforce_in_range(z2_var, delta_length_non_lookup_range)?;
         }
 
         Ok(())
@@ -788,7 +788,7 @@ mod test {
         let x_to_11_var = circuit.create_variable(x11)?;
 
         let x_to_11_var_rec = circuit.power_11_gen(x_var)?;
-        circuit.equal_gate(x_to_11_var, x_to_11_var_rec)?;
+        circuit.enforce_equal(x_to_11_var, x_to_11_var_rec)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Create an unsatisfied circuit
@@ -798,7 +798,7 @@ mod test {
         let x_to_11_var = circuit.create_variable(x11)?;
 
         let x_to_11_var_rec = circuit.power_11_gen(y_var)?;
-        circuit.equal_gate(x_to_11_var, x_to_11_var_rec)?;
+        circuit.enforce_equal(x_to_11_var, x_to_11_var_rec)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Create an unsatisfied circuit
@@ -807,7 +807,7 @@ mod test {
         let y_var = circuit.create_variable(y)?;
 
         let x_to_11_var_rec = circuit.power_11_gen(x_var)?;
-        circuit.equal_gate(y_var, x_to_11_var_rec)?;
+        circuit.enforce_equal(y_var, x_to_11_var_rec)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         Ok(())
@@ -967,7 +967,7 @@ mod test {
 
         // range gate
         let b = circuit.create_variable(F::from(1023u32))?;
-        circuit.range_gate(b, 10)?;
+        circuit.enforce_in_range(b, 10)?;
 
         // sum gate
         let mut vars = vec![];
@@ -979,7 +979,7 @@ mod test {
         // Finalize the circuit
         circuit.finalize_for_arithmetization()?;
         let pub_inputs = vec![];
-        super::super::basic::test::test_arithmetization_for_circuit(circuit, pub_inputs)?;
+        crate::constraint_system::test::test_arithmetization_for_circuit(circuit, pub_inputs)?;
         Ok(())
     }
 }
