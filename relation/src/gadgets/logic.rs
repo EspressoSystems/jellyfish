@@ -168,7 +168,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 #[cfg(test)]
 mod test {
     use crate::{
-        errors::CircuitError, gadgets::test::test_variable_independence_for_circuit, Circuit,
+        errors::CircuitError, gadgets::test_utils::test_variable_independence_for_circuit, Circuit,
         PlonkCircuit,
     };
     use ark_bls12_377::Fq as Fq377;

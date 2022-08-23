@@ -337,7 +337,10 @@ mod test {
     use ark_ec::{ProjectiveCurve, SWModelParameters, TEModelParameters};
     use ark_std::{test_rng, vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
-    use jf_relation::{gadgets::ecc::Point, Arithmetization, Circuit, MergeableCircuitType};
+    use jf_relation::{
+        gadgets::{ecc::Point, test_utils::test_variable_independence_for_circuit},
+        Circuit, MergeableCircuitType,
+    };
     use jf_utils::field_switching;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
@@ -830,26 +833,6 @@ mod test {
 
         test_variable_independence_for_circuit(circuits[0].clone(), circuits[1].clone())?;
 
-        Ok(())
-    }
-
-    // two circuit with the same statement should have the same extended permutation
-    // polynomials even with different variable assignment
-    // TODO(Chengyu): Copied from crate `jf-relation`, can we remove this
-    // redundancy?
-    pub(crate) fn test_variable_independence_for_circuit<F: PrimeField>(
-        circuit_1: PlonkCircuit<F>,
-        circuit_2: PlonkCircuit<F>,
-    ) -> Result<(), CircuitError> {
-        assert_eq!(circuit_1.num_gates(), circuit_2.num_gates());
-        assert_eq!(circuit_1.num_vars(), circuit_2.num_vars());
-        // Check extended permutation polynomials
-        let sigma_polys_1 = circuit_1.compute_extended_permutation_polynomials()?;
-        let sigma_polys_2 = circuit_2.compute_extended_permutation_polynomials()?;
-        sigma_polys_1
-            .iter()
-            .zip(sigma_polys_2.iter())
-            .for_each(|(p1, p2)| assert_eq!(p1, p2));
         Ok(())
     }
 }

@@ -47,6 +47,7 @@ ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "67
 ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bn254 = "0.3.0"
 hex = "^0.4.3"
+jf-relation = { path = "../relation", default-features = false }
 
 # Benchmarks
 [[bench]]
