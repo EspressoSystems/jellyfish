@@ -79,7 +79,7 @@
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">models::TEModelParameters</span>, <span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FpParameters</span>, <span class="ident">PrimeField</span>};
 <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">jf_plonk::circuit::Variable</span>;
+<span class="kw">use</span> <span class="ident">jf_relation::Variable</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">schnorr::VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">F</span>, <span class="ident">F</span>)
 <span class="kw">where</span>

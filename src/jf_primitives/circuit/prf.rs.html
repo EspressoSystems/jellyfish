@@ -104,12 +104,12 @@
 
 <span class="doccomment">//! Circuit implementation of a PRF.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::pad_with</span>;
-<span class="kw">use</span> <span class="ident">jf_plonk</span>::{
-    <span class="ident">circuit</span>::{<span class="ident">customized::rescue::RescueGadget</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
-    <span class="ident">errors::PlonkError</span>,
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">circuit::rescue::RescueGadget</span>,
+    <span class="ident">rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>},
+    <span class="ident">utils::pad_with</span>,
 };
-<span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>};
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
 <span class="doccomment">/// Circuit implementation of a PRF.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PrfGadget</span> {
@@ -117,14 +117,14 @@
     <span class="doccomment">/// * `key` - key variable</span>
     <span class="doccomment">/// * `input` - input variables,</span>
     <span class="doccomment">/// * `returns` variables that refers to the output</span>
-    <span class="kw">fn</span> <span class="ident">eval_prf</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Variable</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">eval_prf</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Variable</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">PrfGadget</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
 {
-    <span class="kw">fn</span> <span class="ident">eval_prf</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Variable</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">eval_prf</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Variable</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="comment">// pad input: it is ok to pad with zeroes, PRF instance is bound to a specific</span>
         <span class="comment">// input length</span>
 
@@ -146,7 +146,7 @@
     <span class="kw">use</span> <span class="ident">ark_ff::UniformRand</span>;
     <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
     <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
-    <span class="kw">use</span> <span class="ident">jf_plonk::circuit</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
     <span class="macro">macro_rules!</span> <span class="ident">test_prf_circuit</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span>:<span class="ident">tt</span>) =&gt; {
@@ -156,7 +156,7 @@
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">PrfKey::from</span>(<span class="ident">rand_scalar</span>);
             <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">rand_scalar</span>).<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">input_len</span> <span class="op">=</span> <span class="number">10</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>)
+            <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>))
                 .<span class="ident">collect_vec</span>();
             <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data</span>
@@ -165,7 +165,7 @@
                 .<span class="ident">collect_vec</span>();
 
             <span class="kw">let</span> <span class="ident">prf</span> <span class="op">=</span> <span class="ident">PRF::new</span>(<span class="ident">input_len</span>, <span class="number">1</span>);
-            <span class="kw">let</span> <span class="ident">expected_prf_output</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;mut</span> <span class="ident">data</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">expected_prf_output</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>();
 
             <span class="kw">let</span> <span class="ident">prf_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">eval_prf</span>(<span class="ident">key_var</span>, <span class="kw-2">&amp;</span><span class="ident">data_vars</span>).<span class="ident">unwrap</span>();
 

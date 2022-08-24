@@ -201,7 +201,7 @@
         <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">S::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">S::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">S::sign</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">bad_message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(<span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">bad_message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_err</span>());
     }
 }
 </code></pre></div>

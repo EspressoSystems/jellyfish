@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["BatchProofVar","Represent variables of an aggregated SNARK proof that batchly proving multiple instances."],["VerifyingKeyVar","Represent variable of a Plonk verifying key."]]};

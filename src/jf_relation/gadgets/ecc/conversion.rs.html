@@ -1,0 +1,367 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/conversion.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>conversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
+<span class="comment">// This file is part of the Jellyfish library.</span>
+
+<span class="comment">// You should have received a copy of the MIT License</span>
+<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+
+<span class="doccomment">//! this file implements the conversion logic for elliptic curve point between</span>
+<span class="doccomment">//! - short Weierstrass form</span>
+<span class="doccomment">//! - twisted Edwards form</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Note that the APIs below create no circuits.</span>
+<span class="doccomment">//! An entity should either know both the SW and TE form of a</span>
+<span class="doccomment">//! point; or know none of the two. There is no need to generate</span>
+<span class="doccomment">//! a circuit for arguing secret knowledge of one form while</span>
+<span class="doccomment">//! the other form is public. In practice a prover will convert all of the</span>
+<span class="doccomment">//! points to the TE form and work on the TE form inside the circuits.</span>
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Point</span>;
+<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">short_weierstrass_jacobian::GroupAffine</span> <span class="kw">as</span> <span class="ident">SWAffine</span>, <span class="ident">SWModelParameters</span> <span class="kw">as</span> <span class="ident">SWParam</span>};
+<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger256</span>, <span class="ident">BigInteger384</span>, <span class="ident">BigInteger768</span>, <span class="ident">PrimeField</span>};
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">SWAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">PrimeField</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
+    <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+{
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">SWAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="comment">// this function is only correct for BLS12-377</span>
+        <span class="comment">// (other curves does not impl an SW form)</span>
+
+        <span class="comment">// if p is an infinity point</span>
+        <span class="comment">// return infinity point</span>
+        <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">infinity</span> {
+            <span class="kw">return</span> <span class="self">Self</span>(<span class="ident">F::zero</span>(), <span class="ident">F::one</span>());
+        }
+
+        <span class="comment">// we need to firstly convert this point into</span>
+        <span class="comment">// TE form, and then build the point</span>
+
+        <span class="comment">// safe unwrap</span>
+        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">F::from_repr</span>(<span class="ident">F::S</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">neg_alpha</span> <span class="op">=</span> <span class="ident">F::from_repr</span>(<span class="ident">F::NEG_ALPHA</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">F::from_repr</span>(<span class="ident">F::BETA</span>).<span class="ident">unwrap</span>();
+
+        <span class="comment">// we first transform the Weierstrass point (px, py) to Montgomery point (mx,</span>
+        <span class="comment">// my) where mx = s * (px - alpha)</span>
+        <span class="comment">// my = s * py</span>
+        <span class="kw">let</span> <span class="ident">montgomery_x</span> <span class="op">=</span> <span class="ident">s</span> <span class="op">*</span> (<span class="ident">p</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">neg_alpha</span>);
+        <span class="kw">let</span> <span class="ident">montgomery_y</span> <span class="op">=</span> <span class="ident">s</span> <span class="op">*</span> <span class="ident">p</span>.<span class="ident">y</span>;
+        <span class="comment">// then we transform the Montgomery point (mx, my) to TE point (ex, ey) where</span>
+        <span class="comment">// ex = beta * mx / my</span>
+        <span class="comment">// ey = (mx - 1) / (mx + 1)</span>
+        <span class="kw">let</span> <span class="ident">edwards_x</span> <span class="op">=</span> <span class="ident">beta</span> <span class="op">*</span> <span class="ident">montgomery_x</span> <span class="op">/</span> <span class="ident">montgomery_y</span>;
+        <span class="kw">let</span> <span class="ident">edwards_y</span> <span class="op">=</span> (<span class="ident">montgomery_x</span> <span class="op">-</span> <span class="ident">F::one</span>()) <span class="op">/</span> (<span class="ident">montgomery_x</span> <span class="op">+</span> <span class="ident">F::one</span>());
+
+        <span class="ident">Point</span>(<span class="ident">edwards_x</span>, <span class="ident">edwards_y</span>)
+    }
+}
+
+<span class="doccomment">/// This trait holds constants that are used for curve conversion from</span>
+<span class="doccomment">/// short Weierstrass form to twisted Edwards form.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SWToTEConParam</span>: <span class="ident">PrimeField</span> {
+    <span class="doccomment">/// Parameter S.</span>
+    <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
+    <span class="doccomment">/// Parameter 1/alpha.</span>
+    <span class="kw">const</span> <span class="ident">NEG_ALPHA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
+    <span class="doccomment">/// Parameter beta.</span>
+    <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span>;
+}
+
+<span class="comment">// ================================================</span>
+<span class="comment">// BLS12-377::Fq specific implementations</span>
+<span class="comment">// ================================================</span>
+<span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
+<span class="kw">impl</span> <span class="ident">SWToTEConParam</span> <span class="kw">for</span> <span class="ident">Fq377</span> {
+    <span class="comment">// s = 10189023633222963290707194929886294091415157242906428298294512798502806398782149227503530278436336312243746741931</span>
+    <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([
+        <span class="number">0x3401d618f0339eab</span>,
+        <span class="number">0x0f793b8504b428d4</span>,
+        <span class="number">0x0ff643cca95ccc0d</span>,
+        <span class="number">0xd7a504665d66cc8c</span>,
+        <span class="number">0x1dc07a44b1eeea84</span>,
+        <span class="number">0x10f272020f118a</span>,
+    ]);
+
+    <span class="comment">// alpha = -1</span>
+    <span class="kw">const</span> <span class="ident">NEG_ALPHA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+
+    <span class="comment">// beta = 23560188534917577818843641916571445935985386319233886518929971599490231428764380923487987729215299304184915158756</span>
+    <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([
+        <span class="number">0x450ae9206343e6e4</span>,
+        <span class="number">0x7af39509df5027b6</span>,
+        <span class="number">0xab82b31405cf8a30</span>,
+        <span class="number">0x80d743e1f6c15c7c</span>,
+        <span class="number">0x0cec22e650360183</span>,
+        <span class="number">0x272fd56ac5c669</span>,
+    ]);
+}
+
+<span class="comment">// ================================================</span>
+<span class="comment">// Bn254::Fq dummy implementations</span>
+<span class="comment">// ================================================</span>
+<span class="kw">use</span> <span class="ident">ark_bn254::Fq</span> <span class="kw">as</span> <span class="ident">Fq254</span>;
+<span class="doccomment">/// Dummy implementation for trait bounds</span>
+<span class="kw">impl</span> <span class="ident">SWToTEConParam</span> <span class="kw">for</span> <span class="ident">Fq254</span> {
+    <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger256</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+    <span class="kw">const</span> <span class="ident">NEG_ALPHA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger256</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+    <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger256</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+}
+
+<span class="comment">// ================================================</span>
+<span class="comment">// Bls12-381::Fq dummy implementations</span>
+<span class="comment">// ================================================</span>
+<span class="kw">use</span> <span class="ident">ark_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">Fq381</span>;
+<span class="doccomment">/// Dummy implementation for trait bounds</span>
+<span class="kw">impl</span> <span class="ident">SWToTEConParam</span> <span class="kw">for</span> <span class="ident">Fq381</span> {
+    <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+    <span class="kw">const</span> <span class="ident">NEG_ALPHA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+    <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger384</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+}
+
+<span class="comment">// ================================================</span>
+<span class="comment">// Bw6-761::Fq dummy implementations</span>
+<span class="comment">// ================================================</span>
+<span class="kw">use</span> <span class="ident">ark_bw6_761::Fq</span> <span class="kw">as</span> <span class="ident">Fq761</span>;
+<span class="doccomment">/// Dummy implementation for trait bounds</span>
+<span class="kw">impl</span> <span class="ident">SWToTEConParam</span> <span class="kw">for</span> <span class="ident">Fq761</span> {
+    <span class="kw">const</span> <span class="ident">S</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger768</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+    <span class="kw">const</span> <span class="ident">NEG_ALPHA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger768</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+    <span class="kw">const</span> <span class="ident">BETA</span>: <span class="ident"><span class="self">Self</span>::BigInt</span> <span class="op">=</span> <span class="ident">BigInteger768</span>([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>]);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">test</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">ark_bls12_377</span>::{<span class="ident">G1Affine</span>, <span class="ident">G1Projective</span>};
+    <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">AffineCurve</span>, <span class="ident">ProjectiveCurve</span>};
+    <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">field_new</span>, <span class="ident">One</span>};
+    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">UniformRand</span>, <span class="ident">Zero</span>};
+
+    <span class="comment">// a helper function to check if a point is on the ed curve</span>
+    <span class="comment">// of bls12-377 G1</span>
+    <span class="kw">fn</span> <span class="ident">is_on_bls12_377_ed_curve</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
+        <span class="comment">// Twisted Edwards curve 2: a * x² + y² = 1 + d * x² * y²</span>
+        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="macro">field_new!</span>(<span class="ident">Fq377</span>, <span class="string">&quot;-1&quot;</span>);
+        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="macro">field_new!</span>(<span class="ident">Fq377</span>, <span class="string">&quot;122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">x2</span> <span class="op">=</span> <span class="ident">p</span>.<span class="number">0</span> <span class="op">*</span> <span class="ident">p</span>.<span class="number">0</span>;
+        <span class="kw">let</span> <span class="ident">y2</span> <span class="op">=</span> <span class="ident">p</span>.<span class="number">1</span> <span class="op">*</span> <span class="ident">p</span>.<span class="number">1</span>;
+
+        <span class="kw">let</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">*</span> <span class="ident">x2</span> <span class="op">+</span> <span class="ident">y2</span>;
+        <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">Fq377::one</span>() <span class="op">+</span> <span class="ident">d</span> <span class="op">*</span> <span class="ident">x2</span> <span class="op">*</span> <span class="ident">y2</span>;
+
+        <span class="ident">left</span> <span class="op">==</span> <span class="ident">right</span>
+    }
+
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_sw_to_te_conversion</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+
+        <span class="comment">// test generator</span>
+        <span class="kw">let</span> <span class="ident">g1</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">G1Affine::prime_subgroup_generator</span>();
+        <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">g1</span>.<span class="ident">into</span>();
+        <span class="macro">assert!</span>(<span class="ident">is_on_bls12_377_ed_curve</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>));
+
+        <span class="comment">// test zero point</span>
+        <span class="kw">let</span> <span class="ident">g1</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">G1Affine::zero</span>();
+        <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">g1</span>.<span class="ident">into</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">p</span>.<span class="number">0</span>, <span class="ident">Fq377::zero</span>());
+        <span class="macro">assert_eq!</span>(<span class="ident">p</span>.<span class="number">1</span>, <span class="ident">Fq377::one</span>());
+        <span class="macro">assert!</span>(<span class="ident">is_on_bls12_377_ed_curve</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>));
+
+        <span class="comment">// test a random group element</span>
+        <span class="kw">let</span> <span class="ident">g1</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">G1Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>();
+        <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">g1</span>.<span class="ident">into</span>();
+        <span class="macro">assert!</span>(<span class="ident">is_on_bls12_377_ed_curve</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>));
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
+</body></html>

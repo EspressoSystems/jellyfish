@@ -320,11 +320,6 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -334,24 +329,20 @@
 <span class="doccomment">//! Circuit implementation of a Schnorr signature scheme.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">circuit::rescue::RescueGadget</span>,
     <span class="ident">constants::CS_ID_SCHNORR</span>,
+    <span class="ident">rescue::RescueParameter</span>,
     <span class="ident">signatures::schnorr</span>::{<span class="ident">Signature</span>, <span class="ident">VerKey</span>},
     <span class="ident">utils</span>::{<span class="ident">challenge_bit_len</span>, <span class="ident">field_bit_len</span>},
 };
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">twisted_edwards_extended::GroupAffine</span>, <span class="ident">AffineCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">jf_plonk</span>::{
-    <span class="ident">circuit</span>::{
-        <span class="ident">customized</span>::{
-            <span class="ident">ecc</span>::{<span class="ident">Point</span>, <span class="ident">PointVariable</span>},
-            <span class="ident">rescue::RescueGadget</span>,
-        },
-        <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
-    },
-    <span class="ident">errors::PlonkError</span>,
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{
+    <span class="ident">errors::CircuitError</span>,
+    <span class="ident">gadgets::ecc</span>::{<span class="ident">Point</span>, <span class="ident">PointVariable</span>},
+    <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
 };
-<span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
 <span class="kw">use</span> <span class="ident">jf_utils::fr_to_fq</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
@@ -385,7 +376,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Obtain the result bit of a signature verification.</span>
     <span class="doccomment">/// * `vk` - signature verification key variable.</span>
@@ -397,14 +388,16 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Create a signature variable from a signature `sig`.</span>
-    <span class="kw">fn</span> <span class="ident">create_signature_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>)
-        -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignatureVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">create_signature_variable</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignatureVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Create a signature verification key variable from a key `vk`.</span>
-    <span class="kw">fn</span> <span class="ident">create_signature_vk_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerKeyVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">create_signature_vk_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerKeyVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Compute the two point variables to be compared in the signature</span>
     <span class="doccomment">/// verification circuit.</span>
@@ -413,7 +406,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PointVariable</span>, <span class="ident">PointVariable</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PointVariable</span>, <span class="ident">PointVariable</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -426,10 +419,10 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="comment">// p1 = s * G, p2 = sig.R + c * VK</span>
         <span class="kw">let</span> (<span class="ident">p1</span>, <span class="ident">p2</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::verify_sig_core</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="ident">msg</span>, <span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">point_equal_gate</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">enforce_point_equal</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -438,15 +431,15 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">p1</span>, <span class="ident">p2</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::verify_sig_core</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="ident">msg</span>, <span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_equal_point</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)
+        <span class="self">self</span>.<span class="ident">is_point_equal</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">create_signature_variable</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignatureVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignatureVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sig_var</span> <span class="op">=</span> <span class="ident">SignatureVar</span> {
             <span class="ident">s</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">s</span>))<span class="question-mark">?</span>,
             <span class="ident">R</span>: <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">sig</span>.<span class="ident">R</span>))<span class="question-mark">?</span>,
@@ -454,7 +447,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">sig_var</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">create_signature_vk_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerKeyVar</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">create_signature_vk_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerKeyVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vk_var</span> <span class="op">=</span> <span class="ident">VerKeyVar</span>(<span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">vk</span>.<span class="number">0</span>))<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">vk_var</span>)
     }
@@ -464,7 +457,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PointVariable</span>, <span class="ident">PointVariable</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PointVariable</span>, <span class="ident">PointVariable</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">c_bits_le</span> <span class="op">=</span>
             <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::challenge_bits</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">R</span>, <span class="ident">msg</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>();
@@ -486,7 +479,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">sig_point</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -499,12 +492,12 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
         <span class="ident">sig_point</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">CS_ID_SCHNORR</span>.<span class="ident">as_ref</span>());
         <span class="comment">// TODO: create `inst_desc_var` and the constant gate *only once* during the</span>
         <span class="comment">// entire circuit construction.</span>
         <span class="kw">let</span> <span class="ident">inst_desc_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">instance_description</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">constant_gate</span>(<span class="ident">inst_desc_var</span>, <span class="ident">instance_description</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">enforce_constant</span>(<span class="ident">inst_desc_var</span>, <span class="ident">instance_description</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chal_input</span> <span class="op">=</span> <span class="macro">vec!</span>[
             <span class="ident">inst_desc_var</span>,
             <span class="ident">vk</span>.<span class="number">0</span>.<span class="ident">get_x</span>(),
@@ -528,20 +521,17 @@
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381b</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param254</span>;
-    <span class="kw">use</span> <span class="ident">jf_plonk</span>::{
-        <span class="ident">circuit</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
-        <span class="ident">errors::PlonkError</span>,
-    };
+    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_dsa_circuit</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">test_dsa_circuit</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param381b</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_dsa_circuit_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">test_dsa_circuit_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
@@ -552,7 +542,7 @@
         <span class="kw">let</span> <span class="ident">vk_bad</span>: <span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">ver_key_ref</span>().<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">msg</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">20</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>)).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_bad</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">clone</span>();
-        <span class="ident">msg_bad</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">2</span> <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="ident">msg_bad</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">2u64</span>);
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">CS_ID_SCHNORR</span>);
         <span class="kw">let</span> <span class="ident">sig_bad</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg_bad</span>, <span class="ident">CS_ID_SCHNORR</span>);
         <span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">unwrap</span>();
@@ -605,7 +595,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
@@ -616,7 +606,7 @@
         <span class="kw">let</span> <span class="ident">msg_var</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">msg</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">m</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="ident">SignatureGadget</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::verify_signature</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">vk_var</span>, <span class="kw-2">&amp;</span><span class="ident">msg_var</span>, <span class="kw-2">&amp;</span><span class="ident">sig_var</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
     }
@@ -625,7 +615,7 @@
         <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
         <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">Variable</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">Variable</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
@@ -636,7 +626,7 @@
         <span class="kw">let</span> <span class="ident">msg_var</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">msg</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">m</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">bit</span> <span class="op">=</span> <span class="ident">SignatureGadget</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::check_signature_validity</span>(
             <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
             <span class="kw-2">&amp;</span><span class="ident">vk_var</span>,

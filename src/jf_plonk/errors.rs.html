@@ -103,41 +103,6 @@
 <span id="97">97</span>
 <span id="98">98</span>
 <span id="99">99</span>
-<span id="100">100</span>
-<span id="101">101</span>
-<span id="102">102</span>
-<span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
-<span id="129">129</span>
-<span id="130">130</span>
-<span id="131">131</span>
-<span id="132">132</span>
-<span id="133">133</span>
-<span id="134">134</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -148,6 +113,7 @@
 
 <span class="kw">use</span> <span class="ident">ark_std::string::String</span>;
 <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
+<span class="kw">use</span> <span class="ident">jf_relation::errors::CircuitError</span>;
 
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the Plonk.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Display</span>, <span class="ident">Debug</span>)]</span>
@@ -173,7 +139,7 @@
     <span class="doccomment">/// Plonk proof verification failed due to wrong proof</span>
     <span class="ident">WrongProof</span>,
     <span class="doccomment">/// Rescue Error</span>
-    <span class="ident">RescueError</span>(<span class="ident">jf_rescue::errors::RescueError</span>),
+    <span class="ident">RescueError</span>(<span class="ident">jf_primitives::rescue::errors::RescueError</span>),
     <span class="doccomment">/// Invalid parameters</span>
     <span class="ident">InvalidParameters</span>(<span class="ident">String</span>),
     <span class="doccomment">/// Non-native field overflow</span>
@@ -204,8 +170,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">jf_rescue::errors::RescueError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">jf_rescue::errors::RescueError</span>) -&gt; <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">jf_primitives::rescue::errors::RescueError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">jf_primitives::rescue::errors::RescueError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::RescueError</span>(<span class="ident">e</span>)
     }
 }
@@ -230,42 +196,6 @@
         <span class="ident"><span class="self">Self</span>::SnarkError</span>(<span class="ident">e</span>)
     }
 }
-
-<span class="doccomment">/// A `enum` specifying the possible failure modes of the circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Display</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CircuitError</span> {
-    <span class="doccomment">/// Variable index {0} is larger than the bound {1}.</span>
-    <span class="ident">VarIndexOutOfBound</span>(<span class="ident">usize</span>, <span class="ident">usize</span>),
-    <span class="doccomment">/// Public input length {0} doesn&#39;t match num_inputs = {1}.</span>
-    <span class="ident">PubInputLenMismatch</span>(<span class="ident">usize</span>, <span class="ident">usize</span>),
-    <span class="doccomment">/// The {0}-th gate failed: {1}</span>
-    <span class="ident">GateCheckFailure</span>(<span class="ident">usize</span>, <span class="ident">String</span>),
-    <span class="doccomment">/// Invalid parameters: {0}</span>
-    <span class="ident">ParameterError</span>(<span class="ident">String</span>),
-    <span class="doccomment">/// The circuit is not finalized before doing arithmetization</span>
-    <span class="ident">UnfinalizedCircuit</span>,
-    <span class="doccomment">/// Attempt to modify the finalized circuit</span>
-    <span class="ident">ModifyFinalizedCircuit</span>,
-    <span class="doccomment">/// The circuit has wrong Plonk type</span>
-    <span class="ident">WrongPlonkType</span>,
-    <span class="doccomment">/// The circuit does not support lookup</span>
-    <span class="ident">LookupUnsupported</span>,
-    <span class="doccomment">/// Failed to get array value by index</span>
-    <span class="ident">IndexError</span>,
-    <span class="doccomment">/// Algebra over field failed: {0}</span>
-    <span class="ident">FieldAlgebraError</span>(<span class="ident">String</span>),
-    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-    <span class="doccomment">/// Unexpected field for elliptic curve operation, currently only support Bn254, BLS12-381/377 scalar field</span>
-    <span class="ident">UnsupportedCurve</span>,
-    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-    <span class="doccomment">/// ‼ ️Internal error! Please report to Crypto Team immediately!\n\Message: {0}</span>
-    <span class="ident">InternalError</span>(<span class="ident">String</span>),
-    <span class="doccomment">/// Feature not supported: {0}</span>
-    <span class="ident">NotSupported</span>(<span class="ident">String</span>),
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">std::error::Error</span> <span class="kw">for</span> <span class="ident">CircuitError</span> {}
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">CircuitError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">CircuitError</span>) -&gt; <span class="self">Self</span> {

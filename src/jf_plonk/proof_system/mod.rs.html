@@ -103,7 +103,6 @@
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
 <span class="doccomment">//! Interfaces for Plonk-based proof systems</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::circuit::Arithmetization</span>;
 <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{
     <span class="ident">error::Error</span>,
@@ -111,6 +110,7 @@
     <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
     <span class="ident">vec::Vec</span>,
 };
+<span class="kw">use</span> <span class="ident">jf_relation::Arithmetization</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">batch_arg</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">prover</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">snark</span>;

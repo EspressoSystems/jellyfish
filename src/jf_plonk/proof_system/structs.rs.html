@@ -1011,8 +1011,6 @@
 <span id="1005">1005</span>
 <span id="1006">1006</span>
 <span id="1007">1007</span>
-<span id="1008">1008</span>
-<span id="1009">1009</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1021,17 +1019,7 @@
 
 <span class="doccomment">//! Data structures used in Plonk proof systems</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit</span>::{
-        <span class="ident">customized</span>::{
-            <span class="ident">ecc</span>::{<span class="ident">Point</span>, <span class="ident">SWToTEConParam</span>},
-            <span class="ident">ultraplonk</span>::{
-                <span class="ident">mod_arith::FpElemVar</span>,
-                <span class="ident">plonk_verifier</span>::{<span class="ident">BatchProofVar</span>, <span class="ident">ProofEvaluationsVar</span>},
-            },
-        },
-        <span class="ident">PlonkCircuit</span>,
-    },
-    <span class="ident">constants</span>::{<span class="ident">compute_coset_representatives</span>, <span class="ident">GATE_WIDTH</span>, <span class="ident">N_TURBO_PLONK_SELECTORS</span>},
+    <span class="ident">circuit::plonk_verifier</span>::{<span class="ident">BatchProofVar</span>, <span class="ident">ProofEvaluationsVar</span>},
     <span class="ident">errors</span>::{
         <span class="ident">PlonkError</span>,
         <span class="ident">SnarkError</span>::{<span class="self">self</span>, <span class="ident">ParameterError</span>, <span class="ident">SnarkLookupUnsupported</span>},
@@ -1053,7 +1041,15 @@
 };
 <span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish::tag</span>;
 <span class="kw">use</span> <span class="ident">hashbrown::HashMap</span>;
-<span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_primitives::rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{
+    <span class="ident">constants</span>::{<span class="ident">compute_coset_representatives</span>, <span class="ident">GATE_WIDTH</span>, <span class="ident">N_TURBO_PLONK_SELECTORS</span>},
+    <span class="ident">gadgets</span>::{
+        <span class="ident">ecc</span>::{<span class="ident">Point</span>, <span class="ident">SWToTEConParam</span>},
+        <span class="ident">ultraplonk::mod_arith::FpElemVar</span>,
+    },
+    <span class="ident">PlonkCircuit</span>,
+};
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">field_switching</span>, <span class="ident">fq_to_fr</span>, <span class="ident">fr_to_fq</span>, <span class="ident">tagged_blob</span>};
 
 <span class="doccomment">/// Universal Structured Reference String for PlonkKzgSnark</span>

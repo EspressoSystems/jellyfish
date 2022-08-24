@@ -119,6 +119,8 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -127,9 +129,11 @@
 
 <span class="doccomment">//! Implements a rescue hash based commitment scheme.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">errors::PrimitivesError</span>,
+    <span class="ident">rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RATE</span>},
+};
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::String</span>, <span class="ident">vec</span>};
-<span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RATE</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>

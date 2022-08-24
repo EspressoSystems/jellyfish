@@ -1164,10 +1164,8 @@
     <span class="ident">PlookupOracles</span>, <span class="ident">ProofEvaluations</span>, <span class="ident">ProvingKey</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::Arithmetization</span>,
-    <span class="ident">constants</span>::{<span class="ident">domain_size_ratio</span>, <span class="ident">GATE_WIDTH</span>},
+    <span class="ident">constants::domain_size_ratio</span>,
     <span class="ident">errors</span>::{<span class="ident">PlonkError</span>, <span class="ident">SnarkError</span>::<span class="kw-2">*</span>},
-    <span class="ident">par_utils::parallelizable_slice_iter</span>,
     <span class="ident">proof_system::structs::CommitKey</span>,
 };
 <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
@@ -1186,6 +1184,8 @@
     <span class="ident">vec</span>,
     <span class="ident">vec::Vec</span>,
 };
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">constants::GATE_WIDTH</span>, <span class="ident">Arithmetization</span>};
+<span class="kw">use</span> <span class="ident">jf_utils::par_utils::parallelizable_slice_iter</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rayon::prelude</span>::<span class="kw-2">*</span>;
 

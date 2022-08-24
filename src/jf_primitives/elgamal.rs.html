@@ -465,6 +465,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">elgamal::Direction</span>::{<span class="ident">Decrypt</span>, <span class="ident">Encrypt</span>},
     <span class="ident">errors::PrimitivesError</span>,
+    <span class="ident">rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RescueVector</span>, <span class="ident">PRP</span>, <span class="ident">STATE_SIZE</span>},
 };
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{
     <span class="ident">group::Group</span>,
@@ -480,7 +481,6 @@
     <span class="ident">vec</span>,
     <span class="ident">vec::Vec</span>,
 };
-<span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RescueVector</span>, <span class="ident">PRP</span>, <span class="ident">STATE_SIZE</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rayon::prelude</span>::<span class="kw-2">*</span>;

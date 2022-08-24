@@ -200,7 +200,6 @@
 <span class="doccomment">//! This module is a defines rescue transcript.</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::PlonkTranscript</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::customized::ecc</span>::{<span class="ident">Point</span>, <span class="ident">SWToTEConParam</span>},
     <span class="ident">errors::PlonkError</span>,
     <span class="ident">proof_system::structs</span>::{<span class="ident">PlookupEvaluations</span>, <span class="ident">ProofEvaluations</span>, <span class="ident">VerifyingKey</span>},
 };
@@ -209,7 +208,8 @@
 };
 <span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10::Commitment</span>;
 <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span> <span class="kw">as</span> <span class="ident">RescueHash</span>, <span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>};
+<span class="kw">use</span> <span class="ident">jf_primitives::rescue</span>::{<span class="ident">Permutation</span> <span class="kw">as</span> <span class="ident">RescueHash</span>, <span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>};
+<span class="kw">use</span> <span class="ident">jf_relation::gadgets::ecc</span>::{<span class="ident">Point</span>, <span class="ident">SWToTEConParam</span>};
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">bytes_to_field_elements</span>, <span class="ident">field_switching</span>, <span class="ident">fq_to_fr_with_mask</span>};
 
 <span class="doccomment">/// Transcript with rescue hash function.</span>

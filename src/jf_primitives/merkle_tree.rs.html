@@ -2299,6 +2299,8 @@
 <span id="2293">2293</span>
 <span id="2294">2294</span>
 <span id="2295">2295</span>
+<span id="2296">2296</span>
+<span id="2297">2297</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -2315,7 +2317,10 @@
 <span class="doccomment">//! for an element (uid,elem) is obtained as H(0,uid,elem).</span>
 <span class="doccomment">//! The tree height is fixed during initial instantiation and a new leaf will</span>
 <span class="doccomment">//! be inserted at the leftmost available slot in the tree.</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">errors::PrimitivesError</span>,
+    <span class="ident">rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>},
+};
 <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger</span>, <span class="ident">Field</span>, <span class="ident">PrimeField</span>};
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">Read</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
 <span class="kw">use</span> <span class="ident">ark_std</span>::{
@@ -2331,7 +2336,6 @@
 };
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">convert::TryFrom</span>, <span class="ident">fmt::Debug</span>};
 <span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish::tag</span>;
-<span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::tagged_blob</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
@@ -4177,7 +4181,7 @@
     {
         <span class="kw">let</span> <span class="ident">proof</span> <span class="op">=</span> <span class="ident">mt_state</span>.<span class="ident">get_leaf</span>(<span class="ident">pos</span>).<span class="ident">expect_ok</span>().<span class="ident">unwrap</span>().<span class="number">1</span>;
         <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">root_value</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">mt_state</span>.<span class="ident">root</span>.<span class="ident">value</span>());
-        <span class="kw">let</span> <span class="ident">new_proof</span> <span class="op">=</span> <span class="ident">MerkleLeafProof::new</span>(<span class="ident">elem</span>, <span class="ident">proof</span>.<span class="ident">path</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">new_proof</span> <span class="op">=</span> <span class="ident">MerkleLeafProof::new</span>(<span class="ident">elem</span>, <span class="ident">proof</span>.<span class="ident">path</span>);
         <span class="macro">assert_eq!</span>(
             <span class="ident">MerkleTree::check_proof</span>(<span class="ident">rt</span>, <span class="ident">pos</span>, <span class="kw-2">&amp;</span><span class="ident">new_proof</span>).<span class="ident">is_ok</span>(),
             <span class="ident">expected_res</span>
@@ -4340,7 +4344,7 @@
             <span class="kw">let</span> <span class="ident">evil_proof2</span> <span class="op">=</span> <span class="ident">MerkleLeafProof::new</span>(
                 <span class="ident">evil_val</span>,
                 <span class="ident">MerklePath</span> {
-                    <span class="ident">nodes</span>: <span class="macro">vec!</span>[<span class="ident">evil_leaf_node2</span>, <span class="ident">evil_proof_node</span>.<span class="ident">clone</span>()]
+                    <span class="ident">nodes</span>: <span class="macro">vec!</span>[<span class="ident">evil_leaf_node2</span>, <span class="ident">evil_proof_node</span>]
                         .<span class="ident">into_iter</span>()
                         .<span class="ident">chain</span>(<span class="ident">proof</span>.<span class="ident">path</span>.<span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>())
                         .<span class="ident">collect</span>(),

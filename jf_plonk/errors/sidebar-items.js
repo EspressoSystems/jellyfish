@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["CircuitError","A `enum` specifying the possible failure modes of the circuit."],["PlonkError","A `enum` specifying the possible failure modes of the Plonk."],["SnarkError","A `enum` specifying the possible failure modes of the underlying SNARK."]]};
+window.SIDEBAR_ITEMS = {"enum":[["PlonkError","A `enum` specifying the possible failure modes of the Plonk."],["SnarkError","A `enum` specifying the possible failure modes of the underlying SNARK."]]};

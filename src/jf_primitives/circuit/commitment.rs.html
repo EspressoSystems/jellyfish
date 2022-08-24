@@ -106,13 +106,13 @@
 
 <span class="doccomment">//! Circuit implementation of the commitment scheme.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::pad_with</span>;
-<span class="kw">use</span> <span class="ident">ark_std::vec</span>;
-<span class="kw">use</span> <span class="ident">jf_plonk</span>::{
-    <span class="ident">circuit</span>::{<span class="ident">customized::rescue::RescueGadget</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
-    <span class="ident">errors::PlonkError</span>,
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">circuit::rescue::RescueGadget</span>,
+    <span class="ident">rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">RATE</span>},
+    <span class="ident">utils::pad_with</span>,
 };
-<span class="kw">use</span> <span class="ident">jf_rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">RATE</span>};
+<span class="kw">use</span> <span class="ident">ark_std::vec</span>;
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
 <span class="doccomment">/// Circuit implementation of the commitment scheme.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">CommitmentGadget</span> {
@@ -123,14 +123,14 @@
     <span class="doccomment">/// * `returns` a variable that refers to the commitment value</span>
     <span class="doccomment">/// The underlying the commitment instance is bound to a specific length.</span>
     <span class="doccomment">/// Hence input length must match it.</span>
-    <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>], <span class="ident">blinding</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>], <span class="ident">blinding</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">CommitmentGadget</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
 {
-    <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>], <span class="ident">blinding</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>], <span class="ident">blinding</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">blinding</span>];
         <span class="ident">msg</span>.<span class="ident">extend_from_slice</span>(<span class="ident">input</span>);
         <span class="ident">pad_with</span>(<span class="kw-2">&amp;mut</span> <span class="ident">msg</span>, <span class="ident">RATE</span>, <span class="self">self</span>.<span class="ident">zero</span>());
@@ -149,7 +149,7 @@
     <span class="kw">use</span> <span class="ident">ark_ff::UniformRand</span>;
     <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
     <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
-    <span class="kw">use</span> <span class="ident">jf_plonk::circuit</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
     <span class="macro">macro_rules!</span> <span class="ident">test_commit_circuit</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span>:<span class="ident">tt</span>) =&gt; {

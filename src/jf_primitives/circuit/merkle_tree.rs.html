@@ -524,15 +524,15 @@
 
 <span class="doccomment">//! Circuit implementation of a Merkle tree.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::merkle_tree</span>::{<span class="ident">AccMemberWitness</span>, <span class="ident">MerklePath</span>, <span class="ident">MerkleTree</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">circuit::rescue::RescueGadget</span>,
+    <span class="ident">merkle_tree</span>::{<span class="ident">AccMemberWitness</span>, <span class="ident">MerklePath</span>, <span class="ident">MerkleTree</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>},
+    <span class="ident">rescue::RescueParameter</span>,
+};
 <span class="kw">use</span> <span class="ident">ark_ec::TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>;
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">jf_plonk</span>::{
-    <span class="ident">circuit</span>::{<span class="ident">customized::rescue::RescueGadget</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>},
-    <span class="ident">errors::PlonkError</span>,
-};
-<span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">struct</span> <span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
@@ -624,7 +624,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
         <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
         <span class="ident">acc_member_witness</span>: <span class="kw-2">&amp;</span><span class="ident">AccMemberWitness</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
         <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
@@ -652,7 +652,7 @@
         <span class="ident">sib2</span>: <span class="ident">Variable</span>,
         <span class="ident">node_is_left</span>: <span class="ident">BoolVar</span>,
         <span class="ident">node_is_right</span>: <span class="ident">BoolVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Ensure that the position of each node of the path is correctly encoded</span>
     <span class="doccomment">/// Used for testing purposes.</span>
@@ -661,7 +661,7 @@
     <span class="kw">fn</span> <span class="ident">constrain_merkle_path</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// Circuit implementation of a Merkle tree.</span>
@@ -673,7 +673,7 @@
     <span class="kw">fn</span> <span class="ident">add_merkle_path_variable</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Computes the merkle root based on some element placed at a leaf and a</span>
     <span class="doccomment">/// merkle path.</span>
@@ -686,7 +686,7 @@
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">elem</span>: <span class="ident">AccElemVars</span>,
         <span class="ident">path_vars</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathVars</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">MerkleTreeGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
@@ -696,7 +696,7 @@
     <span class="kw">fn</span> <span class="ident">add_merkle_path_variable</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="comment">// Encode Merkle path nodes positions with boolean variables</span>
         <span class="kw">let</span> <span class="ident">merkle_path</span> <span class="op">=</span> <span class="ident">MerklePathBooleanEncoding::from</span>(<span class="ident">merkle_path</span>);
 
@@ -707,7 +707,7 @@
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">elem</span>: <span class="ident">AccElemVars</span>,
         <span class="ident">path_vars</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathVars</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
 
         <span class="comment">// leaf label = H(0, uid, arc)</span>
@@ -739,7 +739,7 @@
         <span class="ident">sib2</span>: <span class="ident">Variable</span>,
         <span class="ident">node_is_left</span>: <span class="ident">BoolVar</span>,
         <span class="ident">node_is_right</span>: <span class="ident">BoolVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">F::one</span>();
         <span class="kw">let</span> <span class="ident">left_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conditional_select</span>(<span class="ident">node_is_left</span>, <span class="ident">sib1</span>, <span class="ident">node</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">right_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conditional_select</span>(<span class="ident">node_is_right</span>, <span class="ident">sib2</span>, <span class="ident">node</span>)<span class="question-mark">?</span>;
@@ -754,13 +754,13 @@
     <span class="kw">fn</span> <span class="ident">constrain_merkle_path</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="comment">// Setup node variables</span>
         <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">merkle_path</span>
             .<span class="ident">nodes</span>
             .<span class="ident">clone</span>()
             .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">MerkleNodeVars</span> {
                     <span class="ident">sibling1</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>.<span class="number">0</span>)<span class="question-mark">?</span>,
                     <span class="ident">sibling2</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">node</span>.<span class="ident">sibling2</span>.<span class="number">0</span>)<span class="question-mark">?</span>,
@@ -768,7 +768,7 @@
                     <span class="ident">is_right_child</span>: <span class="self">self</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">node</span>.<span class="ident">is_right_child</span>)<span class="question-mark">?</span>,
                 })
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
         <span class="comment">// `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are</span>
         <span class="comment">// boolean</span>
@@ -777,7 +777,7 @@
             <span class="comment">// can either be the left or the right child of its parent</span>
             <span class="kw">let</span> <span class="ident">left_plus_right</span> <span class="op">=</span>
                 <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>.<span class="ident">into</span>(), <span class="ident">node</span>.<span class="ident">is_right_child</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">bool_gate</span>(<span class="ident">left_plus_right</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">enforce_bool</span>(<span class="ident">left_plus_right</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(<span class="ident">MerklePathVars</span> { <span class="ident">nodes</span> })
@@ -811,6 +811,7 @@
             <span class="ident">MerklePathBooleanEncoding</span>, <span class="ident">MerkleTreeGadget</span>, <span class="ident">MerkleTreeHelperGadget</span>,
         },
         <span class="ident">merkle_tree</span>::{<span class="ident">hash</span>, <span class="ident">MerklePath</span>, <span class="ident">MerklePathNode</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>},
+        <span class="ident">rescue::RescueParameter</span>,
     };
     <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
     <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
@@ -819,8 +820,7 @@
     <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
     <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
     <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-    <span class="kw">use</span> <span class="ident">jf_plonk::circuit</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
-    <span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
+    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
 
     <span class="kw">fn</span> <span class="ident">check_merkle_path</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">is_left_child</span>: <span class="ident">bool</span>, <span class="ident">is_right_child</span>: <span class="ident">bool</span>, <span class="ident">accept</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
@@ -832,7 +832,7 @@
             <span class="ident">is_left_child</span>,
             <span class="ident">is_right_child</span>,
         );
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">MerklePathBooleanEncoding::new</span>(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[<span class="ident">node</span>]);
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">MerklePathBooleanEncoding::new</span>(<span class="kw-2">&amp;</span>[<span class="ident">node</span>]);
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">constrain_merkle_path</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>);
         <span class="kw">if</span> <span class="ident">accept</span> {
             <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());

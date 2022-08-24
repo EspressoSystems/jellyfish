@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["CircuitError","A `enum` specifying the possible failure modes of the circuit."]]};

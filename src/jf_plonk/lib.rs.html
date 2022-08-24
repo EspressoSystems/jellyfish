@@ -32,26 +32,6 @@
 <span id="26">26</span>
 <span id="27">27</span>
 <span id="28">28</span>
-<span id="29">29</span>
-<span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
-<span id="34">34</span>
-<span id="35">35</span>
-<span id="36">36</span>
-<span id="37">37</span>
-<span id="38">38</span>
-<span id="39">39</span>
-<span id="40">40</span>
-<span id="41">41</span>
-<span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -67,39 +47,19 @@
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">std</span>;
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">downcast_rs</span>;
-
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">derivative</span>;
 
+<span class="doccomment">/// Customized circuit</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">circuit</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">constants</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">par_utils</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">proof_system</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">transcript</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">jf_relation::PlonkType</span>;
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test_apis&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing_apis</span>;
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="doccomment">/// Enum for each type of Plonk scheme.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PlonkType</span> {
-    <span class="doccomment">/// TurboPlonk</span>
-    <span class="ident">TurboPlonk</span>,
-    <span class="doccomment">/// TurboPlonk that supports Plookup</span>
-    <span class="ident">UltraPlonk</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="doccomment">/// Enum for each type of mergeable circuit. We can only merge circuits from</span>
-<span class="doccomment">/// different types.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MergeableCircuitType</span> {
-    <span class="doccomment">/// First type</span>
-    <span class="ident">TypeA</span>,
-    <span class="doccomment">/// Second type</span>
-    <span class="ident">TypeB</span>,
-}
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
 </body></html>

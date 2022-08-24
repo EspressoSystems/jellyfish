@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":[["ecc","Elliptic curve related gates and gadgets. Including both native and non-native fields."],["rescue","Rescue hash related gates and gadgets. Including both native and non-native fields."],["transcript","Implementing native circuit for rescue transcript"],["ultraplonk","Implements ultra-plonk related circuits."]]};

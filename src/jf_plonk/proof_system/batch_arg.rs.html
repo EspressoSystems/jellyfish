@@ -405,9 +405,6 @@
 <span id="399">399</span>
 <span id="400">400</span>
 <span id="401">401</span>
-<span id="402">402</span>
-<span id="403">403</span>
-<span id="404">404</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -416,7 +413,6 @@
 
 <span class="doccomment">//! An argument system that proves/verifies multiple instances in a batch.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit</span>::{<span class="ident">customized::ecc::SWToTEConParam</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>},
     <span class="ident">errors</span>::{<span class="ident">PlonkError</span>, <span class="ident">SnarkError::ParameterError</span>},
     <span class="ident">proof_system</span>::{
         <span class="ident">structs</span>::{<span class="ident">BatchProof</span>, <span class="ident">OpenKey</span>, <span class="ident">ProvingKey</span>, <span class="ident">ScalarsAndBases</span>, <span class="ident">UniversalSrs</span>, <span class="ident">VerifyingKey</span>},
@@ -424,7 +420,6 @@
         <span class="ident">PlonkKzgSnark</span>, <span class="ident">UniversalSNARK</span>,
     },
     <span class="ident">transcript::PlonkTranscript</span>,
-    <span class="ident">MergeableCircuitType</span>,
 };
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff::One</span>;
@@ -436,7 +431,8 @@
     <span class="ident">vec</span>,
     <span class="ident">vec::Vec</span>,
 };
-<span class="kw">use</span> <span class="ident">jf_rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_primitives::rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">gadgets::ecc::SWToTEConParam</span>, <span class="ident">Circuit</span>, <span class="ident">MergeableCircuitType</span>, <span class="ident">PlonkCircuit</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::multi_pairing</span>;
 
 <span class="doccomment">/// A batching argument.</span>
@@ -506,13 +502,13 @@
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">instances_type_b</span>.<span class="ident">iter</span>())
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pred_a</span>, <span class="ident">pred_b</span>)<span class="op">|</span> <span class="ident">pred_a</span>.<span class="ident">prove_key</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">pred_b</span>.<span class="ident">prove_key</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">circuits</span> <span class="op">=</span> <span class="ident">instances_type_a</span>
             .<span class="ident">iter</span>()
             .<span class="ident">zip</span>(<span class="ident">instances_type_b</span>.<span class="ident">iter</span>())
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pred_a</span>, <span class="ident">pred_b</span>)<span class="op">|</span> <span class="ident">pred_a</span>.<span class="ident">circuit</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">pred_b</span>.<span class="ident">circuit</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">pks_ref</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">pks</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">circuits_ref</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">circuits</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
 
@@ -667,20 +663,18 @@
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
             <span class="ident">shared_public_input</span>,
             <span class="ident">i</span>,
-            <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeA</span>,
+            <span class="ident">MergeableCircuitType::TypeA</span>,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span>
-            <span class="ident">BatchArgument::setup_instance</span>(<span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeA</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">BatchArgument::setup_instance</span>(<span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeA</span>)<span class="question-mark">?</span>;
         <span class="ident">vks_type_a</span>.<span class="ident">push</span>(<span class="ident">instance</span>.<span class="ident">verify_key_ref</span>().<span class="ident">clone</span>());
         <span class="ident">instances_type_a</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
 
         <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
             <span class="ident">shared_public_input</span>,
             <span class="ident">i</span>,
-            <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeB</span>,
+            <span class="ident">MergeableCircuitType::TypeB</span>,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span>
-            <span class="ident">BatchArgument::setup_instance</span>(<span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeB</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">BatchArgument::setup_instance</span>(<span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeB</span>)<span class="question-mark">?</span>;
         <span class="ident">vks_type_b</span>.<span class="ident">push</span>(<span class="ident">instance</span>.<span class="ident">verify_key_ref</span>().<span class="ident">clone</span>());
         <span class="ident">instances_type_b</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
     }
@@ -723,19 +717,19 @@
             <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
                 <span class="ident">shared_public_input</span>,
                 <span class="ident">i</span>,
-                <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeA</span>,
+                <span class="ident">MergeableCircuitType::TypeA</span>,
             )<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span>
-                <span class="ident">BatchArgument::setup_instance</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeA</span>)<span class="question-mark">?</span>;
+                <span class="ident">BatchArgument::setup_instance</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeA</span>)<span class="question-mark">?</span>;
             <span class="ident">instances_type_a</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
 
             <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
                 <span class="ident">shared_public_input</span>,
                 <span class="ident">i</span>,
-                <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeB</span>,
+                <span class="ident">MergeableCircuitType::TypeB</span>,
             )<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span>
-                <span class="ident">BatchArgument::setup_instance</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident"><span class="kw">crate</span>::MergeableCircuitType::TypeB</span>)<span class="question-mark">?</span>;
+                <span class="ident">BatchArgument::setup_instance</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeB</span>)<span class="question-mark">?</span>;
             <span class="ident">instances_type_b</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
         }
 
@@ -774,7 +768,7 @@
             <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
             <span class="ident">blinding_factor</span>,
         )<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">BatchArgument::decide</span>(<span class="ident">open_key_ref</span>, <span class="ident">inner1</span>, <span class="ident">inner2</span>)<span class="question-mark">?</span>, <span class="bool-val">true</span>);
+        <span class="macro">assert!</span>(<span class="ident">BatchArgument::decide</span>(<span class="ident">open_key_ref</span>, <span class="ident">inner1</span>, <span class="ident">inner2</span>)<span class="question-mark">?</span>);
         <span class="comment">// error paths</span>
         <span class="comment">// empty merged_vks</span>
         <span class="macro">assert!</span>(<span class="ident">BatchArgument::partial_verify</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
