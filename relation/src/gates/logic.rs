@@ -34,9 +34,9 @@ where
 
 /// A gate for computing the logic OR value of 2 variables
 #[derive(Clone)]
-pub struct LogicOrValueGate;
+pub struct LogicOrOutputGate;
 
-impl<F> Gate<F> for LogicOrValueGate
+impl<F> Gate<F> for LogicOrOutputGate
 where
     F: Field,
 {
