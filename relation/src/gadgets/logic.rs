@@ -10,7 +10,7 @@ use ark_ff::PrimeField;
 
 use crate::{
     errors::CircuitError,
-    gates::{CondSelectGate, LogicOrGate},
+    gates::{CondSelectGate, LogicOrGate, LogicOrValueGate},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 
@@ -120,7 +120,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         let c = self.create_boolean_variable_unchecked(c_val)?;
         let wire_vars = &[a.into(), b.into(), 0, 0, c.into()];
-        self.insert_gate(wire_vars, Box::new(LogicOrGate))?;
+        self.insert_gate(wire_vars, Box::new(LogicOrValueGate))?;
 
         Ok(c)
     }
@@ -186,6 +186,32 @@ mod test {
     }
 
     fn test_logic_or_helper<F: PrimeField>() -> Result<(), CircuitError> {
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
+        let false_var = circuit.false_var();
+        let true_var = circuit.true_var();
+        // Good path
+        let should_be_true = circuit.logic_or(false_var, true_var)?;
+        assert!(circuit.witness(should_be_true.into())?.eq(&F::one()));
+        let should_be_true = circuit.logic_or(true_var, false_var)?;
+        assert!(circuit.witness(should_be_true.into())?.eq(&F::one()));
+        let should_be_true = circuit.logic_or(true_var, true_var)?;
+        assert!(circuit.witness(should_be_true.into())?.eq(&F::one()));
+        // Error path
+        let should_be_false = circuit.logic_or(false_var, false_var)?;
+        assert!(circuit.witness(should_be_false.into())?.eq(&F::zero()));
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+
+        Ok(())
+    }
+    #[test]
+    fn test_logic_or_gate() -> Result<(), CircuitError> {
+        test_logic_or_gate_helper::<FqEd254>()?;
+        test_logic_or_gate_helper::<FqEd377>()?;
+        test_logic_or_gate_helper::<FqEd381>()?;
+        test_logic_or_gate_helper::<Fq377>()
+    }
+
+    fn test_logic_or_gate_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let false_var = circuit.false_var();
         let true_var = circuit.true_var();
