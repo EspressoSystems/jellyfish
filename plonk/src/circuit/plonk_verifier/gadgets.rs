@@ -203,8 +203,7 @@ where
                 verify_keys.len(),
                 batch_proof.len(),
                 public_inputs.len(),
-            ))
-            .into());
+            )));
     }
     let mut transcript_var = RescueTranscriptVar::new(circuit);
     if let Some(msg) = extra_transcript_init_msg {
@@ -282,8 +281,7 @@ where
                 verify_keys.len(),
                 batch_proof.len(),
                 public_inputs.len(),
-            ))
-            .into());
+            )));
     }
 
     for (i, (&pub_input, &vk)) in public_inputs.iter().zip(verify_keys.iter()).enumerate() {
@@ -293,8 +291,7 @@ where
                     pub_input.len(),
                     i,
                     vk.num_inputs,
-                ))
-                .into());
+                )));
         }
 
         if vk.domain_size != domain.size() {
@@ -303,8 +300,7 @@ where
                 vk.domain_size,
                 i,
                 domain.size(),
-            ))
-            .into());
+            )));
         }
     }
 

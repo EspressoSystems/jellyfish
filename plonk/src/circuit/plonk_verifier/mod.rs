@@ -106,19 +106,19 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         P: TEParam<BaseField = F>,
     {
         if self.is_merged || other.is_merged {
-            return Err(ParameterError("cannot merge a merged key again".to_string()).into());
+            return Err(ParameterError(
+                "cannot merge a merged key again".to_string(),
+            ));
         }
         if self.domain_size != other.domain_size {
             return Err(ParameterError(
                 "cannot merge a verifying key with different domain size".to_string(),
-            )
-            .into());
+            ));
         }
         if self.num_inputs != other.num_inputs {
             return Err(ParameterError(
                 "cannot merge a verifying key with different public input length".to_string(),
-            )
-            .into());
+            ));
         }
         let sigma_comms = self
             .sigma_comms
@@ -161,15 +161,14 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         P: SWParam<BaseField = F> + TEParam,
     {
         if merged_vks.is_empty() {
-            return Err(ParameterError("empty merged verification keys".to_string()).into());
+            return Err(ParameterError("empty merged verification keys".to_string()));
         }
         if merged_vks.len() != batch_proof.len() {
             return Err(ParameterError(format!(
                 "the number of verification keys {} is different from the number of instances {}.",
                 merged_vks.len(),
                 batch_proof.len()
-            ))
-            .into());
+            )));
         }
 
         let domain_size = merged_vks[0].domain_size;
@@ -178,8 +177,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
                 return Err(ParameterError(format!(
                     "the {}-th verification key's domain size {} is different from {}.",
                     i, vk.domain_size, domain_size
-                ))
-                .into());
+                )));
             }
         }
 
@@ -309,7 +307,7 @@ where
                 "the number of type A verification key variables {} is different from the number of type B verification key variables {}.",
                 vk_type_a_vars.len(),
                 vk_type_b_vars.len())
-            ).into());
+            ));
         }
         vk_type_a_vars
             .iter()

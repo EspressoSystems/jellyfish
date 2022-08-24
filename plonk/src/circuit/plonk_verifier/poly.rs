@@ -328,8 +328,7 @@ where
             verify_keys.len(),
             batch_proof.len(),
             public_inputs.len(),
-        ))
-        .into());
+        )));
     }
 
     let zeta_fp_elem_var = challenges.zeta;
