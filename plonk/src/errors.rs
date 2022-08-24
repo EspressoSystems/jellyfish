@@ -6,7 +6,7 @@
 
 //! Error module.
 
-use ark_std::string::String;
+use ark_std::{format, string::String};
 use displaydoc::Display;
 use jf_relation::errors::CircuitError;
 
@@ -95,5 +95,13 @@ impl From<SnarkError> for PlonkError {
 impl From<CircuitError> for PlonkError {
     fn from(e: CircuitError) -> Self {
         Self::CircuitError(e)
+    }
+}
+
+impl From<PlonkError> for CircuitError {
+    // this happen during invocation of Plonk proof system API inside Verifier
+    // gadget
+    fn from(e: PlonkError) -> Self {
+        Self::ParameterError(format!("Plonk proof system err: {:?}", e))
     }
 }

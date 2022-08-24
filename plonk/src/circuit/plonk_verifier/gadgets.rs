@@ -8,7 +8,7 @@
 use crate::{
     circuit::{plonk_verifier::*, transcript::RescueTranscriptVar},
     constants::EXTRA_TRANSCRIPT_MSG_LABEL,
-    errors::{PlonkError, SnarkError::ParameterError},
+    errors::PlonkError,
 };
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
@@ -18,6 +18,7 @@ use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
+    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
         ecc::{PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
@@ -48,7 +49,7 @@ pub(super) fn aggregate_poly_commitments_circuit<E, F>(
     batch_proof: &BatchProofVar<F>,
     alpha_bases: &[FpElemVar<F>],
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<(ScalarsAndBasesVar<F>, Vec<FpElemVar<F>>), PlonkError>
+) -> Result<(ScalarsAndBasesVar<F>, Vec<FpElemVar<F>>), CircuitError>
 where
     E: PairingEngine<Fq = F>,
     F: PrimeField,
@@ -58,8 +59,7 @@ where
             "the number of verification keys {} != the number of instances {}",
             vks.len(),
             batch_proof.len()
-        ))
-        .into());
+        )));
     }
 
     // Compute the first part of the batched polynomial commitment `[D]1` described in Sec 8.4, step 9 of https://eprint.iacr.org/2019/953.pdf
@@ -132,7 +132,7 @@ pub(super) fn aggregate_evaluations_circuit<E, F>(
     poly_evals_vec: &[ProofEvaluationsVar<F>],
     non_native_field_info: NonNativeFieldInfo<F>,
     buffer_v_and_uv_basis: &[FpElemVar<F>],
-) -> Result<FpElemVar<F>, PlonkError>
+) -> Result<FpElemVar<F>, CircuitError>
 where
     E: PairingEngine<Fq = F>,
     F: PrimeField,
@@ -177,7 +177,7 @@ where
     }
     // ensure all the buffer has been consumed
     if v_and_uv_basis.next().is_some() {
-        return Err(PlonkError::IteratorOutOfRange);
+        return Err(PlonkError::IteratorOutOfRange)?;
     }
     Ok(result)
 }
@@ -191,7 +191,7 @@ pub(super) fn compute_challenges_vars<E, F, P>(
     batch_proof: &BatchProofVar<F>,
     extra_transcript_init_msg: &Option<Vec<u8>>,
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<ChallengesFpElemVar<F>, PlonkError>
+) -> Result<ChallengesFpElemVar<F>, CircuitError>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
@@ -270,7 +270,7 @@ pub(super) fn prepare_pcs_info_var<E, F, P>(
 
     domain: Radix2EvaluationDomain<E::Fr>,
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<PcsInfoVar<F>, PlonkError>
+) -> Result<PcsInfoVar<F>, CircuitError>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
@@ -398,7 +398,7 @@ fn add_poly_comm_circuit<F>(
     comm: &PointVariable,
     r: &FpElemVar<F>,
     p: &FpElem<F>,
-) -> Result<(), PlonkError>
+) -> Result<(), CircuitError>
 where
     F: PrimeField,
 {
@@ -417,7 +417,7 @@ fn add_pcs_eval_circuit<F>(
     random_combiner: &FpElemVar<F>,
     eval: &FpElemVar<F>,
     p: &FpElem<F>,
-) -> Result<(), PlonkError>
+) -> Result<(), CircuitError>
 where
     F: PrimeField,
 {
@@ -434,7 +434,7 @@ fn compute_alpha_basis<F: PrimeField>(
     alpha_to_3: FpElemVar<F>,
     len: usize,
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<Vec<FpElemVar<F>>, PlonkError> {
+) -> Result<Vec<FpElemVar<F>>, CircuitError> {
     let mut res = Vec::new();
     let mut alpha_base_elem_var = FpElemVar::<F>::one(
         circuit,
@@ -472,12 +472,12 @@ mod test {
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     #[test]
-    fn test_compute_challenges_vars_circuit() -> Result<(), PlonkError> {
+    fn test_compute_challenges_vars_circuit() -> Result<(), CircuitError> {
         test_compute_challenges_vars_circuit_helper::<Bls12_377, _, _, Param377, RescueTranscript<_>>(
         )
     }
 
-    fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), PlonkError>
+    fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,

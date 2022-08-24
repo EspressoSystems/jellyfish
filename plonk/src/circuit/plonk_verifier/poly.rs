@@ -5,16 +5,14 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Circuits for the polynomial evaluations within Plonk verifiers.
-use crate::{
-    circuit::plonk_verifier::*,
-    errors::{PlonkError, SnarkError::ParameterError},
-};
+use crate::{circuit::plonk_verifier::*, errors::PlonkError};
 use ark_ec::PairingEngine;
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, string::ToString, vec, vec::Vec, One};
 use jf_relation::{
     constants::GATE_WIDTH,
+    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
     PlonkCircuit,
 };
@@ -41,7 +39,7 @@ pub(super) fn evaluate_poly_helper<E, F>(
     zeta_fp_elem_var: &FpElemVar<F>,
     domain_size: usize,
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<([FpElemVar<F>; 3]), PlonkError>
+) -> Result<([FpElemVar<F>; 3]), CircuitError>
 where
     E: PairingEngine<Fq = F>,
     F: PrimeField,
@@ -188,14 +186,14 @@ pub(super) fn evaluate_pi_poly_circuit<E, F>(
     vanish_eval_fp_elem_var: &FpElemVar<F>,
     circuit_is_merged: bool,
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<FpElemVar<F>, PlonkError>
+) -> Result<FpElemVar<F>, CircuitError>
 where
     E: PairingEngine<Fq = F>,
     F: PrimeField,
 {
     // the circuit is already merged
     if !circuit_is_merged {
-        return Err(PlonkError::InvalidParameters(
+        return Err(CircuitError::ParameterError(
             "Circuit should already been merged".to_string(),
         ));
     }
@@ -319,7 +317,7 @@ pub(super) fn compute_lin_poly_constant_term_circuit<E, F>(
     evals: &[FpElemVar<F>; 3],
     alpha_bases: &[FpElemVar<F>],
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<FpElemVar<F>, PlonkError>
+) -> Result<FpElemVar<F>, CircuitError>
 where
     E: PairingEngine<Fq = F>,
     F: PrimeField,
@@ -343,7 +341,7 @@ where
     let pi = public_inputs[0];
     for &pi_i in public_inputs.iter().skip(1) {
         if pi != pi_i {
-            return Err(PlonkError::PublicInputsDoNotMatch);
+            return Err(PlonkError::PublicInputsDoNotMatch)?;
         }
     }
 
@@ -465,7 +463,7 @@ where
     }
     // ensure all the buffer has been consumed
     if alpha_bases_elem_var.next().is_some() {
-        return Err(PlonkError::IteratorOutOfRange);
+        return Err(PlonkError::IteratorOutOfRange)?;
     }
     // =====================================================
     // second statement
@@ -492,7 +490,7 @@ pub(super) fn linearization_scalars_and_bases_circuit<E, F>(
     batch_proof: &BatchProofVar<F>,
     alpha_bases: &[FpElemVar<F>],
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<ScalarsAndBasesVar<F>, PlonkError>
+) -> Result<ScalarsAndBasesVar<F>, CircuitError>
 where
     E: PairingEngine<Fq = F>,
     F: PrimeField,
@@ -616,7 +614,7 @@ where
 
         // Add output wire sigma polynomial commitment.
         scalars_and_bases.scalars.push(coeff_fp_elem_var);
-        let tmp = circuit.inverse_point(vk.sigma_comms.last().ok_or(PlonkError::IndexError)?)?;
+        let tmp = circuit.inverse_point(vk.sigma_comms.last().ok_or(CircuitError::IndexError)?)?;
 
         scalars_and_bases.bases.push(tmp);
 
@@ -693,7 +691,7 @@ where
 
     // ensure all the buffer has been consumed
     if alpha_bases_elem_var.next().is_some() {
-        return Err(PlonkError::IteratorOutOfRange);
+        return Err(PlonkError::IteratorOutOfRange)?;
     }
     // ============================================
     // Add splitted quotient commitments
@@ -714,7 +712,7 @@ where
         batch_proof
             .split_quot_poly_comms
             .first()
-            .ok_or(PlonkError::IndexError)?,
+            .ok_or(CircuitError::IndexError)?,
     )?;
     scalars_and_bases.scalars.push(poly_evals[1]);
     scalars_and_bases.bases.push(tmp);
