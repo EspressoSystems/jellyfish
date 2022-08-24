@@ -10,7 +10,7 @@ use ark_ff::PrimeField;
 
 use crate::{
     errors::CircuitError,
-    gates::{CondSelectGate, LogicOrGate, LogicOrValueGate},
+    gates::{CondSelectGate, LogicOrGate, LogicOrOutputGate},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 
@@ -120,7 +120,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         let c = self.create_boolean_variable_unchecked(c_val)?;
         let wire_vars = &[a.into(), b.into(), 0, 0, c.into()];
-        self.insert_gate(wire_vars, Box::new(LogicOrValueGate))?;
+        self.insert_gate(wire_vars, Box::new(LogicOrOutputGate))?;
 
         Ok(c)
     }
