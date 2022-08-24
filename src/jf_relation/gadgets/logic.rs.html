@@ -428,6 +428,32 @@
 <span id="422">422</span>
 <span id="423">423</span>
 <span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -440,7 +466,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">errors::CircuitError</span>,
-    <span class="ident">gates</span>::{<span class="ident">CondSelectGate</span>, <span class="ident">LogicOrGate</span>},
+    <span class="ident">gates</span>::{<span class="ident">CondSelectGate</span>, <span class="ident">LogicOrGate</span>, <span class="ident">LogicOrOutputGate</span>},
     <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
 };
 
@@ -550,7 +576,7 @@
 
         <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_boolean_variable_unchecked</span>(<span class="ident">c_val</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">wire_vars</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">a</span>.<span class="ident">into</span>(), <span class="ident">b</span>.<span class="ident">into</span>(), <span class="number">0</span>, <span class="number">0</span>, <span class="ident">c</span>.<span class="ident">into</span>()];
-        <span class="self">self</span>.<span class="ident">insert_gate</span>(<span class="ident">wire_vars</span>, <span class="ident">Box::new</span>(<span class="ident">LogicOrGate</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">insert_gate</span>(<span class="ident">wire_vars</span>, <span class="ident">Box::new</span>(<span class="ident">LogicOrOutputGate</span>))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">c</span>)
     }
@@ -616,6 +642,32 @@
     }
 
     <span class="kw">fn</span> <span class="ident">test_logic_or_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
+        <span class="kw">let</span> <span class="ident">false_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">false_var</span>();
+        <span class="kw">let</span> <span class="ident">true_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">true_var</span>();
+        <span class="comment">// Good path</span>
+        <span class="kw">let</span> <span class="ident">should_be_true</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">logic_or</span>(<span class="ident">false_var</span>, <span class="ident">true_var</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">should_be_true</span>.<span class="ident">into</span>())<span class="question-mark">?</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">F::one</span>()));
+        <span class="kw">let</span> <span class="ident">should_be_true</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">logic_or</span>(<span class="ident">true_var</span>, <span class="ident">false_var</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">should_be_true</span>.<span class="ident">into</span>())<span class="question-mark">?</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">F::one</span>()));
+        <span class="kw">let</span> <span class="ident">should_be_true</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">logic_or</span>(<span class="ident">true_var</span>, <span class="ident">true_var</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">should_be_true</span>.<span class="ident">into</span>())<span class="question-mark">?</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">F::one</span>()));
+        <span class="comment">// Error path</span>
+        <span class="kw">let</span> <span class="ident">should_be_false</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">logic_or</span>(<span class="ident">false_var</span>, <span class="ident">false_var</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">should_be_false</span>.<span class="ident">into</span>())<span class="question-mark">?</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">F::zero</span>()));
+        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+
+        <span class="prelude-val">Ok</span>(())
+    }
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_logic_or_gate</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
+        <span class="ident">test_logic_or_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="ident">test_logic_or_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="ident">test_logic_or_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="ident">test_logic_or_gate_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
+    }
+
+    <span class="kw">fn</span> <span class="ident">test_logic_or_gate_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
         <span class="kw">let</span> <span class="ident">false_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">false_var</span>();
         <span class="kw">let</span> <span class="ident">true_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">true_var</span>();
