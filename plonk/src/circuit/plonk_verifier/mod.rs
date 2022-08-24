@@ -5,10 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Circuits for Plonk verifiers.
-use crate::{
-    errors::{PlonkError, SnarkError::ParameterError},
-    proof_system::{structs::VerifyingKey, verifier::Verifier},
-};
+use crate::proof_system::{structs::VerifyingKey, verifier::Verifier};
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
     TEModelParameters as TEParam,
@@ -17,7 +14,7 @@ use ark_ff::{BigInteger, FpParameters, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
-    errors::CircuitError,
+    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
         ecc::{MultiScalarMultiplicationCircuit, Point, PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
@@ -58,7 +55,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
     pub fn new<F, P>(
         circuit: &mut PlonkCircuit<F>,
         verify_key: &VerifyingKey<E>,
-    ) -> Result<Self, PlonkError>
+    ) -> Result<Self, CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + SWToTEConParam,
@@ -103,25 +100,25 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         &self,
         circuit: &mut PlonkCircuit<F>,
         other: &Self,
-    ) -> Result<Self, PlonkError>
+    ) -> Result<Self, CircuitError>
     where
         F: PrimeField,
         P: TEParam<BaseField = F>,
     {
         if self.is_merged || other.is_merged {
-            return Err(ParameterError("cannot merge a merged key again".to_string()).into());
+            return Err(ParameterError(
+                "cannot merge a merged key again".to_string(),
+            ));
         }
         if self.domain_size != other.domain_size {
             return Err(ParameterError(
                 "cannot merge a verifying key with different domain size".to_string(),
-            )
-            .into());
+            ));
         }
         if self.num_inputs != other.num_inputs {
             return Err(ParameterError(
                 "cannot merge a verifying key with different public input length".to_string(),
-            )
-            .into());
+            ));
         }
         let sigma_comms = self
             .sigma_comms
@@ -157,22 +154,21 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         shared_public_input_vars: &[FpElemVar<F>],
         batch_proof: &BatchProofVar<F>,
         blinding_factor: Variable,
-    ) -> Result<(PointVariable, PointVariable), PlonkError>
+    ) -> Result<(PointVariable, PointVariable), CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F> + TEParam,
     {
         if merged_vks.is_empty() {
-            return Err(ParameterError("empty merged verification keys".to_string()).into());
+            return Err(ParameterError("empty merged verification keys".to_string()));
         }
         if merged_vks.len() != batch_proof.len() {
             return Err(ParameterError(format!(
                 "the number of verification keys {} is different from the number of instances {}.",
                 merged_vks.len(),
                 batch_proof.len()
-            ))
-            .into());
+            )));
         }
 
         let domain_size = merged_vks[0].domain_size;
@@ -181,8 +177,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
                 return Err(ParameterError(format!(
                     "the {}-th verification key's domain size {} is different from {}.",
                     i, vk.domain_size, domain_size
-                ))
-                .into());
+                )));
             }
         }
 
@@ -287,7 +282,7 @@ pub trait BatchableCircuit<F> {
         &mut self,
         vk_type_a_vars: &[VerifyingKeyVar<E>],
         vk_type_b_vars: &[VerifyingKeyVar<E>],
-    ) -> Result<Vec<VerifyingKeyVar<E>>, PlonkError>
+    ) -> Result<Vec<VerifyingKeyVar<E>>, CircuitError>
     where
         E: PairingEngine,
         P: TEParam<BaseField = F>;
@@ -302,7 +297,7 @@ where
         &mut self,
         vk_type_a_vars: &[VerifyingKeyVar<E>],
         vk_type_b_vars: &[VerifyingKeyVar<E>],
-    ) -> Result<Vec<VerifyingKeyVar<E>>, PlonkError>
+    ) -> Result<Vec<VerifyingKeyVar<E>>, CircuitError>
     where
         E: PairingEngine,
         P: TEParam<BaseField = F>,
@@ -312,13 +307,13 @@ where
                 "the number of type A verification key variables {} is different from the number of type B verification key variables {}.",
                 vk_type_a_vars.len(),
                 vk_type_b_vars.len())
-            ).into());
+            ));
         }
         vk_type_a_vars
             .iter()
             .zip(vk_type_b_vars.iter())
             .map(|(vk_b, vk_d)| vk_b.merge::<F, P>(self, vk_d))
-            .collect::<Result<Vec<_>, PlonkError>>()
+            .collect::<Result<Vec<_>, CircuitError>>()
     }
 }
 
@@ -346,11 +341,11 @@ mod test {
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
 
     #[test]
-    fn test_aggregate_vks() -> Result<(), PlonkError> {
+    fn test_aggregate_vks() -> Result<(), CircuitError> {
         test_aggregate_vks_helper::<Bls12_377, Fq377, _, Param377>()
     }
 
-    fn test_aggregate_vks_helper<E, F, P, Q>() -> Result<(), PlonkError>
+    fn test_aggregate_vks_helper<E, F, P, Q>() -> Result<(), CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + RescueParameter + SWToTEConParam,
@@ -396,7 +391,7 @@ mod test {
         let vk_type_a_vars = vks_type_a
             .iter()
             .map(|vk| VerifyingKeyVar::new(&mut circuit, vk))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, CircuitError>>()?;
         for (vk_var, vk) in vk_type_a_vars.iter().zip(vks_type_a.iter()) {
             check_vk_equality(&circuit, vk_var, vk);
         }
@@ -404,7 +399,7 @@ mod test {
         let vk_type_b_vars = vks_type_b
             .iter()
             .map(|vk| VerifyingKeyVar::new(&mut circuit, vk))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, CircuitError>>()?;
         for (vk_var, vk) in vk_type_b_vars.iter().zip(vks_type_b.iter()) {
             check_vk_equality(&circuit, vk_var, vk);
         }
@@ -460,11 +455,11 @@ mod test {
     }
 
     #[test]
-    fn test_partial_verification_circuit() -> Result<(), PlonkError> {
+    fn test_partial_verification_circuit() -> Result<(), CircuitError> {
         test_partial_verification_circuit_helper::<Bls12_377, _, _, Param377, RescueTranscript<_>>()
     }
 
-    fn test_partial_verification_circuit_helper<E, F, P, Q, T>() -> Result<(), PlonkError>
+    fn test_partial_verification_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -697,7 +692,7 @@ mod test {
         beta_g_ref: &GroupAffine<P>,
         generator_g: &GroupAffine<P>,
         blinding_factor: &E::Fr,
-    ) -> Result<(PlonkCircuit<F>, (PointVariable, PointVariable)), PlonkError>
+    ) -> Result<(PlonkCircuit<F>, (PointVariable, PointVariable)), CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
@@ -742,7 +737,7 @@ mod test {
     }
 
     #[test]
-    fn test_variable_independence_for_partial_verification_circuit() -> Result<(), PlonkError> {
+    fn test_variable_independence_for_partial_verification_circuit() -> Result<(), CircuitError> {
         test_variable_independence_for_partial_verification_circuit_helper::<
             Bls12_377,
             _,
@@ -753,7 +748,7 @@ mod test {
     }
 
     fn test_variable_independence_for_partial_verification_circuit_helper<E, F, P, Q, T>(
-    ) -> Result<(), PlonkError>
+    ) -> Result<(), CircuitError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
