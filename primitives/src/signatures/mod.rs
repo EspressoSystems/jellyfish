@@ -95,6 +95,6 @@ mod tests {
         let parameters = S::param_gen(Some(rng)).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
         let sig = S::sign(&parameters, &sk, message, rng).unwrap();
-        assert!(!S::verify(&parameters, &pk, bad_message, &sig).is_ok());
+        assert!(S::verify(&parameters, &pk, bad_message, &sig).is_err());
     }
 }

@@ -8,7 +8,7 @@ use crate::{elgamal, signatures::schnorr};
 use ark_ec::{models::TEModelParameters, ProjectiveCurve, TEModelParameters as Parameters};
 use ark_ff::{FpParameters, PrimeField};
 use ark_std::vec::Vec;
-use jf_plonk::circuit::Variable;
+use jf_relation::Variable;
 
 impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
 where

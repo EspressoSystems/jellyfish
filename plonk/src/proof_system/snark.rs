@@ -15,10 +15,8 @@ use super::{
     UniversalSNARK,
 };
 use crate::{
-    circuit::{customized::ecc::SWToTEConParam, Arithmetization},
-    constants::{compute_coset_representatives, EXTRA_TRANSCRIPT_MSG_LABEL},
+    constants::EXTRA_TRANSCRIPT_MSG_LABEL,
     errors::{PlonkError, SnarkError::ParameterError},
-    par_utils::parallelizable_slice_iter,
     proof_system::structs::UniversalSrs,
     transcript::*,
 };
@@ -34,7 +32,11 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
+use jf_primitives::rescue::RescueParameter;
+use jf_relation::{
+    constants::compute_coset_representatives, gadgets::ecc::SWToTEConParam, Arithmetization,
+};
+use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
@@ -598,8 +600,6 @@ where
 #[cfg(test)]
 pub mod test {
     use crate::{
-        circuit::{customized::ecc::SWToTEConParam, Arithmetization, Circuit, PlonkCircuit},
-        constants::GATE_WIDTH,
         errors::PlonkError,
         proof_system::{
             structs::{
@@ -612,7 +612,7 @@ pub mod test {
             rescue::RescueTranscript, solidity::SolidityTranscript, standard::StandardTranscript,
             PlonkTranscript,
         },
-        MergeableCircuitType, PlonkType,
+        PlonkType,
     };
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
@@ -635,7 +635,11 @@ pub mod test {
         vec::Vec,
     };
     use core::ops::{Mul, Neg};
-    use jf_rescue::RescueParameter;
+    use jf_primitives::rescue::RescueParameter;
+    use jf_relation::{
+        constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
+        MergeableCircuitType, PlonkCircuit,
+    };
 
     // Different `m`s lead to different circuits.
     // Different `a0`s lead to different witness values.
@@ -670,11 +674,11 @@ pub mod test {
         let mut acc = cs.zero();
         a.iter().for_each(|&elem| acc = cs.add(acc, elem).unwrap());
         let b_mul = cs.mul(b[0], b[1])?;
-        cs.equal_gate(acc, b_mul)?;
+        cs.enforce_equal(acc, b_mul)?;
         let b1_plus_a0 = cs.add(b[1], a[0])?;
         let b1_minus_a0 = cs.sub(b[1], a[0])?;
         cs.mul_gate(b1_plus_a0, b1_minus_a0, c)?;
-        cs.constant_gate(b[0], F::from(m as u64 * 2))?;
+        cs.enforce_constant(b[0], F::from(m as u64 * 2))?;
 
         if plonk_type == PlonkType::UltraPlonk {
             // Create range gates
@@ -902,7 +906,7 @@ pub mod test {
         let public_inputs: Vec<Vec<E::Fr>> = circuits
             .iter()
             .map(|cs| cs.public_input())
-            .collect::<Result<Vec<Vec<E::Fr>>, PlonkError>>()?;
+            .collect::<Result<Vec<Vec<E::Fr>>, _>>()?;
         for (i, proof) in proofs.iter().enumerate() {
             let vk_ref = if i < 3 { &vk1 } else { &vk2 };
             assert!(PlonkKzgSnark::<E>::verify::<T>(
@@ -994,18 +998,13 @@ pub mod test {
         )
         .is_err());
 
-        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(
-            &vks,
-            &public_inputs_ref,
-            &proofs_ref,
-            &vec![],
-        )
-        .is_err());
+        assert!(
+            PlonkKzgSnark::<E>::batch_verify::<T>(&vks, &public_inputs_ref, &proofs_ref, &[],)
+                .is_err()
+        );
 
         // Empty params
-        assert!(
-            PlonkKzgSnark::<E>::batch_verify::<T>(&vec![], &vec![], &vec![], &vec![],).is_err()
-        );
+        assert!(PlonkKzgSnark::<E>::batch_verify::<T>(&[], &[], &[], &[],).is_err());
 
         // Error paths
         let tmp_pi_ref = public_inputs_ref[0];
@@ -1097,7 +1096,7 @@ pub mod test {
             PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(2),
         };
         let var = cs1.create_variable(E::Fr::from(1u8))?;
-        cs1.constant_gate(var, E::Fr::from(1u8))?;
+        cs1.enforce_constant(var, E::Fr::from(1u8))?;
         cs1.finalize_for_arithmetization()?;
         let mut cs2: PlonkCircuit<E::Fr> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
@@ -1209,10 +1208,10 @@ pub mod test {
         pk: &ProvingKey<E>,
         challenges: &Challenges<E::Fr>,
     ) -> Result<(), PlonkError> {
-        check_circuit_polynomial_on_vanishing_set(&oracles, &pk)?;
-        check_perm_polynomials_on_vanishing_set(&oracles, &pk, &challenges)?;
+        check_circuit_polynomial_on_vanishing_set(oracles, pk)?;
+        check_perm_polynomials_on_vanishing_set(oracles, pk, challenges)?;
         if plonk_type == PlonkType::UltraPlonk {
-            check_lookup_polynomials_on_vanishing_set(&oracles, &pk, &challenges)?;
+            check_lookup_polynomials_on_vanishing_set(oracles, pk, challenges)?;
         }
 
         Ok(())
@@ -1590,7 +1589,7 @@ pub mod test {
             .iter()
             .zip(type_b_circuits.iter())
             .map(|(cs_a, cs_b)| cs_a.merge(cs_b))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
         let cs_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
 
         // 3. Preprocessing
@@ -1656,18 +1655,18 @@ pub mod test {
         let public_inputs: Vec<Vec<E::Fr>> = cs_ref
             .iter()
             .map(|&cs| cs.public_input())
-            .collect::<Result<Vec<Vec<E::Fr>>, PlonkError>>()?;
+            .collect::<Result<Vec<Vec<E::Fr>>, _>>()?;
         let pi_ref: Vec<&[E::Fr]> = public_inputs
             .iter()
             .map(|pub_input| &pub_input[..])
             .collect();
         assert!(
-            PlonkKzgSnark::<E>::verify_batch_proof::<T>(&vks_ref, &pi_ref, &batch_proof,).is_ok()
+            PlonkKzgSnark::<E>::verify_batch_proof::<T>(vks_ref, &pi_ref, &batch_proof,).is_ok()
         );
         let mut bad_pi_ref = pi_ref.clone();
         bad_pi_ref[0] = bad_pi_ref[1];
         assert!(
-            PlonkKzgSnark::<E>::verify_batch_proof::<T>(&vks_ref, &bad_pi_ref, &batch_proof,)
+            PlonkKzgSnark::<E>::verify_batch_proof::<T>(vks_ref, &bad_pi_ref, &batch_proof,)
                 .is_err()
         );
 
@@ -1700,11 +1699,11 @@ pub mod test {
         let mut acc = cs.zero();
         a.iter().for_each(|&elem| acc = cs.add(acc, elem).unwrap());
         let b_mul = cs.mul(b[0], b[1])?;
-        cs.equal_gate(acc, b_mul)?;
+        cs.enforce_equal(acc, b_mul)?;
         let b1_plus_a0 = cs.add(b[1], a[0])?;
         let b1_minus_a0 = cs.sub(b[1], a[0])?;
         cs.mul_gate(b1_plus_a0, b1_minus_a0, c)?;
-        cs.constant_gate(b[0], F::from(m as u64 * 2))?;
+        cs.enforce_constant(b[0], F::from(m as u64 * 2))?;
 
         cs.finalize_for_mergeable_circuit(circuit_type)?;
 

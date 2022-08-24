@@ -14,12 +14,12 @@ use ark_bn254::{Bn254, Fr as Fr254};
 use ark_bw6_761::{Fr as Fr761, BW6_761};
 use ark_ff::PrimeField;
 use jf_plonk::{
-    circuit::{Circuit, PlonkCircuit},
     errors::PlonkError,
     proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
     PlonkType,
 };
+use jf_relation::{Circuit, PlonkCircuit};
 use std::time::Instant;
 
 const NUM_REPETITIONS: usize = 10;

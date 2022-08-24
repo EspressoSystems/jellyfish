@@ -9,6 +9,7 @@
 mod conversion;
 mod macros;
 mod multi_pairing;
+pub mod par_utils;
 mod serialize;
 
 use ark_ff::Field;

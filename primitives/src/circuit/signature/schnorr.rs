@@ -7,24 +7,20 @@
 //! Circuit implementation of a Schnorr signature scheme.
 
 use crate::{
+    circuit::rescue::RescueGadget,
     constants::CS_ID_SCHNORR,
+    rescue::RescueParameter,
     signatures::schnorr::{Signature, VerKey},
     utils::{challenge_bit_len, field_bit_len},
 };
 use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParameters as Parameters};
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
-use jf_plonk::{
-    circuit::{
-        customized::{
-            ecc::{Point, PointVariable},
-            rescue::RescueGadget,
-        },
-        BoolVar, Circuit, PlonkCircuit, Variable,
-    },
-    errors::PlonkError,
+use jf_relation::{
+    errors::CircuitError,
+    gadgets::ecc::{Point, PointVariable},
+    BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use jf_rescue::RescueParameter;
 use jf_utils::fr_to_fq;
 
 #[derive(Debug, Clone)]
@@ -58,7 +54,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<(), PlonkError>;
+    ) -> Result<(), CircuitError>;
 
     /// Obtain the result bit of a signature verification.
     /// * `vk` - signature verification key variable.
@@ -70,14 +66,16 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<BoolVar, PlonkError>;
+    ) -> Result<BoolVar, CircuitError>;
 
     /// Create a signature variable from a signature `sig`.
-    fn create_signature_variable(&mut self, sig: &Signature<P>)
-        -> Result<SignatureVar, PlonkError>;
+    fn create_signature_variable(
+        &mut self,
+        sig: &Signature<P>,
+    ) -> Result<SignatureVar, CircuitError>;
 
     /// Create a signature verification key variable from a key `vk`.
-    fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, PlonkError>;
+    fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, CircuitError>;
 
     /// Compute the two point variables to be compared in the signature
     /// verification circuit.
@@ -86,7 +84,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<(PointVariable, PointVariable), PlonkError>;
+    ) -> Result<(PointVariable, PointVariable), CircuitError>;
 }
 
 impl<F, P> SignatureGadget<F, P> for PlonkCircuit<F>
@@ -99,10 +97,10 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<(), PlonkError> {
+    ) -> Result<(), CircuitError> {
         // p1 = s * G, p2 = sig.R + c * VK
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
-        self.point_equal_gate(&p1, &p2)?;
+        self.enforce_point_equal(&p1, &p2)?;
         Ok(())
     }
 
@@ -111,15 +109,15 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<BoolVar, PlonkError> {
+    ) -> Result<BoolVar, CircuitError> {
         let (p1, p2) = <Self as SignatureGadget<F, P>>::verify_sig_core(self, vk, msg, sig)?;
-        self.check_equal_point(&p1, &p2)
+        self.is_point_equal(&p1, &p2)
     }
 
     fn create_signature_variable(
         &mut self,
         sig: &Signature<P>,
-    ) -> Result<SignatureVar, PlonkError> {
+    ) -> Result<SignatureVar, CircuitError> {
         let sig_var = SignatureVar {
             s: self.create_variable(fr_to_fq::<F, P>(&sig.s))?,
             R: self.create_point_variable(Point::from(sig.R))?,
@@ -127,7 +125,7 @@ where
         Ok(sig_var)
     }
 
-    fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, PlonkError> {
+    fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, CircuitError> {
         let vk_var = VerKeyVar(self.create_point_variable(Point::from(vk.0))?);
         Ok(vk_var)
     }
@@ -137,7 +135,7 @@ where
         vk: &VerKeyVar,
         msg: &[Variable],
         sig: &SignatureVar,
-    ) -> Result<(PointVariable, PointVariable), PlonkError> {
+    ) -> Result<(PointVariable, PointVariable), CircuitError> {
         let c_bits_le =
             <Self as SignatureHelperGadget<F, P>>::challenge_bits(self, vk, &sig.R, msg)?;
         let base = GroupAffine::<P>::prime_subgroup_generator();
@@ -159,7 +157,7 @@ where
         vk: &VerKeyVar,
         sig_point: &PointVariable,
         msg: &[Variable],
-    ) -> Result<Vec<BoolVar>, PlonkError>;
+    ) -> Result<Vec<BoolVar>, CircuitError>;
 }
 
 impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
@@ -172,12 +170,12 @@ where
         vk: &VerKeyVar,
         sig_point: &PointVariable,
         msg: &[Variable],
-    ) -> Result<Vec<BoolVar>, PlonkError> {
+    ) -> Result<Vec<BoolVar>, CircuitError> {
         let instance_description = F::from_be_bytes_mod_order(CS_ID_SCHNORR.as_ref());
         // TODO: create `inst_desc_var` and the constant gate *only once* during the
         // entire circuit construction.
         let inst_desc_var = self.create_variable(instance_description)?;
-        self.constant_gate(inst_desc_var, instance_description)?;
+        self.enforce_constant(inst_desc_var, instance_description)?;
         let mut chal_input = vec![
             inst_desc_var,
             vk.0.get_x(),
@@ -201,20 +199,17 @@ mod tests {
     use ark_ed_on_bls12_381::EdwardsParameters as Param381;
     use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
     use ark_ed_on_bn254::EdwardsParameters as Param254;
-    use jf_plonk::{
-        circuit::{Circuit, PlonkCircuit, Variable},
-        errors::PlonkError,
-    };
+    use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
     #[test]
-    fn test_dsa_circuit() -> Result<(), PlonkError> {
+    fn test_dsa_circuit() -> Result<(), CircuitError> {
         test_dsa_circuit_helper::<_, Param377>()?;
         test_dsa_circuit_helper::<_, Param381>()?;
         test_dsa_circuit_helper::<_, Param381b>()?;
         test_dsa_circuit_helper::<_, Param254>()
     }
 
-    fn test_dsa_circuit_helper<F, P>() -> Result<(), PlonkError>
+    fn test_dsa_circuit_helper<F, P>() -> Result<(), CircuitError>
     where
         F: RescueParameter,
         P: Parameters<BaseField = F>,
@@ -225,7 +220,7 @@ mod tests {
         let vk_bad: VerKey<P> = KeyPair::<P>::generate(&mut rng).ver_key_ref().clone();
         let msg: Vec<F> = (0..20).map(|i| F::from(i as u64)).collect();
         let mut msg_bad = msg.clone();
-        msg_bad[0] = F::from(2 as u64);
+        msg_bad[0] = F::from(2u64);
         let sig = keypair.sign(&msg, CS_ID_SCHNORR);
         let sig_bad = keypair.sign(&msg_bad, CS_ID_SCHNORR);
         vk.verify(&msg, &sig, CS_ID_SCHNORR).unwrap();
@@ -278,7 +273,7 @@ mod tests {
         vk: &VerKey<P>,
         msg: &[F],
         sig: &Signature<P>,
-    ) -> Result<PlonkCircuit<F>, PlonkError>
+    ) -> Result<PlonkCircuit<F>, CircuitError>
     where
         F: RescueParameter,
         P: Parameters<BaseField = F>,
@@ -289,7 +284,7 @@ mod tests {
         let msg_var: Vec<Variable> = msg
             .iter()
             .map(|m| circuit.create_variable(*m))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, CircuitError>>()?;
         SignatureGadget::<F, P>::verify_signature(&mut circuit, &vk_var, &msg_var, &sig_var)?;
         Ok(circuit)
     }
@@ -298,7 +293,7 @@ mod tests {
         vk: &VerKey<P>,
         msg: &[F],
         sig: &Signature<P>,
-    ) -> Result<(PlonkCircuit<F>, Variable), PlonkError>
+    ) -> Result<(PlonkCircuit<F>, Variable), CircuitError>
     where
         F: RescueParameter,
         P: Parameters<BaseField = F>,
@@ -309,7 +304,7 @@ mod tests {
         let msg_var: Vec<Variable> = msg
             .iter()
             .map(|m| circuit.create_variable(*m))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, CircuitError>>()?;
         let bit = SignatureGadget::<_, P>::check_signature_validity(
             &mut circuit,
             &vk_var,

@@ -9,6 +9,7 @@
 use crate::{
     elgamal::Direction::{Decrypt, Encrypt},
     errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
 };
 use ark_ec::{
     group::Group,
@@ -24,7 +25,6 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
 use jf_utils::pad_with_zeros;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

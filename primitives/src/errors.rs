@@ -6,10 +6,10 @@
 
 //! Error types.
 
+use crate::rescue::errors::RescueError;
 use ark_serialize::SerializationError;
 use ark_std::string::String;
 use displaydoc::Display;
-use jf_rescue::errors::RescueError;
 
 /// A `enum` specifying the possible failure modes of the primitives.
 #[derive(Debug, Display)]

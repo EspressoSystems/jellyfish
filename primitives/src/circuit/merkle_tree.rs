@@ -8,15 +8,15 @@
 
 //! Circuit implementation of a Merkle tree.
 
-use crate::merkle_tree::{AccMemberWitness, MerklePath, MerkleTree, NodePos, NodeValue};
+use crate::{
+    circuit::rescue::RescueGadget,
+    merkle_tree::{AccMemberWitness, MerklePath, MerkleTree, NodePos, NodeValue},
+    rescue::RescueParameter,
+};
 use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
-use jf_plonk::{
-    circuit::{customized::rescue::RescueGadget, BoolVar, Circuit, PlonkCircuit, Variable},
-    errors::PlonkError,
-};
-use jf_rescue::RescueParameter;
+use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 #[derive(Clone)]
 struct MerkleNodeBooleanEncoding<F: PrimeField> {
@@ -108,7 +108,7 @@ impl AccMemberWitnessVar {
     pub fn new<F, P>(
         circuit: &mut PlonkCircuit<F>,
         acc_member_witness: &AccMemberWitness<F>,
-    ) -> Result<Self, PlonkError>
+    ) -> Result<Self, CircuitError>
     where
         F: RescueParameter,
         P: Parameters<BaseField = F>,
@@ -136,7 +136,7 @@ trait MerkleTreeHelperGadget<F: PrimeField> {
         sib2: Variable,
         node_is_left: BoolVar,
         node_is_right: BoolVar,
-    ) -> Result<[Variable; 3], PlonkError>;
+    ) -> Result<[Variable; 3], CircuitError>;
 
     /// Ensure that the position of each node of the path is correctly encoded
     /// Used for testing purposes.
@@ -145,7 +145,7 @@ trait MerkleTreeHelperGadget<F: PrimeField> {
     fn constrain_merkle_path(
         &mut self,
         merkle_path: &MerklePathBooleanEncoding<F>,
-    ) -> Result<MerklePathVars, PlonkError>;
+    ) -> Result<MerklePathVars, CircuitError>;
 }
 
 /// Circuit implementation of a Merkle tree.
@@ -157,7 +157,7 @@ pub trait MerkleTreeGadget<F: PrimeField> {
     fn add_merkle_path_variable(
         &mut self,
         merkle_path: &MerklePath<F>,
-    ) -> Result<MerklePathVars, PlonkError>;
+    ) -> Result<MerklePathVars, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
@@ -170,7 +170,7 @@ pub trait MerkleTreeGadget<F: PrimeField> {
         &mut self,
         elem: AccElemVars,
         path_vars: &MerklePathVars,
-    ) -> Result<Variable, PlonkError>;
+    ) -> Result<Variable, CircuitError>;
 }
 
 impl<F> MerkleTreeGadget<F> for PlonkCircuit<F>
@@ -180,7 +180,7 @@ where
     fn add_merkle_path_variable(
         &mut self,
         merkle_path: &MerklePath<F>,
-    ) -> Result<MerklePathVars, PlonkError> {
+    ) -> Result<MerklePathVars, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
         let merkle_path = MerklePathBooleanEncoding::from(merkle_path);
 
@@ -191,7 +191,7 @@ where
         &mut self,
         elem: AccElemVars,
         path_vars: &MerklePathVars,
-    ) -> Result<Variable, PlonkError> {
+    ) -> Result<Variable, CircuitError> {
         let zero_var = self.zero();
 
         // leaf label = H(0, uid, arc)
@@ -223,7 +223,7 @@ where
         sib2: Variable,
         node_is_left: BoolVar,
         node_is_right: BoolVar,
-    ) -> Result<[Variable; 3], PlonkError> {
+    ) -> Result<[Variable; 3], CircuitError> {
         let one = F::one();
         let left_node = self.conditional_select(node_is_left, sib1, node)?;
         let right_node = self.conditional_select(node_is_right, sib2, node)?;
@@ -238,13 +238,13 @@ where
     fn constrain_merkle_path(
         &mut self,
         merkle_path: &MerklePathBooleanEncoding<F>,
-    ) -> Result<MerklePathVars, PlonkError> {
+    ) -> Result<MerklePathVars, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
             .nodes
             .clone()
             .into_iter()
-            .map(|node| -> Result<MerkleNodeVars, PlonkError> {
+            .map(|node| -> Result<MerkleNodeVars, CircuitError> {
                 Ok(MerkleNodeVars {
                     sibling1: self.create_variable(node.sibling1.0)?,
                     sibling2: self.create_variable(node.sibling2.0)?,
@@ -252,7 +252,7 @@ where
                     is_right_child: self.create_boolean_variable(node.is_right_child)?,
                 })
             })
-            .collect::<Result<Vec<MerkleNodeVars>, PlonkError>>()?;
+            .collect::<Result<Vec<MerkleNodeVars>, CircuitError>>()?;
 
         // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
         // boolean
@@ -261,7 +261,7 @@ where
             // can either be the left or the right child of its parent
             let left_plus_right =
                 self.add(node.is_left_child.into(), node.is_right_child.into())?;
-            self.bool_gate(left_plus_right)?;
+            self.enforce_bool(left_plus_right)?;
         }
 
         Ok(MerklePathVars { nodes })
@@ -295,6 +295,7 @@ mod test {
             MerklePathBooleanEncoding, MerkleTreeGadget, MerkleTreeHelperGadget,
         },
         merkle_tree::{hash, MerklePath, MerklePathNode, NodePos, NodeValue},
+        rescue::RescueParameter,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -303,8 +304,7 @@ mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
     use ark_std::{vec, vec::Vec};
-    use jf_plonk::circuit::{Circuit, PlonkCircuit, Variable};
-    use jf_rescue::RescueParameter;
+    use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     fn check_merkle_path<F: PrimeField>(is_left_child: bool, is_right_child: bool, accept: bool) {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
@@ -316,7 +316,7 @@ mod test {
             is_left_child,
             is_right_child,
         );
-        let path = MerklePathBooleanEncoding::new(&vec![node]);
+        let path = MerklePathBooleanEncoding::new(&[node]);
         let _ = circuit.constrain_merkle_path(&path);
         if accept {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok());

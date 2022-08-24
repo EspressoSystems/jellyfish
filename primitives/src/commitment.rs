@@ -6,9 +6,11 @@
 
 //! Implements a rescue hash based commitment scheme.
 
-use crate::errors::PrimitivesError;
+use crate::{
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, RATE},
+};
 use ark_std::{format, string::String, vec};
-use jf_rescue::{Permutation, RescueParameter, RATE};
 use jf_utils::pad_with_zeros;
 
 #[derive(Default)]

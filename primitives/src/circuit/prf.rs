@@ -6,12 +6,12 @@
 
 //! Circuit implementation of a PRF.
 
-use crate::utils::pad_with;
-use jf_plonk::{
-    circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
-    errors::PlonkError,
+use crate::{
+    circuit::rescue::RescueGadget,
+    rescue::{RescueParameter, STATE_SIZE},
+    utils::pad_with,
 };
-use jf_rescue::{RescueParameter, STATE_SIZE};
+use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
 /// Circuit implementation of a PRF.
 pub trait PrfGadget {
@@ -19,14 +19,14 @@ pub trait PrfGadget {
     /// * `key` - key variable
     /// * `input` - input variables,
     /// * `returns` variables that refers to the output
-    fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, PlonkError>;
+    fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError>;
 }
 
 impl<F> PrfGadget for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
-    fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, PlonkError> {
+    fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError> {
         // pad input: it is ok to pad with zeroes, PRF instance is bound to a specific
         // input length
 
@@ -48,7 +48,7 @@ mod tests {
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
     use itertools::Itertools;
-    use jf_plonk::circuit::{Circuit, PlonkCircuit, Variable};
+    use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     macro_rules! test_prf_circuit {
         ($base_field:tt) => {
@@ -58,7 +58,7 @@ mod tests {
             let key = PrfKey::from(rand_scalar);
             let key_var = circuit.create_variable(rand_scalar).unwrap();
             let input_len = 10;
-            let mut data: Vec<$base_field> = (0..input_len)
+            let data: Vec<$base_field> = (0..input_len)
                 .map(|_| $base_field::rand(&mut prng))
                 .collect_vec();
             let data_vars: Vec<Variable> = data
@@ -67,7 +67,7 @@ mod tests {
                 .collect_vec();
 
             let prf = PRF::new(input_len, 1);
-            let expected_prf_output = prf.eval(&key, &mut data).unwrap();
+            let expected_prf_output = prf.eval(&key, &data).unwrap();
 
             let prf_var = circuit.eval_prf(key_var, &data_vars).unwrap();
 

@@ -8,7 +8,12 @@
 //! curves.
 
 use super::SignatureScheme;
-use crate::{constants::CS_ID_SCHNORR, errors::PrimitivesError, utils::curve_cofactor};
+use crate::{
+    constants::CS_ID_SCHNORR,
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter},
+    utils::curve_cofactor,
+};
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
@@ -24,7 +29,6 @@ use ark_std::{
     vec,
 };
 use espresso_systems_common::jellyfish::tag;
-use jf_rescue::{Permutation, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
 use zeroize::Zeroize;
 
