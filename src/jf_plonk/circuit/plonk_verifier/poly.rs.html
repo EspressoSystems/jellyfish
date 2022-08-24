@@ -815,9 +815,6 @@
 <span id="809">809</span>
 <span id="810">810</span>
 <span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -825,16 +822,14 @@
 <span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
 
 <span class="doccomment">//! Circuits for the polynomial evaluations within Plonk verifiers.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::plonk_verifier</span>::<span class="kw-2">*</span>,
-    <span class="ident">errors</span>::{<span class="ident">PlonkError</span>, <span class="ident">SnarkError::ParameterError</span>},
-};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">circuit::plonk_verifier</span>::<span class="kw-2">*</span>, <span class="ident">errors::PlonkError</span>};
 <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
 <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
 <span class="kw">use</span> <span class="ident">ark_poly</span>::{<span class="ident">EvaluationDomain</span>, <span class="ident">Radix2EvaluationDomain</span>};
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::ToString</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>, <span class="ident">One</span>};
 <span class="kw">use</span> <span class="ident">jf_relation</span>::{
     <span class="ident">constants::GATE_WIDTH</span>,
+    <span class="ident">errors</span>::{<span class="ident">CircuitError</span>, <span class="ident">CircuitError::ParameterError</span>},
     <span class="ident">gadgets::ultraplonk::mod_arith</span>::{<span class="ident">FpElem</span>, <span class="ident">FpElemVar</span>},
     <span class="ident">PlonkCircuit</span>,
 };
@@ -861,7 +856,7 @@
     <span class="ident">zeta_fp_elem_var</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">domain_size</span>: <span class="ident">usize</span>,
     <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>([<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>]), <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>([<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>]), <span class="ident">CircuitError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
@@ -1008,14 +1003,14 @@
     <span class="ident">vanish_eval_fp_elem_var</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">circuit_is_merged</span>: <span class="ident">bool</span>,
     <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
 {
     <span class="comment">// the circuit is already merged</span>
     <span class="kw">if</span> <span class="op">!</span><span class="ident">circuit_is_merged</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::InvalidParameters</span>(
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(
             <span class="string">&quot;Circuit should already been merged&quot;</span>.<span class="ident">to_string</span>(),
         ));
     }
@@ -1139,7 +1134,7 @@
     <span class="ident">evals</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>],
     <span class="ident">alpha_bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
     <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
@@ -1150,8 +1145,7 @@
             <span class="ident">verify_keys</span>.<span class="ident">len</span>(),
             <span class="ident">batch_proof</span>.<span class="ident">len</span>(),
             <span class="ident">public_inputs</span>.<span class="ident">len</span>(),
-        ))
-        .<span class="ident">into</span>());
+        )));
     }
 
     <span class="kw">let</span> <span class="ident">zeta_fp_elem_var</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">zeta</span>;
@@ -1163,7 +1157,7 @@
     <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">public_inputs</span>[<span class="number">0</span>];
     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">pi_i</span> <span class="kw">in</span> <span class="ident">public_inputs</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
         <span class="kw">if</span> <span class="ident">pi</span> <span class="op">!</span><span class="op">=</span> <span class="ident">pi_i</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::PublicInputsDoNotMatch</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::PublicInputsDoNotMatch</span>)<span class="question-mark">?</span>;
         }
     }
 
@@ -1285,7 +1279,7 @@
     }
     <span class="comment">// ensure all the buffer has been consumed</span>
     <span class="kw">if</span> <span class="ident">alpha_bases_elem_var</span>.<span class="ident">next</span>().<span class="ident">is_some</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>;
     }
     <span class="comment">// =====================================================</span>
     <span class="comment">// second statement</span>
@@ -1312,7 +1306,7 @@
     <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident">BatchProofVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">alpha_bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
     <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ScalarsAndBasesVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ScalarsAndBasesVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="ident">F</span>: <span class="ident">PrimeField</span>,
@@ -1436,7 +1430,7 @@
 
         <span class="comment">// Add output wire sigma polynomial commitment.</span>
         <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">coeff_fp_elem_var</span>);
-        <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="ident">vk</span>.<span class="ident">sigma_comms</span>.<span class="ident">last</span>().<span class="ident">ok_or</span>(<span class="ident">PlonkError::IndexError</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="ident">vk</span>.<span class="ident">sigma_comms</span>.<span class="ident">last</span>().<span class="ident">ok_or</span>(<span class="ident">CircuitError::IndexError</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 
         <span class="ident">scalars_and_bases</span>.<span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
 
@@ -1513,7 +1507,7 @@
 
     <span class="comment">// ensure all the buffer has been consumed</span>
     <span class="kw">if</span> <span class="ident">alpha_bases_elem_var</span>.<span class="ident">next</span>().<span class="ident">is_some</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>;
     }
     <span class="comment">// ============================================</span>
     <span class="comment">// Add splitted quotient commitments</span>
@@ -1534,7 +1528,7 @@
         <span class="ident">batch_proof</span>
             .<span class="ident">split_quot_poly_comms</span>
             .<span class="ident">first</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">PlonkError::IndexError</span>)<span class="question-mark">?</span>,
+            .<span class="ident">ok_or</span>(<span class="ident">CircuitError::IndexError</span>)<span class="question-mark">?</span>,
     )<span class="question-mark">?</span>;
     <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">poly_evals</span>[<span class="number">1</span>]);
     <span class="ident">scalars_and_bases</span>.<span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);

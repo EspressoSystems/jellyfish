@@ -103,6 +103,14 @@
 <span id="97">97</span>
 <span id="98">98</span>
 <span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -111,7 +119,7 @@
 
 <span class="doccomment">//! Error module.</span>
 
-<span class="kw">use</span> <span class="ident">ark_std::string::String</span>;
+<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::String</span>};
 <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
 <span class="kw">use</span> <span class="ident">jf_relation::errors::CircuitError</span>;
 
@@ -200,6 +208,14 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">CircuitError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">CircuitError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::CircuitError</span>(<span class="ident">e</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PlonkError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CircuitError</span> {
+    <span class="comment">// this happen during invocation of Plonk proof system API inside Verifier</span>
+    <span class="comment">// gadget</span>
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">PlonkError</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::ParameterError</span>(<span class="macro">format!</span>(<span class="string">&quot;Plonk proof system err: {:?}&quot;</span>, <span class="ident">e</span>))
     }
 }
 </code></pre></div>
