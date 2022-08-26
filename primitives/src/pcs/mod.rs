@@ -43,20 +43,22 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
 
     /// Build SRS for testing.
     ///
-    /// - For univariate polynomials, `log_size` is the log of maximum degree.
-    /// - For multilinear polynomials, `log_size` is the number of variables.
+    /// - For univariate polynomials, `supported_size` is the maximum degree.
+    /// - For multilinear polynomials, `supported_size` is the number of variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(rng: &mut R, log_size: usize)
-        -> Result<Self::SRS, PCSError>;
+    fn gen_srs_for_testing<R: RngCore>(
+        rng: &mut R,
+        supported_size: usize,
+    ) -> Result<Self::SRS, PCSError>;
 
     /// Trim the universal parameters to specialize the public parameters.
-    /// Input both `supported_log_degree` for univariate and
+    /// Input both `supported_degree` for univariate and
     /// `supported_num_vars` for multilinear.
     fn trim(
         srs: &Self::SRS,
-        supported_log_degree: usize,
+        supported_degree: usize,
         supported_num_vars: Option<usize>,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
 
@@ -119,31 +121,33 @@ pub trait StructuredReferenceString<E: PairingEngine>: Sized {
     type VerifierParam;
 
     /// Extract the prover parameters from the public parameters.
-    fn extract_prover_param(&self, supported_log_size: usize) -> Self::ProverParam;
+    fn extract_prover_param(&self, supported_size: usize) -> Self::ProverParam;
     /// Extract the verifier parameters from the public parameters.
-    fn extract_verifier_param(&self, supported_log_size: usize) -> Self::VerifierParam;
+    fn extract_verifier_param(&self, supported_size: usize) -> Self::VerifierParam;
 
     /// Trim the universal parameters to specialize the public parameters
-    /// for polynomials to the given `supported_log_size`, and
+    /// for polynomials to the given `supported_size`, and
     /// returns committer key and verifier key.
     ///
-    /// - For univariate polynomials, `supported_log_size` is the log of maximum
-    ///   degree.
-    /// - For multilinear polynomials, `supported_log_size` is the number of
+    /// - For univariate polynomials, `supported_size` is the maximum degree.
+    /// - For multilinear polynomials, `supported_size` is 2 to the number of
     ///   variables.
     ///
     /// `supported_log_size` should be in range `1..=params.log_size`
     fn trim(
         &self,
-        supported_log_size: usize,
+        supported_size: usize,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
 
     /// Build SRS for testing.
     ///
-    /// - For univariate polynomials, `log_size` is the log of maximum degree.
-    /// - For multilinear polynomials, `log_size` is the number of variables.
+    /// - For univariate polynomials, `supported_size` is the maximum degree.
+    /// - For multilinear polynomials, `supported_size` is the number of variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(rng: &mut R, log_size: usize) -> Result<Self, PCSError>;
+    fn gen_srs_for_testing<R: RngCore>(
+        rng: &mut R,
+        supported_size: usize,
+    ) -> Result<Self, PCSError>;
 }

@@ -320,9 +320,9 @@ mod tests {
     ) -> Result<(), PCSError> {
         let merged_nv = get_batched_nv(polys[0].num_vars(), polys.len());
         let qx_degree = compute_qx_degree(merged_nv, polys.len());
-        let log_qx_degree = log2(qx_degree) as usize;
+        let padded_qx_degree = 1usize << log2(qx_degree);
 
-        let (uni_ck, uni_vk) = uni_params.trim(log_qx_degree)?;
+        let (uni_ck, uni_vk) = uni_params.trim(padded_qx_degree)?;
         let (ml_ck, ml_vk) = ml_params.trim(merged_nv)?;
 
         let mut points = Vec::new();
@@ -419,7 +419,8 @@ mod tests {
     fn test_multi_commit_internal() -> Result<(), PCSError> {
         let mut rng = test_rng();
 
-        let uni_params = UnivariateUniversalParams::<E>::gen_srs_for_testing(&mut rng, 15)?;
+        let uni_params =
+            UnivariateUniversalParams::<E>::gen_srs_for_testing(&mut rng, 1usize << 15)?;
         let ml_params = MultilinearUniversalParams::<E>::gen_srs_for_testing(&mut rng, 15)?;
 
         // normal polynomials

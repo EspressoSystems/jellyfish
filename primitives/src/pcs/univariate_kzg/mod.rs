@@ -51,24 +51,23 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
 
     /// Build SRS for testing.
     ///
-    /// - For univariate polynomials, `log_size` is the log of maximum degree.
-    /// - For multilinear polynomials, `log_size` is the number of variables.
+    /// - For univariate polynomials, `supported_size` is the maximum degree.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
     fn gen_srs_for_testing<R: RngCore>(
         rng: &mut R,
-        log_size: usize,
+        supported_size: usize,
     ) -> Result<Self::SRS, PCSError> {
-        Self::SRS::gen_srs_for_testing(rng, log_size)
+        Self::SRS::gen_srs_for_testing(rng, supported_size)
     }
 
     /// Trim the universal parameters to specialize the public parameters.
-    /// Input `supported_log_degree` for univariate.
+    /// Input `max_degree` for univariate.
     /// `supported_num_vars` must be None or an error is returned.
     fn trim(
         srs: &Self::SRS,
-        supported_log_degree: usize,
+        supported_degree: usize,
         supported_num_vars: Option<usize>,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
         if supported_num_vars.is_some() {
@@ -76,7 +75,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
                 "univariate should not receive a num_var param".to_string(),
             ));
         }
-        srs.trim(supported_log_degree)
+        srs.trim(supported_degree)
     }
 
     /// Generate a commitment for a polynomial
@@ -299,7 +298,7 @@ mod tests {
     use ark_bls12_381::Bls12_381;
     use ark_ec::PairingEngine;
     use ark_poly::univariate::DensePolynomial;
-    use ark_std::{log2, test_rng, UniformRand};
+    use ark_std::{test_rng, UniformRand};
 
     fn end_to_end_test_template<E>() -> Result<(), PCSError>
     where
@@ -311,9 +310,8 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let log_degree = log2(degree) as usize;
-            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, log_degree)?;
-            let (ck, vk) = pp.trim(log_degree)?;
+            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
             let comm = KZGUnivariatePCS::<E>::commit(&ck, &p)?;
             let point = E::Fr::rand(rng);
@@ -335,10 +333,9 @@ mod tests {
         let rng = &mut test_rng();
         for _ in 0..100 {
             let degree = 50;
-            let log_degree = log2(degree) as usize;
 
-            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, log_degree)?;
-            let (ck, vk) = pp.trim(log_degree)?;
+            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
             let comm = KZGUnivariatePCS::<E>::commit(&ck, &p)?;
             let point = E::Fr::rand(rng);
@@ -363,9 +360,8 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let log_degree = log2(degree) as usize;
-            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, log_degree)?;
-            let (ck, vk) = KZGUnivariatePCS::<E>::trim(&pp, log_degree, None)?;
+            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, vk) = KZGUnivariatePCS::<E>::trim(&pp, degree, None)?;
             let mut comms = Vec::new();
             let mut values = Vec::new();
             let mut points = Vec::new();
