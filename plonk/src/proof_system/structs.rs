@@ -43,9 +43,11 @@ use jf_relation::{
 };
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
+/// Universal StructuredReferenceString
 pub type UniversalSrs<E> = UnivariateUniversalParams<E>;
-pub type CommitKey<E: PairingEngine> = UnivariateProverParam<E::G1Affine>;
-/// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
+/// Commitment key
+pub type CommitKey<E> = UnivariateProverParam<<E as PairingEngine>::G1Affine>;
+/// Key for verifying PCS opening proof.
 pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
@@ -541,7 +543,7 @@ impl<F: Field> PlookupEvaluations<F> {
 
 /// Preprocessed prover parameters used to compute Plonk proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct ProvingKey<E: PairingEngine> {
     /// Extended permutation (sigma) polynomials.
     pub(crate) sigmas: Vec<DensePolynomial<E::Fr>>,
@@ -815,7 +817,7 @@ impl<E: PairingEngine> VerifyingKey<E> {
             sigma_comms,
             selector_comms,
             k: self.k.clone(),
-            open_key: self.open_key.clone(),
+            open_key: self.open_key,
             plookup_vk: None,
             is_merged: true,
         })

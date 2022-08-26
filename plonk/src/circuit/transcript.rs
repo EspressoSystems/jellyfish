@@ -318,7 +318,7 @@ mod tests {
             sigma_comms: Vec::new(),
             selector_comms: Vec::new(),
             k: Vec::new(),
-            open_key: open_key.clone(),
+            open_key,
             is_merged: false,
             plookup_vk: None,
         };
@@ -377,7 +377,7 @@ mod tests {
                 sigma_comms,
                 selector_comms,
                 k,
-                open_key: open_key.clone(),
+                open_key,
                 is_merged: false,
                 plookup_vk: None,
             };

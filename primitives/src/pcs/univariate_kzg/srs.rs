@@ -28,7 +28,7 @@ pub struct UnivariateUniversalParams<E: PairingEngine> {
 
 impl<E: PairingEngine> UnivariateUniversalParams<E> {
     /// Returns the maximum supported degree
-    pub fn max_degree(self) -> usize {
+    pub fn max_degree(&self) -> usize {
         self.powers_of_g.len()
     }
 }

@@ -524,7 +524,7 @@ where
         let pk = ProvingKey {
             sigmas: sigma_polys,
             selectors: selectors_polys,
-            commit_key: commit_key.into(),
+            commit_key,
             vk: vk.clone(),
             plookup_pk,
         };
@@ -621,8 +621,10 @@ pub mod test {
     };
     use core::ops::{Mul, Neg};
     use jf_primitives::{
-        pcs::prelude::Commitment,
-        pcs::{prelude::KZGUnivariatePCS, PolynomialCommitmentScheme},
+        pcs::{
+            prelude::{Commitment, KZGUnivariatePCS},
+            PolynomialCommitmentScheme,
+        },
         rescue::RescueParameter,
     };
     use jf_relation::{

@@ -28,7 +28,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_primitives::pcs::{
-    prelude::{Commitment, KZGUnivariatePCS, UnivariateProverParam},
+    prelude::{Commitment, KZGUnivariatePCS},
     PolynomialCommitmentScheme,
 };
 use jf_relation::{constants::GATE_WIDTH, Arithmetization};
@@ -486,12 +486,14 @@ impl<E: PairingEngine> Prover<E> {
         );
 
         // Compute opening witness polynomial and its commitment
-        let empty_rand = Randomness::<E::Fr, DensePolynomial<E::Fr>>::empty();
-        let (witness_poly, _) = KZG10::<E, DensePolynomial<E::Fr>>::compute_witness_polynomial(
-            &batch_poly,
-            *eval_point,
-            &empty_rand,
-        )?;
+        // let empty_rand = Randomness::<E::Fr, DensePolynomial<E::Fr>>::empty();
+        // let (witness_poly, _) = KZG10::<E,
+        // DensePolynomial<E::Fr>>::compute_witness_polynomial(     &batch_poly,
+        //     *eval_point,
+        //     &empty_rand,
+        // )?;
+        let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::Fr::one()]);
+        let witness_poly = &batch_poly / &divisor;
 
         Self::commit_polynomial(ck, &witness_poly)
     }
