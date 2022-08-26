@@ -13,8 +13,8 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, Serializatio
 use ark_std::{end_timer, rand::RngCore, start_timer, vec, vec::Vec, One, UniformRand};
 
 /// `UniversalParams` are the universal parameters for the KZG10 scheme.
-/// Adapted from
-/// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L20
+// Adapted from
+// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L20
 #[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Default)]
 pub struct UnivariateUniversalParams<E: PairingEngine> {
     /// Group elements of the form `{ \beta^i G }`, where `i` ranges from 0 to
@@ -33,15 +33,14 @@ impl<E: PairingEngine> UnivariateUniversalParams<E> {
     }
 }
 
-/// Prover Parameters
+/// `UnivariateProverParam` is used to generate a proof
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
 pub struct UnivariateProverParam<C: AffineCurve> {
     /// Parameters
     pub powers_of_g: Vec<C>,
 }
 
-/// `VerifierKey` is used to check evaluation proofs for a given commitment.
-/// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L236
+/// `UnivariateVerifierParam` is used to check evaluation proofs for a given commitment.
 #[derive(Derivative, CanonicalSerialize, CanonicalDeserialize)]
 #[derivative(
     Default(bound = ""),
