@@ -472,11 +472,7 @@ where
         // 2. Compute VerifyingKey
         let (commit_key, open_key) = srs.trim(srs_size)?;
         let selector_comms = parallelizable_slice_iter(&selectors_polys)
-            .map(|poly| {
-                // let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                // Ok(comm)
-                KZGUnivariatePCS::commit(&commit_key, poly).map_err(PlonkError::PCSError)
-            })
+            .map(|poly| KZGUnivariatePCS::commit(&commit_key, poly).map_err(PlonkError::PCSError))
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();

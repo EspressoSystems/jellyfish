@@ -17,6 +17,8 @@ use ark_std::{
     end_timer, format, marker::PhantomData, rand::RngCore, start_timer, string::ToString, vec,
     vec::Vec, One, UniformRand, Zero,
 };
+use jf_utils::par_utils::parallelizable_slice_iter;
+use rayon::prelude::ParallelIterator;
 use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
 
 pub(crate) mod srs;
@@ -115,8 +117,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError> {
         let commit_time = start_timer!(|| format!("batch commit {} polynomials", polys.len()));
-        let res = polys
-            .iter()
+        let res = parallelizable_slice_iter(polys)
             .map(|poly| Self::commit(prover_param, poly))
             .collect::<Result<Vec<Self::Commitment>, PCSError>>()?;
 
