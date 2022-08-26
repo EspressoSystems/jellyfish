@@ -21,15 +21,15 @@ use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, UVPolynomial,
 };
-use ark_poly_commit::{
-    kzg10::{Commitment, Powers, Randomness, KZG10},
-    PCRandomness,
-};
 use ark_std::{
     rand::{CryptoRng, RngCore},
     string::ToString,
     vec,
     vec::Vec,
+};
+use jf_primitives::pcs::{
+    prelude::{Commitment, KZGUnivariatePCS, UnivariateProverParam},
+    PolynomialCommitmentScheme,
 };
 use jf_relation::{constants::GATE_WIDTH, Arithmetization};
 use jf_utils::par_utils::parallelizable_slice_iter;
@@ -468,10 +468,7 @@ impl<E: PairingEngine> Prover<E> {
         ck: &CommitKey<E>,
         poly: &DensePolynomial<E::Fr>,
     ) -> Result<Commitment<E>, PlonkError> {
-        let powers: Powers<'_, E> = ck.into();
-        let (poly_comm, _) =
-            KZG10::commit(&powers, poly, None, None).map_err(PlonkError::PcsError)?;
-        Ok(poly_comm)
+        KZGUnivariatePCS::commit(ck, poly).map_err(PlonkError::PCSError)
     }
 
     /// Return a batched opening proof given a list of polynomials `polys_ref`,

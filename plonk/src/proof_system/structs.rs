@@ -17,7 +17,6 @@ use ark_ec::{
 };
 use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
-use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
 use ark_std::{
     convert::{TryFrom, TryInto},
@@ -28,7 +27,12 @@ use ark_std::{
 };
 use espresso_systems_common::jellyfish::tag;
 use hashbrown::HashMap;
-use jf_primitives::rescue::RescueParameter;
+use jf_primitives::{
+    pcs::prelude::{
+        Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
+    },
+    rescue::RescueParameter,
+};
 use jf_relation::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
     gadgets::{
@@ -39,43 +43,10 @@ use jf_relation::{
 };
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
-/// Universal Structured Reference String for PlonkKzgSnark
-#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct UniversalSrs<E: PairingEngine>(pub(crate) UniversalParams<E>);
-
-impl<E: PairingEngine> UniversalSrs<E> {
-    /// Expose powers of g via reference.
-    pub fn powers_of_g_ref(&self) -> &[E::G1Affine] {
-        &self.0.powers_of_g
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub(crate) struct CommitKey<E: PairingEngine> {
-    pub(crate) powers_of_g: Vec<E::G1Affine>,
-}
-
-impl<E: PairingEngine> From<Powers<'_, E>> for CommitKey<E> {
-    fn from(powers: Powers<'_, E>) -> Self {
-        Self {
-            powers_of_g: powers.powers_of_g.to_vec(),
-        }
-    }
-}
-
-impl<'a, E: PairingEngine> From<&'a CommitKey<E>> for Powers<'a, E> {
-    fn from(ck: &'a CommitKey<E>) -> Self {
-        Self {
-            // Copy-on-write ensure reference passing as smart pointer for read-only access
-            powers_of_g: ark_std::borrow::Cow::Borrowed(&ck.powers_of_g),
-            // didn't use hiding variant of KZG, thus leave it empty
-            powers_of_gamma_g: ark_std::borrow::Cow::Owned(Vec::new()),
-        }
-    }
-}
-
+pub type UniversalSrs<E> = UnivariateUniversalParams<E>;
+pub type CommitKey<E: PairingEngine> = UnivariateProverParam<E::G1Affine>;
 /// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
-pub type OpenKey<E> = VerifierKey<E>;
+pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
 #[tagged_blob(tag::PROOF)]
@@ -922,37 +893,6 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
         }
         VariableBaseMSM::multi_scalar_mul(&bases, &scalars)
     }
-}
-
-/// Specializes the public parameters for a given maximum degree `d` for
-/// polynomials `d` should be less that `pp.max_degree()`.
-/// TODO: (binyi) This is copied from a `pub(crate)` method in Arkworks, we
-/// should fork Arkwork's KZG10 library and make this method public.
-/// NOTE: This doesn't support hiding variant of KZG10 since Plonk don't need
-/// it, and `powers_of_gamma_g` is empty and `gamma_g` is dummy.
-pub(crate) fn trim<E: PairingEngine>(
-    pp: &UniversalParams<E>,
-    mut supported_degree: usize,
-) -> (Powers<E>, VerifierKey<E>) {
-    if supported_degree == 1 {
-        supported_degree += 1;
-    }
-    let powers_of_g = pp.powers_of_g[..=supported_degree].to_vec();
-    let powers_of_gamma_g = vec![]; // not used
-
-    let powers = Powers {
-        powers_of_g: ark_std::borrow::Cow::Owned(powers_of_g),
-        powers_of_gamma_g: ark_std::borrow::Cow::Owned(powers_of_gamma_g),
-    };
-    let vk = VerifierKey {
-        g: pp.powers_of_g[0],
-        gamma_g: E::G1Affine::default(), // not used
-        h: pp.h,
-        beta_h: pp.beta_h,
-        prepared_h: pp.prepared_h.clone(),
-        prepared_beta_h: pp.prepared_beta_h.clone(),
-    };
-    (powers, vk)
 }
 
 // Utility function for computing merged table evaluations.

@@ -106,7 +106,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
         end_timer!(msm_time);
 
         end_timer!(commit_time);
-        Ok(Commitment { commitment })
+        Ok(Commitment(commitment))
     }
 
     /// Generate a commitment for a list of polynomials
@@ -198,7 +198,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
             (
                 (verifier_param.g.mul(value.into_repr())
                     - proof.proof.mul(point.into_repr())
-                    - commitment.commitment.into_projective())
+                    - commitment.0.into_projective())
                 .into_affine()
                 .into(),
                 verifier_param.h.into(),
@@ -244,7 +244,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
         {
             let w = proof.proof;
             let mut temp = w.mul(*z);
-            temp.add_assign_mixed(&c.commitment);
+            temp.add_assign_mixed(&c.0);
             let c = temp;
             g_multiplier += &(randomizer * v);
             total_c += &c.mul(randomizer.into_repr());

@@ -13,9 +13,12 @@ use crate::{
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
 };
-use ark_poly_commit::kzg10::Commitment;
+// use ark_poly_commit::kzg10::Commitment;
 use ark_std::vec::Vec;
-use jf_primitives::rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE};
+use jf_primitives::{
+    pcs::prelude::Commitment,
+    rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE},
+};
 use jf_relation::gadgets::ecc::{Point, SWToTEConParam};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 

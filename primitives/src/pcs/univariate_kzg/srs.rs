@@ -15,7 +15,7 @@ use ark_std::{end_timer, rand::RngCore, start_timer, vec, vec::Vec, One, Uniform
 /// `UniversalParams` are the universal parameters for the KZG10 scheme.
 /// Adapted from
 /// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L20
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Default)]
 pub struct UnivariateUniversalParams<E: PairingEngine> {
     /// Group elements of the form `{ \beta^i G }`, where `i` ranges from 0 to
     /// `degree`.
@@ -26,8 +26,15 @@ pub struct UnivariateUniversalParams<E: PairingEngine> {
     pub beta_h: E::G2Affine,
 }
 
+impl<E: PairingEngine> UnivariateUniversalParams<E> {
+    /// Returns the maximum supported degree
+    pub fn max_degree(self) -> usize {
+        self.powers_of_g.len()
+    }
+}
+
 /// Prover Parameters
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
 pub struct UnivariateProverParam<C: AffineCurve> {
     /// Parameters
     pub powers_of_g: Vec<C>,
@@ -35,7 +42,15 @@ pub struct UnivariateProverParam<C: AffineCurve> {
 
 /// `VerifierKey` is used to check evaluation proofs for a given commitment.
 /// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L236
-#[derive(Clone, Debug)]
+#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize)]
+#[derivative(
+    Default(bound = ""),
+    Clone(bound = ""),
+    Copy(bound = ""),
+    Debug(bound = ""),
+    PartialEq(bound = ""),
+    Eq(bound = "")
+)]
 pub struct UnivariateVerifierParam<E: PairingEngine> {
     /// The generator of G1.
     pub g: E::G1Affine,

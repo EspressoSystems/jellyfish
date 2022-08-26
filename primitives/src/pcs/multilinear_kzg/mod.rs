@@ -143,7 +143,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGMultilinearPCS<E> {
         .into_affine();
 
         end_timer!(commit_timer);
-        Ok(Commitment { commitment })
+        Ok(Commitment(commitment))
     }
 
     /// Generate a commitment for a list of polynomials.
@@ -170,7 +170,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGMultilinearPCS<E> {
         .into_affine();
 
         end_timer!(commit_timer);
-        Ok(Commitment { commitment })
+        Ok(Commitment(commitment))
     }
 
     /// On input a polynomial `p` and a point `point`, outputs a proof for the
@@ -414,7 +414,7 @@ fn verify_internal<E: PairingEngine>(
 
     pairings.push((
         E::G1Prepared::from(
-            (verifier_param.g.mul(*value) - commitment.commitment.into_projective()).into_affine(),
+            (verifier_param.g.mul(*value) - commitment.0.into_projective()).into_affine(),
         ),
         E::G2Prepared::from(verifier_param.h),
     ));

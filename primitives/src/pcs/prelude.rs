@@ -13,8 +13,9 @@ pub use crate::pcs::{
         BatchProof, KZGMultilinearPCS, Proof,
     },
     structs::Commitment,
-    univariate_kzg::srs::{
-        UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
+    univariate_kzg::{
+        srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam},
+        KZGUnivariateOpening, KZGUnivariatePCS,
     },
     PolynomialCommitmentScheme, StructuredReferenceString,
 };

@@ -8,8 +8,8 @@
 use super::{
     prover::Prover,
     structs::{
-        trim, BatchProof, Challenges, Oracles, PlookupProof, PlookupProvingKey,
-        PlookupVerifyingKey, Proof, ProvingKey, VerifyingKey,
+        BatchProof, Challenges, Oracles, PlookupProof, PlookupProvingKey, PlookupVerifyingKey,
+        Proof, ProvingKey, VerifyingKey,
     },
     verifier::Verifier,
     UniversalSNARK,
@@ -22,8 +22,6 @@ use crate::{
 };
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
 use ark_ff::{Field, One};
-use ark_poly::univariate::DensePolynomial;
-use ark_poly_commit::{kzg10::KZG10, PCUniversalParams};
 use ark_std::{
     format,
     marker::PhantomData,
@@ -32,7 +30,10 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_primitives::rescue::RescueParameter;
+use jf_primitives::{
+    pcs::{prelude::KZGUnivariatePCS, PolynomialCommitmentScheme, StructuredReferenceString},
+    rescue::RescueParameter,
+};
 use jf_relation::{
     constants::compute_coset_representatives, gadgets::ecc::SWToTEConParam, Arithmetization,
 };
@@ -432,8 +433,7 @@ where
         max_degree: usize,
         rng: &mut R,
     ) -> Result<Self::UniversalSRS, Self::Error> {
-        let srs = KZG10::<E, DensePolynomial<E::Fr>>::setup(max_degree, false, rng)?;
-        Ok(UniversalSrs(srs))
+        KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
     }
 
     /// Input a circuit and the SRS, precompute the proving key and verification
@@ -446,7 +446,7 @@ where
         let domain_size = circuit.eval_domain_size()?;
         let srs_size = circuit.srs_size()?;
         let num_inputs = circuit.num_inputs();
-        if srs.0.max_degree() < circuit.srs_size()? {
+        if srs.max_degree() < circuit.srs_size()? {
             return Err(PlonkError::IndexTooLarge);
         }
         // 1. Compute selector and permutation polynomials.
@@ -470,20 +470,18 @@ where
         };
 
         // 2. Compute VerifyingKey
-        let (commit_key, open_key) = trim(&srs.0, srs_size);
+        let (commit_key, open_key) = srs.trim(srs_size)?;
         let selector_comms = parallelizable_slice_iter(&selectors_polys)
             .map(|poly| {
-                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                Ok(comm)
+                // let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
+                // Ok(comm)
+                KZGUnivariatePCS::commit(&commit_key, poly).map_err(PlonkError::PCSError)
             })
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
         let sigma_comms = parallelizable_slice_iter(&sigma_polys)
-            .map(|poly| {
-                let (comm, _) = KZG10::commit(&commit_key, poly, None, None)?;
-                Ok(comm)
-            })
+            .map(|poly| KZGUnivariatePCS::commit(&commit_key, poly).map_err(PlonkError::PCSError))
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
@@ -492,34 +490,22 @@ where
         let plookup_vk = match circuit.support_lookup() {
             false => None,
             true => Some(PlookupVerifyingKey {
-                range_table_comm: KZG10::commit(
+                range_table_comm: KZGUnivariatePCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().range_table_poly,
-                    None,
-                    None,
-                )?
-                .0,
-                key_table_comm: KZG10::commit(
+                )?,
+                key_table_comm: KZGUnivariatePCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().key_table_poly,
-                    None,
-                    None,
-                )?
-                .0,
-                table_dom_sep_comm: KZG10::commit(
+                )?,
+                table_dom_sep_comm: KZGUnivariatePCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
-                    None,
-                    None,
-                )?
-                .0,
-                q_dom_sep_comm: KZG10::commit(
+                )?,
+                q_dom_sep_comm: KZGUnivariatePCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
-                    None,
-                    None,
-                )?
-                .0,
+                )?,
             }),
         };
 
@@ -624,7 +610,6 @@ pub mod test {
         univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
         UVPolynomial,
     };
-    use ark_poly_commit::kzg10::{Commitment, Powers, KZG10};
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{
         convert::TryInto,
@@ -635,7 +620,11 @@ pub mod test {
         vec::Vec,
     };
     use core::ops::{Mul, Neg};
-    use jf_primitives::rescue::RescueParameter;
+    use jf_primitives::{
+        pcs::prelude::Commitment,
+        pcs::{prelude::KZGUnivariatePCS, PolynomialCommitmentScheme},
+        rescue::RescueParameter,
+    };
     use jf_relation::{
         constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
         MergeableCircuitType, PlonkCircuit,
@@ -774,26 +763,21 @@ pub mod test {
             .iter()
             .zip(vk.selector_comms.iter())
             .for_each(|(p, &p_comm)| {
-                let powers: Powers<'_, E> = (&pk.commit_key).into();
-                let (expected_comm, _) = KZG10::commit(&powers, p, None, None).unwrap();
+                let expected_comm = KZGUnivariatePCS::commit(&pk.commit_key, p).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
         sigmas
             .iter()
             .zip(vk.sigma_comms.iter())
             .for_each(|(p, &p_comm)| {
-                let powers: Powers<'_, E> = (&pk.commit_key).into();
-                let (expected_comm, _) = KZG10::commit(&powers, p, None, None).unwrap();
+                let expected_comm = KZGUnivariatePCS::commit(&pk.commit_key, p).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
         // check plookup verification key
         if plonk_type == PlonkType::UltraPlonk {
-            let powers: Powers<'_, E> = (&pk.commit_key).into();
-            let (expected_comm, _) = KZG10::commit(
-                &powers,
+            let expected_comm = KZGUnivariatePCS::commit(
+                &pk.commit_key,
                 &pk.plookup_pk.as_ref().unwrap().range_table_poly,
-                None,
-                None,
             )
             .unwrap();
             assert_eq!(
@@ -801,11 +785,9 @@ pub mod test {
                 vk.plookup_vk.as_ref().unwrap().range_table_comm
             );
 
-            let (expected_comm, _) = KZG10::commit(
-                &powers,
+            let expected_comm = KZGUnivariatePCS::commit(
+                &pk.commit_key,
                 &pk.plookup_pk.as_ref().unwrap().key_table_poly,
-                None,
-                None,
             )
             .unwrap();
             assert_eq!(

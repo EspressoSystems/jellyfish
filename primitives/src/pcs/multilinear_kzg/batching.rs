@@ -357,9 +357,7 @@ mod tests {
         assert!(!batch_verify_internal(
             &uni_vk,
             &ml_vk,
-            &Commitment {
-                commitment: <E as PairingEngine>::G1Affine::default()
-            },
+            &Commitment(<E as PairingEngine>::G1Affine::default()),
             &points,
             &evaluations,
             &batch_proof,
@@ -379,9 +377,7 @@ mod tests {
             &evaluations,
             &BatchProof {
                 proof: Proof { proofs: Vec::new() },
-                q_x_commit: Commitment {
-                    commitment: <E as PairingEngine>::G1Affine::default()
-                },
+                q_x_commit: Commitment(<E as PairingEngine>::G1Affine::default()),
                 q_x_opens: vec![],
             },
         )
@@ -401,9 +397,7 @@ mod tests {
 
         // bad q(x) commit
         let mut wrong_proof = batch_proof;
-        wrong_proof.q_x_commit = Commitment {
-            commitment: <E as PairingEngine>::G1Affine::default(),
-        };
+        wrong_proof.q_x_commit = Commitment(<E as PairingEngine>::G1Affine::default());
         assert!(!batch_verify_internal(
             &uni_vk,
             &ml_vk,

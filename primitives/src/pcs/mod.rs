@@ -44,7 +44,8 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Build SRS for testing.
     ///
     /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is the number of variables.
+    /// - For multilinear polynomials, `supported_size` is the number of
+    ///   variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
@@ -142,7 +143,8 @@ pub trait StructuredReferenceString<E: PairingEngine>: Sized {
     /// Build SRS for testing.
     ///
     /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is the number of variables.
+    /// - For multilinear polynomials, `supported_size` is the number of
+    ///   variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.

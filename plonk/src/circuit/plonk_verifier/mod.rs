@@ -521,7 +521,7 @@ mod test {
 
             // 5. Verification
             let open_key_ref = &vks_type_a[0].open_key;
-            let beta_g_ref = &srs.0.powers_of_g[1];
+            let beta_g_ref = &srs.powers_of_g[1];
             let blinding_factor = E::Fr::rand(rng);
             let (inner1, inner2) = BatchArgument::partial_verify::<T>(
                 beta_g_ref,
@@ -810,7 +810,7 @@ mod test {
 
             // 5. Build circuit
             let open_key_ref = &vks_type_a[0].open_key;
-            let beta_g_ref = &srs.0.powers_of_g[1];
+            let beta_g_ref = &srs.powers_of_g[1];
             let blinding_factor = E::Fr::rand(rng);
 
             let (mut circuit, _partial_verify_points) = build_circuit::<E, F, P>(

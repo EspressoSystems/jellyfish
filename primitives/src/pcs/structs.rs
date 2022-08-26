@@ -7,9 +7,18 @@
 use ark_ec::PairingEngine;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize)]
+#[derivative(
+    Default(bound = ""),
+    Hash(bound = ""),
+    Clone(bound = ""),
+    Copy(bound = ""),
+    Debug(bound = ""),
+    PartialEq(bound = ""),
+    Eq(bound = "")
+)]
 /// A commitment is an Affine point.
-pub struct Commitment<E: PairingEngine> {
+pub struct Commitment<E: PairingEngine>(
     /// the actual commitment is an affine point.
-    pub commitment: E::G1Affine,
-}
+    pub E::G1Affine,
+);
