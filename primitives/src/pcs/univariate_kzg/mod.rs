@@ -18,7 +18,8 @@ use ark_std::{
     vec::Vec, One, UniformRand, Zero,
 };
 use jf_utils::par_utils::parallelizable_slice_iter;
-use rayon::prelude::ParallelIterator;
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
 
 pub(crate) mod srs;
