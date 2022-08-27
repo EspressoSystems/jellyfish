@@ -40,7 +40,8 @@ pub struct UnivariateProverParam<C: AffineCurve> {
     pub powers_of_g: Vec<C>,
 }
 
-/// `UnivariateVerifierParam` is used to check evaluation proofs for a given commitment.
+/// `UnivariateVerifierParam` is used to check evaluation proofs for a given
+/// commitment.
 #[derive(Derivative, CanonicalSerialize, CanonicalDeserialize)]
 #[derivative(
     Default(bound = ""),
