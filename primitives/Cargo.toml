@@ -66,8 +66,13 @@ ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751
 name = "merkle_path"
 harness = false
 
+[[bench]]
+name = "pcs"
+harness = false
+
 [features]
 default = [ "parallel" ]
 std = []
+print-trace = [ "ark-std/print-trace" ] 
 parallel = [ "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel", 
             "jf-relation/parallel", "rayon" ]
