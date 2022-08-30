@@ -11,8 +11,13 @@ use ark_ff::{Field, PrimeField};
 use ark_poly::DenseMultilinearExtension;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
-    collections::LinkedList, end_timer, format, rand::RngCore, start_timer, string::ToString,
-    vec::Vec, UniformRand,
+    collections::LinkedList,
+    end_timer, format,
+    rand::{CryptoRng, RngCore},
+    start_timer,
+    string::ToString,
+    vec::Vec,
+    UniformRand,
 };
 use core::iter::FromIterator;
 
@@ -120,7 +125,10 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
     /// Build SRS for testing.
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(rng: &mut R, num_vars: usize) -> Result<Self, PCSError> {
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+        rng: &mut R,
+        num_vars: usize,
+    ) -> Result<Self, PCSError> {
         if num_vars == 0 {
             return Err(PCSError::InvalidParameters(
                 "constant polynomial not supported".to_string(),

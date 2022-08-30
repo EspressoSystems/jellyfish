@@ -10,7 +10,13 @@ use crate::pcs::{PCSError, StructuredReferenceString};
 use ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
-use ark_std::{end_timer, rand::RngCore, start_timer, vec, vec::Vec, One, UniformRand};
+use ark_std::{
+    end_timer,
+    rand::{CryptoRng, RngCore},
+    start_timer, vec,
+    vec::Vec,
+    One, UniformRand,
+};
 
 /// `UniversalParams` are the universal parameters for the KZG10 scheme.
 // Adapted from
@@ -102,7 +108,10 @@ impl<E: PairingEngine> StructuredReferenceString<E> for UnivariateUniversalParam
     /// Build SRS for testing.
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(rng: &mut R, max_degree: usize) -> Result<Self, PCSError> {
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+        rng: &mut R,
+        max_degree: usize,
+    ) -> Result<Self, PCSError> {
         let setup_time = start_timer!(|| format!("KZG10::Setup with degree {}", max_degree));
         let beta = E::Fr::rand(rng);
         let g = E::G1Projective::rand(rng);

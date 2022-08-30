@@ -14,8 +14,15 @@ use ark_ff::PrimeField;
 use ark_poly::{univariate::DensePolynomial, Polynomial, UVPolynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
-    end_timer, format, marker::PhantomData, rand::RngCore, start_timer, string::ToString, vec,
-    vec::Vec, One, UniformRand, Zero,
+    borrow::Borrow,
+    end_timer, format,
+    marker::PhantomData,
+    rand::{CryptoRng, RngCore},
+    start_timer,
+    string::ToString,
+    vec,
+    vec::Vec,
+    One, UniformRand, Zero,
 };
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
@@ -25,19 +32,21 @@ use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierPa
 pub(crate) mod srs;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
-pub struct KZGUnivariatePCS<E: PairingEngine> {
+pub struct UnivariateKZGPCS<E: PairingEngine> {
     #[doc(hidden)]
     phantom: PhantomData<E>,
 }
 
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
 /// proof of opening
-pub struct KZGUnivariateOpening<E: PairingEngine> {
+pub struct UnivariateKZGProof<E: PairingEngine> {
     /// Evaluation of quotients
     pub proof: E::G1Affine,
 }
+/// batch proof
+pub type UnivariateKZGBatchProof<E> = Vec<UnivariateKZGProof<E>>;
 
-impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
+impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKZGPCS<E> {
     // Parameters
     type ProverParam = UnivariateProverParam<E::G1Affine>;
     type VerifierParam = UnivariateVerifierParam<E>;
@@ -49,8 +58,8 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
     // Polynomial and its associated types
     type Commitment = Commitment<E>;
     type BatchCommitment = Vec<Self::Commitment>;
-    type Proof = KZGUnivariateOpening<E>;
-    type BatchProof = Vec<Self::Proof>;
+    type Proof = UnivariateKZGProof<E>;
+    type BatchProof = UnivariateKZGBatchProof<E>;
 
     /// Build SRS for testing.
     ///
@@ -58,7 +67,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
     ) -> Result<Self::SRS, PCSError> {
@@ -69,7 +78,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
     /// Input `max_degree` for univariate.
     /// `supported_num_vars` must be None or an error is returned.
     fn trim(
-        srs: &Self::SRS,
+        srs: impl Borrow<Self::SRS>,
         supported_degree: usize,
         supported_num_vars: Option<usize>,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
@@ -78,15 +87,16 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
                 "univariate should not receive a num_var param".to_string(),
             ));
         }
-        srs.trim(supported_degree)
+        srs.borrow().trim(supported_degree)
     }
 
     /// Generate a commitment for a polynomial
     /// Note that the scheme is not hidding
     fn commit(
-        prover_param: &Self::ProverParam,
+        prover_param: impl Borrow<Self::ProverParam>,
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError> {
+        let prover_param = prover_param.borrow();
         let commit_time =
             start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
 
@@ -114,9 +124,10 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
 
     /// Generate a commitment for a list of polynomials
     fn multi_commit(
-        prover_param: &Self::ProverParam,
+        prover_param: impl Borrow<Self::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError> {
+        let prover_param = prover_param.borrow();
         let commit_time = start_timer!(|| format!("batch commit {} polynomials", polys.len()));
         let res = parallelizable_slice_iter(polys)
             .map(|poly| Self::commit(prover_param, poly))
@@ -129,7 +140,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
     /// On input a polynomial `p` and a point `point`, outputs a proof for the
     /// same.
     fn open(
-        prover_param: &Self::ProverParam,
+        prover_param: impl Borrow<Self::ProverParam>,
         polynomial: &Self::Polynomial,
         point: &Self::Point,
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError> {
@@ -145,7 +156,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
             skip_leading_zeros_and_convert_to_bigints(&witness_polynomial);
 
         let proof = VariableBaseMSM::multi_scalar_mul(
-            &prover_param.powers_of_g[num_leading_zeros..],
+            &prover_param.borrow().powers_of_g[num_leading_zeros..],
             &witness_coeffs,
         )
         .into_affine();
@@ -162,8 +173,8 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
     // TODO: to implement the more efficient batch opening algorithm
     // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
     fn multi_open(
-        prover_param: &Self::ProverParam,
-        _multi_commitment: &Self::Commitment,
+        prover_param: impl Borrow<Self::ProverParam>,
+        _multi_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError> {
@@ -178,7 +189,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
         let mut batch_proof = vec![];
         let mut evals = vec![];
         for (poly, point) in polynomials.iter().zip(points.iter()) {
-            let (proof, eval) = Self::open(prover_param, poly, point)?;
+            let (proof, eval) = Self::open(prover_param.borrow(), poly, point)?;
             batch_proof.push(proof);
             evals.push(eval);
         }
@@ -219,7 +230,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for KZGUnivariatePCS<E> {
     // This is a naive approach
     // TODO: to implement the more efficient batch verification algorithm
     // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
-    fn batch_verify<R: RngCore>(
+    fn batch_verify<R: RngCore + CryptoRng>(
         verifier_param: &Self::VerifierParam,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
@@ -312,14 +323,14 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
-            let comm = KZGUnivariatePCS::<E>::commit(&ck, &p)?;
+            let comm = UnivariateKZGPCS::<E>::commit(&ck, &p)?;
             let point = E::Fr::rand(rng);
-            let (proof, value) = KZGUnivariatePCS::<E>::open(&ck, &p, &point)?;
+            let (proof, value) = UnivariateKZGPCS::<E>::open(&ck, &p, &point)?;
             assert!(
-                KZGUnivariatePCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
+                UnivariateKZGPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
                 "proof was incorrect for max_degree = {}, polynomial_degree = {}",
                 degree,
                 p.degree(),
@@ -336,14 +347,14 @@ mod tests {
         for _ in 0..100 {
             let degree = 50;
 
-            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
-            let comm = KZGUnivariatePCS::<E>::commit(&ck, &p)?;
+            let comm = UnivariateKZGPCS::<E>::commit(&ck, &p)?;
             let point = E::Fr::rand(rng);
-            let (proof, value) = KZGUnivariatePCS::<E>::open(&ck, &p, &point)?;
+            let (proof, value) = UnivariateKZGPCS::<E>::open(&ck, &p, &point)?;
             assert!(
-                KZGUnivariatePCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
+                UnivariateKZGPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
                 "proof was incorrect for max_degree = {}, polynomial_degree = {}",
                 degree,
                 p.degree(),
@@ -362,19 +373,19 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = KZGUnivariatePCS::<E>::gen_srs_for_testing(rng, degree)?;
-            let (ck, vk) = KZGUnivariatePCS::<E>::trim(&pp, degree, None)?;
+            let pp = UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, vk) = UnivariateKZGPCS::<E>::trim(&pp, degree, None)?;
             let mut comms = Vec::new();
             let mut values = Vec::new();
             let mut points = Vec::new();
             let mut proofs = Vec::new();
             for _ in 0..10 {
                 let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
-                let comm = KZGUnivariatePCS::<E>::commit(&ck, &p)?;
+                let comm = UnivariateKZGPCS::<E>::commit(&ck, &p)?;
                 let point = E::Fr::rand(rng);
-                let (proof, value) = KZGUnivariatePCS::<E>::open(&ck, &p, &point)?;
+                let (proof, value) = UnivariateKZGPCS::<E>::open(&ck, &p, &point)?;
 
-                assert!(KZGUnivariatePCS::<E>::verify(
+                assert!(UnivariateKZGPCS::<E>::verify(
                     &vk, &comm, &point, &value, &proof
                 )?);
                 comms.push(comm);
@@ -382,7 +393,7 @@ mod tests {
                 points.push(point);
                 proofs.push(proof);
             }
-            assert!(KZGUnivariatePCS::<E>::batch_verify(
+            assert!(UnivariateKZGPCS::<E>::batch_verify(
                 &vk, &comms, &points, &values, &proofs, rng
             )?);
         }

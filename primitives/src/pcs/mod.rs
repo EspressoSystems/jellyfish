@@ -14,7 +14,11 @@ mod univariate_kzg;
 
 use ark_ec::PairingEngine;
 use ark_serialize::CanonicalSerialize;
-use ark_std::{rand::RngCore, vec::Vec};
+use ark_std::{
+    borrow::Borrow,
+    rand::{CryptoRng, RngCore},
+    vec::Vec,
+};
 use errors::PCSError;
 
 /// This trait defines APIs for polynomial commitment schemes.
@@ -49,7 +53,7 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
     ) -> Result<Self::SRS, PCSError>;
@@ -58,36 +62,36 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Input both `supported_degree` for univariate and
     /// `supported_num_vars` for multilinear.
     fn trim(
-        srs: &Self::SRS,
+        srs: impl Borrow<Self::SRS>,
         supported_degree: usize,
         supported_num_vars: Option<usize>,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
 
     /// Generate a commitment for a polynomial
     fn commit(
-        prover_param: &Self::ProverParam,
+        prover_param: impl Borrow<Self::ProverParam>,
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError>;
 
     /// Generate a commitment for a list of polynomials
     fn multi_commit(
-        prover_param: &Self::ProverParam,
+        prover_param: impl Borrow<Self::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError>;
 
     /// On input a polynomial `p` and a point `point`, outputs a proof for the
     /// same.
     fn open(
-        prover_param: &Self::ProverParam,
+        prover_param: impl Borrow<Self::ProverParam>,
         polynomial: &Self::Polynomial,
         point: &Self::Point,
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError>;
 
-    /// Input a list of MLEs, and a same number of points, and a transcript,
-    /// compute a multi-opening for all the polynomials.
+    /// Input a list of multilinear extensions, and a same number of points, and
+    /// a transcript, compute a multi-opening for all the polynomials.
     fn multi_open(
-        prover_param: &Self::ProverParam,
-        multi_commitment: &Self::Commitment,
+        prover_param: impl Borrow<Self::ProverParam>,
+        multi_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError>;
@@ -104,7 +108,7 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
 
     /// Verifies that `value_i` is the evaluation at `x_i` of the polynomial
     /// `poly_i` committed inside `comm`.
-    fn batch_verify<R: RngCore>(
+    fn batch_verify<R: RngCore + CryptoRng>(
         verifier_param: &Self::VerifierParam,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
@@ -148,7 +152,7 @@ pub trait StructuredReferenceString<E: PairingEngine>: Sized {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore>(
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
     ) -> Result<Self, PCSError>;

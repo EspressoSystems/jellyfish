@@ -8,13 +8,13 @@ use super::{
     open_internal,
     srs::{MultilinearProverParam, MultilinearVerifierParam},
     util::{build_l, compute_w_circ_l, merge_polynomials},
-    verify_internal, BatchProof,
+    verify_internal, MultilinearKZGBatchProof,
 };
 use crate::pcs::{
     multilinear_kzg::util::get_uni_domain,
     prelude::{Commitment, UnivariateProverParam, UnivariateVerifierParam},
     transcript::IOPTranscript,
-    univariate_kzg::KZGUnivariatePCS,
+    univariate_kzg::UnivariateKZGPCS,
     PCSError, PolynomialCommitmentScheme,
 };
 use ark_ec::PairingEngine;
@@ -58,7 +58,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
     polynomials: &[Rc<DenseMultilinearExtension<E::Fr>>],
     multi_commitment: &Commitment<E>,
     points: &[Vec<E::Fr>],
-) -> Result<(BatchProof<E>, Vec<E::Fr>), PCSError> {
+) -> Result<(MultilinearKZGBatchProof<E>, Vec<E::Fr>), PCSError> {
     let open_timer = start_timer!(|| "multi open");
 
     // ===================================
@@ -111,7 +111,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
         transcript.append_serializable_element(b"w", point)?;
     }
 
-    let q_x_commit = KZGUnivariatePCS::<E>::commit(uni_prover_param, &q_x)?;
+    let q_x_commit = UnivariateKZGPCS::<E>::commit(uni_prover_param, &q_x)?;
     transcript.append_serializable_element(b"q(x)", &q_x_commit)?;
     let r = transcript.get_and_append_challenge(b"r")?;
 
@@ -120,7 +120,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
     let mut q_x_evals = vec![];
     for i in 0..points_len {
         let (q_x_open, q_x_eval) =
-            KZGUnivariatePCS::<E>::open(uni_prover_param, &q_x, &domain.element(i))?;
+            UnivariateKZGPCS::<E>::open(uni_prover_param, &q_x, &domain.element(i))?;
         q_x_opens.push(q_x_open);
         q_x_evals.push(q_x_eval);
 
@@ -139,7 +139,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
     }
 
     // 6. build q(r) and its opening
-    let (q_x_open, q_r_value) = KZGUnivariatePCS::<E>::open(uni_prover_param, &q_x, &r)?;
+    let (q_x_open, q_r_value) = UnivariateKZGPCS::<E>::open(uni_prover_param, &q_x, &r)?;
     q_x_opens.push(q_x_open);
     q_x_evals.push(q_r_value);
 
@@ -162,7 +162,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
     end_timer!(open_timer);
 
     Ok((
-        BatchProof {
+        MultilinearKZGBatchProof {
             proof: mle_opening,
             q_x_commit,
             q_x_opens,
@@ -191,7 +191,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
     multi_commitment: &Commitment<E>,
     points: &[Vec<E::Fr>],
     values: &[E::Fr],
-    batch_proof: &BatchProof<E>,
+    batch_proof: &MultilinearKZGBatchProof<E>,
 ) -> Result<bool, PCSError> {
     let verify_timer = start_timer!(|| "batch verify");
 
@@ -244,7 +244,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
     // 3. check `q(r) == batch_proof.q_x_value.last` and `q(omega^i) =
     // batch_proof.q_x_value[i]`
     for (i, value) in values.iter().enumerate().take(points_len) {
-        if !KZGUnivariatePCS::verify(
+        if !UnivariateKZGPCS::verify(
             uni_verifier_param,
             &batch_proof.q_x_commit,
             &domain.element(i),
@@ -257,7 +257,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
         }
     }
 
-    if !KZGUnivariatePCS::verify(
+    if !UnivariateKZGPCS::verify(
         uni_verifier_param,
         &batch_proof.q_x_commit,
         &r,
@@ -312,7 +312,7 @@ mod tests {
     use ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
     type Fr = <E as PairingEngine>::Fr;
 
-    fn test_multi_commit_helper<R: RngCore>(
+    fn test_multi_commit_helper<R: RngCore + CryptoRng>(
         uni_params: &UnivariateUniversalParams<E>,
         ml_params: &MultilinearUniversalParams<E>,
         polys: &[Rc<DenseMultilinearExtension<Fr>>],
@@ -335,7 +335,7 @@ mod tests {
 
         let evals = generate_evaluations(polys, &points)?;
 
-        let com = KZGMultilinearPCS::multi_commit(&(ml_ck.clone(), uni_ck.clone()), polys)?;
+        let com = MultilinearKZGPCS::multi_commit(&(ml_ck.clone(), uni_ck.clone()), polys)?;
         let (batch_proof, evaluations) =
             multi_open_internal(&uni_ck, &ml_ck, polys, &com, &points)?;
 
@@ -375,8 +375,8 @@ mod tests {
             &com,
             &points,
             &evaluations,
-            &BatchProof {
-                proof: Proof { proofs: Vec::new() },
+            &MultilinearKZGBatchProof {
+                proof: MultilinearKZGProof { proofs: Vec::new() },
                 q_x_commit: Commitment(<E as PairingEngine>::G1Affine::default()),
                 q_x_opens: vec![],
             },

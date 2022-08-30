@@ -28,7 +28,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_primitives::pcs::{
-    prelude::{Commitment, KZGUnivariatePCS},
+    prelude::{Commitment, UnivariateKZGPCS},
     PolynomialCommitmentScheme,
 };
 use jf_relation::{constants::GATE_WIDTH, Arithmetization};
@@ -82,7 +82,7 @@ impl<E: PairingEngine> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
-        let wires_poly_comms = KZGUnivariatePCS::multi_commit(ck, &wire_polys)?;
+        let wires_poly_comms = UnivariateKZGPCS::multi_commit(ck, &wire_polys)?;
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -106,7 +106,7 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
-        let h_poly_comms = KZGUnivariatePCS::multi_commit(ck, &h_polys)?;
+        let h_poly_comms = UnivariateKZGPCS::multi_commit(ck, &h_polys)?;
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -124,7 +124,7 @@ impl<E: PairingEngine> Prover<E> {
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
             2,
         );
-        let prod_perm_comm = KZGUnivariatePCS::commit(ck, &prod_perm_poly)?;
+        let prod_perm_comm = UnivariateKZGPCS::commit(ck, &prod_perm_poly)?;
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
@@ -157,7 +157,7 @@ impl<E: PairingEngine> Prover<E> {
             )?,
             2,
         );
-        let prod_lookup_comm = KZGUnivariatePCS::commit(ck, &prod_lookup_poly)?;
+        let prod_lookup_comm = UnivariateKZGPCS::commit(ck, &prod_lookup_poly)?;
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
@@ -176,7 +176,7 @@ impl<E: PairingEngine> Prover<E> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
         let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
-        let split_quot_poly_comms = KZGUnivariatePCS::multi_commit(ck, &split_quot_polys)?;
+        let split_quot_poly_comms = UnivariateKZGPCS::multi_commit(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
     }
@@ -469,7 +469,7 @@ impl<E: PairingEngine> Prover<E> {
         let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::Fr::one()]);
         let witness_poly = &batch_poly / &divisor;
 
-        KZGUnivariatePCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
+        UnivariateKZGPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
     }
 
     /// Compute the quotient polynomial via (i)FFTs.
