@@ -85,6 +85,93 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let c = self.is_lt_internal(a, b)?;
         self.logic_neg(c)
     }
+
+    /// Returns a `BoolVar` indicating whether the variable `a` is less than a
+    /// given constant `val`.
+    pub fn is_lt_constant(&mut self, a: Variable, val: F) -> Result<BoolVar, CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.is_lt(a, b)
+    }
+
+    /// Returns a `BoolVar` indicating whether the variable `a` is less than or
+    /// equal to a given constant `val`.
+    pub fn is_leq_constant(&mut self, a: Variable, val: F) -> Result<BoolVar, CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.is_leq(a, b)
+    }
+
+    /// Returns a `BoolVar` indicating whether the variable `a` is greater than
+    /// a given constant `val`.
+    pub fn is_gt_constant(&mut self, a: Variable, val: F) -> Result<BoolVar, CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        self.is_gt_constant_internal(a, &val)
+    }
+
+    /// Returns a `BoolVar` indicating whether the variable `a` is greater than
+    /// or equal a given constant `val`.
+    pub fn is_geq_constant(&mut self, a: Variable, val: F) -> Result<BoolVar, CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.is_geq(a, b)
+    }
+
+    /// Enforce the variable `a` to be less than a
+    /// given constant `val`.
+    pub fn enforce_lt_constant(&mut self, a: Variable, val: F) -> Result<(), CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.enforce_lt(a, b)
+    }
+
+    /// Enforce the variable `a` to be less than or
+    /// equal to a given constant `val`.
+    pub fn enforce_leq_constant(&mut self, a: Variable, val: F) -> Result<(), CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.enforce_leq(a, b)
+    }
+
+    /// Enforce the variable `a` to be greater than
+    /// a given constant `val`.
+    pub fn enforce_gt_constant(&mut self, a: Variable, val: F) -> Result<(), CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.enforce_gt(a, b)
+    }
+
+    /// Enforce the variable `a` to be greater than
+    /// or equal a given constant `val`.
+    pub fn enforce_geq_constant(&mut self, a: Variable, val: F) -> Result<(), CircuitError>
+    where
+        F: PrimeField,
+    {
+        self.check_var_bound(a)?;
+        let b = self.create_constant_variable(val)?;
+        self.enforce_geq(a, b)
+    }
 }
 
 /// Private helper functions for comparison gate
@@ -216,7 +303,23 @@ mod test {
                 test_enforce_le(b, a)?;
                 test_enforce_leq(b, a)?;
                 test_enforce_ge(b, a)?;
-                test_enforce_geq(b, a)
+                test_enforce_geq(b, a)?;
+                test_is_le_constant(a, b)?;
+                test_is_leq_constant(a, b)?;
+                test_is_ge_constant(a, b)?;
+                test_is_geq_constant(a, b)?;
+                test_enforce_le_constant(a, b)?;
+                test_enforce_leq_constant(a, b)?;
+                test_enforce_ge_constant(a, b)?;
+                test_enforce_geq_constant(a, b)?;
+                test_is_le_constant(b, a)?;
+                test_is_leq_constant(b, a)?;
+                test_is_ge_constant(b, a)?;
+                test_is_geq_constant(b, a)?;
+                test_enforce_le_constant(b, a)?;
+                test_enforce_leq_constant(b, a)?;
+                test_enforce_ge_constant(b, a)?;
+                test_enforce_geq_constant(b, a)
             })
     }
 
@@ -309,6 +412,94 @@ mod test {
         let a = circuit.create_variable(*a)?;
         let b = circuit.create_variable(*b)?;
         circuit.enforce_geq(a, b)?;
+        if expected_result {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_is_le_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a < b { F::one() } else { F::zero() };
+        let a = circuit.create_variable(*a)?;
+
+        let c = circuit.is_lt_constant(a, *b)?;
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_is_leq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a <= b { F::one() } else { F::zero() };
+        let a = circuit.create_variable(*a)?;
+
+        let c = circuit.is_leq_constant(a, *b)?;
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_is_ge_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a > b { F::one() } else { F::zero() };
+        let a = circuit.create_variable(*a)?;
+
+        let c = circuit.is_gt_constant(a, *b)?;
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_is_geq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = if a >= b { F::one() } else { F::zero() };
+        let a = circuit.create_variable(*a)?;
+
+        let c = circuit.is_geq_constant(a, *b)?;
+        assert!(circuit.witness(c.into())?.eq(&expected_result));
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        Ok(())
+    }
+    fn test_enforce_le_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a < b;
+        let a = circuit.create_variable(*a)?;
+        circuit.enforce_lt_constant(a, *b)?;
+        if expected_result {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_enforce_leq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a <= b;
+        let a = circuit.create_variable(*a)?;
+        circuit.enforce_leq_constant(a, *b)?;
+        if expected_result {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_enforce_ge_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a > b;
+        let a = circuit.create_variable(*a)?;
+        circuit.enforce_gt_constant(a, *b)?;
+        if expected_result {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        } else {
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+        Ok(())
+    }
+    fn test_enforce_geq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let expected_result = a >= b;
+        let a = circuit.create_variable(*a)?;
+        circuit.enforce_geq_constant(a, *b)?;
         if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
