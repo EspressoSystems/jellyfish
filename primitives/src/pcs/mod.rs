@@ -13,6 +13,7 @@ mod transcript;
 mod univariate_kzg;
 
 use ark_ec::PairingEngine;
+use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
@@ -26,17 +27,17 @@ use errors::PCSError;
 /// Note that for our usage of PCS, we do not require the hiding property.
 pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Prover parameters
-    type ProverParam;
+    type ProverParam: Clone;
     /// Verifier parameters
-    type VerifierParam;
+    type VerifierParam: Clone + CanonicalSerialize;
     /// Structured reference string
-    type SRS;
+    type SRS: Clone + Debug;
     /// Polynomial and its associated types
     type Polynomial;
     /// Polynomial input domain
-    type Point;
+    type Point: Clone + Debug + PartialEq + Eq;
     /// Polynomial Evaluation
-    type Evaluation;
+    type Evaluation: Field;
     /// Commitments
     type Commitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Batch commitments
