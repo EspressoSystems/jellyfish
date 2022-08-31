@@ -265,6 +265,7 @@ mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
     use ark_std::cmp::Ordering;
+    use itertools::multizip;
 
     #[test]
     fn test_cmp_gates() -> Result<(), CircuitError> {
@@ -287,18 +288,20 @@ mod test {
                 F::from(F::modulus_minus_one_div_two()).mul(F::from(2u32)),
             ),
         ];
-        list.iter()
-            .zip([Ordering::Less, Ordering::Greater].iter())
-            .zip([false, true].iter())
-            .zip([false, true].iter())
+        multizip((
+            list,
+            [Ordering::Less, Ordering::Greater],
+            [false, true],
+            [false, true],
+        )).into_iter()
             .try_for_each(
-                |((((a, b), ordering), should_also_check_equality),
+                |((a, b), ordering, should_also_check_equality,
                  is_b_constant)|
                  -> Result<(), CircuitError> {
-                    test_enforce_cmp_helper(a, b, *ordering, *should_also_check_equality, *is_b_constant)?;
-                    test_enforce_cmp_helper(b, a, *ordering, *should_also_check_equality, *is_b_constant)?;
-                    test_is_cmp_helper(a, b, *ordering, *should_also_check_equality, *is_b_constant)?;
-                    test_is_cmp_helper(b, a, *ordering, *should_also_check_equality, *is_b_constant)
+                    test_enforce_cmp_helper(&a, &b, ordering, should_also_check_equality, is_b_constant)?;
+                    test_enforce_cmp_helper(&b, &a, ordering, should_also_check_equality, is_b_constant)?;
+                    test_is_cmp_helper(&a, &b, ordering, should_also_check_equality, is_b_constant)?;
+                    test_is_cmp_helper(&b, &a, ordering, should_also_check_equality, is_b_constant)
                 },
             )
     }
@@ -335,10 +338,8 @@ mod test {
                         circuit.is_gt_constant(a, *b)?
                     }
                 },
-                Ordering::Equal => {
-                    let b = circuit.create_constant_variable(*b)?;
-                    circuit.is_equal(a, b)?
-                },
+                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                Ordering::Equal => circuit.create_boolean_variable_unchecked(expected_result)?,
             }
         } else {
             let b = circuit.create_variable(*b)?;
@@ -357,7 +358,8 @@ mod test {
                         circuit.is_gt(a, b)?
                     }
                 },
-                Ordering::Equal => circuit.is_equal(a, b)?,
+                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                Ordering::Equal => circuit.create_boolean_variable_unchecked(expected_result)?,
             }
         };
         assert!(circuit.witness(c.into())?.eq(&expected_result));
@@ -391,10 +393,8 @@ mod test {
                         circuit.enforce_gt_constant(a, *b)?
                     }
                 },
-                Ordering::Equal => {
-                    let b = circuit.create_constant_variable(*b)?;
-                    circuit.enforce_equal(a, b)?
-                },
+                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                Ordering::Equal => (),
             }
         } else {
             let b = circuit.create_variable(*b)?;
@@ -413,7 +413,8 @@ mod test {
                         circuit.enforce_gt(a, b)?
                     }
                 },
-                Ordering::Equal => circuit.enforce_equal(a, b)?,
+                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                Ordering::Equal => (),
             }
         };
         if expected_result {
