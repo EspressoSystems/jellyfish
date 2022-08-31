@@ -258,12 +258,13 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 #[cfg(test)]
 mod test {
-    use crate::{errors::CircuitError, Circuit, PlonkCircuit};
+    use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
+    use ark_std::cmp::Ordering;
 
     #[test]
     fn test_cmp_gates() -> Result<(), CircuitError> {
@@ -287,219 +288,134 @@ mod test {
             ),
         ];
         list.iter()
-            .try_for_each(|(a, b)| -> Result<(), CircuitError> {
-                test_is_le(a, b)?;
-                test_is_leq(a, b)?;
-                test_is_ge(a, b)?;
-                test_is_geq(a, b)?;
-                test_enforce_le(a, b)?;
-                test_enforce_leq(a, b)?;
-                test_enforce_ge(a, b)?;
-                test_enforce_geq(a, b)?;
-                test_is_le(b, a)?;
-                test_is_leq(b, a)?;
-                test_is_ge(b, a)?;
-                test_is_geq(b, a)?;
-                test_enforce_le(b, a)?;
-                test_enforce_leq(b, a)?;
-                test_enforce_ge(b, a)?;
-                test_enforce_geq(b, a)?;
-                test_is_le_constant(a, b)?;
-                test_is_leq_constant(a, b)?;
-                test_is_ge_constant(a, b)?;
-                test_is_geq_constant(a, b)?;
-                test_enforce_le_constant(a, b)?;
-                test_enforce_leq_constant(a, b)?;
-                test_enforce_ge_constant(a, b)?;
-                test_enforce_geq_constant(a, b)?;
-                test_is_le_constant(b, a)?;
-                test_is_leq_constant(b, a)?;
-                test_is_ge_constant(b, a)?;
-                test_is_geq_constant(b, a)?;
-                test_enforce_le_constant(b, a)?;
-                test_enforce_leq_constant(b, a)?;
-                test_enforce_ge_constant(b, a)?;
-                test_enforce_geq_constant(b, a)
-            })
+            .zip([Ordering::Less, Ordering::Greater].iter())
+            .zip([false, true].iter())
+            .zip([false, true].iter())
+            .try_for_each(
+                |((((a, b), ordering), should_also_check_equality),
+                 is_b_constant)|
+                 -> Result<(), CircuitError> {
+                    test_enforce_cmp_helper(a, b, *ordering, *should_also_check_equality, *is_b_constant)?;
+                    test_enforce_cmp_helper(b, a, *ordering, *should_also_check_equality, *is_b_constant)?;
+                    test_is_cmp_helper(a, b, *ordering, *should_also_check_equality, *is_b_constant)?;
+                    test_is_cmp_helper(b, a, *ordering, *should_also_check_equality, *is_b_constant)
+                },
+            )
     }
 
-    fn test_is_le<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+    fn test_is_cmp_helper<F: PrimeField>(
+        a: &F,
+        b: &F,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+        is_b_constant: bool,
+    ) -> Result<(), CircuitError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a < b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-
-        let c = circuit.is_lt(a, b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_is_leq<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a <= b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-
-        let c = circuit.is_leq(a, b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_is_ge<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a > b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-
-        let c = circuit.is_gt(a, b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_is_geq<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a >= b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-
-        let c = circuit.is_geq(a, b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_enforce_le<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a < b;
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-        circuit.enforce_lt(a, b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        let expected_result = if a.cmp(b) == ordering
+            || (a.cmp(b) == Ordering::Equal && should_also_check_equality)
+        {
+            F::one()
         } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_enforce_leq<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a <= b;
+            F::zero()
+        };
         let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-        circuit.enforce_leq(a, b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        let c: BoolVar = if is_b_constant {
+            match ordering {
+                Ordering::Less => {
+                    if should_also_check_equality {
+                        circuit.is_leq_constant(a, *b)?
+                    } else {
+                        circuit.is_lt_constant(a, *b)?
+                    }
+                },
+                Ordering::Greater => {
+                    if should_also_check_equality {
+                        circuit.is_geq_constant(a, *b)?
+                    } else {
+                        circuit.is_gt_constant(a, *b)?
+                    }
+                },
+                Ordering::Equal => {
+                    let b = circuit.create_constant_variable(*b)?;
+                    circuit.is_equal(a, b)?
+                },
+            }
         } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_enforce_ge<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a > b;
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-        circuit.enforce_gt(a, b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
-        } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_enforce_geq<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a >= b;
-        let a = circuit.create_variable(*a)?;
-        let b = circuit.create_variable(*b)?;
-        circuit.enforce_geq(a, b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
-        } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_is_le_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a < b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-
-        let c = circuit.is_lt_constant(a, *b)?;
+            let b = circuit.create_variable(*b)?;
+            match ordering {
+                Ordering::Less => {
+                    if should_also_check_equality {
+                        circuit.is_leq(a, b)?
+                    } else {
+                        circuit.is_lt(a, b)?
+                    }
+                },
+                Ordering::Greater => {
+                    if should_also_check_equality {
+                        circuit.is_geq(a, b)?
+                    } else {
+                        circuit.is_gt(a, b)?
+                    }
+                },
+                Ordering::Equal => circuit.is_equal(a, b)?,
+            }
+        };
         assert!(circuit.witness(c.into())?.eq(&expected_result));
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         Ok(())
     }
-    fn test_is_leq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
+    fn test_enforce_cmp_helper<F: PrimeField>(
+        a: &F,
+        b: &F,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+        is_b_constant: bool,
+    ) -> Result<(), CircuitError> {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a <= b { F::one() } else { F::zero() };
+        let expected_result =
+            a.cmp(b) == ordering || (a.cmp(b) == Ordering::Equal && should_also_check_equality);
         let a = circuit.create_variable(*a)?;
-
-        let c = circuit.is_leq_constant(a, *b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_is_ge_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a > b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-
-        let c = circuit.is_gt_constant(a, *b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_is_geq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = if a >= b { F::one() } else { F::zero() };
-        let a = circuit.create_variable(*a)?;
-
-        let c = circuit.is_geq_constant(a, *b)?;
-        assert!(circuit.witness(c.into())?.eq(&expected_result));
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        Ok(())
-    }
-    fn test_enforce_le_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a < b;
-        let a = circuit.create_variable(*a)?;
-        circuit.enforce_lt_constant(a, *b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
+        if is_b_constant {
+            match ordering {
+                Ordering::Less => {
+                    if should_also_check_equality {
+                        circuit.enforce_leq_constant(a, *b)?
+                    } else {
+                        circuit.enforce_lt_constant(a, *b)?
+                    }
+                },
+                Ordering::Greater => {
+                    if should_also_check_equality {
+                        circuit.enforce_geq_constant(a, *b)?
+                    } else {
+                        circuit.enforce_gt_constant(a, *b)?
+                    }
+                },
+                Ordering::Equal => {
+                    let b = circuit.create_constant_variable(*b)?;
+                    circuit.enforce_equal(a, b)?
+                },
+            }
         } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_enforce_leq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a <= b;
-        let a = circuit.create_variable(*a)?;
-        circuit.enforce_leq_constant(a, *b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
-        } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_enforce_ge_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a > b;
-        let a = circuit.create_variable(*a)?;
-        circuit.enforce_gt_constant(a, *b)?;
-        if expected_result {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
-        } else {
-            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-        }
-        Ok(())
-    }
-    fn test_enforce_geq_constant<F: PrimeField>(a: &F, b: &F) -> Result<(), CircuitError> {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let expected_result = a >= b;
-        let a = circuit.create_variable(*a)?;
-        circuit.enforce_geq_constant(a, *b)?;
+            let b = circuit.create_variable(*b)?;
+            match ordering {
+                Ordering::Less => {
+                    if should_also_check_equality {
+                        circuit.enforce_leq(a, b)?
+                    } else {
+                        circuit.enforce_lt(a, b)?
+                    }
+                },
+                Ordering::Greater => {
+                    if should_also_check_equality {
+                        circuit.enforce_geq(a, b)?
+                    } else {
+                        circuit.enforce_gt(a, b)?
+                    }
+                },
+                Ordering::Equal => circuit.enforce_equal(a, b)?,
+            }
+        };
         if expected_result {
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok())
         } else {
