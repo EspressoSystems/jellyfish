@@ -5,6 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Module for PolyIOP transcript.
+// TODO(chengyu): merge it with jf-plonk/transcript or remove transcript
+// dependency for pcs module
 
 mod errors {
     use ark_std::string::String;

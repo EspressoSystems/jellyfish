@@ -18,6 +18,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
     fmt::Debug,
+    hash::Hash,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
@@ -29,13 +30,19 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Prover parameters
     type ProverParam: Clone;
     /// Verifier parameters
-    type VerifierParam: Clone + CanonicalSerialize;
+    type VerifierParam: Clone + CanonicalSerialize + CanonicalDeserialize;
     /// Structured reference string
     type SRS: Clone + Debug;
     /// Polynomial and its associated types
-    type Polynomial;
+    type Polynomial: Clone
+        + Debug
+        + Hash
+        + PartialEq
+        + Eq
+        + CanonicalSerialize
+        + CanonicalDeserialize;
     /// Polynomial input domain
-    type Point: Clone + Debug + PartialEq + Eq;
+    type Point: Clone + Ord + Debug + Sync + Hash + PartialEq + Eq;
     /// Polynomial Evaluation
     type Evaluation: Field;
     /// Commitments
