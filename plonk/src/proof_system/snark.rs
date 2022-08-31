@@ -31,7 +31,7 @@ use ark_std::{
     vec::Vec,
 };
 use jf_primitives::{
-    pcs::{prelude::UnivariateKZGPCS, PolynomialCommitmentScheme, StructuredReferenceString},
+    pcs::{prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString},
     rescue::RescueParameter,
 };
 use jf_relation::{
@@ -433,7 +433,7 @@ where
         max_degree: usize,
         rng: &mut R,
     ) -> Result<Self::UniversalSRS, Self::Error> {
-        UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
+        UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
     }
 
     /// Input a circuit and the SRS, precompute the proving key and verification
@@ -472,12 +472,12 @@ where
         // 2. Compute VerifyingKey
         let (commit_key, open_key) = srs.trim(srs_size)?;
         let selector_comms = parallelizable_slice_iter(&selectors_polys)
-            .map(|poly| UnivariateKZGPCS::commit(&commit_key, poly).map_err(PlonkError::PCSError))
+            .map(|poly| UnivariateKzgPCS::commit(&commit_key, poly).map_err(PlonkError::PCSError))
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
         let sigma_comms = parallelizable_slice_iter(&sigma_polys)
-            .map(|poly| UnivariateKZGPCS::commit(&commit_key, poly).map_err(PlonkError::PCSError))
+            .map(|poly| UnivariateKzgPCS::commit(&commit_key, poly).map_err(PlonkError::PCSError))
             .collect::<Result<Vec<_>, PlonkError>>()?
             .into_iter()
             .collect();
@@ -486,19 +486,19 @@ where
         let plookup_vk = match circuit.support_lookup() {
             false => None,
             true => Some(PlookupVerifyingKey {
-                range_table_comm: UnivariateKZGPCS::commit(
+                range_table_comm: UnivariateKzgPCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().range_table_poly,
                 )?,
-                key_table_comm: UnivariateKZGPCS::commit(
+                key_table_comm: UnivariateKzgPCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().key_table_poly,
                 )?,
-                table_dom_sep_comm: UnivariateKZGPCS::commit(
+                table_dom_sep_comm: UnivariateKzgPCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().table_dom_sep_poly,
                 )?,
-                q_dom_sep_comm: UnivariateKZGPCS::commit(
+                q_dom_sep_comm: UnivariateKzgPCS::commit(
                     &commit_key,
                     &plookup_pk.as_ref().unwrap().q_dom_sep_poly,
                 )?,
@@ -618,7 +618,7 @@ pub mod test {
     use core::ops::{Mul, Neg};
     use jf_primitives::{
         pcs::{
-            prelude::{Commitment, UnivariateKZGPCS},
+            prelude::{Commitment, UnivariateKzgPCS},
             PolynomialCommitmentScheme,
         },
         rescue::RescueParameter,
@@ -761,19 +761,19 @@ pub mod test {
             .iter()
             .zip(vk.selector_comms.iter())
             .for_each(|(p, &p_comm)| {
-                let expected_comm = UnivariateKZGPCS::commit(&pk.commit_key, p).unwrap();
+                let expected_comm = UnivariateKzgPCS::commit(&pk.commit_key, p).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
         sigmas
             .iter()
             .zip(vk.sigma_comms.iter())
             .for_each(|(p, &p_comm)| {
-                let expected_comm = UnivariateKZGPCS::commit(&pk.commit_key, p).unwrap();
+                let expected_comm = UnivariateKzgPCS::commit(&pk.commit_key, p).unwrap();
                 assert_eq!(expected_comm, p_comm);
             });
         // check plookup verification key
         if plonk_type == PlonkType::UltraPlonk {
-            let expected_comm = UnivariateKZGPCS::commit(
+            let expected_comm = UnivariateKzgPCS::commit(
                 &pk.commit_key,
                 &pk.plookup_pk.as_ref().unwrap().range_table_poly,
             )
@@ -783,7 +783,7 @@ pub mod test {
                 vk.plookup_vk.as_ref().unwrap().range_table_comm
             );
 
-            let expected_comm = UnivariateKZGPCS::commit(
+            let expected_comm = UnivariateKzgPCS::commit(
                 &pk.commit_key,
                 &pk.plookup_pk.as_ref().unwrap().key_table_poly,
             )

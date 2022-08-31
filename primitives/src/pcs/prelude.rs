@@ -10,12 +10,12 @@ pub use crate::pcs::{
     multilinear_kzg::{
         srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam},
         util::{compute_qx_degree, get_batched_nv, merge_polynomials},
-        MultilinearKZGBatchProof, MultilinearKZGPCS, MultilinearKZGProof,
+        MultilinearKzgBatchProof, MultilinearKzgPCS, MultilinearKzgProof,
     },
     structs::Commitment,
     univariate_kzg::{
         srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam},
-        UnivariateKZGBatchProof, UnivariateKZGPCS, UnivariateKZGProof,
+        UnivariateKzgBatchProof, UnivariateKzgPCS, UnivariateKzgProof,
     },
     PolynomialCommitmentScheme, StructuredReferenceString,
 };

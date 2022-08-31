@@ -32,21 +32,21 @@ use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierPa
 pub(crate) mod srs;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
-pub struct UnivariateKZGPCS<E: PairingEngine> {
+pub struct UnivariateKzgPCS<E: PairingEngine> {
     #[doc(hidden)]
     phantom: PhantomData<E>,
 }
 
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
 /// proof of opening
-pub struct UnivariateKZGProof<E: PairingEngine> {
+pub struct UnivariateKzgProof<E: PairingEngine> {
     /// Evaluation of quotients
     pub proof: E::G1Affine,
 }
 /// batch proof
-pub type UnivariateKZGBatchProof<E> = Vec<UnivariateKZGProof<E>>;
+pub type UnivariateKzgBatchProof<E> = Vec<UnivariateKzgProof<E>>;
 
-impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKZGPCS<E> {
+impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     // Parameters
     type ProverParam = UnivariateProverParam<E::G1Affine>;
     type VerifierParam = UnivariateVerifierParam<E>;
@@ -58,8 +58,8 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKZGPCS<E> {
     // Polynomial and its associated types
     type Commitment = Commitment<E>;
     type BatchCommitment = Vec<Self::Commitment>;
-    type Proof = UnivariateKZGProof<E>;
-    type BatchProof = UnivariateKZGBatchProof<E>;
+    type Proof = UnivariateKzgProof<E>;
+    type BatchProof = UnivariateKzgBatchProof<E>;
 
     /// Build SRS for testing.
     ///
@@ -323,14 +323,14 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
-            let comm = UnivariateKZGPCS::<E>::commit(&ck, &p)?;
+            let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
             let point = E::Fr::rand(rng);
-            let (proof, value) = UnivariateKZGPCS::<E>::open(&ck, &p, &point)?;
+            let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
             assert!(
-                UnivariateKZGPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
+                UnivariateKzgPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
                 "proof was incorrect for max_degree = {}, polynomial_degree = {}",
                 degree,
                 p.degree(),
@@ -347,14 +347,14 @@ mod tests {
         for _ in 0..100 {
             let degree = 50;
 
-            let pp = UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
-            let comm = UnivariateKZGPCS::<E>::commit(&ck, &p)?;
+            let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
             let point = E::Fr::rand(rng);
-            let (proof, value) = UnivariateKZGPCS::<E>::open(&ck, &p, &point)?;
+            let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
             assert!(
-                UnivariateKZGPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
+                UnivariateKzgPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
                 "proof was incorrect for max_degree = {}, polynomial_degree = {}",
                 degree,
                 p.degree(),
@@ -373,19 +373,19 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = UnivariateKZGPCS::<E>::gen_srs_for_testing(rng, degree)?;
-            let (ck, vk) = UnivariateKZGPCS::<E>::trim(&pp, degree, None)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, vk) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
             let mut comms = Vec::new();
             let mut values = Vec::new();
             let mut points = Vec::new();
             let mut proofs = Vec::new();
             for _ in 0..10 {
                 let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
-                let comm = UnivariateKZGPCS::<E>::commit(&ck, &p)?;
+                let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
                 let point = E::Fr::rand(rng);
-                let (proof, value) = UnivariateKZGPCS::<E>::open(&ck, &p, &point)?;
+                let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
 
-                assert!(UnivariateKZGPCS::<E>::verify(
+                assert!(UnivariateKzgPCS::<E>::verify(
                     &vk, &comm, &point, &value, &proof
                 )?);
                 comms.push(comm);
@@ -393,7 +393,7 @@ mod tests {
                 points.push(point);
                 proofs.push(proof);
             }
-            assert!(UnivariateKZGPCS::<E>::batch_verify(
+            assert!(UnivariateKzgPCS::<E>::batch_verify(
                 &vk, &comms, &points, &values, &proofs, rng
             )?);
         }

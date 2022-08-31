@@ -3,7 +3,7 @@ use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
 use ark_std::{rc::Rc, test_rng};
 use jf_primitives::pcs::{
-    prelude::{MultilinearKZGPCS, PCSError, PolynomialCommitmentScheme},
+    prelude::{MultilinearKzgPCS, PCSError, PolynomialCommitmentScheme},
     StructuredReferenceString,
 };
 use std::time::Instant;
@@ -16,7 +16,7 @@ fn bench_pcs() -> Result<(), PCSError> {
     let mut rng = test_rng();
 
     // normal polynomials
-    let uni_params = MultilinearKZGPCS::<Bls12_381>::gen_srs_for_testing(&mut rng, 18)?;
+    let uni_params = MultilinearKzgPCS::<Bls12_381>::gen_srs_for_testing(&mut rng, 18)?;
 
     for nv in 4..19 {
         let repetition = if nv < 10 {
@@ -39,7 +39,7 @@ fn bench_pcs() -> Result<(), PCSError> {
         let com = {
             let start = Instant::now();
             for _ in 0..repetition {
-                let _commit = MultilinearKZGPCS::commit(&ck, &poly)?;
+                let _commit = MultilinearKzgPCS::commit(&ck, &poly)?;
             }
 
             println!(
@@ -48,14 +48,14 @@ fn bench_pcs() -> Result<(), PCSError> {
                 start.elapsed().as_nanos() / repetition as u128
             );
 
-            MultilinearKZGPCS::commit(&ck, &poly)?
+            MultilinearKzgPCS::commit(&ck, &poly)?
         };
 
         // open
         let (proof, value) = {
             let start = Instant::now();
             for _ in 0..repetition {
-                let _open = MultilinearKZGPCS::open(&ck, &poly, &point)?;
+                let _open = MultilinearKzgPCS::open(&ck, &poly, &point)?;
             }
 
             println!(
@@ -63,14 +63,14 @@ fn bench_pcs() -> Result<(), PCSError> {
                 nv,
                 start.elapsed().as_nanos() / repetition as u128
             );
-            MultilinearKZGPCS::open(&ck, &poly, &point)?
+            MultilinearKzgPCS::open(&ck, &poly, &point)?
         };
 
         // verify
         {
             let start = Instant::now();
             for _ in 0..repetition {
-                assert!(MultilinearKZGPCS::verify(
+                assert!(MultilinearKzgPCS::verify(
                     &vk, &com, &point, &value, &proof
                 )?);
             }

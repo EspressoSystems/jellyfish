@@ -13,9 +13,10 @@ mod transcript;
 mod univariate_kzg;
 
 use ark_ec::PairingEngine;
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
+    fmt::Debug,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
@@ -37,13 +38,13 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Polynomial Evaluation
     type Evaluation;
     /// Commitments
-    type Commitment: CanonicalSerialize;
+    type Commitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Batch commitments
-    type BatchCommitment: CanonicalSerialize;
+    type BatchCommitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Proofs
-    type Proof;
+    type Proof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Batch proofs
-    type BatchProof;
+    type BatchProof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
 
     /// Build SRS for testing.
     ///
@@ -61,6 +62,13 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Trim the universal parameters to specialize the public parameters.
     /// Input both `supported_degree` for univariate and
     /// `supported_num_vars` for multilinear.
+    /// ## Note on function signature
+    /// Usually, data structure like SRS and ProverParam are huge and users
+    /// might wish to keep them in heap using different kinds of smart pointers
+    /// (instead of only in stack) therefore our `impl Borrow<_>` interface
+    /// allows for passing in any pointer type, e.g.: `trim(srs: &Self::SRS,
+    /// ..)` or `trim(srs: Box<Self::SRS>, ..)` or `trim(srs: Arc<Self::SRS>,
+    /// ..)` etc.
     fn trim(
         srs: impl Borrow<Self::SRS>,
         supported_degree: usize,
@@ -68,6 +76,14 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
 
     /// Generate a commitment for a polynomial
+    /// ## Note on function signature
+    /// Usually, data structure like SRS and ProverParam are huge and users
+    /// might wish to keep them in heap using different kinds of smart pointers
+    /// (instead of only in stack) therefore our `impl Borrow<_>` interface
+    /// allows for passing in any pointer type, e.g.: `commit(prover_param:
+    /// &Self::ProverParam, ..)` or `commit(prover_param:
+    /// Box<Self::ProverParam>, ..)` or `commit(prover_param:
+    /// Arc<Self::ProverParam>, ..)` etc.
     fn commit(
         prover_param: impl Borrow<Self::ProverParam>,
         poly: &Self::Polynomial,
