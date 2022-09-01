@@ -23,7 +23,7 @@ use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
 };
 use ark_ff::PrimeField;
-use ark_poly_commit::kzg10::Commitment;
+use jf_primitives::pcs::prelude::Commitment;
 use jf_utils::to_bytes;
 
 /// Defines transcript APIs.

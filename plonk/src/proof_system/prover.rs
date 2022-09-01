@@ -21,15 +21,15 @@ use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, UVPolynomial,
 };
-use ark_poly_commit::{
-    kzg10::{Commitment, Powers, Randomness, KZG10},
-    PCRandomness,
-};
 use ark_std::{
     rand::{CryptoRng, RngCore},
     string::ToString,
     vec,
     vec::Vec,
+};
+use jf_primitives::pcs::{
+    prelude::{Commitment, UnivariateKzgPCS},
+    PolynomialCommitmentScheme,
 };
 use jf_relation::{constants::GATE_WIDTH, Arithmetization};
 use jf_utils::par_utils::parallelizable_slice_iter;
@@ -82,7 +82,7 @@ impl<E: PairingEngine> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
-        let wires_poly_comms = Self::commit_polynomials(ck, &wire_polys)?;
+        let wires_poly_comms = UnivariateKzgPCS::multi_commit(ck, &wire_polys)?;
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -106,7 +106,7 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
-        let h_poly_comms = Self::commit_polynomials(ck, &h_polys)?;
+        let h_poly_comms = UnivariateKzgPCS::multi_commit(ck, &h_polys)?;
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -124,7 +124,7 @@ impl<E: PairingEngine> Prover<E> {
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
             2,
         );
-        let prod_perm_comm = Self::commit_polynomial(ck, &prod_perm_poly)?;
+        let prod_perm_comm = UnivariateKzgPCS::commit(ck, &prod_perm_poly)?;
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
@@ -157,7 +157,7 @@ impl<E: PairingEngine> Prover<E> {
             )?,
             2,
         );
-        let prod_lookup_comm = Self::commit_polynomial(ck, &prod_lookup_poly)?;
+        let prod_lookup_comm = UnivariateKzgPCS::commit(ck, &prod_lookup_poly)?;
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
@@ -176,7 +176,7 @@ impl<E: PairingEngine> Prover<E> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
         let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
-        let split_quot_poly_comms = Self::commit_polynomials(ck, &split_quot_polys)?;
+        let split_quot_poly_comms = UnivariateKzgPCS::multi_commit(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
     }
@@ -451,29 +451,6 @@ impl<E: PairingEngine> Prover<E> {
         mask_poly + poly
     }
 
-    /// Compute polynomial commitments.
-    fn commit_polynomials(
-        ck: &CommitKey<E>,
-        polys: &[DensePolynomial<E::Fr>],
-    ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        let poly_comms = parallelizable_slice_iter(polys)
-            .map(|poly| Self::commit_polynomial(ck, poly))
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(poly_comms)
-    }
-
-    /// Commit a polynomial.
-    #[inline]
-    fn commit_polynomial(
-        ck: &CommitKey<E>,
-        poly: &DensePolynomial<E::Fr>,
-    ) -> Result<Commitment<E>, PlonkError> {
-        let powers: Powers<'_, E> = ck.into();
-        let (poly_comm, _) =
-            KZG10::commit(&powers, poly, None, None).map_err(PlonkError::PcsError)?;
-        Ok(poly_comm)
-    }
-
     /// Return a batched opening proof given a list of polynomials `polys_ref`,
     /// evaluation point `eval_point`, and randomized combiner `r`.
     fn compute_batched_witness_polynomial_commitment(
@@ -489,14 +466,10 @@ impl<E: PairingEngine> Prover<E> {
         );
 
         // Compute opening witness polynomial and its commitment
-        let empty_rand = Randomness::<E::Fr, DensePolynomial<E::Fr>>::empty();
-        let (witness_poly, _) = KZG10::<E, DensePolynomial<E::Fr>>::compute_witness_polynomial(
-            &batch_poly,
-            *eval_point,
-            &empty_rand,
-        )?;
+        let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::Fr::one()]);
+        let witness_poly = &batch_poly / &divisor;
 
-        Self::commit_polynomial(ck, &witness_poly)
+        UnivariateKzgPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
     }
 
     /// Compute the quotient polynomial via (i)FFTs.

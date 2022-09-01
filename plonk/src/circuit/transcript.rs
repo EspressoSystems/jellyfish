@@ -235,8 +235,8 @@ mod tests {
     };
     use ark_bls12_377::Bls12_377;
     use ark_ec::{AffineCurve, ProjectiveCurve};
-    use ark_poly_commit::kzg10::{Commitment, VerifierKey};
     use ark_std::{format, test_rng, UniformRand};
+    use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::Point;
     use jf_utils::{bytes_to_field_elements, field_switching};
 
@@ -306,13 +306,10 @@ mod tests {
         let mut transcript_var = RescueTranscriptVar::new(&mut circuit);
         let mut transcript = RescueTranscript::<F>::new(label);
 
-        let open_key: VerifierKey<E> = VerifierKey {
+        let open_key: UnivariateVerifierParam<E> = UnivariateVerifierParam {
             g: E::G1Affine::prime_subgroup_generator(),
-            gamma_g: E::G1Projective::rand(&mut rng).into_affine(),
             h: E::G2Affine::prime_subgroup_generator(),
             beta_h: E::G2Projective::rand(&mut rng).into_affine(),
-            prepared_h: E::G2Affine::prime_subgroup_generator().into(),
-            prepared_beta_h: E::G2Projective::rand(&mut rng).into_affine().into(),
         };
 
         let dummy_vk = VerifyingKey {
@@ -321,7 +318,7 @@ mod tests {
             sigma_comms: Vec::new(),
             selector_comms: Vec::new(),
             k: Vec::new(),
-            open_key: open_key.clone(),
+            open_key,
             is_merged: false,
             plookup_vk: None,
         };
@@ -380,7 +377,7 @@ mod tests {
                 sigma_comms,
                 selector_comms,
                 k,
-                open_key: open_key.clone(),
+                open_key,
                 is_merged: false,
                 plookup_vk: None,
             };

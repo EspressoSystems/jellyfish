@@ -8,6 +8,7 @@
 
 use ark_std::{format, string::String};
 use displaydoc::Display;
+use jf_primitives::pcs::errors::PCSError;
 use jf_relation::errors::CircuitError;
 
 /// A `enum` specifying the possible failure modes of the Plonk.
@@ -24,7 +25,7 @@ pub enum PlonkError {
     /// An error in the Plonk SNARK logic: {0}
     SnarkError(SnarkError),
     /// An error in the underlying polynomial commitment: {0}
-    PcsError(ark_poly_commit::Error),
+    PCSError(PCSError),
     /// An error in the Plonk circuit: {0}
     CircuitError(CircuitError),
     /// An error during IO: {0}
@@ -47,9 +48,9 @@ pub enum PlonkError {
 
 impl ark_std::error::Error for PlonkError {}
 
-impl From<ark_poly_commit::Error> for PlonkError {
-    fn from(e: ark_poly_commit::Error) -> Self {
-        Self::PcsError(e)
+impl From<PCSError> for PlonkError {
+    fn from(e: PCSError) -> Self {
+        Self::PCSError(e)
     }
 }
 

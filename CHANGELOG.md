@@ -18,6 +18,8 @@
             - Primitive gadgets, including `commitment`, `el gamal` etc. remains in `jf-primitives/circuit`.
             - Circuit for rescue hash function is now in `jf-primitives/circuit/rescue`.
     - `par-utils` is moved to `jf-utils`.
+- Introduct new `PolynomialCommitmentScheme` trait and basic implementations
+    - Now `PlonkKzgSnark` use our own KZG10 implementation
 
 ## v0.1.2
 
