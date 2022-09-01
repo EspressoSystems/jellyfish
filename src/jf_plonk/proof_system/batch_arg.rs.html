@@ -758,7 +758,7 @@
 
         <span class="comment">// 5. Verification</span>
         <span class="kw">let</span> <span class="ident">open_key_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">vks_type_a</span>[<span class="number">0</span>].<span class="ident">open_key</span>;
-        <span class="kw">let</span> <span class="ident">beta_g_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">srs</span>.<span class="number">0</span>.<span class="ident">powers_of_g</span>[<span class="number">1</span>];
+        <span class="kw">let</span> <span class="ident">beta_g_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">srs</span>.<span class="ident">powers_of_g</span>[<span class="number">1</span>];
         <span class="kw">let</span> <span class="ident">blinding_factor</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
         <span class="kw">let</span> (<span class="ident">inner1</span>, <span class="ident">inner2</span>) <span class="op">=</span> <span class="ident">BatchArgument::partial_verify</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
             <span class="ident">beta_g_ref</span>,

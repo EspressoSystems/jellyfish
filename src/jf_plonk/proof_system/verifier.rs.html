@@ -921,7 +921,6 @@
 <span id="915">915</span>
 <span id="916">916</span>
 <span id="917">917</span>
-<span id="918">918</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -940,10 +939,9 @@
 <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span>};
 <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">Field</span>, <span class="ident">One</span>, <span class="ident">Zero</span>};
 <span class="kw">use</span> <span class="ident">ark_poly</span>::{<span class="ident">EvaluationDomain</span>, <span class="ident">Radix2EvaluationDomain</span>};
-<span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10::Commitment</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
 <span class="kw">use</span> <span class="ident">core::ops::Neg</span>;
-<span class="kw">use</span> <span class="ident">jf_primitives::rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_primitives</span>::{<span class="ident">pcs::prelude::Commitment</span>, <span class="ident">rescue::RescueParameter</span>};
 <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">constants::GATE_WIDTH</span>, <span class="ident">gadgets::ecc::SWToTEConParam</span>};
 <span class="kw">use</span> <span class="ident">jf_utils::multi_pairing</span>;
 

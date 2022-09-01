@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["PCSError","A `enum` specifying the possible failure modes of the PCS."]]};

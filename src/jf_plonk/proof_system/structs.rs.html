@@ -953,64 +953,6 @@
 <span id="947">947</span>
 <span id="948">948</span>
 <span id="949">949</span>
-<span id="950">950</span>
-<span id="951">951</span>
-<span id="952">952</span>
-<span id="953">953</span>
-<span id="954">954</span>
-<span id="955">955</span>
-<span id="956">956</span>
-<span id="957">957</span>
-<span id="958">958</span>
-<span id="959">959</span>
-<span id="960">960</span>
-<span id="961">961</span>
-<span id="962">962</span>
-<span id="963">963</span>
-<span id="964">964</span>
-<span id="965">965</span>
-<span id="966">966</span>
-<span id="967">967</span>
-<span id="968">968</span>
-<span id="969">969</span>
-<span id="970">970</span>
-<span id="971">971</span>
-<span id="972">972</span>
-<span id="973">973</span>
-<span id="974">974</span>
-<span id="975">975</span>
-<span id="976">976</span>
-<span id="977">977</span>
-<span id="978">978</span>
-<span id="979">979</span>
-<span id="980">980</span>
-<span id="981">981</span>
-<span id="982">982</span>
-<span id="983">983</span>
-<span id="984">984</span>
-<span id="985">985</span>
-<span id="986">986</span>
-<span id="987">987</span>
-<span id="988">988</span>
-<span id="989">989</span>
-<span id="990">990</span>
-<span id="991">991</span>
-<span id="992">992</span>
-<span id="993">993</span>
-<span id="994">994</span>
-<span id="995">995</span>
-<span id="996">996</span>
-<span id="997">997</span>
-<span id="998">998</span>
-<span id="999">999</span>
-<span id="1000">1000</span>
-<span id="1001">1001</span>
-<span id="1002">1002</span>
-<span id="1003">1003</span>
-<span id="1004">1004</span>
-<span id="1005">1005</span>
-<span id="1006">1006</span>
-<span id="1007">1007</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -1030,7 +972,6 @@
 };
 <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftField</span>, <span class="ident">Field</span>, <span class="ident">Fp2</span>, <span class="ident">Fp2Parameters</span>, <span class="ident">PrimeField</span>, <span class="ident">Zero</span>};
 <span class="kw">use</span> <span class="ident">ark_poly::univariate::DensePolynomial</span>;
-<span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10</span>::{<span class="ident">Commitment</span>, <span class="ident">Powers</span>, <span class="ident">UniversalParams</span>, <span class="ident">VerifierKey</span>};
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">ark_std</span>::{
     <span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>},
@@ -1041,7 +982,12 @@
 };
 <span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish::tag</span>;
 <span class="kw">use</span> <span class="ident">hashbrown::HashMap</span>;
-<span class="kw">use</span> <span class="ident">jf_primitives::rescue::RescueParameter</span>;
+<span class="kw">use</span> <span class="ident">jf_primitives</span>::{
+    <span class="ident">pcs::prelude</span>::{
+        <span class="ident">Commitment</span>, <span class="ident">UnivariateProverParam</span>, <span class="ident">UnivariateUniversalParams</span>, <span class="ident">UnivariateVerifierParam</span>,
+    },
+    <span class="ident">rescue::RescueParameter</span>,
+};
 <span class="kw">use</span> <span class="ident">jf_relation</span>::{
     <span class="ident">constants</span>::{<span class="ident">compute_coset_representatives</span>, <span class="ident">GATE_WIDTH</span>, <span class="ident">N_TURBO_PLONK_SELECTORS</span>},
     <span class="ident">gadgets</span>::{
@@ -1052,43 +998,12 @@
 };
 <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">field_switching</span>, <span class="ident">fq_to_fr</span>, <span class="ident">fr_to_fq</span>, <span class="ident">tagged_blob</span>};
 
-<span class="doccomment">/// Universal Structured Reference String for PlonkKzgSnark</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">UniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Expose powers of g via reference.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">powers_of_g_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">E::G1Affine</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">powers_of_g</span>
-    }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">powers_of_g</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Powers</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">powers</span>: <span class="ident">Powers</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">E</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">powers_of_g</span>: <span class="ident">powers</span>.<span class="ident">powers_of_g</span>.<span class="ident">to_vec</span>(),
-        }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Powers</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ck</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="comment">// Copy-on-write ensure reference passing as smart pointer for read-only access</span>
-            <span class="ident">powers_of_g</span>: <span class="ident">ark_std::borrow::Cow::Borrowed</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>.<span class="ident">powers_of_g</span>),
-            <span class="comment">// didn&#39;t use hiding variant of KZG, thus leave it empty</span>
-            <span class="ident">powers_of_gamma_g</span>: <span class="ident">ark_std::borrow::Cow::Owned</span>(<span class="ident">Vec::new</span>()),
-        }
-    }
-}
-
-<span class="doccomment">/// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OpenKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VerifierKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Universal StructuredReferenceString</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Commitment key</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateProverParam</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Key for verifying PCS opening proof.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OpenKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// A Plonk SNARK proof.</span>
 <span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::PROOF</span>)]</span>
@@ -1583,7 +1498,7 @@
 
 <span class="doccomment">/// Preprocessed prover parameters used to compute Plonk proofs for a certain</span>
 <span class="doccomment">/// circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Extended permutation (sigma) polynomials.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">sigmas</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1857,7 +1772,7 @@
             <span class="ident">sigma_comms</span>,
             <span class="ident">selector_comms</span>,
             <span class="ident">k</span>: <span class="self">self</span>.<span class="ident">k</span>.<span class="ident">clone</span>(),
-            <span class="ident">open_key</span>: <span class="self">self</span>.<span class="ident">open_key</span>.<span class="ident">clone</span>(),
+            <span class="ident">open_key</span>: <span class="self">self</span>.<span class="ident">open_key</span>,
             <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
             <span class="ident">is_merged</span>: <span class="bool-val">true</span>,
         })
@@ -1935,37 +1850,6 @@
         }
         <span class="ident">VariableBaseMSM::multi_scalar_mul</span>(<span class="kw-2">&amp;</span><span class="ident">bases</span>, <span class="kw-2">&amp;</span><span class="ident">scalars</span>)
     }
-}
-
-<span class="doccomment">/// Specializes the public parameters for a given maximum degree `d` for</span>
-<span class="doccomment">/// polynomials `d` should be less that `pp.max_degree()`.</span>
-<span class="doccomment">/// TODO: (binyi) This is copied from a `pub(crate)` method in Arkworks, we</span>
-<span class="doccomment">/// should fork Arkwork&#39;s KZG10 library and make this method public.</span>
-<span class="doccomment">/// NOTE: This doesn&#39;t support hiding variant of KZG10 since Plonk don&#39;t need</span>
-<span class="doccomment">/// it, and `powers_of_gamma_g` is empty and `gamma_g` is dummy.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">trim</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident">UniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="kw-2">mut</span> <span class="ident">supported_degree</span>: <span class="ident">usize</span>,
-) -&gt; (<span class="ident">Powers</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">VerifierKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">supported_degree</span> <span class="op">==</span> <span class="number">1</span> {
-        <span class="ident">supported_degree</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
-    <span class="kw">let</span> <span class="ident">powers_of_g</span> <span class="op">=</span> <span class="ident">pp</span>.<span class="ident">powers_of_g</span>[..<span class="op">=</span><span class="ident">supported_degree</span>].<span class="ident">to_vec</span>();
-    <span class="kw">let</span> <span class="ident">powers_of_gamma_g</span> <span class="op">=</span> <span class="macro">vec!</span>[]; <span class="comment">// not used</span>
-
-    <span class="kw">let</span> <span class="ident">powers</span> <span class="op">=</span> <span class="ident">Powers</span> {
-        <span class="ident">powers_of_g</span>: <span class="ident">ark_std::borrow::Cow::Owned</span>(<span class="ident">powers_of_g</span>),
-        <span class="ident">powers_of_gamma_g</span>: <span class="ident">ark_std::borrow::Cow::Owned</span>(<span class="ident">powers_of_gamma_g</span>),
-    };
-    <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">VerifierKey</span> {
-        <span class="ident">g</span>: <span class="ident">pp</span>.<span class="ident">powers_of_g</span>[<span class="number">0</span>],
-        <span class="ident">gamma_g</span>: <span class="ident">E::G1Affine::default</span>(), <span class="comment">// not used</span>
-        <span class="ident">h</span>: <span class="ident">pp</span>.<span class="ident">h</span>,
-        <span class="ident">beta_h</span>: <span class="ident">pp</span>.<span class="ident">beta_h</span>,
-        <span class="ident">prepared_h</span>: <span class="ident">pp</span>.<span class="ident">prepared_h</span>.<span class="ident">clone</span>(),
-        <span class="ident">prepared_beta_h</span>: <span class="ident">pp</span>.<span class="ident">prepared_beta_h</span>.<span class="ident">clone</span>(),
-    };
-    (<span class="ident">powers</span>, <span class="ident">vk</span>)
 }
 
 <span class="comment">// Utility function for computing merged table evaluations.</span>

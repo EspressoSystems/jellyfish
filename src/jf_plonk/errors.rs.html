@@ -111,6 +111,7 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
+<span id="108">108</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -121,6 +122,7 @@
 
 <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::String</span>};
 <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
+<span class="kw">use</span> <span class="ident">jf_primitives::pcs::errors::PCSError</span>;
 <span class="kw">use</span> <span class="ident">jf_relation::errors::CircuitError</span>;
 
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the Plonk.</span>
@@ -137,7 +139,7 @@
     <span class="doccomment">/// An error in the Plonk SNARK logic: {0}</span>
     <span class="ident">SnarkError</span>(<span class="ident">SnarkError</span>),
     <span class="doccomment">/// An error in the underlying polynomial commitment: {0}</span>
-    <span class="ident">PcsError</span>(<span class="ident">ark_poly_commit::Error</span>),
+    <span class="ident">PCSError</span>(<span class="ident">PCSError</span>),
     <span class="doccomment">/// An error in the Plonk circuit: {0}</span>
     <span class="ident">CircuitError</span>(<span class="ident">CircuitError</span>),
     <span class="doccomment">/// An error during IO: {0}</span>
@@ -160,9 +162,9 @@
 
 <span class="kw">impl</span> <span class="ident">ark_std::error::Error</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {}
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ark_poly_commit::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">ark_poly_commit::Error</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::PcsError</span>(<span class="ident">e</span>)
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PCSError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkError</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">PCSError</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::PCSError</span>(<span class="ident">e</span>)
     }
 }
 

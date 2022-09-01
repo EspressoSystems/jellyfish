@@ -418,9 +418,6 @@
 <span id="412">412</span>
 <span id="413">413</span>
 <span id="414">414</span>
-<span id="415">415</span>
-<span id="416">416</span>
-<span id="417">417</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
 <span class="comment">// This file is part of the Jellyfish library.</span>
 
@@ -658,8 +655,8 @@
     };
     <span class="kw">use</span> <span class="ident">ark_bls12_377::Bls12_377</span>;
     <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">AffineCurve</span>, <span class="ident">ProjectiveCurve</span>};
-    <span class="kw">use</span> <span class="ident">ark_poly_commit::kzg10</span>::{<span class="ident">Commitment</span>, <span class="ident">VerifierKey</span>};
     <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">test_rng</span>, <span class="ident">UniformRand</span>};
+    <span class="kw">use</span> <span class="ident">jf_primitives::pcs::prelude</span>::{<span class="ident">Commitment</span>, <span class="ident">UnivariateVerifierParam</span>};
     <span class="kw">use</span> <span class="ident">jf_relation::gadgets::ecc::Point</span>;
     <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">bytes_to_field_elements</span>, <span class="ident">field_switching</span>};
 
@@ -729,13 +726,10 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript_var</span> <span class="op">=</span> <span class="ident">RescueTranscriptVar::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript</span> <span class="op">=</span> <span class="ident">RescueTranscript</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">label</span>);
 
-        <span class="kw">let</span> <span class="ident">open_key</span>: <span class="ident">VerifierKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VerifierKey</span> {
+        <span class="kw">let</span> <span class="ident">open_key</span>: <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateVerifierParam</span> {
             <span class="ident">g</span>: <span class="ident">E::G1Affine::prime_subgroup_generator</span>(),
-            <span class="ident">gamma_g</span>: <span class="ident">E::G1Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>(),
             <span class="ident">h</span>: <span class="ident">E::G2Affine::prime_subgroup_generator</span>(),
             <span class="ident">beta_h</span>: <span class="ident">E::G2Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>(),
-            <span class="ident">prepared_h</span>: <span class="ident">E::G2Affine::prime_subgroup_generator</span>().<span class="ident">into</span>(),
-            <span class="ident">prepared_beta_h</span>: <span class="ident">E::G2Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>().<span class="ident">into</span>(),
         };
 
         <span class="kw">let</span> <span class="ident">dummy_vk</span> <span class="op">=</span> <span class="ident">VerifyingKey</span> {
@@ -744,7 +738,7 @@
             <span class="ident">sigma_comms</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">selector_comms</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">k</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">open_key</span>: <span class="ident">open_key</span>.<span class="ident">clone</span>(),
+            <span class="ident">open_key</span>,
             <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
             <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
         };
@@ -803,7 +797,7 @@
                 <span class="ident">sigma_comms</span>,
                 <span class="ident">selector_comms</span>,
                 <span class="ident">k</span>,
-                <span class="ident">open_key</span>: <span class="ident">open_key</span>.<span class="ident">clone</span>(),
+                <span class="ident">open_key</span>,
                 <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
                 <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
             };
