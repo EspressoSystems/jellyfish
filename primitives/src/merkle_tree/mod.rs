@@ -1,4 +1,11 @@
-mod merkle_tree;
-mod merkle_tree_impl;
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-pub use merkle_tree::*;
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
+//! Merkle Tree traits and implementations
+mod merkle_tree_impl;
+mod merkle_tree_traits;
+
+pub use merkle_tree_traits::*;

@@ -8,7 +8,8 @@
 #[macro_use]
 extern crate criterion;
 use ark_ed_on_bls12_381::Fq as Fq381;
-use ark_std::rand::{prelude::SliceRandom, Rng};
+use ark_std::rand::prelude::SliceRandom;
+use ark_std::rand::Rng;
 use criterion::Criterion;
 use jf_primitives::merkle_tree::{
     MerkleLeafProof, MerklePath, MerklePathNode, MerkleTree, NodePos, NodeValue,
