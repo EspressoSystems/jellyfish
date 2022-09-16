@@ -49,6 +49,9 @@ pub trait ElementType<F: Field>:
     + PartialEq
     + AsRef<[F]>
 {
+    /// Convert the element into a slice of field elements
+    /// TODO: is it the same as `AsRef<[F]>`?
+    fn as_slice_ref(&self) -> &[F];
 }
 
 /// Merkle tree hash function
@@ -74,12 +77,12 @@ pub trait MerkleTree<F: Field>: Sized {
 
     /// Construct a new merkle tree with given height from a data slice
     fn build(
-        height: u8,
+        height: usize,
         data: impl Iterator<Item = Self::ElementType>,
     ) -> Result<Self, PrimitivesError>;
 
     /// Return the height of this merkle tree
-    fn height(&self) -> u8;
+    fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
     fn capacity(&self) -> u64;
     /// Return the current number of leaves
@@ -93,18 +96,17 @@ pub trait MerkleTree<F: Field>: Sized {
     /// * `returns` - Leaf value at the position. LookupResult::EmptyLeaf if the
     ///   leaf position is empty or invalid, LookupResult::NotInMemory if the
     ///   leaf position has been forgotten.
-    fn lookup(&self, pos: usize) -> LookupResult<(), Self::Proof>;
+    fn lookup(&self, pos: u64) -> LookupResult<(), Self::Proof>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `pos` - zero-based index of the leaf in the tree
-    /// * `proof` - element from which the leaf value is computed and list of
-    ///   node siblings/positions from the leaf to the root
-    /// * `returns` - Ok(()) if the verification succeeds, Err(None) if there
-    ///   are internal errors, Err(computed_err) otherwise
-    fn verify(&self, pos: usize, proof: impl Borrow<Self::Proof>) -> Result<(), Option<F>>;
+    /// * `proof` - a merkle tree proof
+    /// * `returns` - Err() if something is wrong with this proof, Ok(result)
+    ///   otherwise
+    fn verify(&self, pos: u64, proof: impl Borrow<Self::Proof>) -> Result<bool, PrimitivesError>;
 
-    // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(), Self::BatchProof>;
-    // fn batch_verify(
+    // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
+    // Self::BatchProof>; fn batch_verify(
     //     &self,
     //     pos: impl Iterator<Item = usize>,
     //     proof: impl Borrow<Self::BatchProof>,

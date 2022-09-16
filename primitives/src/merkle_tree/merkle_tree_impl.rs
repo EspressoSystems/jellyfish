@@ -3,11 +3,10 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
-
 use super::{ElementType, Hasher, LookupResult, MerkleTree};
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
-use ark_std::{borrow::Borrow, boxed::Box, marker::PhantomData, string::ToString, vec::Vec};
+use ark_std::{borrow::Borrow, boxed::Box, marker::PhantomData, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
@@ -20,7 +19,7 @@ where
     F: Field,
 {
     root: Box<MerkleNode<E, F>>,
-    height: u8,
+    height: usize,
     capacity: u64,
     num_leaves: u64,
 
@@ -41,11 +40,11 @@ where
     type Hasher = H;
     type LeafArity = LeafArity;
     type TreeArity = TreeArity;
-    type Proof = MerkleNode<E, F>;
+    type Proof = MerkleProof<E, F>;
     type BatchProof = MerkleNode<E, F>;
 
     fn build(
-        height: u8,
+        height: usize,
         data: impl Iterator<Item = Self::ElementType>,
     ) -> Result<Self, PrimitivesError> {
         let capacity = Self::calculate_capacity(height);
@@ -61,7 +60,7 @@ where
         })
     }
 
-    fn height(&self) -> u8 {
+    fn height(&self) -> usize {
         self.height
     }
 
@@ -74,15 +73,72 @@ where
     }
 
     fn value(&self) -> F {
-        F::zero()
+        self.root.value()
     }
 
-    fn lookup(&self, _pos: usize) -> LookupResult<(), Self::Proof> {
-        todo!()
+    fn lookup(&self, pos: u64) -> LookupResult<(), Self::Proof> {
+        let mut mpos = pos;
+        if mpos >= self.num_leaves {
+            return LookupResult::EmptyLeaf;
+        }
+        let mut subtree_size = self.capacity / TreeArity::to_u64();
+        let mut path = vec![];
+        let mut proof: Vec<MerkleNode<E, F>> = vec![];
+        let mut cur = self.root.borrow();
+        for _ in 1..self.height {
+            match cur {
+                MerkleNode::Leaf {
+                    value: _,
+                    children: _,
+                } => {
+                    path.push(mpos as usize);
+                    proof.push(cur.clone());
+                },
+                MerkleNode::Branch { value: _, children } => {
+                    let branch = (mpos / subtree_size) as usize;
+                    path.push(branch);
+                    proof.push(MerkleNode::Branch {
+                        value: F::zero(),
+                        children: children
+                            .iter()
+                            .map(|node| {
+                                Box::new(MerkleNode::ForgettenSubtree {
+                                    value: node.value(),
+                                })
+                            })
+                            .collect_vec(),
+                    });
+                    cur = &children[branch];
+                    mpos %= TreeArity::to_u64();
+                    subtree_size /= TreeArity::to_u64();
+                },
+                MerkleNode::EmptySubtree => return LookupResult::EmptyLeaf,
+                MerkleNode::ForgettenSubtree { value: _ } => return LookupResult::NotInMemory,
+            }
+        }
+        LookupResult::Ok((), MerkleProof { pos, path, proof })
     }
 
-    fn verify(&self, _pos: usize, _proof: impl Borrow<Self::Proof>) -> Result<(), Option<F>> {
-        todo!()
+    fn verify(&self, _pos: u64, proof: impl Borrow<Self::Proof>) -> Result<bool, PrimitivesError> {
+        let proof = proof.borrow();
+        let computed_root_value = proof.path.iter().zip(proof.proof.iter()).rev().fold(
+            Ok(F::zero()),
+            |result, (branch, node)| -> Result<F, PrimitivesError> {
+                match result {
+                    Ok(val) => match node {
+                        MerkleNode::Leaf { value: _, children } => Ok(Self::digest_leaf(children)),
+                        MerkleNode::Branch { value: _, children } => {
+                            let mut data = children.iter().map(|node| node.value()).collect_vec();
+                            data[*branch] = val;
+                            Ok(H::digest(&data))
+                        },
+                        _ => Err(PrimitivesError::ParameterError("Invalid proof".to_string())),
+                    },
+                    Err(e) => Err(e),
+                }
+            },
+        )?;
+        Ok(computed_root_value == self.root.value())
     }
 }
 
@@ -95,7 +151,7 @@ where
     F: Field,
 {
     /// Helper function to calculate the tree capacity
-    fn calculate_capacity(height: u8) -> u64 {
+    fn calculate_capacity(height: usize) -> u64 {
         let mut capacity = LeafArity::to_u64();
         for _i in 1..height {
             capacity *= TreeArity::to_u64();
@@ -104,7 +160,7 @@ where
     }
 
     fn build_tree_internal<I>(
-        height: u8,
+        height: usize,
         capacity: u64,
         iter: I,
     ) -> Result<(Box<MerkleNode<E, F>>, u64), PrimitivesError>
@@ -142,7 +198,7 @@ where
                     .map(|chunk| {
                         let children = chunk
                             .pad_using(TreeArity::to_usize(), |_| {
-                                Box::new(MerkleNode::<E, F>::EmptySubtree { value: F::zero() })
+                                Box::new(MerkleNode::<E, F>::EmptySubtree)
                             })
                             .collect_vec();
                         Box::new(MerkleNode::<E, F>::Branch {
@@ -154,15 +210,17 @@ where
             }
             Ok((cur_nodes[0].clone(), num_leaves))
         } else {
-            Ok((
-                Box::new(MerkleNode::<E, F>::EmptySubtree { value: F::zero() }),
-                0,
-            ))
+            Ok((Box::new(MerkleNode::<E, F>::EmptySubtree), 0))
         }
     }
 
-    fn digest_leaf(_data: &[Box<E>]) -> F {
-        todo!()
+    fn digest_leaf(data: &[Box<E>]) -> F {
+        let data = data
+            .iter()
+            .map(|elem| -> &[F] { elem.as_slice_ref() })
+            .collect_vec()
+            .concat();
+        H::digest(&data)
     }
 
     fn digest_branch(data: &[Box<MerkleNode<E, F>>]) -> F {
@@ -173,9 +231,7 @@ where
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MerkleNode<E, F: Field> {
-    EmptySubtree {
-        value: F,
-    },
+    EmptySubtree,
     Branch {
         value: F,
         children: Vec<Box<MerkleNode<E, F>>>,
@@ -184,15 +240,30 @@ pub enum MerkleNode<E, F: Field> {
         value: F,
         children: Vec<Box<E>>,
     },
+    ForgettenSubtree {
+        value: F,
+    },
 }
 
 impl<E, F: Field> MerkleNode<E, F> {
     /// Returns the value of this [`MerkleNode`].
+    #[inline]
     pub(crate) fn value(&self) -> F {
         match self {
+            Self::EmptySubtree => F::zero(),
             Self::Branch { value, children: _ } => *value,
             Self::Leaf { value, children: _ } => *value,
-            Self::EmptySubtree { value } => *value,
+            Self::ForgettenSubtree { value } => *value,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct MerkleProof<E, F: Field> {
+    /// Proof of inclusion for element at index `pos`
+    pub pos: u64,
+    /// Branch index
+    pub path: Vec<usize>,
+    /// root of proof path
+    pub proof: Vec<MerkleNode<E, F>>,
 }
