@@ -3,7 +3,9 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
-use super::{ElementType, Hasher, LookupResult, MerkleTree};
+use super::{
+    AppendableMerkleTree, ElementType, Hasher, LookupResult, MerkleTree, UpdatableMerkleTree,
+};
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
 use ark_std::{borrow::Borrow, boxed::Box, marker::PhantomData, string::ToString, vec, vec::Vec};
@@ -142,6 +144,58 @@ where
     }
 }
 
+impl<E, H, LeafArity, TreeArity, F> AppendableMerkleTree<F>
+    for MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+where
+    E: ElementType<F>,
+    H: Hasher<F>,
+    LeafArity: Unsigned,
+    TreeArity: Unsigned,
+    F: Field,
+{
+    fn push(&mut self, elem: &Self::ElementType) -> Result<(), PrimitivesError> {
+        if self.num_leaves == self.capacity {
+            return Err(PrimitivesError::InternalError(
+                "Merkle tree full".to_string(),
+            ));
+        }
+        self.num_leaves += 1;
+        Self::update_internal(
+            &mut self.root,
+            self.height,
+            self.num_leaves - 1,
+            self.capacity,
+            elem,
+        )
+    }
+
+    fn emplace(
+        &mut self,
+        elems: impl Iterator<Item = Self::ElementType>,
+    ) -> Result<(), PrimitivesError> {
+        // TODO(Chengyu): efficient batch insert
+        for elem in elems {
+            self.push(&elem)?;
+        }
+        Ok(())
+    }
+}
+
+impl<E, H, LeafArity, TreeArity, F> UpdatableMerkleTree<F>
+    for MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+where
+    E: ElementType<F>,
+    H: Hasher<F>,
+    LeafArity: Unsigned,
+    TreeArity: Unsigned,
+    F: Field,
+{
+    fn update(&mut self, pos: u64, elem: &Self::ElementType) -> Result<(), PrimitivesError> {
+        self.num_leaves = self.num_leaves.max(pos);
+        Self::update_internal(&mut self.root, self.height, pos, self.capacity, elem)
+    }
+}
+
 impl<E, H, LeafArity, TreeArity, F> MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
 where
     E: ElementType<F>,
@@ -227,6 +281,94 @@ where
         let data = data.iter().map(|node| node.value()).collect_vec();
         H::digest(&data)
     }
+
+    fn update_internal(
+        node: &mut Box<MerkleNode<E, F>>,
+        depth: usize,
+        pos: u64,
+        tree_cap: u64,
+        elem: &E,
+    ) -> Result<(), PrimitivesError> {
+        if depth == 1 {
+            if let MerkleNode::Leaf {
+                ref mut value,
+                ref mut children,
+            } = **node
+            {
+                if pos <= tree_cap {
+                    *children[pos as usize] = *elem;
+                    *value = Self::digest_leaf(children);
+                } else {
+                    return Err(PrimitivesError::InternalError(
+                        "Invalid insertion position".to_string(),
+                    ));
+                }
+            } else {
+                return Err(PrimitivesError::InternalError(
+                    "Inconsistent merkle tree".to_string(),
+                ));
+            }
+        } else if let MerkleNode::<E, F>::Branch {
+            value: _,
+            ref mut children,
+        } = **node
+        {
+            let sub_tree_cap = tree_cap / TreeArity::to_u64();
+            let child = &mut children[(pos / sub_tree_cap) as usize];
+            match **child {
+                MerkleNode::<E, F>::Branch {
+                    value: _,
+                    children: _,
+                } => {
+                    Self::update_internal(child, depth - 1, pos & sub_tree_cap, sub_tree_cap, elem)?
+                },
+                MerkleNode::<E, F>::Leaf {
+                    value: _,
+                    children: _,
+                } => {
+                    Self::update_internal(child, depth - 1, pos % sub_tree_cap, sub_tree_cap, elem)?
+                },
+
+                MerkleNode::<E, F>::ForgettenSubtree { value: _ } => {
+                    return Err(PrimitivesError::InternalError(
+                        "Couldn't update the given position: merkle tree data not in memory"
+                            .to_string(),
+                    ))
+                },
+
+                MerkleNode::<E, F>::EmptySubtree => {
+                    **child = if depth == 2 {
+                        let mut children = vec![Box::new(E::default()); LeafArity::to_usize()];
+                        *children[(pos / sub_tree_cap) as usize] = *elem;
+                        MerkleNode::<E, F>::Leaf {
+                            value: Self::digest_leaf(&children),
+                            children,
+                        }
+                    } else {
+                        let mut children =
+                            vec![Box::new(MerkleNode::EmptySubtree); TreeArity::to_usize()];
+                        // *children[(pos / sub_tree_cap) as usize] = *elem;
+                        Self::update_internal(
+                            &mut children[(pos / sub_tree_cap) as usize],
+                            depth - 1,
+                            pos % sub_tree_cap,
+                            sub_tree_cap,
+                            elem,
+                        )?;
+                        MerkleNode::<E, F>::Branch {
+                            value: Self::digest_branch(&children),
+                            children,
+                        }
+                    }
+                },
+            }
+        } else {
+            return Err(PrimitivesError::InternalError(
+                "Inconsistent merkle tree".to_string(),
+            ));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -267,3 +409,5 @@ pub struct MerkleProof<E, F: Field> {
     /// root of proof path
     pub proof: Vec<MerkleNode<E, F>>,
 }
+
+// TODO(Chengyu): unit tests

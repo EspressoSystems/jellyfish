@@ -134,7 +134,7 @@ pub trait UpdatableMerkleTree<F: Field>: MerkleTree<F> {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    fn update(&mut self, pos: usize, elem: &Self::ElementType) -> Result<(), PrimitivesError>;
+    fn update(&mut self, pos: u64, elem: &Self::ElementType) -> Result<(), PrimitivesError>;
 }
 
 /// Merkle tree that allows forget/remember elements from the memory
@@ -143,7 +143,7 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     /// Should not trim if position `i` is the last inserted leaf position.
     /// Return is identical to result if `get_leaf(pos)` were called before this
     /// call.
-    fn forget(&mut self, pos: usize) -> LookupResult<(), Self::Proof>;
+    fn forget(&mut self, pos: u64) -> LookupResult<(), Self::Proof>;
 
     /// "Re-insert" a leaf into the tree using its proof.
     /// Returns Ok(()) if insertion is successful, or Err((ix,val)) if the
@@ -151,8 +151,8 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     /// in the proof.
     fn remember(
         &mut self,
-        pos: usize,
+        pos: u64,
         element: &Self::ElementType,
         proof: Self::Proof,
-    ) -> LookupResult<(), (usize, F)>;
+    ) -> LookupResult<(), (u64, F)>;
 }
