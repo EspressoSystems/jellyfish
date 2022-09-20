@@ -3,8 +3,10 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
 use super::{
-    AppendableMerkleTree, ElementType, Hasher, LookupResult, MerkleTree, UpdatableMerkleTree,
+    AppendableMerkleTree, ElementType, Hasher, IndexType, LookupResult, MerkleTree,
+    UpdatableMerkleTree,
 };
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
@@ -14,35 +16,41 @@ use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+pub struct MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
+    E: ElementType<F>,
+    H: Hasher<F>,
+    I: IndexType,
     LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
     root: Box<MerkleNode<E, F>>,
     height: usize,
-    capacity: u64,
-    num_leaves: u64,
+    capacity: I,
+    num_leaves: I,
 
     _phantom_h: PhantomData<H>,
     _phantom_la: PhantomData<LeafArity>,
     _phantom_ta: PhantomData<TreeArity>,
 }
 
-impl<E, H, LeafArity, TreeArity, F> MerkleTree<F> for MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+impl<E, H, I, LeafArity, TreeArity, F> MerkleTree<F>
+    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
     E: ElementType<F>,
     H: Hasher<F>,
+    I: IndexType,
     LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
     type ElementType = E;
     type Hasher = H;
+    type IndexType = I;
     type LeafArity = LeafArity;
     type TreeArity = TreeArity;
-    type Proof = MerkleProof<E, F>;
+    type Proof = MerkleProof<E, F, I>;
     type BatchProof = MerkleNode<E, F>;
 
     fn build(
@@ -66,11 +74,11 @@ where
         self.height
     }
 
-    fn capacity(&self) -> u64 {
+    fn capacity(&self) -> Self::IndexType {
         self.capacity
     }
 
-    fn num_leaves(&self) -> u64 {
+    fn num_leaves(&self) -> Self::IndexType {
         self.num_leaves
     }
 
@@ -78,27 +86,23 @@ where
         self.root.value()
     }
 
-    fn lookup(&self, pos: u64) -> LookupResult<(), Self::Proof> {
-        let mut mpos = pos;
-        if mpos >= self.num_leaves {
+    fn lookup(&self, pos: Self::IndexType) -> LookupResult<Self::ElementType, Self::Proof> {
+        if pos >= self.num_leaves {
             return LookupResult::EmptyLeaf;
         }
-        let mut subtree_size = self.capacity / TreeArity::to_u64();
-        let mut path = vec![];
+
         let mut proof: Vec<MerkleNode<E, F>> = vec![];
         let mut cur = self.root.borrow();
-        for _ in 1..self.height {
+        let mut branches = Self::index_to_branches(pos, self.height);
+        branches.reverse();
+        let mut leaf_value = Self::ElementType::default();
+        for depth in 0..self.height {
             match cur {
-                MerkleNode::Leaf {
-                    value: _,
-                    children: _,
-                } => {
-                    path.push(mpos as usize);
+                MerkleNode::Leaf { value: _, children } => {
                     proof.push(cur.clone());
+                    leaf_value = *children[branches[depth]];
                 },
                 MerkleNode::Branch { value: _, children } => {
-                    let branch = (mpos / subtree_size) as usize;
-                    path.push(branch);
                     proof.push(MerkleNode::Branch {
                         value: F::zero(),
                         children: children
@@ -110,45 +114,56 @@ where
                             })
                             .collect_vec(),
                     });
-                    cur = &children[branch];
-                    mpos %= TreeArity::to_u64();
-                    subtree_size /= TreeArity::to_u64();
+                    cur = &children[branches[depth]];
                 },
                 MerkleNode::EmptySubtree => return LookupResult::EmptyLeaf,
                 MerkleNode::ForgettenSubtree { value: _ } => return LookupResult::NotInMemory,
             }
         }
-        LookupResult::Ok((), MerkleProof { pos, path, proof })
+        LookupResult::Ok(leaf_value, MerkleProof { pos, proof })
     }
 
-    fn verify(&self, _pos: u64, proof: impl Borrow<Self::Proof>) -> Result<bool, PrimitivesError> {
+    fn verify(
+        &self,
+        _pos: Self::IndexType,
+        proof: impl Borrow<Self::Proof>,
+    ) -> Result<bool, PrimitivesError> {
         let proof = proof.borrow();
-        let computed_root_value = proof.path.iter().zip(proof.proof.iter()).rev().fold(
-            Ok(F::zero()),
-            |result, (branch, node)| -> Result<F, PrimitivesError> {
-                match result {
-                    Ok(val) => match node {
-                        MerkleNode::Leaf { value: _, children } => Ok(Self::digest_leaf(children)),
-                        MerkleNode::Branch { value: _, children } => {
-                            let mut data = children.iter().map(|node| node.value()).collect_vec();
-                            data[*branch] = val;
-                            Ok(H::digest(&data))
+        let computed_root_value = Self::index_to_branches(proof.pos, self.height)
+            .iter()
+            .zip(proof.proof.iter().rev())
+            .fold(
+                Ok(F::zero()),
+                |result, (branch, node)| -> Result<F, PrimitivesError> {
+                    match result {
+                        Ok(val) => match node {
+                            MerkleNode::Leaf { value: _, children } => {
+                                Ok(Self::digest_leaf(children))
+                            },
+                            MerkleNode::Branch { value: _, children } => {
+                                let mut data =
+                                    children.iter().map(|node| node.value()).collect_vec();
+                                data[*branch] = val;
+                                Ok(H::digest(&data))
+                            },
+                            _ => Err(PrimitivesError::ParameterError(
+                                "Incompatible proof for this merkle tree".to_string(),
+                            )),
                         },
-                        _ => Err(PrimitivesError::ParameterError("Invalid proof".to_string())),
-                    },
-                    Err(e) => Err(e),
-                }
-            },
-        )?;
+                        Err(e) => Err(e),
+                    }
+                },
+            )?;
         Ok(computed_root_value == self.root.value())
     }
 }
 
-impl<E, H, LeafArity, TreeArity, F> AppendableMerkleTree<F>
-    for MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+impl<E, H, I, LeafArity, TreeArity, F> AppendableMerkleTree<F>
+    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
     E: ElementType<F>,
     H: Hasher<F>,
+    I: IndexType,
     LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
@@ -159,17 +174,12 @@ where
                 "Merkle tree full".to_string(),
             ));
         }
+        self.update_internal(self.num_leaves, elem)?;
         self.num_leaves += 1;
-        Self::update_internal(
-            &mut self.root,
-            self.height,
-            self.num_leaves - 1,
-            self.capacity,
-            elem,
-        )
+        Ok(())
     }
 
-    fn emplace(
+    fn extend(
         &mut self,
         elems: impl Iterator<Item = Self::ElementType>,
     ) -> Result<(), PrimitivesError> {
@@ -181,54 +191,72 @@ where
     }
 }
 
-impl<E, H, LeafArity, TreeArity, F> UpdatableMerkleTree<F>
-    for MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+impl<E, H, I, LeafArity, TreeArity, F> UpdatableMerkleTree<F>
+    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
     E: ElementType<F>,
     H: Hasher<F>,
+    I: IndexType,
     LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
-    fn update(&mut self, pos: u64, elem: &Self::ElementType) -> Result<(), PrimitivesError> {
+    fn update(
+        &mut self,
+        pos: Self::IndexType,
+        elem: &Self::ElementType,
+    ) -> Result<(), PrimitivesError> {
         self.num_leaves = self.num_leaves.max(pos);
-        Self::update_internal(&mut self.root, self.height, pos, self.capacity, elem)
+        self.update_internal(pos, elem)
     }
 }
 
-impl<E, H, LeafArity, TreeArity, F> MerkleTreeImpl<E, H, LeafArity, TreeArity, F>
+impl<E, H, I, LeafArity, TreeArity, F> MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
     E: ElementType<F>,
     H: Hasher<F>,
+    I: IndexType,
     LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
     /// Helper function to calculate the tree capacity
-    fn calculate_capacity(height: usize) -> u64 {
-        let mut capacity = LeafArity::to_u64();
+    fn calculate_capacity(height: usize) -> I {
+        let mut capacity = I::from(LeafArity::to_u64());
         for _i in 1..height {
             capacity *= TreeArity::to_u64();
         }
         capacity
     }
 
-    fn build_tree_internal<I>(
+    /// Return a vector of branching index from leaf to root for a given index
+    fn index_to_branches(pos: I, height: usize) -> Vec<usize> {
+        let mut pos = pos;
+        let mut ret = vec![(pos % LeafArity::to_u64()).as_()];
+        pos /= LeafArity::to_u64();
+        for _i in 1..height {
+            ret.push((pos % TreeArity::to_u64()).as_());
+            pos /= TreeArity::to_u64();
+        }
+        ret
+    }
+
+    fn build_tree_internal<Iter>(
         height: usize,
-        capacity: u64,
-        iter: I,
-    ) -> Result<(Box<MerkleNode<E, F>>, u64), PrimitivesError>
+        capacity: I,
+        iter: Iter,
+    ) -> Result<(Box<MerkleNode<E, F>>, I), PrimitivesError>
     where
-        I: Iterator<Item = E>,
+        Iter: Iterator<Item = E>,
     {
         let leaves: Vec<_> = iter.collect();
-        let num_leaves = leaves.len() as u64;
+        let num_leaves = I::from(leaves.len() as u64);
 
         if num_leaves > capacity {
             Err(PrimitivesError::ParameterError(
                 "Too many data for merkle tree".to_string(),
             ))
-        } else if num_leaves > 0 {
+        } else if num_leaves > I::zero() {
             let mut cur_nodes = leaves
                 .into_iter()
                 .chunks(LeafArity::to_usize())
@@ -264,7 +292,7 @@ where
             }
             Ok((cur_nodes[0].clone(), num_leaves))
         } else {
-            Ok((Box::new(MerkleNode::<E, F>::EmptySubtree), 0))
+            Ok((Box::new(MerkleNode::<E, F>::EmptySubtree), I::zero()))
         }
     }
 
@@ -282,11 +310,15 @@ where
         H::digest(&data)
     }
 
-    fn update_internal(
+    fn update_internal(&mut self, pos: I, elem: &E) -> Result<(), PrimitivesError> {
+        let branches = Self::index_to_branches(pos, self.height);
+        Self::update_node_internal(&mut self.root, self.height, &branches, elem)
+    }
+
+    fn update_node_internal(
         node: &mut Box<MerkleNode<E, F>>,
         depth: usize,
-        pos: u64,
-        tree_cap: u64,
+        branches: &[usize],
         elem: &E,
     ) -> Result<(), PrimitivesError> {
         if depth == 1 {
@@ -295,14 +327,8 @@ where
                 ref mut children,
             } = **node
             {
-                if pos <= tree_cap {
-                    *children[pos as usize] = *elem;
-                    *value = Self::digest_leaf(children);
-                } else {
-                    return Err(PrimitivesError::InternalError(
-                        "Invalid insertion position".to_string(),
-                    ));
-                }
+                *children[branches[depth - 1]] = *elem;
+                *value = Self::digest_leaf(children);
             } else {
                 return Err(PrimitivesError::InternalError(
                     "Inconsistent merkle tree".to_string(),
@@ -313,21 +339,16 @@ where
             ref mut children,
         } = **node
         {
-            let sub_tree_cap = tree_cap / TreeArity::to_u64();
-            let child = &mut children[(pos / sub_tree_cap) as usize];
+            let child = &mut children[branches[depth - 1]];
             match **child {
                 MerkleNode::<E, F>::Branch {
                     value: _,
                     children: _,
-                } => {
-                    Self::update_internal(child, depth - 1, pos & sub_tree_cap, sub_tree_cap, elem)?
-                },
+                } => Self::update_node_internal(child, depth - 1, branches, elem)?,
                 MerkleNode::<E, F>::Leaf {
                     value: _,
                     children: _,
-                } => {
-                    Self::update_internal(child, depth - 1, pos % sub_tree_cap, sub_tree_cap, elem)?
-                },
+                } => Self::update_node_internal(child, depth - 1, branches, elem)?,
 
                 MerkleNode::<E, F>::ForgettenSubtree { value: _ } => {
                     return Err(PrimitivesError::InternalError(
@@ -339,7 +360,7 @@ where
                 MerkleNode::<E, F>::EmptySubtree => {
                     **child = if depth == 2 {
                         let mut children = vec![Box::new(E::default()); LeafArity::to_usize()];
-                        *children[(pos / sub_tree_cap) as usize] = *elem;
+                        *children[branches[depth - 1]] = *elem;
                         MerkleNode::<E, F>::Leaf {
                             value: Self::digest_leaf(&children),
                             children,
@@ -347,12 +368,10 @@ where
                     } else {
                         let mut children =
                             vec![Box::new(MerkleNode::EmptySubtree); TreeArity::to_usize()];
-                        // *children[(pos / sub_tree_cap) as usize] = *elem;
-                        Self::update_internal(
-                            &mut children[(pos / sub_tree_cap) as usize],
+                        Self::update_node_internal(
+                            &mut children[branches[depth - 1]],
                             depth - 1,
-                            pos % sub_tree_cap,
-                            sub_tree_cap,
+                            branches,
                             elem,
                         )?;
                         MerkleNode::<E, F>::Branch {
@@ -401,13 +420,29 @@ impl<E, F: Field> MerkleNode<E, F> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleProof<E, F: Field> {
+pub struct MerkleProof<E, F: Field, I: IndexType> {
     /// Proof of inclusion for element at index `pos`
-    pub pos: u64,
-    /// Branch index
-    pub path: Vec<usize>,
-    /// root of proof path
+    pub pos: I,
+    /// Nodes of proof path, from root to leaf
     pub proof: Vec<MerkleNode<E, F>>,
 }
 
 // TODO(Chengyu): unit tests
+// #[cfg(test)]
+// mod mt_tests {
+//     use crate::{merkle_tree::*, rescue::RescueParameter};
+//     use ark_ed_on_bls12_377::Fq as Fq377;
+//     use ark_ed_on_bls12_381::Fq as Fq381;
+//     use ark_ed_on_bn254::Fq as Fq254;
+
+//     #[test]
+//     fn test_empty_tree() {
+//         test_empty_tree_helper::<Fq254>();
+//         test_empty_tree_helper::<Fq377>();
+//         test_empty_tree_helper::<Fq381>();
+//     }
+
+//     fn test_empty_tree_helper<F: RescueParameter>() {
+//         let merkle_tree = MerkleTree::build(10, &[].iter());
+//     }
+// }

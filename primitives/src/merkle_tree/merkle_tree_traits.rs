@@ -5,9 +5,15 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::errors::PrimitivesError;
-use ark_ff::Field;
+use ark_ff::{Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, fmt::Debug, string::ToString};
+use ark_std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{AddAssign, DivAssign, MulAssign, Rem},
+    string::ToString,
+};
+use num::traits::AsPrimitive;
 use typenum::Unsigned;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -60,12 +66,33 @@ pub trait Hasher<F: Field> {
     fn digest(data: &[F]) -> F;
 }
 
+/// Generic index type for merkle tree. In most cases, for merkle tree indexed
+/// with `u64`, just add `impl Indextype for u64 {}`.
+pub trait IndexType:
+    Default
+    + Zero
+    + Ord
+    + Eq
+    + PartialEq
+    + From<u64>
+    + AddAssign<u64>
+    + DivAssign<u64>
+    + MulAssign<u64>
+    + Rem<u64, Output = Self>
+    + AsPrimitive<usize>
+    + CanonicalSerialize
+    + CanonicalDeserialize
+{
+}
+
 /// Basic functionalities for a merkle tree implementation
 pub trait MerkleTree<F: Field>: Sized {
     /// Merkle tree element type
     type ElementType: ElementType<F>;
     /// Hash algorithm used in merkle tree
     type Hasher: Hasher<F>;
+    /// Index type for this merkle tree
+    type IndexType: IndexType;
     /// Leaf arity
     type LeafArity: Unsigned;
     /// Non-leaf arity
@@ -84,26 +111,30 @@ pub trait MerkleTree<F: Field>: Sized {
     /// Return the height of this merkle tree
     fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
-    fn capacity(&self) -> u64;
+    fn capacity(&self) -> Self::IndexType;
     /// Return the current number of leaves
-    fn num_leaves(&self) -> u64;
+    fn num_leaves(&self) -> Self::IndexType;
 
     /// Return the current root value
     fn value(&self) -> F;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
-    /// * `returns` - Leaf value at the position. LookupResult::EmptyLeaf if the
-    ///   leaf position is empty or invalid, LookupResult::NotInMemory if the
-    ///   leaf position has been forgotten.
-    fn lookup(&self, pos: u64) -> LookupResult<(), Self::Proof>;
+    /// * `returns` - Leaf value at the position along with a proof.
+    ///   LookupResult::EmptyLeaf if the leaf position is empty or invalid,
+    ///   LookupResult::NotInMemory if the leaf position has been forgotten.
+    fn lookup(&self, pos: Self::IndexType) -> LookupResult<Self::ElementType, Self::Proof>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
-    /// * `returns` - Err() if something is wrong with this proof, Ok(result)
-    ///   otherwise
-    fn verify(&self, pos: u64, proof: impl Borrow<Self::Proof>) -> Result<bool, PrimitivesError>;
+    /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
+    ///   if the proof is not well structured, E.g. not for this merkle tree.
+    fn verify(
+        &self,
+        pos: Self::IndexType,
+        proof: impl Borrow<Self::Proof>,
+    ) -> Result<bool, PrimitivesError>;
 
     // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
     // Self::BatchProof>; fn batch_verify(
@@ -123,7 +154,7 @@ pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
     /// Insert a list of new values at the leftmost available slots
     /// * `elems` - elements to insert
     /// * `returns` - Ok(()) if successful
-    fn emplace(
+    fn extend(
         &mut self,
         elems: impl Iterator<Item = Self::ElementType>,
     ) -> Result<(), PrimitivesError>;
@@ -134,7 +165,11 @@ pub trait UpdatableMerkleTree<F: Field>: MerkleTree<F> {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    fn update(&mut self, pos: u64, elem: &Self::ElementType) -> Result<(), PrimitivesError>;
+    fn update(
+        &mut self,
+        pos: Self::IndexType,
+        elem: &Self::ElementType,
+    ) -> Result<(), PrimitivesError>;
 }
 
 /// Merkle tree that allows forget/remember elements from the memory
@@ -143,7 +178,7 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     /// Should not trim if position `i` is the last inserted leaf position.
     /// Return is identical to result if `get_leaf(pos)` were called before this
     /// call.
-    fn forget(&mut self, pos: u64) -> LookupResult<(), Self::Proof>;
+    fn forget(&mut self, pos: Self::IndexType) -> LookupResult<(), Self::Proof>;
 
     /// "Re-insert" a leaf into the tree using its proof.
     /// Returns Ok(()) if insertion is successful, or Err((ix,val)) if the
@@ -151,7 +186,7 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     /// in the proof.
     fn remember(
         &mut self,
-        pos: u64,
+        pos: Self::IndexType,
         element: &Self::ElementType,
         proof: Self::Proof,
     ) -> LookupResult<(), (u64, F)>;
