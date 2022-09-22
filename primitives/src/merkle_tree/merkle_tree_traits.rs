@@ -55,13 +55,10 @@ pub trait ElementType<F: Field>:
     + PartialEq
     + AsRef<[F]>
 {
-    /// Convert the element into a slice of field elements
-    /// TODO: is it the same as `AsRef<[F]>`?
-    fn as_slice_ref(&self) -> &[F];
 }
 
 /// Merkle tree hash function
-pub trait Hasher<F: Field> {
+pub trait DigestAlgorithm<F: Field> {
     /// Digest a list of values
     fn digest(data: &[F]) -> F;
 }
@@ -85,25 +82,27 @@ pub trait IndexType:
 {
 }
 
-/// Basic functionalities for a merkle tree implementation
+/// Basic functionalities for a merkle tree implementation. Abstracted as an
+/// accumulator for fixed-length array. Supports generate membership proof at a
+/// given position and verify a membership proof.
 pub trait MerkleTree<F: Field>: Sized {
     /// Merkle tree element type
     type ElementType: ElementType<F>;
     /// Hash algorithm used in merkle tree
-    type Hasher: Hasher<F>;
+    type Digest: DigestAlgorithm<F>;
     /// Index type for this merkle tree
     type IndexType: IndexType;
     /// Leaf arity
     type LeafArity: Unsigned;
     /// Non-leaf arity
     type TreeArity: Unsigned;
-    /// Exsistential proof
-    type Proof;
+    /// Merkle proof
+    type MembershipProof;
     /// Batch proof
-    type BatchProof;
+    type BatchMembershipProof;
 
     /// Construct a new merkle tree with given height from a data slice
-    fn build(
+    fn new(
         height: usize,
         data: impl Iterator<Item = Self::ElementType>,
     ) -> Result<Self, PrimitivesError>;
@@ -116,14 +115,17 @@ pub trait MerkleTree<F: Field>: Sized {
     fn num_leaves(&self) -> Self::IndexType;
 
     /// Return the current root value
-    fn value(&self) -> F;
+    fn root(&self) -> F;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `returns` - Leaf value at the position along with a proof.
     ///   LookupResult::EmptyLeaf if the leaf position is empty or invalid,
     ///   LookupResult::NotInMemory if the leaf position has been forgotten.
-    fn lookup(&self, pos: Self::IndexType) -> LookupResult<Self::ElementType, Self::Proof>;
+    fn lookup(
+        &self,
+        pos: Self::IndexType,
+    ) -> LookupResult<Self::ElementType, Self::MembershipProof>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `pos` - zero-based index of the leaf in the tree
@@ -133,7 +135,7 @@ pub trait MerkleTree<F: Field>: Sized {
     fn verify(
         &self,
         pos: Self::IndexType,
-        proof: impl Borrow<Self::Proof>,
+        proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<bool, PrimitivesError>;
 
     // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
@@ -157,11 +159,23 @@ pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
     fn extend(
         &mut self,
         elems: impl Iterator<Item = Self::ElementType>,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<(), PrimitivesError> {
+        for elem in elems {
+            self.push(&elem)?;
+        }
+        Ok(())
+    }
 }
 
-/// Merkle tree that allows modification
-pub trait UpdatableMerkleTree<F: Field>: MerkleTree<F> {
+/// A universal merkle tree is abstracted as a random-access array or a
+/// key-value map. It allows manipulation at any given position, and has ability
+/// to generate/verify a non-membership proof.
+pub trait UniversalMerkleTree<F: Field>: MerkleTree<F> {
+    /// Non membership proof for a given index
+    type NonMembershipProof;
+    /// Batch non membership proof
+    type BatchNonMembershipProof;
+
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
@@ -170,6 +184,8 @@ pub trait UpdatableMerkleTree<F: Field>: MerkleTree<F> {
         pos: Self::IndexType,
         elem: &Self::ElementType,
     ) -> Result<(), PrimitivesError>;
+
+    // TODO(Chengyu): non-membership proof interfaces
 }
 
 /// Merkle tree that allows forget/remember elements from the memory
@@ -178,7 +194,10 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     /// Should not trim if position `i` is the last inserted leaf position.
     /// Return is identical to result if `get_leaf(pos)` were called before this
     /// call.
-    fn forget(&mut self, pos: Self::IndexType) -> LookupResult<(), Self::Proof>;
+    fn forget(
+        &mut self,
+        pos: Self::IndexType,
+    ) -> LookupResult<Self::ElementType, Self::MembershipProof>;
 
     /// "Re-insert" a leaf into the tree using its proof.
     /// Returns Ok(()) if insertion is successful, or Err((ix,val)) if the
@@ -188,6 +207,6 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
         &mut self,
         pos: Self::IndexType,
         element: &Self::ElementType,
-        proof: Self::Proof,
+        proof: Self::MembershipProof,
     ) -> LookupResult<(), (u64, F)>;
 }

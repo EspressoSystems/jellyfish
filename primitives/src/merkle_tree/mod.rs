@@ -7,5 +7,7 @@
 //! Merkle Tree traits and implementations
 mod merkle_tree_impl;
 mod merkle_tree_traits;
+mod utils;
 
+// TODO(Chengyu): moving traits definition here
 pub use merkle_tree_traits::*;
