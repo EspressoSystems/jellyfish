@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["RescueError","Various error modes."]]};
