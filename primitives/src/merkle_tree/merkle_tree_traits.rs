@@ -6,14 +6,16 @@
 
 use crate::errors::PrimitivesError;
 use ark_ff::{Field, Zero};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
     borrow::Borrow,
     fmt::Debug,
-    ops::{AddAssign, DivAssign, MulAssign, Rem},
+    ops::{Add, AddAssign, DivAssign, MulAssign, Rem},
+    slice,
     string::ToString,
 };
 use num::traits::AsPrimitive;
+use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -44,17 +46,16 @@ impl<F, P> LookupResult<F, P> {
 
 /// Merkle tree element type
 pub trait ElementType<F: Field>:
-    Default
-    + Ord
-    + Clone
-    + Copy
-    + Debug
-    + CanonicalSerialize
-    + CanonicalDeserialize
-    + Eq
-    + PartialEq
-    + AsRef<[F]>
+    Default + Ord + Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize + Eq + PartialEq
 {
+    /// Into a slice of field elements
+    fn as_slice_ref(&self) -> &[F];
+}
+
+impl<F: Field> ElementType<F> for F {
+    fn as_slice_ref<'a>(&self) -> &[F] {
+        slice::from_ref(self)
+    }
 }
 
 /// Merkle tree hash function
@@ -73,6 +74,7 @@ pub trait IndexType:
     + PartialEq
     + From<u64>
     + AddAssign<u64>
+    + Add<u64, Output = Self>
     + DivAssign<u64>
     + MulAssign<u64>
     + Rem<u64, Output = Self>
@@ -80,6 +82,19 @@ pub trait IndexType:
     + CanonicalSerialize
     + CanonicalDeserialize
 {
+}
+
+/// A merkle commitment consists a root hash value, a tree height and number of leaves
+#[derive(
+    Eq, PartialEq, Clone, Copy, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
+)]
+pub struct MerkleCommitment<I: IndexType, F: Field> {
+    /// Root of a tree
+    pub root_value: F,
+    /// Height of a tree
+    pub height: usize,
+    /// Number of leaves in the tree
+    pub num_leaves: I,
 }
 
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
@@ -101,10 +116,13 @@ pub trait MerkleTree<F: Field>: Sized {
     /// Batch proof
     type BatchMembershipProof;
 
+    /// Construct a new merkle tree with given height
+    fn new(height: usize) -> Self;
+
     /// Construct a new merkle tree with given height from a data slice
-    fn new(
+    fn from_data(
         height: usize,
-        data: impl Iterator<Item = Self::ElementType>,
+        data: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
     ) -> Result<Self, PrimitivesError>;
 
     /// Return the height of this merkle tree
@@ -116,6 +134,9 @@ pub trait MerkleTree<F: Field>: Sized {
 
     /// Return the current root value
     fn root(&self) -> F;
+
+    /// Return a merkle commitment
+    fn commitment(&self) -> MerkleCommitment<Self::IndexType, F>;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -151,17 +172,17 @@ pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful
-    fn push(&mut self, elem: &Self::ElementType) -> Result<(), PrimitivesError>;
+    fn push(&mut self, elem: impl Borrow<Self::ElementType>) -> Result<(), PrimitivesError>;
 
     /// Insert a list of new values at the leftmost available slots
     /// * `elems` - elements to insert
     /// * `returns` - Ok(()) if successful
     fn extend(
         &mut self,
-        elems: impl Iterator<Item = Self::ElementType>,
+        elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
     ) -> Result<(), PrimitivesError> {
         for elem in elems {
-            self.push(&elem)?;
+            self.push(elem)?;
         }
         Ok(())
     }

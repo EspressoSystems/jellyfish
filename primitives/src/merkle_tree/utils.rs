@@ -7,7 +7,7 @@
 use super::{DigestAlgorithm, ElementType, IndexType, LookupResult};
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
-use ark_std::{borrow::Borrow, boxed::Box, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, boxed::Box, iter::Peekable, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
@@ -82,7 +82,7 @@ where
 pub(crate) fn build_tree_internal<E, H, I, LeafArity, TreeArity, F>(
     height: usize,
     capacity: I,
-    iter: impl Iterator<Item = E>,
+    iter: impl IntoIterator<Item = impl Borrow<E>>,
 ) -> Result<(Box<MerkleNode<E, F>>, I), PrimitivesError>
 where
     E: ElementType<F>,
@@ -92,7 +92,7 @@ where
     TreeArity: Unsigned,
     F: Field,
 {
-    let leaves: Vec<_> = iter.collect();
+    let leaves: Vec<_> = iter.into_iter().collect();
     let num_leaves = I::from(leaves.len() as u64);
 
     if num_leaves > capacity {
@@ -106,7 +106,7 @@ where
             .into_iter()
             .map(|chunk| {
                 let children = chunk
-                    .map(|node| Box::new(node))
+                    .map(|elem| Box::new(*elem.borrow()))
                     .pad_using(LeafArity::to_usize(), |_| Box::new(E::default()))
                     .collect_vec();
                 Box::new(MerkleNode::<E, F>::Leaf {
@@ -147,7 +147,7 @@ where
 {
     let data = data
         .iter()
-        .map(|elem| -> &[F] { (**elem).as_ref() })
+        .map(|elem| -> &[F] { elem.as_slice_ref() })
         .collect_vec()
         .concat();
     H::digest(&data)
@@ -163,11 +163,133 @@ where
     H::digest(&data)
 }
 
-pub(crate) fn update_mt_node_internal<E, H, I, LeafArity, TreeArity, F>(
+/// Extend a list to the given node. Return the number of inserted elements.
+pub(crate) fn mt_node_extend_internal<E, H, LeafArity, TreeArity, F>(
+    node: &mut Box<MerkleNode<E, F>>,
+    height: usize,
+    branch: &[usize],
+    data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
+) -> Result<u64, PrimitivesError>
+where
+    E: ElementType<F>,
+    H: DigestAlgorithm<F>,
+    LeafArity: Unsigned,
+    TreeArity: Unsigned,
+    F: Field,
+{
+    if data.peek().is_none() {
+        Ok(0)
+    } else if height == 1 {
+        match &mut **node {
+            MerkleNode::EmptySubtree => {
+                let mut frontier = branch[height - 1];
+                let mut cnt = 0u64;
+                if frontier == 0 {
+                    let mut children = vec![Box::new(E::default()); LeafArity::to_usize()];
+                    while data.peek().is_some() && frontier < LeafArity::to_usize() {
+                        cnt += 1;
+                        frontier += 1;
+                        children[frontier] = Box::new(*data.next().unwrap().borrow());
+                    }
+                    **node = MerkleNode::Leaf {
+                        value: digest_leaf::<E, H, F>(&children),
+                        children,
+                    };
+                    Ok(cnt)
+                } else {
+                    Err(PrimitivesError::ParameterError(
+                        "Incompatible merkle tree".to_string(),
+                    ))
+                }
+            },
+            MerkleNode::Leaf { value, children } => {
+                let mut frontier = branch[height - 1];
+                let mut cnt = 0u64;
+                while data.peek().is_some() && frontier < LeafArity::to_usize() {
+                    cnt += 1;
+                    frontier += 1;
+                    *children[frontier] = *data.next().unwrap().borrow();
+                }
+                *value = digest_leaf::<E, H, F>(children);
+                Ok(cnt)
+            },
+            MerkleNode::Branch {
+                value: _,
+                children: _,
+            } => Err(PrimitivesError::ParameterError(
+                "Incompatible merkle tree".to_string(),
+            )),
+            MerkleNode::ForgettenSubtree { value: _ } => Err(PrimitivesError::ParameterError(
+                "Given part of merkle tree is not in memory".to_string(),
+            )),
+        }
+    } else {
+        match &mut **node {
+            MerkleNode::EmptySubtree => {
+                let mut frontier = branch[height - 1];
+                let mut cnt = 0u64;
+                if frontier == 0 {
+                    let mut children =
+                        vec![Box::new(MerkleNode::EmptySubtree); TreeArity::to_usize()];
+                    while data.peek().is_some() && frontier < TreeArity::to_usize() {
+                        cnt += mt_node_extend_internal::<E, H, LeafArity, TreeArity, F>(
+                            &mut children[frontier],
+                            height - 1,
+                            branch,
+                            data,
+                        )?;
+                        frontier += 1;
+                    }
+                    **node = MerkleNode::Branch {
+                        value: digest_branch::<E, H, F>(&children),
+                        children,
+                    };
+                    Ok(cnt)
+                } else {
+                    Err(PrimitivesError::ParameterError(
+                        "Incompatible merkle tree".to_string(),
+                    ))
+                }
+            },
+            MerkleNode::Branch { value, children } => {
+                if height > 1 {
+                    let mut frontier = branch[height - 1];
+                    let mut cnt = 0u64;
+                    while data.peek().is_some() && frontier < TreeArity::to_usize() {
+                        cnt += mt_node_extend_internal::<E, H, LeafArity, TreeArity, F>(
+                            &mut children[frontier],
+                            height - 1,
+                            branch,
+                            data,
+                        )?;
+                        frontier += 1;
+                    }
+                    *value = digest_branch::<E, H, F>(children);
+                    Ok(cnt)
+                } else {
+                    Err(PrimitivesError::ParameterError(
+                        "Incompatible merkle tree".to_string(),
+                    ))
+                }
+            },
+            MerkleNode::Leaf {
+                value: _,
+                children: _,
+            } => Err(PrimitivesError::ParameterError(
+                "Incompatible merkle tree".to_string(),
+            )),
+            MerkleNode::ForgettenSubtree { value: _ } => Err(PrimitivesError::ParameterError(
+                "Given part of merkle tree is not in memory".to_string(),
+            )),
+        }
+    }
+}
+
+pub(crate) fn mt_node_update_internal<E, H, I, LeafArity, TreeArity, F>(
     node: &mut Box<MerkleNode<E, F>>,
     depth: usize,
     branches: &[usize],
-    elem: &E,
+    elem: impl Borrow<E>,
 ) -> Result<(), PrimitivesError>
 where
     E: ElementType<F>,
@@ -183,7 +305,7 @@ where
             ref mut children,
         } = **node
         {
-            *children[branches[depth - 1]] = *elem;
+            *children[branches[depth - 1]] = *elem.borrow();
             *value = digest_leaf::<E, H, F>(children);
         } else {
             return Err(PrimitivesError::InternalError(
@@ -200,7 +322,7 @@ where
             MerkleNode::<E, F>::Branch {
                 value: _,
                 children: _,
-            } => update_mt_node_internal::<E, H, I, LeafArity, TreeArity, F>(
+            } => mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
                 child,
                 depth - 1,
                 branches,
@@ -209,7 +331,7 @@ where
             MerkleNode::<E, F>::Leaf {
                 value: _,
                 children: _,
-            } => update_mt_node_internal::<E, H, I, LeafArity, TreeArity, F>(
+            } => mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
                 child,
                 depth - 1,
                 branches,
@@ -226,7 +348,7 @@ where
             MerkleNode::<E, F>::EmptySubtree => {
                 **child = if depth == 2 {
                     let mut children = vec![Box::new(E::default()); LeafArity::to_usize()];
-                    *children[branches[depth - 1]] = *elem;
+                    *children[branches[depth - 1]] = *elem.borrow();
                     MerkleNode::<E, F>::Leaf {
                         value: digest_leaf::<E, H, F>(&children),
                         children,
@@ -234,7 +356,7 @@ where
                 } else {
                     let mut children =
                         vec![Box::new(MerkleNode::EmptySubtree); TreeArity::to_usize()];
-                    update_mt_node_internal::<E, H, I, LeafArity, TreeArity, F>(
+                    mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
                         &mut children[branches[depth - 1]],
                         depth - 1,
                         branches,

@@ -5,7 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Merkle Tree traits and implementations
-mod merkle_tree_impl;
+pub mod merkle_tree_impl;
+
 mod merkle_tree_traits;
 mod utils;
 

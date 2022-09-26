@@ -8,16 +8,21 @@
 use super::{
     utils::{
         build_tree_internal, calculate_capacity, index_to_branches, lookup_internal,
-        update_mt_node_internal, MerkleNode, MerkleProof,
+        mt_node_extend_internal, mt_node_update_internal, MerkleNode, MerkleProof,
     },
-    AppendableMerkleTree, DigestAlgorithm, ElementType, IndexType, LookupResult, MerkleTree,
+    AppendableMerkleTree, DigestAlgorithm, ElementType, IndexType, LookupResult, MerkleCommitment,
+    MerkleTree,
 };
-use crate::errors::PrimitivesError;
+use crate::{
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter},
+};
 use ark_ff::Field;
 use ark_std::{borrow::Borrow, boxed::Box, marker::PhantomData, string::ToString};
 use serde::{Deserialize, Serialize};
-use typenum::Unsigned;
+use typenum::{Unsigned, U3};
 
+/// A standard append only Merkle tree implementation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
@@ -56,9 +61,21 @@ where
     type MembershipProof = MerkleProof<E, F, I>;
     type BatchMembershipProof = MerkleNode<E, F>;
 
-    fn new(
+    fn new(height: usize) -> Self {
+        MerkleTreeImpl {
+            root: Box::new(MerkleNode::<E, F>::EmptySubtree),
+            height,
+            capacity: calculate_capacity::<I, LeafArity, TreeArity>(height),
+            num_leaves: I::from(0),
+            _phantom_h: PhantomData,
+            _phantom_la: PhantomData,
+            _phantom_ta: PhantomData,
+        }
+    }
+
+    fn from_data(
         height: usize,
-        data: impl Iterator<Item = Self::ElementType>,
+        data: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
     ) -> Result<Self, PrimitivesError> {
         let capacity = calculate_capacity::<I, LeafArity, TreeArity>(height);
         let (root, num_leaves) =
@@ -116,6 +133,14 @@ where
             .verify_membership_proof::<H, LeafArity, TreeArity>()?;
         Ok(computed_root_value == self.root.value())
     }
+
+    fn commitment(&self) -> super::MerkleCommitment<Self::IndexType, F> {
+        MerkleCommitment {
+            root_value: self.root.value(),
+            height: self.height,
+            num_leaves: self.num_leaves,
+        }
+    }
 }
 
 impl<E, H, I, LeafArity, TreeArity, F> AppendableMerkleTree<F>
@@ -128,7 +153,7 @@ where
     TreeArity: Unsigned,
     F: Field,
 {
-    fn push(&mut self, elem: &Self::ElementType) -> Result<(), PrimitivesError> {
+    fn push(&mut self, elem: impl Borrow<Self::ElementType>) -> Result<(), PrimitivesError> {
         if self.num_leaves == self.capacity {
             return Err(PrimitivesError::InternalError(
                 "Merkle tree full".to_string(),
@@ -136,11 +161,11 @@ where
         }
 
         let branches = index_to_branches::<I, LeafArity, TreeArity>(self.num_leaves, self.height);
-        update_mt_node_internal::<E, H, I, LeafArity, TreeArity, F>(
+        mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
             &mut self.root,
             self.height,
             &branches,
-            elem,
+            elem.borrow(),
         )?;
         self.num_leaves += 1;
         Ok(())
@@ -148,11 +173,17 @@ where
 
     fn extend(
         &mut self,
-        elems: impl Iterator<Item = Self::ElementType>,
+        elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
     ) -> Result<(), PrimitivesError> {
-        // TODO(Chengyu): efficient batch insert
-        for elem in elems {
-            self.push(&elem)?;
+        let mut iter = elems.into_iter().peekable();
+        if iter.peek().is_some() {
+            let branch = index_to_branches::<I, LeafArity, TreeArity>(self.num_leaves, self.height);
+            self.num_leaves += mt_node_extend_internal::<E, H, LeafArity, TreeArity, F>(
+                &mut self.root,
+                self.height,
+                &branch,
+                &mut iter,
+            )?;
         }
         Ok(())
     }
@@ -170,22 +201,41 @@ where
     // TODO(Chengyu): extract a merkle frontier/commitment
 }
 
+impl IndexType for u64 {}
+/// A standard merkle tree using RATE-3 rescue hash function
+pub type RescueMerkleTree<F> = MerkleTreeImpl<F, RescueHash<F>, u64, U3, U3, F>;
+
+/// Wrapper for rescue hash function
+pub struct RescueHash<F: RescueParameter> {
+    phantom_f: PhantomData<F>,
+}
+
+impl<F: RescueParameter> DigestAlgorithm<F> for RescueHash<F> {
+    fn digest(data: &[F]) -> F {
+        let perm = Permutation::default();
+        perm.sponge_no_padding(data, 1).unwrap()[0]
+    }
+}
+
 // TODO(Chengyu): unit tests
-// #[cfg(test)]
-// mod mt_tests {
-//     use crate::{merkle_tree::*, rescue::RescueParameter};
-//     use ark_ed_on_bls12_377::Fq as Fq377;
-//     use ark_ed_on_bls12_381::Fq as Fq381;
-//     use ark_ed_on_bn254::Fq as Fq254;
+#[cfg(test)]
+mod mt_tests {
+    use crate::{merkle_tree::*, rescue::RescueParameter};
+    use ark_ed_on_bls12_377::Fq as Fq377;
+    use ark_ed_on_bls12_381::Fq as Fq381;
+    use ark_ed_on_bn254::Fq as Fq254;
 
-//     #[test]
-//     fn test_empty_tree() {
-//         test_empty_tree_helper::<Fq254>();
-//         test_empty_tree_helper::<Fq377>();
-//         test_empty_tree_helper::<Fq381>();
-//     }
+    use super::RescueMerkleTree;
 
-//     fn test_empty_tree_helper<F: RescueParameter>() {
-//         let merkle_tree = MerkleTree::build(10, &[].iter());
-//     }
-// }
+    #[test]
+    fn test_empty_tree() {
+        test_empty_tree_helper::<Fq254>();
+        test_empty_tree_helper::<Fq377>();
+        test_empty_tree_helper::<Fq381>();
+    }
+
+    fn test_empty_tree_helper<F: RescueParameter>() {
+        let mut mt = RescueMerkleTree::<F>::new(10);
+        assert!(mt.push(&F::from(2u64)).is_ok());
+    }
+}
