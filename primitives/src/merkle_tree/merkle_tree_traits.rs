@@ -48,13 +48,20 @@ impl<F, P> LookupResult<F, P> {
 pub trait ElementType<F: Field>:
     Default + Ord + Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize + Eq + PartialEq
 {
-    /// Into a slice of field elements
+    /// As a slice ref of field elements
     fn as_slice_ref(&self) -> &[F];
+
+    /// Length of the slice ref
+    fn slice_len() -> usize;
 }
 
 impl<F: Field> ElementType<F> for F {
     fn as_slice_ref<'a>(&self) -> &[F] {
         slice::from_ref(self)
+    }
+
+    fn slice_len() -> usize {
+        1
     }
 }
 
@@ -84,7 +91,8 @@ pub trait IndexType:
 {
 }
 
-/// A merkle commitment consists a root hash value, a tree height and number of leaves
+/// A merkle commitment consists a root hash value, a tree height and number of
+/// leaves
 #[derive(
     Eq, PartialEq, Clone, Copy, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
 )]

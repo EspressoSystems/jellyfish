@@ -20,22 +20,25 @@ pub enum MerkleNode<E, F: Field> {
         children: Vec<Box<MerkleNode<E, F>>>,
     },
     Leaf {
-        value: F,
-        children: Vec<Box<E>>,
+        elem: E,
     },
     ForgettenSubtree {
         value: F,
     },
+    ForgettenLeaf {
+        elem: E,
+    },
 }
 
-impl<E, F: Field> MerkleNode<E, F> {
+impl<E: ElementType<F>, F: Field> MerkleNode<E, F> {
     /// Returns the value of this [`MerkleNode`].
     #[inline]
     pub(crate) fn value(&self) -> F {
         match self {
             Self::EmptySubtree => F::zero(),
+            Self::Leaf { elem: _ } => F::zero(),
+            Self::ForgettenLeaf { elem: _ } => F::zero(),
             Self::Branch { value, children: _ } => *value,
-            Self::Leaf { value, children: _ } => *value,
             Self::ForgettenSubtree { value } => *value,
         }
     }
@@ -106,11 +109,17 @@ where
             .into_iter()
             .map(|chunk| {
                 let children = chunk
-                    .map(|elem| Box::new(*elem.borrow()))
-                    .pad_using(LeafArity::to_usize(), |_| Box::new(E::default()))
+                    .map(|elem| {
+                        Box::new(MerkleNode::Leaf {
+                            elem: *elem.borrow(),
+                        })
+                    })
+                    .pad_using(LeafArity::to_usize(), |_| {
+                        Box::new(MerkleNode::EmptySubtree)
+                    })
                     .collect_vec();
-                Box::new(MerkleNode::<E, F>::Leaf {
-                    value: digest_leaf::<E, H, F>(children.as_slice()),
+                Box::new(MerkleNode::<E, F>::Branch {
+                    value: digest_branch::<E, H, F>(&children, true),
                     children,
                 })
             })
@@ -127,7 +136,7 @@ where
                         })
                         .collect_vec();
                     Box::new(MerkleNode::<E, F>::Branch {
-                        value: digest_branch::<E, H, F>(&children),
+                        value: digest_branch::<E, H, F>(&children, false),
                         children,
                     })
                 })
@@ -139,286 +148,244 @@ where
     }
 }
 
-pub(crate) fn digest_leaf<E, H, F>(data: &[Box<E>]) -> F
+pub(crate) fn digest_branch<E, H, F>(data: &[Box<MerkleNode<E, F>>], is_bottom: bool) -> F
 where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
     F: Field,
 {
+    // Question(Chengyu): any more efficient implementation?
     let data = data
         .iter()
-        .map(|elem| -> &[F] { elem.as_slice_ref() })
+        .map(|node| match **node {
+            MerkleNode::EmptySubtree => {
+                vec![F::zero(); if is_bottom { E::slice_len() } else { 1 }]
+            },
+            MerkleNode::Leaf { elem: value } => value.as_slice_ref().to_vec(),
+            MerkleNode::Branch { value, children: _ } => vec![value],
+            MerkleNode::ForgettenLeaf { elem: value } => value.as_slice_ref().to_vec(),
+            MerkleNode::ForgettenSubtree { value } => vec![value],
+        })
         .collect_vec()
         .concat();
     H::digest(&data)
 }
 
-pub(crate) fn digest_branch<E, H, F>(data: &[Box<MerkleNode<E, F>>]) -> F
+impl<E, F> MerkleNode<E, F>
 where
     E: ElementType<F>,
-    H: DigestAlgorithm<F>,
     F: Field,
 {
-    let data = data.iter().map(|node| node.value()).collect_vec();
-    H::digest(&data)
-}
-
-/// Extend a list to the given node. Return the number of inserted elements.
-pub(crate) fn mt_node_extend_internal<E, H, LeafArity, TreeArity, F>(
-    node: &mut Box<MerkleNode<E, F>>,
-    height: usize,
-    branch: &[usize],
-    data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
-) -> Result<u64, PrimitivesError>
-where
-    E: ElementType<F>,
-    H: DigestAlgorithm<F>,
-    LeafArity: Unsigned,
-    TreeArity: Unsigned,
-    F: Field,
-{
-    if data.peek().is_none() {
-        Ok(0)
-    } else if height == 1 {
-        match &mut **node {
-            MerkleNode::EmptySubtree => {
-                let mut frontier = branch[height - 1];
-                let mut cnt = 0u64;
-                if frontier == 0 {
-                    let mut children = vec![Box::new(E::default()); LeafArity::to_usize()];
-                    while data.peek().is_some() && frontier < LeafArity::to_usize() {
-                        cnt += 1;
-                        frontier += 1;
-                        children[frontier] = Box::new(*data.next().unwrap().borrow());
-                    }
-                    **node = MerkleNode::Leaf {
-                        value: digest_leaf::<E, H, F>(&children),
-                        children,
-                    };
-                    Ok(cnt)
-                } else {
-                    Err(PrimitivesError::ParameterError(
-                        "Incompatible merkle tree".to_string(),
-                    ))
-                }
-            },
-            MerkleNode::Leaf { value, children } => {
-                let mut frontier = branch[height - 1];
-                let mut cnt = 0u64;
-                while data.peek().is_some() && frontier < LeafArity::to_usize() {
-                    cnt += 1;
-                    frontier += 1;
-                    *children[frontier] = *data.next().unwrap().borrow();
-                }
-                *value = digest_leaf::<E, H, F>(children);
-                Ok(cnt)
-            },
-            MerkleNode::Branch {
-                value: _,
-                children: _,
-            } => Err(PrimitivesError::ParameterError(
-                "Incompatible merkle tree".to_string(),
-            )),
-            MerkleNode::ForgettenSubtree { value: _ } => Err(PrimitivesError::ParameterError(
-                "Given part of merkle tree is not in memory".to_string(),
-            )),
-        }
-    } else {
-        match &mut **node {
-            MerkleNode::EmptySubtree => {
-                let mut frontier = branch[height - 1];
-                let mut cnt = 0u64;
-                if frontier == 0 {
-                    let mut children =
-                        vec![Box::new(MerkleNode::EmptySubtree); TreeArity::to_usize()];
-                    while data.peek().is_some() && frontier < TreeArity::to_usize() {
-                        cnt += mt_node_extend_internal::<E, H, LeafArity, TreeArity, F>(
-                            &mut children[frontier],
-                            height - 1,
-                            branch,
-                            data,
-                        )?;
-                        frontier += 1;
-                    }
-                    **node = MerkleNode::Branch {
-                        value: digest_branch::<E, H, F>(&children),
-                        children,
-                    };
-                    Ok(cnt)
-                } else {
-                    Err(PrimitivesError::ParameterError(
-                        "Incompatible merkle tree".to_string(),
-                    ))
-                }
-            },
+    /// Forget a leaf from the merkle tree. Internal branch merkle node will also be forgotten if all its leafs are forgotten.
+    pub(crate) fn forget_internal(
+        &mut self,
+        depth: usize,
+        branches: &[usize],
+    ) -> LookupResult<E, Vec<MerkleNode<E, F>>> {
+        match self {
+            MerkleNode::EmptySubtree => LookupResult::EmptyLeaf,
             MerkleNode::Branch { value, children } => {
-                if height > 1 {
-                    let mut frontier = branch[height - 1];
-                    let mut cnt = 0u64;
-                    while data.peek().is_some() && frontier < TreeArity::to_usize() {
-                        cnt += mt_node_extend_internal::<E, H, LeafArity, TreeArity, F>(
-                            &mut children[frontier],
-                            height - 1,
-                            branch,
-                            data,
-                        )?;
-                        frontier += 1;
-                    }
-                    *value = digest_branch::<E, H, F>(children);
-                    Ok(cnt)
-                } else {
-                    Err(PrimitivesError::ParameterError(
-                        "Incompatible merkle tree".to_string(),
-                    ))
+                match children[branches[depth - 1]].forget_internal(depth, branches) {
+                    LookupResult::Ok(elem, mut proof) => {
+                        proof.push(MerkleNode::Branch {
+                            value: F::zero(),
+                            children: if depth == 1 {
+                                children.iter().cloned().collect_vec()
+                            } else {
+                                children
+                                    .iter()
+                                    .map(|child| {
+                                        Box::new(MerkleNode::ForgettenSubtree {
+                                            value: child.value(),
+                                        })
+                                    })
+                                    .collect_vec()
+                            },
+                        });
+                        if children.iter().all(|child| {
+                            matches!(
+                                **child,
+                                MerkleNode::EmptySubtree
+                                    | MerkleNode::ForgettenLeaf { elem: _ }
+                                    | MerkleNode::ForgettenSubtree { value: _ }
+                            )
+                        }) {
+                            *self = MerkleNode::ForgettenSubtree { value: *value };
+                        }
+                        LookupResult::Ok(elem, proof)
+                    },
+                    LookupResult::NotInMemory => LookupResult::NotInMemory,
+                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
                 }
             },
-            MerkleNode::Leaf {
-                value: _,
-                children: _,
-            } => Err(PrimitivesError::ParameterError(
-                "Incompatible merkle tree".to_string(),
-            )),
-            MerkleNode::ForgettenSubtree { value: _ } => Err(PrimitivesError::ParameterError(
-                "Given part of merkle tree is not in memory".to_string(),
-            )),
+            MerkleNode::Leaf { elem: value } => {
+                let value = *value;
+                *self = MerkleNode::ForgettenLeaf { elem: value };
+                LookupResult::Ok(value, vec![])
+            },
+            _ => LookupResult::NotInMemory,
         }
     }
-}
 
-pub(crate) fn mt_node_update_internal<E, H, I, LeafArity, TreeArity, F>(
-    node: &mut Box<MerkleNode<E, F>>,
-    depth: usize,
-    branches: &[usize],
-    elem: impl Borrow<E>,
-) -> Result<(), PrimitivesError>
-where
-    E: ElementType<F>,
-    H: DigestAlgorithm<F>,
-    I: IndexType,
-    LeafArity: Unsigned,
-    TreeArity: Unsigned,
-    F: Field,
-{
-    if depth == 1 {
-        if let MerkleNode::Leaf {
-            ref mut value,
-            ref mut children,
-        } = **node
-        {
-            *children[branches[depth - 1]] = *elem.borrow();
-            *value = digest_leaf::<E, H, F>(children);
-        } else {
-            return Err(PrimitivesError::InternalError(
-                "Inconsistent merkle tree".to_string(),
-            ));
-        }
-    } else if let MerkleNode::<E, F>::Branch {
-        value: _,
-        ref mut children,
-    } = **node
-    {
-        let child = &mut children[branches[depth - 1]];
-        match **child {
-            MerkleNode::<E, F>::Branch {
-                value: _,
-                children: _,
-            } => mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
-                child,
-                depth - 1,
-                branches,
-                elem,
-            )?,
-            MerkleNode::<E, F>::Leaf {
-                value: _,
-                children: _,
-            } => mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
-                child,
-                depth - 1,
-                branches,
-                elem,
-            )?,
-
-            MerkleNode::<E, F>::ForgettenSubtree { value: _ } => {
-                return Err(PrimitivesError::InternalError(
-                    "Couldn't update the given position: merkle tree data not in memory"
-                        .to_string(),
-                ))
+    pub(crate) fn lookup_internal(
+        &self,
+        depth: usize,
+        branches: &[usize],
+    ) -> LookupResult<E, Vec<MerkleNode<E, F>>> {
+        match self {
+            MerkleNode::EmptySubtree => LookupResult::EmptyLeaf,
+            MerkleNode::Branch { value: _, children } => {
+                match children[branches[depth - 1]].lookup_internal(depth, branches) {
+                    LookupResult::Ok(value, mut proof) => {
+                        proof.push(MerkleNode::Branch {
+                            value: F::zero(),
+                            children: if depth == 1 {
+                                children.iter().cloned().collect_vec()
+                            } else {
+                                children
+                                    .iter()
+                                    .map(|child| {
+                                        Box::new(MerkleNode::ForgettenSubtree {
+                                            value: child.value(),
+                                        })
+                                    })
+                                    .collect_vec()
+                            },
+                        });
+                        LookupResult::Ok(value, proof)
+                    },
+                    LookupResult::NotInMemory => LookupResult::NotInMemory,
+                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+                }
             },
+            MerkleNode::Leaf { elem: value } => LookupResult::Ok(*value, vec![]),
+            _ => LookupResult::NotInMemory,
+        }
+    }
 
-            MerkleNode::<E, F>::EmptySubtree => {
-                **child = if depth == 2 {
-                    let mut children = vec![Box::new(E::default()); LeafArity::to_usize()];
-                    *children[branches[depth - 1]] = *elem.borrow();
-                    MerkleNode::<E, F>::Leaf {
-                        value: digest_leaf::<E, H, F>(&children),
-                        children,
-                    }
+    pub(crate) fn update_internal<H, LeafArity, TreeArity>(
+        &mut self,
+        depth: usize,
+        branches: &[usize],
+        elem: impl Borrow<E>,
+    ) -> Result<(), PrimitivesError>
+    where
+        H: DigestAlgorithm<F>,
+        LeafArity: Unsigned,
+        TreeArity: Unsigned,
+    {
+        match self {
+            MerkleNode::Leaf { elem: value } => {
+                *value = *elem.borrow();
+                Ok(())
+            },
+            MerkleNode::Branch { value: _, children } => (*children[branches[depth - 1]])
+                .update_internal::<H, LeafArity, TreeArity>(depth - 1, branches, elem),
+            MerkleNode::EmptySubtree => {
+                if depth == 0 {
+                    *self = MerkleNode::Leaf {
+                        elem: *elem.borrow(),
+                    };
                 } else {
-                    let mut children =
-                        vec![Box::new(MerkleNode::EmptySubtree); TreeArity::to_usize()];
-                    mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
-                        &mut children[branches[depth - 1]],
+                    let mut children = vec![
+                        Box::new(MerkleNode::EmptySubtree);
+                        if depth == 1 {
+                            LeafArity::to_usize()
+                        } else {
+                            TreeArity::to_usize()
+                        }
+                    ];
+                    (*children[branches[depth - 1]]).update_internal::<H, LeafArity, TreeArity>(
                         depth - 1,
                         branches,
                         elem,
                     )?;
-                    MerkleNode::<E, F>::Branch {
-                        value: digest_branch::<E, H, F>(&children),
+                    *self = MerkleNode::Branch {
+                        value: digest_branch::<E, H, F>(&children, depth == 1),
                         children,
                     }
                 }
+                Ok(())
             },
+            _ => Err(PrimitivesError::ParameterError(
+                "Given index is not in memory".to_string(),
+            )),
         }
-    } else {
-        return Err(PrimitivesError::InternalError(
-            "Inconsistent merkle tree".to_string(),
-        ));
     }
-    Ok(())
-}
 
-pub(crate) fn lookup_internal<E, I, LeafArity, TreeArity, F>(
-    root: &MerkleNode<E, F>,
-    height: usize,
-    pos: I,
-) -> LookupResult<E, MerkleProof<E, F, I>>
-where
-    E: ElementType<F>,
-    I: IndexType,
-    LeafArity: Unsigned,
-    TreeArity: Unsigned,
-    F: Field,
-{
-    let mut proof: Vec<MerkleNode<E, F>> = vec![];
-    let mut cur = root.borrow();
-    let mut branches = index_to_branches::<I, LeafArity, TreeArity>(pos, height);
-    branches.reverse();
-    let mut leaf_value = E::default();
-    for depth in 0..height {
-        match cur {
-            MerkleNode::Leaf { value: _, children } => {
-                proof.push(cur.clone());
-                leaf_value = *children[branches[depth]];
-            },
-            MerkleNode::Branch { value: _, children } => {
-                proof.push(MerkleNode::Branch {
-                    value: F::zero(),
-                    children: children
-                        .iter()
-                        .map(|node| {
-                            Box::new(MerkleNode::ForgettenSubtree {
-                                value: node.value(),
-                            })
-                        })
-                        .collect_vec(),
-                });
-                cur = &children[branches[depth]];
-            },
-            MerkleNode::EmptySubtree => return LookupResult::EmptyLeaf,
-            MerkleNode::ForgettenSubtree { value: _ } => return LookupResult::NotInMemory,
+    pub(crate) fn extend_internal<H, LeafArity, TreeArity>(
+        &mut self,
+        depth: usize,
+        branches: &[usize],
+        data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
+    ) -> Result<u64, PrimitivesError>
+    where
+        H: DigestAlgorithm<F>,
+        LeafArity: Unsigned,
+        TreeArity: Unsigned,
+    {
+        if data.peek().is_none() {
+            Ok(0)
+        } else {
+            match self {
+                MerkleNode::Branch { value, children } => {
+                    let mut cnt = 0u64;
+                    let mut frontier = branches[depth - 1];
+                    let cap = if depth == 1 {
+                        LeafArity::to_usize()
+                    } else {
+                        TreeArity::to_usize()
+                    };
+                    while data.peek().is_some() && frontier < cap {
+                        cnt += children[frontier].extend_internal::<H, LeafArity, TreeArity>(
+                            depth - 1,
+                            branches,
+                            data,
+                        )?;
+                        frontier += 1;
+                    }
+                    *value = digest_branch::<E, H, F>(children, depth == 1);
+                    Ok(cnt)
+                },
+                MerkleNode::EmptySubtree => {
+                    if depth == 0 {
+                        *self = MerkleNode::Leaf {
+                            elem: *data.next().unwrap().borrow(),
+                        };
+                        Ok(1)
+                    } else {
+                        let mut cnt = 0u64;
+                        let mut frontier = branches[depth - 1];
+                        let cap = if depth == 1 {
+                            LeafArity::to_usize()
+                        } else {
+                            TreeArity::to_usize()
+                        };
+                        let mut children = vec![Box::new(MerkleNode::EmptySubtree); cap];
+                        while data.peek().is_some() && frontier < cap {
+                            cnt += children[frontier].extend_internal::<H, LeafArity, TreeArity>(
+                                depth - 1,
+                                branches,
+                                data,
+                            )?;
+                            frontier += 1;
+                        }
+                        *self = MerkleNode::Branch {
+                            value: digest_branch::<E, H, F>(&children, depth == 1),
+                            children,
+                        };
+                        Ok(cnt)
+                    }
+                },
+                MerkleNode::Leaf { elem: _ } => Err(PrimitivesError::ParameterError(
+                    "Incompatible merkle tree: index already occupied".to_string(),
+                )),
+                _ => Err(PrimitivesError::ParameterError(
+                    "Given part of merkle tree is not in memory".to_string(),
+                )),
+            }
         }
     }
-    LookupResult::Ok(leaf_value, MerkleProof { pos, proof })
 }
 
 impl<E, F, I> MerkleProof<E, F, I>
@@ -438,19 +405,21 @@ where
         index_to_branches::<I, LeafArity, TreeArity>(self.pos, self.proof.len())
             .iter()
             .zip(self.proof.iter().rev())
+            .enumerate()
             .fold(
                 Ok(F::zero()),
-                |result, (branch, node)| -> Result<F, PrimitivesError> {
+                |result, (index, (branch, node))| -> Result<F, PrimitivesError> {
                     match result {
                         Ok(val) => match node {
-                            MerkleNode::Leaf { value: _, children } => {
-                                Ok(digest_leaf::<E, H, F>(children))
-                            },
                             MerkleNode::Branch { value: _, children } => {
-                                let mut data =
-                                    children.iter().map(|node| node.value()).collect_vec();
-                                data[*branch] = val;
-                                Ok(H::digest(&data))
+                                if index == 0 {
+                                    Ok(digest_branch::<E, H, F>(children, true))
+                                } else {
+                                    let mut data =
+                                        children.iter().map(|node| node.value()).collect_vec();
+                                    data[*branch] = val;
+                                    Ok(H::digest(&data))
+                                }
                             },
                             _ => Err(PrimitivesError::ParameterError(
                                 "Incompatible proof for this merkle tree".to_string(),

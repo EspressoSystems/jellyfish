@@ -6,12 +6,9 @@
 
 //! Implementation of a typical append only merkle tree
 use super::{
-    utils::{
-        build_tree_internal, calculate_capacity, index_to_branches, lookup_internal,
-        mt_node_extend_internal, mt_node_update_internal, MerkleNode, MerkleProof,
-    },
-    AppendableMerkleTree, DigestAlgorithm, ElementType, IndexType, LookupResult, MerkleCommitment,
-    MerkleTree,
+    utils::{build_tree_internal, calculate_capacity, index_to_branches, MerkleNode, MerkleProof},
+    AppendableMerkleTree, DigestAlgorithm, ElementType, ForgetableMerkleTree, IndexType,
+    LookupResult, MerkleCommitment, MerkleTree,
 };
 use crate::{
     errors::PrimitivesError,
@@ -59,7 +56,8 @@ where
     type LeafArity = LeafArity;
     type TreeArity = TreeArity;
     type MembershipProof = MerkleProof<E, F, I>;
-    type BatchMembershipProof = MerkleNode<E, F>;
+    // TODO(Chengyu): implement batch membership proof
+    type BatchMembershipProof = ();
 
     fn new(height: usize) -> Self {
         MerkleTreeImpl {
@@ -114,7 +112,12 @@ where
         if pos >= self.num_leaves {
             return LookupResult::EmptyLeaf;
         }
-        lookup_internal::<E, I, LeafArity, TreeArity, F>(&self.root, self.height, pos)
+        let branches = index_to_branches::<I, LeafArity, TreeArity>(pos, self.height);
+        match self.root.lookup_internal(self.height, &branches) {
+            LookupResult::Ok(value, proof) => LookupResult::Ok(value, MerkleProof { pos, proof }),
+            LookupResult::NotInMemory => LookupResult::NotInMemory,
+            LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+        }
     }
 
     fn verify(
@@ -161,8 +164,7 @@ where
         }
 
         let branches = index_to_branches::<I, LeafArity, TreeArity>(self.num_leaves, self.height);
-        mt_node_update_internal::<E, H, I, LeafArity, TreeArity, F>(
-            &mut self.root,
+        self.root.update_internal::<H, LeafArity, TreeArity>(
             self.height,
             &branches,
             elem.borrow(),
@@ -178,8 +180,7 @@ where
         let mut iter = elems.into_iter().peekable();
         if iter.peek().is_some() {
             let branch = index_to_branches::<I, LeafArity, TreeArity>(self.num_leaves, self.height);
-            self.num_leaves += mt_node_extend_internal::<E, H, LeafArity, TreeArity, F>(
-                &mut self.root,
+            self.num_leaves += self.root.extend_internal::<H, LeafArity, TreeArity>(
                 self.height,
                 &branch,
                 &mut iter,
@@ -189,7 +190,8 @@ where
     }
 }
 
-impl<E, H, I, LeafArity, TreeArity, F> MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
+impl<E, H, I, LeafArity, TreeArity, F> ForgetableMerkleTree<F>
+    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
@@ -198,8 +200,31 @@ where
     TreeArity: Unsigned,
     F: Field,
 {
-    // TODO(Chengyu): extract a merkle frontier/commitment
+    fn forget(
+        &mut self,
+        pos: Self::IndexType,
+    ) -> LookupResult<Self::ElementType, Self::MembershipProof> {
+        let branches = index_to_branches::<I, LeafArity, TreeArity>(pos, self.height);
+        match self.root.forget_internal(self.height, &branches) {
+            LookupResult::Ok(elem, proof) => {
+                LookupResult::Ok(elem, MerkleProof::<E, F, I> { pos, proof })
+            },
+            LookupResult::NotInMemory => LookupResult::NotInMemory,
+            LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+        }
+    }
+
+    fn remember(
+        &mut self,
+        _pos: Self::IndexType,
+        _element: &Self::ElementType,
+        _proof: Self::MembershipProof,
+    ) -> LookupResult<(), (u64, F)> {
+        todo!()
+    }
 }
+
+// TODO(Chengyu): extract a merkle frontier
 
 impl IndexType for u64 {}
 /// A standard merkle tree using RATE-3 rescue hash function
