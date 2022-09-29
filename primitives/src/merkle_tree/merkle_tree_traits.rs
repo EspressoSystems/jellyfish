@@ -175,7 +175,8 @@ pub trait MerkleTree<F: Field>: Sized {
     // ) -> Result<(), PrimitivesError>;
 }
 
-/// Merkle tree that allows insertion at back. Abstracted as a commitment for append-only vector.
+/// Merkle tree that allows insertion at back. Abstracted as a commitment for
+/// append-only vector.
 pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree

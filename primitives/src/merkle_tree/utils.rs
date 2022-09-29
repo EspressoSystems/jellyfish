@@ -193,7 +193,8 @@ where
     E: ElementType<F>,
     F: Field,
 {
-    /// Forget a leaf from the merkle tree. Internal branch merkle node will also be forgotten if all its leafs are forgotten.
+    /// Forget a leaf from the merkle tree. Internal branch merkle node will
+    /// also be forgotten if all its leafs are forgotten.
     pub(crate) fn forget_internal(
         &mut self,
         depth: usize,
