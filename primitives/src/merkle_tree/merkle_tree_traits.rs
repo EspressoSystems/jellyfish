@@ -175,7 +175,7 @@ pub trait MerkleTree<F: Field>: Sized {
     // ) -> Result<(), PrimitivesError>;
 }
 
-/// Merkle tree that allows insertion at back
+/// Merkle tree that allows insertion at back. Abstracted as a commitment for append-only vector.
 pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
@@ -229,13 +229,12 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     ) -> LookupResult<Self::ElementType, Self::MembershipProof>;
 
     /// "Re-insert" a leaf into the tree using its proof.
-    /// Returns Ok(()) if insertion is successful, or Err((ix,val)) if the
-    /// proof disagrees with the correct node value `val` at position `ix`
-    /// in the proof.
+    /// Returns Ok(()) if insertion is successful, or Err(err) if the
+    /// proof disagrees with the merkle tree
     fn remember(
         &mut self,
         pos: Self::IndexType,
         element: &Self::ElementType,
         proof: Self::MembershipProof,
-    ) -> LookupResult<(), (u64, F)>;
+    ) -> Result<(), PrimitivesError>;
 }

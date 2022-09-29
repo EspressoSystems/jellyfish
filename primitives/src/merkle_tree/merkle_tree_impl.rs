@@ -6,7 +6,10 @@
 
 //! Implementation of a typical append only merkle tree
 use super::{
-    utils::{build_tree_internal, calculate_capacity, index_to_branches, MerkleNode, MerkleProof},
+    utils::{
+        build_tree_internal, calculate_capacity, digest_branch, index_to_branches, MerkleNode,
+        MerkleProof,
+    },
     AppendableMerkleTree, DigestAlgorithm, ElementType, ForgetableMerkleTree, IndexType,
     LookupResult, MerkleCommitment, MerkleTree,
 };
@@ -15,7 +18,7 @@ use crate::{
     rescue::{Permutation, RescueParameter},
 };
 use ark_ff::Field;
-use ark_std::{borrow::Borrow, boxed::Box, marker::PhantomData, string::ToString};
+use ark_std::{borrow::Borrow, boxed::Box, marker::PhantomData, string::ToString, vec, vec::Vec};
 use serde::{Deserialize, Serialize};
 use typenum::{Unsigned, U3};
 
@@ -216,11 +219,45 @@ where
 
     fn remember(
         &mut self,
-        _pos: Self::IndexType,
+        pos: Self::IndexType,
         _element: &Self::ElementType,
-        _proof: Self::MembershipProof,
-    ) -> LookupResult<(), (u64, F)> {
-        todo!()
+        proof: Self::MembershipProof,
+    ) -> Result<(), PrimitivesError> {
+        let branches = index_to_branches::<I, LeafArity, TreeArity>(pos, self.height);
+        let mut path_values = vec![];
+        branches
+            .iter()
+            .zip(proof.proof.iter().rev())
+            .enumerate()
+            .fold(
+                Ok(F::zero()),
+                |result, (index, (branch, node))| -> Result<F, PrimitivesError> {
+                    match result {
+                        Ok(val) => match node {
+                            MerkleNode::Branch { value: _, children } => {
+                                if index == 0 {
+                                    let digest = digest_branch::<E, H, F>(children, true);
+                                    path_values.push(digest);
+                                    Ok(digest)
+                                } else {
+                                    let mut data: Vec<_> =
+                                        children.iter().map(|node| node.value()).collect();
+                                    data[*branch] = val;
+                                    let digest = H::digest(&data);
+                                    path_values.push(digest);
+                                    Ok(digest)
+                                }
+                            },
+                            _ => Err(PrimitivesError::ParameterError(
+                                "Incompatible proof for this merkle tree".to_string(),
+                            )),
+                        },
+                        Err(e) => Err(e),
+                    }
+                },
+            )?;
+        self.root
+            .remember_internal(self.height, &branches, &path_values, &proof.proof)
     }
 }
 

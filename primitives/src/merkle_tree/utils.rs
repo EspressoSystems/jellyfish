@@ -7,7 +7,9 @@
 use super::{DigestAlgorithm, ElementType, IndexType, LookupResult};
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
-use ark_std::{borrow::Borrow, boxed::Box, iter::Peekable, string::ToString, vec, vec::Vec};
+use ark_std::{
+    borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
+};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
@@ -31,7 +33,7 @@ pub enum MerkleNode<E, F: Field> {
 }
 
 impl<E: ElementType<F>, F: Field> MerkleNode<E, F> {
-    /// Returns the value of this [`MerkleNode`].
+    /// Return the value of this [`MerkleNode`].
     #[inline]
     pub(crate) fn value(&self) -> F {
         match self {
@@ -40,6 +42,21 @@ impl<E: ElementType<F>, F: Field> MerkleNode<E, F> {
             Self::ForgettenLeaf { elem: _ } => F::zero(),
             Self::Branch { value, children: _ } => *value,
             Self::ForgettenSubtree { value } => *value,
+        }
+    }
+
+    /// Return a reference to the element stored in this [`MerkleNode`].
+    /// Call this function only if the given node is a leaf.
+    pub(crate) fn elem_ref(&self) -> &E {
+        match self {
+            Self::EmptySubtree => unreachable!(),
+            Self::Leaf { elem } => elem,
+            Self::ForgettenLeaf { elem } => elem,
+            Self::Branch {
+                value: _,
+                children: _,
+            } => unreachable!(),
+            Self::ForgettenSubtree { value: _ } => unreachable!(),
         }
     }
 }
@@ -195,9 +212,13 @@ where
                                 children
                                     .iter()
                                     .map(|child| {
-                                        Box::new(MerkleNode::ForgettenSubtree {
-                                            value: child.value(),
-                                        })
+                                        if let MerkleNode::EmptySubtree = **child {
+                                            Box::new(MerkleNode::EmptySubtree)
+                                        } else {
+                                            Box::new(MerkleNode::ForgettenSubtree {
+                                                value: child.value(),
+                                            })
+                                        }
                                     })
                                     .collect_vec()
                             },
@@ -227,6 +248,94 @@ where
         }
     }
 
+    pub(crate) fn remember_internal(
+        &mut self,
+        depth: usize,
+        branches: &[usize],
+        path_values: &[F],
+        proof: &[MerkleNode<E, F>],
+    ) -> Result<(), PrimitivesError> {
+        if self.value() != path_values[depth - 1] {
+            return Err(PrimitivesError::ParameterError(format!(
+                "Invalid proof. Hash differs at height {}: (expected: {}, received: {})",
+                depth,
+                self.value(),
+                path_values[depth - 1]
+            )));
+        }
+        if let MerkleNode::Branch {
+            value: _,
+            children: proof_children,
+        } = &proof[depth - 1]
+        {
+            match &mut *self {
+                MerkleNode::Branch { value: _, children } => {
+                    let branch = branches[depth - 1];
+                    if depth == 1 {
+                        if !children.iter().zip(proof_children.iter()).all(
+                            |(child, proof_child)| {
+                                (matches!(**child, MerkleNode::EmptySubtree)
+                                    && matches!(**proof_child, MerkleNode::EmptySubtree))
+                                    || *child.elem_ref() == *proof_child.elem_ref()
+                            },
+                        ) {
+                            Err(PrimitivesError::ParameterError(format!(
+                                "Invalid proof. Sibling differs at height {}",
+                                depth
+                            )))
+                        } else {
+                            *children[branch] = MerkleNode::Leaf {
+                                elem: *proof_children[branch].elem_ref(),
+                            };
+                            Ok(())
+                        }
+                    } else if !children.iter().zip(proof_children.iter()).all(
+                        |(child, proof_child)| {
+                            (matches!(**child, MerkleNode::EmptySubtree)
+                                && matches!(**proof_child, MerkleNode::EmptySubtree))
+                                || child.value() == proof_child.value()
+                        },
+                    ) {
+                        Err(PrimitivesError::ParameterError(format!(
+                            "Invalid proof. Sibling differs at height {}",
+                            depth
+                        )))
+                    } else {
+                        children[branches[depth - 1]].remember_internal(
+                            depth - 1,
+                            branches,
+                            path_values,
+                            proof,
+                        )
+                    }
+                },
+                MerkleNode::ForgettenSubtree { value: _ } => {
+                    *self = MerkleNode::Branch {
+                        value: path_values[depth - 1],
+                        children: {
+                            let mut children = proof_children.clone();
+                            children[branches[depth - 1]].remember_internal(
+                                depth - 1,
+                                branches,
+                                path_values,
+                                proof,
+                            )?;
+                            children
+                        },
+                    };
+                    Ok(())
+                },
+                MerkleNode::Leaf { elem: _ } => unreachable!(),
+                MerkleNode::ForgettenLeaf { elem: _ } => unreachable!(),
+                MerkleNode::EmptySubtree => Err(PrimitivesError::ParameterError(
+                    "Invalid proof. Given location is supposed to be empty.".to_string(),
+                )),
+            }
+        } else {
+            Err(PrimitivesError::ParameterError("Invalid proof".to_string()))
+        }
+    }
+
     pub(crate) fn lookup_internal(
         &self,
         depth: usize,
@@ -245,9 +354,13 @@ where
                                 children
                                     .iter()
                                     .map(|child| {
-                                        Box::new(MerkleNode::ForgettenSubtree {
-                                            value: child.value(),
-                                        })
+                                        if let MerkleNode::EmptySubtree = **child {
+                                            Box::new(MerkleNode::EmptySubtree)
+                                        } else {
+                                            Box::new(MerkleNode::ForgettenSubtree {
+                                                value: child.value(),
+                                            })
+                                        }
                                     })
                                     .collect_vec()
                             },
