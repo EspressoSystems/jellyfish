@@ -77,6 +77,7 @@ pub trait DigestAlgorithm<F: Field> {
 /// with `u64`, just add `impl IndexType<F> for u64 {}`.
 pub trait IndexType<F: Field>:
     Default
+    + Debug
     + Zero
     + Ord
     + Eq
@@ -254,7 +255,7 @@ pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
     fn remember(
         &mut self,
         pos: Self::IndexType,
-        element: &Self::ElementType,
-        proof: Self::MembershipProof,
+        element: impl Borrow<Self::ElementType>,
+        proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError>;
 }

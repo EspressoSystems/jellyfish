@@ -51,20 +51,6 @@ where
             Self::ForgettenSubtree { value } => *value,
         }
     }
-
-    /// Return the element reference of this [`MerkleNode`].
-    /// Only available when it's an leaf node.
-    #[inline]
-    pub(crate) fn elem_ref(&self) -> &E {
-        match self {
-            Self::Leaf {
-                value: _,
-                pos: _,
-                elem,
-            } => elem,
-            _ => unreachable!(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -269,7 +255,6 @@ where
         }
     }
 
-    // TODO(Chengyu): fix this
     pub(crate) fn remember_internal<H, TreeArity>(
         &mut self,
         depth: usize,
@@ -290,7 +275,10 @@ where
                 path_values[depth]
             )));
         }
-        if let MerkleNode::Branch {
+        if depth == 0 && matches!(self, MerkleNode::ForgettenSubtree { value: _ }) {
+            *self = proof[depth].clone();
+            Ok(())
+        } else if let MerkleNode::Branch {
             value: _,
             children: proof_children,
         } = &proof[depth]
@@ -298,31 +286,11 @@ where
             match &mut *self {
                 MerkleNode::Branch { value: _, children } => {
                     let branch = branches[depth - 1];
-                    if depth == 1 {
-                        if !children.iter().zip(proof_children.iter()).all(
-                            |(child, proof_child)| {
-                                (matches!(**child, MerkleNode::Empty)
+                    if !children.iter().zip(proof_children.iter()).enumerate().all(
+                        |(index, (child, proof_child))| {
+                            index == branch
+                                || (matches!(**child, MerkleNode::Empty)
                                     && matches!(**proof_child, MerkleNode::Empty))
-                                    || *child.elem_ref() == *proof_child.elem_ref()
-                            },
-                        ) {
-                            Err(PrimitivesError::ParameterError(format!(
-                                "Invalid proof. Sibling differs at height {}",
-                                depth
-                            )))
-                        } else {
-                            let elem = proof_children[branch].elem_ref();
-                            *children[branch] = MerkleNode::Leaf {
-                                value: digest_leaf::<E, H, I, F>(pos, elem, TreeArity::to_usize()),
-                                pos,
-                                elem: *elem,
-                            };
-                            Ok(())
-                        }
-                    } else if !children.iter().zip(proof_children.iter()).all(
-                        |(child, proof_child)| {
-                            (matches!(**child, MerkleNode::Empty)
-                                && matches!(**proof_child, MerkleNode::Empty))
                                 || child.value() == proof_child.value()
                         },
                     ) {
@@ -331,7 +299,7 @@ where
                             depth
                         )))
                     } else {
-                        children[branches[depth - 1]].remember_internal::<H, TreeArity>(
+                        children[branch].remember_internal::<H, TreeArity>(
                             depth - 1,
                             pos,
                             branches,
@@ -357,13 +325,15 @@ where
                     };
                     Ok(())
                 },
+                MerkleNode::Empty => Err(PrimitivesError::ParameterError(
+                    "Invalid proof. Given location is supposed to be empty.".to_string(),
+                )),
                 MerkleNode::Leaf {
                     value: _,
                     pos: _,
                     elem: _,
-                } => unreachable!(),
-                MerkleNode::Empty => Err(PrimitivesError::ParameterError(
-                    "Invalid proof. Given location is supposed to be empty.".to_string(),
+                } => Err(PrimitivesError::ParameterError(
+                    "Given position is already occupied".to_string(),
                 )),
             }
         } else {
@@ -380,7 +350,7 @@ where
             MerkleNode::Empty => LookupResult::EmptyLeaf,
             MerkleNode::Branch { value: _, children } => {
                 match children[branches[depth - 1]].lookup_internal(depth - 1, branches) {
-                    LookupResult::Ok(value, mut proof) => {
+                    LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
                             value: F::zero(),
                             children: children
@@ -396,7 +366,7 @@ where
                                 })
                                 .collect_vec(),
                         });
-                        LookupResult::Ok(value, proof)
+                        LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
@@ -583,7 +553,7 @@ where
             let init = digest_leaf::<E, H, I, F>(pos, elem, TreeArity::to_usize());
             index_to_branches::<I, LeafArity, TreeArity, F>(self.pos, self.proof.len() - 1)
                 .iter()
-                .zip(self.proof.iter().skip(1).rev())
+                .zip(self.proof.iter().skip(1))
                 .fold(
                     Ok(init),
                     |result, (branch, node)| -> Result<F, PrimitivesError> {

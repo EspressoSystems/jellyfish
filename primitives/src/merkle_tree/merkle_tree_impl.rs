@@ -231,9 +231,10 @@ where
     fn remember(
         &mut self,
         pos: Self::IndexType,
-        _element: &Self::ElementType,
-        proof: Self::MembershipProof,
+        _element: impl Borrow<Self::ElementType>,
+        proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
+        let proof = proof.borrow();
         let branches = index_to_branches::<I, LeafArity, TreeArity, F>(pos, self.height);
         if let MerkleNode::<E, I, F>::Leaf {
             value: _,
@@ -241,9 +242,10 @@ where
             elem,
         } = proof.proof[0]
         {
-            let mut path_values = vec![digest_leaf::<E, H, I, F>(pos, elem, TreeArity::to_usize())];
-            branches.iter().zip(proof.proof.iter().skip(1).rev()).fold(
-                Ok(F::zero()),
+            let proof_leaf_value = digest_leaf::<E, H, I, F>(pos, elem, TreeArity::to_usize());
+            let mut path_values = vec![proof_leaf_value];
+            branches.iter().zip(proof.proof.iter().skip(1)).fold(
+                Ok(proof_leaf_value),
                 |result, (branch, node)| -> Result<F, PrimitivesError> {
                     match result {
                         Ok(val) => match node {
@@ -355,7 +357,7 @@ mod mt_tests {
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.proof.len(), 3);
-        assert!(mt.verify(0u64, &proof).is_ok());
+        assert!(mt.verify(0u64, &proof).unwrap());
 
         let mut bad_proof = proof.clone();
         if let MerkleNode::Leaf {
@@ -390,5 +392,63 @@ mod mt_tests {
         let result = mt.verify(2u64, &forge_proof);
         assert!(result.is_ok());
         assert!(!result.unwrap());
+    }
+
+    #[test]
+    fn test_mt_forget_remember() {
+        test_mt_forget_remember_helper::<Fq254>();
+        test_mt_forget_remember_helper::<Fq377>();
+        test_mt_forget_remember_helper::<Fq381>();
+    }
+
+    fn test_mt_forget_remember_helper<F: RescueParameter>() {
+        let mut mt = RescueMerkleTree::<F>::from_data(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
+        let (elem, proof) = mt.forget(0).expect_ok().unwrap();
+        assert_eq!(lookup_elem, elem);
+        assert_eq!(lookup_proof, proof);
+        assert_eq!(elem, F::from(3u64));
+        assert_eq!(proof.proof.len(), 3);
+        assert!(mt.verify(0, &lookup_proof).unwrap());
+        assert!(mt.verify(0, &proof).unwrap());
+
+        assert!(mt.forget(0).expect_ok().is_err());
+        assert!(matches!(mt.lookup(0), LookupResult::NotInMemory));
+
+        let mut bad_proof = proof.clone();
+        if let MerkleNode::Leaf {
+            value: _,
+            pos: _,
+            elem,
+        } = &mut bad_proof.proof[0]
+        {
+            *elem = F::from(4u64);
+        } else {
+            unreachable!()
+        }
+
+        let result = mt.remember(0u64, elem, &bad_proof);
+        assert!(result.is_err());
+
+        let mut forge_proof = MerkleProof {
+            pos: 2,
+            proof: proof.proof.clone(),
+        };
+        if let MerkleNode::Leaf {
+            value: _,
+            pos,
+            elem,
+        } = &mut forge_proof.proof[0]
+        {
+            *pos = 2;
+            *elem = F::from(0u64);
+        } else {
+            unreachable!()
+        }
+        let result = mt.remember(2u64, elem, &forge_proof);
+        assert!(result.is_err());
+
+        assert!(mt.remember(0, elem, &proof).is_ok());
+        assert!(mt.lookup(0).expect_ok().is_ok());
     }
 }
