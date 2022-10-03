@@ -4,6 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+// TODO(Chengyu): place holder for future implementation.
 impl<E, H, I, LeafArity, TreeArity, F> UniversalMerkleTree<F>
     for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
 where
@@ -14,7 +15,6 @@ where
     TreeArity: Unsigned,
     F: Field,
 {
-    // TODO(Chengyu):
     type NonMembershipProof = ();
     type BatchNonMembershipProof = ();
 
