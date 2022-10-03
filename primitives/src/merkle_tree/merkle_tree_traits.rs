@@ -13,6 +13,8 @@ use ark_std::{
     ops::{Add, AddAssign, DivAssign, MulAssign, Rem},
     slice,
     string::ToString,
+    vec,
+    vec::Vec,
 };
 use num::traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
@@ -72,8 +74,8 @@ pub trait DigestAlgorithm<F: Field> {
 }
 
 /// Generic index type for merkle tree. In most cases, for merkle tree indexed
-/// with `u64`, just add `impl Indextype for u64 {}`.
-pub trait IndexType:
+/// with `u64`, just add `impl IndexType<F> for u64 {}`.
+pub trait IndexType<F: Field>:
     Default
     + Zero
     + Ord
@@ -89,6 +91,21 @@ pub trait IndexType:
     + CanonicalSerialize
     + CanonicalDeserialize
 {
+    /// As a slice ref of field elements
+    fn as_slice(&self) -> Vec<F>;
+
+    /// Length of the slice ref
+    fn slice_len() -> usize;
+}
+
+impl<F: Field> IndexType<F> for u64 {
+    fn as_slice(&self) -> Vec<F> {
+        vec![F::from(*self)]
+    }
+
+    fn slice_len() -> usize {
+        1
+    }
 }
 
 /// A merkle commitment consists a root hash value, a tree height and number of
@@ -96,7 +113,7 @@ pub trait IndexType:
 #[derive(
     Eq, PartialEq, Clone, Copy, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
 )]
-pub struct MerkleCommitment<I: IndexType, F: Field> {
+pub struct MerkleCommitment<I: IndexType<F>, F: Field> {
     /// Root of a tree
     pub root_value: F,
     /// Height of a tree
@@ -114,7 +131,7 @@ pub trait MerkleTree<F: Field>: Sized {
     /// Hash algorithm used in merkle tree
     type Digest: DigestAlgorithm<F>;
     /// Index type for this merkle tree
-    type IndexType: IndexType;
+    type IndexType: IndexType<F>;
     /// Leaf arity
     type LeafArity: Unsigned;
     /// Non-leaf arity
@@ -185,7 +202,9 @@ pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
 
     /// Insert a list of new values at the leftmost available slots
     /// * `elems` - elements to insert
-    /// * `returns` - Ok(()) if successful
+    /// * `returns` - Ok(()) if successful. If there are too many elements,
+    ///   insertions will be performed until the merkle tree is full, and wil
+    ///   return an Err().
     fn extend(
         &mut self,
         elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
