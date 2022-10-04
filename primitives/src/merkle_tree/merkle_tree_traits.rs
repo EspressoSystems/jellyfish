@@ -18,7 +18,6 @@ use ark_std::{
 };
 use num::traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
-use typenum::Unsigned;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
@@ -133,22 +132,18 @@ pub trait MerkleTree<F: Field>: Sized {
     type Digest: DigestAlgorithm<F>;
     /// Index type for this merkle tree
     type IndexType: IndexType<F>;
-    /// Leaf arity
-    type LeafArity: Unsigned;
-    /// Non-leaf arity
-    type TreeArity: Unsigned;
     /// Merkle proof
     type MembershipProof;
     /// Batch proof
     type BatchMembershipProof;
 
-    /// Construct a new merkle tree with given height
-    fn new(height: usize) -> Self;
+    /// Tree arity
+    const ARITY: usize;
 
     /// Construct a new merkle tree with given height from a data slice
-    fn from_data(
+    fn from_elems(
         height: usize,
-        data: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
+        elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
     ) -> Result<Self, PrimitivesError>;
 
     /// Return the height of this merkle tree

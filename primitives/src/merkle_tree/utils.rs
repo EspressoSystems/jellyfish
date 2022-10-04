@@ -41,7 +41,7 @@ where
     #[inline]
     pub(crate) fn value(&self) -> F {
         match self {
-            Self::Empty => F::zero(),
+            Self::Empty => F::default(),
             Self::Leaf {
                 value,
                 pos: _,
@@ -62,10 +62,9 @@ pub struct MerkleProof<E, I: IndexType<F>, F: Field> {
 }
 
 /// Return a vector of branching index from leaf to root for a given index
-pub(crate) fn index_to_branches<I, LeafArity, TreeArity, F>(pos: I, height: usize) -> Vec<usize>
+pub(crate) fn index_to_branches<I, TreeArity, F>(pos: I, height: usize) -> Vec<usize>
 where
     TreeArity: Unsigned,
-    LeafArity: Unsigned,
     I: IndexType<F>,
     F: Field,
 {
@@ -78,10 +77,9 @@ where
     ret
 }
 
-pub(crate) fn calculate_capacity<I, LeafArity, TreeArity, F>(height: usize) -> I
+pub(crate) fn calculate_capacity<I, TreeArity, F>(height: usize) -> I
 where
     TreeArity: Unsigned,
-    LeafArity: Unsigned,
     I: IndexType<F>,
     F: Field,
 {
@@ -94,7 +92,7 @@ where
 
 type BoxMTNode<E, I, F> = Box<MerkleNode<E, I, F>>;
 
-pub(crate) fn build_tree_internal<E, H, I, LeafArity, TreeArity, F>(
+pub(crate) fn build_tree_internal<E, H, I, TreeArity, F>(
     height: usize,
     capacity: I,
     iter: impl IntoIterator<Item = impl Borrow<E>>,
@@ -103,7 +101,6 @@ where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
     I: IndexType<F>,
-    LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
@@ -114,7 +111,7 @@ where
         Err(PrimitivesError::ParameterError(
             "Too many data for merkle tree".to_string(),
         ))
-    } else if num_leaves > I::zero() {
+    } else if num_leaves > I::default() {
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
@@ -162,7 +159,7 @@ where
         }
         Ok((cur_nodes[0].clone(), num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, I, F>::Empty), I::zero()))
+        Ok((Box::new(MerkleNode::<E, I, F>::Empty), I::default()))
     }
 }
 
@@ -176,7 +173,7 @@ where
     let data = [
         &pos.borrow().as_slice(),
         elem.borrow().as_slice_ref(),
-        &vec![F::zero(); arity - E::slice_len() - I::slice_len()],
+        &vec![F::default(); arity - E::slice_len() - I::slice_len()],
     ]
     .concat();
     H::digest(&data)
@@ -213,7 +210,7 @@ where
                 match children[branches[depth - 1]].forget_internal(depth, branches) {
                     LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
-                            value: F::zero(),
+                            value: F::default(),
                             children: children
                                 .iter()
                                 .map(|child| {
@@ -352,7 +349,7 @@ where
                 match children[branches[depth - 1]].lookup_internal(depth - 1, branches) {
                     LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
-                            value: F::zero(),
+                            value: F::default(),
                             children: children
                                 .iter()
                                 .map(|child| {
@@ -381,7 +378,7 @@ where
         }
     }
 
-    pub(crate) fn update_internal<H, LeafArity, TreeArity>(
+    pub(crate) fn update_internal<H, TreeArity>(
         &mut self,
         depth: usize,
         pos: I,
@@ -391,7 +388,6 @@ where
     where
         H: DigestAlgorithm<F>,
         I: IndexType<F>,
-        LeafArity: Unsigned,
         TreeArity: Unsigned,
     {
         match self {
@@ -405,7 +401,7 @@ where
                 Ok(())
             },
             MerkleNode::Branch { value: _, children } => (*children[branches[depth - 1]])
-                .update_internal::<H, LeafArity, TreeArity>(depth - 1, pos, branches, elem),
+                .update_internal::<H, TreeArity>(depth - 1, pos, branches, elem),
             MerkleNode::Empty => {
                 if depth == 0 {
                     *self = MerkleNode::Leaf {
@@ -415,7 +411,7 @@ where
                     };
                 } else {
                     let mut children = vec![Box::new(MerkleNode::Empty); TreeArity::to_usize()];
-                    (*children[branches[depth - 1]]).update_internal::<H, LeafArity, TreeArity>(
+                    (*children[branches[depth - 1]]).update_internal::<H, TreeArity>(
                         depth - 1,
                         pos,
                         branches,
@@ -434,7 +430,7 @@ where
         }
     }
 
-    pub(crate) fn extend_internal<H, LeafArity, TreeArity>(
+    pub(crate) fn extend_internal<H, TreeArity>(
         &mut self,
         depth: usize,
         pos: I,
@@ -444,7 +440,6 @@ where
     ) -> Result<u64, PrimitivesError>
     where
         H: DigestAlgorithm<F>,
-        LeafArity: Unsigned,
         TreeArity: Unsigned,
     {
         if data.peek().is_none() {
@@ -461,14 +456,13 @@ where
                     };
                     let cap = TreeArity::to_usize();
                     while data.peek().is_some() && frontier < cap {
-                        let increment = children[frontier]
-                            .extend_internal::<H, LeafArity, TreeArity>(
-                                depth - 1,
-                                pos,
-                                branches,
-                                tight_frontier && frontier == branches[depth - 1],
-                                data,
-                            )?;
+                        let increment = children[frontier].extend_internal::<H, TreeArity>(
+                            depth - 1,
+                            pos,
+                            branches,
+                            tight_frontier && frontier == branches[depth - 1],
+                            data,
+                        )?;
                         cnt += increment;
                         pos += increment;
                         frontier += 1;
@@ -496,14 +490,13 @@ where
                         let cap = TreeArity::to_usize();
                         let mut children = vec![Box::new(MerkleNode::Empty); cap];
                         while data.peek().is_some() && frontier < cap {
-                            let increment = children[frontier]
-                                .extend_internal::<H, LeafArity, TreeArity>(
-                                    depth - 1,
-                                    pos,
-                                    branches,
-                                    tight_frontier && frontier == branches[depth - 1],
-                                    data,
-                                )?;
+                            let increment = children[frontier].extend_internal::<H, TreeArity>(
+                                depth - 1,
+                                pos,
+                                branches,
+                                tight_frontier && frontier == branches[depth - 1],
+                                data,
+                            )?;
                             cnt += increment;
                             pos += increment;
                             frontier += 1;
@@ -536,12 +529,9 @@ where
     F: Field,
     I: IndexType<F>,
 {
-    pub(crate) fn verify_membership_proof<H, LeafArity, TreeArity>(
-        &self,
-    ) -> Result<F, PrimitivesError>
+    pub(crate) fn verify_membership_proof<H, TreeArity>(&self) -> Result<F, PrimitivesError>
     where
         H: DigestAlgorithm<F>,
-        LeafArity: Unsigned,
         TreeArity: Unsigned,
     {
         if let MerkleNode::<E, I, F>::Leaf {
@@ -551,7 +541,7 @@ where
         } = self.proof[0]
         {
             let init = digest_leaf::<E, H, I, F>(pos, elem, TreeArity::to_usize());
-            index_to_branches::<I, LeafArity, TreeArity, F>(self.pos, self.proof.len() - 1)
+            index_to_branches::<I, TreeArity, F>(self.pos, self.proof.len() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(

@@ -24,13 +24,11 @@ use typenum::{Unsigned, U3};
 
 /// A standard append only Merkle tree implementation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
+pub struct MerkleTreeImpl<E, H, I, TreeArity, F>
 where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
     I: IndexType<F>,
-    LeafArity: Unsigned,
-    TreeArity: Unsigned,
     F: Field,
 {
     root: Box<MerkleNode<E, I, F>>,
@@ -39,55 +37,39 @@ where
     num_leaves: I,
 
     _phantom_h: PhantomData<H>,
-    _phantom_la: PhantomData<LeafArity>,
     _phantom_ta: PhantomData<TreeArity>,
 }
 
-impl<E, H, I, LeafArity, TreeArity, F> MerkleTree<F>
-    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
+impl<E, H, I, TreeArity, F> MerkleTree<F> for MerkleTreeImpl<E, H, I, TreeArity, F>
 where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
     I: IndexType<F>,
-    LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
     type ElementType = E;
     type Digest = H;
     type IndexType = I;
-    type LeafArity = LeafArity;
-    type TreeArity = TreeArity;
     type MembershipProof = MerkleProof<E, I, F>;
     // TODO(Chengyu): implement batch membership proof
     type BatchMembershipProof = ();
 
-    fn new(height: usize) -> Self {
-        MerkleTreeImpl {
-            root: Box::new(MerkleNode::<E, I, F>::Empty),
-            height,
-            capacity: calculate_capacity::<I, LeafArity, TreeArity, F>(height),
-            num_leaves: I::from(0),
-            _phantom_h: PhantomData,
-            _phantom_la: PhantomData,
-            _phantom_ta: PhantomData,
-        }
-    }
+    const ARITY: usize = TreeArity::USIZE;
 
-    fn from_data(
+    fn from_elems(
         height: usize,
-        data: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
+        elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
     ) -> Result<Self, PrimitivesError> {
-        let capacity = calculate_capacity::<I, LeafArity, TreeArity, F>(height);
+        let capacity = calculate_capacity::<I, TreeArity, F>(height);
         let (root, num_leaves) =
-            build_tree_internal::<E, H, I, LeafArity, TreeArity, F>(height, capacity, data)?;
+            build_tree_internal::<E, H, I, TreeArity, F>(height, capacity, elems)?;
         Ok(MerkleTreeImpl {
             root,
             height,
             capacity,
             num_leaves,
             _phantom_h: PhantomData,
-            _phantom_la: PhantomData,
             _phantom_ta: PhantomData,
         })
     }
@@ -108,6 +90,14 @@ where
         self.root.value()
     }
 
+    fn commitment(&self) -> super::MerkleCommitment<Self::IndexType, F> {
+        MerkleCommitment {
+            root_value: self.root.value(),
+            height: self.height,
+            num_leaves: self.num_leaves,
+        }
+    }
+
     fn lookup(
         &self,
         pos: Self::IndexType,
@@ -115,7 +105,7 @@ where
         if pos >= self.num_leaves {
             return LookupResult::EmptyLeaf;
         }
-        let branches = index_to_branches::<I, LeafArity, TreeArity, F>(pos, self.height);
+        let branches = index_to_branches::<I, TreeArity, F>(pos, self.height);
         match self.root.lookup_internal(self.height, &branches) {
             LookupResult::Ok(value, proof) => LookupResult::Ok(value, MerkleProof { pos, proof }),
             LookupResult::NotInMemory => LookupResult::NotInMemory,
@@ -139,26 +129,16 @@ where
                 "Inconsistent proof index".to_string(),
             ));
         }
-        let computed_root_value = proof.verify_membership_proof::<H, LeafArity, TreeArity>()?;
+        let computed_root_value = proof.verify_membership_proof::<H, TreeArity>()?;
         Ok(computed_root_value == self.root.value())
-    }
-
-    fn commitment(&self) -> super::MerkleCommitment<Self::IndexType, F> {
-        MerkleCommitment {
-            root_value: self.root.value(),
-            height: self.height,
-            num_leaves: self.num_leaves,
-        }
     }
 }
 
-impl<E, H, I, LeafArity, TreeArity, F> AppendableMerkleTree<F>
-    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
+impl<E, H, I, TreeArity, F> AppendableMerkleTree<F> for MerkleTreeImpl<E, H, I, TreeArity, F>
 where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
     I: IndexType<F>,
-    LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
@@ -169,9 +149,8 @@ where
             ));
         }
 
-        let branches =
-            index_to_branches::<I, LeafArity, TreeArity, F>(self.num_leaves, self.height);
-        self.root.update_internal::<H, LeafArity, TreeArity>(
+        let branches = index_to_branches::<I, TreeArity, F>(self.num_leaves, self.height);
+        self.root.update_internal::<H, TreeArity>(
             self.height,
             self.num_leaves,
             &branches,
@@ -187,8 +166,8 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let branch = index_to_branches::<I, LeafArity, TreeArity, F>(self.num_leaves, self.height);
-        self.num_leaves += self.root.extend_internal::<H, LeafArity, TreeArity>(
+        let branch = index_to_branches::<I, TreeArity, F>(self.num_leaves, self.height);
+        self.num_leaves += self.root.extend_internal::<H, TreeArity>(
             self.height,
             self.num_leaves,
             &branch,
@@ -204,13 +183,11 @@ where
     }
 }
 
-impl<E, H, I, LeafArity, TreeArity, F> ForgetableMerkleTree<F>
-    for MerkleTreeImpl<E, H, I, LeafArity, TreeArity, F>
+impl<E, H, I, TreeArity, F> ForgetableMerkleTree<F> for MerkleTreeImpl<E, H, I, TreeArity, F>
 where
     E: ElementType<F>,
     H: DigestAlgorithm<F>,
     I: IndexType<F>,
-    LeafArity: Unsigned,
     TreeArity: Unsigned,
     F: Field,
 {
@@ -218,7 +195,7 @@ where
         &mut self,
         pos: Self::IndexType,
     ) -> LookupResult<Self::ElementType, Self::MembershipProof> {
-        let branches = index_to_branches::<I, LeafArity, TreeArity, F>(pos, self.height);
+        let branches = index_to_branches::<I, TreeArity, F>(pos, self.height);
         match self.root.forget_internal(self.height, &branches) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, F> { pos, proof })
@@ -235,14 +212,14 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
-        let branches = index_to_branches::<I, LeafArity, TreeArity, F>(pos, self.height);
+        let branches = index_to_branches::<I, TreeArity, F>(pos, self.height);
         if let MerkleNode::<E, I, F>::Leaf {
             value: _,
             pos,
             elem,
         } = proof.proof[0]
         {
-            let proof_leaf_value = digest_leaf::<E, H, I, F>(pos, elem, TreeArity::to_usize());
+            let proof_leaf_value = digest_leaf::<E, H, I, F>(pos, elem, Self::ARITY);
             let mut path_values = vec![proof_leaf_value];
             branches.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(proof_leaf_value),
@@ -283,7 +260,7 @@ where
 // TODO(Chengyu): extract a merkle frontier
 
 /// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTreeImpl<F, RescueHash<F>, u64, U3, U3, F>;
+pub type RescueMerkleTree<F> = MerkleTreeImpl<F, RescueHash<F>, u64, U3, F>;
 
 /// Wrapper for rescue hash function
 pub struct RescueHash<F: RescueParameter> {
@@ -320,8 +297,8 @@ mod mt_tests {
     }
 
     fn test_mt_builder_helper<F: RescueParameter>() {
-        assert!(RescueMerkleTree::<F>::from_data(1, &[F::from(0u64); 3]).is_ok());
-        assert!(RescueMerkleTree::<F>::from_data(1, &[F::from(0u64); 4]).is_err());
+        assert!(RescueMerkleTree::<F>::from_elems(1, &[F::from(0u64); 3]).is_ok());
+        assert!(RescueMerkleTree::<F>::from_elems(1, &[F::from(0u64); 4]).is_err());
     }
 
     #[test]
@@ -332,7 +309,7 @@ mod mt_tests {
     }
 
     fn test_mt_insertion_helper<F: RescueParameter>() {
-        let mut mt = RescueMerkleTree::<F>::new(2);
+        let mut mt = RescueMerkleTree::<F>::from_elems(2, &[]).unwrap();
         assert_eq!(mt.capacity(), 9u64);
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
@@ -353,7 +330,7 @@ mod mt_tests {
     }
 
     fn test_mt_lookup_helper<F: RescueParameter>() {
-        let mt = RescueMerkleTree::<F>::from_data(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.proof.len(), 3);
@@ -402,7 +379,7 @@ mod mt_tests {
     }
 
     fn test_mt_forget_remember_helper<F: RescueParameter>() {
-        let mut mt = RescueMerkleTree::<F>::from_data(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let mut mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
         let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
         let (elem, proof) = mt.forget(0).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
