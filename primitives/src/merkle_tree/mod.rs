@@ -6,6 +6,7 @@
 
 //! Merkle Tree traits and implementations
 pub mod merkle_tree_impl;
+pub mod sample;
 
 mod merkle_tree_traits;
 mod utils;

@@ -5,18 +5,16 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::errors::PrimitivesError;
-use ark_ff::{Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
     borrow::Borrow,
-    fmt::Debug,
+    fmt::{Debug, Display},
     ops::{Add, AddAssign, DivAssign, MulAssign, Rem},
-    slice,
     string::ToString,
     vec,
     vec::Vec,
 };
-use num::traits::AsPrimitive;
+use num_traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -45,66 +43,36 @@ impl<F, P> LookupResult<F, P> {
     }
 }
 
-/// Merkle tree element type
-pub trait ElementType<F: Field>:
-    Default + Ord + Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize + Eq + PartialEq
-{
-    /// As a slice ref of field elements
-    fn as_slice_ref(&self) -> &[F];
-
-    /// Length of the slice ref
-    fn slice_len() -> usize;
-}
-
-impl<F: Field> ElementType<F> for F {
-    fn as_slice_ref<'a>(&self) -> &[F] {
-        slice::from_ref(self)
-    }
-
-    fn slice_len() -> usize {
-        1
-    }
-}
-
 /// Merkle tree hash function
-pub trait DigestAlgorithm<F: Field> {
+pub trait DigestAlgorithm<T> {
     /// Digest a list of values
-    fn digest(data: &[F]) -> F;
+    fn digest(data: &[T]) -> T;
 }
 
-/// Generic index type for merkle tree. In most cases, for merkle tree indexed
-/// with `u64`, just add `impl IndexType<F> for u64 {}`.
-pub trait IndexType<F: Field>:
-    Default
-    + Debug
-    + Zero
-    + Ord
-    + Eq
-    + PartialEq
-    + From<u64>
-    + AddAssign<u64>
-    + Add<u64, Output = Self>
-    + DivAssign<u64>
-    + MulAssign<u64>
-    + Rem<u64, Output = Self>
-    + AsPrimitive<usize>
-    + CanonicalSerialize
-    + CanonicalDeserialize
+/// Ops needs to be performed over index
+pub trait IndexOps<Rhs = Self>:
+    AddAssign<Rhs> + Add<Rhs, Output = Self> + DivAssign<Rhs> + MulAssign<Rhs> + Rem<Rhs, Output = Self>
 {
-    /// As a slice ref of field elements
-    fn as_slice(&self) -> Vec<F>;
-
-    /// Length of the slice ref
-    fn slice_len() -> usize;
 }
 
-impl<F: Field> IndexType<F> for u64 {
-    fn as_slice(&self) -> Vec<F> {
-        vec![F::from(*self)]
-    }
+impl<T, Rhs> IndexOps<Rhs> for T where
+    T: AddAssign<Rhs>
+        + Add<Rhs, Output = Self>
+        + DivAssign<Rhs>
+        + MulAssign<Rhs>
+        + Rem<Rhs, Output = Self>
+{
+}
 
-    fn slice_len() -> usize {
-        1
+/// Convert into a vector of T
+pub trait ToVec<T> {
+    /// Return a vector of T
+    fn to_vec(&self) -> Vec<T>;
+}
+
+impl<T: Copy> ToVec<T> for T {
+    fn to_vec(&self) -> Vec<T> {
+        vec![*self]
     }
 }
 
@@ -113,9 +81,12 @@ impl<F: Field> IndexType<F> for u64 {
 #[derive(
     Eq, PartialEq, Clone, Copy, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
 )]
-pub struct MerkleCommitment<I: IndexType<F>, F: Field> {
+pub struct MerkleCommitment<
+    I: CanonicalSerialize + CanonicalDeserialize,
+    T: CanonicalSerialize + CanonicalDeserialize,
+> {
     /// Root of a tree
-    pub root_value: F,
+    pub root_value: T,
     /// Height of a tree
     pub height: usize,
     /// Number of leaves in the tree
@@ -125,13 +96,39 @@ pub struct MerkleCommitment<I: IndexType<F>, F: Field> {
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
 /// accumulator for fixed-length array. Supports generate membership proof at a
 /// given position and verify a membership proof.
-pub trait MerkleTree<F: Field>: Sized {
+pub trait MerkleTree: Sized {
     /// Merkle tree element type
-    type ElementType: ElementType<F>;
+    type ElementType: Clone
+        + Copy
+        + CanonicalSerialize
+        + CanonicalDeserialize
+        + Eq
+        + PartialEq
+        + ToVec<Self::NodeValue>;
     /// Hash algorithm used in merkle tree
-    type Digest: DigestAlgorithm<F>;
+    type Digest: DigestAlgorithm<Self::NodeValue>;
     /// Index type for this merkle tree
-    type IndexType: IndexType<F>;
+    type IndexType: ToVec<Self::NodeValue>
+        + Debug
+        + Eq
+        + PartialEq
+        + Ord
+        + PartialOrd
+        + IndexOps
+        + Clone
+        + Copy
+        + AsPrimitive<usize>
+        + CanonicalDeserialize
+        + CanonicalSerialize;
+    /// Internal and root node value
+    type NodeValue: Default
+        + Eq
+        + PartialEq
+        + Copy
+        + Clone
+        + Display
+        + CanonicalSerialize
+        + CanonicalDeserialize;
     /// Merkle proof
     type MembershipProof;
     /// Batch proof
@@ -154,10 +151,10 @@ pub trait MerkleTree<F: Field>: Sized {
     fn num_leaves(&self) -> Self::IndexType;
 
     /// Return the current root value
-    fn root(&self) -> F;
+    fn root(&self) -> Self::NodeValue;
 
     /// Return a merkle commitment
-    fn commitment(&self) -> MerkleCommitment<Self::IndexType, F>;
+    fn commitment(&self) -> MerkleCommitment<Self::IndexType, Self::NodeValue>;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -190,7 +187,7 @@ pub trait MerkleTree<F: Field>: Sized {
 
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
-pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
+pub trait AppendableMerkleTree: MerkleTree {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful
@@ -215,7 +212,7 @@ pub trait AppendableMerkleTree<F: Field>: MerkleTree<F> {
 /// A universal merkle tree is abstracted as a random-access array or a
 /// key-value map. It allows manipulation at any given position, and has ability
 /// to generate/verify a non-membership proof.
-pub trait UniversalMerkleTree<F: Field>: MerkleTree<F> {
+pub trait UniversalMerkleTree: MerkleTree {
     /// Non membership proof for a given index
     type NonMembershipProof;
     /// Batch non membership proof
@@ -234,7 +231,7 @@ pub trait UniversalMerkleTree<F: Field>: MerkleTree<F> {
 }
 
 /// Merkle tree that allows forget/remember elements from the memory
-pub trait ForgetableMerkleTree<F: Field>: MerkleTree<F> {
+pub trait ForgetableMerkleTree: MerkleTree {
     /// Trim the leaf at position `i` from memory, if present.
     /// Should not trim if position `i` is the last inserted leaf position.
     /// Return is identical to result if `get_leaf(pos)` were called before this

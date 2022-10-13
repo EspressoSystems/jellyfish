@@ -48,7 +48,7 @@ sha2 = { version = "0.10.1", default-features = false }
 digest = { version = "0.10.1", default-features = false }
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }
 typenum = "1.15.0"
-num = "0.4.0"
+num-traits = "0.2.15"
 
 [dev-dependencies]
 bincode = "1.0"
