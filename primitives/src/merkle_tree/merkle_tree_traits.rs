@@ -16,6 +16,7 @@ use ark_std::{
 };
 use num_traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
+// use to_vec::ToVec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree

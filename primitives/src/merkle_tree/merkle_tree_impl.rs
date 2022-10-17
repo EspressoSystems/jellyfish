@@ -129,7 +129,7 @@ where
         self.root.value()
     }
 
-    fn commitment(&self) -> super::MerkleCommitment<Self::IndexType, T> {
+    fn commitment(&self) -> MerkleCommitment<Self::IndexType, T> {
         MerkleCommitment {
             root_value: self.root.value(),
             height: self.height,
@@ -343,7 +343,7 @@ where
 mod mt_tests {
     use crate::{
         merkle_tree::{
-            sample::RescueMerkleTree,
+            examples::RescueMerkleTree,
             utils::{MerkleNode, MerkleProof},
             *,
         },

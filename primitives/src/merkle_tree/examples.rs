@@ -32,3 +32,15 @@ impl<F: RescueParameter> DigestAlgorithm<F> for RescueHash<F> {
         perm.sponge_no_padding(data, 1).unwrap()[0]
     }
 }
+
+/// Element type for interval merkle tree
+pub struct Interval<F>(pub F, pub F);
+
+impl<F: Copy> ToVec<F> for Interval<F> {
+    fn to_vec(&self) -> Vec<F> {
+        vec![self.0, self.1]
+    }
+}
+
+/// Interval merkle tree instantiation for interval merkle tree using Rescue hash function.
+pub type IntervalMerkleTree<F> = MerkleTreeImpl<Interval<F>, RescueHash<F>, u64, U3, F>;
