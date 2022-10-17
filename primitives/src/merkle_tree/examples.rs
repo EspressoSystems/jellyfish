@@ -42,5 +42,6 @@ impl<F: Copy> ToVec<F> for Interval<F> {
     }
 }
 
-/// Interval merkle tree instantiation for interval merkle tree using Rescue hash function.
+/// Interval merkle tree instantiation for interval merkle tree using Rescue
+/// hash function.
 pub type IntervalMerkleTree<F> = MerkleTreeImpl<Interval<F>, RescueHash<F>, u64, U3, F>;
