@@ -11,12 +11,9 @@ use ark_std::{
     fmt::{Debug, Display},
     ops::{Add, AddAssign, DivAssign, MulAssign, Rem},
     string::ToString,
-    vec,
     vec::Vec,
 };
-use num_traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
-// use to_vec::ToVec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
@@ -46,18 +43,25 @@ impl<F, P> LookupResult<F, P> {
 
 /// Merkle tree hash function
 pub trait DigestAlgorithm<T> {
+    // Possible improvement: adding digest_element() and digest_index()
     /// Digest a list of values
     fn digest(data: &[T]) -> T;
 }
 
 /// Ops needs to be performed over index
 pub trait IndexOps<Rhs = Self>:
-    AddAssign<Rhs> + Add<Rhs, Output = Self> + DivAssign<Rhs> + MulAssign<Rhs> + Rem<Rhs, Output = Self>
+    Copy
+    + AddAssign<Rhs>
+    + Add<Rhs, Output = Self>
+    + DivAssign<Rhs>
+    + MulAssign<Rhs>
+    + Rem<Rhs, Output = Self>
 {
 }
 
 impl<T, Rhs> IndexOps<Rhs> for T where
-    T: AddAssign<Rhs>
+    T: Copy
+        + AddAssign<Rhs>
         + Add<Rhs, Output = Self>
         + DivAssign<Rhs>
         + MulAssign<Rhs>
@@ -65,16 +69,16 @@ impl<T, Rhs> IndexOps<Rhs> for T where
 {
 }
 
+/// Convert into usize
+pub trait ToUsize {
+    /// Return a usize
+    fn to_usize(&self) -> usize;
+}
+
 /// Convert into a vector of T
 pub trait ToVec<T> {
     /// Return a vector of T
     fn to_vec(&self) -> Vec<T>;
-}
-
-impl<T: Copy> ToVec<T> for T {
-    fn to_vec(&self) -> Vec<T> {
-        vec![*self]
-    }
 }
 
 /// A merkle commitment consists a root hash value, a tree height and number of
@@ -118,7 +122,7 @@ pub trait MerkleTree: Sized {
         + IndexOps
         + Clone
         + Copy
-        + AsPrimitive<usize>
+        + ToUsize
         + CanonicalDeserialize
         + CanonicalSerialize;
     /// Internal and root node value

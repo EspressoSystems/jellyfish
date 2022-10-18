@@ -4,14 +4,13 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use super::{DigestAlgorithm, IndexOps, LookupResult, ToVec};
+use super::{DigestAlgorithm, IndexOps, LookupResult, ToUsize, ToVec};
 use crate::errors::PrimitivesError;
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Display, format, iter::Peekable, string::ToString, vec,
     vec::Vec,
 };
 use itertools::Itertools;
-use num_traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
@@ -66,12 +65,12 @@ pub struct MerkleProof<E, I, T> {
 pub(crate) fn index_to_branches<I, TreeArity>(pos: I, height: usize) -> Vec<usize>
 where
     TreeArity: Unsigned,
-    I: IndexOps + From<u64> + AsPrimitive<usize>,
+    I: IndexOps + From<u64> + ToUsize,
 {
     let mut pos = pos;
     let mut ret = vec![];
     for _i in 0..height {
-        ret.push((pos % I::from(TreeArity::to_u64())).as_());
+        ret.push((pos % I::from(TreeArity::to_u64())).to_usize());
         pos /= I::from(TreeArity::to_u64());
     }
     ret
@@ -522,7 +521,7 @@ where
 impl<E, I, T> MerkleProof<E, I, T>
 where
     E: ToVec<T> + Copy,
-    I: ToVec<T> + From<u64> + AsPrimitive<usize> + IndexOps,
+    I: ToVec<T> + From<u64> + ToUsize + IndexOps,
     T: Default + Clone + Copy,
 {
     pub(crate) fn verify_membership_proof<H, TreeArity>(&self) -> Result<T, PrimitivesError>
@@ -534,7 +533,7 @@ where
             value: _,
             pos,
             elem,
-        } = self.proof[0]
+        } = &self.proof[0]
         {
             let init = digest_leaf::<E, H, I, T>(pos, elem, TreeArity::to_usize());
             index_to_branches::<I, TreeArity>(self.pos, self.proof.len() - 1)

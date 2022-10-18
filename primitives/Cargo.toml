@@ -49,6 +49,8 @@ digest = { version = "0.10.1", default-features = false }
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }
 typenum = "1.15.0"
 num-traits = "0.2.15"
+num-bigint = "0.2.3"
+sha3 = "0.10.5"
 
 [dev-dependencies]
 bincode = "1.0"

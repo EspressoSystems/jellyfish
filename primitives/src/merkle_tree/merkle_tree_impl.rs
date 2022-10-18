@@ -12,7 +12,7 @@ use super::{
         MerkleProof,
     },
     AppendableMerkleTree, DigestAlgorithm, ForgetableMerkleTree, IndexOps, LookupResult,
-    MerkleCommitment, MerkleTree, ToVec,
+    MerkleCommitment, MerkleTree, ToUsize, ToVec,
 };
 use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -25,7 +25,6 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use num_traits::AsPrimitive;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
@@ -41,7 +40,7 @@ where
         + PartialOrd
         + CanonicalDeserialize
         + CanonicalSerialize
-        + AsPrimitive<usize>
+        + ToUsize
         + Eq
         + PartialEq
         + Clone
@@ -69,7 +68,7 @@ where
         + PartialOrd
         + CanonicalDeserialize
         + CanonicalSerialize
-        + AsPrimitive<usize>
+        + ToUsize
         + Eq
         + PartialEq
         + Clone
@@ -184,7 +183,7 @@ where
         + PartialOrd
         + CanonicalSerialize
         + CanonicalDeserialize
-        + AsPrimitive<usize>
+        + ToUsize
         + Eq
         + PartialEq
         + Clone
@@ -253,7 +252,7 @@ where
         + PartialOrd
         + CanonicalDeserialize
         + CanonicalSerialize
-        + AsPrimitive<usize>
+        + ToUsize
         + Eq
         + PartialEq
         + Clone
