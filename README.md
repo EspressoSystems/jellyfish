@@ -1,4 +1,5 @@
 # Jellyfish cryptographic library
+
 ![example workflow](https://github.com/EspressoSystems/jellyfish/actions/workflows/build.yml/badge.svg)
 ![Crates.io (version)](https://img.shields.io/crates/dv/jf-plonk/0.1.0)
 ![GitHub](https://img.shields.io/github/license/EspressoSystems/jellyfish)
@@ -8,7 +9,7 @@
 **DISCLAIMER:** This software is provided "as is" and its security has not been externally audited. Use at your own risk.
 
 ## Chatroom
- 
+
 For general discussions on Jellyfish PLONK, please join our [Discord channel](https://discord.gg/GJa4gznGfU).
 
 ## Development environment setup
@@ -100,15 +101,12 @@ To format your code run
 
 ### Updating non-cargo dependencies
 
-- To update the [nix packages](https://github.com/NixOS/nixpkgs) run `./nix/update-nix`.
-- To update the [rust overlay](https://github.com/oxalica/rust-overlay) run
-  `./nix/update-rust-overlay`.
+Run `nix flake update` if you would like to pin other version edit `flake.nix`
+beforehand. Commit the lock file when happy.
 
-To use the updates enter a new `nix-shell`.
+To update only a single input specify it as argument, for example
 
-### Testing the nix-shell dev environment on other platforms
-
-Refer to the [nix/vagrant](./nix/vagrant/) directory.
+    nix flake update github:oxalica/rust-overlay
 
 ### Benchmarks
 

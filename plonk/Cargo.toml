@@ -7,40 +7,38 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
-jf-utils = { path = "../utilities" }
-jf-relation = { path = "../relation", default-features = false }
-jf-primitives = { path = "../primitives", default-features = false }
-
-ark-std = { version = "0.3.0", default-features = false }
-ark-serialize = "0.3.0"
-ark-ff = { version = "0.3.0", features = [ "asm" ] }
-ark-ec = "0.3.0"
-ark-poly = "0.3.0"
-ark-bn254 = "0.3.0"
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-bls12-381 = "0.3.0"
+ark-bn254 = "0.3.0"
 ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-
-merlin = { version = "3.0.0", default-features = false }
-rayon = { version = "1.5.0", optional = true }
-itertools = { version = "0.10.1", default-features = false }
-downcast-rs = { version = "1.2.0", default-features = false }
-serde = { version = "1.0", default-features = false, features = ["derive"] }
-displaydoc = { version = "0.2.3", default-features = false }
+ark-ec = "0.3.0"
+ark-ff = { version = "0.3.0", features = [ "asm" ] }
+ark-poly = "0.3.0"
+ark-serialize = "0.3.0"
+ark-std = { version = "0.3.0", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
-num-bigint = { version = "0.4", default-features = false }
-rand_chacha = { version = "0.3.1" }
-sha3 = "^0.10"
+displaydoc = { version = "0.2.3", default-features = false }
+downcast-rs = { version = "1.2.0", default-features = false }
+dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }
 hashbrown = "0.12.3"
-dyn-clone = "^1.0"
+itertools = { version = "0.10.1", default-features = false }
+jf-primitives = { path = "../primitives", default-features = false }
+jf-relation = { path = "../relation", default-features = false }
+jf-utils = { path = "../utilities" }
+merlin = { version = "3.0.0", default-features = false }
+num-bigint = { version = "0.4", default-features = false }
+rand_chacha = { version = "0.3.1" }
+rayon = { version = "1.5.0", optional = true }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+sha3 = "^0.10"
 
 [dev-dependencies]
-bincode = "1.0"
-ark-ed-on-bls12-381 = "0.3.0"
 ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ed-on-bls12-381 = "0.3.0"
 ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bn254 = "0.3.0"
+bincode = "1.0"
 hex = "^0.4.3"
 
 # Benchmarks
@@ -50,9 +48,9 @@ path = "benches/bench.rs"
 harness = false
 
 [features]
-default = [ "parallel" ]
-std = [ "ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", "ark-poly/std"]
+default = ["parallel"]
+std = ["ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", "ark-poly/std"]
 test_apis = [] # exposing apis for testing purpose
-parallel = [ "ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
+parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
             "jf-utils/parallel", "jf-relation/parallel", "jf-primitives/parallel",
             "rayon" ]
