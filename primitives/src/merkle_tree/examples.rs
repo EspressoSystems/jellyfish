@@ -7,7 +7,7 @@
 //! Provides sample instantiations of merkle tree.
 //! E.g. Sparse merkle tree with BigUInt index.
 
-use super::{merkle_tree_impl::MerkleTreeImpl, DigestAlgorithm, ToUsize, ToVec};
+use super::{append_only::MerkleTree, DigestAlgorithm, ToUsize, ToVec};
 use crate::rescue::{Permutation, RescueParameter};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{convert::TryInto, marker::PhantomData, vec, vec::Vec};
@@ -33,7 +33,7 @@ impl<F: RescueParameter> ToVec<F> for u64 {
     }
 }
 /// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTreeImpl<F, RescueHash<F>, u64, U3, F>;
+pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
 
 impl ToUsize for BigUint {
     fn to_usize(&self) -> usize {
@@ -41,7 +41,7 @@ impl ToUsize for BigUint {
     }
 }
 /// Example instantiation of a SparseMerkleTree indexed by BigUInt
-pub type SparseMerkleTree<V, F> = MerkleTreeImpl<V, RescueHash<F>, BigUint, U3, F>;
+pub type SparseMerkleTree<V, F> = MerkleTree<V, RescueHash<F>, BigUint, U3, F>;
 
 /// Wrapper for rescue hash function
 pub struct RescueHash<F: RescueParameter> {
@@ -66,7 +66,7 @@ impl<F: Copy> ToVec<F> for Interval<F> {
 
 /// Interval merkle tree instantiation for interval merkle tree using Rescue
 /// hash function.
-pub type IntervalMerkleTree<F> = MerkleTreeImpl<Interval<F>, RescueHash<F>, u64, U3, F>;
+pub type IntervalMerkleTree<F> = MerkleTree<Interval<F>, RescueHash<F>, u64, U3, F>;
 
 /// Update the array length here
 type NodeValue = [u8; 3];
@@ -97,4 +97,4 @@ impl DigestAlgorithm<NodeValue> for Sha3Digest {
 }
 
 /// Merkle tree using SHA3 hash
-pub type SHA3MerkleTree<E> = MerkleTreeImpl<E, Sha3Digest, u64, U3, NodeValue>;
+pub type SHA3MerkleTree<E> = MerkleTree<E, Sha3Digest, u64, U3, NodeValue>;

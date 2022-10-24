@@ -7,12 +7,12 @@
 //! Implementation of a typical append only merkle tree
 
 use super::{
-    utils::{
+    internal::{
         build_tree_internal, calculate_capacity, digest_leaf, index_to_branches, MerkleNode,
         MerkleProof,
     },
-    AppendableMerkleTree, DigestAlgorithm, ForgetableMerkleTree, IndexOps, LookupResult,
-    MerkleCommitment, MerkleTree, ToUsize, ToVec,
+    AppendableMerkleTreeScheme, DigestAlgorithm, ForgetableMerkleTreeScheme, IndexOps,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, ToUsize, ToVec,
 };
 use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -30,7 +30,7 @@ use typenum::Unsigned;
 
 /// A standard append only Merkle tree implementation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleTreeImpl<E, H, I, TreeArity, T>
+pub struct MerkleTree<E, H, I, TreeArity, T>
 where
     E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
     H: DigestAlgorithm<T>,
@@ -57,7 +57,7 @@ where
     _phantom_ta: PhantomData<TreeArity>,
 }
 
-impl<E, H, I, TreeArity, T> MerkleTree for MerkleTreeImpl<E, H, I, TreeArity, T>
+impl<E, H, I, TreeArity, T> MerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
 where
     E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Clone + Eq + PartialEq + Debug,
     H: DigestAlgorithm<T>,
@@ -85,9 +85,9 @@ where
         + Display
         + Copy,
 {
-    type ElementType = E;
+    type Element = E;
     type Digest = H;
-    type IndexType = I;
+    type Index = I;
     type NodeValue = T;
     type MembershipProof = MerkleProof<E, I, T>;
     // TODO(Chengyu): implement batch membership proof
@@ -97,12 +97,12 @@ where
 
     fn from_elems(
         height: usize,
-        elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
+        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
         let capacity = calculate_capacity::<I, TreeArity>(height);
         let (root, num_leaves) =
             build_tree_internal::<E, H, I, TreeArity, T>(height, capacity, elems)?;
-        Ok(MerkleTreeImpl {
+        Ok(MerkleTree {
             root,
             height,
             capacity,
@@ -116,11 +116,11 @@ where
         self.height
     }
 
-    fn capacity(&self) -> Self::IndexType {
+    fn capacity(&self) -> Self::Index {
         self.capacity
     }
 
-    fn num_leaves(&self) -> Self::IndexType {
+    fn num_leaves(&self) -> Self::Index {
         self.num_leaves
     }
 
@@ -128,7 +128,7 @@ where
         self.root.value()
     }
 
-    fn commitment(&self) -> MerkleCommitment<Self::IndexType, T> {
+    fn commitment(&self) -> MerkleCommitment<Self::Index, T> {
         MerkleCommitment {
             root_value: self.root.value(),
             height: self.height,
@@ -136,10 +136,7 @@ where
         }
     }
 
-    fn lookup(
-        &self,
-        pos: Self::IndexType,
-    ) -> LookupResult<Self::ElementType, Self::MembershipProof> {
+    fn lookup(&self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
         if pos >= self.num_leaves {
             return LookupResult::EmptyLeaf;
         }
@@ -153,7 +150,7 @@ where
 
     fn verify(
         &self,
-        pos: Self::IndexType,
+        pos: Self::Index,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<bool, PrimitivesError> {
         let proof = proof.borrow();
@@ -172,7 +169,7 @@ where
     }
 }
 
-impl<E, H, I, TreeArity, T> AppendableMerkleTree for MerkleTreeImpl<E, H, I, TreeArity, T>
+impl<E, H, I, TreeArity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
 where
     E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
     H: DigestAlgorithm<T>,
@@ -200,7 +197,7 @@ where
         + Display
         + Copy,
 {
-    fn push(&mut self, elem: impl Borrow<Self::ElementType>) -> Result<(), PrimitivesError> {
+    fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
         if self.num_leaves >= self.capacity {
             return Err(PrimitivesError::InternalError(
                 "Merkle tree full".to_string(),
@@ -220,7 +217,7 @@ where
 
     fn extend(
         &mut self,
-        elems: impl IntoIterator<Item = impl Borrow<Self::ElementType>>,
+        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
@@ -241,7 +238,7 @@ where
     }
 }
 
-impl<E, H, I, TreeArity, T> ForgetableMerkleTree for MerkleTreeImpl<E, H, I, TreeArity, T>
+impl<E, H, I, TreeArity, T> ForgetableMerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
 where
     E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
     H: DigestAlgorithm<T>,
@@ -269,10 +266,7 @@ where
         + Display
         + Copy,
 {
-    fn forget(
-        &mut self,
-        pos: Self::IndexType,
-    ) -> LookupResult<Self::ElementType, Self::MembershipProof> {
+    fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
         let branches = index_to_branches::<I, TreeArity>(pos, self.height);
         match self.root.forget_internal(self.height, &branches) {
             LookupResult::Ok(elem, proof) => {
@@ -285,8 +279,8 @@ where
 
     fn remember(
         &mut self,
-        pos: Self::IndexType,
-        _element: impl Borrow<Self::ElementType>,
+        pos: Self::Index,
+        _element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
@@ -343,7 +337,7 @@ mod mt_tests {
     use crate::{
         merkle_tree::{
             examples::RescueMerkleTree,
-            utils::{MerkleNode, MerkleProof},
+            internal::{MerkleNode, MerkleProof},
             *,
         },
         rescue::RescueParameter,
