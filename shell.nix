@@ -1,41 +1,20 @@
-let
-  basePkgs = import ./nix/nixpkgs.nix { };
+# Copyright (c) 2022 Espresso Systems (espressosys.com)
+# This file is part of the Configurable Asset Privacy for Ethereum (CAPE) library.
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-  rust_overlay = with basePkgs;
-    import (fetchFromGitHub (lib.importJSON ./nix/oxalica_rust_overlay.json));
-
-  pkgs = import ./nix/nixpkgs.nix { overlays = [ rust_overlay ]; };
-
-  nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith
-    (toolchain: toolchain.minimal.override { extensions = [ "rustfmt" ]; });
-
-  stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
-    extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
-  };
-
-  pre-commit-check = pkgs.callPackage ./nix/pre-commit.nix { };
-in with pkgs;
-
-mkShell {
-  buildInputs = [
-    argbash
-    openssl
-    pkgconfig
-    git
-
-    stableToolchain
-    nightlyToolchain
-
-  ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
-
-  shellHook = ''
-    export RUST_BACKTRACE=full
-    export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
-
-    # Ensure `cargo fmt` uses `rustfmt` from nightly.
-    export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
-
-    # install pre-commit hooks
-    ${pre-commit-check.shellHook}
-  '';
-}
+(import
+  (
+    let
+      lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+    in
+    fetchTarball {
+      url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
+      sha256 = lock.nodes.flake-compat.locked.narHash;
+    }
+  )
+  {
+    src = ./.;
+  }).shellNix
