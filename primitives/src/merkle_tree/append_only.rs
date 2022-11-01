@@ -7,12 +7,9 @@
 //! Implementation of a typical append only merkle tree
 
 use super::{
-    internal::{
-        build_tree_internal, calculate_capacity, digest_leaf, index_to_branches, MerkleNode,
-        MerkleProof,
-    },
+    internal::{build_tree_internal, calculate_capacity, digest_leaf, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, ForgetableMerkleTreeScheme, IndexOps,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, ToUsize, ToVec,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, ToBranches, ToVec,
 };
 use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -40,7 +37,7 @@ where
         + PartialOrd
         + CanonicalDeserialize
         + CanonicalSerialize
-        + ToUsize
+        + ToBranches
         + Eq
         + PartialEq
         + Clone
@@ -50,8 +47,8 @@ where
 {
     root: Box<MerkleNode<E, I, T>>,
     height: usize,
-    capacity: I,
-    num_leaves: I,
+    capacity: u64,
+    num_leaves: u64,
 
     _phantom_h: PhantomData<H>,
     _phantom_ta: PhantomData<TreeArity>,
@@ -68,7 +65,7 @@ where
         + PartialOrd
         + CanonicalDeserialize
         + CanonicalSerialize
-        + ToUsize
+        + ToBranches
         + Eq
         + PartialEq
         + Clone
@@ -99,7 +96,7 @@ where
         height: usize,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
-        let capacity = calculate_capacity::<I, TreeArity>(height);
+        let capacity = calculate_capacity(height, TreeArity::to_u64());
         let (root, num_leaves) =
             build_tree_internal::<E, H, I, TreeArity, T>(height, capacity, elems)?;
         Ok(MerkleTree {
@@ -116,11 +113,11 @@ where
         self.height
     }
 
-    fn capacity(&self) -> Self::Index {
+    fn capacity(&self) -> u64 {
         self.capacity
     }
 
-    fn num_leaves(&self) -> Self::Index {
+    fn num_leaves(&self) -> u64 {
         self.num_leaves
     }
 
@@ -128,7 +125,7 @@ where
         self.root.value()
     }
 
-    fn commitment(&self) -> MerkleCommitment<Self::Index, T> {
+    fn commitment(&self) -> MerkleCommitment<T> {
         MerkleCommitment {
             root_value: self.root.value(),
             height: self.height,
@@ -137,10 +134,7 @@ where
     }
 
     fn lookup(&self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        if pos >= self.num_leaves {
-            return LookupResult::EmptyLeaf;
-        }
-        let branches = index_to_branches::<I, TreeArity>(pos, self.height);
+        let branches = pos.to_branches(self.height, Self::ARITY);
         match self.root.lookup_internal(self.height, &branches) {
             LookupResult::Ok(value, proof) => LookupResult::Ok(value, MerkleProof { pos, proof }),
             LookupResult::NotInMemory => LookupResult::NotInMemory,
@@ -180,7 +174,7 @@ where
         + PartialOrd
         + CanonicalSerialize
         + CanonicalDeserialize
-        + ToUsize
+        + ToBranches
         + Eq
         + PartialEq
         + Clone
@@ -204,14 +198,14 @@ where
             ));
         }
 
-        let branches = index_to_branches::<I, TreeArity>(self.num_leaves, self.height);
+        let branches = self.num_leaves.to_branches(self.height, Self::ARITY);
         self.root.update_internal::<H, TreeArity>(
             self.height,
-            self.num_leaves,
+            I::from(self.num_leaves),
             &branches,
             elem.borrow(),
         )?;
-        self.num_leaves += I::from(1);
+        self.num_leaves += 1;
         Ok(())
     }
 
@@ -221,14 +215,14 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let branch = index_to_branches::<I, TreeArity>(self.num_leaves, self.height);
-        self.num_leaves += I::from(self.root.extend_internal::<H, TreeArity>(
+        let branches = self.num_leaves.to_branches(self.height, Self::ARITY);
+        self.num_leaves += self.root.extend_internal::<H, TreeArity>(
             self.height,
-            self.num_leaves,
-            &branch,
+            I::from(self.num_leaves),
+            &branches,
             true,
             &mut iter,
-        )?);
+        )?;
         if iter.peek().is_some() {
             return Err(PrimitivesError::ParameterError(
                 "To much data for extension".to_string(),
@@ -249,7 +243,7 @@ where
         + PartialOrd
         + CanonicalDeserialize
         + CanonicalSerialize
-        + ToUsize
+        + ToBranches
         + Eq
         + PartialEq
         + Clone
@@ -267,7 +261,7 @@ where
         + Copy,
 {
     fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let branches = index_to_branches::<I, TreeArity>(pos, self.height);
+        let branches = pos.to_branches(self.height, Self::ARITY);
         match self.root.forget_internal(self.height, &branches) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
@@ -284,7 +278,7 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
-        let branches = index_to_branches::<I, TreeArity>(pos, self.height);
+        let branches = pos.to_branches(self.height, Self::ARITY);
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,
             pos,

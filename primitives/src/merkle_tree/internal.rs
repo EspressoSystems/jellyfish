@@ -4,7 +4,9 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use super::{DigestAlgorithm, IndexOps, LookupResult, ToUsize, ToVec};
+use core::convert::TryInto;
+
+use super::{DigestAlgorithm, IndexOps, LookupResult, ToBranches, ToVec};
 use crate::errors::PrimitivesError;
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Display, format, iter::Peekable, string::ToString, vec,
@@ -61,40 +63,19 @@ pub struct MerkleProof<E, I, T> {
     pub proof: Vec<MerkleNode<E, I, T>>,
 }
 
-/// Return a vector of branching index from leaf to root for a given index
-pub(crate) fn index_to_branches<I, TreeArity>(pos: I, height: usize) -> Vec<usize>
-where
-    TreeArity: Unsigned,
-    I: IndexOps + From<u64> + ToUsize,
-{
-    let mut pos = pos;
-    let mut ret = vec![];
-    for _i in 0..height {
-        ret.push((pos % I::from(TreeArity::to_u64())).to_usize());
-        pos /= I::from(TreeArity::to_u64());
-    }
-    ret
-}
-
-pub(crate) fn calculate_capacity<I, TreeArity>(height: usize) -> I
-where
-    TreeArity: Unsigned,
-    I: IndexOps + From<u64>,
-{
-    let mut capacity = I::from(1u64);
-    for _i in 0..height {
-        capacity *= I::from(TreeArity::to_u64());
-    }
-    capacity
+pub(crate) fn calculate_capacity(height: usize, arity: u64) -> u64 {
+    arity
+        .checked_pow(height.try_into().unwrap())
+        .unwrap_or(u64::MAX)
 }
 
 type BoxMTNode<E, I, T> = Box<MerkleNode<E, I, T>>;
 
 pub(crate) fn build_tree_internal<E, H, I, TreeArity, T>(
     height: usize,
-    capacity: I,
+    capacity: u64,
     iter: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(BoxMTNode<E, I, T>, I), PrimitivesError>
+) -> Result<(BoxMTNode<E, I, T>, u64), PrimitivesError>
 where
     E: ToVec<T> + Clone + Copy,
     H: DigestAlgorithm<T>,
@@ -103,13 +84,13 @@ where
     T: Default + Clone + Copy,
 {
     let leaves: Vec<_> = iter.into_iter().collect();
-    let num_leaves = I::from(leaves.len() as u64);
+    let num_leaves = leaves.len() as u64;
 
     if num_leaves > capacity {
         Err(PrimitivesError::ParameterError(
             "Too many data for merkle tree".to_string(),
         ))
-    } else if num_leaves > I::default() {
+    } else if num_leaves > 0 {
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
@@ -157,7 +138,7 @@ where
         }
         Ok((cur_nodes[0].clone(), num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, I, T>::Empty), I::default()))
+        Ok((Box::new(MerkleNode::<E, I, T>::Empty), 0))
     }
 }
 
@@ -521,7 +502,7 @@ where
 impl<E, I, T> MerkleProof<E, I, T>
 where
     E: ToVec<T> + Copy,
-    I: ToVec<T> + From<u64> + ToUsize + IndexOps,
+    I: ToVec<T> + From<u64> + ToBranches + IndexOps + Copy,
     T: Default + Clone + Copy,
 {
     pub(crate) fn verify_membership_proof<H, TreeArity>(&self) -> Result<T, PrimitivesError>
@@ -536,7 +517,8 @@ where
         } = &self.proof[0]
         {
             let init = digest_leaf::<E, H, I, T>(pos, elem, TreeArity::to_usize());
-            index_to_branches::<I, TreeArity>(self.pos, self.proof.len() - 1)
+            self.pos
+                .to_branches(self.proof.len() - 1, TreeArity::to_usize())
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(

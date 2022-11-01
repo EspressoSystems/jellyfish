@@ -16,8 +16,9 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, Serializatio
 use ark_std::{
     borrow::Borrow,
     fmt::{Debug, Display},
-    ops::{Add, AddAssign, DivAssign, MulAssign, Rem},
+    ops::{Add, AddAssign},
     string::ToString,
+    vec,
     vec::Vec,
 };
 use serde::{Deserialize, Serialize};
@@ -56,30 +57,27 @@ pub trait DigestAlgorithm<T> {
 }
 
 /// Ops needs to be performed over index
-pub trait IndexOps<Rhs = Self>:
-    Copy
-    + AddAssign<Rhs>
-    + Add<Rhs, Output = Self>
-    + DivAssign<Rhs>
-    + MulAssign<Rhs>
-    + Rem<Rhs, Output = Self>
-{
+pub trait IndexOps<Rhs = Self>: AddAssign<Rhs> + Add<Rhs, Output = Self> {}
+
+impl<T, Rhs> IndexOps<Rhs> for T where T: AddAssign<Rhs> + Add<Rhs, Output = Self> {}
+
+/// An trait for Merkle tree index type.
+pub trait ToBranches {
+    /// Convert the given index to a vector of branch indices given tree height
+    /// and arity.
+    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize>;
 }
 
-impl<T, Rhs> IndexOps<Rhs> for T where
-    T: Copy
-        + AddAssign<Rhs>
-        + Add<Rhs, Output = Self>
-        + DivAssign<Rhs>
-        + MulAssign<Rhs>
-        + Rem<Rhs, Output = Self>
-{
-}
-
-/// Convert into usize
-pub trait ToUsize {
-    /// Return a usize
-    fn to_usize(&self) -> usize;
+impl ToBranches for u64 {
+    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize> {
+        let mut pos = *self;
+        let mut ret = vec![];
+        for _i in 0..height {
+            ret.push((pos % (arity as u64)) as usize);
+            pos /= arity as u64;
+        }
+        ret
+    }
 }
 
 /// Convert into a vector of T
@@ -93,16 +91,13 @@ pub trait ToVec<T> {
 #[derive(
     Eq, PartialEq, Clone, Copy, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
 )]
-pub struct MerkleCommitment<
-    I: CanonicalSerialize + CanonicalDeserialize,
-    T: CanonicalSerialize + CanonicalDeserialize,
-> {
+pub struct MerkleCommitment<T: CanonicalSerialize + CanonicalDeserialize> {
     /// Root of a tree
     pub root_value: T,
     /// Height of a tree
     pub height: usize,
     /// Number of leaves in the tree
-    pub num_leaves: I,
+    pub num_leaves: u64,
 }
 
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
@@ -129,7 +124,7 @@ pub trait MerkleTreeScheme: Sized {
         + IndexOps
         + Clone
         + Copy
-        + ToUsize
+        + ToBranches
         + CanonicalDeserialize
         + CanonicalSerialize;
     /// Internal and root node value
@@ -158,15 +153,15 @@ pub trait MerkleTreeScheme: Sized {
     /// Return the height of this merkle tree
     fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
-    fn capacity(&self) -> Self::Index;
+    fn capacity(&self) -> u64;
     /// Return the current number of leaves
-    fn num_leaves(&self) -> Self::Index;
+    fn num_leaves(&self) -> u64;
 
     /// Return the current root value
     fn root(&self) -> Self::NodeValue;
 
     /// Return a merkle commitment
-    fn commitment(&self) -> MerkleCommitment<Self::Index, Self::NodeValue>;
+    fn commitment(&self) -> MerkleCommitment<Self::NodeValue>;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree

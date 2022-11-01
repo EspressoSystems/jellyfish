@@ -7,19 +7,14 @@
 //! Provides sample instantiations of merkle tree.
 //! E.g. Sparse merkle tree with BigUInt index.
 
-use super::{append_only::MerkleTree, DigestAlgorithm, ToUsize, ToVec};
+use super::{append_only::MerkleTree, DigestAlgorithm, ToBranches, ToVec};
 use crate::rescue::{Permutation, RescueParameter};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{convert::TryInto, marker::PhantomData, vec, vec::Vec};
 use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 use sha3::{Digest, Sha3_512};
 use typenum::U3;
-
-impl ToUsize for u64 {
-    fn to_usize(&self) -> usize {
-        *self as usize
-    }
-}
 
 impl<F: RescueParameter> ToVec<F> for F {
     fn to_vec(&self) -> Vec<F> {
@@ -35,11 +30,18 @@ impl<F: RescueParameter> ToVec<F> for u64 {
 /// A standard merkle tree using RATE-3 rescue hash function
 pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
 
-impl ToUsize for BigUint {
-    fn to_usize(&self) -> usize {
-        num_traits::ToPrimitive::to_usize(self).unwrap()
+impl ToBranches for BigUint {
+    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize> {
+        let mut pos = self.clone();
+        let mut ret = vec![];
+        for _i in 0..height {
+            ret.push((&pos % (arity as u64)).to_usize().unwrap());
+            pos /= arity as u64;
+        }
+        ret
     }
 }
+
 /// Example instantiation of a SparseMerkleTree indexed by BigUInt
 pub type SparseMerkleTree<V, F> = MerkleTree<V, RescueHash<F>, BigUint, U3, F>;
 
