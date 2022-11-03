@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/cmp.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cmp.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_relation/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/cmp.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cmp.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_relation/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -425,432 +425,432 @@
 <span id="425">425</span>
 <span id="426">426</span>
 <span id="427">427</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Comparison gadgets for circuit</span>
+</span><span class="doccomment">//! Comparison gadgets for circuit
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger</span>, <span class="ident">PrimeField</span>};
+</span><span class="kw">use crate</span>::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
+<span class="kw">use </span>ark_ff::{BigInteger, PrimeField};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Constrain that `a` &lt; `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_lt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
+    <span class="doccomment">/// Constrain that `a` &lt; `b`.
+    </span><span class="kw">pub fn </span>enforce_lt(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_lt_internal</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(b)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_lt_internal(a, b)
     }
 
-    <span class="doccomment">/// Constrain that `a` &lt;= `b`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_leq</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Constrain that `a` &lt;= `b`
+    </span><span class="kw">pub fn </span>enforce_leq(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_lt</span>(<span class="ident">b</span>, <span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_constant</span>(<span class="ident">c</span>.<span class="number">0</span>, <span class="ident">F::zero</span>())
+        <span class="kw">let </span>c = <span class="self">self</span>.is_lt(b, a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_constant(c.<span class="number">0</span>, F::zero())
     }
 
-    <span class="doccomment">/// Constrain that `a` &gt; `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_gt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Constrain that `a` &gt; `b`.
+    </span><span class="kw">pub fn </span>enforce_gt(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">enforce_lt</span>(<span class="ident">b</span>, <span class="ident">a</span>)
+        <span class="self">self</span>.enforce_lt(b, a)
     }
 
-    <span class="doccomment">/// Constrain that `a` &gt;= `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_geq</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Constrain that `a` &gt;= `b`.
+    </span><span class="kw">pub fn </span>enforce_geq(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_lt</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_constant</span>(<span class="ident">c</span>.<span class="ident">into</span>(), <span class="ident">F::zero</span>())
+        <span class="kw">let </span>c = <span class="self">self</span>.is_lt(a, b)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_constant(c.into(), F::zero())
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &lt; `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_lt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &lt; `b`.
+    </span><span class="kw">pub fn </span>is_lt(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_lt_internal</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(b)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_lt_internal(a, b)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &gt; `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_gt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &gt; `b`.
+    </span><span class="kw">pub fn </span>is_gt(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">is_lt</span>(<span class="ident">b</span>, <span class="ident">a</span>)
+        <span class="self">self</span>.is_lt(b, a)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &lt;= `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_leq</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &lt;= `b`.
+    </span><span class="kw">pub fn </span>is_leq(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_lt_internal</span>(<span class="ident">b</span>, <span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">logic_neg</span>(<span class="ident">c</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(b)<span class="question-mark">?</span>;
+        <span class="kw">let </span>c = <span class="self">self</span>.is_lt_internal(b, a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.logic_neg(c)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &gt;= `b`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_geq</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether `a` &gt;= `b`.
+    </span><span class="kw">pub fn </span>is_geq(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_lt_internal</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">logic_neg</span>(<span class="ident">c</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(b)<span class="question-mark">?</span>;
+        <span class="kw">let </span>c = <span class="self">self</span>.is_lt_internal(a, b)<span class="question-mark">?</span>;
+        <span class="self">self</span>.logic_neg(c)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is less than a</span>
-    <span class="doccomment">/// given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_lt_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is less than a
+    /// given constant `val`.
+    </span><span class="kw">pub fn </span>is_lt_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_lt</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_lt(a, b)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is less than or</span>
-    <span class="doccomment">/// equal to a given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_leq_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is less than or
+    /// equal to a given constant `val`.
+    </span><span class="kw">pub fn </span>is_leq_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_leq</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_leq(a, b)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is greater than</span>
-    <span class="doccomment">/// a given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_gt_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is greater than
+    /// a given constant `val`.
+    </span><span class="kw">pub fn </span>is_gt_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_gt_constant_internal</span>(<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">val</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_gt_constant_internal(a, <span class="kw-2">&amp;</span>val)
     }
 
-    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is greater than</span>
-    <span class="doccomment">/// or equal a given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_geq_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Returns a `BoolVar` indicating whether the variable `a` is greater than
+    /// or equal a given constant `val`.
+    </span><span class="kw">pub fn </span>is_geq_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_geq</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_geq(a, b)
     }
 
-    <span class="doccomment">/// Enforce the variable `a` to be less than a</span>
-    <span class="doccomment">/// given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_lt_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Enforce the variable `a` to be less than a
+    /// given constant `val`.
+    </span><span class="kw">pub fn </span>enforce_lt_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_lt</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_lt(a, b)
     }
 
-    <span class="doccomment">/// Enforce the variable `a` to be less than or</span>
-    <span class="doccomment">/// equal to a given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_leq_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Enforce the variable `a` to be less than or
+    /// equal to a given constant `val`.
+    </span><span class="kw">pub fn </span>enforce_leq_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_leq</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_leq(a, b)
     }
 
-    <span class="doccomment">/// Enforce the variable `a` to be greater than</span>
-    <span class="doccomment">/// a given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_gt_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Enforce the variable `a` to be greater than
+    /// a given constant `val`.
+    </span><span class="kw">pub fn </span>enforce_gt_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_gt</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_gt(a, b)
     }
 
-    <span class="doccomment">/// Enforce the variable `a` to be greater than</span>
-    <span class="doccomment">/// or equal a given constant `val`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_geq_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">val</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+    <span class="doccomment">/// Enforce the variable `a` to be greater than
+    /// or equal a given constant `val`.
+    </span><span class="kw">pub fn </span>enforce_geq_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
     {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant_variable</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_geq</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = <span class="self">self</span>.create_constant_variable(val)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_geq(a, b)
     }
 }
 
-<span class="doccomment">/// Private helper functions for comparison gate</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns 2 `BoolVar`s.</span>
-    <span class="doccomment">/// First indicates whether `a` &lt;= (q-1)/2 and `b` &gt; (q-1)/2.</span>
-    <span class="doccomment">/// Second indicates whether `a` and `b` are both &lt;= (q-1)/2</span>
-    <span class="doccomment">/// or both &gt; (q-1)/2.</span>
-    <span class="kw">fn</span> <span class="ident">msb_check_internal</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">a</span>: <span class="ident">Variable</span>,
-        <span class="ident">b</span>: <span class="ident">Variable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">BoolVar</span>, <span class="ident">BoolVar</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">a_gt_const</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">is_gt_constant_internal</span>(<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b_gt_const</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">is_gt_constant_internal</span>(<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">a_leq_const</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">logic_neg</span>(<span class="ident">a_gt_const</span>)<span class="question-mark">?</span>;
-        <span class="comment">// Check whether `a` &lt;= (q-1)/2 and `b` &gt; (q-1)/2</span>
-        <span class="kw">let</span> <span class="ident">msb_check</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">logic_and</span>(<span class="ident">a_leq_const</span>, <span class="ident">b_gt_const</span>)<span class="question-mark">?</span>;
-        <span class="comment">// Check whether `a` and `b` are both &lt;= (q-1)/2 or</span>
-        <span class="comment">// are both &gt; (q-1)/2</span>
-        <span class="kw">let</span> <span class="ident">msb_eq</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_equal</span>(<span class="ident">a_gt_const</span>.<span class="ident">into</span>(), <span class="ident">b_gt_const</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">msb_check</span>, <span class="ident">msb_eq</span>))
+<span class="doccomment">/// Private helper functions for comparison gate
+</span><span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
+    <span class="doccomment">/// Returns 2 `BoolVar`s.
+    /// First indicates whether `a` &lt;= (q-1)/2 and `b` &gt; (q-1)/2.
+    /// Second indicates whether `a` and `b` are both &lt;= (q-1)/2
+    /// or both &gt; (q-1)/2.
+    </span><span class="kw">fn </span>msb_check_internal(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: Variable,
+        b: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(BoolVar, BoolVar), CircuitError&gt; {
+        <span class="kw">let </span>a_gt_const =
+            <span class="self">self</span>.is_gt_constant_internal(a, <span class="kw-2">&amp;</span>F::from(F::modulus_minus_one_div_two()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>b_gt_const =
+            <span class="self">self</span>.is_gt_constant_internal(b, <span class="kw-2">&amp;</span>F::from(F::modulus_minus_one_div_two()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>a_leq_const = <span class="self">self</span>.logic_neg(a_gt_const)<span class="question-mark">?</span>;
+        <span class="comment">// Check whether `a` &lt;= (q-1)/2 and `b` &gt; (q-1)/2
+        </span><span class="kw">let </span>msb_check = <span class="self">self</span>.logic_and(a_leq_const, b_gt_const)<span class="question-mark">?</span>;
+        <span class="comment">// Check whether `a` and `b` are both &lt;= (q-1)/2 or
+        // are both &gt; (q-1)/2
+        </span><span class="kw">let </span>msb_eq = <span class="self">self</span>.is_equal(a_gt_const.into(), b_gt_const.into())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((msb_check, msb_eq))
     }
 
-    <span class="doccomment">/// Return a variable indicating whether `a` &lt; `b`.</span>
-    <span class="kw">fn</span> <span class="ident">is_lt_internal</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">msb_check</span>, <span class="ident">msb_eq</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">msb_check_internal</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="comment">// check whether (a-b) &gt; (q-1)/2</span>
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cmp_result</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">is_gt_constant_internal</span>(<span class="ident">c</span>, <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cmp_result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">logic_and</span>(<span class="ident">msb_eq</span>, <span class="ident">cmp_result</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Return a variable indicating whether `a` &lt; `b`.
+    </span><span class="kw">fn </span>is_lt_internal(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="kw">let </span>(msb_check, msb_eq) = <span class="self">self</span>.msb_check_internal(a, b)<span class="question-mark">?</span>;
+        <span class="comment">// check whether (a-b) &gt; (q-1)/2
+        </span><span class="kw">let </span>c = <span class="self">self</span>.sub(a, b)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmp_result =
+            <span class="self">self</span>.is_gt_constant_internal(c, <span class="kw-2">&amp;</span>F::from(F::modulus_minus_one_div_two()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmp_result = <span class="self">self</span>.logic_and(msb_eq, cmp_result)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">logic_or</span>(<span class="ident">msb_check</span>, <span class="ident">cmp_result</span>)
+        <span class="self">self</span>.logic_or(msb_check, cmp_result)
     }
 
-    <span class="doccomment">/// Constrain that `a` &lt; `b`</span>
-    <span class="kw">fn</span> <span class="ident">enforce_lt_internal</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">b</span>: <span class="ident">Variable</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">msb_check</span>, <span class="ident">msb_eq</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">msb_check_internal</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="comment">// check whether (a-b) &lt;= (q-1)/2</span>
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cmp_result</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">is_gt_constant_internal</span>(<span class="ident">c</span>, <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cmp_result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">logic_and</span>(<span class="ident">msb_eq</span>, <span class="ident">cmp_result</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Constrain that `a` &lt; `b`
+    </span><span class="kw">fn </span>enforce_lt_internal(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, b: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span>(msb_check, msb_eq) = <span class="self">self</span>.msb_check_internal(a, b)<span class="question-mark">?</span>;
+        <span class="comment">// check whether (a-b) &lt;= (q-1)/2
+        </span><span class="kw">let </span>c = <span class="self">self</span>.sub(a, b)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmp_result =
+            <span class="self">self</span>.is_gt_constant_internal(c, <span class="kw-2">&amp;</span>F::from(F::modulus_minus_one_div_two()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>cmp_result = <span class="self">self</span>.logic_and(msb_eq, cmp_result)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">logic_or_gate</span>(<span class="ident">msb_check</span>, <span class="ident">cmp_result</span>)
+        <span class="self">self</span>.logic_or_gate(msb_check, cmp_result)
     }
 
-    <span class="doccomment">/// Helper function to check whether `a` is greater than a given</span>
-    <span class="doccomment">/// constant. Let N = F::size_in_bits(), it assumes that the</span>
-    <span class="doccomment">/// constant &lt; 2^N. And it uses at most N AND/OR gates.</span>
-    <span class="kw">fn</span> <span class="ident">is_gt_constant_internal</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">a</span>: <span class="ident">Variable</span>,
-        <span class="ident">constant</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">a_bits_le</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">unpack</span>(<span class="ident">a</span>, <span class="ident">F::size_in_bits</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">const_bits_le</span> <span class="op">=</span> <span class="ident">constant</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>();
+    <span class="doccomment">/// Helper function to check whether `a` is greater than a given
+    /// constant. Let N = F::size_in_bits(), it assumes that the
+    /// constant &lt; 2^N. And it uses at most N AND/OR gates.
+    </span><span class="kw">fn </span>is_gt_constant_internal(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: Variable,
+        constant: <span class="kw-2">&amp;</span>F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="kw">let </span>a_bits_le = <span class="self">self</span>.unpack(a, F::size_in_bits())<span class="question-mark">?</span>;
+        <span class="kw">let </span>const_bits_le = constant.into_repr().to_bits_le();
 
-        <span class="comment">// Iterating from LSB to MSB. Skip the front consecutive 1&#39;s.</span>
-        <span class="comment">// Put an OR gate for bit 0 and an AND gate for bit 1.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zipped</span> <span class="op">=</span> <span class="ident">const_bits_le</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">chain</span>(<span class="ident">ark_std::iter::repeat</span>(<span class="bool-val">false</span>))
-            .<span class="ident">take</span>(<span class="ident">a_bits_le</span>.<span class="ident">len</span>())
-            .<span class="ident">zip</span>(<span class="ident">a_bits_le</span>.<span class="ident">iter</span>())
-            .<span class="ident">skip_while</span>(<span class="op">|</span>(<span class="ident">b</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">b</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="ident">var</span>)) <span class="op">=</span> <span class="ident">zipped</span>.<span class="ident">next</span>() {
-            <span class="ident">zipped</span>.<span class="ident">try_fold</span>(<span class="ident">var</span>, <span class="op">|</span><span class="ident">current</span>, (<span class="ident">b</span>, <span class="ident">a</span>)<span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">b</span> {
-                    <span class="self">self</span>.<span class="ident">logic_and</span>(<span class="kw-2">*</span><span class="ident">a</span>, <span class="ident">current</span>)
-                } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">logic_or</span>(<span class="kw-2">*</span><span class="ident">a</span>, <span class="ident">current</span>)
+        <span class="comment">// Iterating from LSB to MSB. Skip the front consecutive 1&#39;s.
+        // Put an OR gate for bit 0 and an AND gate for bit 1.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>zipped = const_bits_le
+            .into_iter()
+            .chain(ark_std::iter::repeat(<span class="bool-val">false</span>))
+            .take(a_bits_le.len())
+            .zip(a_bits_le.iter())
+            .skip_while(|(b, <span class="kw">_</span>)| <span class="kw-2">*</span>b);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw-2">&amp;</span>var)) = zipped.next() {
+            zipped.try_fold(var, |current, (b, a)| -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+                <span class="kw">if </span>b {
+                    <span class="self">self</span>.logic_and(<span class="kw-2">*</span>a, current)
+                } <span class="kw">else </span>{
+                    <span class="self">self</span>.logic_or(<span class="kw-2">*</span>a, current)
                 }
             })
-        } <span class="kw">else</span> {
-            <span class="comment">// the constant is all one</span>
-            <span class="prelude-val">Ok</span>(<span class="ident">BoolVar</span>(<span class="self">self</span>.<span class="ident">zero</span>()))
+        } <span class="kw">else </span>{
+            <span class="comment">// the constant is all one
+            </span><span class="prelude-val">Ok</span>(BoolVar(<span class="self">self</span>.zero()))
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>};
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::cmp::Ordering</span>;
-    <span class="kw">use</span> <span class="ident">itertools::multizip</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use crate</span>::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit};
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_ff::PrimeField;
+    <span class="kw">use </span>ark_std::cmp::Ordering;
+    <span class="kw">use </span>itertools::multizip;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_cmp_gates</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_cmp_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_cmp_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_cmp_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_cmp_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_cmp_gates() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_cmp_helper::&lt;FqEd254&gt;()<span class="question-mark">?</span>;
+        test_cmp_helper::&lt;FqEd377&gt;()<span class="question-mark">?</span>;
+        test_cmp_helper::&lt;FqEd381&gt;()<span class="question-mark">?</span>;
+        test_cmp_helper::&lt;Fq377&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_cmp_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">list</span> <span class="op">=</span> [
-            (<span class="ident">F::from</span>(<span class="number">5u32</span>), <span class="ident">F::from</span>(<span class="number">5u32</span>)),
-            (<span class="ident">F::from</span>(<span class="number">1u32</span>), <span class="ident">F::from</span>(<span class="number">2u32</span>)),
+    <span class="kw">fn </span>test_cmp_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span>list = [
+            (F::from(<span class="number">5u32</span>), F::from(<span class="number">5u32</span>)),
+            (F::from(<span class="number">1u32</span>), F::from(<span class="number">2u32</span>)),
             (
-                <span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()).<span class="ident">add</span>(<span class="ident">F::one</span>()),
-                <span class="ident">F::from</span>(<span class="number">2u32</span>),
+                F::from(F::modulus_minus_one_div_two()).add(F::one()),
+                F::from(<span class="number">2u32</span>),
             ),
             (
-                <span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()).<span class="ident">add</span>(<span class="ident">F::one</span>()),
-                <span class="ident">F::from</span>(<span class="ident">F::modulus_minus_one_div_two</span>()).<span class="ident">mul</span>(<span class="ident">F::from</span>(<span class="number">2u32</span>)),
+                F::from(F::modulus_minus_one_div_two()).add(F::one()),
+                F::from(F::modulus_minus_one_div_two()).mul(F::from(<span class="number">2u32</span>)),
             ),
         ];
-        <span class="ident">multizip</span>((
-            <span class="ident">list</span>,
-            [<span class="ident">Ordering::Less</span>, <span class="ident">Ordering::Greater</span>],
+        multizip((
+            list,
+            [Ordering::Less, Ordering::Greater],
             [<span class="bool-val">false</span>, <span class="bool-val">true</span>],
             [<span class="bool-val">false</span>, <span class="bool-val">true</span>],
-        )).<span class="ident">into_iter</span>()
-            .<span class="ident">try_for_each</span>(
-                <span class="op">|</span>((<span class="ident">a</span>, <span class="ident">b</span>), <span class="ident">ordering</span>, <span class="ident">should_also_check_equality</span>,
-                 <span class="ident">is_b_constant</span>)<span class="op">|</span>
-                 -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-                    <span class="ident">test_enforce_cmp_helper</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="ident">ordering</span>, <span class="ident">should_also_check_equality</span>, <span class="ident">is_b_constant</span>)<span class="question-mark">?</span>;
-                    <span class="ident">test_enforce_cmp_helper</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="ident">ordering</span>, <span class="ident">should_also_check_equality</span>, <span class="ident">is_b_constant</span>)<span class="question-mark">?</span>;
-                    <span class="ident">test_is_cmp_helper</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="ident">ordering</span>, <span class="ident">should_also_check_equality</span>, <span class="ident">is_b_constant</span>)<span class="question-mark">?</span>;
-                    <span class="ident">test_is_cmp_helper</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="ident">ordering</span>, <span class="ident">should_also_check_equality</span>, <span class="ident">is_b_constant</span>)
+        )).into_iter()
+            .try_for_each(
+                |((a, b), ordering, should_also_check_equality,
+                 is_b_constant)|
+                 -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+                    test_enforce_cmp_helper(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b, ordering, should_also_check_equality, is_b_constant)<span class="question-mark">?</span>;
+                    test_enforce_cmp_helper(<span class="kw-2">&amp;</span>b, <span class="kw-2">&amp;</span>a, ordering, should_also_check_equality, is_b_constant)<span class="question-mark">?</span>;
+                    test_is_cmp_helper(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b, ordering, should_also_check_equality, is_b_constant)<span class="question-mark">?</span>;
+                    test_is_cmp_helper(<span class="kw-2">&amp;</span>b, <span class="kw-2">&amp;</span>a, ordering, should_also_check_equality, is_b_constant)
                 },
             )
     }
 
-    <span class="kw">fn</span> <span class="ident">test_is_cmp_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-        <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-        <span class="ident">ordering</span>: <span class="ident">Ordering</span>,
-        <span class="ident">should_also_check_equality</span>: <span class="ident">bool</span>,
-        <span class="ident">is_b_constant</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">expected_result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">a</span>.<span class="ident">cmp</span>(<span class="ident">b</span>) <span class="op">==</span> <span class="ident">ordering</span>
-            <span class="op">|</span><span class="op">|</span> (<span class="ident">a</span>.<span class="ident">cmp</span>(<span class="ident">b</span>) <span class="op">==</span> <span class="ident">Ordering::Equal</span> <span class="op">&amp;&amp;</span> <span class="ident">should_also_check_equality</span>)
+    <span class="kw">fn </span>test_is_cmp_helper&lt;F: PrimeField&gt;(
+        a: <span class="kw-2">&amp;</span>F,
+        b: <span class="kw-2">&amp;</span>F,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+        is_b_constant: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>expected_result = <span class="kw">if </span>a.cmp(b) == ordering
+            || (a.cmp(b) == Ordering::Equal &amp;&amp; should_also_check_equality)
         {
-            <span class="ident">F::one</span>()
-        } <span class="kw">else</span> {
-            <span class="ident">F::zero</span>()
+            F::one()
+        } <span class="kw">else </span>{
+            F::zero()
         };
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">c</span>: <span class="ident">BoolVar</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_b_constant</span> {
-            <span class="kw">match</span> <span class="ident">ordering</span> {
-                <span class="ident">Ordering::Less</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_leq_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_lt_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+        <span class="kw">let </span>a = circuit.create_variable(<span class="kw-2">*</span>a)<span class="question-mark">?</span>;
+        <span class="kw">let </span>c: BoolVar = <span class="kw">if </span>is_b_constant {
+            <span class="kw">match </span>ordering {
+                Ordering::Less =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.is_leq_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.is_lt_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="ident">Ordering::Greater</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_geq_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_gt_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+                Ordering::Greater =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.is_geq_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.is_gt_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here</span>
-                <span class="ident">Ordering::Equal</span> =&gt; <span class="ident">circuit</span>.<span class="ident">create_boolean_variable_unchecked</span>(<span class="ident">expected_result</span>)<span class="question-mark">?</span>,
+                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here
+                </span>Ordering::Equal =&gt; circuit.create_boolean_variable_unchecked(expected_result)<span class="question-mark">?</span>,
             }
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> <span class="ident">ordering</span> {
-                <span class="ident">Ordering::Less</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_leq</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_lt</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>b = circuit.create_variable(<span class="kw-2">*</span>b)<span class="question-mark">?</span>;
+            <span class="kw">match </span>ordering {
+                Ordering::Less =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.is_leq(a, b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.is_lt(a, b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="ident">Ordering::Greater</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_geq</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">is_gt</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+                Ordering::Greater =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.is_geq(a, b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.is_gt(a, b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here</span>
-                <span class="ident">Ordering::Equal</span> =&gt; <span class="ident">circuit</span>.<span class="ident">create_boolean_variable_unchecked</span>(<span class="ident">expected_result</span>)<span class="question-mark">?</span>,
+                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here
+                </span>Ordering::Equal =&gt; circuit.create_boolean_variable_unchecked(expected_result)<span class="question-mark">?</span>,
             }
         };
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">c</span>.<span class="ident">into</span>())<span class="question-mark">?</span>.<span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="ident">expected_result</span>));
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(circuit.witness(c.into())<span class="question-mark">?</span>.eq(<span class="kw-2">&amp;</span>expected_result));
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="kw">fn</span> <span class="ident">test_enforce_cmp_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-        <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-        <span class="ident">ordering</span>: <span class="ident">Ordering</span>,
-        <span class="ident">should_also_check_equality</span>: <span class="ident">bool</span>,
-        <span class="ident">is_b_constant</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">expected_result</span> <span class="op">=</span>
-            <span class="ident">a</span>.<span class="ident">cmp</span>(<span class="ident">b</span>) <span class="op">==</span> <span class="ident">ordering</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">a</span>.<span class="ident">cmp</span>(<span class="ident">b</span>) <span class="op">==</span> <span class="ident">Ordering::Equal</span> <span class="op">&amp;&amp;</span> <span class="ident">should_also_check_equality</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">is_b_constant</span> {
-            <span class="kw">match</span> <span class="ident">ordering</span> {
-                <span class="ident">Ordering::Less</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_leq_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_lt_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+    <span class="kw">fn </span>test_enforce_cmp_helper&lt;F: PrimeField&gt;(
+        a: <span class="kw-2">&amp;</span>F,
+        b: <span class="kw-2">&amp;</span>F,
+        ordering: Ordering,
+        should_also_check_equality: bool,
+        is_b_constant: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>expected_result =
+            a.cmp(b) == ordering || (a.cmp(b) == Ordering::Equal &amp;&amp; should_also_check_equality);
+        <span class="kw">let </span>a = circuit.create_variable(<span class="kw-2">*</span>a)<span class="question-mark">?</span>;
+        <span class="kw">if </span>is_b_constant {
+            <span class="kw">match </span>ordering {
+                Ordering::Less =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.enforce_leq_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.enforce_lt_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="ident">Ordering::Greater</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_geq_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_gt_constant</span>(<span class="ident">a</span>, <span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+                Ordering::Greater =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.enforce_geq_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.enforce_gt_constant(a, <span class="kw-2">*</span>b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here</span>
-                <span class="ident">Ordering::Equal</span> =&gt; (),
+                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here
+                </span>Ordering::Equal =&gt; (),
             }
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">b</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> <span class="ident">ordering</span> {
-                <span class="ident">Ordering::Less</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_leq</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_lt</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>b = circuit.create_variable(<span class="kw-2">*</span>b)<span class="question-mark">?</span>;
+            <span class="kw">match </span>ordering {
+                Ordering::Less =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.enforce_leq(a, b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.enforce_lt(a, b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="ident">Ordering::Greater</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">should_also_check_equality</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_geq</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">circuit</span>.<span class="ident">enforce_gt</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="question-mark">?</span>
-                    }
+                Ordering::Greater =&gt; {
+                    <span class="kw">if </span>should_also_check_equality {
+                        circuit.enforce_geq(a, b)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        circuit.enforce_gt(a, b)<span class="question-mark">?
+                    </span>}
                 },
-                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here</span>
-                <span class="ident">Ordering::Equal</span> =&gt; (),
+                <span class="comment">// Equality test will be handled elsewhere, comparison gate test will not enter here
+                </span>Ordering::Equal =&gt; (),
             }
         };
-        <span class="kw">if</span> <span class="ident">expected_result</span> {
-            <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>())
-        } <span class="kw">else</span> {
-            <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="kw">if </span>expected_result {
+            <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok())
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

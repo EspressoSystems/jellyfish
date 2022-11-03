@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/prf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prf.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/prf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prf.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -128,135 +128,135 @@
 <span id="128">128</span>
 <span id="129">129</span>
 <span id="130">130</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! This module implements a pseudo random function that is derived from</span>
-<span class="doccomment">//! the rescue hash function.</span>
+</span><span class="doccomment">//! This module implements a pseudo random function that is derived from
+//! the rescue hash function.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">errors::PrimitivesError</span>,
-    <span class="ident">rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>},
+</span><span class="kw">use crate</span>::{
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, STATE_SIZE},
 };
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">borrow::ToOwned</span>, <span class="ident">format</span>, <span class="ident">string::ToString</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;
-<span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
+<span class="kw">use </span>ark_std::{borrow::ToOwned, format, string::ToString, vec::Vec};
+<span class="kw">use </span>jf_utils::pad_with_zeros;
+<span class="kw">use </span>zeroize::Zeroize;
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::upper_case_acronyms</span>)]</span>
-<span class="doccomment">/// Pseudo-random function (PRF) instance for user defined input and output size</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PRF</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Length of the input.</span>
-    <span class="kw">pub</span> <span class="ident">input_len</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// Length of the output.</span>
-    <span class="kw">pub</span> <span class="ident">output_len</span>: <span class="ident">usize</span>,
-    <span class="ident">permutation</span>: <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="attribute">#[allow(clippy::upper_case_acronyms)]
+</span><span class="doccomment">/// Pseudo-random function (PRF) instance for user defined input and output size
+</span><span class="kw">pub struct </span>PRF&lt;F: RescueParameter&gt; {
+    <span class="doccomment">/// Length of the input.
+    </span><span class="kw">pub </span>input_len: usize,
+    <span class="doccomment">/// Length of the output.
+    </span><span class="kw">pub </span>output_len: usize,
+    permutation: Permutation&lt;F&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(
-    <span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Zeroize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>,
-)]</span>
-<span class="doccomment">/// Key data-type of Pseudo-random function consisting on a single scalar</span>
-<span class="doccomment">/// element.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PrfKey</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">F</span>);
+<span class="attribute">#[derive(
+    Clone, Default, Debug, PartialEq, Eq, Hash, Zeroize, CanonicalSerialize, CanonicalDeserialize,
+)]
+</span><span class="doccomment">/// Key data-type of Pseudo-random function consisting on a single scalar
+/// element.
+</span><span class="kw">pub struct </span>PrfKey&lt;F: PrimeField&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) F);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">PrfKey</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">zeroize</span>();
+<span class="kw">impl</span>&lt;F: PrimeField&gt; Drop <span class="kw">for </span>PrfKey&lt;F&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.<span class="number">0</span>.zeroize();
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PrfKey</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">key</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">PrfKey</span>(<span class="ident">key</span>)
+<span class="kw">impl</span>&lt;F: PrimeField&gt; From&lt;F&gt; <span class="kw">for </span>PrfKey&lt;F&gt; {
+    <span class="kw">fn </span>from(key: F) -&gt; <span class="self">Self </span>{
+        PrfKey(key)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PrfKey</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// return the internal field value</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">internal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-    }
+<span class="kw">impl</span>&lt;F: PrimeField&gt; PrfKey&lt;F&gt; {
+    <span class="doccomment">/// return the internal field value
+    </span><span class="kw">pub fn </span>internal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">PRF</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Pseudo-random function instance constructor</span>
-    <span class="doccomment">/// `input_len`: number of input scalars for the function</span>
-    <span class="doccomment">/// `output_len`: number of scalar outputs for the function</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">input_len</span>: <span class="ident">usize</span>, <span class="ident">output_len</span>: <span class="ident">usize</span>) -&gt; <span class="ident">PRF</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">PRF</span> {
-            <span class="ident">input_len</span>,
-            <span class="ident">output_len</span>,
-            <span class="ident">permutation</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; PRF&lt;F&gt; {
+    <span class="doccomment">/// Pseudo-random function instance constructor
+    /// `input_len`: number of input scalars for the function
+    /// `output_len`: number of scalar outputs for the function
+    </span><span class="kw">pub fn </span>new(input_len: usize, output_len: usize) -&gt; PRF&lt;F&gt; {
+        PRF {
+            input_len,
+            output_len,
+            permutation: Default::default(),
         }
     }
 
-    <span class="doccomment">/// Key generation for Pseudo-random function</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">ark_std::rand::RngCore</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="ident">PrfKey</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">PrfKey::from</span>(<span class="ident">F::rand</span>(<span class="ident">rng</span>))
+    <span class="doccomment">/// Key generation for Pseudo-random function
+    </span><span class="kw">pub fn </span>key_gen&lt;R: ark_std::rand::RngCore&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; PrfKey&lt;F&gt; {
+        PrfKey::from(F::rand(rng))
     }
 
-    <span class="doccomment">/// Compute output of pseudo-random function for a given key and input</span>
-    <span class="doccomment">/// Return Err(PrimitivesError::ParameterError) if input length does not</span>
-    <span class="doccomment">/// match instance defined input length</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">PrfKey</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">input_len</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::ParameterError</span>(<span class="macro">format!</span>(
+    <span class="doccomment">/// Compute output of pseudo-random function for a given key and input
+    /// Return Err(PrimitivesError::ParameterError) if input length does not
+    /// match instance defined input length
+    </span><span class="kw">pub fn </span>eval(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>PrfKey&lt;F&gt;, input: <span class="kw-2">&amp;</span>[F]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PrimitivesError&gt; {
+        <span class="kw">if </span>input.len() != <span class="self">self</span>.input_len {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;PRF Error: input length ({}) does not match instance ({})&quot;</span>,
-                <span class="ident">input</span>.<span class="ident">len</span>(),
-                <span class="self">self</span>.<span class="ident">input_len</span>
+                input.len(),
+                <span class="self">self</span>.input_len
             )));
         }
-        <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the PRF instance</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">to_owned</span>();
-        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">padded</span>, <span class="ident">STATE_SIZE</span>);
-        <span class="self">self</span>.<span class="ident">permutation</span>
-            .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">padded</span>, <span class="self">self</span>.<span class="ident">output_len</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                <span class="ident">PrimitivesError::InternalError</span>(<span class="string">&quot;Bug in PRF: bad padding for input&quot;</span>.<span class="ident">to_string</span>())
+        <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the PRF instance
+        </span><span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_owned();
+        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, STATE_SIZE);
+        <span class="self">self</span>.permutation
+            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key.<span class="number">0</span>, <span class="kw-2">&amp;</span>padded, <span class="self">self</span>.output_len)
+            .map_err(|<span class="kw">_</span>| {
+                PrimitivesError::InternalError(<span class="string">&quot;Bug in PRF: bad padding for input&quot;</span>.to_string())
             })
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prf::PRF</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::One</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::vec</span>;
-    <span class="macro">macro_rules!</span> <span class="ident">test_prf</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr</span>:<span class="ident">tt</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-            <span class="kw">let</span> <span class="ident">prf</span> <span class="op">=</span> <span class="ident">PRF::new</span>(<span class="number">1</span>, <span class="number">15</span>);
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">key_gen</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-            <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::one</span>()];
-            <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-            <span class="macro">assert!</span>(<span class="ident">out</span>.<span class="ident">is_ok</span>());
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::prf::PRF;
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_ff::One;
+    <span class="kw">use </span>ark_std::vec;
+    <span class="macro">macro_rules! </span>test_prf {
+        (<span class="macro-nonterminal">$tr</span>:tt) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+            <span class="kw">let </span>prf = PRF::new(<span class="number">1</span>, <span class="number">15</span>);
+            <span class="kw">let </span>key = prf.key_gen(<span class="kw-2">&amp;mut </span>prng);
+            <span class="kw">let </span>input = <span class="macro">vec!</span>[<span class="macro-nonterminal">$tr::one</span>()];
+            <span class="kw">let </span>out = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+            <span class="macro">assert!</span>(out.is_ok());
 
-            <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-            <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-            <span class="macro">assert!</span>(<span class="ident">out</span>.<span class="ident">is_err</span>());
+            <span class="kw">let </span>input = <span class="macro">vec!</span>[];
+            <span class="kw">let </span>out = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+            <span class="macro">assert!</span>(out.is_err());
 
-            <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::one</span>(); <span class="number">2</span>];
-            <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-            <span class="macro">assert!</span>(<span class="ident">out</span>.<span class="ident">is_err</span>());
+            <span class="kw">let </span>input = <span class="macro">vec!</span>[<span class="macro-nonterminal">$tr::one</span>(); <span class="number">2</span>];
+            <span class="kw">let </span>out = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+            <span class="macro">assert!</span>(out.is_err());
         };
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">test_prf</span>() {
-        <span class="macro">test_prf!</span>(<span class="ident">FqEd254</span>);
-        <span class="macro">test_prf!</span>(<span class="ident">FqEd377</span>);
-        <span class="macro">test_prf!</span>(<span class="ident">FqEd381</span>);
-        <span class="macro">test_prf!</span>(<span class="ident">Fq377</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>test_prf() {
+        <span class="macro">test_prf!</span>(FqEd254);
+        <span class="macro">test_prf!</span>(FqEd377);
+        <span class="macro">test_prf!</span>(FqEd381);
+        <span class="macro">test_prf!</span>(Fq377);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

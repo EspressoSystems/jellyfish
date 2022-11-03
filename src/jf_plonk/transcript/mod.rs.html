@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/transcript/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/transcript/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -209,216 +209,216 @@
 <span id="209">209</span>
 <span id="210">210</span>
 <span id="211">211</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! This module implements three different types of transcripts that are</span>
-<span class="doccomment">//! supported.</span>
+</span><span class="doccomment">//! This module implements three different types of transcripts that are
+//! supported.
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">rescue</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">solidity</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">standard</span>;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>rescue;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>solidity;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>standard;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">rescue::RescueTranscript</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">solidity::SolidityTranscript</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">standard::StandardTranscript</span>;
+<span class="kw">pub use </span>rescue::RescueTranscript;
+<span class="kw">pub use </span>solidity::SolidityTranscript;
+<span class="kw">pub use </span>standard::StandardTranscript;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">errors::PlonkError</span>,
-    <span class="ident">proof_system::structs</span>::{<span class="ident">PlookupEvaluations</span>, <span class="ident">ProofEvaluations</span>, <span class="ident">VerifyingKey</span>},
+<span class="kw">use crate</span>::{
+    errors::PlonkError,
+    proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{
-    <span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span> <span class="kw">as</span> <span class="ident">SWParam</span>,
+<span class="kw">use </span>ark_ec::{
+    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters <span class="kw">as </span>SWParam,
 };
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">jf_primitives::pcs::prelude::Commitment</span>;
-<span class="kw">use</span> <span class="ident">jf_utils::to_bytes</span>;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>jf_primitives::pcs::prelude::Commitment;
+<span class="kw">use </span>jf_utils::to_bytes;
 
-<span class="doccomment">/// Defines transcript APIs.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It has an associated type `F` which defines the native</span>
-<span class="doccomment">/// field for the snark circuit.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The transcript can be either a Merlin transcript</span>
-<span class="doccomment">/// (instantiated with Sha-3/keccak), or a Rescue transcript</span>
-<span class="doccomment">/// (instantiated with Rescue hash), or a Solidity-friendly transcript</span>
-<span class="doccomment">/// (instantiated with Keccak256 hash).</span>
-<span class="doccomment">/// The second is only used for recursive snarks.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new plonk transcript.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="self">Self</span>;
+<span class="doccomment">/// Defines transcript APIs.
+///
+/// It has an associated type `F` which defines the native
+/// field for the snark circuit.
+///
+/// The transcript can be either a Merlin transcript
+/// (instantiated with Sha-3/keccak), or a Rescue transcript
+/// (instantiated with Rescue hash), or a Solidity-friendly transcript
+/// (instantiated with Keccak256 hash).
+/// The second is only used for recursive snarks.
+</span><span class="kw">pub trait </span>PlonkTranscript&lt;F&gt; {
+    <span class="doccomment">/// Create a new plonk transcript.
+    </span><span class="kw">fn </span>new(label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="self">Self</span>;
 
-    <span class="doccomment">/// Append the verification key and the public input to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_vk_and_pub_input</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">pub_input</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Append the verification key and the public input to the transcript.
+    </span><span class="kw">fn </span>append_vk_and_pub_input&lt;E, P&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;,
+        pub_input: <span class="kw-2">&amp;</span>[E::Fr],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        P: SWParam&lt;BaseField = F&gt;,
     {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;field size in bits&quot;</span>,
-            <span class="ident">E::Fr::size_in_bits</span>().<span class="ident">to_le_bytes</span>().<span class="ident">as_ref</span>(),
+            E::Fr::size_in_bits().to_le_bytes().as_ref(),
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;domain size&quot;</span>,
-            <span class="ident">vk</span>.<span class="ident">domain_size</span>.<span class="ident">to_le_bytes</span>().<span class="ident">as_ref</span>(),
+            vk.domain_size.to_le_bytes().as_ref(),
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;input size&quot;</span>,
-            <span class="ident">vk</span>.<span class="ident">num_inputs</span>.<span class="ident">to_le_bytes</span>().<span class="ident">as_ref</span>(),
+            vk.num_inputs.to_le_bytes().as_ref(),
         )<span class="question-mark">?</span>;
 
-        <span class="kw">for</span> <span class="ident">ki</span> <span class="kw">in</span> <span class="ident">vk</span>.<span class="ident">k</span>.<span class="ident">iter</span>() {
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        <span class="kw">for </span>ki <span class="kw">in </span>vk.k.iter() {
+            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
                 <span class="self">self</span>,
                 <span class="string">b&quot;wire subsets separators&quot;</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">ki</span>)<span class="question-mark">?</span>,
+                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(ki)<span class="question-mark">?</span>,
             )<span class="question-mark">?</span>;
         }
-        <span class="kw">for</span> <span class="ident">selector_com</span> <span class="kw">in</span> <span class="ident">vk</span>.<span class="ident">selector_comms</span>.<span class="ident">iter</span>() {
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        <span class="kw">for </span>selector_com <span class="kw">in </span>vk.selector_comms.iter() {
+            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
                 <span class="self">self</span>,
                 <span class="string">b&quot;selector commitments&quot;</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">selector_com</span>)<span class="question-mark">?</span>,
+                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(selector_com)<span class="question-mark">?</span>,
             )<span class="question-mark">?</span>;
         }
 
-        <span class="kw">for</span> <span class="ident">sigma_comms</span> <span class="kw">in</span> <span class="ident">vk</span>.<span class="ident">sigma_comms</span>.<span class="ident">iter</span>() {
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        <span class="kw">for </span>sigma_comms <span class="kw">in </span>vk.sigma_comms.iter() {
+            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
                 <span class="self">self</span>,
                 <span class="string">b&quot;sigma commitments&quot;</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">sigma_comms</span>)<span class="question-mark">?</span>,
+                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(sigma_comms)<span class="question-mark">?</span>,
             )<span class="question-mark">?</span>;
         }
 
-        <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">pub_input</span>.<span class="ident">iter</span>() {
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        <span class="kw">for </span>input <span class="kw">in </span>pub_input.iter() {
+            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
                 <span class="self">self</span>,
                 <span class="string">b&quot;public input&quot;</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">input</span>)<span class="question-mark">?</span>,
+                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(input)<span class="question-mark">?</span>,
             )<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Append the message to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>], <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Append the message to the transcript.
+    </span><span class="kw">fn </span>append_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8], msg: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;;
 
-    <span class="doccomment">/// Append a slice of commitments to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_commitments</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">comms</span>: <span class="kw-2">&amp;</span>[<span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Append a slice of commitments to the transcript.
+    </span><span class="kw">fn </span>append_commitments&lt;E, P&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        comms: <span class="kw-2">&amp;</span>[Commitment&lt;E&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        P: SWParam&lt;BaseField = F&gt;,
     {
-        <span class="kw">for</span> <span class="ident">comm</span> <span class="kw">in</span> <span class="ident">comms</span>.<span class="ident">iter</span>() {
-            <span class="self">self</span>.<span class="ident">append_commitment</span>(<span class="ident">label</span>, <span class="ident">comm</span>)<span class="question-mark">?</span>;
+        <span class="kw">for </span>comm <span class="kw">in </span>comms.iter() {
+            <span class="self">self</span>.append_commitment(label, comm)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Append a single commitment to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_commitment</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">comm</span>: <span class="kw-2">&amp;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWParam</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Append a single commitment to the transcript.
+    </span><span class="kw">fn </span>append_commitment&lt;E, P&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        comm: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        P: SWParam&lt;BaseField = F&gt;,
     {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(<span class="self">self</span>, <span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">comm</span>)<span class="question-mark">?</span>)
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, label, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(comm)<span class="question-mark">?</span>)
     }
 
-    <span class="doccomment">/// Append a challenge to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">challenge</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Append a challenge to the transcript.
+    </span><span class="kw">fn </span>append_challenge&lt;E&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        challenge: <span class="kw-2">&amp;</span>E::Fr,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F&gt;,
     {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(<span class="self">self</span>, <span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">challenge</span>)<span class="question-mark">?</span>)
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, label, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(challenge)<span class="question-mark">?</span>)
     }
 
-    <span class="doccomment">/// Append a proof evaluation to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_proof_evaluations</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">w_eval</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">wires_evals</span> {
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(<span class="self">self</span>, <span class="string">b&quot;wire_evals&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">w_eval</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Append a proof evaluation to the transcript.
+    </span><span class="kw">fn </span>append_proof_evaluations&lt;E: PairingEngine&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::Fr&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
+        <span class="kw">for </span>w_eval <span class="kw">in </span><span class="kw-2">&amp;</span>evals.wires_evals {
+            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, <span class="string">b&quot;wire_evals&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(w_eval)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         }
-        <span class="kw">for</span> <span class="ident">sigma_eval</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">wire_sigma_evals</span> {
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        <span class="kw">for </span>sigma_eval <span class="kw">in </span><span class="kw-2">&amp;</span>evals.wire_sigma_evals {
+            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
                 <span class="self">self</span>,
                 <span class="string">b&quot;wire_sigma_evals&quot;</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">sigma_eval</span>)<span class="question-mark">?</span>,
+                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(sigma_eval)<span class="question-mark">?</span>,
             )<span class="question-mark">?</span>;
         }
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;perm_next_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">perm_next_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.perm_next_eval)<span class="question-mark">?</span>,
         )
     }
 
-    <span class="doccomment">/// Append the plookup evaluation to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">append_plookup_evaluations</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+    <span class="doccomment">/// Append the plookup evaluation to the transcript.
+    </span><span class="kw">fn </span>append_plookup_evaluations&lt;E: PairingEngine&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        evals: <span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::Fr&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;lookup_table_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">range_table_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.range_table_eval)<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;h_1_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">h_1_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.h_1_eval)<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;prod_next_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">prod_next_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.prod_next_eval)<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;lookup_table_next_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">range_table_next_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.range_table_next_eval)<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;h_1_next_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">h_1_next_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.h_1_next_eval)<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
-        <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::append_message</span>(
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
             <span class="self">self</span>,
             <span class="string">b&quot;h_2_next_eval&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">h_2_next_eval</span>)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.h_2_next_eval)<span class="question-mark">?</span>,
         )
     }
 
-    <span class="doccomment">/// Generate the challenge for the current transcript,</span>
-    <span class="doccomment">/// and then append it to the transcript.</span>
-    <span class="kw">fn</span> <span class="ident">get_and_append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">E::Fr</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span>;
+    <span class="doccomment">/// Generate the challenge for the current transcript,
+    /// and then append it to the transcript.
+    </span><span class="kw">fn </span>get_and_append_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

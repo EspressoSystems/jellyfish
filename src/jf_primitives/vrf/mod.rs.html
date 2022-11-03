@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vrf/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vrf/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -98,105 +98,105 @@
 <span id="98">98</span>
 <span id="99">99</span>
 <span id="100">100</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Module for verifiable random functions.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Module for verifiable random functions.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
-<span class="kw">use</span> <span class="ident">ark_std::rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>};
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">blsvrf</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ecvrf</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
+<span class="kw">use </span>ark_std::rand::{CryptoRng, RngCore};
+<span class="kw">pub mod </span>blsvrf;
+<span class="kw">pub mod </span>ecvrf;
 
-<span class="doccomment">/// A trait for VRF proof, evaluation and verification.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">VrfHasher</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// ciphersuite identifier</span>
-    <span class="kw">const</span> <span class="ident">CS_ID</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
+<span class="doccomment">/// A trait for VRF proof, evaluation and verification.
+</span><span class="kw">pub trait </span>Vrf&lt;VrfHasher&gt; {
+    <span class="doccomment">/// ciphersuite identifier
+    </span><span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
 
-    <span class="doccomment">/// Public parameters</span>
-    <span class="kw">type</span> <span class="ident">PublicParameter</span>;
+    <span class="doccomment">/// Public parameters
+    </span><span class="kw">type </span>PublicParameter;
 
-    <span class="doccomment">/// VRF public key.</span>
-    <span class="kw">type</span> <span class="ident">PublicKey</span>;
+    <span class="doccomment">/// VRF public key.
+    </span><span class="kw">type </span>PublicKey;
 
-    <span class="doccomment">/// VRF secret key.</span>
-    <span class="kw">type</span> <span class="ident">SecretKey</span>;
+    <span class="doccomment">/// VRF secret key.
+    </span><span class="kw">type </span>SecretKey;
 
-    <span class="doccomment">/// VRF signature.</span>
-    <span class="kw">type</span> <span class="ident">Proof</span>;
+    <span class="doccomment">/// VRF signature.
+    </span><span class="kw">type </span>Proof;
 
-    <span class="doccomment">/// The input of VRF proof.</span>
-    <span class="kw">type</span> <span class="ident">Input</span>;
+    <span class="doccomment">/// The input of VRF proof.
+    </span><span class="kw">type </span>Input;
 
-    <span class="doccomment">/// The output of VRF evaluation.</span>
-    <span class="kw">type</span> <span class="ident">Output</span>;
+    <span class="doccomment">/// The output of VRF evaluation.
+    </span><span class="kw">type </span>Output;
 
-    <span class="doccomment">/// generate public parameters from RNG.</span>
-    <span class="doccomment">/// If the RNG is not presented, use the default group generator.</span>
-    <span class="comment">// FIXME: the API looks a bit strange when the default generator is used.</span>
-    <span class="comment">// For example:</span>
-    <span class="comment">//   `S::param_gen::&lt;StdRng&gt;(None)`</span>
-    <span class="comment">// wheere `StdRng` is redundent.</span>
-    <span class="kw">fn</span> <span class="ident">param_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">R</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// generate public parameters from RNG.
+    /// If the RNG is not presented, use the default group generator.
+    </span><span class="comment">// FIXME: the API looks a bit strange when the default generator is used.
+    // For example:
+    //   `S::param_gen::&lt;StdRng&gt;(None)`
+    // wheere `StdRng` is redundent.
+    </span><span class="kw">fn </span>param_gen&lt;R: CryptoRng + RngCore&gt;(
+        prng: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>R&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::PublicParameter, PrimitivesError&gt;;
 
-    <span class="doccomment">/// Creates a pair of VRF public and private keys.</span>
-    <span class="kw">fn</span> <span class="ident">key_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::SecretKey</span>, <span class="ident"><span class="self">Self</span>::PublicKey</span>), <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Creates a pair of VRF public and private keys.
+    </span><span class="kw">fn </span>key_gen&lt;R: CryptoRng + RngCore&gt;(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        prng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::SecretKey, <span class="self">Self</span>::PublicKey), PrimitivesError&gt;;
 
-    <span class="doccomment">/// Creates the VRF proof associated with a VRF secret key.</span>
-    <span class="kw">fn</span> <span class="ident">prove</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">secret_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::SecretKey</span>,
-        <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Input</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Creates the VRF proof associated with a VRF secret key.
+    </span><span class="kw">fn </span>prove&lt;R: CryptoRng + RngCore&gt;(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        secret_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::SecretKey,
+        input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
+        prng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Proof, PrimitivesError&gt;;
 
-    <span class="doccomment">/// Computes the VRF output associated with a VRF proof.</span>
-    <span class="kw">fn</span> <span class="ident">evaluate</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Proof</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Computes the VRF output associated with a VRF proof.
+    </span><span class="kw">fn </span>evaluate(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt;;
 
-    <span class="doccomment">/// Verifies a VRF proof.</span>
-    <span class="kw">fn</span> <span class="ident">verify</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Proof</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicKey</span>,
-        <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Input</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Verifies a VRF proof.
+    </span><span class="kw">fn </span>verify(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
+        public_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicKey,
+        input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PrimitivesError&gt;;
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">rand::prelude::StdRng</span>, <span class="ident">test_rng</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_std::{rand::prelude::StdRng, test_rng};
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">sign_and_verify</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>) {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">V::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">V::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">vrf_proof</span> <span class="op">=</span> <span class="ident">V::prove</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">_vrf_output</span> <span class="op">=</span> <span class="ident">V::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">V::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">message</span>).<span class="ident">unwrap</span>());
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sign_and_verify&lt;V: Vrf&lt;H&gt;, H&gt;(message: <span class="kw-2">&amp;</span>V::Input) {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">let </span>parameters = V::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
+        <span class="kw">let </span>(sk, pk) = V::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>vrf_proof = V::prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="kw">let </span>_vrf_output = V::evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
+        <span class="macro">assert!</span>(V::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, message).unwrap());
 
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">V::param_gen</span>::<span class="op">&lt;</span><span class="ident">StdRng</span><span class="op">&gt;</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">V::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">vrf_proof</span> <span class="op">=</span> <span class="ident">V::prove</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">_vrf_output</span> <span class="op">=</span> <span class="ident">V::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>parameters = V::param_gen::&lt;StdRng&gt;(<span class="prelude-val">None</span>).unwrap();
+        <span class="kw">let </span>(sk, pk) = V::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>vrf_proof = V::prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="kw">let </span>_vrf_output = V::evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
 
-        <span class="macro">assert!</span>(<span class="ident">V::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">message</span>).<span class="ident">unwrap</span>());
+        <span class="macro">assert!</span>(V::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, message).unwrap());
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">failed_verification</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Vrf</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>, <span class="ident">bad_message</span>: <span class="kw-2">&amp;</span><span class="ident">V::Input</span>) {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">V::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">V::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">vrf_proof</span> <span class="op">=</span> <span class="ident">V::prove</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">_vrf_output</span> <span class="op">=</span> <span class="ident">V::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>).<span class="ident">unwrap</span>();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>failed_verification&lt;V: Vrf&lt;H&gt;, H&gt;(message: <span class="kw-2">&amp;</span>V::Input, bad_message: <span class="kw-2">&amp;</span>V::Input) {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">let </span>parameters = V::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
+        <span class="kw">let </span>(sk, pk) = V::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>vrf_proof = V::prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="kw">let </span>_vrf_output = V::evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">V::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">vrf_proof</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">bad_message</span>).<span class="ident">unwrap</span>());
+        <span class="macro">assert!</span>(!V::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, bad_message).unwrap());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

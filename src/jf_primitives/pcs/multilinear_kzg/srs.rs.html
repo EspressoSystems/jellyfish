@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/srs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>srs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/srs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>srs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -272,279 +272,279 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implementing Structured Reference Strings for multilinear polynomial KZG</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pcs</span>::{<span class="ident">prelude::PCSError</span>, <span class="ident">StructuredReferenceString</span>};
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">msm::FixedBaseMSM</span>, <span class="ident">AffineCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">ProjectiveCurve</span>};
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">Field</span>, <span class="ident">PrimeField</span>};
-<span class="kw">use</span> <span class="ident">ark_poly::DenseMultilinearExtension</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">Read</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">collections::LinkedList</span>,
-    <span class="ident">end_timer</span>, <span class="ident">format</span>,
-    <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">start_timer</span>,
-    <span class="ident">string::ToString</span>,
-    <span class="ident">vec::Vec</span>,
-    <span class="ident">UniformRand</span>,
+</span><span class="doccomment">//! Implementing Structured Reference Strings for multilinear polynomial KZG
+</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{prelude::PCSError, StructuredReferenceString};
+<span class="kw">use </span>ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+<span class="kw">use </span>ark_ff::{Field, PrimeField};
+<span class="kw">use </span>ark_poly::DenseMultilinearExtension;
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+<span class="kw">use </span>ark_std::{
+    collections::LinkedList,
+    end_timer, format,
+    rand::{CryptoRng, RngCore},
+    start_timer,
+    string::ToString,
+    vec::Vec,
+    UniformRand,
 };
-<span class="kw">use</span> <span class="ident">core::iter::FromIterator</span>;
+<span class="kw">use </span>core::iter::FromIterator;
 
-<span class="doccomment">/// Evaluations over {0,1}^n for G1 or G2</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Evaluations</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">AffineCurve</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The evaluations.</span>
-    <span class="kw">pub</span> <span class="ident">evals</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Evaluations over {0,1}^n for G1 or G2
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
+</span><span class="kw">pub struct </span>Evaluations&lt;C: AffineCurve&gt; {
+    <span class="doccomment">/// The evaluations.
+    </span><span class="kw">pub </span>evals: Vec&lt;C&gt;,
 }
 
-<span class="doccomment">/// Universal Parameter</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultilinearUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// prover parameters</span>
-    <span class="kw">pub</span> <span class="ident">prover_param</span>: <span class="ident">MultilinearProverParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**</span>
-    <span class="kw">pub</span> <span class="ident">h_mask</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::G2Affine</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Universal Parameter
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
+</span><span class="kw">pub struct </span>MultilinearUniversalParams&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// prover parameters
+    </span><span class="kw">pub </span>prover_param: MultilinearProverParam&lt;E&gt;,
+    <span class="doccomment">/// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**
+    </span><span class="kw">pub </span>h_mask: Vec&lt;E::G2Affine&gt;,
 }
 
-<span class="doccomment">/// Prover Parameters</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultilinearProverParam</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// number of variables</span>
-    <span class="kw">pub</span> <span class="ident">num_vars</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// `pp_{num_vars}`, `pp_{num_vars - 1}`, `pp_{num_vars - 2}`, ..., defined</span>
-    <span class="doccomment">/// by XZZPD19</span>
-    <span class="kw">pub</span> <span class="ident">powers_of_g</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Evaluations</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// generator for G1</span>
-    <span class="kw">pub</span> <span class="ident">g</span>: <span class="ident">E::G1Affine</span>,
-    <span class="doccomment">/// generator for G2</span>
-    <span class="kw">pub</span> <span class="ident">h</span>: <span class="ident">E::G2Affine</span>,
+<span class="doccomment">/// Prover Parameters
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
+</span><span class="kw">pub struct </span>MultilinearProverParam&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// number of variables
+    </span><span class="kw">pub </span>num_vars: usize,
+    <span class="doccomment">/// `pp_{num_vars}`, `pp_{num_vars - 1}`, `pp_{num_vars - 2}`, ..., defined
+    /// by XZZPD19
+    </span><span class="kw">pub </span>powers_of_g: Vec&lt;Evaluations&lt;E::G1Affine&gt;&gt;,
+    <span class="doccomment">/// generator for G1
+    </span><span class="kw">pub </span>g: E::G1Affine,
+    <span class="doccomment">/// generator for G2
+    </span><span class="kw">pub </span>h: E::G2Affine,
 }
 
-<span class="doccomment">/// Verifier Parameters</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultilinearVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// number of variables</span>
-    <span class="kw">pub</span> <span class="ident">num_vars</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// generator of G1</span>
-    <span class="kw">pub</span> <span class="ident">g</span>: <span class="ident">E::G1Affine</span>,
-    <span class="doccomment">/// generator of G2</span>
-    <span class="kw">pub</span> <span class="ident">h</span>: <span class="ident">E::G2Affine</span>,
-    <span class="doccomment">/// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**</span>
-    <span class="kw">pub</span> <span class="ident">h_mask</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::G2Affine</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Verifier Parameters
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
+</span><span class="kw">pub struct </span>MultilinearVerifierParam&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// number of variables
+    </span><span class="kw">pub </span>num_vars: usize,
+    <span class="doccomment">/// generator of G1
+    </span><span class="kw">pub </span>g: E::G1Affine,
+    <span class="doccomment">/// generator of G2
+    </span><span class="kw">pub </span>h: E::G2Affine,
+    <span class="doccomment">/// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**
+    </span><span class="kw">pub </span>h_mask: Vec&lt;E::G2Affine&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">StructuredReferenceString</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MultilinearUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">ProverParam</span> <span class="op">=</span> <span class="ident">MultilinearProverParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">VerifierParam</span> <span class="op">=</span> <span class="ident">MultilinearVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; StructuredReferenceString&lt;E&gt; <span class="kw">for </span>MultilinearUniversalParams&lt;E&gt; {
+    <span class="kw">type </span>ProverParam = MultilinearProverParam&lt;E&gt;;
+    <span class="kw">type </span>VerifierParam = MultilinearVerifierParam&lt;E&gt;;
 
-    <span class="doccomment">/// Extract the prover parameters from the public parameters.</span>
-    <span class="kw">fn</span> <span class="ident">extract_prover_param</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">supported_num_vars</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::ProverParam</span> {
-        <span class="kw">let</span> <span class="ident">to_reduce</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">num_vars</span> <span class="op">-</span> <span class="ident">supported_num_vars</span>;
+    <span class="doccomment">/// Extract the prover parameters from the public parameters.
+    </span><span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_num_vars: usize) -&gt; <span class="self">Self</span>::ProverParam {
+        <span class="kw">let </span>to_reduce = <span class="self">self</span>.prover_param.num_vars - supported_num_vars;
 
-        <span class="ident"><span class="self">Self</span>::ProverParam</span> {
-            <span class="ident">powers_of_g</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">powers_of_g</span>[<span class="ident">to_reduce</span>..].<span class="ident">to_vec</span>(),
-            <span class="ident">g</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">g</span>,
-            <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">h</span>,
-            <span class="ident">num_vars</span>: <span class="ident">supported_num_vars</span>,
+        <span class="self">Self</span>::ProverParam {
+            powers_of_g: <span class="self">self</span>.prover_param.powers_of_g[to_reduce..].to_vec(),
+            g: <span class="self">self</span>.prover_param.g,
+            h: <span class="self">self</span>.prover_param.h,
+            num_vars: supported_num_vars,
         }
     }
 
-    <span class="doccomment">/// Extract the verifier parameters from the public parameters.</span>
-    <span class="kw">fn</span> <span class="ident">extract_verifier_param</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">supported_num_vars</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::VerifierParam</span> {
-        <span class="kw">let</span> <span class="ident">to_reduce</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">num_vars</span> <span class="op">-</span> <span class="ident">supported_num_vars</span>;
-        <span class="ident"><span class="self">Self</span>::VerifierParam</span> {
-            <span class="ident">num_vars</span>: <span class="ident">supported_num_vars</span>,
-            <span class="ident">g</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">g</span>,
-            <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">h</span>,
-            <span class="ident">h_mask</span>: <span class="self">self</span>.<span class="ident">h_mask</span>[<span class="ident">to_reduce</span>..].<span class="ident">to_vec</span>(),
+    <span class="doccomment">/// Extract the verifier parameters from the public parameters.
+    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_num_vars: usize) -&gt; <span class="self">Self</span>::VerifierParam {
+        <span class="kw">let </span>to_reduce = <span class="self">self</span>.prover_param.num_vars - supported_num_vars;
+        <span class="self">Self</span>::VerifierParam {
+            num_vars: supported_num_vars,
+            g: <span class="self">self</span>.prover_param.g,
+            h: <span class="self">self</span>.prover_param.h,
+            h_mask: <span class="self">self</span>.h_mask[to_reduce..].to_vec(),
         }
     }
 
-    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters</span>
-    <span class="doccomment">/// for multilinear polynomials to the given `supported_num_vars`, and</span>
-    <span class="doccomment">/// returns committer key and verifier key. `supported_num_vars` should</span>
-    <span class="doccomment">/// be in range `1..=params.num_vars`</span>
-    <span class="kw">fn</span> <span class="ident">trim</span>(
+    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters
+    /// for multilinear polynomials to the given `supported_num_vars`, and
+    /// returns committer key and verifier key. `supported_num_vars` should
+    /// be in range `1..=params.num_vars`
+    </span><span class="kw">fn </span>trim(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">supported_num_vars</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::ProverParam</span>, <span class="ident"><span class="self">Self</span>::VerifierParam</span>), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">supported_num_vars</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">num_vars</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(<span class="macro">format!</span>(
+        supported_num_vars: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
+        <span class="kw">if </span>supported_num_vars &gt; <span class="self">self</span>.prover_param.num_vars {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
                 <span class="string">&quot;SRS does not support target number of vars {}&quot;</span>,
-                <span class="ident">supported_num_vars</span>
+                supported_num_vars
             )));
         }
 
-        <span class="kw">let</span> <span class="ident">to_reduce</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">num_vars</span> <span class="op">-</span> <span class="ident">supported_num_vars</span>;
-        <span class="kw">let</span> <span class="ident">ck</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ProverParam</span> {
-            <span class="ident">powers_of_g</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">powers_of_g</span>[<span class="ident">to_reduce</span>..].<span class="ident">to_vec</span>(),
-            <span class="ident">g</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">g</span>,
-            <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">h</span>,
-            <span class="ident">num_vars</span>: <span class="ident">supported_num_vars</span>,
+        <span class="kw">let </span>to_reduce = <span class="self">self</span>.prover_param.num_vars - supported_num_vars;
+        <span class="kw">let </span>ck = <span class="self">Self</span>::ProverParam {
+            powers_of_g: <span class="self">self</span>.prover_param.powers_of_g[to_reduce..].to_vec(),
+            g: <span class="self">self</span>.prover_param.g,
+            h: <span class="self">self</span>.prover_param.h,
+            num_vars: supported_num_vars,
         };
-        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::VerifierParam</span> {
-            <span class="ident">num_vars</span>: <span class="ident">supported_num_vars</span>,
-            <span class="ident">g</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">g</span>,
-            <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">prover_param</span>.<span class="ident">h</span>,
-            <span class="ident">h_mask</span>: <span class="self">self</span>.<span class="ident">h_mask</span>[<span class="ident">to_reduce</span>..].<span class="ident">to_vec</span>(),
+        <span class="kw">let </span>vk = <span class="self">Self</span>::VerifierParam {
+            num_vars: supported_num_vars,
+            g: <span class="self">self</span>.prover_param.g,
+            h: <span class="self">self</span>.prover_param.h,
+            h_mask: <span class="self">self</span>.h_mask[to_reduce..].to_vec(),
         };
-        <span class="prelude-val">Ok</span>((<span class="ident">ck</span>, <span class="ident">vk</span>))
+        <span class="prelude-val">Ok</span>((ck, vk))
     }
 
-    <span class="doccomment">/// Build SRS for testing.</span>
-    <span class="doccomment">/// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.</span>
-    <span class="doccomment">/// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.</span>
-    <span class="kw">fn</span> <span class="ident">gen_srs_for_testing</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-        <span class="ident">num_vars</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">num_vars</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-                <span class="string">&quot;constant polynomial not supported&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Build SRS for testing.
+    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
+    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
+        rng: <span class="kw-2">&amp;mut </span>R,
+        num_vars: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+        <span class="kw">if </span>num_vars == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+                <span class="string">&quot;constant polynomial not supported&quot;</span>.to_string(),
             ));
         }
 
-        <span class="kw">let</span> <span class="ident">total_timer</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;SRS generation&quot;</span>);
+        <span class="kw">let </span>total_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;SRS generation&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">pp_generation_timer</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Prover Param generation&quot;</span>);
+        <span class="kw">let </span>pp_generation_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Prover Param generation&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">E::G1Projective::rand</span>(<span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">E::G2Projective::rand</span>(<span class="ident">rng</span>);
+        <span class="kw">let </span>g = E::G1Projective::rand(rng);
+        <span class="kw">let </span>h = E::G2Projective::rand(rng);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">powers_of_g</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>powers_of_g = Vec::new();
 
-        <span class="kw">let</span> <span class="ident">t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">num_vars</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">scalar_bits</span> <span class="op">=</span> <span class="ident">E::Fr::size_in_bits</span>();
+        <span class="kw">let </span>t: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..num_vars).map(|<span class="kw">_</span>| E::Fr::rand(rng)).collect();
+        <span class="kw">let </span>scalar_bits = E::Fr::size_in_bits();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">eq</span>: <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">DenseMultilinearExtension</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-            <span class="ident">LinkedList::from_iter</span>(<span class="ident">eq_extension</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>).<span class="ident">into_iter</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">eq_arr</span> <span class="op">=</span> <span class="ident">LinkedList::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">eq</span>.<span class="ident">pop_back</span>().<span class="ident">unwrap</span>().<span class="ident">evaluations</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>eq: LinkedList&lt;DenseMultilinearExtension&lt;E::Fr&gt;&gt; =
+            LinkedList::from_iter(eq_extension(<span class="kw-2">&amp;</span>t).into_iter());
+        <span class="kw">let </span><span class="kw-2">mut </span>eq_arr = LinkedList::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>base = eq.pop_back().unwrap().evaluations;
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="ident">num_vars</span>).<span class="ident">rev</span>() {
-            <span class="ident">eq_arr</span>.<span class="ident">push_front</span>(<span class="ident">remove_dummy_variable</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>, <span class="ident">i</span>)<span class="question-mark">?</span>);
-            <span class="kw">if</span> <span class="ident">i</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">let</span> <span class="ident">mul</span> <span class="op">=</span> <span class="ident">eq</span>.<span class="ident">pop_back</span>().<span class="ident">unwrap</span>().<span class="ident">evaluations</span>;
-                <span class="ident">base</span> <span class="op">=</span> <span class="ident">base</span>
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">zip</span>(<span class="ident">mul</span>.<span class="ident">into_iter</span>())
-                    .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="op">|</span> <span class="ident">a</span> <span class="op">*</span> <span class="ident">b</span>)
-                    .<span class="ident">collect</span>();
+        <span class="kw">for </span>i <span class="kw">in </span>(<span class="number">0</span>..num_vars).rev() {
+            eq_arr.push_front(remove_dummy_variable(<span class="kw-2">&amp;</span>base, i)<span class="question-mark">?</span>);
+            <span class="kw">if </span>i != <span class="number">0 </span>{
+                <span class="kw">let </span>mul = eq.pop_back().unwrap().evaluations;
+                base = base
+                    .into_iter()
+                    .zip(mul.into_iter())
+                    .map(|(a, b)| a * b)
+                    .collect();
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pp_powers</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_scalars</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_vars</span> {
-            <span class="kw">let</span> <span class="ident">eq</span> <span class="op">=</span> <span class="ident">eq_arr</span>.<span class="ident">pop_front</span>().<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">pp_k_powers</span> <span class="op">=</span> (<span class="number">0</span>..(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">num_vars</span> <span class="op">-</span> <span class="ident">i</span>))).<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">eq</span>[<span class="ident">x</span>]);
-            <span class="ident">pp_powers</span>.<span class="ident">extend</span>(<span class="ident">pp_k_powers</span>);
-            <span class="ident">total_scalars</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">num_vars</span> <span class="op">-</span> <span class="ident">i</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>pp_powers = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_scalars = <span class="number">0</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_vars {
+            <span class="kw">let </span>eq = eq_arr.pop_front().unwrap();
+            <span class="kw">let </span>pp_k_powers = (<span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; (num_vars - i))).map(|x| eq[x]);
+            pp_powers.extend(pp_k_powers);
+            total_scalars += <span class="number">1 </span>&lt;&lt; (num_vars - i);
         }
-        <span class="kw">let</span> <span class="ident">window_size</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::get_mul_window_size</span>(<span class="ident">total_scalars</span>);
-        <span class="kw">let</span> <span class="ident">g_table</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::get_window_table</span>(<span class="ident">scalar_bits</span>, <span class="ident">window_size</span>, <span class="ident">g</span>);
+        <span class="kw">let </span>window_size = FixedBaseMSM::get_mul_window_size(total_scalars);
+        <span class="kw">let </span>g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
 
-        <span class="kw">let</span> <span class="ident">pp_g</span> <span class="op">=</span> <span class="ident">E::G1Projective::batch_normalization_into_affine</span>(
-            <span class="kw-2">&amp;</span><span class="ident">FixedBaseMSM::multi_scalar_mul</span>(<span class="ident">scalar_bits</span>, <span class="ident">window_size</span>, <span class="kw-2">&amp;</span><span class="ident">g_table</span>, <span class="kw-2">&amp;</span><span class="ident">pp_powers</span>),
+        <span class="kw">let </span>pp_g = E::G1Projective::batch_normalization_into_affine(
+            <span class="kw-2">&amp;</span>FixedBaseMSM::multi_scalar_mul(scalar_bits, window_size, <span class="kw-2">&amp;</span>g_table, <span class="kw-2">&amp;</span>pp_powers),
         );
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">start</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_vars</span> {
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">num_vars</span> <span class="op">-</span> <span class="ident">i</span>);
-            <span class="kw">let</span> <span class="ident">pp_k_g</span> <span class="op">=</span> <span class="ident">Evaluations</span> {
-                <span class="ident">evals</span>: <span class="ident">pp_g</span>[<span class="ident">start</span>..(<span class="ident">start</span> <span class="op">+</span> <span class="ident">size</span>)].<span class="ident">to_vec</span>(),
+        <span class="kw">let </span><span class="kw-2">mut </span>start = <span class="number">0</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_vars {
+            <span class="kw">let </span>size = <span class="number">1 </span>&lt;&lt; (num_vars - i);
+            <span class="kw">let </span>pp_k_g = Evaluations {
+                evals: pp_g[start..(start + size)].to_vec(),
             };
-            <span class="ident">powers_of_g</span>.<span class="ident">push</span>(<span class="ident">pp_k_g</span>);
-            <span class="ident">start</span> <span class="op">+</span><span class="op">=</span> <span class="ident">size</span>;
+            powers_of_g.push(pp_k_g);
+            start += size;
         }
 
-        <span class="kw">let</span> <span class="ident">pp</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ProverParam</span> {
-            <span class="ident">num_vars</span>,
-            <span class="ident">g</span>: <span class="ident">g</span>.<span class="ident">into_affine</span>(),
-            <span class="ident">h</span>: <span class="ident">h</span>.<span class="ident">into_affine</span>(),
-            <span class="ident">powers_of_g</span>,
+        <span class="kw">let </span>pp = <span class="self">Self</span>::ProverParam {
+            num_vars,
+            g: g.into_affine(),
+            h: h.into_affine(),
+            powers_of_g,
         };
 
-        <span class="macro">end_timer!</span>(<span class="ident">pp_generation_timer</span>);
+        <span class="macro">end_timer!</span>(pp_generation_timer);
 
-        <span class="kw">let</span> <span class="ident">vp_generation_timer</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;VP generation&quot;</span>);
-        <span class="kw">let</span> <span class="ident">h_mask</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">window_size</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::get_mul_window_size</span>(<span class="ident">num_vars</span>);
-            <span class="kw">let</span> <span class="ident">h_table</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::get_window_table</span>(<span class="ident">scalar_bits</span>, <span class="ident">window_size</span>, <span class="ident">h</span>);
-            <span class="ident">E::G2Projective::batch_normalization_into_affine</span>(<span class="kw-2">&amp;</span><span class="ident">FixedBaseMSM::multi_scalar_mul</span>(
-                <span class="ident">scalar_bits</span>,
-                <span class="ident">window_size</span>,
-                <span class="kw-2">&amp;</span><span class="ident">h_table</span>,
-                <span class="kw-2">&amp;</span><span class="ident">t</span>,
+        <span class="kw">let </span>vp_generation_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;VP generation&quot;</span>);
+        <span class="kw">let </span>h_mask = {
+            <span class="kw">let </span>window_size = FixedBaseMSM::get_mul_window_size(num_vars);
+            <span class="kw">let </span>h_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, h);
+            E::G2Projective::batch_normalization_into_affine(<span class="kw-2">&amp;</span>FixedBaseMSM::multi_scalar_mul(
+                scalar_bits,
+                window_size,
+                <span class="kw-2">&amp;</span>h_table,
+                <span class="kw-2">&amp;</span>t,
             ))
         };
-        <span class="macro">end_timer!</span>(<span class="ident">vp_generation_timer</span>);
-        <span class="macro">end_timer!</span>(<span class="ident">total_timer</span>);
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">prover_param</span>: <span class="ident">pp</span>,
-            <span class="ident">h_mask</span>,
+        <span class="macro">end_timer!</span>(vp_generation_timer);
+        <span class="macro">end_timer!</span>(total_timer);
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            prover_param: pp,
+            h_mask,
         })
     }
 }
 
-<span class="doccomment">/// fix first `pad` variables of `poly` represented in evaluation form to zero</span>
-<span class="kw">fn</span> <span class="ident">remove_dummy_variable</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span>(<span class="ident">poly</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">pad</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">pad</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">poly</span>.<span class="ident">to_vec</span>());
+<span class="doccomment">/// fix first `pad` variables of `poly` represented in evaluation form to zero
+</span><span class="kw">fn </span>remove_dummy_variable&lt;F: Field&gt;(poly: <span class="kw-2">&amp;</span>[F], pad: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PCSError&gt; {
+    <span class="kw">if </span>pad == <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(poly.to_vec());
     }
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">poly</span>.<span class="ident">len</span>().<span class="ident">is_power_of_two</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-            <span class="string">&quot;Size of polynomial should be power of two.&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="kw">if </span>!poly.len().is_power_of_two() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+            <span class="string">&quot;Size of polynomial should be power of two.&quot;</span>.to_string(),
         ));
     }
-    <span class="kw">let</span> <span class="ident">nv</span> <span class="op">=</span> <span class="ident">ark_std::log2</span>(<span class="ident">poly</span>.<span class="ident">len</span>()) <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="ident">pad</span>;
+    <span class="kw">let </span>nv = ark_std::log2(poly.len()) <span class="kw">as </span>usize - pad;
 
-    <span class="prelude-val">Ok</span>((<span class="number">0</span>..(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">nv</span>)).<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">poly</span>[<span class="ident">x</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">pad</span>]).<span class="ident">collect</span>())
+    <span class="prelude-val">Ok</span>((<span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; nv)).map(|x| poly[x &lt;&lt; pad]).collect())
 }
 
-<span class="doccomment">/// Generate eq(t,x), a product of multilinear polynomials with fixed t.</span>
-<span class="doccomment">/// eq(a,b) is takes extensions of a,b in {0,1}^num_vars such that if a and b in</span>
-<span class="doccomment">/// {0,1}^num_vars are equal then this polynomial evaluates to 1.</span>
-<span class="kw">fn</span> <span class="ident">eq_extension</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">t</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DenseMultilinearExtension</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;eq extension&quot;</span>);
+<span class="doccomment">/// Generate eq(t,x), a product of multilinear polynomials with fixed t.
+/// eq(a,b) is takes extensions of a,b in {0,1}^num_vars such that if a and b in
+/// {0,1}^num_vars are equal then this polynomial evaluates to 1.
+</span><span class="kw">fn </span>eq_extension&lt;F: PrimeField&gt;(t: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;DenseMultilinearExtension&lt;F&gt;&gt; {
+    <span class="kw">let </span>start = <span class="macro">start_timer!</span>(|| <span class="string">&quot;eq extension&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">dim</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">len</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">ti</span>) <span class="kw">in</span> <span class="ident">t</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">take</span>(<span class="ident">dim</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">poly</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">dim</span>);
-        <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">dim</span>) {
-            <span class="kw">let</span> <span class="ident">xi</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">1</span> { <span class="ident">F::one</span>() } <span class="kw">else</span> { <span class="ident">F::zero</span>() };
-            <span class="kw">let</span> <span class="ident">ti_xi</span> <span class="op">=</span> <span class="ident">ti</span> <span class="op">*</span> <span class="ident">xi</span>;
-            <span class="ident">poly</span>.<span class="ident">push</span>(<span class="ident">ti_xi</span> <span class="op">+</span> <span class="ident">ti_xi</span> <span class="op">-</span> <span class="ident">xi</span> <span class="op">-</span> <span class="ident">ti</span> <span class="op">+</span> <span class="ident">F::one</span>());
+    <span class="kw">let </span>dim = t.len();
+    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
+    <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>ti) <span class="kw">in </span>t.iter().enumerate().take(dim) {
+        <span class="kw">let </span><span class="kw-2">mut </span>poly = Vec::with_capacity(<span class="number">1 </span>&lt;&lt; dim);
+        <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; dim) {
+            <span class="kw">let </span>xi = <span class="kw">if </span>x &gt;&gt; i &amp; <span class="number">1 </span>== <span class="number">1 </span>{ F::one() } <span class="kw">else </span>{ F::zero() };
+            <span class="kw">let </span>ti_xi = ti * xi;
+            poly.push(ti_xi + ti_xi - xi - ti + F::one());
         }
-        <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">DenseMultilinearExtension::from_evaluations_vec</span>(<span class="ident">dim</span>, <span class="ident">poly</span>));
+        result.push(DenseMultilinearExtension::from_evaluations_vec(dim, poly));
     }
 
-    <span class="macro">end_timer!</span>(<span class="ident">start</span>);
-    <span class="ident">result</span>
+    <span class="macro">end_timer!</span>(start);
+    result
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::test_rng</span>;
-    <span class="kw">type</span> <span class="ident">E</span> <span class="op">=</span> <span class="ident">Bls12_381</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_bls12_381::Bls12_381;
+    <span class="kw">use </span>ark_std::test_rng;
+    <span class="kw">type </span>E = Bls12_381;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_srs_gen</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
-        <span class="kw">for</span> <span class="ident">nv</span> <span class="kw">in</span> <span class="number">4</span>..<span class="number">10</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">MultilinearUniversalParams</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::gen_srs_for_testing</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="ident">nv</span>)<span class="question-mark">?</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_srs_gen() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+        <span class="kw">for </span>nv <span class="kw">in </span><span class="number">4</span>..<span class="number">10 </span>{
+            <span class="kw">let _ </span>= MultilinearUniversalParams::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, nv)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

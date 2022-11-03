@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -508,515 +508,515 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+</span><span class="attribute">#![allow(missing_docs)]
 
-<span class="doccomment">//! Circuit implementation of a Merkle tree.</span>
+</span><span class="doccomment">//! Circuit implementation of a Merkle tree.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::rescue::RescueGadget</span>,
-    <span class="ident">merkle_tree</span>::{<span class="ident">AccMemberWitness</span>, <span class="ident">MerklePath</span>, <span class="ident">MerkleTree</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>},
-    <span class="ident">rescue::RescueParameter</span>,
+</span><span class="kw">use crate</span>::{
+    circuit::rescue::RescueGadget,
+    merkle_tree::{AccMemberWitness, MerklePath, MerkleTree, NodePos, NodeValue},
+    rescue::RescueParameter,
 };
-<span class="kw">use</span> <span class="ident">ark_ec::TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>;
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+<span class="kw">use </span>ark_ec::TEModelParameters <span class="kw">as </span>Parameters;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{vec, vec::Vec};
+<span class="kw">use </span>jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="ident">sibling1</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">sibling2</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">is_left_child</span>: <span class="ident">bool</span>,
-    <span class="ident">is_right_child</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>MerkleNodeBooleanEncoding&lt;F: PrimeField&gt; {
+    sibling1: NodeValue&lt;F&gt;,
+    sibling2: NodeValue&lt;F&gt;,
+    is_left_child: bool,
+    is_right_child: bool,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">sibling1</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">sibling2</span>: <span class="ident">NodeValue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">is_left_child</span>: <span class="ident">bool</span>,
-        <span class="ident">is_right_child</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="ident">MerkleNodeBooleanEncoding</span> {
-            <span class="ident">sibling1</span>,
-            <span class="ident">sibling2</span>,
-            <span class="ident">is_left_child</span>,
-            <span class="ident">is_right_child</span>,
+<span class="kw">impl</span>&lt;F: PrimeField&gt; MerkleNodeBooleanEncoding&lt;F&gt; {
+    <span class="kw">fn </span>new(
+        sibling1: NodeValue&lt;F&gt;,
+        sibling2: NodeValue&lt;F&gt;,
+        is_left_child: bool,
+        is_right_child: bool,
+    ) -&gt; <span class="self">Self </span>{
+        MerkleNodeBooleanEncoding {
+            sibling1,
+            sibling2,
+            is_left_child,
+            is_right_child,
         }
     }
 }
 
-<span class="kw">struct</span> <span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>MerklePathBooleanEncoding&lt;F: PrimeField&gt; {
+    <span class="kw">pub </span>nodes: Vec&lt;MerkleNodeBooleanEncoding&lt;F&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="ident">MerkleNodeBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>]) -&gt; <span class="self">Self</span> {
-        <span class="ident">MerklePathBooleanEncoding</span> {
-            <span class="ident">nodes</span>: <span class="ident">nodes</span>.<span class="ident">to_vec</span>(),
+<span class="kw">impl</span>&lt;F: PrimeField&gt; MerklePathBooleanEncoding&lt;F&gt; {
+    <span class="kw">fn </span>new(nodes: <span class="kw-2">&amp;</span>[MerkleNodeBooleanEncoding&lt;F&gt;]) -&gt; <span class="self">Self </span>{
+        MerklePathBooleanEncoding {
+            nodes: nodes.to_vec(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">path</span>.<span class="ident">nodes</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">circuit_node</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">node</span>.<span class="ident">pos</span> {
-                <span class="ident">NodePos::Left</span> =&gt; {
-                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>)
+<span class="kw">impl</span>&lt;F: PrimeField&gt; From&lt;<span class="kw-2">&amp;</span>MerklePath&lt;F&gt;&gt; <span class="kw">for </span>MerklePathBooleanEncoding&lt;F&gt; {
+    <span class="kw">fn </span>from(path: <span class="kw-2">&amp;</span>MerklePath&lt;F&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>nodes = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>node <span class="kw">in </span>path.nodes.iter() {
+            <span class="kw">let </span>circuit_node = <span class="kw">match </span>node.pos {
+                NodePos::Left =&gt; {
+                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, <span class="bool-val">true</span>, <span class="bool-val">false</span>)
                 },
-                <span class="ident">NodePos::Middle</span> =&gt; {
-                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>)
+                NodePos::Middle =&gt; {
+                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, <span class="bool-val">false</span>, <span class="bool-val">false</span>)
                 },
-                <span class="ident">NodePos::Right</span> =&gt; {
-                    <span class="ident">MerkleNodeBooleanEncoding::new</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>)
+                NodePos::Right =&gt; {
+                    MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, <span class="bool-val">false</span>, <span class="bool-val">true</span>)
                 },
             };
-            <span class="ident">nodes</span>.<span class="ident">push</span>(<span class="ident">circuit_node</span>);
+            nodes.push(circuit_node);
         }
 
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="kw-2">&amp;</span><span class="ident">nodes</span>)
+        <span class="self">Self</span>::new(<span class="kw-2">&amp;</span>nodes)
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="doccomment">/// Circuit variables for a Merkle node</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MerkleNodeVars</span> {
-    <span class="kw">pub</span> <span class="ident">sibling1</span>: <span class="ident">Variable</span>,
-    <span class="kw">pub</span> <span class="ident">sibling2</span>: <span class="ident">Variable</span>,
-    <span class="kw">pub</span> <span class="ident">is_left_child</span>: <span class="ident">BoolVar</span>,
-    <span class="kw">pub</span> <span class="ident">is_right_child</span>: <span class="ident">BoolVar</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="doccomment">/// Circuit variables for a Merkle node
+</span><span class="kw">pub struct </span>MerkleNodeVars {
+    <span class="kw">pub </span>sibling1: Variable,
+    <span class="kw">pub </span>sibling2: Variable,
+    <span class="kw">pub </span>is_left_child: BoolVar,
+    <span class="kw">pub </span>is_right_child: BoolVar,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="doccomment">/// Circuit variables for a Merkle authentication path</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MerklePathVars</span> {
-    <span class="kw">pub</span> <span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="doccomment">/// Circuit variables for a Merkle authentication path
+</span><span class="kw">pub struct </span>MerklePathVars {
+    <span class="kw">pub </span>nodes: Vec&lt;MerkleNodeVars&gt;,
 }
 
-<span class="doccomment">/// Circuit variables for an accumulated element</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccElemVars</span> {
-    <span class="kw">pub</span> <span class="ident">uid</span>: <span class="ident">Variable</span>,
-    <span class="kw">pub</span> <span class="ident">elem</span>: <span class="ident">Variable</span>,
+<span class="doccomment">/// Circuit variables for an accumulated element
+</span><span class="kw">pub struct </span>AccElemVars {
+    <span class="kw">pub </span>uid: Variable,
+    <span class="kw">pub </span>elem: Variable,
 }
 
-<span class="doccomment">/// Circuit variables for membership proof.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccMemberWitnessVar</span> {
-    <span class="kw">pub</span> <span class="ident">uid</span>: <span class="ident">Variable</span>,
-    <span class="kw">pub</span> <span class="ident">merkle_path</span>: <span class="ident">MerklePathVars</span>,
+<span class="doccomment">/// Circuit variables for membership proof.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>AccMemberWitnessVar {
+    <span class="kw">pub </span>uid: Variable,
+    <span class="kw">pub </span>merkle_path: MerklePathVars,
 }
 
-<span class="kw">impl</span> <span class="ident">AccMemberWitnessVar</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">acc_member_witness</span>: <span class="kw-2">&amp;</span><span class="ident">AccMemberWitness</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl </span>AccMemberWitnessVar {
+    <span class="kw">pub fn </span>new&lt;F, P&gt;(
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        acc_member_witness: <span class="kw-2">&amp;</span>AccMemberWitness&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CircuitError&gt;
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: Parameters&lt;BaseField = F&gt;,
     {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">uid</span>: <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">acc_member_witness</span>.<span class="ident">uid</span> <span class="kw">as</span> <span class="ident">u64</span>))<span class="question-mark">?</span>,
-            <span class="ident">merkle_path</span>: <span class="ident">circuit</span>.<span class="ident">add_merkle_path_variable</span>(<span class="kw-2">&amp;</span><span class="ident">acc_member_witness</span>.<span class="ident">merkle_path</span>)<span class="question-mark">?</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            uid: circuit.create_variable(F::from(acc_member_witness.uid <span class="kw">as </span>u64))<span class="question-mark">?</span>,
+            merkle_path: circuit.add_merkle_path_variable(<span class="kw-2">&amp;</span>acc_member_witness.merkle_path)<span class="question-mark">?</span>,
         })
     }
 }
-<span class="kw">trait</span> <span class="ident">MerkleTreeHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Produces an ordered list of variables based on the relative position of</span>
-    <span class="doccomment">/// a node and its siblings.</span>
-    <span class="doccomment">/// * `node` - node to be inserted in the final list.</span>
-    <span class="doccomment">/// * `sibling1` - first sibling</span>
-    <span class="doccomment">/// * `sibling2` - second sibling</span>
-    <span class="doccomment">/// * `node_is_left` - variable that is true if node is the leftmost one.</span>
-    <span class="doccomment">/// * `node_is_right` -  variable that is true if node is the rightmost one.</span>
-    <span class="doccomment">/// * `returns` - list of variables corresponding to the node and its</span>
-    <span class="doccomment">///   siblings in the correct order.</span>
-    <span class="kw">fn</span> <span class="ident">permute</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">node</span>: <span class="ident">Variable</span>,
-        <span class="ident">sib1</span>: <span class="ident">Variable</span>,
-        <span class="ident">sib2</span>: <span class="ident">Variable</span>,
-        <span class="ident">node_is_left</span>: <span class="ident">BoolVar</span>,
-        <span class="ident">node_is_right</span>: <span class="ident">BoolVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+<span class="kw">trait </span>MerkleTreeHelperGadget&lt;F: PrimeField&gt; {
+    <span class="doccomment">/// Produces an ordered list of variables based on the relative position of
+    /// a node and its siblings.
+    /// * `node` - node to be inserted in the final list.
+    /// * `sibling1` - first sibling
+    /// * `sibling2` - second sibling
+    /// * `node_is_left` - variable that is true if node is the leftmost one.
+    /// * `node_is_right` -  variable that is true if node is the rightmost one.
+    /// * `returns` - list of variables corresponding to the node and its
+    ///   siblings in the correct order.
+    </span><span class="kw">fn </span>permute(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        node: Variable,
+        sib1: Variable,
+        sib2: Variable,
+        node_is_left: BoolVar,
+        node_is_right: BoolVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[Variable; <span class="number">3</span>], CircuitError&gt;;
 
-    <span class="doccomment">/// Ensure that the position of each node of the path is correctly encoded</span>
-    <span class="doccomment">/// Used for testing purposes.</span>
-    <span class="doccomment">/// * `merkle_path` - list of node of an authentication path</span>
-    <span class="doccomment">/// * `returns` - list of variables corresponding to the authentication path</span>
-    <span class="kw">fn</span> <span class="ident">constrain_merkle_path</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Ensure that the position of each node of the path is correctly encoded
+    /// Used for testing purposes.
+    /// * `merkle_path` - list of node of an authentication path
+    /// * `returns` - list of variables corresponding to the authentication path
+    </span><span class="kw">fn </span>constrain_merkle_path(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        merkle_path: <span class="kw-2">&amp;</span>MerklePathBooleanEncoding&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVars, CircuitError&gt;;
 }
 
-<span class="doccomment">/// Circuit implementation of a Merkle tree.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MerkleTreeGadget</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Wrapper around Circuit.constrain_merkle_path. Adds and checks the</span>
-    <span class="doccomment">/// variables related to the Merkle path.</span>
-    <span class="doccomment">/// * `merkle_path` - list of node of an authentication path</span>
-    <span class="doccomment">/// * `returns` - list of variables corresponding to the authentication path</span>
-    <span class="kw">fn</span> <span class="ident">add_merkle_path_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Circuit implementation of a Merkle tree.
+</span><span class="kw">pub trait </span>MerkleTreeGadget&lt;F: PrimeField&gt; {
+    <span class="doccomment">/// Wrapper around Circuit.constrain_merkle_path. Adds and checks the
+    /// variables related to the Merkle path.
+    /// * `merkle_path` - list of node of an authentication path
+    /// * `returns` - list of variables corresponding to the authentication path
+    </span><span class="kw">fn </span>add_merkle_path_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        merkle_path: <span class="kw-2">&amp;</span>MerklePath&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVars, CircuitError&gt;;
 
-    <span class="doccomment">/// Computes the merkle root based on some element placed at a leaf and a</span>
-    <span class="doccomment">/// merkle path.</span>
-    <span class="doccomment">/// * `elem` - variables corresponding to the uid and the element value</span>
-    <span class="doccomment">///   (e.g.: record commitment).</span>
-    <span class="doccomment">/// * `path_vars` - variables corresponding to the Merkle path.</span>
-    <span class="doccomment">/// * `return` - variable corresponding to the root value of the Merkle</span>
-    <span class="doccomment">///   tree.</span>
-    <span class="kw">fn</span> <span class="ident">compute_merkle_root</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">elem</span>: <span class="ident">AccElemVars</span>,
-        <span class="ident">path_vars</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathVars</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Computes the merkle root based on some element placed at a leaf and a
+    /// merkle path.
+    /// * `elem` - variables corresponding to the uid and the element value
+    ///   (e.g.: record commitment).
+    /// * `path_vars` - variables corresponding to the Merkle path.
+    /// * `return` - variable corresponding to the root value of the Merkle
+    ///   tree.
+    </span><span class="kw">fn </span>compute_merkle_root(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        elem: AccElemVars,
+        path_vars: <span class="kw-2">&amp;</span>MerklePathVars,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">MerkleTreeGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
+<span class="kw">impl</span>&lt;F&gt; MerkleTreeGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
 {
-    <span class="kw">fn</span> <span class="ident">add_merkle_path_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePath</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// Encode Merkle path nodes positions with boolean variables</span>
-        <span class="kw">let</span> <span class="ident">merkle_path</span> <span class="op">=</span> <span class="ident">MerklePathBooleanEncoding::from</span>(<span class="ident">merkle_path</span>);
+    <span class="kw">fn </span>add_merkle_path_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        merkle_path: <span class="kw-2">&amp;</span>MerklePath&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVars, CircuitError&gt; {
+        <span class="comment">// Encode Merkle path nodes positions with boolean variables
+        </span><span class="kw">let </span>merkle_path = MerklePathBooleanEncoding::from(merkle_path);
 
-        <span class="self">self</span>.<span class="ident">constrain_merkle_path</span>(<span class="kw-2">&amp;</span><span class="ident">merkle_path</span>)
+        <span class="self">self</span>.constrain_merkle_path(<span class="kw-2">&amp;</span>merkle_path)
     }
 
-    <span class="kw">fn</span> <span class="ident">compute_merkle_root</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">elem</span>: <span class="ident">AccElemVars</span>,
-        <span class="ident">path_vars</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathVars</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
+    <span class="kw">fn </span>compute_merkle_root(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        elem: AccElemVars,
+        path_vars: <span class="kw-2">&amp;</span>MerklePathVars,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
 
-        <span class="comment">// leaf label = H(0, uid, arc)</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur_label</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rescue_sponge_no_padding</span>(<span class="kw-2">&amp;</span>[<span class="ident">zero_var</span>, <span class="ident">elem</span>.<span class="ident">uid</span>, <span class="ident">elem</span>.<span class="ident">elem</span>], <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
-        <span class="kw">for</span> <span class="ident">cur_node</span> <span class="kw">in</span> <span class="ident">path_vars</span>.<span class="ident">nodes</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">input_labels</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">permute</span>(
-                <span class="ident">cur_label</span>,
-                <span class="ident">cur_node</span>.<span class="ident">sibling1</span>,
-                <span class="ident">cur_node</span>.<span class="ident">sibling2</span>,
-                <span class="ident">cur_node</span>.<span class="ident">is_left_child</span>,
-                <span class="ident">cur_node</span>.<span class="ident">is_right_child</span>,
+        <span class="comment">// leaf label = H(0, uid, arc)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>[zero_var, elem.uid, elem.elem], <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+        <span class="kw">for </span>cur_node <span class="kw">in </span>path_vars.nodes.iter() {
+            <span class="kw">let </span>input_labels = <span class="self">self</span>.permute(
+                cur_label,
+                cur_node.sibling1,
+                cur_node.sibling2,
+                cur_node.is_left_child,
+                cur_node.is_right_child,
             )<span class="question-mark">?</span>;
-            <span class="comment">// check that the left child&#39;s label is non-zero</span>
-            <span class="self">self</span>.<span class="ident">non_zero_gate</span>(<span class="ident">input_labels</span>[<span class="number">0</span>])<span class="question-mark">?</span>;
-            <span class="ident">cur_label</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rescue_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input_labels</span>, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+            <span class="comment">// check that the left child&#39;s label is non-zero
+            </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
+            cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">cur_label</span>)
+        <span class="prelude-val">Ok</span>(cur_label)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">MerkleTreeHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="kw">impl</span>&lt;F&gt; MerkleTreeHelperGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
 {
-    <span class="kw">fn</span> <span class="ident">permute</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">node</span>: <span class="ident">Variable</span>,
-        <span class="ident">sib1</span>: <span class="ident">Variable</span>,
-        <span class="ident">sib2</span>: <span class="ident">Variable</span>,
-        <span class="ident">node_is_left</span>: <span class="ident">BoolVar</span>,
-        <span class="ident">node_is_right</span>: <span class="ident">BoolVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">Variable</span>; <span class="number">3</span>], <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">F::one</span>();
-        <span class="kw">let</span> <span class="ident">left_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conditional_select</span>(<span class="ident">node_is_left</span>, <span class="ident">sib1</span>, <span class="ident">node</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">right_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conditional_select</span>(<span class="ident">node_is_right</span>, <span class="ident">sib2</span>, <span class="ident">node</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">left_plus_right</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">left_node</span>, <span class="ident">right_node</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">mid_node</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lc</span>(
-            <span class="kw-2">&amp;</span>[<span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>, <span class="ident">left_plus_right</span>],
-            <span class="kw-2">&amp;</span>[<span class="ident">one</span>, <span class="ident">one</span>, <span class="ident">one</span>, <span class="ident">one</span>.<span class="ident">neg</span>()],
+    <span class="kw">fn </span>permute(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        node: Variable,
+        sib1: Variable,
+        sib2: Variable,
+        node_is_left: BoolVar,
+        node_is_right: BoolVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[Variable; <span class="number">3</span>], CircuitError&gt; {
+        <span class="kw">let </span>one = F::one();
+        <span class="kw">let </span>left_node = <span class="self">self</span>.conditional_select(node_is_left, sib1, node)<span class="question-mark">?</span>;
+        <span class="kw">let </span>right_node = <span class="self">self</span>.conditional_select(node_is_right, sib2, node)<span class="question-mark">?</span>;
+        <span class="kw">let </span>left_plus_right = <span class="self">self</span>.add(left_node, right_node)<span class="question-mark">?</span>;
+        <span class="kw">let </span>mid_node = <span class="self">self</span>.lc(
+            <span class="kw-2">&amp;</span>[node, sib1, sib2, left_plus_right],
+            <span class="kw-2">&amp;</span>[one, one, one, one.neg()],
         )<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>([<span class="ident">left_node</span>, <span class="ident">mid_node</span>, <span class="ident">right_node</span>])
+        <span class="prelude-val">Ok</span>([left_node, mid_node, right_node])
     }
 
-    <span class="kw">fn</span> <span class="ident">constrain_merkle_path</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">merkle_path</span>: <span class="kw-2">&amp;</span><span class="ident">MerklePathBooleanEncoding</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerklePathVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// Setup node variables</span>
-        <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">merkle_path</span>
-            .<span class="ident">nodes</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">MerkleNodeVars</span> {
-                    <span class="ident">sibling1</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">node</span>.<span class="ident">sibling1</span>.<span class="number">0</span>)<span class="question-mark">?</span>,
-                    <span class="ident">sibling2</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">node</span>.<span class="ident">sibling2</span>.<span class="number">0</span>)<span class="question-mark">?</span>,
-                    <span class="ident">is_left_child</span>: <span class="self">self</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>)<span class="question-mark">?</span>,
-                    <span class="ident">is_right_child</span>: <span class="self">self</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">node</span>.<span class="ident">is_right_child</span>)<span class="question-mark">?</span>,
+    <span class="kw">fn </span>constrain_merkle_path(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        merkle_path: <span class="kw-2">&amp;</span>MerklePathBooleanEncoding&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVars, CircuitError&gt; {
+        <span class="comment">// Setup node variables
+        </span><span class="kw">let </span>nodes = merkle_path
+            .nodes
+            .clone()
+            .into_iter()
+            .map(|node| -&gt; <span class="prelude-ty">Result</span>&lt;MerkleNodeVars, CircuitError&gt; {
+                <span class="prelude-val">Ok</span>(MerkleNodeVars {
+                    sibling1: <span class="self">self</span>.create_variable(node.sibling1.<span class="number">0</span>)<span class="question-mark">?</span>,
+                    sibling2: <span class="self">self</span>.create_variable(node.sibling2.<span class="number">0</span>)<span class="question-mark">?</span>,
+                    is_left_child: <span class="self">self</span>.create_boolean_variable(node.is_left_child)<span class="question-mark">?</span>,
+                    is_right_child: <span class="self">self</span>.create_boolean_variable(node.is_right_child)<span class="question-mark">?</span>,
                 })
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MerkleNodeVars</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;MerkleNodeVars&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="comment">// `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are</span>
-        <span class="comment">// boolean</span>
-        <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span>.<span class="ident">iter</span>() {
-            <span class="comment">// Boolean constrain `is_left_child + is_right_child` because a node</span>
-            <span class="comment">// can either be the left or the right child of its parent</span>
-            <span class="kw">let</span> <span class="ident">left_plus_right</span> <span class="op">=</span>
-                <span class="self">self</span>.<span class="ident">add</span>(<span class="ident">node</span>.<span class="ident">is_left_child</span>.<span class="ident">into</span>(), <span class="ident">node</span>.<span class="ident">is_right_child</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">enforce_bool</span>(<span class="ident">left_plus_right</span>)<span class="question-mark">?</span>;
+        <span class="comment">// `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
+        // boolean
+        </span><span class="kw">for </span>node <span class="kw">in </span>nodes.iter() {
+            <span class="comment">// Boolean constrain `is_left_child + is_right_child` because a node
+            // can either be the left or the right child of its parent
+            </span><span class="kw">let </span>left_plus_right =
+                <span class="self">self</span>.add(node.is_left_child.into(), node.is_right_child.into())<span class="question-mark">?</span>;
+            <span class="self">self</span>.enforce_bool(left_plus_right)<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">MerklePathVars</span> { <span class="ident">nodes</span> })
+        <span class="prelude-val">Ok</span>(MerklePathVars { nodes })
     }
 }
 
-<span class="doccomment">/// Create a merkle path for position `uid` and element `comm`.</span>
-<span class="doccomment">/// **Only used for testing**</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_merkle_path_for_test</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>(<span class="ident">uid</span>: <span class="ident">u64</span>, <span class="ident">comm</span>: <span class="ident">F</span>) -&gt; (<span class="ident">AccMemberWitness</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">F</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">elem</span> <span class="op">=</span> <span class="ident">F::one</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mt</span> <span class="op">=</span> <span class="ident">MerkleTree::new</span>((<span class="ident">uid</span> <span class="kw">as</span> <span class="ident">f64</span>).<span class="ident">log</span>(<span class="number">3.0</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">unwrap</span>();
-    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">uid</span> {
-        <span class="ident">mt</span>.<span class="ident">push</span>(<span class="ident">elem</span>);
-        <span class="ident">elem</span> <span class="op">+</span><span class="op">=</span> <span class="ident">F::one</span>();
+<span class="doccomment">/// Create a merkle path for position `uid` and element `comm`.
+/// **Only used for testing**
+</span><span class="kw">pub fn </span>gen_merkle_path_for_test&lt;F: RescueParameter&gt;(uid: u64, comm: F) -&gt; (AccMemberWitness&lt;F&gt;, F) {
+    <span class="kw">let </span><span class="kw-2">mut </span>elem = F::one();
+    <span class="kw">let </span><span class="kw-2">mut </span>mt = MerkleTree::new((uid <span class="kw">as </span>f64).log(<span class="number">3.0</span>) <span class="kw">as </span>u8 + <span class="number">1</span>).unwrap();
+    <span class="kw">for _ in </span><span class="number">0</span>..uid {
+        mt.push(elem);
+        elem += F::one();
     }
-    <span class="ident">mt</span>.<span class="ident">push</span>(<span class="ident">comm</span>);
+    mt.push(comm);
 
-    <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">mt</span>.<span class="ident">commitment</span>().<span class="ident">root_value</span>;
-    <span class="kw">let</span> <span class="ident">leaf_info</span> <span class="op">=</span> <span class="ident">AccMemberWitness::lookup_from_tree</span>(<span class="kw-2">&amp;</span><span class="ident">mt</span>, <span class="ident">uid</span>)
-        .<span class="ident">expect_ok</span>()
-        .<span class="ident">unwrap</span>()
-        .<span class="number">1</span>; <span class="comment">// safe unwrap</span>
-    (<span class="ident">leaf_info</span>, <span class="ident">root</span>.<span class="ident">to_scalar</span>())
+    <span class="kw">let </span>root = mt.commitment().root_value;
+    <span class="kw">let </span>leaf_info = AccMemberWitness::lookup_from_tree(<span class="kw-2">&amp;</span>mt, uid)
+        .expect_ok()
+        .unwrap()
+        .<span class="number">1</span>; <span class="comment">// safe unwrap
+    </span>(leaf_info, root.to_scalar())
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">circuit::merkle_tree</span>::{
-            <span class="ident">gen_merkle_path_for_test</span>, <span class="ident">AccElemVars</span>, <span class="ident">MerkleNodeBooleanEncoding</span>,
-            <span class="ident">MerklePathBooleanEncoding</span>, <span class="ident">MerkleTreeGadget</span>, <span class="ident">MerkleTreeHelperGadget</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use crate</span>::{
+        circuit::merkle_tree::{
+            gen_merkle_path_for_test, AccElemVars, MerkleNodeBooleanEncoding,
+            MerklePathBooleanEncoding, MerkleTreeGadget, MerkleTreeHelperGadget,
         },
-        <span class="ident">merkle_tree</span>::{<span class="ident">hash</span>, <span class="ident">MerklePath</span>, <span class="ident">MerklePathNode</span>, <span class="ident">NodePos</span>, <span class="ident">NodeValue</span>},
-        <span class="ident">rescue::RescueParameter</span>,
+        merkle_tree::{hash, MerklePath, MerklePathNode, NodePos, NodeValue},
+        rescue::RescueParameter,
     };
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381b</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::Fq <span class="kw">as </span>FqEd381b;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_ff::PrimeField;
+    <span class="kw">use </span>ark_std::{vec, vec::Vec};
+    <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit, Variable};
 
-    <span class="kw">fn</span> <span class="ident">check_merkle_path</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">is_left_child</span>: <span class="ident">bool</span>, <span class="ident">is_right_child</span>: <span class="ident">bool</span>, <span class="ident">accept</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">F::zero</span>();
-        <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">F::one</span>();
-        <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">MerkleNodeBooleanEncoding::new</span>(
-            <span class="ident">NodeValue</span>(<span class="ident">one</span>),
-            <span class="ident">NodeValue</span>(<span class="ident">zero</span>),
-            <span class="ident">is_left_child</span>,
-            <span class="ident">is_right_child</span>,
+    <span class="kw">fn </span>check_merkle_path&lt;F: PrimeField&gt;(is_left_child: bool, is_right_child: bool, accept: bool) {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>zero = F::zero();
+        <span class="kw">let </span>one = F::one();
+        <span class="kw">let </span>node = MerkleNodeBooleanEncoding::new(
+            NodeValue(one),
+            NodeValue(zero),
+            is_left_child,
+            is_right_child,
         );
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">MerklePathBooleanEncoding::new</span>(<span class="kw-2">&amp;</span>[<span class="ident">node</span>]);
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">constrain_merkle_path</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>);
-        <span class="kw">if</span> <span class="ident">accept</span> {
-            <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        } <span class="kw">else</span> {
-            <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="kw">let </span>path = MerklePathBooleanEncoding::new(<span class="kw-2">&amp;</span>[node]);
+        <span class="kw">let _ </span>= circuit.constrain_merkle_path(<span class="kw-2">&amp;</span>path);
+        <span class="kw">if </span>accept {
+            <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_constrain_merkle_path</span>() {
-        <span class="ident">test_constrain_merkle_path_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>();
-        <span class="ident">test_constrain_merkle_path_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>();
-        <span class="ident">test_constrain_merkle_path_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>();
-        <span class="ident">test_constrain_merkle_path_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span><span class="op">&gt;</span>();
-        <span class="ident">test_constrain_merkle_path_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_constrain_merkle_path() {
+        test_constrain_merkle_path_helper::&lt;FqEd254&gt;();
+        test_constrain_merkle_path_helper::&lt;FqEd377&gt;();
+        test_constrain_merkle_path_helper::&lt;FqEd381&gt;();
+        test_constrain_merkle_path_helper::&lt;FqEd381b&gt;();
+        test_constrain_merkle_path_helper::&lt;Fq377&gt;();
     }
-    <span class="kw">fn</span> <span class="ident">test_constrain_merkle_path_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() {
-        <span class="comment">// Happy path:</span>
-        <span class="comment">// `is_left_child`,`is_right_child` and `is_left_child + is_right_child` are</span>
-        <span class="comment">// boolean</span>
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>);
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
+    <span class="kw">fn </span>test_constrain_merkle_path_helper&lt;F: PrimeField&gt;() {
+        <span class="comment">// Happy path:
+        // `is_left_child`,`is_right_child` and `is_left_child + is_right_child` are
+        // boolean
+        </span>check_merkle_path::&lt;F&gt;(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
+        check_merkle_path::&lt;F&gt;(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>);
+        check_merkle_path::&lt;F&gt;(<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
 
-        <span class="comment">// Circuit cannot be satisfied when `is_left_child + is_right_child` is not</span>
-        <span class="comment">// boolean</span>
-        <span class="ident">check_merkle_path</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>);
+        <span class="comment">// Circuit cannot be satisfied when `is_left_child + is_right_child` is not
+        // boolean
+        </span>check_merkle_path::&lt;F&gt;(<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">check_permute</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">is_left</span>: <span class="ident">bool</span>,
-        <span class="ident">is_right</span>: <span class="ident">bool</span>,
-        <span class="ident">input_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">expected_output_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
+    <span class="kw">fn </span>check_permute&lt;F: PrimeField&gt;(
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        is_left: bool,
+        is_right: bool,
+        input_vars: <span class="kw-2">&amp;</span>[Variable],
+        expected_output_vars: <span class="kw-2">&amp;</span>[Variable],
     ) {
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">F::zero</span>();
+        <span class="kw">let </span>zero = F::zero();
 
-        <span class="kw">let</span> <span class="ident">node_is_left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">is_left</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">node_is_right</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">is_right</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>node_is_left = circuit.create_boolean_variable(is_left).unwrap();
+        <span class="kw">let </span>node_is_right = circuit.create_boolean_variable(is_right).unwrap();
 
-        <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">input_vars</span>[<span class="number">0</span>];
-        <span class="kw">let</span> <span class="ident">sib1</span> <span class="op">=</span> <span class="ident">input_vars</span>[<span class="number">1</span>];
-        <span class="kw">let</span> <span class="ident">sib2</span> <span class="op">=</span> <span class="ident">input_vars</span>[<span class="number">2</span>];
+        <span class="kw">let </span>node = input_vars[<span class="number">0</span>];
+        <span class="kw">let </span>sib1 = input_vars[<span class="number">1</span>];
+        <span class="kw">let </span>sib2 = input_vars[<span class="number">2</span>];
 
-        <span class="kw">let</span> <span class="ident">out_vars</span> <span class="op">=</span> <span class="ident">circuit</span>
-            .<span class="ident">permute</span>(<span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>, <span class="ident">node_is_left</span>, <span class="ident">node_is_right</span>)
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>out_vars = circuit
+            .permute(node, sib1, sib2, node_is_left, node_is_right)
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">output</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">out_vars</span>[..]
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">idx</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">idx</span>).<span class="ident">unwrap</span>())
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>output: Vec&lt;F&gt; = out_vars[..]
+            .iter()
+            .map(|<span class="kw-2">&amp;</span>idx| circuit.witness(idx).unwrap())
+            .collect();
 
-        <span class="kw">let</span> <span class="ident">expected_output</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">expected_output_vars</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="kw-2">*</span><span class="ident">v</span>).<span class="ident">unwrap</span>())
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>expected_output: Vec&lt;F&gt; = expected_output_vars
+            .iter()
+            .map(|v| circuit.witness(<span class="kw-2">*</span>v).unwrap())
+            .collect();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">output</span>, <span class="ident">expected_output</span>);
+        <span class="macro">assert_eq!</span>(output, expected_output);
 
-        <span class="comment">// Check constraints</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">sib1</span>) <span class="op">=</span> <span class="ident">zero</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Check constraints
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>circuit.witness_mut(sib1) = zero;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
     }
 
-    <span class="kw">fn</span> <span class="ident">gen_permutation_circuit_and_vars</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-    ) -&gt; (<span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">Variable</span>, <span class="ident">Variable</span>, <span class="ident">Variable</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sib1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sib2</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>)).<span class="ident">unwrap</span>();
+    <span class="kw">fn </span>gen_permutation_circuit_and_vars&lt;F: PrimeField&gt;(
+    ) -&gt; (PlonkCircuit&lt;F&gt;, Variable, Variable, Variable) {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+        <span class="kw">let </span>node = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>prng)).unwrap();
+        <span class="kw">let </span>sib1 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>prng)).unwrap();
+        <span class="kw">let </span>sib2 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>prng)).unwrap();
 
-        (<span class="ident">circuit</span>, <span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>)
+        (circuit, node, sib1, sib2)
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_permute</span>() {
-        <span class="ident">test_permute_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>();
-        <span class="ident">test_permute_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>();
-        <span class="ident">test_permute_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>();
-        <span class="ident">test_permute_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span><span class="op">&gt;</span>();
-        <span class="ident">test_permute_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_permute() {
+        test_permute_helper::&lt;FqEd254&gt;();
+        test_permute_helper::&lt;FqEd377&gt;();
+        test_permute_helper::&lt;FqEd381&gt;();
+        test_permute_helper::&lt;FqEd381b&gt;();
+        test_permute_helper::&lt;Fq377&gt;();
     }
 
-    <span class="kw">fn</span> <span class="ident">test_permute_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>) <span class="op">=</span> <span class="ident">gen_permutation_circuit_and_vars</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>();
-        <span class="ident">check_permute</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
+    <span class="kw">fn </span>test_permute_helper&lt;F: PrimeField&gt;() {
+        <span class="kw">let </span>(<span class="kw-2">mut </span>circuit, node, sib1, sib2) = gen_permutation_circuit_and_vars::&lt;F&gt;();
+        check_permute(
+            <span class="kw-2">&amp;mut </span>circuit,
             <span class="bool-val">false</span>,
             <span class="bool-val">true</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>],
-            <span class="kw-2">&amp;</span>[<span class="ident">sib1</span>, <span class="ident">sib2</span>, <span class="ident">node</span>],
+            <span class="kw-2">&amp;</span>[node, sib1, sib2],
+            <span class="kw-2">&amp;</span>[sib1, sib2, node],
         );
 
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>) <span class="op">=</span> <span class="ident">gen_permutation_circuit_and_vars</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>();
-        <span class="ident">check_permute</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
+        <span class="kw">let </span>(<span class="kw-2">mut </span>circuit, node, sib1, sib2) = gen_permutation_circuit_and_vars::&lt;F&gt;();
+        check_permute(
+            <span class="kw-2">&amp;mut </span>circuit,
             <span class="bool-val">true</span>,
             <span class="bool-val">false</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>],
-            <span class="kw-2">&amp;</span>[<span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>],
+            <span class="kw-2">&amp;</span>[node, sib1, sib2],
+            <span class="kw-2">&amp;</span>[node, sib1, sib2],
         );
 
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>) <span class="op">=</span> <span class="ident">gen_permutation_circuit_and_vars</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>();
-        <span class="ident">check_permute</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
+        <span class="kw">let </span>(<span class="kw-2">mut </span>circuit, node, sib1, sib2) = gen_permutation_circuit_and_vars::&lt;F&gt;();
+        check_permute(
+            <span class="kw-2">&amp;mut </span>circuit,
             <span class="bool-val">false</span>,
             <span class="bool-val">false</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">node</span>, <span class="ident">sib1</span>, <span class="ident">sib2</span>],
-            <span class="kw-2">&amp;</span>[<span class="ident">sib1</span>, <span class="ident">node</span>, <span class="ident">sib2</span>],
+            <span class="kw-2">&amp;</span>[node, sib1, sib2],
+            <span class="kw-2">&amp;</span>[sib1, node, sib2],
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_merkle_root</span>() {
-        <span class="ident">test_merkle_root_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>();
-        <span class="ident">test_merkle_root_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>();
-        <span class="ident">test_merkle_root_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>();
-        <span class="ident">test_merkle_root_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span><span class="op">&gt;</span>();
-        <span class="ident">test_merkle_root_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_merkle_root() {
+        test_merkle_root_helper::&lt;FqEd254&gt;();
+        test_merkle_root_helper::&lt;FqEd377&gt;();
+        test_merkle_root_helper::&lt;FqEd381&gt;();
+        test_merkle_root_helper::&lt;FqEd381b&gt;();
+        test_merkle_root_helper::&lt;Fq377&gt;();
     }
-    <span class="kw">fn</span> <span class="ident">test_merkle_root_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
+    <span class="kw">fn </span>test_merkle_root_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
 
-        <span class="comment">//// Happy path</span>
+        <span class="comment">//// Happy path
 
-        <span class="comment">// 2, because the leaf is inserted in position 2 (see gen_merkle_path_for_test)</span>
-        <span class="kw">let</span> <span class="ident">uid_u32</span> <span class="op">=</span> <span class="number">2u32</span>;
-        <span class="kw">let</span> <span class="ident">uid</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">uid_u32</span>);
-        <span class="kw">let</span> <span class="ident">comm</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">310_u32</span>);
+        // 2, because the leaf is inserted in position 2 (see gen_merkle_path_for_test)
+        </span><span class="kw">let </span>uid_u32 = <span class="number">2u32</span>;
+        <span class="kw">let </span>uid = F::from(uid_u32);
+        <span class="kw">let </span>comm = F::from(<span class="number">310_u32</span>);
 
-        <span class="kw">let</span> <span class="ident">uid_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">uid</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">comm_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">comm</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>uid_var = circuit.create_variable(uid).unwrap();
+        <span class="kw">let </span>comm_var = circuit.create_variable(comm).unwrap();
 
-        <span class="kw">let</span> <span class="ident">elem</span> <span class="op">=</span> <span class="ident">AccElemVars</span> {
-            <span class="ident">uid</span>: <span class="ident">uid_var</span>,
-            <span class="ident">elem</span>: <span class="ident">comm_var</span>,
+        <span class="kw">let </span>elem = AccElemVars {
+            uid: uid_var,
+            elem: comm_var,
         };
 
-        <span class="kw">let</span> (<span class="ident">leaf_info</span>, <span class="ident">expected_root</span>) <span class="op">=</span> <span class="ident">gen_merkle_path_for_test</span>(<span class="ident">uid_u32</span> <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">comm</span>);
+        <span class="kw">let </span>(leaf_info, expected_root) = gen_merkle_path_for_test(uid_u32 <span class="kw">as </span>u64, comm);
 
-        <span class="kw">let</span> <span class="ident">path_vars</span> <span class="op">=</span> <span class="ident">circuit</span>
-            .<span class="ident">add_merkle_path_variable</span>(<span class="kw-2">&amp;</span><span class="ident">leaf_info</span>.<span class="ident">merkle_path</span>)
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>path_vars = circuit
+            .add_merkle_path_variable(<span class="kw-2">&amp;</span>leaf_info.merkle_path)
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">root_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_merkle_root</span>(<span class="ident">elem</span>, <span class="kw-2">&amp;</span><span class="ident">path_vars</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>root_var = circuit.compute_merkle_root(elem, <span class="kw-2">&amp;</span>path_vars).unwrap();
 
-        <span class="comment">// Check Merkle root correctness</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">root_var</span>).<span class="ident">unwrap</span>(), <span class="ident">expected_root</span>);
+        <span class="comment">// Check Merkle root correctness
+        </span><span class="macro">assert_eq!</span>(circuit.witness(root_var).unwrap(), expected_root);
 
-        <span class="comment">// Check constraints</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">root_var</span>) <span class="op">=</span> <span class="ident">F::zero</span>();
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Check constraints
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>circuit.witness_mut(root_var) = F::zero();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
-        <span class="comment">//// Bad path:</span>
-        <span class="comment">//// The circuit cannot be satisfied if an internal node has a left child with</span>
-        <span class="comment">//// zero value.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
+        <span class="comment">//// Bad path:
+        //// The circuit cannot be satisfied if an internal node has a left child with
+        //// zero value.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
 
-        <span class="kw">let</span> <span class="ident">uid_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">uid</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">comm_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">comm</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>uid_var = circuit.create_variable(uid).unwrap();
+        <span class="kw">let </span>comm_var = circuit.create_variable(comm).unwrap();
 
-        <span class="kw">let</span> <span class="ident">elem</span> <span class="op">=</span> <span class="ident">AccElemVars</span> {
-            <span class="ident">uid</span>: <span class="ident">uid_var</span>,
-            <span class="ident">elem</span>: <span class="ident">comm_var</span>,
+        <span class="kw">let </span>elem = AccElemVars {
+            uid: uid_var,
+            elem: comm_var,
         };
 
-        <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="ident">MerklePathNode::new</span>(
-            <span class="ident">NodePos::Right</span>,
-            <span class="ident">NodeValue</span>(<span class="ident">F::zero</span>()), <span class="comment">// Left node is zero which is not allowed</span>
-            <span class="ident">NodeValue</span>(<span class="ident">F::from</span>(<span class="number">4_u32</span>)),
+        <span class="kw">let </span>node = MerklePathNode::new(
+            NodePos::Right,
+            NodeValue(F::zero()), <span class="comment">// Left node is zero which is not allowed
+            </span>NodeValue(F::from(<span class="number">4_u32</span>)),
         );
-        <span class="kw">let</span> <span class="ident">leaf</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="ident">NodeValue</span>(<span class="ident">F::zero</span>()), <span class="kw-2">&amp;</span><span class="ident">NodeValue</span>(<span class="ident">uid</span>), <span class="kw-2">&amp;</span><span class="ident">NodeValue</span>(<span class="ident">comm</span>));
-        <span class="kw">let</span> <span class="ident">expected_root</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">sibling1</span>, <span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">sibling2</span>, <span class="kw-2">&amp;</span><span class="ident">leaf</span>);
+        <span class="kw">let </span>leaf = hash(<span class="kw-2">&amp;</span>NodeValue(F::zero()), <span class="kw-2">&amp;</span>NodeValue(uid), <span class="kw-2">&amp;</span>NodeValue(comm));
+        <span class="kw">let </span>expected_root = hash(<span class="kw-2">&amp;</span>node.sibling1, <span class="kw-2">&amp;</span>node.sibling2, <span class="kw-2">&amp;</span>leaf);
 
-        <span class="kw">let</span> <span class="ident">merkle_path</span> <span class="op">=</span> <span class="ident">MerklePath::new</span>(<span class="macro">vec!</span>[<span class="ident">node</span>]);
-        <span class="kw">let</span> <span class="ident">path_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">add_merkle_path_variable</span>(<span class="kw-2">&amp;</span><span class="ident">merkle_path</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>merkle_path = MerklePath::new(<span class="macro">vec!</span>[node]);
+        <span class="kw">let </span>path_vars = circuit.add_merkle_path_variable(<span class="kw-2">&amp;</span>merkle_path).unwrap();
 
-        <span class="kw">let</span> <span class="ident">root_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">compute_merkle_root</span>(<span class="ident">elem</span>, <span class="kw-2">&amp;</span><span class="ident">path_vars</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>root_var = circuit.compute_merkle_root(elem, <span class="kw-2">&amp;</span>path_vars).unwrap();
 
-        <span class="comment">// Check Merkle root correctness</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">root_var</span>).<span class="ident">unwrap</span>(), <span class="ident">expected_root</span>.<span class="number">0</span>);
+        <span class="comment">// Check Merkle root correctness
+        </span><span class="macro">assert_eq!</span>(circuit.witness(root_var).unwrap(), expected_root.<span class="number">0</span>);
 
-        <span class="comment">// Circuit does not verify because a left node value is 0</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Circuit does not verify because a left node value is 0
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

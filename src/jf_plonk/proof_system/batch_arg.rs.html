@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/batch_arg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batch_arg.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/batch_arg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batch_arg.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -399,406 +399,406 @@
 <span id="399">399</span>
 <span id="400">400</span>
 <span id="401">401</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! An argument system that proves/verifies multiple instances in a batch.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">errors</span>::{<span class="ident">PlonkError</span>, <span class="ident">SnarkError::ParameterError</span>},
-    <span class="ident">proof_system</span>::{
-        <span class="ident">structs</span>::{<span class="ident">BatchProof</span>, <span class="ident">OpenKey</span>, <span class="ident">ProvingKey</span>, <span class="ident">ScalarsAndBases</span>, <span class="ident">UniversalSrs</span>, <span class="ident">VerifyingKey</span>},
-        <span class="ident">verifier::Verifier</span>,
-        <span class="ident">PlonkKzgSnark</span>, <span class="ident">UniversalSNARK</span>,
+</span><span class="doccomment">//! An argument system that proves/verifies multiple instances in a batch.
+</span><span class="kw">use crate</span>::{
+    errors::{PlonkError, SnarkError::ParameterError},
+    proof_system::{
+        structs::{BatchProof, OpenKey, ProvingKey, ScalarsAndBases, UniversalSrs, VerifyingKey},
+        verifier::Verifier,
+        PlonkKzgSnark, UniversalSNARK,
     },
-    <span class="ident">transcript::PlonkTranscript</span>,
+    transcript::PlonkTranscript,
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span>};
-<span class="kw">use</span> <span class="ident">ark_ff::One</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">format</span>,
-    <span class="ident">marker::PhantomData</span>,
-    <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">string::ToString</span>,
-    <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
+<span class="kw">use </span>ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+<span class="kw">use </span>ark_ff::One;
+<span class="kw">use </span>ark_std::{
+    format,
+    marker::PhantomData,
+    rand::{CryptoRng, RngCore},
+    string::ToString,
+    vec,
+    vec::Vec,
 };
-<span class="kw">use</span> <span class="ident">jf_primitives::rescue::RescueParameter</span>;
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">gadgets::ecc::SWToTEConParam</span>, <span class="ident">Circuit</span>, <span class="ident">MergeableCircuitType</span>, <span class="ident">PlonkCircuit</span>};
-<span class="kw">use</span> <span class="ident">jf_utils::multi_pairing</span>;
+<span class="kw">use </span>jf_primitives::rescue::RescueParameter;
+<span class="kw">use </span>jf_relation::{gadgets::ecc::SWToTEConParam, Circuit, MergeableCircuitType, PlonkCircuit};
+<span class="kw">use </span>jf_utils::multi_pairing;
 
-<span class="doccomment">/// A batching argument.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BatchArgument</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>);
+<span class="doccomment">/// A batching argument.
+</span><span class="kw">pub struct </span>BatchArgument&lt;E: PairingEngine&gt;(PhantomData&lt;E&gt;);
 
-<span class="doccomment">/// A circuit instance that consists of the corresponding proving</span>
-<span class="doccomment">/// key/verification key/circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Instance</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="comment">// TODO: considering giving instance an ID</span>
-    <span class="ident">prove_key</span>: <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="comment">// the verification key can be obtained inside the proving key.</span>
-    <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    <span class="ident">_circuit_type</span>: <span class="ident">MergeableCircuitType</span>,
+<span class="doccomment">/// A circuit instance that consists of the corresponding proving
+/// key/verification key/circuit.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>Instance&lt;E: PairingEngine&gt; {
+    <span class="comment">// TODO: considering giving instance an ID
+    </span>prove_key: ProvingKey&lt;E&gt;, <span class="comment">// the verification key can be obtained inside the proving key.
+    </span>circuit: PlonkCircuit&lt;E::Fr&gt;,
+    _circuit_type: MergeableCircuitType,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">Instance</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Get verification key by reference.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_key_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">prove_key</span>.<span class="ident">vk</span>
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; Instance&lt;E&gt; {
+    <span class="doccomment">/// Get verification key by reference.
+    </span><span class="kw">pub fn </span>verify_key_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.prove_key.vk
     }
 
-    <span class="doccomment">/// Get mutable circuit by reference.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">circuit_mut_ref</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">circuit</span>
+    <span class="doccomment">/// Get mutable circuit by reference.
+    </span><span class="kw">pub fn </span>circuit_mut_ref(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;E::Fr&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.circuit
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">BatchArgument</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;E, F, P&gt; BatchArgument&lt;E&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    F: RescueParameter + SWToTEConParam,
+    P: SWModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="doccomment">/// Setup the circuit and the proving key for a (mergeable) instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">setup_instance</span>(
-        <span class="ident">srs</span>: <span class="kw-2">&amp;</span><span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
-        <span class="ident">circuit_type</span>: <span class="ident">MergeableCircuitType</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Instance</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="ident">circuit</span>.<span class="ident">finalize_for_mergeable_circuit</span>(<span class="ident">circuit_type</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> (<span class="ident">prove_key</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">PlonkKzgSnark::preprocess</span>(<span class="ident">srs</span>, <span class="kw-2">&amp;</span><span class="ident">circuit</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">Instance</span> {
-            <span class="ident">prove_key</span>,
-            <span class="ident">circuit</span>,
-            <span class="ident">_circuit_type</span>: <span class="ident">circuit_type</span>,
+    <span class="doccomment">/// Setup the circuit and the proving key for a (mergeable) instance.
+    </span><span class="kw">pub fn </span>setup_instance(
+        srs: <span class="kw-2">&amp;</span>UniversalSrs&lt;E&gt;,
+        <span class="kw-2">mut </span>circuit: PlonkCircuit&lt;E::Fr&gt;,
+        circuit_type: MergeableCircuitType,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Instance&lt;E&gt;, PlonkError&gt; {
+        circuit.finalize_for_mergeable_circuit(circuit_type)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(prove_key, <span class="kw">_</span>) = PlonkKzgSnark::preprocess(srs, <span class="kw-2">&amp;</span>circuit)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Instance {
+            prove_key,
+            circuit,
+            _circuit_type: circuit_type,
         })
     }
 
-    <span class="doccomment">/// Prove satisfiability of multiple instances in a batch.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">batch_prove</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-        <span class="ident">instances_type_a</span>: <span class="kw-2">&amp;</span>[<span class="ident">Instance</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-        <span class="ident">instances_type_b</span>: <span class="kw-2">&amp;</span>[<span class="ident">Instance</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
-        <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Prove satisfiability of multiple instances in a batch.
+    </span><span class="kw">pub fn </span>batch_prove&lt;R, T&gt;(
+        prng: <span class="kw-2">&amp;mut </span>R,
+        instances_type_a: <span class="kw-2">&amp;</span>[Instance&lt;E&gt;],
+        instances_type_b: <span class="kw-2">&amp;</span>[Instance&lt;E&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BatchProof&lt;E&gt;, PlonkError&gt;
+    <span class="kw">where
+        </span>R: CryptoRng + RngCore,
+        T: PlonkTranscript&lt;F&gt;,
     {
-        <span class="kw">if</span> <span class="ident">instances_type_a</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">instances_type_b</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">if </span>instances_type_a.len() != instances_type_b.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;the number of type A instances {} is different from the number of type B instances {}.&quot;</span>, 
-                <span class="ident">instances_type_a</span>.<span class="ident">len</span>(),
-                <span class="ident">instances_type_b</span>.<span class="ident">len</span>())
-            ).<span class="ident">into</span>());
+                instances_type_a.len(),
+                instances_type_b.len())
+            ).into());
         }
-        <span class="kw">let</span> <span class="ident">pks</span> <span class="op">=</span> <span class="ident">instances_type_a</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">instances_type_b</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pred_a</span>, <span class="ident">pred_b</span>)<span class="op">|</span> <span class="ident">pred_a</span>.<span class="ident">prove_key</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">pred_b</span>.<span class="ident">prove_key</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>pks = instances_type_a
+            .iter()
+            .zip(instances_type_b.iter())
+            .map(|(pred_a, pred_b)| pred_a.prove_key.merge(<span class="kw-2">&amp;</span>pred_b.prove_key))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">circuits</span> <span class="op">=</span> <span class="ident">instances_type_a</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">instances_type_b</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pred_a</span>, <span class="ident">pred_b</span>)<span class="op">|</span> <span class="ident">pred_a</span>.<span class="ident">circuit</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">pred_b</span>.<span class="ident">circuit</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">pks_ref</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">pks</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">circuits_ref</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">circuits</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
+        <span class="kw">let </span>circuits = instances_type_a
+            .iter()
+            .zip(instances_type_b.iter())
+            .map(|(pred_a, pred_b)| pred_a.circuit.merge(<span class="kw-2">&amp;</span>pred_b.circuit))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>pks_ref: Vec&lt;<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;&gt; = pks.iter().collect();
+        <span class="kw">let </span>circuits_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::Fr&gt;&gt; = circuits.iter().collect();
 
-        <span class="ident">PlonkKzgSnark::batch_prove</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">prng</span>, <span class="kw-2">&amp;</span><span class="ident">circuits_ref</span>, <span class="kw-2">&amp;</span><span class="ident">pks_ref</span>)
+        PlonkKzgSnark::batch_prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(prng, <span class="kw-2">&amp;</span>circuits_ref, <span class="kw-2">&amp;</span>pks_ref)
     }
 
-    <span class="doccomment">/// Partially verify a batched proof without performing the pairing. Return</span>
-    <span class="doccomment">/// the two group elements used in the final pairing.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">partial_verify</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">beta_g</span>: <span class="kw-2">&amp;</span><span class="ident">E::G1Affine</span>,
-        <span class="ident">generator_g</span>: <span class="kw-2">&amp;</span><span class="ident">E::G1Affine</span>,
-        <span class="ident">merged_vks</span>: <span class="kw-2">&amp;</span>[<span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-        <span class="ident">shared_public_input</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
-        <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">blinding_factor</span>: <span class="ident">E::Fr</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">E::G1Projective</span>, <span class="ident">E::G1Projective</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Partially verify a batched proof without performing the pairing. Return
+    /// the two group elements used in the final pairing.
+    </span><span class="kw">pub fn </span>partial_verify&lt;T&gt;(
+        beta_g: <span class="kw-2">&amp;</span>E::G1Affine,
+        generator_g: <span class="kw-2">&amp;</span>E::G1Affine,
+        merged_vks: <span class="kw-2">&amp;</span>[VerifyingKey&lt;E&gt;],
+        shared_public_input: <span class="kw-2">&amp;</span>[E::Fr],
+        batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
+        blinding_factor: E::Fr,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(E::G1Projective, E::G1Projective), PlonkError&gt;
+    <span class="kw">where
+        </span>T: PlonkTranscript&lt;F&gt;,
     {
-        <span class="kw">if</span> <span class="ident">merged_vks</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="string">&quot;empty merged verification keys&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>());
+        <span class="kw">if </span>merged_vks.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;empty merged verification keys&quot;</span>.to_string()).into());
         }
-        <span class="kw">if</span> <span class="ident">merged_vks</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">batch_proof</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">if </span>merged_vks.len() != batch_proof.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;the number of verification keys {} is different from the number of instances {}.&quot;</span>,
-                <span class="ident">merged_vks</span>.<span class="ident">len</span>(),
-                <span class="ident">batch_proof</span>.<span class="ident">len</span>()
+                merged_vks.len(),
+                batch_proof.len()
             ))
-            .<span class="ident">into</span>());
+            .into());
         }
-        <span class="kw">let</span> <span class="ident">domain_size</span> <span class="op">=</span> <span class="ident">merged_vks</span>[<span class="number">0</span>].<span class="ident">domain_size</span>;
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">vk</span>) <span class="kw">in</span> <span class="ident">merged_vks</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">vk</span>.<span class="ident">domain_size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">domain_size</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">let </span>domain_size = merged_vks[<span class="number">0</span>].domain_size;
+        <span class="kw">for </span>(i, vk) <span class="kw">in </span>merged_vks.iter().skip(<span class="number">1</span>).enumerate() {
+            <span class="kw">if </span>vk.domain_size != domain_size {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                     <span class="string">&quot;the {}-th verification key&#39;s domain size {} is different from {}.&quot;</span>,
-                    <span class="ident">i</span>, <span class="ident">vk</span>.<span class="ident">domain_size</span>, <span class="ident">domain_size</span>
+                    i, vk.domain_size, domain_size
                 ))
-                .<span class="ident">into</span>());
+                .into());
             }
         }
-        <span class="kw">let</span> <span class="ident">verifier</span> <span class="op">=</span> <span class="ident">Verifier::new</span>(<span class="ident">domain_size</span>)<span class="question-mark">?</span>;
-        <span class="comment">// we need to copy the public input once after merging the circuit</span>
-        <span class="kw">let</span> <span class="ident">shared_public_input</span> <span class="op">=</span> [<span class="ident">shared_public_input</span>, <span class="ident">shared_public_input</span>].<span class="ident">concat</span>();
-        <span class="kw">let</span> <span class="ident">public_inputs</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="kw-2">&amp;</span><span class="ident">shared_public_input</span>[..]; <span class="ident">merged_vks</span>.<span class="ident">len</span>()];
-        <span class="kw">let</span> <span class="ident">merged_vks_ref</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">merged_vks</span>.<span class="ident">iter</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">pcs_info</span> <span class="op">=</span>
-            <span class="ident">verifier</span>.<span class="ident">prepare_pcs_info</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">merged_vks_ref</span>, <span class="kw-2">&amp;</span><span class="ident">public_inputs</span>, <span class="ident">batch_proof</span>, <span class="kw-2">&amp;</span><span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>verifier = Verifier::new(domain_size)<span class="question-mark">?</span>;
+        <span class="comment">// we need to copy the public input once after merging the circuit
+        </span><span class="kw">let </span>shared_public_input = [shared_public_input, shared_public_input].concat();
+        <span class="kw">let </span>public_inputs = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>shared_public_input[..]; merged_vks.len()];
+        <span class="kw">let </span>merged_vks_ref: Vec&lt;<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;&gt; = merged_vks.iter().collect();
+        <span class="kw">let </span>pcs_info =
+            verifier.prepare_pcs_info::&lt;T&gt;(<span class="kw-2">&amp;</span>merged_vks_ref, <span class="kw-2">&amp;</span>public_inputs, batch_proof, <span class="kw-2">&amp;</span><span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// inner1 = [open_proof] + u * [shifted_open_proof] + blinding_factor * [1]1</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scalars_and_bases</span> <span class="op">=</span> <span class="ident">ScalarsAndBases</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::new</span>();
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(<span class="ident">E::Fr::one</span>(), <span class="ident">pcs_info</span>.<span class="ident">opening_proof</span>.<span class="number">0</span>);
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(<span class="ident">pcs_info</span>.<span class="ident">u</span>, <span class="ident">pcs_info</span>.<span class="ident">shifted_opening_proof</span>.<span class="number">0</span>);
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(<span class="ident">blinding_factor</span>, <span class="kw-2">*</span><span class="ident">generator_g</span>);
-        <span class="kw">let</span> <span class="ident">inner1</span> <span class="op">=</span> <span class="ident">scalars_and_bases</span>.<span class="ident">multi_scalar_mul</span>();
+        <span class="comment">// inner1 = [open_proof] + u * [shifted_open_proof] + blinding_factor * [1]1
+        </span><span class="kw">let </span><span class="kw-2">mut </span>scalars_and_bases = ScalarsAndBases::&lt;E&gt;::new();
+        scalars_and_bases.push(E::Fr::one(), pcs_info.opening_proof.<span class="number">0</span>);
+        scalars_and_bases.push(pcs_info.u, pcs_info.shifted_opening_proof.<span class="number">0</span>);
+        scalars_and_bases.push(blinding_factor, <span class="kw-2">*</span>generator_g);
+        <span class="kw">let </span>inner1 = scalars_and_bases.multi_scalar_mul();
 
-        <span class="comment">// inner2 = eval_point * [open_proof] + next_eval_point * u *</span>
-        <span class="comment">// [shifted_open_proof] + [aggregated_comm] - aggregated_eval * [1]1 +</span>
-        <span class="comment">// blinding_factor * [beta]1</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scalars_and_bases</span> <span class="op">=</span> <span class="ident">pcs_info</span>.<span class="ident">comm_scalars_and_bases</span>;
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(<span class="ident">pcs_info</span>.<span class="ident">eval_point</span>, <span class="ident">pcs_info</span>.<span class="ident">opening_proof</span>.<span class="number">0</span>);
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(
-            <span class="ident">pcs_info</span>.<span class="ident">next_eval_point</span> <span class="op">*</span> <span class="ident">pcs_info</span>.<span class="ident">u</span>,
-            <span class="ident">pcs_info</span>.<span class="ident">shifted_opening_proof</span>.<span class="number">0</span>,
+        <span class="comment">// inner2 = eval_point * [open_proof] + next_eval_point * u *
+        // [shifted_open_proof] + [aggregated_comm] - aggregated_eval * [1]1 +
+        // blinding_factor * [beta]1
+        </span><span class="kw">let </span><span class="kw-2">mut </span>scalars_and_bases = pcs_info.comm_scalars_and_bases;
+        scalars_and_bases.push(pcs_info.eval_point, pcs_info.opening_proof.<span class="number">0</span>);
+        scalars_and_bases.push(
+            pcs_info.next_eval_point * pcs_info.u,
+            pcs_info.shifted_opening_proof.<span class="number">0</span>,
         );
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(<span class="op">-</span><span class="ident">pcs_info</span>.<span class="ident">eval</span>, <span class="kw-2">*</span><span class="ident">generator_g</span>);
-        <span class="ident">scalars_and_bases</span>.<span class="ident">push</span>(<span class="ident">blinding_factor</span>, <span class="kw-2">*</span><span class="ident">beta_g</span>);
-        <span class="kw">let</span> <span class="ident">inner2</span> <span class="op">=</span> <span class="ident">scalars_and_bases</span>.<span class="ident">multi_scalar_mul</span>();
+        scalars_and_bases.push(-pcs_info.eval, <span class="kw-2">*</span>generator_g);
+        scalars_and_bases.push(blinding_factor, <span class="kw-2">*</span>beta_g);
+        <span class="kw">let </span>inner2 = scalars_and_bases.multi_scalar_mul();
 
-        <span class="prelude-val">Ok</span>((<span class="ident">inner1</span>, <span class="ident">inner2</span>))
+        <span class="prelude-val">Ok</span>((inner1, inner2))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="ident">BatchArgument</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+<span class="kw">impl</span>&lt;E&gt; BatchArgument&lt;E&gt;
+<span class="kw">where
+    </span>E: PairingEngine,
 {
-    <span class="doccomment">/// Aggregate verification keys</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aggregate_verify_keys</span>(
-        <span class="ident">vks_type_a</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-        <span class="ident">vks_type_b</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">vks_type_a</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">vks_type_b</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
+    <span class="doccomment">/// Aggregate verification keys
+    </span><span class="kw">pub fn </span>aggregate_verify_keys(
+        vks_type_a: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
+        vks_type_b: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;VerifyingKey&lt;E&gt;&gt;, PlonkError&gt; {
+        <span class="kw">if </span>vks_type_a.len() != vks_type_b.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;the number of type A verification keys {} is different from the number of type B verification keys {}.&quot;</span>, 
-                <span class="ident">vks_type_a</span>.<span class="ident">len</span>(),
-                <span class="ident">vks_type_b</span>.<span class="ident">len</span>())
-            ).<span class="ident">into</span>());
+                vks_type_a.len(),
+                vks_type_b.len())
+            ).into());
         }
-        <span class="ident">vks_type_a</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">vks_type_b</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">vk_a</span>, <span class="ident">vk_b</span>)<span class="op">|</span> <span class="ident">vk_a</span>.<span class="ident">merge</span>(<span class="ident">vk_b</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+        vks_type_a
+            .iter()
+            .zip(vks_type_b.iter())
+            .map(|(vk_a, vk_b)| vk_a.merge(vk_b))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PlonkError&gt;&gt;()
     }
 
-    <span class="doccomment">/// Perform the final pairing to verify the proof.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decide</span>(
-        <span class="ident">open_key</span>: <span class="kw-2">&amp;</span><span class="ident">OpenKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">inner1</span>: <span class="ident">E::G1Projective</span>,
-        <span class="ident">inner2</span>: <span class="ident">E::G1Projective</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="comment">// check e(elem1, [beta]2) ?= e(elem2, [1]2)</span>
-        <span class="kw">let</span> <span class="ident">g1_elems</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">inner1</span>.<span class="ident">into</span>(), <span class="op">-</span><span class="ident">inner2</span>.<span class="ident">into</span>()];
-        <span class="kw">let</span> <span class="ident">g2_elems</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">open_key</span>.<span class="ident">beta_h</span>, <span class="ident">open_key</span>.<span class="ident">h</span>];
-        <span class="prelude-val">Ok</span>(<span class="ident">multi_pairing</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">g1_elems</span>, <span class="kw-2">&amp;</span><span class="ident">g2_elems</span>) <span class="op">==</span> <span class="ident">E::Fqk::one</span>())
+    <span class="doccomment">/// Perform the final pairing to verify the proof.
+    </span><span class="kw">pub fn </span>decide(
+        open_key: <span class="kw-2">&amp;</span>OpenKey&lt;E&gt;,
+        inner1: E::G1Projective,
+        inner2: E::G1Projective,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PlonkError&gt; {
+        <span class="comment">// check e(elem1, [beta]2) ?= e(elem2, [1]2)
+        </span><span class="kw">let </span>g1_elems: Vec&lt;&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine&gt; = <span class="macro">vec!</span>[inner1.into(), -inner2.into()];
+        <span class="kw">let </span>g2_elems = <span class="macro">vec!</span>[open_key.beta_h, open_key.h];
+        <span class="prelude-val">Ok</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>g1_elems, <span class="kw-2">&amp;</span>g2_elems) == E::Fqk::one())
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new_mergeable_circuit_for_test</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    <span class="ident">shared_public_input</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">i</span>: <span class="ident">usize</span>,
-    <span class="ident">circuit_type</span>: <span class="ident">MergeableCircuitType</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-    <span class="kw">let</span> <span class="ident">shared_pub_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_public_variable</span>(<span class="ident">shared_public_input</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">var</span> <span class="op">=</span> <span class="ident">shared_pub_var</span>;
-    <span class="kw">if</span> <span class="ident">circuit_type</span> <span class="op">==</span> <span class="ident">MergeableCircuitType::TypeA</span> {
-        <span class="comment">// compute type A instances: add `shared_public_input` by i times</span>
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">i</span> {
-            <span class="ident">var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">add</span>(<span class="ident">var</span>, <span class="ident">shared_pub_var</span>)<span class="question-mark">?</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_mergeable_circuit_for_test&lt;E: PairingEngine&gt;(
+    shared_public_input: E::Fr,
+    i: usize,
+    circuit_type: MergeableCircuitType,
+) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;E::Fr&gt;, PlonkError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
+    <span class="kw">let </span>shared_pub_var = circuit.create_public_variable(shared_public_input)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>var = shared_pub_var;
+    <span class="kw">if </span>circuit_type == MergeableCircuitType::TypeA {
+        <span class="comment">// compute type A instances: add `shared_public_input` by i times
+        </span><span class="kw">for _ in </span><span class="number">0</span>..i {
+            var = circuit.add(var, shared_pub_var)<span class="question-mark">?</span>;
         }
-    } <span class="kw">else</span> {
-        <span class="comment">// compute type B instances: mul `shared_public_input` by i times</span>
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">i</span> {
-            <span class="ident">var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mul</span>(<span class="ident">var</span>, <span class="ident">shared_pub_var</span>)<span class="question-mark">?</span>;
+    } <span class="kw">else </span>{
+        <span class="comment">// compute type B instances: mul `shared_public_input` by i times
+        </span><span class="kw">for _ in </span><span class="number">0</span>..i {
+            var = circuit.mul(var, shared_pub_var)<span class="question-mark">?</span>;
         }
     }
-    <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
+    <span class="prelude-val">Ok</span>(circuit)
 }
 
-<span class="doccomment">/// Create `num_instances` type A/B instance verifying keys and</span>
-<span class="doccomment">/// compute the corresponding batch proof. Only used for testing.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_batch_proof_and_vks_for_test</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(
-    <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    <span class="ident">srs</span>: <span class="kw-2">&amp;</span><span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="ident">num_instances</span>: <span class="ident">usize</span>,
-    <span class="ident">shared_public_input</span>: <span class="ident">E::Fr</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
-    <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Create `num_instances` type A/B instance verifying keys and
+/// compute the corresponding batch proof. Only used for testing.
+</span><span class="attribute">#[allow(clippy::type_complexity)]
+</span><span class="kw">pub fn </span>build_batch_proof_and_vks_for_test&lt;E, F, P, R, T&gt;(
+    rng: <span class="kw-2">&amp;mut </span>R,
+    srs: <span class="kw-2">&amp;</span>UniversalSrs&lt;E&gt;,
+    num_instances: usize,
+    shared_public_input: E::Fr,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(BatchProof&lt;E&gt;, Vec&lt;VerifyingKey&lt;E&gt;&gt;, Vec&lt;VerifyingKey&lt;E&gt;&gt;), PlonkError&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    F: RescueParameter + SWToTEConParam,
+    P: SWModelParameters&lt;BaseField = F&gt;,
+    R: CryptoRng + RngCore,
+    T: PlonkTranscript&lt;F&gt;,
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances_type_a</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances_type_b</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vks_type_a</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vks_type_b</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">10</span>..<span class="number">10</span> <span class="op">+</span> <span class="ident">num_instances</span> {
-        <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
-            <span class="ident">shared_public_input</span>,
-            <span class="ident">i</span>,
-            <span class="ident">MergeableCircuitType::TypeA</span>,
+    <span class="kw">let </span><span class="kw-2">mut </span>instances_type_a = <span class="macro">vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>instances_type_b = <span class="macro">vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>vks_type_a = <span class="macro">vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>vks_type_b = <span class="macro">vec!</span>[];
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">10</span>..<span class="number">10 </span>+ num_instances {
+        <span class="kw">let </span>circuit = new_mergeable_circuit_for_test::&lt;E&gt;(
+            shared_public_input,
+            i,
+            MergeableCircuitType::TypeA,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">BatchArgument::setup_instance</span>(<span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeA</span>)<span class="question-mark">?</span>;
-        <span class="ident">vks_type_a</span>.<span class="ident">push</span>(<span class="ident">instance</span>.<span class="ident">verify_key_ref</span>().<span class="ident">clone</span>());
-        <span class="ident">instances_type_a</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
+        <span class="kw">let </span>instance = BatchArgument::setup_instance(srs, circuit, MergeableCircuitType::TypeA)<span class="question-mark">?</span>;
+        vks_type_a.push(instance.verify_key_ref().clone());
+        instances_type_a.push(instance);
 
-        <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
-            <span class="ident">shared_public_input</span>,
-            <span class="ident">i</span>,
-            <span class="ident">MergeableCircuitType::TypeB</span>,
+        <span class="kw">let </span>circuit = new_mergeable_circuit_for_test::&lt;E&gt;(
+            shared_public_input,
+            i,
+            MergeableCircuitType::TypeB,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">BatchArgument::setup_instance</span>(<span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeB</span>)<span class="question-mark">?</span>;
-        <span class="ident">vks_type_b</span>.<span class="ident">push</span>(<span class="ident">instance</span>.<span class="ident">verify_key_ref</span>().<span class="ident">clone</span>());
-        <span class="ident">instances_type_b</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
+        <span class="kw">let </span>instance = BatchArgument::setup_instance(srs, circuit, MergeableCircuitType::TypeB)<span class="question-mark">?</span>;
+        vks_type_b.push(instance.verify_key_ref().clone());
+        instances_type_b.push(instance);
     }
 
-    <span class="kw">let</span> <span class="ident">batch_proof</span> <span class="op">=</span>
-        <span class="ident">BatchArgument::batch_prove</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">instances_type_a</span>, <span class="kw-2">&amp;</span><span class="ident">instances_type_b</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>((<span class="ident">batch_proof</span>, <span class="ident">vks_type_a</span>, <span class="ident">vks_type_b</span>))
+    <span class="kw">let </span>batch_proof =
+        BatchArgument::batch_prove::&lt;<span class="kw">_</span>, T&gt;(rng, <span class="kw-2">&amp;</span>instances_type_a, <span class="kw-2">&amp;</span>instances_type_b)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>((batch_proof, vks_type_a, vks_type_b))
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transcript::RescueTranscript</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_377</span>::{<span class="ident">Bls12_377</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>};
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">UniformRand</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::transcript::RescueTranscript;
+    <span class="kw">use </span>ark_bls12_377::{Bls12_377, Fq <span class="kw">as </span>Fq377};
+    <span class="kw">use </span>ark_std::{test_rng, UniformRand};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_batch_argument</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="ident">test_batch_argument_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span>, <span class="ident">Fq377</span>, <span class="kw">_</span>, <span class="ident">RescueTranscript</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_batch_argument() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
+        test_batch_argument_helper::&lt;Bls12_377, Fq377, <span class="kw">_</span>, RescueTranscript&lt;<span class="kw">_</span>&gt;&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_batch_argument_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>: <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_batch_argument_helper&lt;E, F, P, T&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        F: RescueParameter + SWToTEConParam,
+        P: SWModelParameters&lt;BaseField = F&gt;,
+        T: PlonkTranscript&lt;F&gt;,
     {
-        <span class="comment">// 1. Simulate universal setup</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">128</span>;
-        <span class="kw">let</span> <span class="ident">max_degree</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">+</span> <span class="number">2</span>;
-        <span class="kw">let</span> <span class="ident">srs</span> <span class="op">=</span> <span class="ident">PlonkKzgSnark</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::universal_setup</span>(<span class="ident">max_degree</span>, <span class="ident">rng</span>)<span class="question-mark">?</span>;
+        <span class="comment">// 1. Simulate universal setup
+        </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">let </span>n = <span class="number">128</span>;
+        <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
 
-        <span class="comment">// 2. Setup instances</span>
-        <span class="kw">let</span> <span class="ident">shared_public_input</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances_type_a</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances_type_b</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">32</span>..<span class="number">50</span> {
-            <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
-                <span class="ident">shared_public_input</span>,
-                <span class="ident">i</span>,
-                <span class="ident">MergeableCircuitType::TypeA</span>,
+        <span class="comment">// 2. Setup instances
+        </span><span class="kw">let </span>shared_public_input = E::Fr::rand(rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>instances_type_a = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>instances_type_b = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">32</span>..<span class="number">50 </span>{
+            <span class="kw">let </span>circuit = new_mergeable_circuit_for_test::&lt;E&gt;(
+                shared_public_input,
+                i,
+                MergeableCircuitType::TypeA,
             )<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span>
-                <span class="ident">BatchArgument::setup_instance</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeA</span>)<span class="question-mark">?</span>;
-            <span class="ident">instances_type_a</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
+            <span class="kw">let </span>instance =
+                BatchArgument::setup_instance(<span class="kw-2">&amp;</span>srs, circuit, MergeableCircuitType::TypeA)<span class="question-mark">?</span>;
+            instances_type_a.push(instance);
 
-            <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">new_mergeable_circuit_for_test</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
-                <span class="ident">shared_public_input</span>,
-                <span class="ident">i</span>,
-                <span class="ident">MergeableCircuitType::TypeB</span>,
+            <span class="kw">let </span>circuit = new_mergeable_circuit_for_test::&lt;E&gt;(
+                shared_public_input,
+                i,
+                MergeableCircuitType::TypeB,
             )<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span>
-                <span class="ident">BatchArgument::setup_instance</span>(<span class="kw-2">&amp;</span><span class="ident">srs</span>, <span class="ident">circuit</span>, <span class="ident">MergeableCircuitType::TypeB</span>)<span class="question-mark">?</span>;
-            <span class="ident">instances_type_b</span>.<span class="ident">push</span>(<span class="ident">instance</span>);
+            <span class="kw">let </span>instance =
+                BatchArgument::setup_instance(<span class="kw-2">&amp;</span>srs, circuit, MergeableCircuitType::TypeB)<span class="question-mark">?</span>;
+            instances_type_b.push(instance);
         }
 
-        <span class="comment">// 3. Batch Proving</span>
-        <span class="kw">let</span> <span class="ident">batch_proof</span> <span class="op">=</span>
-            <span class="ident">BatchArgument::batch_prove</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">instances_type_a</span>, <span class="kw-2">&amp;</span><span class="ident">instances_type_b</span>)<span class="question-mark">?</span>;
-        <span class="comment">// error path: inconsistent length between instances_type_a and</span>
-        <span class="comment">// instances_type_b</span>
-        <span class="macro">assert!</span>(
-            <span class="ident">BatchArgument::batch_prove</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">instances_type_a</span>[<span class="number">1</span>..], <span class="kw-2">&amp;</span><span class="ident">instances_type_b</span>)
-                .<span class="ident">is_err</span>()
+        <span class="comment">// 3. Batch Proving
+        </span><span class="kw">let </span>batch_proof =
+            BatchArgument::batch_prove::&lt;<span class="kw">_</span>, T&gt;(rng, <span class="kw-2">&amp;</span>instances_type_a, <span class="kw-2">&amp;</span>instances_type_b)<span class="question-mark">?</span>;
+        <span class="comment">// error path: inconsistent length between instances_type_a and
+        // instances_type_b
+        </span><span class="macro">assert!</span>(
+            BatchArgument::batch_prove::&lt;<span class="kw">_</span>, T&gt;(rng, <span class="kw-2">&amp;</span>instances_type_a[<span class="number">1</span>..], <span class="kw-2">&amp;</span>instances_type_b)
+                .is_err()
         );
 
-        <span class="comment">// 4. Aggregate verification keys</span>
-        <span class="kw">let</span> <span class="ident">vks_type_a</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">instances_type_a</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pred</span><span class="op">|</span> <span class="ident">pred</span>.<span class="ident">verify_key_ref</span>())
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">vks_type_b</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">instances_type_b</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pred</span><span class="op">|</span> <span class="ident">pred</span>.<span class="ident">verify_key_ref</span>())
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">merged_vks</span> <span class="op">=</span> <span class="ident">BatchArgument::aggregate_verify_keys</span>(<span class="kw-2">&amp;</span><span class="ident">vks_type_a</span>, <span class="kw-2">&amp;</span><span class="ident">vks_type_b</span>)<span class="question-mark">?</span>;
-        <span class="comment">// error path: inconsistent length between vks_type_a and vks_type_b</span>
-        <span class="macro">assert!</span>(<span class="ident">BatchArgument::aggregate_verify_keys</span>(<span class="kw-2">&amp;</span><span class="ident">vks_type_a</span>[<span class="number">1</span>..], <span class="kw-2">&amp;</span><span class="ident">vks_type_b</span>).<span class="ident">is_err</span>());
+        <span class="comment">// 4. Aggregate verification keys
+        </span><span class="kw">let </span>vks_type_a: Vec&lt;<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;&gt; = instances_type_a
+            .iter()
+            .map(|pred| pred.verify_key_ref())
+            .collect();
+        <span class="kw">let </span>vks_type_b: Vec&lt;<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;&gt; = instances_type_b
+            .iter()
+            .map(|pred| pred.verify_key_ref())
+            .collect();
+        <span class="kw">let </span>merged_vks = BatchArgument::aggregate_verify_keys(<span class="kw-2">&amp;</span>vks_type_a, <span class="kw-2">&amp;</span>vks_type_b)<span class="question-mark">?</span>;
+        <span class="comment">// error path: inconsistent length between vks_type_a and vks_type_b
+        </span><span class="macro">assert!</span>(BatchArgument::aggregate_verify_keys(<span class="kw-2">&amp;</span>vks_type_a[<span class="number">1</span>..], <span class="kw-2">&amp;</span>vks_type_b).is_err());
 
-        <span class="comment">// 5. Verification</span>
-        <span class="kw">let</span> <span class="ident">open_key_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">vks_type_a</span>[<span class="number">0</span>].<span class="ident">open_key</span>;
-        <span class="kw">let</span> <span class="ident">beta_g_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">srs</span>.<span class="ident">powers_of_g</span>[<span class="number">1</span>];
-        <span class="kw">let</span> <span class="ident">blinding_factor</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
-        <span class="kw">let</span> (<span class="ident">inner1</span>, <span class="ident">inner2</span>) <span class="op">=</span> <span class="ident">BatchArgument::partial_verify</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-            <span class="ident">beta_g_ref</span>,
-            <span class="kw-2">&amp;</span><span class="ident">open_key_ref</span>.<span class="ident">g</span>,
-            <span class="kw-2">&amp;</span><span class="ident">merged_vks</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">shared_public_input</span>],
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
-            <span class="ident">blinding_factor</span>,
+        <span class="comment">// 5. Verification
+        </span><span class="kw">let </span>open_key_ref = <span class="kw-2">&amp;</span>vks_type_a[<span class="number">0</span>].open_key;
+        <span class="kw">let </span>beta_g_ref = <span class="kw-2">&amp;</span>srs.powers_of_g[<span class="number">1</span>];
+        <span class="kw">let </span>blinding_factor = E::Fr::rand(rng);
+        <span class="kw">let </span>(inner1, inner2) = BatchArgument::partial_verify::&lt;T&gt;(
+            beta_g_ref,
+            <span class="kw-2">&amp;</span>open_key_ref.g,
+            <span class="kw-2">&amp;</span>merged_vks,
+            <span class="kw-2">&amp;</span>[shared_public_input],
+            <span class="kw-2">&amp;</span>batch_proof,
+            blinding_factor,
         )<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">BatchArgument::decide</span>(<span class="ident">open_key_ref</span>, <span class="ident">inner1</span>, <span class="ident">inner2</span>)<span class="question-mark">?</span>);
-        <span class="comment">// error paths</span>
-        <span class="comment">// empty merged_vks</span>
-        <span class="macro">assert!</span>(<span class="ident">BatchArgument::partial_verify</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-            <span class="ident">beta_g_ref</span>,
-            <span class="kw-2">&amp;</span><span class="ident">open_key_ref</span>.<span class="ident">g</span>,
+        <span class="macro">assert!</span>(BatchArgument::decide(open_key_ref, inner1, inner2)<span class="question-mark">?</span>);
+        <span class="comment">// error paths
+        // empty merged_vks
+        </span><span class="macro">assert!</span>(BatchArgument::partial_verify::&lt;T&gt;(
+            beta_g_ref,
+            <span class="kw-2">&amp;</span>open_key_ref.g,
             <span class="kw-2">&amp;</span>[],
-            <span class="kw-2">&amp;</span>[<span class="ident">shared_public_input</span>],
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
-            <span class="ident">blinding_factor</span>
+            <span class="kw-2">&amp;</span>[shared_public_input],
+            <span class="kw-2">&amp;</span>batch_proof,
+            blinding_factor
         )
-        .<span class="ident">is_err</span>());
-        <span class="comment">// the number of vks is different the number of instances</span>
-        <span class="macro">assert!</span>(<span class="ident">BatchArgument::partial_verify</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-            <span class="ident">beta_g_ref</span>,
-            <span class="kw-2">&amp;</span><span class="ident">open_key_ref</span>.<span class="ident">g</span>,
-            <span class="kw-2">&amp;</span><span class="ident">merged_vks</span>[<span class="number">1</span>..],
-            <span class="kw-2">&amp;</span>[<span class="ident">shared_public_input</span>],
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
-            <span class="ident">blinding_factor</span>
+        .is_err());
+        <span class="comment">// the number of vks is different the number of instances
+        </span><span class="macro">assert!</span>(BatchArgument::partial_verify::&lt;T&gt;(
+            beta_g_ref,
+            <span class="kw-2">&amp;</span>open_key_ref.g,
+            <span class="kw-2">&amp;</span>merged_vks[<span class="number">1</span>..],
+            <span class="kw-2">&amp;</span>[shared_public_input],
+            <span class="kw-2">&amp;</span>batch_proof,
+            blinding_factor
         )
-        .<span class="ident">is_err</span>());
-        <span class="comment">// inconsistent domain size between verification keys</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bad_merged_vks</span> <span class="op">=</span> <span class="ident">merged_vks</span>;
-        <span class="ident">bad_merged_vks</span>[<span class="number">0</span>].<span class="ident">domain_size</span> <span class="op">/</span><span class="op">=</span> <span class="number">2</span>;
-        <span class="macro">assert!</span>(<span class="ident">BatchArgument::partial_verify</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-            <span class="ident">beta_g_ref</span>,
-            <span class="kw-2">&amp;</span><span class="ident">open_key_ref</span>.<span class="ident">g</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bad_merged_vks</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">shared_public_input</span>],
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
-            <span class="ident">blinding_factor</span>
+        .is_err());
+        <span class="comment">// inconsistent domain size between verification keys
+        </span><span class="kw">let </span><span class="kw-2">mut </span>bad_merged_vks = merged_vks;
+        bad_merged_vks[<span class="number">0</span>].domain_size /= <span class="number">2</span>;
+        <span class="macro">assert!</span>(BatchArgument::partial_verify::&lt;T&gt;(
+            beta_g_ref,
+            <span class="kw-2">&amp;</span>open_key_ref.g,
+            <span class="kw-2">&amp;</span>bad_merged_vks,
+            <span class="kw-2">&amp;</span>[shared_public_input],
+            <span class="kw-2">&amp;</span>batch_proof,
+            blinding_factor
         )
-        .<span class="ident">is_err</span>());
+        .is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

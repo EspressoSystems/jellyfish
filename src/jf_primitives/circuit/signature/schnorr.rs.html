@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/signature/schnorr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>schnorr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/signature/schnorr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>schnorr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -314,321 +314,321 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Circuit implementation of a Schnorr signature scheme.</span>
+</span><span class="doccomment">//! Circuit implementation of a Schnorr signature scheme.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::rescue::RescueGadget</span>,
-    <span class="ident">constants::CS_ID_SCHNORR</span>,
-    <span class="ident">rescue::RescueParameter</span>,
-    <span class="ident">signatures::schnorr</span>::{<span class="ident">Signature</span>, <span class="ident">VerKey</span>},
-    <span class="ident">utils</span>::{<span class="ident">challenge_bit_len</span>, <span class="ident">field_bit_len</span>},
+</span><span class="kw">use crate</span>::{
+    circuit::rescue::RescueGadget,
+    constants::CS_ID_SCHNORR,
+    rescue::RescueParameter,
+    signatures::schnorr::{Signature, VerKey},
+    utils::{challenge_bit_len, field_bit_len},
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">twisted_edwards_extended::GroupAffine</span>, <span class="ident">AffineCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{
-    <span class="ident">errors::CircuitError</span>,
-    <span class="ident">gadgets::ecc</span>::{<span class="ident">Point</span>, <span class="ident">PointVariable</span>},
-    <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+<span class="kw">use </span>ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParameters <span class="kw">as </span>Parameters};
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{vec, vec::Vec};
+<span class="kw">use </span>jf_relation::{
+    errors::CircuitError,
+    gadgets::ecc::{Point, PointVariable},
+    BoolVar, Circuit, PlonkCircuit, Variable,
 };
-<span class="kw">use</span> <span class="ident">jf_utils::fr_to_fq</span>;
+<span class="kw">use </span>jf_utils::fr_to_fq;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="doccomment">/// Signature verification key variable</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VerKeyVar</span>(<span class="kw">pub</span> <span class="ident">PointVariable</span>);
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="doccomment">/// Signature verification key variable
+</span><span class="kw">pub struct </span>VerKeyVar(<span class="kw">pub </span>PointVariable);
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
-<span class="doccomment">/// Signature variable</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignatureVar</span> {
-    <span class="doccomment">/// s component.</span>
-    <span class="kw">pub</span> <span class="ident">s</span>: <span class="ident">Variable</span>,
-    <span class="doccomment">/// R component.</span>
-    <span class="kw">pub</span> <span class="ident">R</span>: <span class="ident">PointVariable</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+#[allow(non_snake_case)]
+</span><span class="doccomment">/// Signature variable
+</span><span class="kw">pub struct </span>SignatureVar {
+    <span class="doccomment">/// s component.
+    </span><span class="kw">pub </span>s: Variable,
+    <span class="doccomment">/// R component.
+    </span><span class="kw">pub </span>R: PointVariable,
 }
 
-<span class="doccomment">/// Plonk circuit gadget for EdDSA signatures.</span>
-<span class="comment">// FIXME -- clear this todo</span>
-<span class="comment">// TODO: check the parameters and the security level of the signature scheme.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Plonk circuit gadget for EdDSA signatures.
+</span><span class="comment">// FIXME -- clear this todo
+// TODO: check the parameters and the security level of the signature scheme.
+</span><span class="kw">pub trait </span>SignatureGadget&lt;F, P&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="doccomment">/// Signature verification circuit</span>
-    <span class="doccomment">/// * `vk` - signature verification key variable.</span>
-    <span class="doccomment">/// * `msg` - message variables that have been signed.</span>
-    <span class="doccomment">/// * `sig` - signature variable.</span>
-    <span class="kw">fn</span> <span class="ident">verify_signature</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Signature verification circuit
+    /// * `vk` - signature verification key variable.
+    /// * `msg` - message variables that have been signed.
+    /// * `sig` - signature variable.
+    </span><span class="kw">fn </span>verify_signature(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+        sig: <span class="kw-2">&amp;</span>SignatureVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;;
 
-    <span class="doccomment">/// Obtain the result bit of a signature verification.</span>
-    <span class="doccomment">/// * `vk` - signature verification key variable.</span>
-    <span class="doccomment">/// * `msg` - message variables that have been signed.</span>
-    <span class="doccomment">/// * `sig` - signature variable.</span>
-    <span class="doccomment">/// * `returns` - a bool variable indicating whether the signature is valid.</span>
-    <span class="kw">fn</span> <span class="ident">check_signature_validity</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Obtain the result bit of a signature verification.
+    /// * `vk` - signature verification key variable.
+    /// * `msg` - message variables that have been signed.
+    /// * `sig` - signature variable.
+    /// * `returns` - a bool variable indicating whether the signature is valid.
+    </span><span class="kw">fn </span>check_signature_validity(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+        sig: <span class="kw-2">&amp;</span>SignatureVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;;
 
-    <span class="doccomment">/// Create a signature variable from a signature `sig`.</span>
-    <span class="kw">fn</span> <span class="ident">create_signature_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignatureVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Create a signature variable from a signature `sig`.
+    </span><span class="kw">fn </span>create_signature_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        sig: <span class="kw-2">&amp;</span>Signature&lt;P&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignatureVar, CircuitError&gt;;
 
-    <span class="doccomment">/// Create a signature verification key variable from a key `vk`.</span>
-    <span class="kw">fn</span> <span class="ident">create_signature_vk_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerKeyVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Create a signature verification key variable from a key `vk`.
+    </span><span class="kw">fn </span>create_signature_vk_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vk: <span class="kw-2">&amp;</span>VerKey&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;VerKeyVar, CircuitError&gt;;
 
-    <span class="doccomment">/// Compute the two point variables to be compared in the signature</span>
-    <span class="doccomment">/// verification circuit.</span>
-    <span class="kw">fn</span> <span class="ident">verify_sig_core</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PointVariable</span>, <span class="ident">PointVariable</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Compute the two point variables to be compared in the signature
+    /// verification circuit.
+    </span><span class="kw">fn </span>verify_sig_core(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+        sig: <span class="kw-2">&amp;</span>SignatureVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(PointVariable, PointVariable), CircuitError&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; SignatureGadget&lt;F, P&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">verify_signature</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// p1 = s * G, p2 = sig.R + c * VK</span>
-        <span class="kw">let</span> (<span class="ident">p1</span>, <span class="ident">p2</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::verify_sig_core</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="ident">msg</span>, <span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_point_equal</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>verify_signature(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+        sig: <span class="kw-2">&amp;</span>SignatureVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// p1 = s * G, p2 = sig.R + c * VK
+        </span><span class="kw">let </span>(p1, p2) = &lt;<span class="self">Self </span><span class="kw">as </span>SignatureGadget&lt;F, P&gt;&gt;::verify_sig_core(<span class="self">self</span>, vk, msg, sig)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_point_equal(<span class="kw-2">&amp;</span>p1, <span class="kw-2">&amp;</span>p2)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">check_signature_validity</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">p1</span>, <span class="ident">p2</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::verify_sig_core</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="ident">msg</span>, <span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_point_equal</span>(<span class="kw-2">&amp;</span><span class="ident">p1</span>, <span class="kw-2">&amp;</span><span class="ident">p2</span>)
+    <span class="kw">fn </span>check_signature_validity(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+        sig: <span class="kw-2">&amp;</span>SignatureVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="kw">let </span>(p1, p2) = &lt;<span class="self">Self </span><span class="kw">as </span>SignatureGadget&lt;F, P&gt;&gt;::verify_sig_core(<span class="self">self</span>, vk, msg, sig)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_point_equal(<span class="kw-2">&amp;</span>p1, <span class="kw-2">&amp;</span>p2)
     }
 
-    <span class="kw">fn</span> <span class="ident">create_signature_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignatureVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">sig_var</span> <span class="op">=</span> <span class="ident">SignatureVar</span> {
-            <span class="ident">s</span>: <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">s</span>))<span class="question-mark">?</span>,
-            <span class="ident">R</span>: <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">sig</span>.<span class="ident">R</span>))<span class="question-mark">?</span>,
+    <span class="kw">fn </span>create_signature_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        sig: <span class="kw-2">&amp;</span>Signature&lt;P&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignatureVar, CircuitError&gt; {
+        <span class="kw">let </span>sig_var = SignatureVar {
+            s: <span class="self">self</span>.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>sig.s))<span class="question-mark">?</span>,
+            R: <span class="self">self</span>.create_point_variable(Point::from(sig.R))<span class="question-mark">?</span>,
         };
-        <span class="prelude-val">Ok</span>(<span class="ident">sig_var</span>)
+        <span class="prelude-val">Ok</span>(sig_var)
     }
 
-    <span class="kw">fn</span> <span class="ident">create_signature_vk_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerKeyVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">vk_var</span> <span class="op">=</span> <span class="ident">VerKeyVar</span>(<span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">vk</span>.<span class="number">0</span>))<span class="question-mark">?</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">vk_var</span>)
+    <span class="kw">fn </span>create_signature_vk_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vk: <span class="kw-2">&amp;</span>VerKey&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;VerKeyVar, CircuitError&gt; {
+        <span class="kw">let </span>vk_var = VerKeyVar(<span class="self">self</span>.create_point_variable(Point::from(vk.<span class="number">0</span>))<span class="question-mark">?</span>);
+        <span class="prelude-val">Ok</span>(vk_var)
     }
 
-    <span class="kw">fn</span> <span class="ident">verify_sig_core</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureVar</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PointVariable</span>, <span class="ident">PointVariable</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">c_bits_le</span> <span class="op">=</span>
-            <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">SignatureHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::challenge_bits</span>(<span class="self">self</span>, <span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">R</span>, <span class="ident">msg</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>();
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fixed_base_scalar_mul</span>(<span class="ident">sig</span>.<span class="ident">s</span>, <span class="kw-2">&amp;</span><span class="ident">base</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">variable_base_binary_scalar_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">c_bits_le</span>, <span class="kw-2">&amp;</span><span class="ident">vk</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ecc_add</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">R</span>, <span class="kw-2">&amp;</span><span class="ident">z</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>verify_sig_core(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+        sig: <span class="kw-2">&amp;</span>SignatureVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(PointVariable, PointVariable), CircuitError&gt; {
+        <span class="kw">let </span>c_bits_le =
+            &lt;<span class="self">Self </span><span class="kw">as </span>SignatureHelperGadget&lt;F, P&gt;&gt;::challenge_bits(<span class="self">self</span>, vk, <span class="kw-2">&amp;</span>sig.R, msg)<span class="question-mark">?</span>;
+        <span class="kw">let </span>base = GroupAffine::&lt;P&gt;::prime_subgroup_generator();
+        <span class="kw">let </span>x = <span class="self">self</span>.fixed_base_scalar_mul(sig.s, <span class="kw-2">&amp;</span>base)<span class="question-mark">?</span>;
+        <span class="kw">let </span>z = <span class="self">self</span>.variable_base_binary_scalar_mul::&lt;P&gt;(<span class="kw-2">&amp;</span>c_bits_le, <span class="kw-2">&amp;</span>vk.<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>y = <span class="self">self</span>.ecc_add::&lt;P&gt;(<span class="kw-2">&amp;</span>sig.R, <span class="kw-2">&amp;</span>z)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>((<span class="ident">x</span>, <span class="ident">y</span>))
+        <span class="prelude-val">Ok</span>((x, y))
     }
 }
-<span class="kw">trait</span> <span class="ident">SignatureHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">trait </span>SignatureHelperGadget&lt;F, P&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="comment">// Return signature hash challenge in little-endian binary form.</span>
-    <span class="kw">fn</span> <span class="ident">challenge_bits</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">sig_point</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="comment">// Return signature hash challenge in little-endian binary form.
+    </span><span class="kw">fn </span>challenge_bits(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        sig_point: <span class="kw-2">&amp;</span>PointVariable,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;BoolVar&gt;, CircuitError&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">SignatureHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; SignatureHelperGadget&lt;F, P&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">challenge_bits</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKeyVar</span>,
-        <span class="ident">sig_point</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">instance_description</span> <span class="op">=</span> <span class="ident">F::from_be_bytes_mod_order</span>(<span class="ident">CS_ID_SCHNORR</span>.<span class="ident">as_ref</span>());
-        <span class="comment">// TODO: create `inst_desc_var` and the constant gate *only once* during the</span>
-        <span class="comment">// entire circuit construction.</span>
-        <span class="kw">let</span> <span class="ident">inst_desc_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">instance_description</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_constant</span>(<span class="ident">inst_desc_var</span>, <span class="ident">instance_description</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chal_input</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">inst_desc_var</span>,
-            <span class="ident">vk</span>.<span class="number">0</span>.<span class="ident">get_x</span>(),
-            <span class="ident">vk</span>.<span class="number">0</span>.<span class="ident">get_y</span>(),
-            <span class="ident">sig_point</span>.<span class="ident">get_x</span>(),
-            <span class="ident">sig_point</span>.<span class="ident">get_y</span>(),
+    <span class="kw">fn </span>challenge_bits(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vk: <span class="kw-2">&amp;</span>VerKeyVar,
+        sig_point: <span class="kw-2">&amp;</span>PointVariable,
+        msg: <span class="kw-2">&amp;</span>[Variable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;BoolVar&gt;, CircuitError&gt; {
+        <span class="kw">let </span>instance_description = F::from_be_bytes_mod_order(CS_ID_SCHNORR.as_ref());
+        <span class="comment">// TODO: create `inst_desc_var` and the constant gate *only once* during the
+        // entire circuit construction.
+        </span><span class="kw">let </span>inst_desc_var = <span class="self">self</span>.create_variable(instance_description)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_constant(inst_desc_var, instance_description)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>chal_input = <span class="macro">vec!</span>[
+            inst_desc_var,
+            vk.<span class="number">0</span>.get_x(),
+            vk.<span class="number">0</span>.get_y(),
+            sig_point.get_x(),
+            sig_point.get_y(),
         ];
-        <span class="ident">chal_input</span>.<span class="ident">extend</span>(<span class="ident">msg</span>);
+        chal_input.extend(msg);
 
-        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rescue_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">chal_input</span>, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
-        <span class="kw">let</span> <span class="ident">c_bits</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">unpack</span>(<span class="ident">challenge</span>, <span class="ident">field_bit_len</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">usize</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">c_bits</span>[..<span class="ident">challenge_bit_len</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>()].<span class="ident">to_vec</span>())
+        <span class="kw">let </span>challenge = <span class="self">self</span>.rescue_sponge_with_padding(<span class="kw-2">&amp;</span>chal_input, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+        <span class="kw">let </span>c_bits = <span class="self">self</span>.unpack(challenge, field_bit_len::&lt;F&gt;() <span class="kw">as </span>usize)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(c_bits[..challenge_bit_len::&lt;F&gt;()].to_vec())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::signatures::schnorr</span>::{<span class="ident">KeyPair</span>, <span class="ident">Signature</span>, <span class="ident">VerKey</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381b</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param254</span>;
-    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::signatures::schnorr::{KeyPair, Signature, VerKey};
+    <span class="kw">use </span>ark_ed_on_bls12_377::EdwardsParameters <span class="kw">as </span>Param377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::EdwardsParameters <span class="kw">as </span>Param381;
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::EdwardsParameters <span class="kw">as </span>Param381b;
+    <span class="kw">use </span>ark_ed_on_bn254::EdwardsParameters <span class="kw">as </span>Param254;
+    <span class="kw">use </span>jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_dsa_circuit</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param381b</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_dsa_circuit_helper</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param254</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_dsa_circuit() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_dsa_circuit_helper::&lt;<span class="kw">_</span>, Param377&gt;()<span class="question-mark">?</span>;
+        test_dsa_circuit_helper::&lt;<span class="kw">_</span>, Param381&gt;()<span class="question-mark">?</span>;
+        test_dsa_circuit_helper::&lt;<span class="kw">_</span>, Param381b&gt;()<span class="question-mark">?</span>;
+        test_dsa_circuit_helper::&lt;<span class="kw">_</span>, Param254&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_dsa_circuit_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_dsa_circuit_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: Parameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">ver_key_ref</span>();
-        <span class="kw">let</span> <span class="ident">vk_bad</span>: <span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">ver_key_ref</span>().<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">msg</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">20</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_bad</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">clone</span>();
-        <span class="ident">msg_bad</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">2u64</span>);
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">CS_ID_SCHNORR</span>);
-        <span class="kw">let</span> <span class="ident">sig_bad</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">msg_bad</span>, <span class="ident">CS_ID_SCHNORR</span>);
-        <span class="ident">vk</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>, <span class="ident">CS_ID_SCHNORR</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span>keypair = KeyPair::&lt;P&gt;::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>vk = keypair.ver_key_ref();
+        <span class="kw">let </span>vk_bad: VerKey&lt;P&gt; = KeyPair::&lt;P&gt;::generate(<span class="kw-2">&amp;mut </span>rng).ver_key_ref().clone();
+        <span class="kw">let </span>msg: Vec&lt;F&gt; = (<span class="number">0</span>..<span class="number">20</span>).map(|i| F::from(i <span class="kw">as </span>u64)).collect();
+        <span class="kw">let </span><span class="kw-2">mut </span>msg_bad = msg.clone();
+        msg_bad[<span class="number">0</span>] = F::from(<span class="number">2u64</span>);
+        <span class="kw">let </span>sig = keypair.sign(<span class="kw-2">&amp;</span>msg, CS_ID_SCHNORR);
+        <span class="kw">let </span>sig_bad = keypair.sign(<span class="kw-2">&amp;</span>msg_bad, CS_ID_SCHNORR);
+        vk.verify(<span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig, CS_ID_SCHNORR).unwrap();
 
-        <span class="comment">// Test `verify_signature()`</span>
-        <span class="comment">// Good path</span>
-        <span class="kw">let</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">build_verify_sig_circuit</span>(<span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="comment">// Bad verification key</span>
-        <span class="kw">let</span> <span class="ident">bad_circuit</span> <span class="op">=</span> <span class="ident">build_verify_sig_circuit</span>(<span class="kw-2">&amp;</span><span class="ident">vk_bad</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Bad signature</span>
-        <span class="kw">let</span> <span class="ident">bad_circuit</span> <span class="op">=</span> <span class="ident">build_verify_sig_circuit</span>(<span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig_bad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Bad message</span>
-        <span class="kw">let</span> <span class="ident">bad_circuit</span> <span class="op">=</span> <span class="ident">build_verify_sig_circuit</span>(<span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">msg_bad</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Test `verify_signature()`
+        // Good path
+        </span><span class="kw">let </span>circuit = build_verify_sig_circuit(vk, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="comment">// Bad verification key
+        </span><span class="kw">let </span>bad_circuit = build_verify_sig_circuit(<span class="kw-2">&amp;</span>vk_bad, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Bad signature
+        </span><span class="kw">let </span>bad_circuit = build_verify_sig_circuit(vk, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig_bad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Bad message
+        </span><span class="kw">let </span>bad_circuit = build_verify_sig_circuit(vk, <span class="kw-2">&amp;</span>msg_bad, <span class="kw-2">&amp;</span>sig)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
-        <span class="comment">// Test `is_valid_signature()`</span>
-        <span class="comment">// Good path</span>
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">circuit</span>, <span class="ident">bit</span>) <span class="op">=</span> <span class="ident">build_is_valid_signature_circuit</span>(<span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">bit</span>)<span class="question-mark">?</span>, <span class="ident">F::one</span>());
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="comment">// Bad output bit</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">bit</span>) <span class="op">=</span> <span class="ident">F::zero</span>();
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Bad verification key</span>
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">bad_circuit</span>, <span class="ident">bit</span>) <span class="op">=</span> <span class="ident">build_is_valid_signature_circuit</span>(<span class="kw-2">&amp;</span><span class="ident">vk_bad</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">bad_circuit</span>.<span class="ident">witness</span>(<span class="ident">bit</span>)<span class="question-mark">?</span>, <span class="ident">F::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="kw-2">*</span><span class="ident">bad_circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">bit</span>) <span class="op">=</span> <span class="ident">F::one</span>();
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Bad signature</span>
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">bad_circuit</span>, <span class="ident">bit</span>) <span class="op">=</span> <span class="ident">build_is_valid_signature_circuit</span>(<span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">sig_bad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">bad_circuit</span>.<span class="ident">witness</span>(<span class="ident">bit</span>)<span class="question-mark">?</span>, <span class="ident">F::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="kw-2">*</span><span class="ident">bad_circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">bit</span>) <span class="op">=</span> <span class="ident">F::one</span>();
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Bad message</span>
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">bad_circuit</span>, <span class="ident">bit</span>) <span class="op">=</span> <span class="ident">build_is_valid_signature_circuit</span>(<span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">msg_bad</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">bad_circuit</span>.<span class="ident">witness</span>(<span class="ident">bit</span>)<span class="question-mark">?</span>, <span class="ident">F::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="kw-2">*</span><span class="ident">bad_circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">bit</span>) <span class="op">=</span> <span class="ident">F::one</span>();
-        <span class="macro">assert!</span>(<span class="ident">bad_circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Test `is_valid_signature()`
+        // Good path
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>circuit, bit) = build_is_valid_signature_circuit(vk, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(circuit.witness(bit)<span class="question-mark">?</span>, F::one());
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="comment">// Bad output bit
+        </span><span class="kw-2">*</span>circuit.witness_mut(bit) = F::zero();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Bad verification key
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>bad_circuit, bit) = build_is_valid_signature_circuit(<span class="kw-2">&amp;</span>vk_bad, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(bad_circuit.witness(bit)<span class="question-mark">?</span>, F::zero());
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>bad_circuit.witness_mut(bit) = F::one();
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Bad signature
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>bad_circuit, bit) = build_is_valid_signature_circuit(vk, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig_bad)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(bad_circuit.witness(bit)<span class="question-mark">?</span>, F::zero());
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>bad_circuit.witness_mut(bit) = F::one();
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Bad message
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>bad_circuit, bit) = build_is_valid_signature_circuit(vk, <span class="kw-2">&amp;</span>msg_bad, <span class="kw-2">&amp;</span>sig)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(bad_circuit.witness(bit)<span class="question-mark">?</span>, F::zero());
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>bad_circuit.witness_mut(bit) = F::one();
+        <span class="macro">assert!</span>(bad_circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">build_verify_sig_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>build_verify_sig_circuit&lt;F, P&gt;(
+        vk: <span class="kw-2">&amp;</span>VerKey&lt;P&gt;,
+        msg: <span class="kw-2">&amp;</span>[F],
+        sig: <span class="kw-2">&amp;</span>Signature&lt;P&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: Parameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">vk_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_signature_vk_variable</span>(<span class="ident">vk</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">sig_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_signature_variable</span>(<span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">msg_var</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">msg</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">m</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">SignatureGadget</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::verify_signature</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">vk_var</span>, <span class="kw-2">&amp;</span><span class="ident">msg_var</span>, <span class="kw-2">&amp;</span><span class="ident">sig_var</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>vk_var = circuit.create_signature_vk_variable(vk)<span class="question-mark">?</span>;
+        <span class="kw">let </span>sig_var = circuit.create_signature_variable(sig)<span class="question-mark">?</span>;
+        <span class="kw">let </span>msg_var: Vec&lt;Variable&gt; = msg
+            .iter()
+            .map(|m| circuit.create_variable(<span class="kw-2">*</span>m))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
+        SignatureGadget::&lt;F, P&gt;::verify_signature(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>vk_var, <span class="kw-2">&amp;</span>msg_var, <span class="kw-2">&amp;</span>sig_var)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(circuit)
     }
 
-    <span class="kw">fn</span> <span class="ident">build_is_valid_signature_circuit</span><span class="op">&lt;</span><span class="ident">P</span>, <span class="ident">F</span><span class="op">&gt;</span>(
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident">VerKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">Variable</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>build_is_valid_signature_circuit&lt;P, F&gt;(
+        vk: <span class="kw-2">&amp;</span>VerKey&lt;P&gt;,
+        msg: <span class="kw-2">&amp;</span>[F],
+        sig: <span class="kw-2">&amp;</span>Signature&lt;P&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(PlonkCircuit&lt;F&gt;, Variable), CircuitError&gt;
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: Parameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">vk_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_signature_vk_variable</span>(<span class="ident">vk</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">sig_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_signature_variable</span>(<span class="ident">sig</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">msg_var</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">msg</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">m</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">bit</span> <span class="op">=</span> <span class="ident">SignatureGadget</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::check_signature_validity</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
-            <span class="kw-2">&amp;</span><span class="ident">vk_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">msg_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">sig_var</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>vk_var = circuit.create_signature_vk_variable(vk)<span class="question-mark">?</span>;
+        <span class="kw">let </span>sig_var = circuit.create_signature_variable(sig)<span class="question-mark">?</span>;
+        <span class="kw">let </span>msg_var: Vec&lt;Variable&gt; = msg
+            .iter()
+            .map(|m| circuit.create_variable(<span class="kw-2">*</span>m))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>bit = SignatureGadget::&lt;<span class="kw">_</span>, P&gt;::check_signature_validity(
+            <span class="kw-2">&amp;mut </span>circuit,
+            <span class="kw-2">&amp;</span>vk_var,
+            <span class="kw-2">&amp;</span>msg_var,
+            <span class="kw-2">&amp;</span>sig_var,
         )<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">circuit</span>, <span class="ident">bit</span>.<span class="ident">into</span>()))
+        <span class="prelude-val">Ok</span>((circuit, bit.into()))
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

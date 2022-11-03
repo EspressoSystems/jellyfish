@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/transcript.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transcript.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/transcript.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transcript.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -412,419 +412,419 @@
 <span id="412">412</span>
 <span id="413">413</span>
 <span id="414">414</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implementing *native* circuit for rescue transcript</span>
+</span><span class="doccomment">//! Implementing *native* circuit for rescue transcript
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::plonk_verifier</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span>};
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">string::ToString</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">jf_primitives</span>::{
-    <span class="ident">circuit::rescue::RescueGadget</span>,
-    <span class="ident">rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>},
+</span><span class="kw">use </span><span class="kw">super</span>::plonk_verifier::<span class="kw-2">*</span>;
+<span class="kw">use </span>ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{string::ToString, vec::Vec};
+<span class="kw">use </span>core::marker::PhantomData;
+<span class="kw">use </span>jf_primitives::{
+    circuit::rescue::RescueGadget,
+    rescue::{RescueParameter, STATE_SIZE},
 };
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{
-    <span class="ident">errors::CircuitError</span>::{<span class="self">self</span>, <span class="ident">ParameterError</span>},
-    <span class="ident">gadgets</span>::{
-        <span class="ident">ecc</span>::{<span class="ident">PointVariable</span>, <span class="ident">SWToTEConParam</span>},
-        <span class="ident">ultraplonk::mod_arith::FpElemVar</span>,
+<span class="kw">use </span>jf_relation::{
+    errors::CircuitError::{<span class="self">self</span>, ParameterError},
+    gadgets::{
+        ecc::{PointVariable, SWToTEConParam},
+        ultraplonk::mod_arith::FpElemVar,
     },
-    <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+    Circuit, PlonkCircuit, Variable,
 };
 
-<span class="doccomment">/// Struct of variables representing a Rescue transcript type, including</span>
-<span class="doccomment">/// `STATE_SIZE` variables for the state, and a vector of variables for</span>
-<span class="doccomment">/// the transcript.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueTranscriptVar</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> {
-    <span class="ident">transcript_var</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>,
-    <span class="ident">state_var</span>: [<span class="ident">Variable</span>; <span class="ident">STATE_SIZE</span>],
-    <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Struct of variables representing a Rescue transcript type, including
+/// `STATE_SIZE` variables for the state, and a vector of variables for
+/// the transcript.
+</span><span class="kw">pub struct </span>RescueTranscriptVar&lt;F: RescueParameter&gt; {
+    transcript_var: Vec&lt;Variable&gt;,
+    state_var: [Variable; STATE_SIZE],
+    _phantom: PhantomData&lt;F&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">RescueTranscriptVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
+<span class="kw">impl</span>&lt;F&gt; RescueTranscriptVar&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter + SWToTEConParam,
 {
-    <span class="doccomment">/// create a new RescueTranscriptVar for a given circuit.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">transcript_var</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">state_var</span>: [<span class="ident">circuit</span>.<span class="ident">zero</span>(); <span class="ident">STATE_SIZE</span>],
-            <span class="ident">_phantom</span>: <span class="ident">PhantomData::default</span>(),
+    <span class="doccomment">/// create a new RescueTranscriptVar for a given circuit.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            transcript_var: Vec::new(),
+            state_var: [circuit.zero(); STATE_SIZE],
+            _phantom: PhantomData::default(),
         }
     }
 
-    <span class="comment">// append the verification key and the public input</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_vk_and_pub_input_vars</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">vk_var</span>: <span class="kw-2">&amp;</span><span class="ident">VerifyingKeyVar</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">pub_input</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// to enable a more efficient verifier circuit, we remove</span>
-        <span class="comment">// the following messages (c.f. merlin transcript)</span>
-        <span class="comment">//  - field_size_in_bits</span>
-        <span class="comment">//  - domain size</span>
-        <span class="comment">//  - number of inputs</span>
-        <span class="comment">//  - wire subsets separators</span>
+    <span class="comment">// append the verification key and the public input
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_vk_and_pub_input_vars&lt;E: PairingEngine&lt;Fq = F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        vk_var: <span class="kw-2">&amp;</span>VerifyingKeyVar&lt;E&gt;,
+        pub_input: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// to enable a more efficient verifier circuit, we remove
+        // the following messages (c.f. merlin transcript)
+        //  - field_size_in_bits
+        //  - domain size
+        //  - number of inputs
+        //  - wire subsets separators
 
-        <span class="comment">// selector commitments</span>
-        <span class="kw">for</span> <span class="ident">com</span> <span class="kw">in</span> <span class="ident">vk_var</span>.<span class="ident">selector_comms</span>.<span class="ident">iter</span>() {
-            <span class="comment">// the commitment vars are already in TE form</span>
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">com</span>.<span class="ident">get_x</span>());
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">com</span>.<span class="ident">get_y</span>());
+        // selector commitments
+        </span><span class="kw">for </span>com <span class="kw">in </span>vk_var.selector_comms.iter() {
+            <span class="comment">// the commitment vars are already in TE form
+            </span><span class="self">self</span>.transcript_var.push(com.get_x());
+            <span class="self">self</span>.transcript_var.push(com.get_y());
         }
-        <span class="comment">// sigma commitments</span>
-        <span class="kw">for</span> <span class="ident">com</span> <span class="kw">in</span> <span class="ident">vk_var</span>.<span class="ident">sigma_comms</span>.<span class="ident">iter</span>() {
-            <span class="comment">// the commitment vars are already in TE form</span>
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">com</span>.<span class="ident">get_x</span>());
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">com</span>.<span class="ident">get_y</span>());
+        <span class="comment">// sigma commitments
+        </span><span class="kw">for </span>com <span class="kw">in </span>vk_var.sigma_comms.iter() {
+            <span class="comment">// the commitment vars are already in TE form
+            </span><span class="self">self</span>.transcript_var.push(com.get_x());
+            <span class="self">self</span>.transcript_var.push(com.get_y());
         }
-        <span class="comment">// public input</span>
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">pub_input</span> {
-            <span class="kw">let</span> <span class="ident">pub_var</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">convert_to_var</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">pub_var</span>)
+        <span class="comment">// public input
+        </span><span class="kw">for </span>e <span class="kw">in </span>pub_input {
+            <span class="kw">let </span>pub_var = e.convert_to_var(circuit)<span class="question-mark">?</span>;
+            <span class="self">self</span>.transcript_var.push(pub_var)
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// Append the variable to the transcript.</span>
-    <span class="comment">// For efficiency purpose, label is not used for rescue FS.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">var</span>: <span class="kw-2">&amp;</span><span class="ident">Variable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">var</span>);
+    <span class="comment">// Append the variable to the transcript.
+    // For efficiency purpose, label is not used for rescue FS.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        var: <span class="kw-2">&amp;</span>Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="self">self</span>.transcript_var.push(<span class="kw-2">*</span>var);
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// Append the message variables to the transcript.</span>
-    <span class="comment">// For efficiency purpose, label is not used for rescue FS.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_message_vars</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">msg_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">msg_vars</span>.<span class="ident">iter</span>() {
-            <span class="self">self</span>.<span class="ident">append_variable</span>(<span class="ident">_label</span>, <span class="ident">e</span>)<span class="question-mark">?</span>;
+    <span class="comment">// Append the message variables to the transcript.
+    // For efficiency purpose, label is not used for rescue FS.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_message_vars(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        msg_vars: <span class="kw-2">&amp;</span>[Variable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">for </span>e <span class="kw">in </span>msg_vars.iter() {
+            <span class="self">self</span>.append_variable(_label, e)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// Append a commitment variable (in the form of PointVariable) to the</span>
-    <span class="comment">// transcript. The caller needs to make sure that the commitment is</span>
-    <span class="comment">// already converted to TE form before generating the variables.</span>
-    <span class="comment">// For efficiency purpose, label is not used for rescue FS.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_commitment_var</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">poly_comm_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="comment">// Append a commitment variable (in the form of PointVariable) to the
+    // transcript. The caller needs to make sure that the commitment is
+    // already converted to TE form before generating the variables.
+    // For efficiency purpose, label is not used for rescue FS.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_commitment_var&lt;E, P&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        poly_comm_var: <span class="kw-2">&amp;</span>PointVariable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P&gt;&gt;,
+        P: SWModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="comment">// push the x and y coordinate of comm to the transcript</span>
-        <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">poly_comm_var</span>.<span class="ident">get_x</span>());
-        <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">poly_comm_var</span>.<span class="ident">get_y</span>());
+        <span class="comment">// push the x and y coordinate of comm to the transcript
+        </span><span class="self">self</span>.transcript_var.push(poly_comm_var.get_x());
+        <span class="self">self</span>.transcript_var.push(poly_comm_var.get_y());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// Append  a slice of commitment variables (in the form of PointVariable) to the</span>
-    <span class="comment">// The caller needs to make sure that the commitment is</span>
-    <span class="comment">// already converted to TE form before generating the variables.</span>
-    <span class="comment">// transcript For efficiency purpose, label is not used for rescue FS.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_commitments_vars</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">poly_comm_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">PointVariable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="comment">// Append  a slice of commitment variables (in the form of PointVariable) to the
+    // The caller needs to make sure that the commitment is
+    // already converted to TE form before generating the variables.
+    // transcript For efficiency purpose, label is not used for rescue FS.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_commitments_vars&lt;E, P&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        poly_comm_vars: <span class="kw-2">&amp;</span>[PointVariable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P&gt;&gt;,
+        P: SWModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">for</span> <span class="ident">poly_comm_var</span> <span class="kw">in</span> <span class="ident">poly_comm_vars</span>.<span class="ident">iter</span>() {
-            <span class="comment">// push the x and y coordinate of comm to the transcript</span>
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">poly_comm_var</span>.<span class="ident">get_x</span>());
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">poly_comm_var</span>.<span class="ident">get_y</span>());
+        <span class="kw">for </span>poly_comm_var <span class="kw">in </span>poly_comm_vars.iter() {
+            <span class="comment">// push the x and y coordinate of comm to the transcript
+            </span><span class="self">self</span>.transcript_var.push(poly_comm_var.get_x());
+            <span class="self">self</span>.transcript_var.push(poly_comm_var.get_y());
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// Append a challenge variable to the transcript.</span>
-    <span class="comment">// For efficiency purpose, label is not used for rescue FS.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_challenge_var</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">challenge_var</span>: <span class="kw-2">&amp;</span><span class="ident">Variable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">append_variable</span>(<span class="ident">_label</span>, <span class="ident">challenge_var</span>)
+    <span class="comment">// Append a challenge variable to the transcript.
+    // For efficiency purpose, label is not used for rescue FS.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_challenge_var(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        challenge_var: <span class="kw-2">&amp;</span>Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="self">self</span>.append_variable(_label, challenge_var)
     }
 
-    <span class="comment">// Append the proof evaluation to the transcript</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_proof_evaluations_vars</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">evals</span>: <span class="kw-2">&amp;</span><span class="ident">ProofEvaluationsVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">wires_evals</span> {
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">convert_to_var</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+    <span class="comment">// Append the proof evaluation to the transcript
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_proof_evaluations_vars&lt;E: PairingEngine&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        evals: <span class="kw-2">&amp;</span>ProofEvaluationsVar&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">for </span>e <span class="kw">in </span><span class="kw-2">&amp;</span>evals.wires_evals {
+            <span class="kw">let </span>tmp = e.convert_to_var(circuit)<span class="question-mark">?</span>;
+            <span class="self">self</span>.transcript_var.push(tmp);
         }
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">evals</span>.<span class="ident">wire_sigma_evals</span> {
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">convert_to_var</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+        <span class="kw">for </span>e <span class="kw">in </span><span class="kw-2">&amp;</span>evals.wire_sigma_evals {
+            <span class="kw">let </span>tmp = e.convert_to_var(circuit)<span class="question-mark">?</span>;
+            <span class="self">self</span>.transcript_var.push(tmp);
         }
-        <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">evals</span>.<span class="ident">perm_next_eval</span>.<span class="ident">convert_to_var</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+        <span class="kw">let </span>tmp = evals.perm_next_eval.convert_to_var(circuit)<span class="question-mark">?</span>;
+        <span class="self">self</span>.transcript_var.push(tmp);
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// generate the challenge for the current transcript</span>
-    <span class="comment">// and append it to the transcript</span>
-    <span class="comment">// For efficiency purpose, label is not used for rescue FS.</span>
-    <span class="comment">// Note that this function currently only supports bls12-377</span>
-    <span class="comment">// curve due to its decomposition method.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_and_append_challenge_var</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+    <span class="comment">// generate the challenge for the current transcript
+    // and append it to the transcript
+    // For efficiency purpose, label is not used for rescue FS.
+    // Note that this function currently only supports bls12-377
+    // curve due to its decomposition method.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_and_append_challenge_var&lt;E&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine,
     {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">circuit</span>.<span class="ident">support_lookup</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="string">&quot;does not support range table&quot;</span>.<span class="ident">to_string</span>()));
+        <span class="kw">if </span>!circuit.support_lookup() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;does not support range table&quot;</span>.to_string()));
         }
 
-        <span class="kw">if</span> <span class="ident">E::Fr::size_in_bits</span>() <span class="op">!</span><span class="op">=</span> <span class="number">253</span> <span class="op">|</span><span class="op">|</span> <span class="ident">E::Fq::size_in_bits</span>() <span class="op">!</span><span class="op">=</span> <span class="number">377</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
-                <span class="string">&quot;Curve Parameter does not support for rescue transcript circuit&quot;</span>.<span class="ident">to_string</span>(),
+        <span class="kw">if </span>E::Fr::size_in_bits() != <span class="number">253 </span>|| E::Fq::size_in_bits() != <span class="number">377 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
+                <span class="string">&quot;Curve Parameter does not support for rescue transcript circuit&quot;</span>.to_string(),
             ));
         }
 
-        <span class="comment">// ==================================</span>
-        <span class="comment">// This algorithm takes in 3 steps</span>
-        <span class="comment">// 1. state: [F: STATE_SIZE] = hash(state|transcript)</span>
-        <span class="comment">// 2. challenge = state[0] in Fr</span>
-        <span class="comment">// 3. transcript = vec![challenge]</span>
-        <span class="comment">// ==================================</span>
+        <span class="comment">// ==================================
+        // This algorithm takes in 3 steps
+        // 1. state: [F: STATE_SIZE] = hash(state|transcript)
+        // 2. challenge = state[0] in Fr
+        // 3. transcript = vec![challenge]
+        // ==================================
 
-        <span class="comment">// step 1. state: [F: STATE_SIZE] = hash(state|transcript)</span>
-        <span class="kw">let</span> <span class="ident">input_var</span> <span class="op">=</span> [<span class="self">self</span>.<span class="ident">state_var</span>.<span class="ident">as_ref</span>(), <span class="self">self</span>.<span class="ident">transcript_var</span>.<span class="ident">as_ref</span>()].<span class="ident">concat</span>();
-        <span class="kw">let</span> <span class="ident">res_var</span> <span class="op">=</span> <span class="ident">circuit</span>
-            .<span class="ident">rescue_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input_var</span>, <span class="ident">STATE_SIZE</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">out_var</span> <span class="op">=</span> <span class="ident">res_var</span>[<span class="number">0</span>];
+        // step 1. state: [F: STATE_SIZE] = hash(state|transcript)
+        </span><span class="kw">let </span>input_var = [<span class="self">self</span>.state_var.as_ref(), <span class="self">self</span>.transcript_var.as_ref()].concat();
+        <span class="kw">let </span>res_var = circuit
+            .rescue_sponge_with_padding(<span class="kw-2">&amp;</span>input_var, STATE_SIZE)
+            .unwrap();
+        <span class="kw">let </span>out_var = res_var[<span class="number">0</span>];
 
-        <span class="comment">// step 2. challenge = state[0] in Fr</span>
-        <span class="kw">let</span> <span class="ident">challenge_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">truncate</span>(<span class="ident">out_var</span>, <span class="number">248</span>)<span class="question-mark">?</span>;
+        <span class="comment">// step 2. challenge = state[0] in Fr
+        </span><span class="kw">let </span>challenge_var = circuit.truncate(out_var, <span class="number">248</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// 3. transcript = vec![challenge]</span>
-        <span class="comment">// finish and update the states</span>
-        <span class="self">self</span>.<span class="ident">state_var</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">res_var</span>[<span class="number">0</span>..<span class="ident">STATE_SIZE</span>]);
-        <span class="self">self</span>.<span class="ident">transcript_var</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="self">self</span>.<span class="ident">append_challenge_var</span>(<span class="ident">_label</span>, <span class="kw-2">&amp;</span><span class="ident">challenge_var</span>)<span class="question-mark">?</span>;
+        <span class="comment">// 3. transcript = vec![challenge]
+        // finish and update the states
+        </span><span class="self">self</span>.state_var.copy_from_slice(<span class="kw-2">&amp;</span>res_var[<span class="number">0</span>..STATE_SIZE]);
+        <span class="self">self</span>.transcript_var = Vec::new();
+        <span class="self">self</span>.append_challenge_var(_label, <span class="kw-2">&amp;</span>challenge_var)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">challenge_var</span>)
+        <span class="prelude-val">Ok</span>(challenge_var)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">proof_system::structs::VerifyingKey</span>,
-        <span class="ident">transcript</span>::{<span class="ident">PlonkTranscript</span>, <span class="ident">RescueTranscript</span>},
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{
+        proof_system::structs::VerifyingKey,
+        transcript::{PlonkTranscript, RescueTranscript},
     };
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Bls12_377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">AffineCurve</span>, <span class="ident">ProjectiveCurve</span>};
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">test_rng</span>, <span class="ident">UniformRand</span>};
-    <span class="kw">use</span> <span class="ident">jf_primitives::pcs::prelude</span>::{<span class="ident">Commitment</span>, <span class="ident">UnivariateVerifierParam</span>};
-    <span class="kw">use</span> <span class="ident">jf_relation::gadgets::ecc::Point</span>;
-    <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">bytes_to_field_elements</span>, <span class="ident">field_switching</span>};
+    <span class="kw">use </span>ark_bls12_377::Bls12_377;
+    <span class="kw">use </span>ark_ec::{AffineCurve, ProjectiveCurve};
+    <span class="kw">use </span>ark_std::{format, test_rng, UniformRand};
+    <span class="kw">use </span>jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
+    <span class="kw">use </span>jf_relation::gadgets::ecc::Point;
+    <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching};
 
-    <span class="kw">const</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_rescue_transcript_challenge_circuit</span>() {
-        <span class="ident">test_rescue_transcript_challenge_circuit_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span>()
+    <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rescue_transcript_challenge_circuit() {
+        test_rescue_transcript_challenge_circuit_helper::&lt;Bls12_377, <span class="kw">_</span>, <span class="kw">_</span>&gt;()
     }
-    <span class="kw">fn</span> <span class="ident">test_rescue_transcript_challenge_circuit_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_rescue_transcript_challenge_circuit_helper&lt;E, F, P&gt;()
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        F: RescueParameter + SWToTEConParam,
+        P: SWModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>label = <span class="string">&quot;testing&quot;</span>.as_ref();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcipt_var</span> <span class="op">=</span> <span class="ident">RescueTranscriptVar::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript</span> <span class="op">=</span> <span class="ident">RescueTranscript</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">label</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>transcipt_var = RescueTranscriptVar::new(<span class="kw-2">&amp;mut </span>circuit);
+        <span class="kw">let </span><span class="kw-2">mut </span>transcript = RescueTranscript::&lt;F&gt;::new(label);
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;message {}&quot;</span>, <span class="ident">i</span>);
-                <span class="kw">let</span> <span class="ident">vals</span> <span class="op">=</span> <span class="ident">bytes_to_field_elements</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
-                <span class="kw">let</span> <span class="ident">message_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">vals</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">unwrap</span>())
-                    .<span class="ident">collect</span>();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">10 </span>{
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;message {}&quot;</span>, i);
+                <span class="kw">let </span>vals = bytes_to_field_elements(<span class="kw-2">&amp;</span>msg);
+                <span class="kw">let </span>message_vars: Vec&lt;Variable&gt; = vals
+                    .iter()
+                    .map(|x| circuit.create_variable(<span class="kw-2">*</span>x).unwrap())
+                    .collect();
 
-                <span class="ident">transcript</span>.<span class="ident">append_message</span>(<span class="ident">label</span>, <span class="ident">msg</span>.<span class="ident">as_bytes</span>()).<span class="ident">unwrap</span>();
+                transcript.append_message(label, msg.as_bytes()).unwrap();
 
-                <span class="ident">transcipt_var</span>
-                    .<span class="ident">append_message_vars</span>(<span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="ident">message_vars</span>)
-                    .<span class="ident">unwrap</span>();
+                transcipt_var
+                    .append_message_vars(label, <span class="kw-2">&amp;</span>message_vars)
+                    .unwrap();
             }
 
-            <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">transcript</span>.<span class="ident">get_and_append_challenge</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">label</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>challenge = transcript.get_and_append_challenge::&lt;E&gt;(label).unwrap();
 
-            <span class="kw">let</span> <span class="ident">challenge_var</span> <span class="op">=</span> <span class="ident">transcipt_var</span>
-                .<span class="ident">get_and_append_challenge_var</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">label</span>, <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)
-                .<span class="ident">unwrap</span>();
+            <span class="kw">let </span>challenge_var = transcipt_var
+                .get_and_append_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
+                .unwrap();
 
             <span class="macro">assert_eq!</span>(
-                <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">challenge_var</span>).<span class="ident">unwrap</span>().<span class="ident">into_repr</span>(),
-                <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">challenge</span>).<span class="ident">into_repr</span>()
+                circuit.witness(challenge_var).unwrap().into_repr(),
+                field_switching::&lt;<span class="kw">_</span>, F&gt;(<span class="kw-2">&amp;</span>challenge).into_repr()
             );
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_rescue_transcript_append_vk_and_input_circuit</span>() {
-        <span class="ident">test_rescue_transcript_append_vk_and_input_circuit_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rescue_transcript_append_vk_and_input_circuit() {
+        test_rescue_transcript_append_vk_and_input_circuit_helper::&lt;Bls12_377, <span class="kw">_</span>, <span class="kw">_</span>&gt;()
     }
-    <span class="kw">fn</span> <span class="ident">test_rescue_transcript_append_vk_and_input_circuit_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_rescue_transcript_append_vk_and_input_circuit_helper&lt;E, F, P&gt;()
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        F: RescueParameter + SWToTEConParam,
+        P: SWModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>label = <span class="string">&quot;testing&quot;</span>.as_ref();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript_var</span> <span class="op">=</span> <span class="ident">RescueTranscriptVar::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript</span> <span class="op">=</span> <span class="ident">RescueTranscript</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">label</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>transcript_var = RescueTranscriptVar::new(<span class="kw-2">&amp;mut </span>circuit);
+        <span class="kw">let </span><span class="kw-2">mut </span>transcript = RescueTranscript::&lt;F&gt;::new(label);
 
-        <span class="kw">let</span> <span class="ident">open_key</span>: <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateVerifierParam</span> {
-            <span class="ident">g</span>: <span class="ident">E::G1Affine::prime_subgroup_generator</span>(),
-            <span class="ident">h</span>: <span class="ident">E::G2Affine::prime_subgroup_generator</span>(),
-            <span class="ident">beta_h</span>: <span class="ident">E::G2Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>(),
+        <span class="kw">let </span>open_key: UnivariateVerifierParam&lt;E&gt; = UnivariateVerifierParam {
+            g: E::G1Affine::prime_subgroup_generator(),
+            h: E::G2Affine::prime_subgroup_generator(),
+            beta_h: E::G2Projective::rand(<span class="kw-2">&amp;mut </span>rng).into_affine(),
         };
 
-        <span class="kw">let</span> <span class="ident">dummy_vk</span> <span class="op">=</span> <span class="ident">VerifyingKey</span> {
-            <span class="ident">domain_size</span>: <span class="number">512</span>,
-            <span class="ident">num_inputs</span>: <span class="number">0</span>,
-            <span class="ident">sigma_comms</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">selector_comms</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">k</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">open_key</span>,
-            <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
-            <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
+        <span class="kw">let </span>dummy_vk = VerifyingKey {
+            domain_size: <span class="number">512</span>,
+            num_inputs: <span class="number">0</span>,
+            sigma_comms: Vec::new(),
+            selector_comms: Vec::new(),
+            k: Vec::new(),
+            open_key,
+            is_merged: <span class="bool-val">false</span>,
+            plookup_vk: <span class="prelude-val">None</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">dummy_vk_var</span> <span class="op">=</span> <span class="ident">VerifyingKeyVar::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">dummy_vk</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>dummy_vk_var = VerifyingKeyVar::new(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>dummy_vk).unwrap();
 
-        <span class="comment">// build challenge from transcript and check for correctness</span>
-        <span class="ident">transcript</span>.<span class="ident">append_vk_and_pub_input</span>(<span class="kw-2">&amp;</span><span class="ident">dummy_vk</span>, <span class="kw-2">&amp;</span>[]).<span class="ident">unwrap</span>();
-        <span class="ident">transcript_var</span>
-            .<span class="ident">append_vk_and_pub_input_vars</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">dummy_vk_var</span>, <span class="kw-2">&amp;</span>[])
-            .<span class="ident">unwrap</span>();
+        <span class="comment">// build challenge from transcript and check for correctness
+        </span>transcript.append_vk_and_pub_input(<span class="kw-2">&amp;</span>dummy_vk, <span class="kw-2">&amp;</span>[]).unwrap();
+        transcript_var
+            .append_vk_and_pub_input_vars::&lt;E&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>dummy_vk_var, <span class="kw-2">&amp;</span>[])
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">transcript</span>.<span class="ident">get_and_append_challenge</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">label</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>challenge = transcript.get_and_append_challenge::&lt;E&gt;(label).unwrap();
 
-        <span class="kw">let</span> <span class="ident">challenge_var</span> <span class="op">=</span> <span class="ident">transcript_var</span>
-            .<span class="ident">get_and_append_challenge_var</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">label</span>, <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>challenge_var = transcript_var
+            .get_and_append_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
+            .unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">challenge_var</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">challenge</span>)
+            circuit.witness(challenge_var).unwrap(),
+            field_switching(<span class="kw-2">&amp;</span>challenge)
         );
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-            <span class="comment">// inputs</span>
-            <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">16</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">E::Fr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+            <span class="comment">// inputs
+            </span><span class="kw">let </span>input: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..<span class="number">16</span>).map(|<span class="kw">_</span>| E::Fr::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
 
-            <span class="comment">// sigma commitments</span>
-            <span class="kw">let</span> <span class="ident">sigma_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">42</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Commitment</span>(<span class="ident">E::G1Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>()))
-                .<span class="ident">collect</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sigma_comms_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PointVariable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">sigma_comms</span>.<span class="ident">iter</span>() {
-                <span class="comment">// convert point into TE form</span>
-                <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="number">0</span>).<span class="ident">into</span>();
-                <span class="ident">sigma_comms_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>).<span class="ident">unwrap</span>());
+            <span class="comment">// sigma commitments
+            </span><span class="kw">let </span>sigma_comms: Vec&lt;Commitment&lt;E&gt;&gt; = (<span class="number">0</span>..<span class="number">42</span>)
+                .map(|<span class="kw">_</span>| Commitment(E::G1Projective::rand(<span class="kw-2">&amp;mut </span>rng).into_affine()))
+                .collect();
+            <span class="kw">let </span><span class="kw-2">mut </span>sigma_comms_vars: Vec&lt;PointVariable&gt; = Vec::new();
+            <span class="kw">for </span>e <span class="kw">in </span>sigma_comms.iter() {
+                <span class="comment">// convert point into TE form
+                </span><span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+                sigma_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
-            <span class="comment">// selector commitments</span>
-            <span class="kw">let</span> <span class="ident">selector_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">33</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Commitment</span>(<span class="ident">E::G1Projective::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into_affine</span>()))
-                .<span class="ident">collect</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selector_comms_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PointVariable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">selector_comms</span>.<span class="ident">iter</span>() {
-                <span class="comment">// convert point into TE form</span>
-                <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="number">0</span>).<span class="ident">into</span>();
-                <span class="ident">selector_comms_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>).<span class="ident">unwrap</span>());
+            <span class="comment">// selector commitments
+            </span><span class="kw">let </span>selector_comms: Vec&lt;Commitment&lt;E&gt;&gt; = (<span class="number">0</span>..<span class="number">33</span>)
+                .map(|<span class="kw">_</span>| Commitment(E::G1Projective::rand(<span class="kw-2">&amp;mut </span>rng).into_affine()))
+                .collect();
+            <span class="kw">let </span><span class="kw-2">mut </span>selector_comms_vars: Vec&lt;PointVariable&gt; = Vec::new();
+            <span class="kw">for </span>e <span class="kw">in </span>selector_comms.iter() {
+                <span class="comment">// convert point into TE form
+                </span><span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+                selector_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
-            <span class="comment">// k</span>
-            <span class="kw">let</span> <span class="ident">k</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">5</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">E::Fr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
+            <span class="comment">// k
+            </span><span class="kw">let </span>k: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..<span class="number">5</span>).map(|<span class="kw">_</span>| E::Fr::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
 
-            <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident">VerifyingKey</span> {
-                <span class="ident">domain_size</span>: <span class="number">512</span>,
-                <span class="ident">num_inputs</span>: <span class="ident">input</span>.<span class="ident">len</span>(),
-                <span class="ident">sigma_comms</span>,
-                <span class="ident">selector_comms</span>,
-                <span class="ident">k</span>,
-                <span class="ident">open_key</span>,
-                <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
-                <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
+            <span class="kw">let </span>vk = VerifyingKey {
+                domain_size: <span class="number">512</span>,
+                num_inputs: input.len(),
+                sigma_comms,
+                selector_comms,
+                k,
+                open_key,
+                is_merged: <span class="bool-val">false</span>,
+                plookup_vk: <span class="prelude-val">None</span>,
             };
-            <span class="kw">let</span> <span class="ident">vk_var</span> <span class="op">=</span> <span class="ident">VerifyingKeyVar::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">vk</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>vk_var = VerifyingKeyVar::new(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>vk).unwrap();
 
-            <span class="comment">// build challenge from transcript and check for correctness</span>
-            <span class="ident">transcript</span>.<span class="ident">append_vk_and_pub_input</span>(<span class="kw-2">&amp;</span><span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">128</span>;
-            <span class="kw">let</span> <span class="ident">input_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_public_variable</span>(<span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>)).<span class="ident">unwrap</span>())
-                .<span class="ident">collect</span>();
+            <span class="comment">// build challenge from transcript and check for correctness
+            </span>transcript.append_vk_and_pub_input(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>input).unwrap();
+            <span class="kw">let </span>m = <span class="number">128</span>;
+            <span class="kw">let </span>input_vars: Vec&lt;Variable&gt; = input
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>x| circuit.create_public_variable(field_switching(<span class="kw-2">&amp;</span>x)).unwrap())
+                .collect();
 
-            <span class="kw">let</span> <span class="ident">input_fp_elem_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input_vars</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>())
-                .<span class="ident">collect</span>();
-            <span class="ident">transcript_var</span>
-                .<span class="ident">append_vk_and_pub_input_vars</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">vk_var</span>, <span class="kw-2">&amp;</span><span class="ident">input_fp_elem_vars</span>)
-                .<span class="ident">unwrap</span>();
+            <span class="kw">let </span>input_fp_elem_vars: Vec&lt;FpElemVar&lt;F&gt;&gt; = input_vars
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>x| FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, x, m, <span class="prelude-val">None</span>).unwrap())
+                .collect();
+            transcript_var
+                .append_vk_and_pub_input_vars::&lt;E&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>vk_var, <span class="kw-2">&amp;</span>input_fp_elem_vars)
+                .unwrap();
 
-            <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">transcript</span>.<span class="ident">get_and_append_challenge</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">label</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>challenge = transcript.get_and_append_challenge::&lt;E&gt;(label).unwrap();
 
-            <span class="kw">let</span> <span class="ident">challenge_var</span> <span class="op">=</span> <span class="ident">transcript_var</span>
-                .<span class="ident">get_and_append_challenge_var</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">label</span>, <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)
-                .<span class="ident">unwrap</span>();
+            <span class="kw">let </span>challenge_var = transcript_var
+                .get_and_append_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
+                .unwrap();
 
             <span class="macro">assert_eq!</span>(
-                <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">challenge_var</span>).<span class="ident">unwrap</span>(),
-                <span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">challenge</span>)
+                circuit.witness(challenge_var).unwrap(),
+                field_switching(<span class="kw-2">&amp;</span>challenge)
             );
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

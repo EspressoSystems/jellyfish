@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/commitment.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>commitment.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/commitment.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>commitment.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -115,122 +115,122 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implements a rescue hash based commitment scheme.</span>
+</span><span class="doccomment">//! Implements a rescue hash based commitment scheme.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">errors::PrimitivesError</span>,
-    <span class="ident">rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RATE</span>},
+</span><span class="kw">use crate</span>::{
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, RATE},
 };
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::String</span>, <span class="ident">vec</span>};
-<span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;
+<span class="kw">use </span>ark_std::{format, string::String, vec};
+<span class="kw">use </span>jf_utils::pad_with_zeros;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="doccomment">/// Commitment instance for user defined input size (in scalar elements)</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> {
-    <span class="ident">hash</span>: <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">input_len</span>: <span class="ident">usize</span>,
+<span class="attribute">#[derive(Default)]
+</span><span class="doccomment">/// Commitment instance for user defined input size (in scalar elements)
+</span><span class="kw">pub struct </span>Commitment&lt;F: RescueParameter&gt; {
+    hash: Permutation&lt;F&gt;,
+    input_len: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new commitment instance for inputs of length `input_len`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">input_len</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="macro">assert!</span>(<span class="ident">input_len</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="string">&quot;input_len must be positive&quot;</span>);
-        <span class="ident">Commitment</span> {
-            <span class="ident">hash</span>: <span class="ident">Permutation::default</span>(),
-            <span class="ident">input_len</span>,
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; Commitment&lt;F&gt; {
+    <span class="doccomment">/// Create a new commitment instance for inputs of length `input_len`
+    </span><span class="kw">pub fn </span>new(input_len: usize) -&gt; Commitment&lt;F&gt; {
+        <span class="macro">assert!</span>(input_len &gt; <span class="number">0</span>, <span class="string">&quot;input_len must be positive&quot;</span>);
+        Commitment {
+            hash: Permutation::default(),
+            input_len,
         }
     }
-    <span class="doccomment">/// Commits to `input` slice using blinding `blind`. Return</span>
-    <span class="doccomment">/// Err(PrimitivesError::ParameterError) if input.len() !=</span>
-    <span class="doccomment">/// self.input_len</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">blind</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">input_len</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::ParameterError</span>(<span class="macro">format!</span>(
+    <span class="doccomment">/// Commits to `input` slice using blinding `blind`. Return
+    /// Err(PrimitivesError::ParameterError) if input.len() !=
+    /// self.input_len
+    </span><span class="kw">pub fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F], blind: <span class="kw-2">&amp;</span>F) -&gt; <span class="prelude-ty">Result</span>&lt;F, PrimitivesError&gt; {
+        <span class="kw">if </span>input.len() != <span class="self">self</span>.input_len {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;Commitment error: expected input length ({}). It must match \
                 instance&#39;s message length ({})&quot;</span>,
-                <span class="self">self</span>.<span class="ident">input_len</span>,
-                <span class="ident">input</span>.<span class="ident">len</span>(),
+                <span class="self">self</span>.input_len,
+                input.len(),
             )));
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="kw-2">*</span><span class="ident">blind</span>];
-        <span class="ident">msg</span>.<span class="ident">extend_from_slice</span>(<span class="ident">input</span>);
-        <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the commitment instance</span>
-        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">msg</span>, <span class="ident">RATE</span>);
-        <span class="kw">let</span> <span class="ident">result_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">msg</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">result_vec</span>[<span class="number">0</span>])
+        <span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="macro">vec!</span>[<span class="kw-2">*</span>blind];
+        msg.extend_from_slice(input);
+        <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the commitment instance
+        </span>pad_with_zeros(<span class="kw-2">&amp;mut </span>msg, RATE);
+        <span class="kw">let </span>result_vec = <span class="self">self</span>.hash.sponge_no_padding(msg.as_slice(), <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(result_vec[<span class="number">0</span>])
     }
-    <span class="doccomment">/// Verifies `commitment` against `input` and `blind`.</span>
-    <span class="doccomment">/// Returns Ok(()) on success. Otherwise, returns</span>
-    <span class="doccomment">/// PrimitivesError::ParameterError if input.len() != self.input_len,</span>
-    <span class="doccomment">/// and PrimitivesError::VerificationError if commitment is not valid.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">blind</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">commitment</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">commit</span>(<span class="ident">input</span>, <span class="ident">blind</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">commitment</span> {
+    <span class="doccomment">/// Verifies `commitment` against `input` and `blind`.
+    /// Returns Ok(()) on success. Otherwise, returns
+    /// PrimitivesError::ParameterError if input.len() != self.input_len,
+    /// and PrimitivesError::VerificationError if commitment is not valid.
+    </span><span class="kw">pub fn </span>verify(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F], blind: <span class="kw-2">&amp;</span>F, commitment: <span class="kw-2">&amp;</span>F) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.commit(input, blind)<span class="question-mark">? </span>== <span class="kw-2">*</span>commitment {
             <span class="prelude-val">Ok</span>(())
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::VerificationError</span>(<span class="ident">String::from</span>(
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(PrimitivesError::VerificationError(String::from(
                 <span class="string">&quot;Commitment verification failed&quot;</span>,
             )))
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::commitment::Commitment</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381b</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::UniformRand</span>;
-    <span class="kw">use</span> <span class="ident">core::ops::Add</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span><span class="kw">crate</span>::commitment::Commitment;
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::Fq <span class="kw">as </span>FqEd381b;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_ff::UniformRand;
+    <span class="kw">use </span>core::ops::Add;
 
-    <span class="macro">macro_rules!</span> <span class="ident">test_commit</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr</span>:<span class="ident">tt</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-            <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">Commitment::new</span>(<span class="number">3</span>);
+    <span class="macro">macro_rules! </span>test_commit {
+        (<span class="macro-nonterminal">$tr</span>:tt) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+            <span class="kw">let </span>commitment = Commitment::new(<span class="number">3</span>);
 
-            <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">3u64</span>)];
-            <span class="kw">let</span> <span class="ident">blind</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-            <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">commitment</span>.<span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="kw-2">&amp;</span><span class="ident">blind</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert!</span>(<span class="ident">commitment</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="kw-2">&amp;</span><span class="ident">blind</span>, <span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">is_ok</span>());
-            <span class="comment">// smaller input size</span>
-            <span class="macro">assert!</span>(<span class="ident">commitment</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="number">0</span>..<span class="number">2</span>], <span class="kw-2">&amp;</span><span class="ident">blind</span>, <span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">is_err</span>());
-            <span class="comment">// bad blinding factor</span>
-            <span class="kw">let</span> <span class="ident">bad_blind</span> <span class="op">=</span> <span class="ident">blind</span>.<span class="ident">add</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u8</span>));
-            <span class="macro">assert!</span>(<span class="ident">commitment</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="kw-2">&amp;</span><span class="ident">bad_blind</span>, <span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">is_err</span>());
-            <span class="comment">// bad input</span>
-            <span class="kw">let</span> <span class="ident">bad_input</span> <span class="op">=</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">3u64</span>)];
-            <span class="macro">assert!</span>(<span class="ident">commitment</span>.<span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="ident">bad_input</span>, <span class="kw-2">&amp;</span><span class="ident">blind</span>, <span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">is_err</span>());
+            <span class="kw">let </span>input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">3u64</span>)];
+            <span class="kw">let </span>blind = <span class="macro-nonterminal">$tr::rand</span>(<span class="kw-2">&amp;mut </span>prng);
+            <span class="kw">let </span>c = commitment.commit(<span class="kw-2">&amp;</span>input, <span class="kw-2">&amp;</span>blind).unwrap();
+            <span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>input, <span class="kw-2">&amp;</span>blind, <span class="kw-2">&amp;</span>c).is_ok());
+            <span class="comment">// smaller input size
+            </span><span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>input[<span class="number">0</span>..<span class="number">2</span>], <span class="kw-2">&amp;</span>blind, <span class="kw-2">&amp;</span>c).is_err());
+            <span class="comment">// bad blinding factor
+            </span><span class="kw">let </span>bad_blind = blind.add(<span class="macro-nonterminal">$tr::from</span>(<span class="number">1u8</span>));
+            <span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>input, <span class="kw-2">&amp;</span>bad_blind, <span class="kw-2">&amp;</span>c).is_err());
+            <span class="comment">// bad input
+            </span><span class="kw">let </span>bad_input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">3u64</span>)];
+            <span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>bad_input, <span class="kw-2">&amp;</span>blind, <span class="kw-2">&amp;</span>c).is_err());
 
-            <span class="comment">// smaller input size</span>
-            <span class="kw">let</span> <span class="ident">bad_size_input</span> <span class="op">=</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u64</span>)];
-            <span class="macro">assert!</span>(<span class="ident">commitment</span>.<span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="ident">bad_size_input</span>, <span class="kw-2">&amp;</span><span class="ident">blind</span>).<span class="ident">is_err</span>());
-            <span class="comment">// greater input size</span>
-            <span class="kw">let</span> <span class="ident">bad_size_input</span> <span class="op">=</span> [
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">2u64</span>),
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u64</span>),
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u64</span>),
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tr::from</span>(<span class="number">1u64</span>),
+            <span class="comment">// smaller input size
+            </span><span class="kw">let </span>bad_size_input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>)];
+            <span class="macro">assert!</span>(commitment.commit(<span class="kw-2">&amp;</span>bad_size_input, <span class="kw-2">&amp;</span>blind).is_err());
+            <span class="comment">// greater input size
+            </span><span class="kw">let </span>bad_size_input = [
+                <span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>),
+                <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>),
+                <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>),
+                <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>),
             ];
-            <span class="macro">assert!</span>(<span class="ident">commitment</span>.<span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="ident">bad_size_input</span>, <span class="kw-2">&amp;</span><span class="ident">blind</span>).<span class="ident">is_err</span>());
+            <span class="macro">assert!</span>(commitment.commit(<span class="kw-2">&amp;</span>bad_size_input, <span class="kw-2">&amp;</span>blind).is_err());
         };
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_commit</span>() {
-        <span class="macro">test_commit!</span>(<span class="ident">FqEd254</span>);
-        <span class="macro">test_commit!</span>(<span class="ident">FqEd377</span>);
-        <span class="macro">test_commit!</span>(<span class="ident">FqEd381</span>);
-        <span class="macro">test_commit!</span>(<span class="ident">FqEd381b</span>);
-        <span class="macro">test_commit!</span>(<span class="ident">Fq377</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_commit() {
+        <span class="macro">test_commit!</span>(FqEd254);
+        <span class="macro">test_commit!</span>(FqEd377);
+        <span class="macro">test_commit!</span>(FqEd381);
+        <span class="macro">test_commit!</span>(FqEd381b);
+        <span class="macro">test_commit!</span>(Fq377);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

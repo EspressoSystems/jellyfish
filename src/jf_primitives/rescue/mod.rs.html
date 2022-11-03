@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1111,562 +1111,562 @@
 <span id="1111">1111</span>
 <span id="1112">1112</span>
 <span id="1113">1113</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
-<span class="doccomment">//! This module implements Rescue hash function over the following fields</span>
-<span class="doccomment">//! - bls12_377 base field</span>
-<span class="doccomment">//! - ed_on_bls12_377 base field</span>
-<span class="doccomment">//! - ed_on_bls12_381 base field</span>
-<span class="doccomment">//! - ed_on_bn254 base field</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! It also has place holders for</span>
-<span class="doccomment">//! - bls12_381 base field</span>
-<span class="doccomment">//! - bn254 base field</span>
-<span class="doccomment">//! - bw6_761 base field</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Those three place holders should never be used.</span>
+</span><span class="attribute">#![deny(missing_docs)]
+</span><span class="doccomment">//! This module implements Rescue hash function over the following fields
+//! - bls12_377 base field
+//! - ed_on_bls12_377 base field
+//! - ed_on_bls12_381 base field
+//! - ed_on_bn254 base field
+//!
+//! It also has place holders for
+//! - bls12_381 base field
+//! - bn254 base field
+//! - bw6_761 base field
+//!
+//! Those three place holders should never be used.
 
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">warnings</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">mod</span> <span class="ident">rescue_constants</span>;
+</span><span class="attribute">#![deny(warnings)]
+</span><span class="kw">pub mod </span>errors;
+<span class="kw">mod </span>rescue_constants;
 
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">PrimeField</span>, <span class="ident">Zero</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">string::ToString</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">errors::RescueError</span>;
-<span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;
+<span class="kw">use </span>ark_ff::{PrimeField, Zero};
+<span class="kw">use </span>ark_std::{string::ToString, vec, vec::Vec};
+<span class="kw">use </span>errors::RescueError;
+<span class="kw">use </span>jf_utils::pad_with_zeros;
 
-<span class="doccomment">/// The state size of rescue hash.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STATE_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="doccomment">/// The rate of rescue hash.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RATE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="doccomment">/// The state size of rescue hash.
+</span><span class="kw">pub const </span>STATE_SIZE: usize = <span class="number">4</span>;
+<span class="doccomment">/// The rate of rescue hash.
+</span><span class="kw">pub const </span>RATE: usize = <span class="number">3</span>;
 
-<span class="doccomment">/// The # of rounds of rescue hash.</span>
-<span class="comment">// In the paper, to derive ROUND:</span>
-<span class="comment">//  sage: m = 4</span>
-<span class="comment">//  sage: for N in range (13):</span>
-<span class="comment">//  ....:     t = m*N*3+3+2</span>
-<span class="comment">//  ....:     b = m*N + 3</span>
-<span class="comment">//  ....:     sec = factorial(t)/factorial(b)/factorial(t-b)</span>
-<span class="comment">//  ....:     print (N, RR(log(sec^2,2)))</span>
-<span class="comment">//</span>
-<span class="comment">// for alpha = 5, (i.e., BLS12-381 and BN254)</span>
-<span class="comment">//      10 224.672644456021</span>
-<span class="comment">//      11 246.589942930803</span>
-<span class="comment">//      12 268.516687541633</span>
-<span class="comment">// set ROUND = 12, we have 134 bits security</span>
-<span class="comment">//</span>
-<span class="comment">// for alpha = 11, (i.e. BLS12-377) we have l1 =</span>
-<span class="comment">//      7 227.364142668101</span>
-<span class="comment">//      8 258.421493926570</span>
-<span class="comment">//      9 289.491120346551</span>
-<span class="comment">//      10 320.571247089962</span>
-<span class="comment">//      11 351.660410749737</span>
-<span class="comment">//      12 382.757409540148</span>
-<span class="comment">// The smallest possible round number will be max(10, l1), which</span>
-<span class="comment">// means round = 10 gives 160 bits security</span>
-<span class="comment">//</span>
-<span class="comment">// There is also the script from</span>
-<span class="comment">//  https://github.com/EspressoSystems/Marvellous</span>
-<span class="comment">//</span>
-<span class="comment">// For unknown reasons, for all alpha &gt;=5, the ROUND number is taken as if alpha</span>
-<span class="comment">// = 5. This parameter choice does not seem to be optimal</span>
-<span class="comment">//</span>
-<span class="comment">//  if (self.alpha == 3):</span>
-<span class="comment">//      self.Nb = max(10, 2*ceil((1.0 * security_level + 2) / (4*m)))</span>
-<span class="comment">//  elif (self.alpha == 5):</span>
-<span class="comment">//      self.Nb = max(10, 2*ceil((1.0 * security_level + 3) / (5.5*m)))</span>
-<span class="comment">//  else :</span>
-<span class="comment">//      self.Nb = max(10, 2*ceil((1.0 * security_level + 3) / (5.5*m)))</span>
-<span class="comment">//  # where m = 4</span>
-<span class="comment">//</span>
-<span class="comment">// For conservative purpose, we are setting ROUNDS = 12 for now.</span>
-<span class="comment">// We may consider to use ROUNDS = 10 for BLS12-377 (alpha = 11) in futures.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ROUNDS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">12</span>;
+<span class="doccomment">/// The # of rounds of rescue hash.
+</span><span class="comment">// In the paper, to derive ROUND:
+//  sage: m = 4
+//  sage: for N in range (13):
+//  ....:     t = m*N*3+3+2
+//  ....:     b = m*N + 3
+//  ....:     sec = factorial(t)/factorial(b)/factorial(t-b)
+//  ....:     print (N, RR(log(sec^2,2)))
+//
+// for alpha = 5, (i.e., BLS12-381 and BN254)
+//      10 224.672644456021
+//      11 246.589942930803
+//      12 268.516687541633
+// set ROUND = 12, we have 134 bits security
+//
+// for alpha = 11, (i.e. BLS12-377) we have l1 =
+//      7 227.364142668101
+//      8 258.421493926570
+//      9 289.491120346551
+//      10 320.571247089962
+//      11 351.660410749737
+//      12 382.757409540148
+// The smallest possible round number will be max(10, l1), which
+// means round = 10 gives 160 bits security
+//
+// There is also the script from
+//  https://github.com/EspressoSystems/Marvellous
+//
+// For unknown reasons, for all alpha &gt;=5, the ROUND number is taken as if alpha
+// = 5. This parameter choice does not seem to be optimal
+//
+//  if (self.alpha == 3):
+//      self.Nb = max(10, 2*ceil((1.0 * security_level + 2) / (4*m)))
+//  elif (self.alpha == 5):
+//      self.Nb = max(10, 2*ceil((1.0 * security_level + 3) / (5.5*m)))
+//  else :
+//      self.Nb = max(10, 2*ceil((1.0 * security_level + 3) / (5.5*m)))
+//  # where m = 4
+//
+// For conservative purpose, we are setting ROUNDS = 12 for now.
+// We may consider to use ROUNDS = 10 for BLS12-377 (alpha = 11) in futures.
+</span><span class="kw">pub const </span>ROUNDS: usize = <span class="number">12</span>;
 
-<span class="doccomment">/// This trait defines constants that are used for rescue hash functions.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RescueParameter</span>: <span class="ident">PrimeField</span> {
-    <span class="doccomment">/// parameter A, a.k.a., alpha</span>
-    <span class="kw">const</span> <span class="ident">A</span>: <span class="ident">u64</span>;
-    <span class="doccomment">/// parameter A^-1</span>
-    <span class="kw">const</span> <span class="ident">A_INV</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u64</span>];
-    <span class="doccomment">/// MDS matrix</span>
-    <span class="kw">const</span> <span class="ident">MDS_LE</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="ident">STATE_SIZE</span>]; <span class="ident">STATE_SIZE</span>];
-    <span class="doccomment">/// Initial vector.</span>
-    <span class="kw">const</span> <span class="ident">INIT_VEC_LE</span>: [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="ident">STATE_SIZE</span>];
-    <span class="doccomment">/// Injected keys for each round.</span>
-    <span class="kw">const</span> <span class="ident">KEY_INJECTION_LE</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="number">4</span>]; <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>];
-    <span class="doccomment">/// Permutation keys.</span>
-    <span class="kw">const</span> <span class="ident">PERMUTATION_ROUND_KEYS</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="number">4</span>]; <span class="number">25</span>];
+<span class="doccomment">/// This trait defines constants that are used for rescue hash functions.
+</span><span class="kw">pub trait </span>RescueParameter: PrimeField {
+    <span class="doccomment">/// parameter A, a.k.a., alpha
+    </span><span class="kw">const </span>A: u64;
+    <span class="doccomment">/// parameter A^-1
+    </span><span class="kw">const </span>A_INV: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u64];
+    <span class="doccomment">/// MDS matrix
+    </span><span class="kw">const </span>MDS_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; STATE_SIZE]; STATE_SIZE];
+    <span class="doccomment">/// Initial vector.
+    </span><span class="kw">const </span>INIT_VEC_LE: [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; STATE_SIZE];
+    <span class="doccomment">/// Injected keys for each round.
+    </span><span class="kw">const </span>KEY_INJECTION_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; <span class="number">4</span>]; <span class="number">2 </span>* ROUNDS];
+    <span class="doccomment">/// Permutation keys.
+    </span><span class="kw">const </span>PERMUTATION_ROUND_KEYS: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; <span class="number">4</span>]; <span class="number">25</span>];
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Copy</span>)]</span>
-<span class="doccomment">/// Data type for rescue prp inputs, keys and internal data</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">vec</span>: [<span class="ident">F</span>; <span class="ident">STATE_SIZE</span>],
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Copy)]
+</span><span class="doccomment">/// Data type for rescue prp inputs, keys and internal data
+</span><span class="kw">pub struct </span>RescueVector&lt;F&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) vec: [F; STATE_SIZE],
 }
 
-<span class="comment">// Public functions</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// zero vector</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>() -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">RescueVector</span> {
-            <span class="ident">vec</span>: [<span class="ident">F::zero</span>(); <span class="ident">STATE_SIZE</span>],
+<span class="comment">// Public functions
+</span><span class="kw">impl</span>&lt;F: PrimeField&gt; RescueVector&lt;F&gt; {
+    <span class="doccomment">/// zero vector
+    </span><span class="kw">pub fn </span>zero() -&gt; RescueVector&lt;F&gt; {
+        RescueVector {
+            vec: [F::zero(); STATE_SIZE],
         }
     }
 
-    <span class="doccomment">/// Return vector of the field elements</span>
-    <span class="doccomment">/// WARNING: may expose the internal state.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">elems</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">to_vec</span>()
+    <span class="doccomment">/// Return vector of the field elements
+    /// WARNING: may expose the internal state.
+    </span><span class="kw">pub fn </span>elems(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt; {
+        <span class="self">self</span>.vec.to_vec()
     }
 
-    <span class="doccomment">/// Perform a linear transform of the vector.</span>
-    <span class="doccomment">/// Function needs to be public for circuits generation..</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">linear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">matrix</span>.<span class="ident">mul_vec</span>(<span class="self">self</span>);
-        <span class="ident">aux</span>.<span class="ident">add_assign</span>(<span class="ident">vector</span>);
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident">aux</span>
+    <span class="doccomment">/// Perform a linear transform of the vector.
+    /// Function needs to be public for circuits generation..
+    </span><span class="kw">pub fn </span>linear(<span class="kw-2">&amp;mut </span><span class="self">self</span>, matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;, vector: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = matrix.mul_vec(<span class="self">self</span>);
+        aux.add_assign(vector);
+        <span class="kw-2">*</span><span class="self">self </span>= aux
     }
 }
 
-<span class="comment">// Private functions</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from_elems_le_bytes</span>(<span class="ident">e0</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e1</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e2</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">e3</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">RescueVector</span> {
-            <span class="ident">vec</span>: [
-                <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">e0</span>),
-                <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">e1</span>),
-                <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">e2</span>),
-                <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">e3</span>),
+<span class="comment">// Private functions
+</span><span class="kw">impl</span>&lt;F: PrimeField&gt; RescueVector&lt;F&gt; {
+    <span class="kw">fn </span>from_elems_le_bytes(e0: <span class="kw-2">&amp;</span>[u8], e1: <span class="kw-2">&amp;</span>[u8], e2: <span class="kw-2">&amp;</span>[u8], e3: <span class="kw-2">&amp;</span>[u8]) -&gt; RescueVector&lt;F&gt; {
+        RescueVector {
+            vec: [
+                F::from_le_bytes_mod_order(e0),
+                F::from_le_bytes_mod_order(e1),
+                F::from_le_bytes_mod_order(e2),
+                F::from_le_bytes_mod_order(e3),
             ],
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">pad_smaller_chunk</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="macro">assert!</span>(<span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::zero</span>().<span class="ident">vec</span>;
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">elem</span>) <span class="kw">in</span> <span class="ident">input</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="ident">vec</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">elem</span>;
+    <span class="kw">fn </span>pad_smaller_chunk(input: <span class="kw-2">&amp;</span>[F]) -&gt; RescueVector&lt;F&gt; {
+        <span class="macro">assert!</span>(input.len() &lt; <span class="number">4</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="self">Self</span>::zero().vec;
+        <span class="kw">for </span>(i, elem) <span class="kw">in </span>input.iter().enumerate() {
+            vec[i] = <span class="kw-2">*</span>elem;
         }
-        <span class="ident">RescueVector</span> { <span class="ident">vec</span> }
+        RescueVector { vec }
     }
 
-    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>]) {
-        <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">elem</span><span class="op">|</span> {
-            <span class="kw-2">*</span><span class="ident">elem</span> <span class="op">=</span> <span class="ident">elem</span>.<span class="ident">pow</span>(<span class="ident">exp</span>);
+    <span class="kw">fn </span>pow(<span class="kw-2">&amp;mut </span><span class="self">self</span>, exp: <span class="kw-2">&amp;</span>[u64]) {
+        <span class="self">self</span>.vec.iter_mut().for_each(|elem| {
+            <span class="kw-2">*</span>elem = elem.pow(exp);
         });
     }
 
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
-        <span class="kw">for</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">vector</span>.<span class="ident">vec</span>.<span class="ident">iter</span>()) {
-            <span class="ident">a</span>.<span class="ident">add_assign</span>(<span class="ident">b</span>);
+    <span class="kw">fn </span>add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vector: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) {
+        <span class="kw">for </span>(a, b) <span class="kw">in </span><span class="self">self</span>.vec.iter_mut().zip(vector.vec.iter()) {
+            a.add_assign(b);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
-        <span class="ident">aux</span>.<span class="ident">add_assign</span>(<span class="ident">vector</span>);
-        <span class="ident">aux</span>
+    <span class="kw">fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, vector: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) -&gt; RescueVector&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = <span class="kw-2">*</span><span class="self">self</span>;
+        aux.add_assign(vector);
+        aux
     }
 
-    <span class="kw">fn</span> <span class="ident">add_assign_elems</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) {
-        <span class="macro">assert_eq!</span>(<span class="ident">elems</span>.<span class="ident">len</span>(), <span class="ident">STATE_SIZE</span>);
-        <span class="self">self</span>.<span class="ident">vec</span>
-            .<span class="ident">iter_mut</span>()
-            .<span class="ident">zip</span>(<span class="ident">elems</span>.<span class="ident">iter</span>())
-            .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">a</span>, <span class="ident">b</span>)<span class="op">|</span> <span class="ident">a</span>.<span class="ident">add_assign</span>(<span class="ident">b</span>));
+    <span class="kw">fn </span>add_assign_elems(<span class="kw-2">&amp;mut </span><span class="self">self</span>, elems: <span class="kw-2">&amp;</span>[F]) {
+        <span class="macro">assert_eq!</span>(elems.len(), STATE_SIZE);
+        <span class="self">self</span>.vec
+            .iter_mut()
+            .zip(elems.iter())
+            .for_each(|(a, b)| a.add_assign(b));
     }
 
-    <span class="kw">fn</span> <span class="ident">dot_product</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">F</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">F::zero</span>();
-        <span class="kw">for</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">vec</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">vector</span>.<span class="ident">vec</span>.<span class="ident">iter</span>()) {
-            <span class="ident">r</span>.<span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">mul</span>(<span class="ident">b</span>));
+    <span class="kw">fn </span>dot_product(<span class="kw-2">&amp;</span><span class="self">self</span>, vector: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) -&gt; F {
+        <span class="kw">let </span><span class="kw-2">mut </span>r = F::zero();
+        <span class="kw">for </span>(a, b) <span class="kw">in </span><span class="self">self</span>.vec.iter().zip(vector.vec.iter()) {
+            r.add_assign(<span class="kw-2">&amp;</span>a.mul(b));
         }
-        <span class="ident">r</span>
+        r
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Helper function to compute f(M,x,c) = Mx^a + c.</span>
-    <span class="doccomment">/// Function needs to be public for circuits generation..</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_linear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">matrix</span>: <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">self_aux</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>;
-        <span class="ident">self_aux</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">F::A</span>]);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">matrix</span>.<span class="ident">mul_vec</span>(<span class="kw-2">&amp;</span><span class="ident">self_aux</span>);
-        <span class="ident">aux</span>.<span class="ident">add_assign</span>(<span class="ident">vector</span>);
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident">aux</span>;
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; RescueVector&lt;F&gt; {
+    <span class="doccomment">/// Helper function to compute f(M,x,c) = Mx^a + c.
+    /// Function needs to be public for circuits generation..
+    </span><span class="kw">pub fn </span>non_linear(<span class="kw-2">&amp;mut </span><span class="self">self</span>, matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;, vector: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>self_aux = <span class="kw-2">*</span><span class="self">self</span>;
+        self_aux.pow(<span class="kw-2">&amp;</span>[F::A]);
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = matrix.mul_vec(<span class="kw-2">&amp;</span>self_aux);
+        aux.add_assign(vector);
+        <span class="kw-2">*</span><span class="self">self </span>= aux;
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">F</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">field_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="macro">assert_eq!</span>(<span class="ident">field_elems</span>.<span class="ident">len</span>(), <span class="ident">STATE_SIZE</span>);
-        <span class="ident">RescueVector</span> {
-            <span class="ident">vec</span>: [
-                <span class="ident">field_elems</span>[<span class="number">0</span>],
-                <span class="ident">field_elems</span>[<span class="number">1</span>],
-                <span class="ident">field_elems</span>[<span class="number">2</span>],
-                <span class="ident">field_elems</span>[<span class="number">3</span>],
+<span class="kw">impl</span>&lt;F: Copy&gt; From&lt;<span class="kw-2">&amp;</span>[F]&gt; <span class="kw">for </span>RescueVector&lt;F&gt; {
+    <span class="kw">fn </span>from(field_elems: <span class="kw-2">&amp;</span>[F]) -&gt; RescueVector&lt;F&gt; {
+        <span class="macro">assert_eq!</span>(field_elems.len(), STATE_SIZE);
+        RescueVector {
+            vec: [
+                field_elems[<span class="number">0</span>],
+                field_elems[<span class="number">1</span>],
+                field_elems[<span class="number">2</span>],
+                field_elems[<span class="number">3</span>],
             ],
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">STATE_SIZE</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">field_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">STATE_SIZE</span>]) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">RescueVector</span> { <span class="ident">vec</span>: <span class="kw-2">*</span><span class="ident">field_elems</span> }
+<span class="kw">impl</span>&lt;F: Copy&gt; From&lt;<span class="kw-2">&amp;</span>[F; STATE_SIZE]&gt; <span class="kw">for </span>RescueVector&lt;F&gt; {
+    <span class="kw">fn </span>from(field_elems: <span class="kw-2">&amp;</span>[F; STATE_SIZE]) -&gt; RescueVector&lt;F&gt; {
+        RescueVector { vec: <span class="kw-2">*</span>field_elems }
     }
 }
 
-<span class="doccomment">/// A matrix that consists of `STATE_SIZE` number of rescue vectors.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="ident">matrix</span>: [<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>],
+<span class="doccomment">/// A matrix that consists of `STATE_SIZE` number of rescue vectors.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>RescueMatrix&lt;F&gt; {
+    matrix: [RescueVector&lt;F&gt;; STATE_SIZE],
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vectors</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="ident">STATE_SIZE</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">matrix</span>: <span class="kw-2">*</span><span class="ident">vectors</span> }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">mul_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> [<span class="ident">F::zero</span>(); <span class="ident">STATE_SIZE</span>];
-        <span class="self">self</span>.<span class="ident">matrix</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">row</span>)<span class="op">|</span> <span class="ident">result</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">row</span>.<span class="ident">dot_product</span>(<span class="ident">vector</span>));
-        <span class="ident">RescueVector</span> { <span class="ident">vec</span>: <span class="ident">result</span> }
-    }
-
-    <span class="doccomment">/// Accessing the i-th vector of the matrix.    </span>
-    <span class="doccomment">/// Function needs to be public for circuits generation..</span>
-    <span class="doccomment">/// WARNING: may expose the internal state.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">matrix</span>[<span class="ident">i</span>]
-    }
-
-    <span class="doccomment">/// Check if the matrix is empty.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">matrix</span>.<span class="ident">is_empty</span>()
-    }
-
-    <span class="doccomment">/// Return the number of columns of the matrix.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">matrix</span>.<span class="ident">len</span>()
+<span class="kw">impl</span>&lt;F: PrimeField&gt; From&lt;<span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;; STATE_SIZE]&gt; <span class="kw">for </span>RescueMatrix&lt;F&gt; {
+    <span class="kw">fn </span>from(vectors: <span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;; STATE_SIZE]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ matrix: <span class="kw-2">*</span>vectors }
     }
 }
 
-<span class="comment">// Rescue Pseudorandom Permutation (PRP) implementation for the BLS12_381 Scalar</span>
-<span class="comment">// field with 4 elements as key and input size. From the PRP it derives 3 hash</span>
-<span class="comment">// functions: 1. Sponge construction with arbitrary input and output length</span>
-<span class="comment">// 2. Sponge construction with input length multiple of the RATE (3) (no padding</span>
-<span class="comment">// needed) 3. 3 to 1 hashing (same construction as 1 and 2, but limiting the</span>
-<span class="comment">// input to 3 and output to 1</span>
-<span class="comment">//</span>
+<span class="kw">impl</span>&lt;F: PrimeField&gt; RescueMatrix&lt;F&gt; {
+    <span class="kw">fn </span>mul_vec(<span class="kw-2">&amp;</span><span class="self">self</span>, vector: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) -&gt; RescueVector&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = [F::zero(); STATE_SIZE];
+        <span class="self">self</span>.matrix
+            .iter()
+            .enumerate()
+            .for_each(|(i, row)| result[i] = row.dot_product(vector));
+        RescueVector { vec: result }
+    }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::upper_case_acronyms</span>)]</span>
-<span class="doccomment">/// Rescue pseudo-random permutation (PRP) instance</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="ident">mds</span>: <span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,      <span class="comment">// rescue permutation MDS matrix</span>
-    <span class="ident">init_vec</span>: <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="comment">// rescue permutation initial constants</span>
-    <span class="ident">key_injection</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">/* rescue permutation key injection constants to compute
-                                * round keys */</span>
+    <span class="doccomment">/// Accessing the i-th vector of the matrix.    
+    /// Function needs to be public for circuits generation..
+    /// WARNING: may expose the internal state.
+    </span><span class="kw">pub fn </span>vec(<span class="kw-2">&amp;</span><span class="self">self</span>, i: usize) -&gt; RescueVector&lt;F&gt; {
+        <span class="self">self</span>.matrix[i]
+    }
+
+    <span class="doccomment">/// Check if the matrix is empty.
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.matrix.is_empty()
+    }
+
+    <span class="doccomment">/// Return the number of columns of the matrix.
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.matrix.len()
+    }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_injection</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>);
-        <span class="kw">for</span> <span class="ident">bytes</span> <span class="kw">in</span> <span class="ident">F::KEY_INJECTION_LE</span>.<span class="ident">iter</span>() {
-            <span class="ident">key_injection</span>.<span class="ident">push</span>(<span class="ident">RescueVector::from_elems_le_bytes</span>(
-                <span class="ident">bytes</span>[<span class="number">0</span>], <span class="ident">bytes</span>[<span class="number">1</span>], <span class="ident">bytes</span>[<span class="number">2</span>], <span class="ident">bytes</span>[<span class="number">3</span>],
+<span class="comment">// Rescue Pseudorandom Permutation (PRP) implementation for the BLS12_381 Scalar
+// field with 4 elements as key and input size. From the PRP it derives 3 hash
+// functions: 1. Sponge construction with arbitrary input and output length
+// 2. Sponge construction with input length multiple of the RATE (3) (no padding
+// needed) 3. 3 to 1 hashing (same construction as 1 and 2, but limiting the
+// input to 3 and output to 1
+//
+
+</span><span class="attribute">#[derive(Clone)]
+#[allow(clippy::upper_case_acronyms)]
+</span><span class="doccomment">/// Rescue pseudo-random permutation (PRP) instance
+</span><span class="kw">pub struct </span>PRP&lt;F&gt; {
+    mds: RescueMatrix&lt;F&gt;,      <span class="comment">// rescue permutation MDS matrix
+    </span>init_vec: RescueVector&lt;F&gt;, <span class="comment">// rescue permutation initial constants
+    </span>key_injection: Vec&lt;RescueVector&lt;F&gt;&gt;, <span class="comment">/* rescue permutation key injection constants to compute
+                                * round keys */
+</span>}
+
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; Default <span class="kw">for </span>PRP&lt;F&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>key_injection = Vec::with_capacity(<span class="number">2 </span>* ROUNDS);
+        <span class="kw">for </span>bytes <span class="kw">in </span>F::KEY_INJECTION_LE.iter() {
+            key_injection.push(RescueVector::from_elems_le_bytes(
+                bytes[<span class="number">0</span>], bytes[<span class="number">1</span>], bytes[<span class="number">2</span>], bytes[<span class="number">3</span>],
             ));
         }
-        <span class="ident">PRP</span> {
-            <span class="ident">mds</span>: <span class="ident">RescueMatrix::from</span>(<span class="kw-2">&amp;</span>[
-                <span class="ident">RescueVector::from_elems_le_bytes</span>(
-                    <span class="ident">F::MDS_LE</span>[<span class="number">0</span>][<span class="number">0</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">0</span>][<span class="number">1</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">0</span>][<span class="number">2</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">0</span>][<span class="number">3</span>],
+        PRP {
+            mds: RescueMatrix::from(<span class="kw-2">&amp;</span>[
+                RescueVector::from_elems_le_bytes(
+                    F::MDS_LE[<span class="number">0</span>][<span class="number">0</span>],
+                    F::MDS_LE[<span class="number">0</span>][<span class="number">1</span>],
+                    F::MDS_LE[<span class="number">0</span>][<span class="number">2</span>],
+                    F::MDS_LE[<span class="number">0</span>][<span class="number">3</span>],
                 ),
-                <span class="ident">RescueVector::from_elems_le_bytes</span>(
-                    <span class="ident">F::MDS_LE</span>[<span class="number">1</span>][<span class="number">0</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">1</span>][<span class="number">1</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">1</span>][<span class="number">2</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">1</span>][<span class="number">3</span>],
+                RescueVector::from_elems_le_bytes(
+                    F::MDS_LE[<span class="number">1</span>][<span class="number">0</span>],
+                    F::MDS_LE[<span class="number">1</span>][<span class="number">1</span>],
+                    F::MDS_LE[<span class="number">1</span>][<span class="number">2</span>],
+                    F::MDS_LE[<span class="number">1</span>][<span class="number">3</span>],
                 ),
-                <span class="ident">RescueVector::from_elems_le_bytes</span>(
-                    <span class="ident">F::MDS_LE</span>[<span class="number">2</span>][<span class="number">0</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">2</span>][<span class="number">1</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">2</span>][<span class="number">2</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">2</span>][<span class="number">3</span>],
+                RescueVector::from_elems_le_bytes(
+                    F::MDS_LE[<span class="number">2</span>][<span class="number">0</span>],
+                    F::MDS_LE[<span class="number">2</span>][<span class="number">1</span>],
+                    F::MDS_LE[<span class="number">2</span>][<span class="number">2</span>],
+                    F::MDS_LE[<span class="number">2</span>][<span class="number">3</span>],
                 ),
-                <span class="ident">RescueVector::from_elems_le_bytes</span>(
-                    <span class="ident">F::MDS_LE</span>[<span class="number">3</span>][<span class="number">0</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">3</span>][<span class="number">1</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">3</span>][<span class="number">2</span>],
-                    <span class="ident">F::MDS_LE</span>[<span class="number">3</span>][<span class="number">3</span>],
+                RescueVector::from_elems_le_bytes(
+                    F::MDS_LE[<span class="number">3</span>][<span class="number">0</span>],
+                    F::MDS_LE[<span class="number">3</span>][<span class="number">1</span>],
+                    F::MDS_LE[<span class="number">3</span>][<span class="number">2</span>],
+                    F::MDS_LE[<span class="number">3</span>][<span class="number">3</span>],
                 ),
             ]),
-            <span class="ident">init_vec</span>: <span class="ident">RescueVector::from_elems_le_bytes</span>(
-                <span class="ident">F::INIT_VEC_LE</span>[<span class="number">0</span>],
-                <span class="ident">F::INIT_VEC_LE</span>[<span class="number">1</span>],
-                <span class="ident">F::INIT_VEC_LE</span>[<span class="number">2</span>],
-                <span class="ident">F::INIT_VEC_LE</span>[<span class="number">3</span>],
+            init_vec: RescueVector::from_elems_le_bytes(
+                F::INIT_VEC_LE[<span class="number">0</span>],
+                F::INIT_VEC_LE[<span class="number">1</span>],
+                F::INIT_VEC_LE[<span class="number">2</span>],
+                F::INIT_VEC_LE[<span class="number">3</span>],
             ),
-            <span class="ident">key_injection</span>,
+            key_injection,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4</span>
-    <span class="doccomment">/// without key scheduled keys (scheduling occurs online)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">key_schedule</span>(<span class="ident">key</span>);
-        <span class="self">self</span>.<span class="ident">prp_with_round_keys</span>(<span class="ident">round_keys</span>.<span class="ident">as_slice</span>(), <span class="ident">input</span>)
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; PRP&lt;F&gt; {
+    <span class="doccomment">/// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4
+    /// without key scheduled keys (scheduling occurs online)
+    </span><span class="kw">pub fn </span>prp(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;, input: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) -&gt; RescueVector&lt;F&gt; {
+        <span class="kw">let </span>round_keys = <span class="self">self</span>.key_schedule(key);
+        <span class="self">self</span>.prp_with_round_keys(round_keys.as_slice(), input)
     }
 
-    <span class="doccomment">/// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4</span>
-    <span class="doccomment">/// using scheduled keys</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prp_with_round_keys</span>(
+    <span class="doccomment">/// Rescue pseudorandom permutation for Bls12381 scalars vectors of size 4
+    /// using scheduled keys
+    </span><span class="kw">pub fn </span>prp_with_round_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">round_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-        <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="macro">assert_eq!</span>(<span class="ident">round_keys</span>.<span class="ident">len</span>(), <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">perm_state</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="ident">round_keys</span>[<span class="number">0</span>]);
-        <span class="ident">round_keys</span>[<span class="number">1</span>..].<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">round</span>, <span class="ident">key</span>)<span class="op">|</span> {
-            <span class="kw">if</span> (<span class="ident">round</span> <span class="op">%</span> <span class="number">2</span>).<span class="ident">is_zero</span>() {
-                <span class="ident">perm_state</span>.<span class="ident">pow</span>(<span class="ident">F::A_INV</span>);
-            } <span class="kw">else</span> {
-                <span class="ident">perm_state</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">F::A</span>]);
+        round_keys: <span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;],
+        input: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;,
+    ) -&gt; RescueVector&lt;F&gt; {
+        <span class="macro">assert_eq!</span>(round_keys.len(), <span class="number">2 </span>* ROUNDS + <span class="number">1</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>perm_state = input.add(<span class="kw-2">&amp;</span>round_keys[<span class="number">0</span>]);
+        round_keys[<span class="number">1</span>..].iter().enumerate().for_each(|(round, key)| {
+            <span class="kw">if </span>(round % <span class="number">2</span>).is_zero() {
+                perm_state.pow(F::A_INV);
+            } <span class="kw">else </span>{
+                perm_state.pow(<span class="kw-2">&amp;</span>[F::A]);
             }
-            <span class="ident">perm_state</span>.<span class="ident">linear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mds</span>, <span class="ident">key</span>)
+            perm_state.linear(<span class="kw-2">&amp;</span><span class="self">self</span>.mds, key)
         });
-        <span class="ident">perm_state</span>
+        perm_state
     }
 
-    <span class="doccomment">/// Key scheduling for rescue based PRP for Bls12_381 scalars vector of size</span>
-    <span class="doccomment">/// 4</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">init_vec</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">aux</span>];
-        (<span class="number">0</span>..<span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>).<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="kw">if</span> (<span class="ident">i</span> <span class="op">%</span> <span class="number">2</span>).<span class="ident">is_zero</span>() { <span class="ident">F::A_INV</span> } <span class="kw">else</span> { <span class="kw-2">&amp;</span>[<span class="ident">F::A</span>] };
-            <span class="ident">aux</span>.<span class="ident">pow</span>(<span class="ident">exp</span>);
-            <span class="ident">aux</span>.<span class="ident">linear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mds</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key_injection</span>[<span class="ident">i</span>]);
-            <span class="ident">round_keys</span>.<span class="ident">push</span>(<span class="ident">aux</span>);
+    <span class="doccomment">/// Key scheduling for rescue based PRP for Bls12_381 scalars vector of size
+    /// 4
+    </span><span class="kw">pub fn </span>key_schedule(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) -&gt; Vec&lt;RescueVector&lt;F&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = key.add(<span class="kw-2">&amp;</span><span class="self">self</span>.init_vec);
+        <span class="kw">let </span><span class="kw-2">mut </span>round_keys = <span class="macro">vec!</span>[aux];
+        (<span class="number">0</span>..<span class="number">2 </span>* ROUNDS).for_each(|i| {
+            <span class="kw">let </span>exp = <span class="kw">if </span>(i % <span class="number">2</span>).is_zero() { F::A_INV } <span class="kw">else </span>{ <span class="kw-2">&amp;</span>[F::A] };
+            aux.pow(exp);
+            aux.linear(<span class="kw-2">&amp;</span><span class="self">self</span>.mds, <span class="kw-2">&amp;</span><span class="self">self</span>.key_injection[i]);
+            round_keys.push(aux);
         });
-        <span class="ident">round_keys</span>
+        round_keys
     }
 
-    <span class="doccomment">/// Return a pointer to the mds matrix.</span>
-    <span class="doccomment">/// Does not expose secret states.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mds_matrix_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mds</span>
+    <span class="doccomment">/// Return a pointer to the mds matrix.
+    /// Does not expose secret states.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>mds_matrix_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.mds
     }
 
-    <span class="doccomment">/// Return a pointer to the key injection vectors.</span>
-    <span class="doccomment">/// Function needs to be public for circuits generation..</span>
-    <span class="doccomment">/// WARNING!!! May expose secret state if keys are supposed to be secret.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_injection_vec_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key_injection</span>
+    <span class="doccomment">/// Return a pointer to the key injection vectors.
+    /// Function needs to be public for circuits generation..
+    /// WARNING!!! May expose secret state if keys are supposed to be secret.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>key_injection_vec_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.key_injection
     }
 
-    <span class="doccomment">/// Return a pointer to the initial vectors.</span>
-    <span class="doccomment">/// Does not expose secret states.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vec_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">init_vec</span>
+    <span class="doccomment">/// Return a pointer to the initial vectors.
+    /// Does not expose secret states.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>init_vec_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RescueVector&lt;F&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.init_vec
     }
 }
 
-<span class="doccomment">/// Instance of a unkeyed cryptographic permutation to be used for instantiation</span>
-<span class="doccomment">/// hashing, pseudo-random function, and other cryptographic primitives</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="ident">rescue_prp</span>: <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">round_keys</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Instance of a unkeyed cryptographic permutation to be used for instantiation
+/// hashing, pseudo-random function, and other cryptographic primitives
+</span><span class="kw">pub struct </span>Permutation&lt;F&gt; {
+    rescue_prp: PRP&lt;F&gt;,
+    round_keys: Vec&lt;RescueVector&lt;F&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">rescue</span>: <span class="ident">PRP</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">F::PERMUTATION_ROUND_KEYS</span>.<span class="ident">iter</span>() {
-            <span class="ident">keys</span>.<span class="ident">push</span>(<span class="ident">RescueVector::from_elems_le_bytes</span>(
-                <span class="ident">key</span>[<span class="number">0</span>], <span class="ident">key</span>[<span class="number">1</span>], <span class="ident">key</span>[<span class="number">2</span>], <span class="ident">key</span>[<span class="number">3</span>],
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; From&lt;PRP&lt;F&gt;&gt; <span class="kw">for </span>Permutation&lt;F&gt; {
+    <span class="kw">fn </span>from(rescue: PRP&lt;F&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>keys: Vec&lt;RescueVector&lt;F&gt;&gt; = Vec::with_capacity(<span class="number">2 </span>* ROUNDS + <span class="number">1</span>);
+        <span class="kw">for </span>key <span class="kw">in </span>F::PERMUTATION_ROUND_KEYS.iter() {
+            keys.push(RescueVector::from_elems_le_bytes(
+                key[<span class="number">0</span>], key[<span class="number">1</span>], key[<span class="number">2</span>], key[<span class="number">3</span>],
             ))
         }
-        <span class="ident">Permutation</span> {
-            <span class="ident">rescue_prp</span>: <span class="ident">rescue</span>,
-            <span class="ident">round_keys</span>: <span class="ident">keys</span>,
+        Permutation {
+            rescue_prp: rescue,
+            round_keys: keys,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Permutation::from</span>(<span class="ident">PRP::default</span>())
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; Default <span class="kw">for </span>Permutation&lt;F&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        Permutation::from(PRP::default())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Return a pointer to the round key.</span>
-    <span class="doccomment">/// Does not expose secret states.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">round_keys_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>] {
-        <span class="self">self</span>.<span class="ident">round_keys</span>.<span class="ident">as_slice</span>()
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; Permutation&lt;F&gt; {
+    <span class="doccomment">/// Return a pointer to the round key.
+    /// Does not expose secret states.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>round_keys_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;] {
+        <span class="self">self</span>.round_keys.as_slice()
     }
 
-    <span class="doccomment">/// Return a pointer to the mds matrix.</span>
-    <span class="doccomment">/// Does not expose secret states.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mds_matrix_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RescueMatrix</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">rescue_prp</span>.<span class="ident">mds_matrix_ref</span>()
+    <span class="doccomment">/// Return a pointer to the mds matrix.
+    /// Does not expose secret states.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>mds_matrix_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt; {
+        <span class="self">self</span>.rescue_prp.mds_matrix_ref()
     }
-    <span class="doccomment">/// Compute the permutation on RescueVector `input`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">rescue_prp</span>
-            .<span class="ident">prp_with_round_keys</span>(<span class="self">self</span>.<span class="ident">round_keys</span>.<span class="ident">as_slice</span>(), <span class="ident">input</span>)
+    <span class="doccomment">/// Compute the permutation on RescueVector `input`
+    </span><span class="kw">pub fn </span>eval(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;) -&gt; RescueVector&lt;F&gt; {
+        <span class="self">self</span>.rescue_prp
+            .prp_with_round_keys(<span class="self">self</span>.round_keys.as_slice(), input)
     }
 }
 
-<span class="comment">// Implement Sponge Hashing</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Sponge hashing based on rescue permutation for Bls12_381 scalar field</span>
-    <span class="doccomment">/// for RATE 3 and CAPACITY 1. It allows unrestricted variable length</span>
-    <span class="doccomment">/// input and number of output elements</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">num_output</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="comment">// Pad input as follows: append a One, then pad with 0 until length is multiple</span>
-        <span class="comment">// of RATE</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">to_vec</span>();
-        <span class="ident">padded</span>.<span class="ident">push</span>(<span class="ident">F::one</span>());
-        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">padded</span>, <span class="ident">RATE</span>);
-        <span class="self">self</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">padded</span>.<span class="ident">as_slice</span>(), <span class="ident">num_output</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
+<span class="comment">// Implement Sponge Hashing
+</span><span class="kw">impl</span>&lt;F: RescueParameter&gt; Permutation&lt;F&gt; {
+    <span class="doccomment">/// Sponge hashing based on rescue permutation for Bls12_381 scalar field
+    /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
+    /// input and number of output elements
+    </span><span class="kw">pub fn </span>sponge_with_padding(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F], num_output: usize) -&gt; Vec&lt;F&gt; {
+        <span class="comment">// Pad input as follows: append a One, then pad with 0 until length is multiple
+        // of RATE
+        </span><span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
+        padded.push(F::one());
+        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, RATE);
+        <span class="self">self</span>.sponge_no_padding(padded.as_slice(), num_output)
+            .expect(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
     }
 
-    <span class="doccomment">/// Sponge hashing based on rescue permutation for Bls12_381 scalar field</span>
-    <span class="doccomment">/// for RATE 3 and CAPACITY 1. It allows input length multiple of the</span>
-    <span class="doccomment">/// RATE and variable output length</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>], <span class="ident">num_output</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">RescueError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">RATE</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RescueError::ParameterError</span>(
-                <span class="string">&quot;Rescue sponge Error : input to sponge hashing function is not multiple of RATE.&quot;</span>
-                    .<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Sponge hashing based on rescue permutation for Bls12_381 scalar field
+    /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
+    /// RATE and variable output length
+    </span><span class="kw">pub fn </span>sponge_no_padding(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F], num_output: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
+        <span class="kw">if </span>input.len() % RATE != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(RescueError::ParameterError(
+                <span class="string">&quot;Rescue sponge Error : input to sponge hashing function is not multiple of RATE.&quot;
+                    </span>.to_string(),
             ));
         }
-        <span class="comment">// ABSORB PHASE</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="ident">input</span>.<span class="ident">chunks_exact</span>(<span class="ident">RATE</span>).<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">RescueVector::pad_smaller_chunk</span>(<span class="ident">chunk</span>);
-            <span class="ident">state</span>.<span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>);
-            <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)
+        <span class="comment">// ABSORB PHASE
+        </span><span class="kw">let </span><span class="kw-2">mut </span>state = RescueVector::zero();
+        input.chunks_exact(RATE).into_iter().for_each(|chunk| {
+            <span class="kw">let </span>block = RescueVector::pad_smaller_chunk(chunk);
+            state.add_assign(<span class="kw-2">&amp;</span>block);
+            state = <span class="self">self</span>.eval(<span class="kw-2">&amp;</span>state)
         });
 
-        <span class="comment">// SQUEEZE PHASE</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="ident">num_output</span>;
-        <span class="comment">// extract current rate before calling PRP again</span>
-        <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">extract</span> <span class="op">=</span> <span class="ident">remaining</span>.<span class="ident">min</span>(<span class="ident">RATE</span>);
-            <span class="ident">result</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">vec</span>[<span class="number">0</span>..<span class="ident">extract</span>]);
-            <span class="ident">remaining</span> <span class="op">-</span><span class="op">=</span> <span class="ident">extract</span>;
-            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="comment">// SQUEEZE PHASE
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>remaining = num_output;
+        <span class="comment">// extract current rate before calling PRP again
+        </span><span class="kw">loop </span>{
+            <span class="kw">let </span>extract = remaining.min(RATE);
+            result.extend_from_slice(<span class="kw-2">&amp;</span>state.vec[<span class="number">0</span>..extract]);
+            remaining -= extract;
+            <span class="kw">if </span>remaining == <span class="number">0 </span>{
                 <span class="kw">break</span>;
             }
-            <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)
+            state = <span class="self">self</span>.eval(<span class="kw-2">&amp;</span>state)
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+        <span class="prelude-val">Ok</span>(result)
     }
 
-    <span class="doccomment">/// Compute the 3-to-1 rescue based hash function</span>
-    <span class="doccomment">/// * `input` - input of size RATE</span>
-    <span class="doccomment">/// * `returns` - hash value (single field element)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_3_to_1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>; <span class="ident">RATE</span>]) -&gt; <span class="ident">F</span> {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">input</span>[<span class="number">0</span>], <span class="ident">input</span>[<span class="number">1</span>], <span class="ident">input</span>[<span class="number">2</span>], <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">res_vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>));
-        <span class="ident">res_vec</span>.<span class="ident">elems</span>()[<span class="number">0</span>]
+    <span class="doccomment">/// Compute the 3-to-1 rescue based hash function
+    /// * `input` - input of size RATE
+    /// * `returns` - hash value (single field element)
+    </span><span class="kw">pub fn </span>hash_3_to_1(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F; RATE]) -&gt; F {
+        <span class="kw">let </span>input = [input[<span class="number">0</span>], input[<span class="number">1</span>], input[<span class="number">2</span>], F::zero()];
+        <span class="kw">let </span>res_vec = <span class="self">self</span>.eval(<span class="kw-2">&amp;</span>RescueVector::from(<span class="kw-2">&amp;</span>input));
+        res_vec.elems()[<span class="number">0</span>]
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span> <span class="ident">Permutation</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted</span>
-    <span class="doccomment">/// variable length input and number of output elements</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">full_state_keyed_sponge_with_padding</span>(
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; Permutation&lt;F&gt; {
+    <span class="doccomment">/// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
+    /// variable length input and number of output elements
+    </span><span class="kw">pub fn </span>full_state_keyed_sponge_with_padding(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-        <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-        <span class="ident">num_outputs</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded_input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">to_vec</span>();
-        <span class="ident">padded_input</span>.<span class="ident">push</span>(<span class="ident">F::one</span>());
-        <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">padded_input</span>, <span class="ident">STATE_SIZE</span>);
-        <span class="self">self</span>.<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="ident">key</span>, <span class="ident">padded_input</span>.<span class="ident">as_slice</span>(), <span class="ident">num_outputs</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
+        key: <span class="kw-2">&amp;</span>F,
+        input: <span class="kw-2">&amp;</span>[F],
+        num_outputs: usize,
+    ) -&gt; Vec&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>padded_input = input.to_vec();
+        padded_input.push(F::one());
+        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded_input, STATE_SIZE);
+        <span class="self">self</span>.full_state_keyed_sponge_no_padding(key, padded_input.as_slice(), num_outputs)
+            .expect(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
     }
 
-    <span class="doccomment">/// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted</span>
-    <span class="doccomment">/// variable length input and number of output elements. Return error if</span>
-    <span class="doccomment">/// input is not multiple of STATE_SIZE = 4</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">full_state_keyed_sponge_no_padding</span>(
+    <span class="doccomment">/// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
+    /// variable length input and number of output elements. Return error if
+    /// input is not multiple of STATE_SIZE = 4
+    </span><span class="kw">pub fn </span>full_state_keyed_sponge_no_padding(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-        <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-        <span class="ident">num_outputs</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">RescueError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">STATE_SIZE</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RescueError::ParameterError</span>(
-                <span class="string">&quot;Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE.&quot;</span>
-                    .<span class="ident">to_string</span>(),
+        key: <span class="kw-2">&amp;</span>F,
+        input: <span class="kw-2">&amp;</span>[F],
+        num_outputs: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
+        <span class="kw">if </span>input.len() % STATE_SIZE != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(RescueError::ParameterError(
+                <span class="string">&quot;Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE.&quot;
+                    </span>.to_string(),
             ));
         }
-        <span class="comment">// ABSORB PHASE</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="ident">state</span>.<span class="ident">vec</span>[<span class="ident">STATE_SIZE</span> <span class="op">-</span> <span class="number">1</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">key</span>;
-        <span class="ident">input</span>.<span class="ident">chunks_exact</span>(<span class="ident">STATE_SIZE</span>).<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> {
-            <span class="ident">state</span>.<span class="ident">add_assign_elems</span>(<span class="ident">chunk</span>);
-            <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>);
+        <span class="comment">// ABSORB PHASE
+        </span><span class="kw">let </span><span class="kw-2">mut </span>state = RescueVector::zero();
+        state.vec[STATE_SIZE - <span class="number">1</span>] = <span class="kw-2">*</span>key;
+        input.chunks_exact(STATE_SIZE).for_each(|chunk| {
+            state.add_assign_elems(chunk);
+            state = <span class="self">self</span>.eval(<span class="kw-2">&amp;</span>state);
         });
-        <span class="comment">// SQUEEZE PHASE</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="ident">num_outputs</span>;
-        <span class="comment">// extract current rate before calling PRP again</span>
-        <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">extract</span> <span class="op">=</span> <span class="ident">remaining</span>.<span class="ident">min</span>(<span class="ident">RATE</span>);
-            <span class="ident">result</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">vec</span>[<span class="number">0</span>..<span class="ident">extract</span>]);
-            <span class="ident">remaining</span> <span class="op">-</span><span class="op">=</span> <span class="ident">extract</span>;
-            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="comment">// SQUEEZE PHASE
+        </span><span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>remaining = num_outputs;
+        <span class="comment">// extract current rate before calling PRP again
+        </span><span class="kw">loop </span>{
+            <span class="kw">let </span>extract = remaining.min(RATE);
+            result.extend_from_slice(<span class="kw-2">&amp;</span>state.vec[<span class="number">0</span>..extract]);
+            remaining -= extract;
+            <span class="kw">if </span>remaining == <span class="number">0 </span>{
                 <span class="kw">break</span>;
             }
-            <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)
+            state = <span class="self">self</span>.eval(<span class="kw-2">&amp;</span>state)
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+        <span class="prelude-val">Ok</span>(result)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test_prp</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rescue</span>::{<span class="ident">RescueVector</span>, <span class="ident">PRP</span>};
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fr377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">Fr381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">Fr254</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test_prp {
+    <span class="kw">use </span><span class="kw">crate</span>::rescue::{RescueVector, PRP};
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>Fr377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>Fr381;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>Fr254;
 
-    <span class="comment">// hash output on vector [0, 0, 0, 0]</span>
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// rescue761.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT761</span>: [[<span class="ident">u8</span>; <span class="number">48</span>]; <span class="number">4</span>] <span class="op">=</span> [
+    <span class="comment">// hash output on vector [0, 0, 0, 0]
+    // this value is cross checked with sage script
+    // rescue761.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT761: [[u8; <span class="number">48</span>]; <span class="number">4</span>] = [
         [
             <span class="number">0x37</span>, <span class="number">0xBE</span>, <span class="number">0x12</span>, <span class="number">0x7E</span>, <span class="number">0xDF</span>, <span class="number">0x9C</span>, <span class="number">0xBF</span>, <span class="number">0xCE</span>, <span class="number">0x78</span>, <span class="number">0xE1</span>, <span class="number">0x4F</span>, <span class="number">0xEB</span>, <span class="number">0x69</span>, <span class="number">0xAC</span>,
             <span class="number">0x89</span>, <span class="number">0x53</span>, <span class="number">0xE7</span>, <span class="number">0xC4</span>, <span class="number">0x8D</span>, <span class="number">0x89</span>, <span class="number">0x90</span>, <span class="number">0x77</span>, <span class="number">0x64</span>, <span class="number">0x0D</span>, <span class="number">0xD0</span>, <span class="number">0x87</span>, <span class="number">0x42</span>, <span class="number">0xDD</span>,
@@ -1693,10 +1693,10 @@
         ],
     ];
 
-    <span class="comment">// hash output on vector [0, 0, 0, 0]</span>
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// rescue381.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT381</span>: [[<span class="ident">u8</span>; <span class="number">32</span>]; <span class="number">4</span>] <span class="op">=</span> [
+    <span class="comment">// hash output on vector [0, 0, 0, 0]
+    // this value is cross checked with sage script
+    // rescue381.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT381: [[u8; <span class="number">32</span>]; <span class="number">4</span>] = [
         [
             <span class="number">0x12</span>, <span class="number">0x53</span>, <span class="number">0x24</span>, <span class="number">0x66</span>, <span class="number">0x84</span>, <span class="number">0xA2</span>, <span class="number">0x4D</span>, <span class="number">0x2B</span>, <span class="number">0xC7</span>, <span class="number">0x28</span>, <span class="number">0x3E</span>, <span class="number">0x0F</span>, <span class="number">0x80</span>, <span class="number">0xDF</span>,
             <span class="number">0x1A</span>, <span class="number">0xC3</span>, <span class="number">0x5B</span>, <span class="number">0xA1</span>, <span class="number">0xA9</span>, <span class="number">0x5B</span>, <span class="number">0x46</span>, <span class="number">0x60</span>, <span class="number">0xBD</span>, <span class="number">0xED</span>, <span class="number">0xA6</span>, <span class="number">0xD1</span>, <span class="number">0x43</span>, <span class="number">0xB7</span>,
@@ -1718,9 +1718,9 @@
             <span class="number">0xAC</span>, <span class="number">0x44</span>, <span class="number">0x5C</span>, <span class="number">0x60</span>,
         ],
     ];
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// rescue377.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT377</span>: [[<span class="ident">u8</span>; <span class="number">32</span>]; <span class="number">4</span>] <span class="op">=</span> [
+    <span class="comment">// this value is cross checked with sage script
+    // rescue377.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT377: [[u8; <span class="number">32</span>]; <span class="number">4</span>] = [
         [
             <span class="number">0x65</span>, <span class="number">0xF2</span>, <span class="number">0xF2</span>, <span class="number">0x74</span>, <span class="number">0x15</span>, <span class="number">0x7A</span>, <span class="number">0x5A</span>, <span class="number">0xB5</span>, <span class="number">0xE0</span>, <span class="number">0x86</span>, <span class="number">0x46</span>, <span class="number">0x9D</span>, <span class="number">0xAE</span>, <span class="number">0x27</span>,
             <span class="number">0x29</span>, <span class="number">0xE0</span>, <span class="number">0x08</span>, <span class="number">0x39</span>, <span class="number">0x0D</span>, <span class="number">0xA6</span>, <span class="number">0x44</span>, <span class="number">0x5E</span>, <span class="number">0x20</span>, <span class="number">0x76</span>, <span class="number">0x23</span>, <span class="number">0x42</span>, <span class="number">0xDA</span>, <span class="number">0xF0</span>,
@@ -1743,9 +1743,9 @@
         ],
     ];
 
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// rescue254.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT254</span>: [[<span class="ident">u8</span>; <span class="number">32</span>]; <span class="number">4</span>] <span class="op">=</span> [
+    <span class="comment">// this value is cross checked with sage script
+    // rescue254.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT254: [[u8; <span class="number">32</span>]; <span class="number">4</span>] = [
         [
             <span class="number">0xDD</span>, <span class="number">0xE7</span>, <span class="number">0x55</span>, <span class="number">0x8E</span>, <span class="number">0x14</span>, <span class="number">0xF9</span>, <span class="number">0x4C</span>, <span class="number">0xEE</span>, <span class="number">0x9F</span>, <span class="number">0xCC</span>, <span class="number">0xB2</span>, <span class="number">0x02</span>, <span class="number">0xFC</span>, <span class="number">0x0E</span>,
             <span class="number">0x54</span>, <span class="number">0x21</span>, <span class="number">0xF2</span>, <span class="number">0xAA</span>, <span class="number">0xB8</span>, <span class="number">0x48</span>, <span class="number">0x05</span>, <span class="number">0xDB</span>, <span class="number">0x9B</span>, <span class="number">0x7A</span>, <span class="number">0xD2</span>, <span class="number">0x36</span>, <span class="number">0xA5</span>, <span class="number">0xF1</span>,
@@ -1768,140 +1768,140 @@
         ],
     ];
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_rescue_perm_on_0_vec</span>() {
-        <span class="ident">test_rescue_perm_on_0_vec_254</span>();
-        <span class="ident">test_rescue_perm_on_0_vec_377</span>();
-        <span class="ident">test_rescue_perm_on_0_vec_381</span>();
-        <span class="ident">test_rescue_perm_on_0_vec_761</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rescue_perm_on_0_vec() {
+        test_rescue_perm_on_0_vec_254();
+        test_rescue_perm_on_0_vec_377();
+        test_rescue_perm_on_0_vec_381();
+        test_rescue_perm_on_0_vec_761();
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_perm_on_0_vec_254</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">Fr254</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">RescueVector::from_elems_le_bytes</span>(
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">2</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">3</span>],
+    <span class="kw">fn </span>test_rescue_perm_on_0_vec_254() {
+        <span class="kw">let </span>rescue = PRP::&lt;Fr254&gt;::default();
+        <span class="kw">let </span>key = RescueVector::zero();
+        <span class="kw">let </span>input = RescueVector::zero();
+        <span class="kw">let </span>expected = RescueVector::from_elems_le_bytes(
+            <span class="kw-2">&amp;</span>OUTPUT254[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>OUTPUT254[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>OUTPUT254[<span class="number">2</span>],
+            <span class="kw-2">&amp;</span>OUTPUT254[<span class="number">3</span>],
         );
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-        <span class="kw">let</span> <span class="ident">real_output_with_round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp_with_round_keys</span>(<span class="kw-2">&amp;</span><span class="ident">round_keys</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">real_output_with_round_keys</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.prp(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+        <span class="kw">let </span>round_keys = rescue.key_schedule(<span class="kw-2">&amp;</span>key);
+        <span class="kw">let </span>real_output_with_round_keys = rescue.prp_with_round_keys(<span class="kw-2">&amp;</span>round_keys, <span class="kw-2">&amp;</span>input);
+        <span class="macro">assert_eq!</span>(real_output, real_output_with_round_keys);
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_perm_on_0_vec_381</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">Fr381</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">RescueVector::from_elems_le_bytes</span>(
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">2</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">3</span>],
+    <span class="kw">fn </span>test_rescue_perm_on_0_vec_381() {
+        <span class="kw">let </span>rescue = PRP::&lt;Fr381&gt;::default();
+        <span class="kw">let </span>key = RescueVector::zero();
+        <span class="kw">let </span>input = RescueVector::zero();
+        <span class="kw">let </span>expected = RescueVector::from_elems_le_bytes(
+            <span class="kw-2">&amp;</span>OUTPUT381[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>OUTPUT381[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>OUTPUT381[<span class="number">2</span>],
+            <span class="kw-2">&amp;</span>OUTPUT381[<span class="number">3</span>],
         );
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-        <span class="kw">let</span> <span class="ident">real_output_with_round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp_with_round_keys</span>(<span class="kw-2">&amp;</span><span class="ident">round_keys</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
+        <span class="kw">let </span>real_output = rescue.prp(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+        <span class="kw">let </span>round_keys = rescue.key_schedule(<span class="kw-2">&amp;</span>key);
+        <span class="kw">let </span>real_output_with_round_keys = rescue.prp_with_round_keys(<span class="kw-2">&amp;</span>round_keys, <span class="kw-2">&amp;</span>input);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">real_output_with_round_keys</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="macro">assert_eq!</span>(real_output, real_output_with_round_keys);
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_perm_on_0_vec_377</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">Fr377</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">RescueVector::from_elems_le_bytes</span>(
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">2</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">3</span>],
+    <span class="kw">fn </span>test_rescue_perm_on_0_vec_377() {
+        <span class="kw">let </span>rescue = PRP::&lt;Fr377&gt;::default();
+        <span class="kw">let </span>key = RescueVector::zero();
+        <span class="kw">let </span>input = RescueVector::zero();
+        <span class="kw">let </span>expected = RescueVector::from_elems_le_bytes(
+            <span class="kw-2">&amp;</span>OUTPUT377[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>OUTPUT377[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>OUTPUT377[<span class="number">2</span>],
+            <span class="kw-2">&amp;</span>OUTPUT377[<span class="number">3</span>],
         );
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-        <span class="kw">let</span> <span class="ident">real_output_with_round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp_with_round_keys</span>(<span class="kw-2">&amp;</span><span class="ident">round_keys</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">real_output_with_round_keys</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.prp(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+        <span class="kw">let </span>round_keys = rescue.key_schedule(<span class="kw-2">&amp;</span>key);
+        <span class="kw">let </span>real_output_with_round_keys = rescue.prp_with_round_keys(<span class="kw-2">&amp;</span>round_keys, <span class="kw-2">&amp;</span>input);
+        <span class="macro">assert_eq!</span>(real_output, real_output_with_round_keys);
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_perm_on_0_vec_761</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">RescueVector::from_elems_le_bytes</span>(
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">2</span>],
-            <span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">3</span>],
+    <span class="kw">fn </span>test_rescue_perm_on_0_vec_761() {
+        <span class="kw">let </span>rescue = PRP::&lt;Fq377&gt;::default();
+        <span class="kw">let </span>key = RescueVector::zero();
+        <span class="kw">let </span>input = RescueVector::zero();
+        <span class="kw">let </span>expected = RescueVector::from_elems_le_bytes(
+            <span class="kw-2">&amp;</span>OUTPUT761[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>OUTPUT761[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>OUTPUT761[<span class="number">2</span>],
+            <span class="kw-2">&amp;</span>OUTPUT761[<span class="number">3</span>],
         );
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-        <span class="kw">let</span> <span class="ident">real_output_with_round_keys</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">prp_with_round_keys</span>(<span class="kw-2">&amp;</span><span class="ident">round_keys</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">real_output_with_round_keys</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.prp(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+        <span class="kw">let </span>round_keys = rescue.key_schedule(<span class="kw-2">&amp;</span>key);
+        <span class="kw">let </span>real_output_with_round_keys = rescue.prp_with_round_keys(<span class="kw-2">&amp;</span>round_keys, <span class="kw-2">&amp;</span>input);
+        <span class="macro">assert_eq!</span>(real_output, real_output_with_round_keys);
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="comment">// printing vectors as hex bytes little endian</span>
-    <span class="comment">// #[test]</span>
-    <span class="comment">// fn print(){</span>
-    <span class="comment">// let rescue_hash = RescueBls4::default();</span>
-    <span class="comment">// println!(&quot;KeySchedule:&quot;);</span>
-    <span class="comment">// let keys = rescue_hash.key_schedule(&amp;RescueBls4Vector::zero());</span>
-    <span class="comment">// for key in keys {</span>
-    <span class="comment">// for elem in key.vec.iter() {</span>
-    <span class="comment">// let str: Vec&lt;String&gt; = elem.into_repr().to_bytes_le().iter().map(|b|</span>
-    <span class="comment">// format!(&quot;0x{:02X},&quot;, b)) .collect();</span>
-    <span class="comment">// println!(&quot;{:?}&quot;, str.join(&quot; &quot;));</span>
-    <span class="comment">// }</span>
-    <span class="comment">// println!(&quot;],[&quot;);</span>
-    <span class="comment">// }</span>
-    <span class="comment">// }</span>
-}
+    <span class="comment">// printing vectors as hex bytes little endian
+    // #[test]
+    // fn print(){
+    // let rescue_hash = RescueBls4::default();
+    // println!(&quot;KeySchedule:&quot;);
+    // let keys = rescue_hash.key_schedule(&amp;RescueBls4Vector::zero());
+    // for key in keys {
+    // for elem in key.vec.iter() {
+    // let str: Vec&lt;String&gt; = elem.into_repr().to_bytes_le().iter().map(|b|
+    // format!(&quot;0x{:02X},&quot;, b)) .collect();
+    // println!(&quot;{:?}&quot;, str.join(&quot; &quot;));
+    // }
+    // println!(&quot;],[&quot;);
+    // }
+    // }
+</span>}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test_permutation</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RescueVector</span>, <span class="ident">PRP</span>};
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fr377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">Fr381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">Fr254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">Zero</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test_permutation {
+    <span class="kw">use </span><span class="kw">crate</span>::rescue::{Permutation, RescueParameter, RescueVector, PRP};
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>Fr377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>Fr381;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>Fr254;
+    <span class="kw">use </span>ark_ff::PrimeField;
+    <span class="kw">use </span>ark_std::{vec, Zero};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_round_keys</span>() {
-        <span class="ident">test_round_keys_helper</span>::<span class="op">&lt;</span><span class="ident">Fr254</span><span class="op">&gt;</span>();
-        <span class="ident">test_round_keys_helper</span>::<span class="op">&lt;</span><span class="ident">Fr377</span><span class="op">&gt;</span>();
-        <span class="ident">test_round_keys_helper</span>::<span class="op">&lt;</span><span class="ident">Fr381</span><span class="op">&gt;</span>();
-        <span class="ident">test_round_keys_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_round_keys() {
+        test_round_keys_helper::&lt;Fr254&gt;();
+        test_round_keys_helper::&lt;Fr377&gt;();
+        test_round_keys_helper::&lt;Fr381&gt;();
+        test_round_keys_helper::&lt;Fq377&gt;();
     }
 
-    <span class="kw">fn</span> <span class="ident">test_round_keys_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="ident">rescue_perm</span> <span class="op">=</span> <span class="ident">PRP</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::default</span>();
-        <span class="kw">let</span> <span class="ident">rescue_hash</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="ident">keys2</span> <span class="op">=</span> <span class="ident">rescue_perm</span>.<span class="ident">key_schedule</span>(<span class="kw-2">&amp;</span><span class="ident">zero</span>);
+    <span class="kw">fn </span>test_round_keys_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>rescue_perm = PRP::&lt;F&gt;::default();
+        <span class="kw">let </span>rescue_hash = Permutation::default();
+        <span class="kw">let </span>zero = RescueVector::zero();
+        <span class="kw">let </span>keys2 = rescue_perm.key_schedule(<span class="kw-2">&amp;</span>zero);
 
-        <span class="comment">// // the following code is used to dump the key schedule to screen</span>
-        <span class="comment">// // in a sage friendly format</span>
-        <span class="comment">// for e in keys2.iter() {</span>
-        <span class="comment">//     for f in e.vec.iter() {</span>
-        <span class="comment">//         ark_std::println!(&quot;permutation_round_key.append(0x{})&quot;,</span>
-        <span class="comment">// f.into_repr());     }</span>
-        <span class="comment">// }</span>
-        <span class="comment">// assert!(false);</span>
+        <span class="comment">// // the following code is used to dump the key schedule to screen
+        // // in a sage friendly format
+        // for e in keys2.iter() {
+        //     for f in e.vec.iter() {
+        //         ark_std::println!(&quot;permutation_round_key.append(0x{})&quot;,
+        // f.into_repr());     }
+        // }
+        // assert!(false);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue_hash</span>.<span class="ident">round_keys</span>, <span class="ident">keys2</span>);
+        </span><span class="macro">assert_eq!</span>(rescue_hash.round_keys, keys2);
     }
 
-    <span class="comment">// hash output on vector [0, 0, 0, 0]</span>
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// first three vectors of rescue761.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT761</span>: [[<span class="ident">u8</span>; <span class="number">48</span>]; <span class="number">3</span>] <span class="op">=</span> [
+    <span class="comment">// hash output on vector [0, 0, 0, 0]
+    // this value is cross checked with sage script
+    // first three vectors of rescue761.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT761: [[u8; <span class="number">48</span>]; <span class="number">3</span>] = [
         [
             <span class="number">0x37</span>, <span class="number">0xBE</span>, <span class="number">0x12</span>, <span class="number">0x7E</span>, <span class="number">0xDF</span>, <span class="number">0x9C</span>, <span class="number">0xBF</span>, <span class="number">0xCE</span>, <span class="number">0x78</span>, <span class="number">0xE1</span>, <span class="number">0x4F</span>, <span class="number">0xEB</span>, <span class="number">0x69</span>, <span class="number">0xAC</span>,
             <span class="number">0x89</span>, <span class="number">0x53</span>, <span class="number">0xE7</span>, <span class="number">0xC4</span>, <span class="number">0x8D</span>, <span class="number">0x89</span>, <span class="number">0x90</span>, <span class="number">0x77</span>, <span class="number">0x64</span>, <span class="number">0x0D</span>, <span class="number">0xD0</span>, <span class="number">0x87</span>, <span class="number">0x42</span>, <span class="number">0xDD</span>,
@@ -1922,10 +1922,10 @@
         ],
     ];
 
-    <span class="comment">// hash output on vector [0, 0, 0, 0]</span>
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// first three vectors of rescue254.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT254</span>: [[<span class="ident">u8</span>; <span class="number">32</span>]; <span class="number">3</span>] <span class="op">=</span> [
+    <span class="comment">// hash output on vector [0, 0, 0, 0]
+    // this value is cross checked with sage script
+    // first three vectors of rescue254.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT254: [[u8; <span class="number">32</span>]; <span class="number">3</span>] = [
         [
             <span class="number">0xDD</span>, <span class="number">0xE7</span>, <span class="number">0x55</span>, <span class="number">0x8E</span>, <span class="number">0x14</span>, <span class="number">0xF9</span>, <span class="number">0x4C</span>, <span class="number">0xEE</span>, <span class="number">0x9F</span>, <span class="number">0xCC</span>, <span class="number">0xB2</span>, <span class="number">0x02</span>, <span class="number">0xFC</span>, <span class="number">0x0E</span>,
             <span class="number">0x54</span>, <span class="number">0x21</span>, <span class="number">0xF2</span>, <span class="number">0xAA</span>, <span class="number">0xB8</span>, <span class="number">0x48</span>, <span class="number">0x05</span>, <span class="number">0xDB</span>, <span class="number">0x9B</span>, <span class="number">0x7A</span>, <span class="number">0xD2</span>, <span class="number">0x36</span>, <span class="number">0xA5</span>, <span class="number">0xF1</span>,
@@ -1942,10 +1942,10 @@
             <span class="number">0x4C</span>, <span class="number">0xA0</span>, <span class="number">0xA6</span>, <span class="number">0x23</span>,
         ],
     ];
-    <span class="comment">// hash output on vector [0, 0, 0, 0]</span>
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// first three vectors of rescue377.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT377</span>: [[<span class="ident">u8</span>; <span class="number">32</span>]; <span class="number">3</span>] <span class="op">=</span> [
+    <span class="comment">// hash output on vector [0, 0, 0, 0]
+    // this value is cross checked with sage script
+    // first three vectors of rescue377.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT377: [[u8; <span class="number">32</span>]; <span class="number">3</span>] = [
         [
             <span class="number">0x65</span>, <span class="number">0xF2</span>, <span class="number">0xF2</span>, <span class="number">0x74</span>, <span class="number">0x15</span>, <span class="number">0x7A</span>, <span class="number">0x5A</span>, <span class="number">0xB5</span>, <span class="number">0xE0</span>, <span class="number">0x86</span>, <span class="number">0x46</span>, <span class="number">0x9D</span>, <span class="number">0xAE</span>, <span class="number">0x27</span>,
             <span class="number">0x29</span>, <span class="number">0xE0</span>, <span class="number">0x08</span>, <span class="number">0x39</span>, <span class="number">0x0D</span>, <span class="number">0xA6</span>, <span class="number">0x44</span>, <span class="number">0x5E</span>, <span class="number">0x20</span>, <span class="number">0x76</span>, <span class="number">0x23</span>, <span class="number">0x42</span>, <span class="number">0xDA</span>, <span class="number">0xF0</span>,
@@ -1963,10 +1963,10 @@
         ],
     ];
 
-    <span class="comment">// hash output on vector [0, 0, 0, 0]</span>
-    <span class="comment">// this value is cross checked with sage script</span>
-    <span class="comment">// first three vectors of rescue381.Sponge([0,0,0,0], 4)</span>
-    <span class="kw">const</span> <span class="ident">OUTPUT381</span>: [[<span class="ident">u8</span>; <span class="number">32</span>]; <span class="number">3</span>] <span class="op">=</span> [
+    <span class="comment">// hash output on vector [0, 0, 0, 0]
+    // this value is cross checked with sage script
+    // first three vectors of rescue381.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUT381: [[u8; <span class="number">32</span>]; <span class="number">3</span>] = [
         [
             <span class="number">0x12</span>, <span class="number">0x53</span>, <span class="number">0x24</span>, <span class="number">0x66</span>, <span class="number">0x84</span>, <span class="number">0xA2</span>, <span class="number">0x4D</span>, <span class="number">0x2B</span>, <span class="number">0xC7</span>, <span class="number">0x28</span>, <span class="number">0x3E</span>, <span class="number">0x0F</span>, <span class="number">0x80</span>, <span class="number">0xDF</span>,
             <span class="number">0x1A</span>, <span class="number">0xC3</span>, <span class="number">0x5B</span>, <span class="number">0xA1</span>, <span class="number">0xA9</span>, <span class="number">0x5B</span>, <span class="number">0x46</span>, <span class="number">0x60</span>, <span class="number">0xBD</span>, <span class="number">0xED</span>, <span class="number">0xA6</span>, <span class="number">0xD1</span>, <span class="number">0x43</span>, <span class="number">0xB7</span>,
@@ -1984,245 +1984,245 @@
         ],
     ];
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_sponge</span>() {
-        <span class="ident">test_sponge_helper</span>::<span class="op">&lt;</span><span class="ident">Fr254</span><span class="op">&gt;</span>();
-        <span class="ident">test_sponge_helper</span>::<span class="op">&lt;</span><span class="ident">Fr377</span><span class="op">&gt;</span>();
-        <span class="ident">test_sponge_helper</span>::<span class="op">&lt;</span><span class="ident">Fr381</span><span class="op">&gt;</span>();
-        <span class="ident">test_sponge_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_sponge() {
+        test_sponge_helper::&lt;Fr254&gt;();
+        test_sponge_helper::&lt;Fr377&gt;();
+        test_sponge_helper::&lt;Fr381&gt;();
+        test_sponge_helper::&lt;Fq377&gt;();
     }
 
-    <span class="kw">fn</span> <span class="ident">test_sponge_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="ident">rescue_prp</span> <span class="op">=</span> <span class="ident">PRP::default</span>();
-        <span class="kw">let</span> <span class="ident">rescue_permutation</span> <span class="op">=</span> <span class="ident">Permutation::from</span>(<span class="ident">rescue_prp</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">e0</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e3</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e4</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">e5</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
+    <span class="kw">fn </span>test_sponge_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>rescue_prp = PRP::default();
+        <span class="kw">let </span>rescue_permutation = Permutation::from(rescue_prp.clone());
+        <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+        <span class="kw">let </span>e0 = F::rand(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>e1 = F::rand(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>e2 = F::rand(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>e3 = F::rand(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>e4 = F::rand(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>e5 = F::rand(<span class="kw-2">&amp;mut </span>prng);
 
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">e0</span>, <span class="ident">e1</span>, <span class="ident">e2</span>, <span class="ident">e3</span>, <span class="ident">e4</span>, <span class="ident">e5</span>];
+        <span class="kw">let </span>input = [e0, e1, e2, e3, e4, e5];
 
-        <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">rescue_permutation</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">1</span>).<span class="ident">unwrap</span>()[<span class="number">0</span>];
+        <span class="kw">let </span>output = rescue_permutation.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">1</span>).unwrap()[<span class="number">0</span>];
 
-        <span class="kw">let</span> <span class="ident">zero</span> <span class="op">=</span> <span class="ident">RescueVector::zero</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RescueVector</span> {
-            <span class="ident">vec</span>: [<span class="ident">input</span>[<span class="number">0</span>], <span class="ident">input</span>[<span class="number">1</span>], <span class="ident">input</span>[<span class="number">2</span>], <span class="ident">F::zero</span>()],
+        <span class="kw">let </span>zero = RescueVector::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>state = RescueVector {
+            vec: [input[<span class="number">0</span>], input[<span class="number">1</span>], input[<span class="number">2</span>], F::zero()],
         };
-        <span class="ident">state</span> <span class="op">=</span> <span class="ident">rescue_prp</span>.<span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="ident">zero</span>, <span class="kw-2">&amp;</span><span class="ident">state</span>);
-        <span class="ident">state</span>.<span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="ident">RescueVector::pad_smaller_chunk</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="number">3</span>..<span class="number">6</span>]));
-        <span class="ident">state</span> <span class="op">=</span> <span class="ident">rescue_prp</span>.<span class="ident">prp</span>(<span class="kw-2">&amp;</span><span class="ident">zero</span>, <span class="kw-2">&amp;</span><span class="ident">state</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">output</span>, <span class="ident">state</span>.<span class="ident">vec</span>[<span class="number">0</span>]);
+        state = rescue_prp.prp(<span class="kw-2">&amp;</span>zero, <span class="kw-2">&amp;</span>state);
+        state.add_assign(<span class="kw-2">&amp;</span>RescueVector::pad_smaller_chunk(<span class="kw-2">&amp;</span>input[<span class="number">3</span>..<span class="number">6</span>]));
+        state = rescue_prp.prp(<span class="kw-2">&amp;</span>zero, <span class="kw-2">&amp;</span>state);
+        <span class="macro">assert_eq!</span>(output, state.vec[<span class="number">0</span>]);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_rescue_hash_on_0_vec</span>() {
-        <span class="ident">test_rescue_hash_on_0_vec_254</span>();
-        <span class="ident">test_rescue_hash_on_0_vec_377</span>();
-        <span class="ident">test_rescue_hash_on_0_vec_381</span>();
-        <span class="ident">test_rescue_hash_on_0_vec_761</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rescue_hash_on_0_vec() {
+        test_rescue_hash_on_0_vec_254();
+        test_rescue_hash_on_0_vec_377();
+        test_rescue_hash_on_0_vec_381();
+        test_rescue_hash_on_0_vec_761()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_hash_on_0_vec_254</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">Fr254::zero</span>(); <span class="number">3</span>];
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">Fr254::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">0</span>]),
-            <span class="ident">Fr254::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">1</span>]),
-            <span class="ident">Fr254::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT254</span>[<span class="number">2</span>]),
+    <span class="kw">fn </span>test_rescue_hash_on_0_vec_254() {
+        <span class="kw">let </span>rescue = Permutation::default();
+        <span class="kw">let </span>input = [Fr254::zero(); <span class="number">3</span>];
+        <span class="kw">let </span>expected = <span class="macro">vec!</span>[
+            Fr254::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT254[<span class="number">0</span>]),
+            Fr254::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT254[<span class="number">1</span>]),
+            Fr254::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT254[<span class="number">2</span>]),
         ];
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).unwrap();
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_hash_on_0_vec_377</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">Fr377::zero</span>(); <span class="number">3</span>];
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">Fr377::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">0</span>]),
-            <span class="ident">Fr377::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">1</span>]),
-            <span class="ident">Fr377::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT377</span>[<span class="number">2</span>]),
+    <span class="kw">fn </span>test_rescue_hash_on_0_vec_377() {
+        <span class="kw">let </span>rescue = Permutation::default();
+        <span class="kw">let </span>input = [Fr377::zero(); <span class="number">3</span>];
+        <span class="kw">let </span>expected = <span class="macro">vec!</span>[
+            Fr377::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT377[<span class="number">0</span>]),
+            Fr377::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT377[<span class="number">1</span>]),
+            Fr377::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT377[<span class="number">2</span>]),
         ];
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).unwrap();
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_hash_on_0_vec_381</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">Fr381::zero</span>(); <span class="number">3</span>];
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">Fr381::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">0</span>]),
-            <span class="ident">Fr381::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">1</span>]),
-            <span class="ident">Fr381::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT381</span>[<span class="number">2</span>]),
+    <span class="kw">fn </span>test_rescue_hash_on_0_vec_381() {
+        <span class="kw">let </span>rescue = Permutation::default();
+        <span class="kw">let </span>input = [Fr381::zero(); <span class="number">3</span>];
+        <span class="kw">let </span>expected = <span class="macro">vec!</span>[
+            Fr381::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT381[<span class="number">0</span>]),
+            Fr381::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT381[<span class="number">1</span>]),
+            Fr381::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT381[<span class="number">2</span>]),
         ];
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).unwrap();
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="kw">fn</span> <span class="ident">test_rescue_hash_on_0_vec_761</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">Fq377::zero</span>(); <span class="number">3</span>];
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">Fq377::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">0</span>]),
-            <span class="ident">Fq377::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">1</span>]),
-            <span class="ident">Fq377::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">OUTPUT761</span>[<span class="number">2</span>]),
+    <span class="kw">fn </span>test_rescue_hash_on_0_vec_761() {
+        <span class="kw">let </span>rescue = Permutation::default();
+        <span class="kw">let </span>input = [Fq377::zero(); <span class="number">3</span>];
+        <span class="kw">let </span>expected = <span class="macro">vec!</span>[
+            Fq377::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT761[<span class="number">0</span>]),
+            Fq377::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT761[<span class="number">1</span>]),
+            Fq377::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUT761[<span class="number">2</span>]),
         ];
-        <span class="kw">let</span> <span class="ident">real_output</span> <span class="op">=</span> <span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">real_output</span>, <span class="ident">expected</span>);
+        <span class="kw">let </span>real_output = rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).unwrap();
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_sponge_no_padding_errors</span>() {
-        <span class="ident">test_sponge_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fr254</span><span class="op">&gt;</span>();
-        <span class="ident">test_sponge_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fr377</span><span class="op">&gt;</span>();
-        <span class="ident">test_sponge_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fr381</span><span class="op">&gt;</span>();
-        <span class="ident">test_sponge_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_sponge_no_padding_errors() {
+        test_sponge_no_padding_errors_helper::&lt;Fr254&gt;();
+        test_sponge_no_padding_errors_helper::&lt;Fr377&gt;();
+        test_sponge_no_padding_errors_helper::&lt;Fr381&gt;();
+        test_sponge_no_padding_errors_helper::&lt;Fq377&gt;();
     }
-    <span class="kw">fn</span> <span class="ident">test_sponge_no_padding_errors_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
+    <span class="kw">fn </span>test_sponge_no_padding_errors_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>rescue = Permutation::default();
 
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">3</span>];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>).<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">12</span>];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>).<span class="ident">is_ok</span>());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">3</span>];
+        <span class="macro">assert!</span>(rescue.sponge_no_padding(input.as_slice(), <span class="number">1</span>).is_ok());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">12</span>];
+        <span class="macro">assert!</span>(rescue.sponge_no_padding(input.as_slice(), <span class="number">1</span>).is_ok());
 
-        <span class="comment">// test should panic because number of inputs is not multiple of 3</span>
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">10</span>];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>).<span class="ident">is_err</span>());
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>)];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>).<span class="ident">is_err</span>());
+        <span class="comment">// test should panic because number of inputs is not multiple of 3
+        </span><span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">10</span>];
+        <span class="macro">assert!</span>(rescue.sponge_no_padding(input.as_slice(), <span class="number">1</span>).is_err());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>)];
+        <span class="macro">assert!</span>(rescue.sponge_no_padding(input.as_slice(), <span class="number">1</span>).is_err());
 
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>).<span class="ident">is_ok</span>());
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fsks_no_padding_errors</span>() {
-        <span class="ident">test_fsks_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fr254</span><span class="op">&gt;</span>();
-        <span class="ident">test_fsks_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fr377</span><span class="op">&gt;</span>();
-        <span class="ident">test_fsks_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fr381</span><span class="op">&gt;</span>();
-        <span class="ident">test_fsks_no_padding_errors_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
-    }
-    <span class="kw">fn</span> <span class="ident">test_fsks_no_padding_errors_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>());
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">4</span>];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>
-            .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)
-            .<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">12</span>];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>
-            .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)
-            .<span class="ident">is_ok</span>());
-
-        <span class="comment">// test should panic because number of inputs is not multiple of 3</span>
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>); <span class="number">10</span>];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>
-            .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)
-            .<span class="ident">is_err</span>());
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">F::from</span>(<span class="number">9u64</span>)];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>
-            .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)
-            .<span class="ident">is_err</span>());
-
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="macro">assert!</span>(<span class="ident">rescue</span>
-            .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">input</span>.<span class="ident">as_slice</span>(), <span class="number">1</span>)
-            .<span class="ident">is_ok</span>());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[];
+        <span class="macro">assert!</span>(rescue.sponge_no_padding(input.as_slice(), <span class="number">1</span>).is_ok());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_variable_output_sponge_and_fsks</span>() {
-        <span class="ident">test_variable_output_sponge_and_fsks_helper</span>::<span class="op">&lt;</span><span class="ident">Fr254</span><span class="op">&gt;</span>();
-        <span class="ident">test_variable_output_sponge_and_fsks_helper</span>::<span class="op">&lt;</span><span class="ident">Fr377</span><span class="op">&gt;</span>();
-        <span class="ident">test_variable_output_sponge_and_fsks_helper</span>::<span class="op">&lt;</span><span class="ident">Fr381</span><span class="op">&gt;</span>();
-        <span class="ident">test_variable_output_sponge_and_fsks_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_fsks_no_padding_errors() {
+        test_fsks_no_padding_errors_helper::&lt;Fr254&gt;();
+        test_fsks_no_padding_errors_helper::&lt;Fr377&gt;();
+        test_fsks_no_padding_errors_helper::&lt;Fr381&gt;();
+        test_fsks_no_padding_errors_helper::&lt;Fq377&gt;();
     }
-    <span class="kw">fn</span> <span class="ident">test_variable_output_sponge_and_fsks_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">RescueParameter</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="ident">rescue</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">F::zero</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>()];
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">0</span>).<span class="ident">len</span>(), <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">1</span>).<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">2</span>).<span class="ident">len</span>(), <span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">len</span>(), <span class="number">3</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">10</span>).<span class="ident">len</span>(), <span class="number">10</span>);
+    <span class="kw">fn </span>test_fsks_no_padding_errors_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>rescue = Permutation::default();
+        <span class="kw">let </span>key = F::rand(<span class="kw-2">&amp;mut </span>ark_std::test_rng());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">4</span>];
+        <span class="macro">assert!</span>(rescue
+            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>)
+            .is_ok());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">12</span>];
+        <span class="macro">assert!</span>(rescue
+            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>)
+            .is_ok());
 
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">1</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">2</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">3</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">3</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">rescue</span>.<span class="ident">sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">10</span>).<span class="ident">unwrap</span>().<span class="ident">len</span>(), <span class="number">10</span>);
+        <span class="comment">// test should panic because number of inputs is not multiple of 3
+        </span><span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">10</span>];
+        <span class="macro">assert!</span>(rescue
+            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>)
+            .is_err());
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>)];
+        <span class="macro">assert!</span>(rescue
+            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>)
+            .is_err());
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>());
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> [<span class="ident">F::zero</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
+        <span class="kw">let </span>input = <span class="macro">vec!</span>[];
+        <span class="macro">assert!</span>(rescue
+            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>)
+            .is_ok());
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_variable_output_sponge_and_fsks() {
+        test_variable_output_sponge_and_fsks_helper::&lt;Fr254&gt;();
+        test_variable_output_sponge_and_fsks_helper::&lt;Fr377&gt;();
+        test_variable_output_sponge_and_fsks_helper::&lt;Fr381&gt;();
+        test_variable_output_sponge_and_fsks_helper::&lt;Fq377&gt;();
+    }
+    <span class="kw">fn </span>test_variable_output_sponge_and_fsks_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>rescue = Permutation::default();
+        <span class="kw">let </span>input = [F::zero(), F::one(), F::zero()];
+        <span class="macro">assert_eq!</span>(rescue.sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">0</span>).len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">1</span>).len(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">2</span>).len(), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).len(), <span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">10</span>).len(), <span class="number">10</span>);
+
+        <span class="macro">assert_eq!</span>(rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">0</span>).unwrap().len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">1</span>).unwrap().len(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">2</span>).unwrap().len(), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).unwrap().len(), <span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(rescue.sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">10</span>).unwrap().len(), <span class="number">10</span>);
+
+        <span class="kw">let </span>key = F::rand(<span class="kw-2">&amp;mut </span>ark_std::test_rng());
+        <span class="kw">let </span>input = [F::zero(), F::one(), F::zero(), F::zero()];
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">0</span>)
-                .<span class="ident">len</span>(),
-            <span class="number">0</span>
-        );
+            rescue
+                .full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">0</span>)
+                .len(),
+            <span class="number">0
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">1</span>)
-                .<span class="ident">len</span>(),
-            <span class="number">1</span>
-        );
+            rescue
+                .full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">1</span>)
+                .len(),
+            <span class="number">1
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">2</span>)
-                .<span class="ident">len</span>(),
-            <span class="number">2</span>
-        );
+            rescue
+                .full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">2</span>)
+                .len(),
+            <span class="number">2
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">4</span>)
-                .<span class="ident">len</span>(),
-            <span class="number">4</span>
-        );
+            rescue
+                .full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">4</span>)
+                .len(),
+            <span class="number">4
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_with_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">10</span>)
-                .<span class="ident">len</span>(),
-            <span class="number">10</span>
-        );
+            rescue
+                .full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">10</span>)
+                .len(),
+            <span class="number">10
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">0</span>)
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">len</span>(),
-            <span class="number">0</span>
-        );
+            rescue
+                .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">0</span>)
+                .unwrap()
+                .len(),
+            <span class="number">0
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">1</span>)
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">len</span>(),
-            <span class="number">1</span>
-        );
+            rescue
+                .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">1</span>)
+                .unwrap()
+                .len(),
+            <span class="number">1
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">2</span>)
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">len</span>(),
-            <span class="number">2</span>
-        );
+            rescue
+                .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">2</span>)
+                .unwrap()
+                .len(),
+            <span class="number">2
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">4</span>)
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">len</span>(),
-            <span class="number">4</span>
-        );
+            rescue
+                .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">4</span>)
+                .unwrap()
+                .len(),
+            <span class="number">4
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">rescue</span>
-                .<span class="ident">full_state_keyed_sponge_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="number">10</span>)
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">len</span>(),
-            <span class="number">10</span>
-        );
+            rescue
+                .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">10</span>)
+                .unwrap()
+                .len(),
+            <span class="number">10
+        </span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

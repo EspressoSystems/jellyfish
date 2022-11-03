@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/aead.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>aead.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/aead.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>aead.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -363,370 +363,370 @@
 <span id="363">363</span>
 <span id="364">364</span>
 <span id="365">365</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Wraps crypto_box&#39;s AEAD encryption scheme.</span>
+</span><span class="doccomment">//! Wraps crypto_box&#39;s AEAD encryption scheme.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">Read</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">format</span>,
-    <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
+</span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+<span class="kw">use </span>ark_std::{
+    format,
+    rand::{CryptoRng, RngCore},
+    vec,
+    vec::Vec,
 };
-<span class="kw">use</span> <span class="ident">crypto_box</span>::{
-    <span class="ident">aead</span>::{<span class="ident">Aead</span>, <span class="ident">AeadCore</span>, <span class="ident">Nonce</span>, <span class="ident">Payload</span>},
-    <span class="ident">ChaChaBox</span>,
+<span class="kw">use </span>crypto_box::{
+    aead::{Aead, AeadCore, Nonce, Payload},
+    ChaChaBox,
 };
-<span class="kw">use</span> <span class="ident">generic_array</span>::{<span class="ident">typenum::U24</span>, <span class="ident">GenericArray</span>};
+<span class="kw">use </span>generic_array::{typenum::U24, GenericArray};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
-<span class="doccomment">/// Public/encryption key for AEAD</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncKey</span>(<span class="ident">crypto_box::PublicKey</span>);
+<span class="attribute">#[derive(Clone, Debug, Eq, Derivative)]
+#[derivative(PartialEq, Hash)]
+</span><span class="doccomment">/// Public/encryption key for AEAD
+</span><span class="kw">pub struct </span>EncKey(crypto_box::PublicKey);
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EncKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">crypto_box::PublicKey::from</span>(<span class="ident">bytes</span>))
+<span class="kw">impl </span>From&lt;[u8; <span class="number">32</span>]&gt; <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>from(bytes: [u8; <span class="number">32</span>]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(crypto_box::PublicKey::from(bytes))
     }
 }
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">EncKey</span><span class="op">&gt;</span> <span class="kw">for</span> [<span class="ident">u8</span>; <span class="number">32</span>] {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">enc_key</span>: <span class="ident">EncKey</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw-2">*</span><span class="ident">enc_key</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>()
+<span class="kw">impl </span>From&lt;EncKey&gt; <span class="kw">for </span>[u8; <span class="number">32</span>] {
+    <span class="kw">fn </span>from(enc_key: EncKey) -&gt; <span class="self">Self </span>{
+        <span class="kw-2">*</span>enc_key.<span class="number">0</span>.as_bytes()
     }
 }
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DecKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EncKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dec_key</span>: <span class="kw-2">&amp;</span><span class="ident">DecKey</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">enc_key</span> <span class="op">=</span> <span class="ident">crypto_box::PublicKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">dec_key</span>.<span class="number">0</span>);
-        <span class="self">Self</span>(<span class="ident">enc_key</span>)
+<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>DecKey&gt; <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>from(dec_key: <span class="kw-2">&amp;</span>DecKey) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>enc_key = crypto_box::PublicKey::from(<span class="kw-2">&amp;</span>dec_key.<span class="number">0</span>);
+        <span class="self">Self</span>(enc_key)
     }
 }
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">EncKey</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">crypto_box::PublicKey::from</span>([<span class="number">0u8</span>; <span class="ident">crypto_box::KEY_SIZE</span>]))
+<span class="kw">impl </span>Default <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(crypto_box::PublicKey::from([<span class="number">0u8</span>; crypto_box::KEY_SIZE]))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CanonicalSerialize</span> <span class="kw">for</span> <span class="ident">EncKey</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">w</span>: <span class="ident">W</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SerializationError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">W</span>: <span class="ident">Write</span>,
+<span class="kw">impl </span>CanonicalSerialize <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>serialize&lt;W&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, w: W) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt;
+    <span class="kw">where
+        </span>W: Write,
     {
-        <span class="ident">CanonicalSerialize::serialize</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>(), <span class="ident">w</span>)
+        CanonicalSerialize::serialize(<span class="self">self</span>.<span class="number">0</span>.as_ref(), w)
     }
-    <span class="kw">fn</span> <span class="ident">serialized_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="ident">crypto_box::KEY_SIZE</span>
+    <span class="kw">fn </span>serialized_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        crypto_box::KEY_SIZE
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CanonicalDeserialize</span> <span class="kw">for</span> <span class="ident">EncKey</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">reader</span>: <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">SerializationError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">Read</span>,
+<span class="kw">impl </span>CanonicalDeserialize <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>deserialize&lt;R&gt;(<span class="kw-2">mut </span>reader: R) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, SerializationError&gt;
+    <span class="kw">where
+        </span>R: Read,
     {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">u64::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">len</span> <span class="op">!</span><span class="op">=</span> <span class="ident">crypto_box::KEY_SIZE</span> <span class="kw">as</span> <span class="ident">u64</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SerializationError::InvalidData</span>);
+        <span class="kw">let </span>len = u64::deserialize(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
+        <span class="kw">if </span>len != crypto_box::KEY_SIZE <span class="kw">as </span>u64 {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SerializationError::InvalidData);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="ident">crypto_box::KEY_SIZE</span>];
-        <span class="ident">reader</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;mut</span> <span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">crypto_box::PublicKey::from</span>(<span class="ident">key</span>)))
+        <span class="kw">let </span><span class="kw-2">mut </span>key = [<span class="number">0u8</span>; crypto_box::KEY_SIZE];
+        reader.read_exact(<span class="kw-2">&amp;mut </span>key)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(crypto_box::PublicKey::from(key)))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">EncKey</span> {
-    <span class="doccomment">/// Encrypt a message with authenticated associated data which is an</span>
-    <span class="doccomment">/// optional bytestring which is not encrypted, but is authenticated</span>
-    <span class="doccomment">/// along with the message. Failure to pass the same AAD that was used</span>
-    <span class="doccomment">/// during encryption will cause decryption to fail, which is useful if you</span>
-    <span class="doccomment">/// would like to &quot;bind&quot; the ciphertext to some identifier, like a</span>
-    <span class="doccomment">/// digital signature key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encrypt</span>(
+<span class="kw">impl </span>EncKey {
+    <span class="doccomment">/// Encrypt a message with authenticated associated data which is an
+    /// optional bytestring which is not encrypted, but is authenticated
+    /// along with the message. Failure to pass the same AAD that was used
+    /// during encryption will cause decryption to fail, which is useful if you
+    /// would like to &quot;bind&quot; the ciphertext to some identifier, like a
+    /// digital signature key.
+    </span><span class="kw">pub fn </span>encrypt(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="kw">impl</span> <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span>,
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">aad</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Ciphertext</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">nonce</span> <span class="op">=</span> <span class="ident">ChaChaBox::generate_nonce</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw-2">mut </span>rng: <span class="kw">impl </span>RngCore + CryptoRng,
+        message: <span class="kw-2">&amp;</span>[u8],
+        aad: <span class="kw-2">&amp;</span>[u8],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Ciphertext, PrimitivesError&gt; {
+        <span class="kw">let </span>nonce = ChaChaBox::generate_nonce(<span class="kw-2">&amp;mut </span>rng);
 
-        <span class="comment">// generate an ephemeral key pair as the virtual sender to derive the crypto box</span>
-        <span class="kw">let</span> <span class="ident">ephemeral_sk</span> <span class="op">=</span> <span class="ident">crypto_box::SecretKey::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">ephemeral_pk</span> <span class="op">=</span> <span class="ident">EncKey</span>(<span class="ident">crypto_box::PublicKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">ephemeral_sk</span>));
-        <span class="kw">let</span> <span class="ident">my_box</span> <span class="op">=</span> <span class="ident">ChaChaBox::new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">ephemeral_sk</span>);
+        <span class="comment">// generate an ephemeral key pair as the virtual sender to derive the crypto box
+        </span><span class="kw">let </span>ephemeral_sk = crypto_box::SecretKey::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>ephemeral_pk = EncKey(crypto_box::PublicKey::from(<span class="kw-2">&amp;</span>ephemeral_sk));
+        <span class="kw">let </span>my_box = ChaChaBox::new(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span>ephemeral_sk);
 
-        <span class="comment">// encrypt the message and associated data using crypto box</span>
-        <span class="kw">let</span> <span class="ident">ct</span> <span class="op">=</span> <span class="ident">my_box</span>
-            .<span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>, <span class="ident">Payload</span> { <span class="ident">msg</span>: <span class="ident">message</span>, <span class="ident">aad</span> })
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">PrimitivesError::InternalError</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+        <span class="comment">// encrypt the message and associated data using crypto box
+        </span><span class="kw">let </span>ct = my_box
+            .encrypt(<span class="kw-2">&amp;</span>nonce, Payload { msg: message, aad })
+            .map_err(|e| PrimitivesError::InternalError(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, e)))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Ciphertext</span> {
-            <span class="ident">nonce</span>,
-            <span class="ident">ct</span>,
-            <span class="ident">ephemeral_pk</span>,
+        <span class="prelude-val">Ok</span>(Ciphertext {
+            nonce,
+            ct,
+            ephemeral_pk,
         })
     }
 }
 
-<span class="doccomment">/// Private/decryption key for AEAD</span>
-<span class="comment">// look into zeroization logic from aead lib</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">DecKey</span>(<span class="ident">crypto_box::SecretKey</span>);
+<span class="doccomment">/// Private/decryption key for AEAD
+</span><span class="comment">// look into zeroization logic from aead lib
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">struct </span>DecKey(crypto_box::SecretKey);
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DecKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">crypto_box::SecretKey::from</span>(<span class="ident">bytes</span>))
+<span class="kw">impl </span>From&lt;[u8; <span class="number">32</span>]&gt; <span class="kw">for </span>DecKey {
+    <span class="kw">fn </span>from(bytes: [u8; <span class="number">32</span>]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(crypto_box::SecretKey::from(bytes))
     }
 }
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DecKey</span><span class="op">&gt;</span> <span class="kw">for</span> [<span class="ident">u8</span>; <span class="number">32</span>] {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dec_key</span>: <span class="ident">DecKey</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw-2">*</span><span class="ident">dec_key</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>()
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DecKey</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">crypto_box::SecretKey::from</span>([<span class="number">0</span>; <span class="ident">crypto_box::KEY_SIZE</span>]))
+<span class="kw">impl </span>From&lt;DecKey&gt; <span class="kw">for </span>[u8; <span class="number">32</span>] {
+    <span class="kw">fn </span>from(dec_key: DecKey) -&gt; <span class="self">Self </span>{
+        <span class="kw-2">*</span>dec_key.<span class="number">0</span>.as_bytes()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CanonicalSerialize</span> <span class="kw">for</span> <span class="ident">DecKey</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">w</span>: <span class="ident">W</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SerializationError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">W</span>: <span class="ident">Write</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>DecKey {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(crypto_box::SecretKey::from([<span class="number">0</span>; crypto_box::KEY_SIZE]))
+    }
+}
+
+<span class="kw">impl </span>CanonicalSerialize <span class="kw">for </span>DecKey {
+    <span class="kw">fn </span>serialize&lt;W&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, w: W) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt;
+    <span class="kw">where
+        </span>W: Write,
     {
-        <span class="ident">CanonicalSerialize::serialize</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>().<span class="ident">as_ref</span>(), <span class="ident">w</span>)
+        CanonicalSerialize::serialize(<span class="self">self</span>.<span class="number">0</span>.as_bytes().as_ref(), w)
     }
-    <span class="kw">fn</span> <span class="ident">serialized_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="ident">crypto_box::KEY_SIZE</span>
+    <span class="kw">fn </span>serialized_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        crypto_box::KEY_SIZE
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CanonicalDeserialize</span> <span class="kw">for</span> <span class="ident">DecKey</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">reader</span>: <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">SerializationError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">Read</span>,
+<span class="kw">impl </span>CanonicalDeserialize <span class="kw">for </span>DecKey {
+    <span class="kw">fn </span>deserialize&lt;R&gt;(<span class="kw-2">mut </span>reader: R) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, SerializationError&gt;
+    <span class="kw">where
+        </span>R: Read,
     {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">u64::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">len</span> <span class="op">!</span><span class="op">=</span> <span class="ident">crypto_box::KEY_SIZE</span> <span class="kw">as</span> <span class="ident">u64</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SerializationError::InvalidData</span>);
+        <span class="kw">let </span>len = u64::deserialize(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
+        <span class="kw">if </span>len != crypto_box::KEY_SIZE <span class="kw">as </span>u64 {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SerializationError::InvalidData);
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">k</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="ident">crypto_box::KEY_SIZE</span>];
-        <span class="ident">reader</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;mut</span> <span class="ident">k</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">crypto_box::SecretKey::from</span>(<span class="ident">k</span>)))
+        <span class="kw">let </span><span class="kw-2">mut </span>k = [<span class="number">0u8</span>; crypto_box::KEY_SIZE];
+        reader.read_exact(<span class="kw-2">&amp;mut </span>k)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(crypto_box::SecretKey::from(k)))
     }
 }
 
-<span class="doccomment">/// Keypair for Authenticated Encryption with Associated Data</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyPair</span> {
-    <span class="ident">enc_key</span>: <span class="ident">EncKey</span>,
-    <span class="ident">dec_key</span>: <span class="ident">DecKey</span>,
+<span class="doccomment">/// Keypair for Authenticated Encryption with Associated Data
+</span><span class="attribute">#[derive(Clone, Debug, Default, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>KeyPair {
+    enc_key: EncKey,
+    dec_key: DecKey,
 }
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">KeyPair</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">KeyPair</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">enc_key</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">enc_key</span>
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>KeyPair {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>KeyPair) -&gt; bool {
+        <span class="self">self</span>.enc_key == other.enc_key
     }
 }
 
-<span class="kw">impl</span> <span class="ident">KeyPair</span> {
-    <span class="doccomment">/// Randomly sample a key pair.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(<span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">dec_key</span> <span class="op">=</span> <span class="ident">crypto_box::SecretKey::generate</span>(<span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">enc_key</span> <span class="op">=</span> <span class="ident">crypto_box::PublicKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">dec_key</span>);
-        <span class="self">Self</span> {
-            <span class="ident">enc_key</span>: <span class="ident">EncKey</span>(<span class="ident">enc_key</span>),
-            <span class="ident">dec_key</span>: <span class="ident">DecKey</span>(<span class="ident">dec_key</span>),
+<span class="kw">impl </span>KeyPair {
+    <span class="doccomment">/// Randomly sample a key pair.
+    </span><span class="kw">pub fn </span>generate&lt;R: RngCore + CryptoRng&gt;(rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>dec_key = crypto_box::SecretKey::generate(rng);
+        <span class="kw">let </span>enc_key = crypto_box::PublicKey::from(<span class="kw-2">&amp;</span>dec_key);
+        <span class="self">Self </span>{
+            enc_key: EncKey(enc_key),
+            dec_key: DecKey(dec_key),
         }
     }
 
-    <span class="doccomment">/// Getter for the public/encryption key</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enc_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">EncKey</span> {
-        <span class="self">self</span>.<span class="ident">enc_key</span>.<span class="ident">clone</span>()
+    <span class="doccomment">/// Getter for the public/encryption key
+    </span><span class="kw">pub fn </span>enc_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; EncKey {
+        <span class="self">self</span>.enc_key.clone()
     }
 
-    <span class="doccomment">/// Getter for reference to the public/encryption key</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enc_key_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">EncKey</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">enc_key</span>
+    <span class="doccomment">/// Getter for reference to the public/encryption key
+    </span><span class="kw">pub fn </span>enc_key_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>EncKey {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.enc_key
     }
 
-    <span class="doccomment">/// Decrypt a ciphertext with authenticated associated data provided.</span>
-    <span class="doccomment">/// If the associated data is different that that used during encryption,</span>
-    <span class="doccomment">/// then decryption will fail.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ciphertext</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span>, <span class="ident">aad</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">my_box</span> <span class="op">=</span> <span class="ident">ChaChaBox::new</span>(<span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">ephemeral_pk</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dec_key</span>.<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">plaintext</span> <span class="op">=</span> <span class="ident">my_box</span>
-            .<span class="ident">decrypt</span>(
-                <span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">nonce</span>,
-                <span class="ident">Payload</span> {
-                    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">ct</span>,
-                    <span class="ident">aad</span>,
+    <span class="doccomment">/// Decrypt a ciphertext with authenticated associated data provided.
+    /// If the associated data is different that that used during encryption,
+    /// then decryption will fail.
+    </span><span class="kw">pub fn </span>decrypt(<span class="kw-2">&amp;</span><span class="self">self</span>, ciphertext: <span class="kw-2">&amp;</span>Ciphertext, aad: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, PrimitivesError&gt; {
+        <span class="kw">let </span>my_box = ChaChaBox::new(<span class="kw-2">&amp;</span>ciphertext.ephemeral_pk.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.dec_key.<span class="number">0</span>);
+        <span class="kw">let </span>plaintext = my_box
+            .decrypt(
+                <span class="kw-2">&amp;</span>ciphertext.nonce,
+                Payload {
+                    msg: <span class="kw-2">&amp;</span>ciphertext.ct,
+                    aad,
                 },
             )
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">PrimitivesError::FailedDecryption</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">plaintext</span>)
+            .map_err(|e| PrimitivesError::FailedDecryption(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, e)))<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(plaintext)
     }
 }
 
-<span class="doccomment">/// The ciphertext produced by AEAD encryption</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ciphertext</span> {
-    <span class="ident">nonce</span>: <span class="ident">Nonce</span><span class="op">&lt;</span><span class="ident">ChaChaBox</span><span class="op">&gt;</span>,
-    <span class="ident">ct</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">ephemeral_pk</span>: <span class="ident">EncKey</span>,
+<span class="doccomment">/// The ciphertext produced by AEAD encryption
+</span><span class="attribute">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>Ciphertext {
+    nonce: Nonce&lt;ChaChaBox&gt;,
+    ct: Vec&lt;u8&gt;,
+    ephemeral_pk: EncKey,
 }
 
-<span class="kw">impl</span> <span class="ident">CanonicalSerialize</span> <span class="kw">for</span> <span class="ident">Ciphertext</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">writer</span>: <span class="ident">W</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">W</span>: <span class="ident">ark_serialize::Write</span>,
+<span class="kw">impl </span>CanonicalSerialize <span class="kw">for </span>Ciphertext {
+    <span class="kw">fn </span>serialize&lt;W&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>writer: W) -&gt; <span class="prelude-ty">Result</span>&lt;(), ark_serialize::SerializationError&gt;
+    <span class="kw">where
+        </span>W: ark_serialize::Write,
     {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">nonce</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="ident">len</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">writer</span>)<span class="question-mark">?</span>;
-        <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="self">self</span>.<span class="ident">nonce</span>.<span class="ident">as_slice</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>len = <span class="self">self</span>.nonce.len() <span class="kw">as </span>u64;
+        len.serialize(<span class="kw-2">&amp;mut </span>writer)<span class="question-mark">?</span>;
+        writer.write_all(<span class="self">self</span>.nonce.as_slice())<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ct</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="ident">len</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">writer</span>)<span class="question-mark">?</span>;
-        <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ct</span>[..])<span class="question-mark">?</span>;
+        <span class="kw">let </span>len = <span class="self">self</span>.ct.len() <span class="kw">as </span>u64;
+        len.serialize(<span class="kw-2">&amp;mut </span>writer)<span class="question-mark">?</span>;
+        writer.write_all(<span class="kw-2">&amp;</span><span class="self">self</span>.ct[..])<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">ephemeral_pk</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">writer</span>)
+        <span class="self">self</span>.ephemeral_pk.serialize(<span class="kw-2">&amp;mut </span>writer)
     }
-    <span class="kw">fn</span> <span class="ident">serialized_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>() <span class="op">*</span> <span class="number">2</span>
-            <span class="op">+</span> <span class="self">self</span>.<span class="ident">nonce</span>.<span class="ident">len</span>()
-            <span class="op">+</span> <span class="self">self</span>.<span class="ident">ct</span>.<span class="ident">len</span>()
-            <span class="op">+</span> <span class="self">self</span>.<span class="ident">ephemeral_pk</span>.<span class="ident">serialized_size</span>()
+    <span class="kw">fn </span>serialized_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        core::mem::size_of::&lt;u64&gt;() * <span class="number">2
+            </span>+ <span class="self">self</span>.nonce.len()
+            + <span class="self">self</span>.ct.len()
+            + <span class="self">self</span>.ephemeral_pk.serialized_size()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">CanonicalDeserialize</span> <span class="kw">for</span> <span class="ident">Ciphertext</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">reader</span>: <span class="ident">R</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">ark_serialize::Read</span>,
+<span class="kw">impl </span>CanonicalDeserialize <span class="kw">for </span>Ciphertext {
+    <span class="kw">fn </span>deserialize&lt;R&gt;(<span class="kw-2">mut </span>reader: R) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ark_serialize::SerializationError&gt;
+    <span class="kw">where
+        </span>R: ark_serialize::Read,
     {
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">u64::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">len</span> <span class="op">!</span><span class="op">=</span> <span class="number">24</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SerializationError::InvalidData</span>);
+        <span class="kw">let </span>len = u64::deserialize(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
+        <span class="kw">if </span>len != <span class="number">24 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SerializationError::InvalidData);
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">24</span>];
-        <span class="ident">reader</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;mut</span> <span class="ident">nonce</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">nonce</span>: <span class="ident">Nonce</span><span class="op">&lt;</span><span class="ident">ChaChaBox</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">GenericArray</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">U24</span><span class="op">&gt;</span><span class="ident">::clone_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>nonce = [<span class="number">0u8</span>; <span class="number">24</span>];
+        reader.read_exact(<span class="kw-2">&amp;mut </span>nonce)<span class="question-mark">?</span>;
+        <span class="kw">let </span>nonce: Nonce&lt;ChaChaBox&gt; = GenericArray::&lt;u8, U24&gt;::clone_from_slice(<span class="kw-2">&amp;</span>nonce);
 
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">u64::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ct</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="ident">reader</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ct</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>len = u64::deserialize(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>ct = <span class="macro">vec!</span>[<span class="number">0u8</span>; len <span class="kw">as </span>usize];
+        reader.read_exact(<span class="kw-2">&amp;mut </span>ct)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">ephemeral_pk</span> <span class="op">=</span> <span class="ident">EncKey::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">nonce</span>,
-            <span class="ident">ct</span>,
-            <span class="ident">ephemeral_pk</span>,
+        <span class="kw">let </span>ephemeral_pk = EncKey::deserialize(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            nonce,
+            ct,
+            ephemeral_pk,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::rand::SeedableRng</span>;
-    <span class="kw">use</span> <span class="ident">rand_chacha::ChaCha20Rng</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_std::rand::SeedableRng;
+    <span class="kw">use </span>rand_chacha::ChaCha20Rng;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_aead_encryption</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ChaCha20Rng::from_seed</span>([<span class="number">0u8</span>; <span class="number">32</span>]);
-        <span class="kw">let</span> <span class="ident">keypair1</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">keypair2</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">aad</span> <span class="op">=</span> <span class="string">b&quot;my associated data&quot;</span>.<span class="ident">to_vec</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_aead_encryption() -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ChaCha20Rng::from_seed([<span class="number">0u8</span>; <span class="number">32</span>]);
+        <span class="kw">let </span>keypair1 = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>keypair2 = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>msg = <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.to_vec();
+        <span class="kw">let </span>aad = <span class="string">b&quot;my associated data&quot;</span>.to_vec();
 
-        <span class="comment">// check correctness</span>
-        <span class="kw">let</span> <span class="ident">ct1</span> <span class="op">=</span> <span class="ident">keypair1</span>.<span class="ident">enc_key</span>.<span class="ident">encrypt</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">keypair1</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct1</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>).<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">plaintext1</span> <span class="op">=</span> <span class="ident">keypair1</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct1</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">msg</span> <span class="op">==</span> <span class="ident">plaintext1</span>);
+        <span class="comment">// check correctness
+        </span><span class="kw">let </span>ct1 = keypair1.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(keypair1.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="kw-2">&amp;</span>aad).is_ok());
+        <span class="kw">let </span>plaintext1 = keypair1.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(msg == plaintext1);
 
-        <span class="comment">// check soundness</span>
-        <span class="macro">assert!</span>(<span class="ident">keypair2</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct1</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>).<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">keypair1</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct1</span>, <span class="string">b&quot;wrong associated data&quot;</span>).<span class="ident">is_err</span>());
-        <span class="kw">let</span> <span class="ident">ct2</span> <span class="op">=</span> <span class="ident">keypair1</span>.<span class="ident">enc_key</span>.<span class="ident">encrypt</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="string">b&quot;wrong message&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">plaintext2</span> <span class="op">=</span> <span class="ident">keypair1</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct2</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">msg</span> <span class="op">!</span><span class="op">=</span> <span class="ident">plaintext2</span>);
+        <span class="comment">// check soundness
+        </span><span class="macro">assert!</span>(keypair2.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="kw-2">&amp;</span>aad).is_err());
+        <span class="macro">assert!</span>(keypair1.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="string">b&quot;wrong associated data&quot;</span>).is_err());
+        <span class="kw">let </span>ct2 = keypair1.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="string">b&quot;wrong message&quot;</span>, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="kw">let </span>plaintext2 = keypair1.decrypt(<span class="kw-2">&amp;</span>ct2, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(msg != plaintext2);
 
-        <span class="comment">// rng or nounce shouldn&#39;t affect decryption</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ChaCha20Rng::from_seed</span>([<span class="number">1u8</span>; <span class="number">32</span>]);
-        <span class="kw">let</span> <span class="ident">ct3</span> <span class="op">=</span> <span class="ident">keypair1</span>.<span class="ident">enc_key</span>.<span class="ident">encrypt</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">keypair1</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct3</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>).<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">plaintext3</span> <span class="op">=</span> <span class="ident">keypair1</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ct3</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">msg</span> <span class="op">==</span> <span class="ident">plaintext3</span>);
+        <span class="comment">// rng or nounce shouldn&#39;t affect decryption
+        </span><span class="kw">let </span><span class="kw-2">mut </span>rng = ChaCha20Rng::from_seed([<span class="number">1u8</span>; <span class="number">32</span>]);
+        <span class="kw">let </span>ct3 = keypair1.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(keypair1.decrypt(<span class="kw-2">&amp;</span>ct3, <span class="kw-2">&amp;</span>aad).is_ok());
+        <span class="kw">let </span>plaintext3 = keypair1.decrypt(<span class="kw-2">&amp;</span>ct3, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(msg == plaintext3);
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_conversion</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rand_bytes</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
-        <span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rand_bytes</span>[..]);
-        <span class="kw">let</span> <span class="ident">enc_key</span> <span class="op">=</span> <span class="ident">EncKey::from</span>(<span class="ident">rand_bytes</span>);
-        <span class="kw">let</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">enc_key</span>.<span class="ident">into</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="ident">rand_bytes</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_conversion() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span><span class="kw-2">mut </span>rand_bytes = [<span class="number">0u8</span>; <span class="number">32</span>];
+        rng.fill_bytes(<span class="kw-2">&amp;mut </span>rand_bytes[..]);
+        <span class="kw">let </span>enc_key = EncKey::from(rand_bytes);
+        <span class="kw">let </span>bytes: [u8; <span class="number">32</span>] = enc_key.into();
+        <span class="macro">assert_eq!</span>(bytes, rand_bytes);
 
-        <span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rand_bytes</span>[..]);
-        <span class="kw">let</span> <span class="ident">dec_key</span> <span class="op">=</span> <span class="ident">DecKey::from</span>(<span class="ident">rand_bytes</span>);
-        <span class="kw">let</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">dec_key</span>.<span class="ident">into</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="ident">rand_bytes</span>);
+        rng.fill_bytes(<span class="kw-2">&amp;mut </span>rand_bytes[..]);
+        <span class="kw">let </span>dec_key = DecKey::from(rand_bytes);
+        <span class="kw">let </span>bytes: [u8; <span class="number">32</span>] = dec_key.into();
+        <span class="macro">assert_eq!</span>(bytes, rand_bytes);
 
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">enc_key</span> <span class="op">=</span> <span class="ident">EncKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">dec_key</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">enc_key</span>, <span class="ident">keypair</span>.<span class="ident">enc_key</span>());
+        <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>enc_key = EncKey::from(<span class="kw-2">&amp;</span>keypair.dec_key);
+        <span class="macro">assert_eq!</span>(enc_key, keypair.enc_key());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_serde</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">aad</span> <span class="op">=</span> <span class="string">b&quot;my associated data&quot;</span>.<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">ciphertext</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">enc_key</span>.<span class="ident">encrypt</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">aad</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_serde() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>msg = <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.to_vec();
+        <span class="kw">let </span>aad = <span class="string">b&quot;my associated data&quot;</span>.to_vec();
+        <span class="kw">let </span>ciphertext = keypair.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad).unwrap();
 
-        <span class="comment">// serde for Keypair</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keypair_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">keypair</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">keypair_bytes</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">keypair_de</span> <span class="op">=</span> <span class="ident">KeyPair::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_bytes</span>[..]).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">keypair</span>, <span class="ident">keypair_de</span>);
-        <span class="comment">// wrong byte length</span>
-        <span class="macro">assert!</span>(<span class="ident">KeyPair::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_bytes</span>[<span class="number">1</span>..]).<span class="ident">is_err</span>());
+        <span class="comment">// serde for Keypair
+        </span><span class="kw">let </span><span class="kw-2">mut </span>keypair_bytes = Vec::new();
+        keypair.serialize(<span class="kw-2">&amp;mut </span>keypair_bytes).unwrap();
+        <span class="kw">let </span>keypair_de = KeyPair::deserialize(<span class="kw-2">&amp;</span>keypair_bytes[..]).unwrap();
+        <span class="macro">assert_eq!</span>(keypair, keypair_de);
+        <span class="comment">// wrong byte length
+        </span><span class="macro">assert!</span>(KeyPair::deserialize(<span class="kw-2">&amp;</span>keypair_bytes[<span class="number">1</span>..]).is_err());
 
-        <span class="comment">// serde for EncKey</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enc_key_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">keypair</span>.<span class="ident">enc_key</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">enc_key_bytes</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">enc_key_de</span> <span class="op">=</span> <span class="ident">EncKey::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">enc_key_bytes</span>[..]).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">enc_key_de</span>, <span class="ident">keypair</span>.<span class="ident">enc_key</span>);
-        <span class="comment">// wrong byte length</span>
-        <span class="macro">assert!</span>(<span class="ident">EncKey::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">enc_key_bytes</span>[<span class="number">1</span>..]).<span class="ident">is_err</span>());
+        <span class="comment">// serde for EncKey
+        </span><span class="kw">let </span><span class="kw-2">mut </span>enc_key_bytes = Vec::new();
+        keypair.enc_key.serialize(<span class="kw-2">&amp;mut </span>enc_key_bytes).unwrap();
+        <span class="kw">let </span>enc_key_de = EncKey::deserialize(<span class="kw-2">&amp;</span>enc_key_bytes[..]).unwrap();
+        <span class="macro">assert_eq!</span>(enc_key_de, keypair.enc_key);
+        <span class="comment">// wrong byte length
+        </span><span class="macro">assert!</span>(EncKey::deserialize(<span class="kw-2">&amp;</span>enc_key_bytes[<span class="number">1</span>..]).is_err());
 
-        <span class="comment">// serde for DecKey</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dec_key_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">keypair</span>.<span class="ident">dec_key</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">dec_key_bytes</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">dec_key_de</span> <span class="op">=</span> <span class="ident">DecKey::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">dec_key_bytes</span>[..]).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">dec_key_de</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>(), <span class="ident">keypair</span>.<span class="ident">dec_key</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>());
-        <span class="comment">// wrong byte length</span>
-        <span class="macro">assert!</span>(<span class="ident">DecKey::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">dec_key_bytes</span>[<span class="number">1</span>..]).<span class="ident">is_err</span>());
+        <span class="comment">// serde for DecKey
+        </span><span class="kw">let </span><span class="kw-2">mut </span>dec_key_bytes = Vec::new();
+        keypair.dec_key.serialize(<span class="kw-2">&amp;mut </span>dec_key_bytes).unwrap();
+        <span class="kw">let </span>dec_key_de = DecKey::deserialize(<span class="kw-2">&amp;</span>dec_key_bytes[..]).unwrap();
+        <span class="macro">assert_eq!</span>(dec_key_de.<span class="number">0</span>.as_bytes(), keypair.dec_key.<span class="number">0</span>.as_bytes());
+        <span class="comment">// wrong byte length
+        </span><span class="macro">assert!</span>(DecKey::deserialize(<span class="kw-2">&amp;</span>dec_key_bytes[<span class="number">1</span>..]).is_err());
 
-        <span class="comment">// serde for Ciphertext</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ciphertext_bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">ciphertext</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ciphertext_bytes</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">ciphertext_de</span> <span class="op">=</span> <span class="ident">Ciphertext::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ciphertext_bytes</span>[..]).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">ciphertext_de</span>, <span class="ident">ciphertext</span>);
-        <span class="comment">// wrong byte length</span>
-        <span class="macro">assert!</span>(<span class="ident">Ciphertext::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ciphertext_bytes</span>[<span class="number">1</span>..]).<span class="ident">is_err</span>());
+        <span class="comment">// serde for Ciphertext
+        </span><span class="kw">let </span><span class="kw-2">mut </span>ciphertext_bytes = Vec::new();
+        ciphertext.serialize(<span class="kw-2">&amp;mut </span>ciphertext_bytes).unwrap();
+        <span class="kw">let </span>ciphertext_de = Ciphertext::deserialize(<span class="kw-2">&amp;</span>ciphertext_bytes[..]).unwrap();
+        <span class="macro">assert_eq!</span>(ciphertext_de, ciphertext);
+        <span class="comment">// wrong byte length
+        </span><span class="macro">assert!</span>(Ciphertext::deserialize(<span class="kw-2">&amp;</span>ciphertext_bytes[<span class="number">1</span>..]).is_err());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

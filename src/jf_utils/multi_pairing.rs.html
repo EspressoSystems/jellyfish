@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities/src/multi_pairing.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>multi_pairing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities/src/multi_pairing.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>multi_pairing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -66,73 +66,73 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! This module implements a simple wrapper of multi-pairing function</span>
+</span><span class="doccomment">//! This module implements a simple wrapper of multi-pairing function
 
-<span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-<span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
+</span><span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_std::vec::Vec;
 
-<span class="doccomment">/// A simple wrapper of multi-pairing function.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">multi_pairing</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="ident">g1_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::G1Affine</span>], <span class="ident">g2_elems</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::G2Affine</span>]) -&gt; <span class="ident">E::Fqk</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+<span class="doccomment">/// A simple wrapper of multi-pairing function.
+</span><span class="kw">pub fn </span>multi_pairing&lt;E&gt;(g1_elems: <span class="kw-2">&amp;</span>[E::G1Affine], g2_elems: <span class="kw-2">&amp;</span>[E::G2Affine]) -&gt; E::Fqk
+<span class="kw">where
+    </span>E: PairingEngine,
 {
-    <span class="kw">let</span> <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">E::G1Prepared</span>, <span class="ident">E::G2Prepared</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">g1_elems</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">zip</span>(<span class="ident">g2_elems</span>.<span class="ident">iter</span>())
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">g1</span>, <span class="ident">g2</span>)<span class="op">|</span> ((<span class="kw-2">*</span><span class="ident">g1</span>).<span class="ident">into</span>(), (<span class="kw-2">*</span><span class="ident">g2</span>).<span class="ident">into</span>()))
-        .<span class="ident">collect</span>();
+    <span class="kw">let </span>inputs: Vec&lt;(E::G1Prepared, E::G2Prepared)&gt; = g1_elems
+        .iter()
+        .zip(g2_elems.iter())
+        .map(|(g1, g2)| ((<span class="kw-2">*</span>g1).into(), (<span class="kw-2">*</span>g2).into()))
+        .collect();
 
-    <span class="ident">E::product_of_pairings</span>(<span class="kw-2">&amp;</span><span class="ident">inputs</span>)
+    E::product_of_pairings(<span class="kw-2">&amp;</span>inputs)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Bls12_377</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span>;
-    <span class="kw">use</span> <span class="ident">ark_bn254::Bn254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">AffineCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">ProjectiveCurve</span>};
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">One</span>, <span class="ident">UniformRand</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_bls12_377::Bls12_377;
+    <span class="kw">use </span>ark_bls12_381::Bls12_381;
+    <span class="kw">use </span>ark_bn254::Bn254;
+    <span class="kw">use </span>ark_ec::{AffineCurve, PairingEngine, ProjectiveCurve};
+    <span class="kw">use </span>ark_std::{test_rng, One, UniformRand};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_multi_pairing</span>() {
-        <span class="ident">test_multi_pairing_helper</span>::<span class="op">&lt;</span><span class="ident">Bn254</span><span class="op">&gt;</span>();
-        <span class="ident">test_multi_pairing_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span><span class="op">&gt;</span>();
-        <span class="ident">test_multi_pairing_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_381</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_multi_pairing() {
+        test_multi_pairing_helper::&lt;Bn254&gt;();
+        test_multi_pairing_helper::&lt;Bls12_377&gt;();
+        test_multi_pairing_helper::&lt;Bls12_381&gt;();
     }
 
-    <span class="kw">fn</span> <span class="ident">test_multi_pairing_helper</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+    <span class="kw">fn </span>test_multi_pairing_helper&lt;E: PairingEngine&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="comment">// generators with single pairing</span>
-        <span class="kw">let</span> <span class="ident">g1</span> <span class="op">=</span> <span class="ident">E::G1Affine::prime_subgroup_generator</span>();
-        <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">E::G2Affine::prime_subgroup_generator</span>();
-        <span class="kw">let</span> <span class="ident">gt</span> <span class="op">=</span> <span class="ident">E::pairing</span>(<span class="ident">g1</span>, <span class="ident">g2</span>);
+        <span class="comment">// generators with single pairing
+        </span><span class="kw">let </span>g1 = E::G1Affine::prime_subgroup_generator();
+        <span class="kw">let </span>g2 = E::G2Affine::prime_subgroup_generator();
+        <span class="kw">let </span>gt = E::pairing(g1, g2);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">multi_pairing</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">g1</span>], <span class="kw-2">&amp;</span>[<span class="ident">g2</span>]), <span class="ident">gt</span>);
+        <span class="macro">assert_eq!</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>[g1], <span class="kw-2">&amp;</span>[g2]), gt);
 
-        <span class="comment">// random elements with single pairing</span>
-        <span class="kw">let</span> <span class="ident">r1</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">r2</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">f1</span> <span class="op">=</span> <span class="ident">g1</span>.<span class="ident">mul</span>(<span class="ident">r1</span>).<span class="ident">into_affine</span>();
-        <span class="kw">let</span> <span class="ident">f2</span> <span class="op">=</span> <span class="ident">g2</span>.<span class="ident">mul</span>(<span class="ident">r2</span>).<span class="ident">into_affine</span>();
-        <span class="kw">let</span> <span class="ident">ft</span> <span class="op">=</span> <span class="ident">E::pairing</span>(<span class="ident">f1</span>, <span class="ident">f2</span>);
+        <span class="comment">// random elements with single pairing
+        </span><span class="kw">let </span>r1 = E::Fr::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>r2 = E::Fr::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>f1 = g1.mul(r1).into_affine();
+        <span class="kw">let </span>f2 = g2.mul(r2).into_affine();
+        <span class="kw">let </span>ft = E::pairing(f1, f2);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">multi_pairing</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">f1</span>], <span class="kw-2">&amp;</span>[<span class="ident">f2</span>]), <span class="ident">ft</span>);
+        <span class="macro">assert_eq!</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>[f1], <span class="kw-2">&amp;</span>[f2]), ft);
 
-        <span class="comment">// random multi pairing products</span>
-        <span class="kw">let</span> <span class="ident">ht</span> <span class="op">=</span> <span class="ident">gt</span> <span class="op">*</span> <span class="ident">ft</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">multi_pairing</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">g1</span>, <span class="ident">f1</span>], <span class="kw-2">&amp;</span>[<span class="ident">g2</span>, <span class="ident">f2</span>]), <span class="ident">ht</span>);
+        <span class="comment">// random multi pairing products
+        </span><span class="kw">let </span>ht = gt * ft;
+        <span class="macro">assert_eq!</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>[g1, f1], <span class="kw-2">&amp;</span>[g2, f2]), ht);
 
-        <span class="comment">// equality test</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">multi_pairing</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">g1</span>, <span class="op">-</span><span class="ident">g1</span>], <span class="kw-2">&amp;</span>[<span class="ident">g2</span>, <span class="ident">g2</span>]), <span class="ident">E::Fqk::one</span>());
+        <span class="comment">// equality test
+        </span><span class="macro">assert_eq!</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>[g1, -g1], <span class="kw-2">&amp;</span>[g2, g2]), E::Fqk::one());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

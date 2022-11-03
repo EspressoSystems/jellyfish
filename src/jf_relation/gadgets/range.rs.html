@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/range.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>range.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_relation/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/range.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>range.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_relation/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -264,271 +264,271 @@
 <span id="264">264</span>
 <span id="265">265</span>
 <span id="266">266</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implemtation of circuit lookup related gadgets</span>
+</span><span class="doccomment">//! Implemtation of circuit lookup related gadgets
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::utils::next_multiple</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">constants::GATE_WIDTH</span>, <span class="ident">errors::CircuitError</span>, <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+</span><span class="kw">use </span><span class="kw">super</span>::utils::next_multiple;
+<span class="kw">use crate</span>::{
+    constants::GATE_WIDTH, errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable,
 };
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger</span>, <span class="ident">PrimeField</span>};
+<span class="kw">use </span>ark_ff::{BigInteger, PrimeField};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Constrain a variable to be within the [0, 2^`bit_len`) range</span>
-    <span class="doccomment">/// Return error if the variable is invalid.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enforce_in_range</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">bit_len</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">support_lookup</span>() <span class="op">&amp;&amp;</span> <span class="ident">bit_len</span> <span class="op">%</span> <span class="self">self</span>.<span class="ident">range_bit_len</span>()<span class="question-mark">?</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">range_gate_with_lookup</span>(<span class="ident">a</span>, <span class="ident">bit_len</span>)<span class="question-mark">?</span>;
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">range_gate_internal</span>(<span class="ident">a</span>, <span class="ident">bit_len</span>)<span class="question-mark">?</span>;
+<span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
+    <span class="doccomment">/// Constrain a variable to be within the [0, 2^`bit_len`) range
+    /// Return error if the variable is invalid.
+    </span><span class="kw">pub fn </span>enforce_in_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, bit_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.support_lookup() &amp;&amp; bit_len % <span class="self">self</span>.range_bit_len()<span class="question-mark">? </span>== <span class="number">0 </span>{
+            <span class="self">self</span>.range_gate_with_lookup(a, bit_len)<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.range_gate_internal(a, bit_len)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Return a boolean variable indicating whether variable `a` is in the</span>
-    <span class="doccomment">/// range [0, 2^`bit_len`). Return error if the variable is invalid.</span>
-    <span class="doccomment">/// TODO: optimize the gate for UltraPlonk.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_in_range</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">bit_len</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoolVar</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">a_bit_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">unpack</span>(<span class="ident">a</span>, <span class="ident">F::size_in_bits</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">a_bit_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">a_bit_le</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">into</span>()).<span class="ident">collect</span>();
-        <span class="comment">// a is in range if and only if the bits in `a_bit_le[bit_len..]` are all</span>
-        <span class="comment">// zeroes.</span>
-        <span class="kw">let</span> <span class="ident">higher_bit_sum</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sum</span>(<span class="kw-2">&amp;</span><span class="ident">a_bit_le</span>[<span class="ident">bit_len</span>..])<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">is_zero</span>(<span class="ident">higher_bit_sum</span>)
+    <span class="doccomment">/// Return a boolean variable indicating whether variable `a` is in the
+    /// range [0, 2^`bit_len`). Return error if the variable is invalid.
+    /// TODO: optimize the gate for UltraPlonk.
+    </span><span class="kw">pub fn </span>is_in_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, bit_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="kw">let </span>a_bit_le: Vec&lt;BoolVar&gt; = <span class="self">self</span>.unpack(a, F::size_in_bits())<span class="question-mark">?</span>;
+        <span class="kw">let </span>a_bit_le: Vec&lt;Variable&gt; = a_bit_le.into_iter().map(|b| b.into()).collect();
+        <span class="comment">// a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
+        // zeroes.
+        </span><span class="kw">let </span>higher_bit_sum = <span class="self">self</span>.sum(<span class="kw-2">&amp;</span>a_bit_le[bit_len..])<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_zero(higher_bit_sum)
     }
 
-    <span class="doccomment">/// Obtain the `bit_len`-long binary representation of variable `a`</span>
-    <span class="doccomment">/// Return a list of variables [b0, ..., b_`bit_len`] which is the binary</span>
-    <span class="doccomment">/// representation of `a`.</span>
-    <span class="doccomment">/// Return error if the `a` is not the range of [0, 2^`bit_len`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">a</span>: <span class="ident">Variable</span>, <span class="ident">bit_len</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">bit_len</span> <span class="op">&lt;</span> <span class="ident">F::size_in_bits</span>() <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">a</span>)<span class="question-mark">?</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">F::from</span>(<span class="number">2u32</span>).<span class="ident">pow</span>([<span class="ident">bit_len</span> <span class="kw">as</span> <span class="ident">u64</span>]) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(
-                <span class="string">&quot;Failed to unpack variable to a range of smaller than 2^bit_len&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Obtain the `bit_len`-long binary representation of variable `a`
+    /// Return a list of variables [b0, ..., b_`bit_len`] which is the binary
+    /// representation of `a`.
+    /// Return error if the `a` is not the range of [0, 2^`bit_len`).
+    </span><span class="kw">pub fn </span>unpack(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, bit_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;BoolVar&gt;, CircuitError&gt; {
+        <span class="kw">if </span>bit_len &lt; F::size_in_bits() &amp;&amp; <span class="self">self</span>.witness(a)<span class="question-mark">? </span>&gt;= F::from(<span class="number">2u32</span>).pow([bit_len <span class="kw">as </span>u64]) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(
+                <span class="string">&quot;Failed to unpack variable to a range of smaller than 2^bit_len&quot;</span>.to_string(),
             ));
         }
-        <span class="self">self</span>.<span class="ident">range_gate_internal</span>(<span class="ident">a</span>, <span class="ident">bit_len</span>)
+        <span class="self">self</span>.range_gate_internal(a, bit_len)
     }
 
-    <span class="doccomment">/// a general decomposition gate (not necessarily binary decomposition)</span>
-    <span class="doccomment">/// where `a` are enforced to decomposed to `a_chunks_le` which consists</span>
-    <span class="doccomment">/// of chunks (multiple bits) in little-endian order and</span>
-    <span class="doccomment">/// each chunk \in [0, `range_size`)</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">decomposition_gate</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">a_chunks_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>,
-        <span class="ident">a</span>: <span class="ident">Variable</span>,
-        <span class="ident">range_size</span>: <span class="ident">F</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// ensure (padded_len - 1) % 3 = 0</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded</span> <span class="op">=</span> <span class="ident">a_chunks_le</span>;
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">padded</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">rate</span> <span class="op">=</span> <span class="ident">GATE_WIDTH</span> <span class="op">-</span> <span class="number">1</span>; <span class="comment">// rate at which lc add each round</span>
-        <span class="kw">let</span> <span class="ident">padded_len</span> <span class="op">=</span> <span class="ident">next_multiple</span>(<span class="ident">len</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">rate</span>)<span class="question-mark">?</span> <span class="op">+</span> <span class="number">1</span>;
-        <span class="ident">padded</span>.<span class="ident">resize</span>(<span class="ident">padded_len</span>, <span class="self">self</span>.<span class="ident">zero</span>());
+    <span class="doccomment">/// a general decomposition gate (not necessarily binary decomposition)
+    /// where `a` are enforced to decomposed to `a_chunks_le` which consists
+    /// of chunks (multiple bits) in little-endian order and
+    /// each chunk \in [0, `range_size`)
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decomposition_gate(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a_chunks_le: Vec&lt;Variable&gt;,
+        a: Variable,
+        range_size: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// ensure (padded_len - 1) % 3 = 0
+        </span><span class="kw">let </span><span class="kw-2">mut </span>padded = a_chunks_le;
+        <span class="kw">let </span>len = padded.len();
+        <span class="kw">let </span>rate = GATE_WIDTH - <span class="number">1</span>; <span class="comment">// rate at which lc add each round
+        </span><span class="kw">let </span>padded_len = next_multiple(len - <span class="number">1</span>, rate)<span class="question-mark">? </span>+ <span class="number">1</span>;
+        padded.resize(padded_len, <span class="self">self</span>.zero());
 
-        <span class="kw">let</span> <span class="ident">range_size_square</span> <span class="op">=</span> <span class="ident">range_size</span>.<span class="ident">square</span>();
-        <span class="kw">let</span> <span class="ident">range_size_cube</span> <span class="op">=</span> <span class="ident">range_size</span> <span class="op">*</span> <span class="ident">range_size_square</span>;
-        <span class="kw">let</span> <span class="ident">coeffs</span> <span class="op">=</span> [<span class="ident">range_size_cube</span>, <span class="ident">range_size_square</span>, <span class="ident">range_size</span>, <span class="ident">F::one</span>()];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accum</span> <span class="op">=</span> <span class="ident">padded</span>[<span class="ident">padded_len</span> <span class="op">-</span> <span class="number">1</span>];
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">padded_len</span> <span class="op">/</span> <span class="ident">rate</span> {
-            <span class="ident">accum</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lc</span>(
+        <span class="kw">let </span>range_size_square = range_size.square();
+        <span class="kw">let </span>range_size_cube = range_size * range_size_square;
+        <span class="kw">let </span>coeffs = [range_size_cube, range_size_square, range_size, F::one()];
+        <span class="kw">let </span><span class="kw-2">mut </span>accum = padded[padded_len - <span class="number">1</span>];
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..padded_len / rate {
+            accum = <span class="self">self</span>.lc(
                 <span class="kw-2">&amp;</span>[
-                    <span class="ident">accum</span>,
-                    <span class="ident">padded</span>[<span class="ident">padded_len</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">rate</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">2</span>],
-                    <span class="ident">padded</span>[<span class="ident">padded_len</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">rate</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>],
-                    <span class="ident">padded</span>[<span class="ident">padded_len</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">rate</span> <span class="op">*</span> <span class="ident">i</span>],
+                    accum,
+                    padded[padded_len - <span class="number">1 </span>- rate * i + <span class="number">2</span>],
+                    padded[padded_len - <span class="number">1 </span>- rate * i + <span class="number">1</span>],
+                    padded[padded_len - <span class="number">1 </span>- rate * i],
                 ],
-                <span class="kw-2">&amp;</span><span class="ident">coeffs</span>,
+                <span class="kw-2">&amp;</span>coeffs,
             )<span class="question-mark">?</span>;
         }
-        <span class="comment">// final round</span>
-        <span class="kw">let</span> <span class="ident">wires</span> <span class="op">=</span> [<span class="ident">accum</span>, <span class="ident">padded</span>[<span class="number">2</span>], <span class="ident">padded</span>[<span class="number">1</span>], <span class="ident">padded</span>[<span class="number">0</span>], <span class="ident">a</span>];
-        <span class="self">self</span>.<span class="ident">lc_gate</span>(<span class="kw-2">&amp;</span><span class="ident">wires</span>, <span class="kw-2">&amp;</span><span class="ident">coeffs</span>)<span class="question-mark">?</span>;
+        <span class="comment">// final round
+        </span><span class="kw">let </span>wires = [accum, padded[<span class="number">2</span>], padded[<span class="number">1</span>], padded[<span class="number">0</span>], a];
+        <span class="self">self</span>.lc_gate(<span class="kw-2">&amp;</span>wires, <span class="kw-2">&amp;</span>coeffs)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="doccomment">/// Private helper function for range gate</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="comment">// internal of a range check gate</span>
-    <span class="kw">fn</span> <span class="ident">range_gate_internal</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">a</span>: <span class="ident">Variable</span>,
-        <span class="ident">bit_len</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">bit_len</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(
-                <span class="string">&quot;Only allows positive bit length for range upper bound&quot;</span>.<span class="ident">to_string</span>(),
+<span class="doccomment">/// Private helper function for range gate
+</span><span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
+    <span class="comment">// internal of a range check gate
+    </span><span class="kw">fn </span>range_gate_internal(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: Variable,
+        bit_len: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;BoolVar&gt;, CircuitError&gt; {
+        <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
+        <span class="kw">if </span>bit_len == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(
+                <span class="string">&quot;Only allows positive bit length for range upper bound&quot;</span>.to_string(),
             ));
         }
 
-        <span class="kw">let</span> <span class="ident">a_bits_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">witness</span>(<span class="ident">a</span>)<span class="question-mark">?</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>();
-        <span class="kw">if</span> <span class="ident">bit_len</span> <span class="op">&gt;</span> <span class="ident">a_bits_le</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">let </span>a_bits_le: Vec&lt;bool&gt; = <span class="self">self</span>.witness(a)<span class="question-mark">?</span>.into_repr().to_bits_le();
+        <span class="kw">if </span>bit_len &gt; a_bits_le.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;Maximum field bit size: {}, requested range upper bound bit len: {}&quot;</span>,
-                <span class="ident">a_bits_le</span>.<span class="ident">len</span>(),
-                <span class="ident">bit_len</span>
+                a_bits_le.len(),
+                bit_len
             )));
         }
-        <span class="comment">// convert to variable in the circuit from the vector of boolean as binary</span>
-        <span class="comment">// representation</span>
-        <span class="kw">let</span> <span class="ident">a_bits_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">a_bits_le</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">take</span>(<span class="ident">bit_len</span>) <span class="comment">// since little-endian, truncate would remove MSBs</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> {
-                <span class="self">self</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">b</span>)
+        <span class="comment">// convert to variable in the circuit from the vector of boolean as binary
+        // representation
+        </span><span class="kw">let </span>a_bits_le: Vec&lt;BoolVar&gt; = a_bits_le
+            .iter()
+            .take(bit_len) <span class="comment">// since little-endian, truncate would remove MSBs
+            </span>.map(|<span class="kw-2">&amp;</span>b| {
+                <span class="self">self</span>.create_boolean_variable(b)
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">binary_decomposition_gate</span>(<span class="ident">a_bits_le</span>.<span class="ident">clone</span>(), <span class="ident">a</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.binary_decomposition_gate(a_bits_le.clone(), a)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">a_bits_le</span>)
+        <span class="prelude-val">Ok</span>(a_bits_le)
     }
 
-    <span class="kw">fn</span> <span class="ident">binary_decomposition_gate</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">a_bits_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoolVar</span><span class="op">&gt;</span>,
-        <span class="ident">a</span>: <span class="ident">Variable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">a_chunks_le</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">a_bits_le</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">into</span>()).<span class="ident">collect</span>();
-        <span class="self">self</span>.<span class="ident">decomposition_gate</span>(<span class="ident">a_chunks_le</span>, <span class="ident">a</span>, <span class="number">2u8</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
+    <span class="kw">fn </span>binary_decomposition_gate(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a_bits_le: Vec&lt;BoolVar&gt;,
+        a: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span>a_chunks_le: Vec&lt;Variable&gt; = a_bits_le.into_iter().map(|b| b.into()).collect();
+        <span class="self">self</span>.decomposition_gate(a_chunks_le, a, <span class="number">2u8</span>.into())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">errors::CircuitError</span>, <span class="ident">gadgets::test_utils::test_variable_independence_for_circuit</span>, <span class="ident">Circuit</span>,
-        <span class="ident">PlonkCircuit</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use crate</span>::{
+        errors::CircuitError, gadgets::test_utils::test_variable_independence_for_circuit, Circuit,
+        PlonkCircuit,
     };
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_ff::PrimeField;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_unpack</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_unpack_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_unpack_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_unpack_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_unpack_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_unpack() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_unpack_helper::&lt;FqEd254&gt;()<span class="question-mark">?</span>;
+        test_unpack_helper::&lt;FqEd377&gt;()<span class="question-mark">?</span>;
+        test_unpack_helper::&lt;FqEd381&gt;()<span class="question-mark">?</span>;
+        test_unpack_helper::&lt;Fq377&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_unpack_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::one</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="number">1023u32</span>))<span class="question-mark">?</span>;
+    <span class="kw">fn </span>test_unpack_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>a = circuit.create_variable(F::one())<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = circuit.create_variable(F::from(<span class="number">1023u32</span>))<span class="question-mark">?</span>;
 
-        <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">a_le</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">unpack</span>(<span class="ident">a</span>, <span class="number">3</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">a_le</span>.<span class="ident">len</span>(), <span class="number">3</span>);
-        <span class="kw">let</span> <span class="ident">b_le</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">unpack</span>(<span class="ident">b</span>, <span class="number">10</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">b_le</span>.<span class="ident">len</span>(), <span class="number">10</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">unpack</span>(<span class="ident">b</span>, <span class="number">9</span>).<span class="ident">is_err</span>());
+        circuit.enforce_in_range(a, <span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>a_le = circuit.unpack(a, <span class="number">3</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(a_le.len(), <span class="number">3</span>);
+        <span class="kw">let </span>b_le = circuit.unpack(b, <span class="number">10</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(b_le.len(), <span class="number">10</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="macro">assert!</span>(circuit.unpack(b, <span class="number">9</span>).is_err());
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_range_gate</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_range_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_range_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_range_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_range_gate_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_range_gate() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_range_gate_helper::&lt;FqEd254&gt;()<span class="question-mark">?</span>;
+        test_range_gate_helper::&lt;FqEd377&gt;()<span class="question-mark">?</span>;
+        test_range_gate_helper::&lt;FqEd381&gt;()<span class="question-mark">?</span>;
+        test_range_gate_helper::&lt;Fq377&gt;()
     }
-    <span class="kw">fn</span> <span class="ident">test_range_gate_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::one</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="number">1023u32</span>))<span class="question-mark">?</span>;
+    <span class="kw">fn </span>test_range_gate_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>a = circuit.create_variable(F::one())<span class="question-mark">?</span>;
+        <span class="kw">let </span>b = circuit.create_variable(F::from(<span class="number">1023u32</span>))<span class="question-mark">?</span>;
 
-        <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a</span>, <span class="number">3</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">b</span>, <span class="number">10</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">b</span>, <span class="number">9</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a</span>, <span class="number">0</span>).<span class="ident">is_err</span>());
-        <span class="comment">// non-positive bit length is undefined, thus fail</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a</span>, <span class="number">0</span>).<span class="ident">is_err</span>());
-        <span class="comment">// bit length bigger than that of a field element (bit length takes 256 or 381</span>
-        <span class="comment">// bits)</span>
-        <span class="kw">let</span> <span class="ident">bit_len</span> <span class="op">=</span> (<span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">8</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">8</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a</span>, <span class="ident">bit_len</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">is_err</span>());
-        <span class="comment">// if mess up the wire value, should fail</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">b</span>) <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">1024u32</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Check variable out of bound error.</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">circuit</span>.<span class="ident">num_vars</span>(), <span class="number">10</span>).<span class="ident">is_err</span>());
+        circuit.enforce_in_range(a, <span class="number">1</span>)<span class="question-mark">?</span>;
+        circuit.enforce_in_range(a, <span class="number">3</span>)<span class="question-mark">?</span>;
+        circuit.enforce_in_range(b, <span class="number">10</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        circuit.enforce_in_range(b, <span class="number">9</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.enforce_in_range(a, <span class="number">0</span>).is_err());
+        <span class="comment">// non-positive bit length is undefined, thus fail
+        </span><span class="macro">assert!</span>(circuit.enforce_in_range(a, <span class="number">0</span>).is_err());
+        <span class="comment">// bit length bigger than that of a field element (bit length takes 256 or 381
+        // bits)
+        </span><span class="kw">let </span>bit_len = (F::size_in_bits() / <span class="number">8 </span>+ <span class="number">1</span>) * <span class="number">8</span>;
+        <span class="macro">assert!</span>(circuit.enforce_in_range(a, bit_len + <span class="number">1</span>).is_err());
+        <span class="comment">// if mess up the wire value, should fail
+        </span><span class="kw-2">*</span>circuit.witness_mut(b) = F::from(<span class="number">1024u32</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Check variable out of bound error.
+        </span><span class="macro">assert!</span>(circuit.enforce_in_range(circuit.num_vars(), <span class="number">10</span>).is_err());
 
-        <span class="comment">// build two fixed circuits with different variable assignments, checking that</span>
-        <span class="comment">// the arithmetized extended permutation polynomial is variable</span>
-        <span class="comment">// independent</span>
-        <span class="kw">let</span> <span class="ident">circuit_1</span> <span class="op">=</span> <span class="ident">build_range_gate_circuit</span>(<span class="ident">F::from</span>(<span class="number">314u32</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">circuit_2</span> <span class="op">=</span> <span class="ident">build_range_gate_circuit</span>(<span class="ident">F::from</span>(<span class="number">489u32</span>))<span class="question-mark">?</span>;
-        <span class="ident">test_variable_independence_for_circuit</span>(<span class="ident">circuit_1</span>, <span class="ident">circuit_2</span>)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn</span> <span class="ident">build_range_gate_circuit</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">a_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">a_var</span>, <span class="number">10</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_check_in_range</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_check_in_range_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_check_in_range_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_check_in_range_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_check_in_range_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
-    }
-    <span class="kw">fn</span> <span class="ident">test_check_in_range_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="number">1023u32</span>))<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">b1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">is_in_range</span>(<span class="ident">a</span>, <span class="number">5</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b2</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">is_in_range</span>(<span class="ident">a</span>, <span class="number">10</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">b3</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">is_in_range</span>(<span class="ident">a</span>, <span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">b1</span>.<span class="ident">into</span>())<span class="question-mark">?</span>, <span class="ident">F::zero</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">b2</span>.<span class="ident">into</span>())<span class="question-mark">?</span>, <span class="ident">F::one</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">b3</span>.<span class="ident">into</span>())<span class="question-mark">?</span>, <span class="ident">F::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-
-        <span class="comment">// if mess up the wire value, should fail</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">a</span>) <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">1024u32</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="comment">// Check variable out of bound error.</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">is_in_range</span>(<span class="ident">circuit</span>.<span class="ident">num_vars</span>(), <span class="number">10</span>).<span class="ident">is_err</span>());
-
-        <span class="comment">// build two fixed circuits with different variable assignments, checking that</span>
-        <span class="comment">// the arithmetized extended permutation polynomial is variable</span>
-        <span class="comment">// independent</span>
-        <span class="kw">let</span> <span class="ident">circuit_1</span> <span class="op">=</span> <span class="ident">build_check_in_range_circuit</span>(<span class="ident">F::from</span>(<span class="number">314u32</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">circuit_2</span> <span class="op">=</span> <span class="ident">build_check_in_range_circuit</span>(<span class="ident">F::from</span>(<span class="number">1489u32</span>))<span class="question-mark">?</span>;
-        <span class="ident">test_variable_independence_for_circuit</span>(<span class="ident">circuit_1</span>, <span class="ident">circuit_2</span>)<span class="question-mark">?</span>;
+        <span class="comment">// build two fixed circuits with different variable assignments, checking that
+        // the arithmetized extended permutation polynomial is variable
+        // independent
+        </span><span class="kw">let </span>circuit_1 = build_range_gate_circuit(F::from(<span class="number">314u32</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_2 = build_range_gate_circuit(F::from(<span class="number">489u32</span>))<span class="question-mark">?</span>;
+        test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">build_check_in_range_circuit</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">a_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">a</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">is_in_range</span>(<span class="ident">a_var</span>, <span class="number">10</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">finalize_for_arithmetization</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">circuit</span>)
+    <span class="kw">fn </span>build_range_gate_circuit&lt;F: PrimeField&gt;(a: F) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>a_var = circuit.create_variable(a)<span class="question-mark">?</span>;
+        circuit.enforce_in_range(a_var, <span class="number">10</span>)<span class="question-mark">?</span>;
+        circuit.finalize_for_arithmetization()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(circuit)
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_check_in_range() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_check_in_range_helper::&lt;FqEd254&gt;()<span class="question-mark">?</span>;
+        test_check_in_range_helper::&lt;FqEd377&gt;()<span class="question-mark">?</span>;
+        test_check_in_range_helper::&lt;FqEd381&gt;()<span class="question-mark">?</span>;
+        test_check_in_range_helper::&lt;Fq377&gt;()
+    }
+    <span class="kw">fn </span>test_check_in_range_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>a = circuit.create_variable(F::from(<span class="number">1023u32</span>))<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>b1 = circuit.is_in_range(a, <span class="number">5</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b2 = circuit.is_in_range(a, <span class="number">10</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>b3 = circuit.is_in_range(a, <span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(circuit.witness(b1.into())<span class="question-mark">?</span>, F::zero());
+        <span class="macro">assert_eq!</span>(circuit.witness(b2.into())<span class="question-mark">?</span>, F::one());
+        <span class="macro">assert_eq!</span>(circuit.witness(b3.into())<span class="question-mark">?</span>, F::zero());
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+
+        <span class="comment">// if mess up the wire value, should fail
+        </span><span class="kw-2">*</span>circuit.witness_mut(a) = F::from(<span class="number">1024u32</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="comment">// Check variable out of bound error.
+        </span><span class="macro">assert!</span>(circuit.is_in_range(circuit.num_vars(), <span class="number">10</span>).is_err());
+
+        <span class="comment">// build two fixed circuits with different variable assignments, checking that
+        // the arithmetized extended permutation polynomial is variable
+        // independent
+        </span><span class="kw">let </span>circuit_1 = build_check_in_range_circuit(F::from(<span class="number">314u32</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_2 = build_check_in_range_circuit(F::from(<span class="number">1489u32</span>))<span class="question-mark">?</span>;
+        test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>build_check_in_range_circuit&lt;F: PrimeField&gt;(a: F) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>a_var = circuit.create_variable(a)<span class="question-mark">?</span>;
+        circuit.is_in_range(a_var, <span class="number">10</span>)<span class="question-mark">?</span>;
+        circuit.finalize_for_arithmetization()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(circuit)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

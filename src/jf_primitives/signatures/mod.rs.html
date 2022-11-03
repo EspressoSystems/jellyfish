@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/signatures/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/signatures/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -98,105 +98,105 @@
 <span id="98">98</span>
 <span id="99">99</span>
 <span id="100">100</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::errors::PrimitivesError</span>;
-<span class="kw">use</span> <span class="ident">ark_std::rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>};
+</span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
+<span class="kw">use </span>ark_std::rand::{CryptoRng, RngCore};
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bls</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">schnorr</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">bls::BLSSignatureScheme</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">schnorr::SchnorrSignatureScheme</span>;
+<span class="kw">pub mod </span>bls;
+<span class="kw">pub mod </span>schnorr;
+<span class="kw">pub use </span>bls::BLSSignatureScheme;
+<span class="kw">pub use </span>schnorr::SchnorrSignatureScheme;
 
-<span class="doccomment">/// Trait definition for a signature scheme.</span>
-<span class="comment">// A signature scheme is associated with a hash function H that is</span>
-<span class="comment">// to be used for challenge generation.</span>
-<span class="comment">// FIXME: update H bound once hash-api is merged.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SignatureScheme</span> {
-    <span class="doccomment">/// Ciphersuite Identifier</span>
-    <span class="kw">const</span> <span class="ident">CS_ID</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
+<span class="doccomment">/// Trait definition for a signature scheme.
+</span><span class="comment">// A signature scheme is associated with a hash function H that is
+// to be used for challenge generation.
+// FIXME: update H bound once hash-api is merged.
+</span><span class="kw">pub trait </span>SignatureScheme {
+    <span class="doccomment">/// Ciphersuite Identifier
+    </span><span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
 
-    <span class="doccomment">/// Signing key.</span>
-    <span class="kw">type</span> <span class="ident">SigningKey</span>;
+    <span class="doccomment">/// Signing key.
+    </span><span class="kw">type </span>SigningKey;
 
-    <span class="doccomment">/// Verification key</span>
-    <span class="kw">type</span> <span class="ident">VerificationKey</span>;
+    <span class="doccomment">/// Verification key
+    </span><span class="kw">type </span>VerificationKey;
 
-    <span class="doccomment">/// Public Parameter</span>
-    <span class="kw">type</span> <span class="ident">PublicParameter</span>;
+    <span class="doccomment">/// Public Parameter
+    </span><span class="kw">type </span>PublicParameter;
 
-    <span class="doccomment">/// Signature</span>
-    <span class="kw">type</span> <span class="ident">Signature</span>;
+    <span class="doccomment">/// Signature
+    </span><span class="kw">type </span>Signature;
 
-    <span class="doccomment">/// A message is &amp;\[MessageUnit\]</span>
-    <span class="kw">type</span> <span class="ident">MessageUnit</span>;
+    <span class="doccomment">/// A message is &amp;\[MessageUnit\]
+    </span><span class="kw">type </span>MessageUnit;
 
-    <span class="doccomment">/// generate public parameters from RNG.</span>
-    <span class="doccomment">/// If the RNG is not presented, use the default group generator.</span>
-    <span class="comment">// FIXME: the API looks a bit strange when the default generator is used.</span>
-    <span class="comment">// For example:</span>
-    <span class="comment">//   `S::param_gen::&lt;StdRng&gt;(None)`</span>
-    <span class="comment">// wheere `StdRng` is redundent.</span>
-    <span class="kw">fn</span> <span class="ident">param_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">prng</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">R</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// generate public parameters from RNG.
+    /// If the RNG is not presented, use the default group generator.
+    </span><span class="comment">// FIXME: the API looks a bit strange when the default generator is used.
+    // For example:
+    //   `S::param_gen::&lt;StdRng&gt;(None)`
+    // wheere `StdRng` is redundent.
+    </span><span class="kw">fn </span>param_gen&lt;R: CryptoRng + RngCore&gt;(
+        prng: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>R&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::PublicParameter, PrimitivesError&gt;;
 
-    <span class="doccomment">/// Sample a pair of keys.</span>
-    <span class="kw">fn</span> <span class="ident">key_gen</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::SigningKey</span>, <span class="ident"><span class="self">Self</span>::VerificationKey</span>), <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Sample a pair of keys.
+    </span><span class="kw">fn </span>key_gen&lt;R: CryptoRng + RngCore&gt;(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        prng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::SigningKey, <span class="self">Self</span>::VerificationKey), PrimitivesError&gt;;
 
-    <span class="doccomment">/// Sign a message with the signing key</span>
-    <span class="kw">fn</span> <span class="ident">sign</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>, <span class="ident">M</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident"><span class="self">Self</span>::MessageUnit</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">sk</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::SigningKey</span>,
-        <span class="ident">msg</span>: <span class="ident">M</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Sign a message with the signing key
+    </span><span class="kw">fn </span>sign&lt;R: CryptoRng + RngCore, M: AsRef&lt;[<span class="self">Self</span>::MessageUnit]&gt;&gt;(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        sk: <span class="kw-2">&amp;</span><span class="self">Self</span>::SigningKey,
+        msg: M,
+        prng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Signature, PrimitivesError&gt;;
 
-    <span class="doccomment">/// Verify a signature.</span>
-    <span class="kw">fn</span> <span class="ident">verify</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident"><span class="self">Self</span>::MessageUnit</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">pp</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicParameter</span>,
-        <span class="ident">vk</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::VerificationKey</span>,
-        <span class="ident">msg</span>: <span class="ident">M</span>,
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Signature</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PrimitivesError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Verify a signature.
+    </span><span class="kw">fn </span>verify&lt;M: AsRef&lt;[<span class="self">Self</span>::MessageUnit]&gt;&gt;(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        vk: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerificationKey,
+        msg: M,
+        sig: <span class="kw-2">&amp;</span><span class="self">Self</span>::Signature,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt;;
 }
 
-<span class="doccomment">/// Trait for aggregatable signatures.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AggregateableSignatureSchemes</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>: <span class="ident">SignatureScheme</span> {
-    <span class="comment">// TODO: APIs for aggregateable signatures</span>
-}
+<span class="doccomment">/// Trait for aggregatable signatures.
+</span><span class="kw">pub trait </span>AggregateableSignatureSchemes&lt;H&gt;: SignatureScheme {
+    <span class="comment">// TODO: APIs for aggregateable signatures
+</span>}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">rand::prelude::StdRng</span>, <span class="ident">test_rng</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_std::{rand::prelude::StdRng, test_rng};
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">sign_and_verify</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">SignatureScheme</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">S::MessageUnit</span>]) {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">S::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">S::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">S::sign</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sign_and_verify&lt;S: SignatureScheme&gt;(message: <span class="kw-2">&amp;</span>[S::MessageUnit]) {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">let </span>parameters = S::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
+        <span class="kw">let </span>(sk, pk) = S::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>sig = S::sign(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="macro">assert!</span>(S::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pk, message, <span class="kw-2">&amp;</span>sig).is_ok());
 
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">S::param_gen</span>::<span class="op">&lt;</span><span class="ident">StdRng</span><span class="op">&gt;</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">S::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">S::sign</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>());
+        <span class="kw">let </span>parameters = S::param_gen::&lt;StdRng&gt;(<span class="prelude-val">None</span>).unwrap();
+        <span class="kw">let </span>(sk, pk) = S::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>sig = S::sign(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="macro">assert!</span>(S::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pk, message, <span class="kw-2">&amp;</span>sig).is_ok());
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">failed_verification</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">SignatureScheme</span><span class="op">&gt;</span>(
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">S::MessageUnit</span>],
-        <span class="ident">bad_message</span>: <span class="kw-2">&amp;</span>[<span class="ident">S::MessageUnit</span>],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>failed_verification&lt;S: SignatureScheme&gt;(
+        message: <span class="kw-2">&amp;</span>[S::MessageUnit],
+        bad_message: <span class="kw-2">&amp;</span>[S::MessageUnit],
     ) {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">S::param_gen</span>(<span class="prelude-val">Some</span>(<span class="ident">rng</span>)).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">sk</span>, <span class="ident">pk</span>) <span class="op">=</span> <span class="ident">S::key_gen</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">S::sign</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">message</span>, <span class="ident">rng</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">S::verify</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>, <span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">bad_message</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_err</span>());
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">let </span>parameters = S::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
+        <span class="kw">let </span>(sk, pk) = S::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>sig = S::sign(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="macro">assert!</span>(S::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pk, bad_message, <span class="kw-2">&amp;</span>sig).is_err());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

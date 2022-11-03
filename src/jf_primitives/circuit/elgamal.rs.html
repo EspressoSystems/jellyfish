@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/elgamal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elgamal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/elgamal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elgamal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -443,450 +443,450 @@
 <span id="443">443</span>
 <span id="444">444</span>
 <span id="445">445</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Circuit implementation of the ElGamal scheme.</span>
+</span><span class="doccomment">//! Circuit implementation of the ElGamal scheme.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::rescue</span>::{<span class="ident">RescueGadget</span>, <span class="ident">RescueStateVar</span>},
-    <span class="ident">elgamal</span>::{<span class="ident">Ciphertext</span>, <span class="ident">EncKey</span>},
-    <span class="ident">rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">PRP</span>, <span class="ident">STATE_SIZE</span>},
+</span><span class="kw">use crate</span>::{
+    circuit::rescue::{RescueGadget, RescueStateVar},
+    elgamal::{Ciphertext, EncKey},
+    rescue::{RescueParameter, PRP, STATE_SIZE},
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{
-    <span class="ident">twisted_edwards_extended::GroupAffine</span>, <span class="ident">AffineCurve</span>, <span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span>,
+<span class="kw">use </span>ark_ec::{
+    twisted_edwards_extended::GroupAffine, AffineCurve, ProjectiveCurve, TEModelParameters,
 };
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{
-    <span class="ident">errors::CircuitError</span>,
-    <span class="ident">gadgets::ecc</span>::{<span class="ident">Point</span>, <span class="ident">PointVariable</span>},
-    <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{vec, vec::Vec};
+<span class="kw">use </span>jf_relation::{
+    errors::CircuitError,
+    gadgets::ecc::{Point, PointVariable},
+    Circuit, PlonkCircuit, Variable,
 };
-<span class="kw">use</span> <span class="ident">jf_utils::compute_len_to_next_multiple</span>;
+<span class="kw">use </span>jf_utils::compute_len_to_next_multiple;
 
-<span class="doccomment">/// Variables holding an encryption key.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncKeyVars</span>(<span class="kw">pub</span> <span class="ident">PointVariable</span>);
+<span class="doccomment">/// Variables holding an encryption key.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>EncKeyVars(<span class="kw">pub </span>PointVariable);
 
-<span class="doccomment">/// Variables holding a ciphertext.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ElGamalHybridCtxtVars</span> {
-    <span class="doccomment">/// r*G component</span>
-    <span class="kw">pub</span> <span class="ident">ephemeral</span>: <span class="ident">PointVariable</span>,
-    <span class="doccomment">/// Ciphertext under hybrid encryption.</span>
-    <span class="kw">pub</span> <span class="ident">symm_ctxts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Variables holding a ciphertext.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ElGamalHybridCtxtVars {
+    <span class="doccomment">/// r*G component
+    </span><span class="kw">pub </span>ephemeral: PointVariable,
+    <span class="doccomment">/// Ciphertext under hybrid encryption.
+    </span><span class="kw">pub </span>symm_ctxts: Vec&lt;Variable&gt;,
 }
 
-<span class="kw">trait</span> <span class="ident">ElGamalEncryptionHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="kw">trait </span>ElGamalEncryptionHelperGadget&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
 {
-    <span class="doccomment">/// Rescue counter mode encryption with no padding</span>
-    <span class="doccomment">/// The key should be a fresh one in each call, and the nonce is initialized</span>
-    <span class="doccomment">/// to zero.</span>
-    <span class="doccomment">/// * `key_var` - variables corresponding to the symmetric key</span>
-    <span class="doccomment">/// * `data_vars` - the variables for the data to be encrypted. The format</span>
-    <span class="doccomment">///   of this input is a list of rescue states.</span>
-    <span class="doccomment">/// * `returns` - the variables that map to the ciphertext contents</span>
-    <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
-        <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueStateVar</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueStateVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Rescue counter mode encryption with no padding
+    /// The key should be a fresh one in each call, and the nonce is initialized
+    /// to zero.
+    /// * `key_var` - variables corresponding to the symmetric key
+    /// * `data_vars` - the variables for the data to be encrypted. The format
+    ///   of this input is a list of rescue states.
+    /// * `returns` - the variables that map to the ciphertext contents
+    </span><span class="kw">fn </span>apply_counter_mode_stream_no_padding(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key_var: <span class="kw-2">&amp;</span>RescueStateVar,
+        data_vars: <span class="kw-2">&amp;</span>[RescueStateVar],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RescueStateVar&gt;, CircuitError&gt;;
 
-    <span class="doccomment">/// Rescue counter mode encryption with padding</span>
-    <span class="doccomment">/// The function pads the input data and then calls</span>
-    <span class="doccomment">/// apply_counter_mode_stream_no_padding The key should be a fresh one</span>
-    <span class="doccomment">/// in each call, and the nonce is initialized to zero.</span>
-    <span class="doccomment">/// * `key_var` - variables corresponding to the symmetric key</span>
-    <span class="doccomment">/// * `data_vars` - the variables for the data to be encrypted. The format</span>
-    <span class="doccomment">///   of this input is a list of variable of arbitrary length</span>
-    <span class="doccomment">/// * `returns` - the variables that map to the ciphertext contents. The</span>
-    <span class="doccomment">///   output size is the same as the length of data_vars</span>
-    <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
-        <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Rescue counter mode encryption with padding
+    /// The function pads the input data and then calls
+    /// apply_counter_mode_stream_no_padding The key should be a fresh one
+    /// in each call, and the nonce is initialized to zero.
+    /// * `key_var` - variables corresponding to the symmetric key
+    /// * `data_vars` - the variables for the data to be encrypted. The format
+    ///   of this input is a list of variable of arbitrary length
+    /// * `returns` - the variables that map to the ciphertext contents. The
+    ///   output size is the same as the length of data_vars
+    </span><span class="kw">fn </span>apply_counter_mode_stream(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key_var: <span class="kw-2">&amp;</span>RescueStateVar,
+        data_vars: <span class="kw-2">&amp;</span>[Variable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Variable&gt;, CircuitError&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">ElGamalEncryptionHelperGadget</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
+<span class="kw">impl</span>&lt;F&gt; ElGamalEncryptionHelperGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
 {
-    <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
-        <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">RescueStateVar</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RescueStateVar</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
+    <span class="kw">fn </span>apply_counter_mode_stream_no_padding(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key_var: <span class="kw-2">&amp;</span>RescueStateVar,
+        data_vars: <span class="kw-2">&amp;</span>[RescueStateVar],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RescueStateVar&gt;, CircuitError&gt; {
+        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_vars</span> <span class="op">=</span> <span class="ident">data_vars</span>.<span class="ident">to_vec</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>output_vars = data_vars.to_vec();
 
-        <span class="comment">// Schedule the keys</span>
-        <span class="kw">let</span> <span class="ident">prp_instance</span> <span class="op">=</span> <span class="ident">PRP::default</span>();
-        <span class="kw">let</span> <span class="ident">mds_states</span> <span class="op">=</span> <span class="ident">prp_instance</span>.<span class="ident">mds_matrix_ref</span>();
-        <span class="kw">let</span> <span class="ident">round_keys_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">key_schedule</span>(<span class="ident">mds_states</span>, <span class="ident">key_var</span>, <span class="kw-2">&amp;</span><span class="ident">prp_instance</span>)<span class="question-mark">?</span>;
+        <span class="comment">// Schedule the keys
+        </span><span class="kw">let </span>prp_instance = PRP::default();
+        <span class="kw">let </span>mds_states = prp_instance.mds_matrix_ref();
+        <span class="kw">let </span>round_keys_var = <span class="self">self</span>.key_schedule(mds_states, key_var, <span class="kw-2">&amp;</span>prp_instance)<span class="question-mark">?</span>;
 
-        <span class="comment">// Compute stream</span>
+        <span class="comment">// Compute stream
 
-        <span class="comment">// nonce == 0</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">counter_var</span> <span class="op">=</span> <span class="ident">zero_var</span>;
+        // nonce == 0
+        </span><span class="kw">let </span><span class="kw-2">mut </span>counter_var = zero_var;
 
-        <span class="ident">output_vars</span>
-            .<span class="ident">iter_mut</span>()
-            .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">output_chunk_vars</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">stream_chunk_vars</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">prp_with_round_keys</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">RescueStateVar::from</span>([<span class="ident">counter_var</span>, <span class="ident">zero_var</span>, <span class="ident">zero_var</span>, <span class="ident">zero_var</span>]),
-                    <span class="ident">mds_states</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">round_keys_var</span>,
+        output_vars
+            .iter_mut()
+            .try_for_each(|output_chunk_vars| -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+                <span class="kw">let </span>stream_chunk_vars = <span class="self">self</span>.prp_with_round_keys(
+                    <span class="kw-2">&amp;</span>RescueStateVar::from([counter_var, zero_var, zero_var, zero_var]),
+                    mds_states,
+                    <span class="kw-2">&amp;</span>round_keys_var,
                 )<span class="question-mark">?</span>;
 
-                <span class="comment">// Increment the counter</span>
-                <span class="ident">counter_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_constant</span>(<span class="ident">counter_var</span>, <span class="kw-2">&amp;</span><span class="ident">F::one</span>())<span class="question-mark">?</span>;
+                <span class="comment">// Increment the counter
+                </span>counter_var = <span class="self">self</span>.add_constant(counter_var, <span class="kw-2">&amp;</span>F::one())<span class="question-mark">?</span>;
 
-                <span class="kw">for</span> (<span class="ident">output_chunk_var</span>, <span class="ident">stream_chunk_var</span>) <span class="kw">in</span> <span class="ident">output_chunk_vars</span>
-                    .<span class="ident">array_mut</span>()
-                    .<span class="ident">iter_mut</span>()
-                    .<span class="ident">zip</span>(<span class="ident">stream_chunk_vars</span>.<span class="ident">array</span>().<span class="ident">iter</span>())
+                <span class="kw">for </span>(output_chunk_var, stream_chunk_var) <span class="kw">in </span>output_chunk_vars
+                    .array_mut()
+                    .iter_mut()
+                    .zip(stream_chunk_vars.array().iter())
                 {
-                    <span class="kw-2">*</span><span class="ident">output_chunk_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add</span>(<span class="kw-2">*</span><span class="ident">output_chunk_var</span>, <span class="kw-2">*</span><span class="ident">stream_chunk_var</span>)<span class="question-mark">?</span>;
+                    <span class="kw-2">*</span>output_chunk_var = <span class="self">self</span>.add(<span class="kw-2">*</span>output_chunk_var, <span class="kw-2">*</span>stream_chunk_var)<span class="question-mark">?</span>;
                 }
                 <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">output_vars</span>)
+        <span class="prelude-val">Ok</span>(output_vars)
     }
 
-    <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">key_var</span>: <span class="kw-2">&amp;</span><span class="ident">RescueStateVar</span>,
-        <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
+    <span class="kw">fn </span>apply_counter_mode_stream(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key_var: <span class="kw-2">&amp;</span>RescueStateVar,
+        data_vars: <span class="kw-2">&amp;</span>[Variable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Variable&gt;, CircuitError&gt; {
+        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
 
-        <span class="comment">// Compute the length of padded input</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data_vars_vec</span> <span class="op">=</span> <span class="ident">data_vars</span>.<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">data_vars_vec</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">new_len</span> <span class="op">=</span> <span class="ident">compute_len_to_next_multiple</span>(<span class="ident">len</span>, <span class="ident">STATE_SIZE</span>);
+        <span class="comment">// Compute the length of padded input
+        </span><span class="kw">let </span><span class="kw-2">mut </span>data_vars_vec = data_vars.to_vec();
+        <span class="kw">let </span>len = data_vars_vec.len();
+        <span class="kw">let </span>new_len = compute_len_to_next_multiple(len, STATE_SIZE);
 
-        <span class="comment">// Pad the input</span>
-        <span class="kw">while</span> <span class="ident">data_vars_vec</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">new_len</span> {
-            <span class="ident">data_vars_vec</span>.<span class="ident">push</span>(<span class="ident">zero_var</span>);
+        <span class="comment">// Pad the input
+        </span><span class="kw">while </span>data_vars_vec.len() &lt; new_len {
+            data_vars_vec.push(zero_var);
         }
 
-        <span class="comment">// Group data_vars in chunks of state size</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data_vars_states</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">data_vars_vec</span>.<span class="ident">chunks</span>(<span class="ident">STATE_SIZE</span>) {
-            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RescueStateVar::from</span>([<span class="ident">block</span>[<span class="number">0</span>], <span class="ident">block</span>[<span class="number">1</span>], <span class="ident">block</span>[<span class="number">2</span>], <span class="ident">block</span>[<span class="number">3</span>]]);
-            <span class="ident">data_vars_states</span>.<span class="ident">push</span>(<span class="ident">state</span>);
+        <span class="comment">// Group data_vars in chunks of state size
+        </span><span class="kw">let </span><span class="kw-2">mut </span>data_vars_states = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>block <span class="kw">in </span>data_vars_vec.chunks(STATE_SIZE) {
+            <span class="kw">let </span>state = RescueStateVar::from([block[<span class="number">0</span>], block[<span class="number">1</span>], block[<span class="number">2</span>], block[<span class="number">3</span>]]);
+            data_vars_states.push(state);
         }
-        <span class="kw">let</span> <span class="ident">encrypted_output_var_states</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">apply_counter_mode_stream_no_padding</span>(<span class="ident">key_var</span>, <span class="ident">data_vars_states</span>.<span class="ident">as_slice</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>encrypted_output_var_states =
+            <span class="self">self</span>.apply_counter_mode_stream_no_padding(key_var, data_vars_states.as_slice())<span class="question-mark">?</span>;
 
-        <span class="comment">// Rebuild the output getting rid of the extra variables</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_vars</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> <span class="ident">state</span> <span class="kw">in</span> <span class="ident">encrypted_output_var_states</span> {
-            <span class="kw">let</span> <span class="ident">state_array</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">array</span>();
-            <span class="kw">for</span> <span class="ident">variable</span> <span class="kw">in</span> <span class="ident">state_array</span>.<span class="ident">iter</span>().<span class="ident">take</span>(<span class="ident">STATE_SIZE</span>) {
-                <span class="kw">if</span> <span class="ident">num_vars</span> <span class="op">==</span> <span class="ident">len</span> {
-                    <span class="comment">// We are not interested in the padding variables</span>
-                    <span class="kw">break</span>;
+        <span class="comment">// Rebuild the output getting rid of the extra variables
+        </span><span class="kw">let </span><span class="kw-2">mut </span>output_vars: Vec&lt;Variable&gt; = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>num_vars = <span class="number">0</span>;
+        <span class="kw">for </span>state <span class="kw">in </span>encrypted_output_var_states {
+            <span class="kw">let </span>state_array = state.array();
+            <span class="kw">for </span>variable <span class="kw">in </span>state_array.iter().take(STATE_SIZE) {
+                <span class="kw">if </span>num_vars == len {
+                    <span class="comment">// We are not interested in the padding variables
+                    </span><span class="kw">break</span>;
                 }
-                <span class="ident">output_vars</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">variable</span>);
-                <span class="ident">num_vars</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                output_vars.push(<span class="kw-2">*</span>variable);
+                num_vars += <span class="number">1</span>;
             }
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">output_vars</span>)
+        <span class="prelude-val">Ok</span>(output_vars)
     }
 }
 
-<span class="doccomment">/// Circuit implementation of the ElGamal scheme.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ElGamalEncryptionGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Circuit implementation of the ElGamal scheme.
+</span><span class="kw">pub trait </span>ElGamalEncryptionGadget&lt;F, P&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: TEModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="doccomment">/// Compute the gadget that check a correct Elgamal encryption</span>
-    <span class="doccomment">/// * `pk_vars` - variables corresponding to the encryption public key</span>
-    <span class="doccomment">/// * `data_vars` - variables corresponding to the plaintext. Can be of</span>
-    <span class="doccomment">///   arbitrary length.</span>
-    <span class="doccomment">/// * `r` - variable corresponding to the encryption randomness</span>
-    <span class="doccomment">/// * `returns` - variables corresponding to the ciphertext</span>
-    <span class="kw">fn</span> <span class="ident">elgamal_encrypt</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">pk_vars</span>: <span class="kw-2">&amp;</span><span class="ident">EncKeyVars</span>,
-        <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">r</span>: <span class="ident">Variable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Compute the gadget that check a correct Elgamal encryption
+    /// * `pk_vars` - variables corresponding to the encryption public key
+    /// * `data_vars` - variables corresponding to the plaintext. Can be of
+    ///   arbitrary length.
+    /// * `r` - variable corresponding to the encryption randomness
+    /// * `returns` - variables corresponding to the ciphertext
+    </span><span class="kw">fn </span>elgamal_encrypt(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pk_vars: <span class="kw-2">&amp;</span>EncKeyVars,
+        data_vars: <span class="kw-2">&amp;</span>[Variable],
+        r: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ElGamalHybridCtxtVars, CircuitError&gt;;
 
-    <span class="doccomment">/// Helper function to create encryption key variables struct</span>
-    <span class="doccomment">/// * `pk` - encryption public key</span>
-    <span class="doccomment">/// * `returns` - struct containing the variables corresponding to `p`</span>
-    <span class="kw">fn</span> <span class="ident">create_enc_key_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncKeyVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Helper function to create encryption key variables struct
+    /// * `pk` - encryption public key
+    /// * `returns` - struct containing the variables corresponding to `p`
+    </span><span class="kw">fn </span>create_enc_key_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pk: <span class="kw-2">&amp;</span>EncKey&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;EncKeyVars, CircuitError&gt;;
 
-    <span class="doccomment">/// Helper function to create a ciphertext variable</span>
-    <span class="kw">fn</span> <span class="ident">create_ciphertext_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ctxts</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Helper function to create a ciphertext variable
+    </span><span class="kw">fn </span>create_ciphertext_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctxts: <span class="kw-2">&amp;</span>Ciphertext&lt;P&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ElGamalHybridCtxtVars, CircuitError&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">ElGamalEncryptionGadget</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; ElGamalEncryptionGadget&lt;F, P&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: TEModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">elgamal_encrypt</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">pk_var</span>: <span class="kw-2">&amp;</span><span class="ident">EncKeyVars</span>,
-        <span class="ident">data_vars</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>],
-        <span class="ident">r</span>: <span class="ident">Variable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">shared_pk_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">variable_base_scalar_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">r</span>, <span class="kw-2">&amp;</span><span class="ident">pk_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">zero_var</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">zero</span>();
-        <span class="kw">let</span> <span class="ident">key_perm_input_var</span> <span class="op">=</span> <span class="ident">RescueStateVar::from</span>([
-            <span class="ident">shared_pk_var</span>.<span class="ident">get_x</span>(),
-            <span class="ident">shared_pk_var</span>.<span class="ident">get_y</span>(),
-            <span class="ident">zero_var</span>,
-            <span class="ident">zero_var</span>,
+    <span class="kw">fn </span>elgamal_encrypt(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pk_var: <span class="kw-2">&amp;</span>EncKeyVars,
+        data_vars: <span class="kw-2">&amp;</span>[Variable],
+        r: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ElGamalHybridCtxtVars, CircuitError&gt; {
+        <span class="kw">let </span>shared_pk_var = <span class="self">self</span>.variable_base_scalar_mul::&lt;P&gt;(r, <span class="kw-2">&amp;</span>pk_var.<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
+        <span class="kw">let </span>key_perm_input_var = RescueStateVar::from([
+            shared_pk_var.get_x(),
+            shared_pk_var.get_y(),
+            zero_var,
+            zero_var,
         ]);
-        <span class="kw">let</span> <span class="ident">symm_key_vars</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rescue_permutation</span>(<span class="ident">key_perm_input_var</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>symm_key_vars = <span class="self">self</span>.rescue_permutation(key_perm_input_var)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">symm_ctxts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">apply_counter_mode_stream</span>(<span class="kw-2">&amp;</span><span class="ident">symm_key_vars</span>, <span class="ident">data_vars</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>();
-        <span class="kw">let</span> <span class="ident">ephemeral</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fixed_base_scalar_mul</span>(<span class="ident">r</span>, <span class="kw-2">&amp;</span><span class="ident">base</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ElGamalHybridCtxtVars</span> {
-            <span class="ident">ephemeral</span>,
-            <span class="ident">symm_ctxts</span>,
+        <span class="kw">let </span>symm_ctxts = <span class="self">self</span>.apply_counter_mode_stream(<span class="kw-2">&amp;</span>symm_key_vars, data_vars)<span class="question-mark">?</span>;
+        <span class="kw">let </span>base = GroupAffine::&lt;P&gt;::prime_subgroup_generator();
+        <span class="kw">let </span>ephemeral = <span class="self">self</span>.fixed_base_scalar_mul(r, <span class="kw-2">&amp;</span>base)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(ElGamalHybridCtxtVars {
+            ephemeral,
+            symm_ctxts,
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">create_enc_key_variable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncKeyVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">Point::from</span>(<span class="ident">pk</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>());
-        <span class="kw">let</span> <span class="ident">point_variable</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">point</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">EncKeyVars</span>(<span class="ident">point_variable</span>))
+    <span class="kw">fn </span>create_enc_key_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pk: <span class="kw-2">&amp;</span>EncKey&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;EncKeyVars, CircuitError&gt; {
+        <span class="kw">let </span>point = Point::from(pk.key.into_affine());
+        <span class="kw">let </span>point_variable = <span class="self">self</span>.create_point_variable(point)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(EncKeyVars(point_variable))
     }
 
-    <span class="kw">fn</span> <span class="ident">create_ciphertext_variable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ctxts</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ElGamalHybridCtxtVars</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ephemeral</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">ctxts</span>.<span class="ident">ephemeral</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>()))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">symm_ctxts</span> <span class="op">=</span> <span class="ident">ctxts</span>
-            .<span class="ident">data</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">msg</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">create_variable</span>(<span class="ident">msg</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ElGamalHybridCtxtVars</span> {
-            <span class="ident">ephemeral</span>,
-            <span class="ident">symm_ctxts</span>,
+    <span class="kw">fn </span>create_ciphertext_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctxts: <span class="kw-2">&amp;</span>Ciphertext&lt;P&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ElGamalHybridCtxtVars, CircuitError&gt; {
+        <span class="kw">let </span>ephemeral =
+            <span class="self">self</span>.create_point_variable(Point::from(ctxts.ephemeral.key.into_affine()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>symm_ctxts = ctxts
+            .data
+            .iter()
+            .map(|<span class="kw-2">&amp;</span>msg| <span class="self">self</span>.create_variable(msg))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(ElGamalHybridCtxtVars {
+            ephemeral,
+            symm_ctxts,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">circuit</span>::{
-            <span class="ident">elgamal</span>::{<span class="ident">ElGamalEncryptionGadget</span>, <span class="ident">ElGamalEncryptionHelperGadget</span>},
-            <span class="ident">rescue::RescueGadget</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use crate</span>::{
+        circuit::{
+            elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
+            rescue::RescueGadget,
         },
-        <span class="ident">elgamal</span>::{<span class="ident">apply_counter_mode_stream</span>, <span class="ident">Direction::Encrypt</span>, <span class="ident">KeyPair</span>},
-        <span class="ident">rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">RescueVector</span>, <span class="ident">STATE_SIZE</span>},
+        elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
+        rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };
-    <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd377</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd381</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd381b</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd381b</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd254</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>};
-    <span class="kw">use</span> <span class="ident">ark_ff::UniformRand</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
-    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">gadgets::ecc::Point</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
-    <span class="kw">use</span> <span class="ident">jf_utils::fr_to_fq</span>;
+    <span class="kw">use </span>ark_ec::{ProjectiveCurve, TEModelParameters};
+    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsParameters <span class="kw">as </span>ParamEd377, Fq <span class="kw">as </span>FqEd377};
+    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsParameters <span class="kw">as </span>ParamEd381, Fq <span class="kw">as </span>FqEd381};
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters <span class="kw">as </span>ParamEd381b, Fq <span class="kw">as </span>FqEd381b};
+    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>ParamEd254, Fq <span class="kw">as </span>FqEd254};
+    <span class="kw">use </span>ark_ff::UniformRand;
+    <span class="kw">use </span>ark_std::{vec, vec::Vec};
+    <span class="kw">use </span>jf_relation::{gadgets::ecc::Point, Circuit, PlonkCircuit, Variable};
+    <span class="kw">use </span>jf_utils::fr_to_fq;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding</span>() {
-        <span class="ident">apply_counter_mode_stream_no_padding_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span>, <span class="ident">ParamEd254</span><span class="op">&gt;</span>();
-        <span class="ident">apply_counter_mode_stream_no_padding_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">ParamEd377</span><span class="op">&gt;</span>();
-        <span class="ident">apply_counter_mode_stream_no_padding_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">ParamEd381</span><span class="op">&gt;</span>();
-        <span class="ident">apply_counter_mode_stream_no_padding_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span>, <span class="ident">ParamEd381b</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>apply_counter_mode_stream_no_padding() {
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd254, ParamEd254&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd377, ParamEd377&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd381, ParamEd381&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd381b, ParamEd381b&gt;();
     }
 
-    <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream_no_padding_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>apply_counter_mode_stream_no_padding_helper&lt;F, P&gt;()
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: TEModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
-            <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+        <span class="kw">let </span>key = RescueVector::from(<span class="kw-2">&amp;</span>[
+            F::rand(<span class="kw-2">&amp;mut </span>prng),
+            F::rand(<span class="kw-2">&amp;mut </span>prng),
+            F::rand(<span class="kw-2">&amp;mut </span>prng),
+            F::rand(<span class="kw-2">&amp;mut </span>prng),
         ]);
 
-        <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_rescue_state_variable</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data_vars</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="kw">let </span>key_var = circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>key).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>data_vars = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[];
 
-        <span class="kw">let</span> <span class="ident">n_blocks</span> <span class="op">=</span> <span class="number">10</span>;
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n_blocks</span> <span class="op">*</span> <span class="ident">STATE_SIZE</span> {
-            <span class="ident">data</span>.<span class="ident">push</span>(<span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>));
+        <span class="kw">let </span>n_blocks = <span class="number">10</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..n_blocks * STATE_SIZE {
+            data.push(F::from(i <span class="kw">as </span>u32));
         }
 
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">data</span>.<span class="ident">chunks</span>(<span class="ident">STATE_SIZE</span>) {
-            <span class="kw">let</span> <span class="ident">block_vector</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="ident">block</span>);
-            <span class="ident">data_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">create_rescue_state_variable</span>(<span class="kw-2">&amp;</span><span class="ident">block_vector</span>).<span class="ident">unwrap</span>());
+        <span class="kw">for </span>block <span class="kw">in </span>data.chunks(STATE_SIZE) {
+            <span class="kw">let </span>block_vector = RescueVector::from(block);
+            data_vars.push(circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>block_vector).unwrap());
         }
 
-        <span class="kw">let</span> <span class="ident">ctxts_vars</span> <span class="op">=</span> <span class="ident">circuit</span>
-            .<span class="ident">apply_counter_mode_stream_no_padding</span>(<span class="kw-2">&amp;</span><span class="ident">key_var</span>, <span class="ident">data_vars</span>.<span class="ident">as_slice</span>())
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>ctxts_vars = circuit
+            .apply_counter_mode_stream_no_padding(<span class="kw-2">&amp;</span>key_var, data_vars.as_slice())
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">encrypted_data</span> <span class="op">=</span> <span class="ident">apply_counter_mode_stream</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="ident">F::zero</span>(), <span class="ident">Encrypt</span>);
+        <span class="kw">let </span>encrypted_data = apply_counter_mode_stream::&lt;F, P&gt;(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>data, <span class="kw-2">&amp;</span>F::zero(), Encrypt);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="macro">vec!</span>[];
 
-        <span class="comment">// Transfer updated data into blocks</span>
-        <span class="kw">for</span> <span class="ident">block</span> <span class="kw">in</span> <span class="ident">encrypted_data</span>.<span class="ident">chunks</span>(<span class="ident">STATE_SIZE</span>) {
-            <span class="kw">let</span> <span class="ident">block_vector</span> <span class="op">=</span> <span class="ident">RescueVector::from</span>(<span class="ident">block</span>);
-            <span class="ident">blocks</span>.<span class="ident">push</span>(<span class="ident">block_vector</span>);
+        <span class="comment">// Transfer updated data into blocks
+        </span><span class="kw">for </span>block <span class="kw">in </span>encrypted_data.chunks(STATE_SIZE) {
+            <span class="kw">let </span>block_vector = RescueVector::from(block);
+            blocks.push(block_vector);
         }
 
-        <span class="comment">// Check ciphertext consistency</span>
-        <span class="kw">for</span> (<span class="ident">ctxt</span>, <span class="ident">ctxt_var</span>) <span class="kw">in</span> <span class="ident">blocks</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">ctxts_vars</span>.<span class="ident">iter</span>()) {
-            <span class="kw">for</span> (<span class="ident">val</span>, <span class="ident">var</span>) <span class="kw">in</span> <span class="ident">ctxt</span>.<span class="ident">elems</span>().<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">ctxt_var</span>.<span class="ident">array</span>().<span class="ident">iter</span>()) {
-                <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">val</span>, <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="kw-2">*</span><span class="ident">var</span>).<span class="ident">unwrap</span>());
+        <span class="comment">// Check ciphertext consistency
+        </span><span class="kw">for </span>(ctxt, ctxt_var) <span class="kw">in </span>blocks.iter().zip(ctxts_vars.iter()) {
+            <span class="kw">for </span>(val, var) <span class="kw">in </span>ctxt.elems().iter().zip(ctxt_var.array().iter()) {
+                <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>val, circuit.witness(<span class="kw-2">*</span>var).unwrap());
             }
         }
 
-        <span class="comment">// Check constraints</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// Check constraints
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">ctxts_vars</span>[<span class="number">0</span>].<span class="ident">array</span>()[<span class="number">0</span>]) <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">1_u32</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="kw-2">*</span>circuit.witness_mut(ctxts_vars[<span class="number">0</span>].array()[<span class="number">0</span>]) = F::from(<span class="number">1_u32</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_elgamal_hybrid_encrypt_circuit</span>() {
-        <span class="ident">test_elgamal_hybrid_encrypt_circuit_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span>, <span class="ident">ParamEd254</span><span class="op">&gt;</span>();
-        <span class="ident">test_elgamal_hybrid_encrypt_circuit_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">ParamEd377</span><span class="op">&gt;</span>();
-        <span class="ident">test_elgamal_hybrid_encrypt_circuit_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">ParamEd381</span><span class="op">&gt;</span>();
-        <span class="ident">test_elgamal_hybrid_encrypt_circuit_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span>, <span class="ident">ParamEd381b</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_elgamal_hybrid_encrypt_circuit() {
+        test_elgamal_hybrid_encrypt_circuit_helper::&lt;FqEd254, ParamEd254&gt;();
+        test_elgamal_hybrid_encrypt_circuit_helper::&lt;FqEd377, ParamEd377&gt;();
+        test_elgamal_hybrid_encrypt_circuit_helper::&lt;FqEd381, ParamEd381&gt;();
+        test_elgamal_hybrid_encrypt_circuit_helper::&lt;FqEd381b, ParamEd381b&gt;();
     }
-    <span class="kw">fn</span> <span class="ident">test_elgamal_hybrid_encrypt_circuit_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_elgamal_hybrid_encrypt_circuit_helper&lt;F, P&gt;()
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: TEModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new_turbo_plonk</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
 
-        <span class="comment">// Prepare data and keys</span>
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">pub_key</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">enc_key_ref</span>();
-        <span class="kw">let</span> <span class="ident">pk_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_enc_key_variable</span>(<span class="ident">pub_key</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// Prepare data and keys
+        </span><span class="kw">let </span>keypair = KeyPair::&lt;P&gt;::generate(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>pub_key = keypair.enc_key_ref();
+        <span class="kw">let </span>pk_var = circuit.create_enc_key_variable(pub_key).unwrap();
 
-        <span class="comment">// the input size is a non multiple of STATE_SIZE</span>
-        <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">5</span> <span class="op">*</span> <span class="ident">STATE_SIZE</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">input_len</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">unwrap</span>())
-            .<span class="ident">collect</span>();
+        <span class="comment">// the input size is a non multiple of STATE_SIZE
+        </span><span class="kw">let </span>data: Vec&lt;F&gt; = (<span class="number">0</span>..<span class="number">5 </span>* STATE_SIZE + <span class="number">1</span>).map(|i| F::from(i <span class="kw">as </span>u32)).collect();
+        <span class="kw">let </span>input_len = data.len();
+        <span class="kw">let </span>data_vars: Vec&lt;Variable&gt; = data
+            .iter()
+            .map(|x| circuit.create_variable(<span class="kw-2">*</span>x).unwrap())
+            .collect();
 
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-        <span class="kw">let</span> <span class="ident">enc_rand_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>)).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>r = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>prng);
+        <span class="kw">let </span>enc_rand_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>r)).unwrap();
 
-        <span class="comment">// Encrypt</span>
-        <span class="kw">let</span> <span class="ident">pub_key</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">enc_key</span>();
-        <span class="kw">let</span> <span class="ident">ctxts</span> <span class="op">=</span> <span class="ident">pub_key</span>.<span class="ident">deterministic_encrypt</span>(<span class="ident">r</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="comment">// Encrypt
+        </span><span class="kw">let </span>pub_key = keypair.enc_key();
+        <span class="kw">let </span>ctxts = pub_key.deterministic_encrypt(r, <span class="kw-2">&amp;</span>data);
 
-        <span class="kw">let</span> <span class="ident">ctxts_vars</span> <span class="op">=</span> <span class="ident">ElGamalEncryptionGadget</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::elgamal_encrypt</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
-            <span class="kw-2">&amp;</span><span class="ident">pk_var</span>,
-            <span class="ident">data_vars</span>.<span class="ident">as_slice</span>(),
-            <span class="ident">enc_rand_var</span>,
+        <span class="kw">let </span>ctxts_vars = ElGamalEncryptionGadget::&lt;<span class="kw">_</span>, P&gt;::elgamal_encrypt(
+            <span class="kw-2">&amp;mut </span>circuit,
+            <span class="kw-2">&amp;</span>pk_var,
+            data_vars.as_slice(),
+            enc_rand_var,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
-        <span class="comment">// The plaintext and ciphertext must have the same length</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">input_len</span>, <span class="ident">ctxts_vars</span>.<span class="ident">symm_ctxts</span>.<span class="ident">len</span>());
+        <span class="comment">// The plaintext and ciphertext must have the same length
+        </span><span class="macro">assert_eq!</span>(input_len, ctxts_vars.symm_ctxts.len());
 
-        <span class="comment">// Check ciphertexts</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">Point::from</span>(<span class="ident">ctxts</span>.<span class="ident">ephemeral</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>()),
-            <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">ctxts_vars</span>.<span class="ident">ephemeral</span>).<span class="ident">unwrap</span>()
+        <span class="comment">// Check ciphertexts
+        </span><span class="macro">assert_eq!</span>(
+            Point::from(ctxts.ephemeral.key.into_affine()),
+            circuit.point_witness(<span class="kw-2">&amp;</span>ctxts_vars.ephemeral).unwrap()
         );
 
-        <span class="kw">for</span> (<span class="ident">ctxt</span>, <span class="ident">ctxt_var</span>) <span class="kw">in</span> <span class="ident">ctxts</span>.<span class="ident">data</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">ctxts_vars</span>.<span class="ident">symm_ctxts</span>.<span class="ident">clone</span>()) {
-            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">ctxt</span>, <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">ctxt_var</span>).<span class="ident">unwrap</span>());
+        <span class="kw">for </span>(ctxt, ctxt_var) <span class="kw">in </span>ctxts.data.iter().zip(ctxts_vars.symm_ctxts.clone()) {
+            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>ctxt, circuit.witness(ctxt_var).unwrap());
         }
 
-        <span class="comment">// Check circuit satisfiability</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// Check circuit satisfiability
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// Alter public key</span>
-        <span class="kw">let</span> <span class="ident">old_pk_var_0</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">pk_var</span>.<span class="number">0</span>.<span class="ident">get_x</span>()).<span class="ident">unwrap</span>();
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">pk_var</span>.<span class="number">0</span>.<span class="ident">get_x</span>()) <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">0_u32</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">pk_var</span>.<span class="number">0</span>.<span class="ident">get_x</span>()) <span class="op">=</span> <span class="ident">old_pk_var_0</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// Alter public key
+        </span><span class="kw">let </span>old_pk_var_0 = circuit.witness(pk_var.<span class="number">0</span>.get_x()).unwrap();
+        <span class="kw-2">*</span>circuit.witness_mut(pk_var.<span class="number">0</span>.get_x()) = F::from(<span class="number">0_u32</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="kw-2">*</span>circuit.witness_mut(pk_var.<span class="number">0</span>.get_x()) = old_pk_var_0;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// Alter encryption randomness</span>
-        <span class="kw">let</span> <span class="ident">old_ephemeral_point_x</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">ctxts_vars</span>.<span class="ident">ephemeral</span>.<span class="ident">get_x</span>()).<span class="ident">unwrap</span>();
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">ctxts_vars</span>.<span class="ident">ephemeral</span>.<span class="ident">get_x</span>()) <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">0_u32</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">ctxts_vars</span>.<span class="ident">ephemeral</span>.<span class="ident">get_x</span>()) <span class="op">=</span> <span class="ident">old_ephemeral_point_x</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// Alter encryption randomness
+        </span><span class="kw">let </span>old_ephemeral_point_x = circuit.witness(ctxts_vars.ephemeral.get_x()).unwrap();
+        <span class="kw-2">*</span>circuit.witness_mut(ctxts_vars.ephemeral.get_x()) = F::from(<span class="number">0_u32</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="kw-2">*</span>circuit.witness_mut(ctxts_vars.ephemeral.get_x()) = old_ephemeral_point_x;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// Alter ciphertext</span>
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">ctxts_vars</span>.<span class="ident">symm_ctxts</span>[<span class="number">0</span>]) <span class="op">=</span> <span class="ident">F::from</span>(<span class="number">0_u32</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Alter ciphertext
+        </span><span class="kw-2">*</span>circuit.witness_mut(ctxts_vars.symm_ctxts[<span class="number">0</span>]) = F::from(<span class="number">0_u32</span>);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="attribute">#[test]
 
-    <span class="kw">fn</span> <span class="ident">test_create_ciphertext_variable</span>() {
-        <span class="ident">test_create_ciphertext_variable_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span>, <span class="ident">ParamEd254</span><span class="op">&gt;</span>();
-        <span class="ident">test_create_ciphertext_variable_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">ParamEd377</span><span class="op">&gt;</span>();
-        <span class="ident">test_create_ciphertext_variable_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span>, <span class="ident">ParamEd381</span><span class="op">&gt;</span>();
-        <span class="ident">test_create_ciphertext_variable_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381b</span>, <span class="ident">ParamEd381b</span><span class="op">&gt;</span>();
+    </span><span class="kw">fn </span>test_create_ciphertext_variable() {
+        test_create_ciphertext_variable_helper::&lt;FqEd254, ParamEd254&gt;();
+        test_create_ciphertext_variable_helper::&lt;FqEd377, ParamEd377&gt;();
+        test_create_ciphertext_variable_helper::&lt;FqEd381, ParamEd381&gt;();
+        test_create_ciphertext_variable_helper::&lt;FqEd381b, ParamEd381b&gt;();
     }
-    <span class="kw">fn</span> <span class="ident">test_create_ciphertext_variable_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>()
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-        <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_create_ciphertext_variable_helper&lt;F, P&gt;()
+    <span class="kw">where
+        </span>F: RescueParameter,
+        P: TEModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="comment">// Prepare ciphertext</span>
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">5</span> <span class="op">*</span> <span class="ident">STATE_SIZE</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">ctxts</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="ident">rng</span>)
-            .<span class="ident">enc_key_ref</span>()
-            .<span class="ident">encrypt</span>(<span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
-        <span class="comment">// Create circuit</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">ctxts_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_ciphertext_variable</span>(<span class="kw-2">&amp;</span><span class="ident">ctxts</span>).<span class="ident">unwrap</span>();
-        <span class="comment">// Check ciphertexts</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">Point::from</span>(<span class="ident">ctxts</span>.<span class="ident">ephemeral</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>()),
-            <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">ctxts_var</span>.<span class="ident">ephemeral</span>).<span class="ident">unwrap</span>()
+        <span class="comment">// Prepare ciphertext
+        </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>ark_std::test_rng();
+        <span class="kw">let </span>data: Vec&lt;F&gt; = (<span class="number">0</span>..<span class="number">5 </span>* STATE_SIZE + <span class="number">1</span>).map(|i| F::from(i <span class="kw">as </span>u32)).collect();
+        <span class="kw">let </span>ctxts = KeyPair::&lt;P&gt;::generate(rng)
+            .enc_key_ref()
+            .encrypt(rng, <span class="kw-2">&amp;</span>data);
+        <span class="comment">// Create circuit
+        </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>ctxts_var = circuit.create_ciphertext_variable(<span class="kw-2">&amp;</span>ctxts).unwrap();
+        <span class="comment">// Check ciphertexts
+        </span><span class="macro">assert_eq!</span>(
+            Point::from(ctxts.ephemeral.key.into_affine()),
+            circuit.point_witness(<span class="kw-2">&amp;</span>ctxts_var.ephemeral).unwrap()
         );
-        <span class="kw">for</span> (<span class="ident">ctxt</span>, <span class="ident">ctxt_var</span>) <span class="kw">in</span> <span class="ident">ctxts</span>.<span class="ident">data</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">ctxts_var</span>.<span class="ident">symm_ctxts</span>) {
-            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">ctxt</span>, <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">ctxt_var</span>).<span class="ident">unwrap</span>());
+        <span class="kw">for </span>(ctxt, ctxt_var) <span class="kw">in </span>ctxts.data.iter().zip(ctxts_var.symm_ctxts) {
+            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>ctxt, circuit.witness(ctxt_var).unwrap());
         }
-        <span class="comment">// The circuit is always satisfied.</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// The circuit is always satisfied.
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

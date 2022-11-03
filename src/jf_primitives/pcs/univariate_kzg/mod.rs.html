@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -414,421 +414,421 @@
 <span id="414">414</span>
 <span id="415">415</span>
 <span id="416">416</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Main module for univariate KZG commitment scheme</span>
+</span><span class="doccomment">//! Main module for univariate KZG commitment scheme
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pcs</span>::{
-    <span class="ident">prelude::Commitment</span>, <span class="ident">PCSError</span>, <span class="ident">PolynomialCommitmentScheme</span>, <span class="ident">StructuredReferenceString</span>,
+</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{
+    prelude::Commitment, PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">msm::VariableBaseMSM</span>, <span class="ident">AffineCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">ProjectiveCurve</span>};
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_poly</span>::{<span class="ident">univariate::DensePolynomial</span>, <span class="ident">Polynomial</span>, <span class="ident">UVPolynomial</span>};
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">Read</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">borrow::Borrow</span>,
-    <span class="ident">end_timer</span>, <span class="ident">format</span>,
-    <span class="ident">marker::PhantomData</span>,
-    <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">start_timer</span>,
-    <span class="ident">string::ToString</span>,
-    <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
-    <span class="ident">One</span>, <span class="ident">UniformRand</span>, <span class="ident">Zero</span>,
+<span class="kw">use </span>ark_ec::{msm::VariableBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_poly::{univariate::DensePolynomial, Polynomial, UVPolynomial};
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+<span class="kw">use </span>ark_std::{
+    borrow::Borrow,
+    end_timer, format,
+    marker::PhantomData,
+    rand::{CryptoRng, RngCore},
+    start_timer,
+    string::ToString,
+    vec,
+    vec::Vec,
+    One, UniformRand, Zero,
 };
-<span class="kw">use</span> <span class="ident">jf_utils::par_utils::parallelizable_slice_iter</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">rayon::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">srs</span>::{<span class="ident">UnivariateProverParam</span>, <span class="ident">UnivariateUniversalParams</span>, <span class="ident">UnivariateVerifierParam</span>};
+<span class="kw">use </span>jf_utils::par_utils::parallelizable_slice_iter;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+</span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">srs</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>srs;
 
-<span class="doccomment">/// KZG Polynomial Commitment Scheme on univariate polynomial.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnivariateKzgPCS</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="ident">phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+<span class="doccomment">/// KZG Polynomial Commitment Scheme on univariate polynomial.
+</span><span class="kw">pub struct </span>UnivariateKzgPCS&lt;E: PairingEngine&gt; {
+    <span class="attribute">#[doc(hidden)]
+    </span>phantom: PhantomData&lt;E&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="doccomment">/// proof of opening</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnivariateKzgProof</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Evaluation of quotients</span>
-    <span class="kw">pub</span> <span class="ident">proof</span>: <span class="ident">E::G1Affine</span>,
+<span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+</span><span class="doccomment">/// proof of opening
+</span><span class="kw">pub struct </span>UnivariateKzgProof&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// Evaluation of quotients
+    </span><span class="kw">pub </span>proof: E::G1Affine,
 }
-<span class="doccomment">/// batch proof</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">UnivariateKzgBatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UnivariateKzgProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// batch proof
+</span><span class="kw">pub type </span>UnivariateKzgBatchProof&lt;E&gt; = Vec&lt;UnivariateKzgProof&lt;E&gt;&gt;;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">PolynomialCommitmentScheme</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UnivariateKzgPCS</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="comment">// Parameters</span>
-    <span class="kw">type</span> <span class="ident">ProverParam</span> <span class="op">=</span> <span class="ident">UnivariateProverParam</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">VerifierParam</span> <span class="op">=</span> <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">SRS</span> <span class="op">=</span> <span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-    <span class="comment">// Polynomial and its associated types</span>
-    <span class="kw">type</span> <span class="ident">Polynomial</span> <span class="op">=</span> <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Point</span> <span class="op">=</span> <span class="ident">E::Fr</span>;
-    <span class="kw">type</span> <span class="ident">Evaluation</span> <span class="op">=</span> <span class="ident">E::Fr</span>;
-    <span class="comment">// Polynomial and its associated types</span>
-    <span class="kw">type</span> <span class="ident">Commitment</span> <span class="op">=</span> <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">BatchCommitment</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Commitment</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Proof</span> <span class="op">=</span> <span class="ident">UnivariateKzgProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">BatchProof</span> <span class="op">=</span> <span class="ident">UnivariateKzgBatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; PolynomialCommitmentScheme&lt;E&gt; <span class="kw">for </span>UnivariateKzgPCS&lt;E&gt; {
+    <span class="comment">// Parameters
+    </span><span class="kw">type </span>ProverParam = UnivariateProverParam&lt;E::G1Affine&gt;;
+    <span class="kw">type </span>VerifierParam = UnivariateVerifierParam&lt;E&gt;;
+    <span class="kw">type </span>SRS = UnivariateUniversalParams&lt;E&gt;;
+    <span class="comment">// Polynomial and its associated types
+    </span><span class="kw">type </span>Polynomial = DensePolynomial&lt;E::Fr&gt;;
+    <span class="kw">type </span>Point = E::Fr;
+    <span class="kw">type </span>Evaluation = E::Fr;
+    <span class="comment">// Polynomial and its associated types
+    </span><span class="kw">type </span>Commitment = Commitment&lt;E&gt;;
+    <span class="kw">type </span>BatchCommitment = Vec&lt;<span class="self">Self</span>::Commitment&gt;;
+    <span class="kw">type </span>Proof = UnivariateKzgProof&lt;E&gt;;
+    <span class="kw">type </span>BatchProof = UnivariateKzgBatchProof&lt;E&gt;;
 
-    <span class="doccomment">/// Build SRS for testing.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// - For univariate polynomials, `supported_size` is the maximum degree.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.</span>
-    <span class="doccomment">/// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.</span>
-    <span class="kw">fn</span> <span class="ident">gen_srs_for_testing</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-        <span class="ident">supported_size</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SRS</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="self">Self</span>::SRS::gen_srs_for_testing</span>(<span class="ident">rng</span>, <span class="ident">supported_size</span>)
+    <span class="doccomment">/// Build SRS for testing.
+    ///
+    /// - For univariate polynomials, `supported_size` is the maximum degree.
+    ///
+    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
+    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
+        rng: <span class="kw-2">&amp;mut </span>R,
+        supported_size: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SRS, PCSError&gt; {
+        <span class="self">Self</span>::SRS::gen_srs_for_testing(rng, supported_size)
     }
 
-    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters.</span>
-    <span class="doccomment">/// Input `max_degree` for univariate.</span>
-    <span class="doccomment">/// `supported_num_vars` must be None or an error is returned.</span>
-    <span class="kw">fn</span> <span class="ident">trim</span>(
-        <span class="ident">srs</span>: <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::SRS</span><span class="op">&gt;</span>,
-        <span class="ident">supported_degree</span>: <span class="ident">usize</span>,
-        <span class="ident">supported_num_vars</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::ProverParam</span>, <span class="ident"><span class="self">Self</span>::VerifierParam</span>), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">supported_num_vars</span>.<span class="ident">is_some</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-                <span class="string">&quot;univariate should not receive a num_var param&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters.
+    /// Input `max_degree` for univariate.
+    /// `supported_num_vars` must be None or an error is returned.
+    </span><span class="kw">fn </span>trim(
+        srs: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::SRS&gt;,
+        supported_degree: usize,
+        supported_num_vars: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
+        <span class="kw">if </span>supported_num_vars.is_some() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+                <span class="string">&quot;univariate should not receive a num_var param&quot;</span>.to_string(),
             ));
         }
-        <span class="ident">srs</span>.<span class="ident">borrow</span>().<span class="ident">trim</span>(<span class="ident">supported_degree</span>)
+        srs.borrow().trim(supported_degree)
     }
 
-    <span class="doccomment">/// Generate a commitment for a polynomial</span>
-    <span class="doccomment">/// Note that the scheme is not hidding</span>
-    <span class="kw">fn</span> <span class="ident">commit</span>(
-        <span class="ident">prover_param</span>: <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ProverParam</span><span class="op">&gt;</span>,
-        <span class="ident">poly</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Polynomial</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Commitment</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">prover_param</span> <span class="op">=</span> <span class="ident">prover_param</span>.<span class="ident">borrow</span>();
-        <span class="kw">let</span> <span class="ident">commit_time</span> <span class="op">=</span>
-            <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Committing to polynomial of degree {} &quot;</span>, <span class="ident">poly</span>.<span class="ident">degree</span>()));
+    <span class="doccomment">/// Generate a commitment for a polynomial
+    /// Note that the scheme is not hidding
+    </span><span class="kw">fn </span>commit(
+        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        poly: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
+        <span class="kw">let </span>prover_param = prover_param.borrow();
+        <span class="kw">let </span>commit_time =
+            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Committing to polynomial of degree {} &quot;</span>, poly.degree()));
 
-        <span class="kw">if</span> <span class="ident">poly</span>.<span class="ident">degree</span>() <span class="op">&gt;</span> <span class="ident">prover_param</span>.<span class="ident">powers_of_g</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(<span class="macro">format!</span>(
+        <span class="kw">if </span>poly.degree() &gt; prover_param.powers_of_g.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
                 <span class="string">&quot;poly degree {} is larger than allowed {}&quot;</span>,
-                <span class="ident">poly</span>.<span class="ident">degree</span>(),
-                <span class="ident">prover_param</span>.<span class="ident">powers_of_g</span>.<span class="ident">len</span>()
+                poly.degree(),
+                prover_param.powers_of_g.len()
             )));
         }
 
-        <span class="kw">let</span> (<span class="ident">num_leading_zeros</span>, <span class="ident">plain_coeffs</span>) <span class="op">=</span> <span class="ident">skip_leading_zeros_and_convert_to_bigints</span>(<span class="ident">poly</span>);
+        <span class="kw">let </span>(num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
-        <span class="kw">let</span> <span class="ident">msm_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;MSM to compute commitment to plaintext poly&quot;</span>);
-        <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">VariableBaseMSM::multi_scalar_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">prover_param</span>.<span class="ident">powers_of_g</span>[<span class="ident">num_leading_zeros</span>..],
-            <span class="kw-2">&amp;</span><span class="ident">plain_coeffs</span>,
+        <span class="kw">let </span>msm_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;MSM to compute commitment to plaintext poly&quot;</span>);
+        <span class="kw">let </span>commitment = VariableBaseMSM::multi_scalar_mul(
+            <span class="kw-2">&amp;</span>prover_param.powers_of_g[num_leading_zeros..],
+            <span class="kw-2">&amp;</span>plain_coeffs,
         )
-        .<span class="ident">into_affine</span>();
-        <span class="macro">end_timer!</span>(<span class="ident">msm_time</span>);
+        .into_affine();
+        <span class="macro">end_timer!</span>(msm_time);
 
-        <span class="macro">end_timer!</span>(<span class="ident">commit_time</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">Commitment</span>(<span class="ident">commitment</span>))
+        <span class="macro">end_timer!</span>(commit_time);
+        <span class="prelude-val">Ok</span>(Commitment(commitment))
     }
 
-    <span class="doccomment">/// Generate a commitment for a list of polynomials</span>
-    <span class="kw">fn</span> <span class="ident">multi_commit</span>(
-        <span class="ident">prover_param</span>: <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ProverParam</span><span class="op">&gt;</span>,
-        <span class="ident">polys</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Polynomial</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::BatchCommitment</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">prover_param</span> <span class="op">=</span> <span class="ident">prover_param</span>.<span class="ident">borrow</span>();
-        <span class="kw">let</span> <span class="ident">commit_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;batch commit {} polynomials&quot;</span>, <span class="ident">polys</span>.<span class="ident">len</span>()));
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">parallelizable_slice_iter</span>(<span class="ident">polys</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> <span class="ident"><span class="self">Self</span>::commit</span>(<span class="ident">prover_param</span>, <span class="ident">poly</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Commitment</span><span class="op">&gt;</span>, <span class="ident">PCSError</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+    <span class="doccomment">/// Generate a commitment for a list of polynomials
+    </span><span class="kw">fn </span>multi_commit(
+        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        polys: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BatchCommitment, PCSError&gt; {
+        <span class="kw">let </span>prover_param = prover_param.borrow();
+        <span class="kw">let </span>commit_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;batch commit {} polynomials&quot;</span>, polys.len()));
+        <span class="kw">let </span>res = parallelizable_slice_iter(polys)
+            .map(|poly| <span class="self">Self</span>::commit(prover_param, poly))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Commitment&gt;, PCSError&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="macro">end_timer!</span>(<span class="ident">commit_time</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+        <span class="macro">end_timer!</span>(commit_time);
+        <span class="prelude-val">Ok</span>(res)
     }
 
-    <span class="doccomment">/// On input a polynomial `p` and a point `point`, outputs a proof for the</span>
-    <span class="doccomment">/// same.</span>
-    <span class="kw">fn</span> <span class="ident">open</span>(
-        <span class="ident">prover_param</span>: <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ProverParam</span><span class="op">&gt;</span>,
-        <span class="ident">polynomial</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Polynomial</span>,
-        <span class="ident">point</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Point</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::Proof</span>, <span class="ident"><span class="self">Self</span>::Evaluation</span>), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">open_time</span> <span class="op">=</span>
-            <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Opening polynomial of degree {}&quot;</span>, <span class="ident">polynomial</span>.<span class="ident">degree</span>()));
-        <span class="kw">let</span> <span class="ident">divisor</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::Polynomial::from_coefficients_vec</span>(<span class="macro">vec!</span>[<span class="op">-</span><span class="kw-2">*</span><span class="ident">point</span>, <span class="ident">E::Fr::one</span>()]);
+    <span class="doccomment">/// On input a polynomial `p` and a point `point`, outputs a proof for the
+    /// same.
+    </span><span class="kw">fn </span>open(
+        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
+        point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Proof, <span class="self">Self</span>::Evaluation), PCSError&gt; {
+        <span class="kw">let </span>open_time =
+            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Opening polynomial of degree {}&quot;</span>, polynomial.degree()));
+        <span class="kw">let </span>divisor = <span class="self">Self</span>::Polynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>point, E::Fr::one()]);
 
-        <span class="kw">let</span> <span class="ident">witness_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Computing witness polynomial&quot;</span>);
-        <span class="kw">let</span> <span class="ident">witness_polynomial</span> <span class="op">=</span> <span class="ident">polynomial</span> <span class="op">/</span> <span class="kw-2">&amp;</span><span class="ident">divisor</span>;
-        <span class="macro">end_timer!</span>(<span class="ident">witness_time</span>);
+        <span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing witness polynomial&quot;</span>);
+        <span class="kw">let </span>witness_polynomial = polynomial / <span class="kw-2">&amp;</span>divisor;
+        <span class="macro">end_timer!</span>(witness_time);
 
-        <span class="kw">let</span> (<span class="ident">num_leading_zeros</span>, <span class="ident">witness_coeffs</span>) <span class="op">=</span>
-            <span class="ident">skip_leading_zeros_and_convert_to_bigints</span>(<span class="kw-2">&amp;</span><span class="ident">witness_polynomial</span>);
+        <span class="kw">let </span>(num_leading_zeros, witness_coeffs) =
+            skip_leading_zeros_and_convert_to_bigints(<span class="kw-2">&amp;</span>witness_polynomial);
 
-        <span class="kw">let</span> <span class="ident">proof</span> <span class="op">=</span> <span class="ident">VariableBaseMSM::multi_scalar_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">prover_param</span>.<span class="ident">borrow</span>().<span class="ident">powers_of_g</span>[<span class="ident">num_leading_zeros</span>..],
-            <span class="kw-2">&amp;</span><span class="ident">witness_coeffs</span>,
+        <span class="kw">let </span>proof = VariableBaseMSM::multi_scalar_mul(
+            <span class="kw-2">&amp;</span>prover_param.borrow().powers_of_g[num_leading_zeros..],
+            <span class="kw-2">&amp;</span>witness_coeffs,
         )
-        .<span class="ident">into_affine</span>();
+        .into_affine();
 
-        <span class="kw">let</span> <span class="ident">eval</span> <span class="op">=</span> <span class="ident">polynomial</span>.<span class="ident">evaluate</span>(<span class="ident">point</span>);
+        <span class="kw">let </span>eval = polynomial.evaluate(point);
 
-        <span class="macro">end_timer!</span>(<span class="ident">open_time</span>);
-        <span class="prelude-val">Ok</span>((<span class="ident"><span class="self">Self</span>::Proof</span> { <span class="ident">proof</span> }, <span class="ident">eval</span>))
+        <span class="macro">end_timer!</span>(open_time);
+        <span class="prelude-val">Ok</span>((<span class="self">Self</span>::Proof { proof }, eval))
     }
 
-    <span class="doccomment">/// Input a list of polynomials, and a same number of points,</span>
-    <span class="doccomment">/// compute a multi-opening for all the polynomials.</span>
-    <span class="comment">// This is a naive approach</span>
-    <span class="comment">// TODO: to implement the more efficient batch opening algorithm</span>
-    <span class="comment">// (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)</span>
-    <span class="kw">fn</span> <span class="ident">multi_open</span>(
-        <span class="ident">prover_param</span>: <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ProverParam</span><span class="op">&gt;</span>,
-        <span class="ident">_multi_commitment</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::BatchCommitment</span>,
-        <span class="ident">polynomials</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Polynomial</span>],
-        <span class="ident">points</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Point</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::BatchProof</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Evaluation</span><span class="op">&gt;</span>), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">open_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;batch opening {} polynomials&quot;</span>, <span class="ident">polynomials</span>.<span class="ident">len</span>()));
-        <span class="kw">if</span> <span class="ident">polynomials</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">points</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(<span class="macro">format!</span>(
+    <span class="doccomment">/// Input a list of polynomials, and a same number of points,
+    /// compute a multi-opening for all the polynomials.
+    </span><span class="comment">// This is a naive approach
+    // TODO: to implement the more efficient batch opening algorithm
+    // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
+    </span><span class="kw">fn </span>multi_open(
+        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        _multi_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
+        polynomials: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
+        points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::BatchProof, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt; {
+        <span class="kw">let </span>open_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;batch opening {} polynomials&quot;</span>, polynomials.len()));
+        <span class="kw">if </span>polynomials.len() != points.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
                 <span class="string">&quot;poly length {} is different from points length {}&quot;</span>,
-                <span class="ident">polynomials</span>.<span class="ident">len</span>(),
-                <span class="ident">points</span>.<span class="ident">len</span>()
+                polynomials.len(),
+                points.len()
             )));
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">batch_proof</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">evals</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> (<span class="ident">poly</span>, <span class="ident">point</span>) <span class="kw">in</span> <span class="ident">polynomials</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">points</span>.<span class="ident">iter</span>()) {
-            <span class="kw">let</span> (<span class="ident">proof</span>, <span class="ident">eval</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::open</span>(<span class="ident">prover_param</span>.<span class="ident">borrow</span>(), <span class="ident">poly</span>, <span class="ident">point</span>)<span class="question-mark">?</span>;
-            <span class="ident">batch_proof</span>.<span class="ident">push</span>(<span class="ident">proof</span>);
-            <span class="ident">evals</span>.<span class="ident">push</span>(<span class="ident">eval</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>batch_proof = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>evals = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>(poly, point) <span class="kw">in </span>polynomials.iter().zip(points.iter()) {
+            <span class="kw">let </span>(proof, eval) = <span class="self">Self</span>::open(prover_param.borrow(), poly, point)<span class="question-mark">?</span>;
+            batch_proof.push(proof);
+            evals.push(eval);
         }
 
-        <span class="macro">end_timer!</span>(<span class="ident">open_time</span>);
-        <span class="prelude-val">Ok</span>((<span class="ident">batch_proof</span>, <span class="ident">evals</span>))
+        <span class="macro">end_timer!</span>(open_time);
+        <span class="prelude-val">Ok</span>((batch_proof, evals))
     }
-    <span class="doccomment">/// Verifies that `value` is the evaluation at `x` of the polynomial</span>
-    <span class="doccomment">/// committed inside `comm`.</span>
-    <span class="kw">fn</span> <span class="ident">verify</span>(
-        <span class="ident">verifier_param</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::VerifierParam</span>,
-        <span class="ident">commitment</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Commitment</span>,
-        <span class="ident">point</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Point</span>,
-        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">E::Fr</span>,
-        <span class="ident">proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Proof</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">check_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Checking evaluation&quot;</span>);
-        <span class="kw">let</span> <span class="ident">pairing_inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">E::G1Prepared</span>, <span class="ident">E::G2Prepared</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
+    <span class="doccomment">/// Verifies that `value` is the evaluation at `x` of the polynomial
+    /// committed inside `comm`.
+    </span><span class="kw">fn </span>verify(
+        verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
+        commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::Commitment,
+        point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
+        value: <span class="kw-2">&amp;</span>E::Fr,
+        proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
+        <span class="kw">let </span>check_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Checking evaluation&quot;</span>);
+        <span class="kw">let </span>pairing_inputs: Vec&lt;(E::G1Prepared, E::G2Prepared)&gt; = <span class="macro">vec!</span>[
             (
-                (<span class="ident">verifier_param</span>.<span class="ident">g</span>.<span class="ident">mul</span>(<span class="ident">value</span>.<span class="ident">into_repr</span>())
-                    <span class="op">-</span> <span class="ident">proof</span>.<span class="ident">proof</span>.<span class="ident">mul</span>(<span class="ident">point</span>.<span class="ident">into_repr</span>())
-                    <span class="op">-</span> <span class="ident">commitment</span>.<span class="number">0</span>.<span class="ident">into_projective</span>())
-                .<span class="ident">into_affine</span>()
-                .<span class="ident">into</span>(),
-                <span class="ident">verifier_param</span>.<span class="ident">h</span>.<span class="ident">into</span>(),
+                (verifier_param.g.mul(value.into_repr())
+                    - proof.proof.mul(point.into_repr())
+                    - commitment.<span class="number">0</span>.into_projective())
+                .into_affine()
+                .into(),
+                verifier_param.h.into(),
             ),
-            (<span class="ident">proof</span>.<span class="ident">proof</span>.<span class="ident">into</span>(), <span class="ident">verifier_param</span>.<span class="ident">beta_h</span>.<span class="ident">into</span>()),
+            (proof.proof.into(), verifier_param.beta_h.into()),
         ];
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">E::product_of_pairings</span>(<span class="ident">pairing_inputs</span>.<span class="ident">iter</span>()).<span class="ident">is_one</span>();
+        <span class="kw">let </span>res = E::product_of_pairings(pairing_inputs.iter()).is_one();
 
-        <span class="macro">end_timer!</span>(<span class="ident">check_time</span>, <span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Result: {}&quot;</span>, <span class="ident">res</span>));
-        <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {}&quot;</span>, res));
+        <span class="prelude-val">Ok</span>(res)
     }
 
-    <span class="doccomment">/// Verifies that `value_i` is the evaluation at `x_i` of the polynomial</span>
-    <span class="doccomment">/// `poly_i` committed inside `comm`.</span>
-    <span class="comment">// This is a naive approach</span>
-    <span class="comment">// TODO: to implement the more efficient batch verification algorithm</span>
-    <span class="comment">// (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)</span>
-    <span class="kw">fn</span> <span class="ident">batch_verify</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
-        <span class="ident">verifier_param</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::VerifierParam</span>,
-        <span class="ident">multi_commitment</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::BatchCommitment</span>,
-        <span class="ident">points</span>: <span class="kw-2">&amp;</span>[<span class="ident"><span class="self">Self</span>::Point</span>],
-        <span class="ident">values</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
-        <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::BatchProof</span>,
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">check_time</span> <span class="op">=</span>
-            <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Checking {} evaluation proofs&quot;</span>, <span class="ident">multi_commitment</span>.<span class="ident">len</span>()));
+    <span class="doccomment">/// Verifies that `value_i` is the evaluation at `x_i` of the polynomial
+    /// `poly_i` committed inside `comm`.
+    </span><span class="comment">// This is a naive approach
+    // TODO: to implement the more efficient batch verification algorithm
+    // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
+    </span><span class="kw">fn </span>batch_verify&lt;R: RngCore + CryptoRng&gt;(
+        verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
+        multi_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
+        points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
+        values: <span class="kw-2">&amp;</span>[E::Fr],
+        batch_proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchProof,
+        rng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
+        <span class="kw">let </span>check_time =
+            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Checking {} evaluation proofs&quot;</span>, multi_commitment.len()));
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_c</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">E::G1Projective</span><span class="op">&gt;</span><span class="ident">::zero</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_w</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">E::G1Projective</span><span class="op">&gt;</span><span class="ident">::zero</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_c = &lt;E::G1Projective&gt;::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_w = &lt;E::G1Projective&gt;::zero();
 
-        <span class="kw">let</span> <span class="ident">combination_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Combining commitments and proofs&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">randomizer</span> <span class="op">=</span> <span class="ident">E::Fr::one</span>();
-        <span class="comment">// Instead of multiplying g and gamma_g in each turn, we simply accumulate</span>
-        <span class="comment">// their coefficients and perform a final multiplication at the end.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g_multiplier</span> <span class="op">=</span> <span class="ident">E::Fr::zero</span>();
-        <span class="kw">for</span> (((<span class="ident">c</span>, <span class="ident">z</span>), <span class="ident">v</span>), <span class="ident">proof</span>) <span class="kw">in</span> <span class="ident">multi_commitment</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">points</span>)
-            .<span class="ident">zip</span>(<span class="ident">values</span>)
-            .<span class="ident">zip</span>(<span class="ident">batch_proof</span>)
+        <span class="kw">let </span>combination_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Combining commitments and proofs&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>randomizer = E::Fr::one();
+        <span class="comment">// Instead of multiplying g and gamma_g in each turn, we simply accumulate
+        // their coefficients and perform a final multiplication at the end.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>g_multiplier = E::Fr::zero();
+        <span class="kw">for </span>(((c, z), v), proof) <span class="kw">in </span>multi_commitment
+            .iter()
+            .zip(points)
+            .zip(values)
+            .zip(batch_proof)
         {
-            <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">proof</span>.<span class="ident">proof</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp</span> <span class="op">=</span> <span class="ident">w</span>.<span class="ident">mul</span>(<span class="kw-2">*</span><span class="ident">z</span>);
-            <span class="ident">temp</span>.<span class="ident">add_assign_mixed</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>.<span class="number">0</span>);
-            <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">temp</span>;
-            <span class="ident">g_multiplier</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span>(<span class="ident">randomizer</span> <span class="op">*</span> <span class="ident">v</span>);
-            <span class="ident">total_c</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">c</span>.<span class="ident">mul</span>(<span class="ident">randomizer</span>.<span class="ident">into_repr</span>());
-            <span class="ident">total_w</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">w</span>.<span class="ident">mul</span>(<span class="ident">randomizer</span>.<span class="ident">into_repr</span>());
-            <span class="comment">// We don&#39;t need to sample randomizers from the full field,</span>
-            <span class="comment">// only from 128-bit strings.</span>
-            <span class="ident">randomizer</span> <span class="op">=</span> <span class="ident">u128::rand</span>(<span class="ident">rng</span>).<span class="ident">into</span>();
+            <span class="kw">let </span>w = proof.proof;
+            <span class="kw">let </span><span class="kw-2">mut </span>temp = w.mul(<span class="kw-2">*</span>z);
+            temp.add_assign_mixed(<span class="kw-2">&amp;</span>c.<span class="number">0</span>);
+            <span class="kw">let </span>c = temp;
+            g_multiplier += <span class="kw-2">&amp;</span>(randomizer * v);
+            total_c += <span class="kw-2">&amp;</span>c.mul(randomizer.into_repr());
+            total_w += <span class="kw-2">&amp;</span>w.mul(randomizer.into_repr());
+            <span class="comment">// We don&#39;t need to sample randomizers from the full field,
+            // only from 128-bit strings.
+            </span>randomizer = u128::rand(rng).into();
         }
-        <span class="ident">total_c</span> <span class="op">-</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">verifier_param</span>.<span class="ident">g</span>.<span class="ident">mul</span>(<span class="ident">g_multiplier</span>);
-        <span class="macro">end_timer!</span>(<span class="ident">combination_time</span>);
+        total_c -= <span class="kw-2">&amp;</span>verifier_param.g.mul(g_multiplier);
+        <span class="macro">end_timer!</span>(combination_time);
 
-        <span class="kw">let</span> <span class="ident">to_affine_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Converting results to affine for pairing&quot;</span>);
-        <span class="kw">let</span> <span class="ident">affine_points</span> <span class="op">=</span> <span class="ident">E::G1Projective::batch_normalization_into_affine</span>(<span class="kw-2">&amp;</span>[<span class="op">-</span><span class="ident">total_w</span>, <span class="ident">total_c</span>]);
-        <span class="kw">let</span> (<span class="ident">total_w</span>, <span class="ident">total_c</span>) <span class="op">=</span> (<span class="ident">affine_points</span>[<span class="number">0</span>], <span class="ident">affine_points</span>[<span class="number">1</span>]);
-        <span class="macro">end_timer!</span>(<span class="ident">to_affine_time</span>);
+        <span class="kw">let </span>to_affine_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting results to affine for pairing&quot;</span>);
+        <span class="kw">let </span>affine_points = E::G1Projective::batch_normalization_into_affine(<span class="kw-2">&amp;</span>[-total_w, total_c]);
+        <span class="kw">let </span>(total_w, total_c) = (affine_points[<span class="number">0</span>], affine_points[<span class="number">1</span>]);
+        <span class="macro">end_timer!</span>(to_affine_time);
 
-        <span class="kw">let</span> <span class="ident">pairing_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Performing product of pairings&quot;</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">E::product_of_pairings</span>(<span class="kw-2">&amp;</span>[
-            (<span class="ident">total_w</span>.<span class="ident">into</span>(), <span class="ident">verifier_param</span>.<span class="ident">beta_h</span>.<span class="ident">into</span>()),
-            (<span class="ident">total_c</span>.<span class="ident">into</span>(), <span class="ident">verifier_param</span>.<span class="ident">h</span>.<span class="ident">into</span>()),
+        <span class="kw">let </span>pairing_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Performing product of pairings&quot;</span>);
+        <span class="kw">let </span>result = E::product_of_pairings(<span class="kw-2">&amp;</span>[
+            (total_w.into(), verifier_param.beta_h.into()),
+            (total_c.into(), verifier_param.h.into()),
         ])
-        .<span class="ident">is_one</span>();
-        <span class="macro">end_timer!</span>(<span class="ident">pairing_time</span>);
-        <span class="macro">end_timer!</span>(<span class="ident">check_time</span>, <span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Result: {}&quot;</span>, <span class="ident">result</span>));
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+        .is_one();
+        <span class="macro">end_timer!</span>(pairing_time);
+        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {}&quot;</span>, result));
+        <span class="prelude-val">Ok</span>(result)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">skip_leading_zeros_and_convert_to_bigints</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span>, <span class="ident">P</span>: <span class="ident">UVPolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-    <span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">P</span>,
-) -&gt; (<span class="ident">usize</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F::BigInt</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_leading_zeros</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">while</span> <span class="ident">num_leading_zeros</span> <span class="op">&lt;</span> <span class="ident">p</span>.<span class="ident">coeffs</span>().<span class="ident">len</span>() <span class="op">&amp;&amp;</span> <span class="ident">p</span>.<span class="ident">coeffs</span>()[<span class="ident">num_leading_zeros</span>].<span class="ident">is_zero</span>() {
-        <span class="ident">num_leading_zeros</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+<span class="kw">fn </span>skip_leading_zeros_and_convert_to_bigints&lt;F: PrimeField, P: UVPolynomial&lt;F&gt;&gt;(
+    p: <span class="kw-2">&amp;</span>P,
+) -&gt; (usize, Vec&lt;F::BigInt&gt;) {
+    <span class="kw">let </span><span class="kw-2">mut </span>num_leading_zeros = <span class="number">0</span>;
+    <span class="kw">while </span>num_leading_zeros &lt; p.coeffs().len() &amp;&amp; p.coeffs()[num_leading_zeros].is_zero() {
+        num_leading_zeros += <span class="number">1</span>;
     }
-    <span class="kw">let</span> <span class="ident">coeffs</span> <span class="op">=</span> <span class="ident">convert_to_bigints</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>.<span class="ident">coeffs</span>()[<span class="ident">num_leading_zeros</span>..]);
-    (<span class="ident">num_leading_zeros</span>, <span class="ident">coeffs</span>)
+    <span class="kw">let </span>coeffs = convert_to_bigints(<span class="kw-2">&amp;</span>p.coeffs()[num_leading_zeros..]);
+    (num_leading_zeros, coeffs)
 }
 
-<span class="kw">fn</span> <span class="ident">convert_to_bigints</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F::BigInt</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">to_bigint_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Converting polynomial coeffs to bigints&quot;</span>);
-    <span class="kw">let</span> <span class="ident">coeffs</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">into_repr</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="macro">end_timer!</span>(<span class="ident">to_bigint_time</span>);
-    <span class="ident">coeffs</span>
+<span class="kw">fn </span>convert_to_bigints&lt;F: PrimeField&gt;(p: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;F::BigInt&gt; {
+    <span class="kw">let </span>to_bigint_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting polynomial coeffs to bigints&quot;</span>);
+    <span class="kw">let </span>coeffs = p.iter().map(|s| s.into_repr()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+    <span class="macro">end_timer!</span>(to_bigint_time);
+    coeffs
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pcs::StructuredReferenceString</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-    <span class="kw">use</span> <span class="ident">ark_poly::univariate::DensePolynomial</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">UniformRand</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::StructuredReferenceString;
+    <span class="kw">use </span>ark_bls12_381::Bls12_381;
+    <span class="kw">use </span>ark_ec::PairingEngine;
+    <span class="kw">use </span>ark_poly::univariate::DensePolynomial;
+    <span class="kw">use </span>ark_std::{test_rng, UniformRand};
 
-    <span class="kw">fn</span> <span class="ident">end_to_end_test_template</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PCSError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+    <span class="kw">fn </span>end_to_end_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine,
     {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">degree</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">while</span> <span class="ident">degree</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="ident">degree</span> <span class="op">=</span> <span class="ident">usize::rand</span>(<span class="ident">rng</span>) <span class="op">%</span> <span class="number">20</span>;
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>degree = <span class="number">0</span>;
+            <span class="kw">while </span>degree &lt;= <span class="number">1 </span>{
+                degree = usize::rand(rng) % <span class="number">20</span>;
             }
-            <span class="kw">let</span> <span class="ident">pp</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::gen_srs_for_testing</span>(<span class="ident">rng</span>, <span class="ident">degree</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> (<span class="ident">ck</span>, <span class="ident">vk</span>) <span class="op">=</span> <span class="ident">pp</span>.<span class="ident">trim</span>(<span class="ident">degree</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">UVPolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="ident">degree</span>, <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">comm</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::commit</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
-            <span class="kw">let</span> (<span class="ident">proof</span>, <span class="ident">value</span>) <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::open</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>pp = UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, degree)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(ck, vk) = pp.trim(degree)<span class="question-mark">?</span>;
+            <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::Fr&gt; <span class="kw">as </span>UVPolynomial&lt;E::Fr&gt;&gt;::rand(degree, rng);
+            <span class="kw">let </span>comm = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+            <span class="kw">let </span>point = E::Fr::rand(rng);
+            <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
-                <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::verify</span>(<span class="kw-2">&amp;</span><span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">comm</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>, <span class="kw-2">&amp;</span><span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">proof</span>)<span class="question-mark">?</span>,
+                UnivariateKzgPCS::&lt;E&gt;::verify(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof)<span class="question-mark">?</span>,
                 <span class="string">&quot;proof was incorrect for max_degree = {}, polynomial_degree = {}&quot;</span>,
-                <span class="ident">degree</span>,
-                <span class="ident">p</span>.<span class="ident">degree</span>(),
+                degree,
+                p.degree(),
             );
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">linear_polynomial_test_template</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PCSError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+    <span class="kw">fn </span>linear_polynomial_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine,
     {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
-            <span class="kw">let</span> <span class="ident">degree</span> <span class="op">=</span> <span class="number">50</span>;
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
+            <span class="kw">let </span>degree = <span class="number">50</span>;
 
-            <span class="kw">let</span> <span class="ident">pp</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::gen_srs_for_testing</span>(<span class="ident">rng</span>, <span class="ident">degree</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> (<span class="ident">ck</span>, <span class="ident">vk</span>) <span class="op">=</span> <span class="ident">pp</span>.<span class="ident">trim</span>(<span class="ident">degree</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">UVPolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="ident">degree</span>, <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">comm</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::commit</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
-            <span class="kw">let</span> (<span class="ident">proof</span>, <span class="ident">value</span>) <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::open</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>pp = UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, degree)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(ck, vk) = pp.trim(degree)<span class="question-mark">?</span>;
+            <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::Fr&gt; <span class="kw">as </span>UVPolynomial&lt;E::Fr&gt;&gt;::rand(degree, rng);
+            <span class="kw">let </span>comm = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+            <span class="kw">let </span>point = E::Fr::rand(rng);
+            <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
-                <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::verify</span>(<span class="kw-2">&amp;</span><span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">comm</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>, <span class="kw-2">&amp;</span><span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">proof</span>)<span class="question-mark">?</span>,
+                UnivariateKzgPCS::&lt;E&gt;::verify(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof)<span class="question-mark">?</span>,
                 <span class="string">&quot;proof was incorrect for max_degree = {}, polynomial_degree = {}&quot;</span>,
-                <span class="ident">degree</span>,
-                <span class="ident">p</span>.<span class="ident">degree</span>(),
+                degree,
+                p.degree(),
             );
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">batch_check_test_template</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PCSError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+    <span class="kw">fn </span>batch_check_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine,
     {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">test_rng</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">degree</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">while</span> <span class="ident">degree</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
-                <span class="ident">degree</span> <span class="op">=</span> <span class="ident">usize::rand</span>(<span class="ident">rng</span>) <span class="op">%</span> <span class="number">20</span>;
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>degree = <span class="number">0</span>;
+            <span class="kw">while </span>degree &lt;= <span class="number">1 </span>{
+                degree = usize::rand(rng) % <span class="number">20</span>;
             }
-            <span class="kw">let</span> <span class="ident">pp</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::gen_srs_for_testing</span>(<span class="ident">rng</span>, <span class="ident">degree</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> (<span class="ident">ck</span>, <span class="ident">vk</span>) <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::trim</span>(<span class="kw-2">&amp;</span><span class="ident">pp</span>, <span class="ident">degree</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">comms</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">points</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
-                <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">UVPolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="ident">degree</span>, <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="ident">comm</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::commit</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
-                <span class="kw">let</span> (<span class="ident">proof</span>, <span class="ident">value</span>) <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::open</span>(<span class="kw-2">&amp;</span><span class="ident">ck</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>pp = UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, degree)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(ck, vk) = UnivariateKzgPCS::&lt;E&gt;::trim(<span class="kw-2">&amp;</span>pp, degree, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>comms = Vec::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>values = Vec::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>points = Vec::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::new();
+            <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+                <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::Fr&gt; <span class="kw">as </span>UVPolynomial&lt;E::Fr&gt;&gt;::rand(degree, rng);
+                <span class="kw">let </span>comm = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+                <span class="kw">let </span>point = E::Fr::rand(rng);
+                <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
 
-                <span class="macro">assert!</span>(<span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::verify</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">comm</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>, <span class="kw-2">&amp;</span><span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">proof</span>
+                <span class="macro">assert!</span>(UnivariateKzgPCS::&lt;E&gt;::verify(
+                    <span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof
                 )<span class="question-mark">?</span>);
-                <span class="ident">comms</span>.<span class="ident">push</span>(<span class="ident">comm</span>);
-                <span class="ident">values</span>.<span class="ident">push</span>(<span class="ident">value</span>);
-                <span class="ident">points</span>.<span class="ident">push</span>(<span class="ident">point</span>);
-                <span class="ident">proofs</span>.<span class="ident">push</span>(<span class="ident">proof</span>);
+                comms.push(comm);
+                values.push(value);
+                points.push(point);
+                proofs.push(proof);
             }
-            <span class="macro">assert!</span>(<span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::batch_verify</span>(
-                <span class="kw-2">&amp;</span><span class="ident">vk</span>, <span class="kw-2">&amp;</span><span class="ident">comms</span>, <span class="kw-2">&amp;</span><span class="ident">points</span>, <span class="kw-2">&amp;</span><span class="ident">values</span>, <span class="kw-2">&amp;</span><span class="ident">proofs</span>, <span class="ident">rng</span>
+            <span class="macro">assert!</span>(UnivariateKzgPCS::&lt;E&gt;::batch_verify(
+                <span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comms, <span class="kw-2">&amp;</span>points, <span class="kw-2">&amp;</span>values, <span class="kw-2">&amp;</span>proofs, rng
             )<span class="question-mark">?</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">end_to_end_test</span>() {
-        <span class="ident">end_to_end_test_template</span>::<span class="op">&lt;</span><span class="ident">Bls12_381</span><span class="op">&gt;</span>().<span class="ident">expect</span>(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>end_to_end_test() {
+        end_to_end_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">linear_polynomial_test</span>() {
-        <span class="ident">linear_polynomial_test_template</span>::<span class="op">&lt;</span><span class="ident">Bls12_381</span><span class="op">&gt;</span>().<span class="ident">expect</span>(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>linear_polynomial_test() {
+        linear_polynomial_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
     }
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">batch_check_test</span>() {
-        <span class="ident">batch_check_test_template</span>::<span class="op">&lt;</span><span class="ident">Bls12_381</span><span class="op">&gt;</span>().<span class="ident">expect</span>(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>batch_check_test() {
+        batch_check_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

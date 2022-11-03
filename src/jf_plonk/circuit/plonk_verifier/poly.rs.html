@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/plonk_verifier/poly.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>poly.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_plonk/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/plonk_verifier/poly.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>poly.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_plonk/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -809,816 +809,816 @@
 <span id="809">809</span>
 <span id="810">810</span>
 <span id="811">811</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Circuits for the polynomial evaluations within Plonk verifiers.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">circuit::plonk_verifier</span>::<span class="kw-2">*</span>, <span class="ident">errors::PlonkError</span>};
-<span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_poly</span>::{<span class="ident">EvaluationDomain</span>, <span class="ident">Radix2EvaluationDomain</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">string::ToString</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>, <span class="ident">One</span>};
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{
-    <span class="ident">constants::GATE_WIDTH</span>,
-    <span class="ident">errors</span>::{<span class="ident">CircuitError</span>, <span class="ident">CircuitError::ParameterError</span>},
-    <span class="ident">gadgets::ultraplonk::mod_arith</span>::{<span class="ident">FpElem</span>, <span class="ident">FpElemVar</span>},
-    <span class="ident">PlonkCircuit</span>,
+</span><span class="doccomment">//! Circuits for the polynomial evaluations within Plonk verifiers.
+</span><span class="kw">use crate</span>::{circuit::plonk_verifier::<span class="kw-2">*</span>, errors::PlonkError};
+<span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
+<span class="kw">use </span>ark_std::{format, string::ToString, vec, vec::Vec, One};
+<span class="kw">use </span>jf_relation::{
+    constants::GATE_WIDTH,
+    errors::{CircuitError, CircuitError::ParameterError},
+    gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
+    PlonkCircuit,
 };
-<span class="kw">use</span> <span class="ident">jf_utils::field_switching</span>;
+<span class="kw">use </span>jf_utils::field_switching;
 
-<span class="doccomment">/// This helper function generate the variables for the following data</span>
-<span class="doccomment">/// - Circuit evaluation of vanishing polynomial at point `zeta` i.e., output =</span>
-<span class="doccomment">///   zeta ^ domain_size - 1 mod Fr::modulus</span>
-<span class="doccomment">/// - Evaluations of the first and the last lagrange polynomial at point `zeta`</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that outputs and zeta are both Fr element</span>
-<span class="doccomment">/// so this needs to be carried out over a non-native circuit</span>
-<span class="doccomment">/// using parameter m.</span>
-<span class="doccomment">/// The output is lifted to Fq and in the FpElemVar form for:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - zeta^n</span>
-<span class="doccomment">/// - zeta^n - 1</span>
-<span class="doccomment">/// - lagrange evaluation at 1</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that evaluation at n is commented out as we don&#39;t need it for</span>
-<span class="doccomment">/// partial verification circuit.</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">evaluate_poly_helper</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">zeta_fp_elem_var</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">domain_size</span>: <span class="ident">usize</span>,
-    <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>([<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>]), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// This helper function generate the variables for the following data
+/// - Circuit evaluation of vanishing polynomial at point `zeta` i.e., output =
+///   zeta ^ domain_size - 1 mod Fr::modulus
+/// - Evaluations of the first and the last lagrange polynomial at point `zeta`
+///
+/// Note that outputs and zeta are both Fr element
+/// so this needs to be carried out over a non-native circuit
+/// using parameter m.
+/// The output is lifted to Fq and in the FpElemVar form for:
+///
+/// - zeta^n
+/// - zeta^n - 1
+/// - lagrange evaluation at 1
+///
+/// Note that evaluation at n is commented out as we don&#39;t need it for
+/// partial verification circuit.
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>evaluate_poly_helper&lt;E, F&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    zeta_fp_elem_var: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+    domain_size: usize,
+    non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;([FpElemVar&lt;F&gt;; <span class="number">3</span>]), CircuitError&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F&gt;,
+    F: PrimeField,
 {
-    <span class="comment">// constants</span>
-    <span class="kw">let</span> <span class="ident">domain_size_fp_elem</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(
-        <span class="kw-2">&amp;</span><span class="ident">F::from</span>(<span class="ident">domain_size</span> <span class="kw">as</span> <span class="ident">u64</span>),
-        <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-        <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+    <span class="comment">// constants
+    </span><span class="kw">let </span>domain_size_fp_elem = FpElem::new(
+        <span class="kw-2">&amp;</span>F::from(domain_size <span class="kw">as </span>u64),
+        non_native_field_info.m,
+        non_native_field_info.two_power_m,
     )<span class="question-mark">?</span>;
 
-    <span class="comment">// zeta</span>
-    <span class="kw">let</span> <span class="ident">zeta</span> <span class="op">=</span> <span class="ident">zeta_fp_elem_var</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">zeta_fr</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">zeta</span>);
+    <span class="comment">// zeta
+    </span><span class="kw">let </span>zeta = zeta_fp_elem_var.witness(circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>zeta_fr = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta);
 
-    <span class="comment">// ================================</span>
-    <span class="comment">// compute zeta^n - 1</span>
-    <span class="comment">// ================================</span>
+    <span class="comment">// ================================
+    // compute zeta^n - 1
+    // ================================
 
-    <span class="comment">// compute zeta^n for n = domain_size a power of 2</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctr</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zeta_n_fp_elem_var</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">zeta_fp_elem_var</span>;
-    <span class="kw">while</span> <span class="ident">ctr</span> <span class="op">&lt;</span> <span class="ident">domain_size</span> {
-        <span class="ident">ctr</span> <span class="op">&lt;</span><span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">zeta_n_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">zeta_n_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">zeta_n_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    // compute zeta^n for n = domain_size a power of 2
+    </span><span class="kw">let </span><span class="kw-2">mut </span>ctr = <span class="number">1</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>zeta_n_fp_elem_var = <span class="kw-2">*</span>zeta_fp_elem_var;
+    <span class="kw">while </span>ctr &lt; domain_size {
+        ctr &lt;&lt;= <span class="number">1</span>;
+        zeta_n_fp_elem_var = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>zeta_n_fp_elem_var,
+            <span class="kw-2">&amp;</span>zeta_n_fp_elem_var,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
     }
 
-    <span class="comment">// to compute zeta^n -1 we need to compute it over Fr</span>
-    <span class="comment">// we cannot simply do</span>
-    <span class="comment">//  let zeta_n_minus_one_var = circuit.sub(zeta_n_var, circuit.one())?;</span>
-    <span class="comment">// since it may be overflowing if zeta_n = 0</span>
-    <span class="comment">//</span>
-    <span class="comment">// Option 1: to write the subtraction in non-native field</span>
-    <span class="comment">//</span>
-    <span class="comment">// Option 2, which is what is implemented here</span>
-    <span class="comment">// - if zeta_n = 0, output Fr::modulus - 1</span>
-    <span class="comment">// - else output zeta_n -1</span>
-    <span class="comment">// this circuit should still be cheaper than non-native circuit.</span>
-    <span class="comment">//</span>
-    <span class="comment">//</span>
-    <span class="comment">// Question(ZZ): second thought, this should be fine since we know that</span>
-    <span class="comment">// zeta !=0 mod fr with 1 - 1/|Fr| probability as zeta is a output from</span>
-    <span class="comment">// RO. Nonetheless, I am implementing it with non-native field first.</span>
-    <span class="comment">// We may switch to native field if this is fine...</span>
-    <span class="comment">//</span>
+    <span class="comment">// to compute zeta^n -1 we need to compute it over Fr
+    // we cannot simply do
+    //  let zeta_n_minus_one_var = circuit.sub(zeta_n_var, circuit.one())?;
+    // since it may be overflowing if zeta_n = 0
+    //
+    // Option 1: to write the subtraction in non-native field
+    //
+    // Option 2, which is what is implemented here
+    // - if zeta_n = 0, output Fr::modulus - 1
+    // - else output zeta_n -1
+    // this circuit should still be cheaper than non-native circuit.
+    //
+    //
+    // Question(ZZ): second thought, this should be fine since we know that
+    // zeta !=0 mod fr with 1 - 1/|Fr| probability as zeta is a output from
+    // RO. Nonetheless, I am implementing it with non-native field first.
+    // We may switch to native field if this is fine...
+    //
 
-    <span class="comment">// zeta^n = zeta_n_minus_1 + 1</span>
-    <span class="kw">let</span> <span class="ident">zeta_n</span> <span class="op">=</span> <span class="ident">zeta_n_fp_elem_var</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">zeta_n_minus_one</span> <span class="op">=</span>
-        <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span>(<span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">zeta_n</span>) <span class="op">-</span> <span class="ident">E::Fr::one</span>()));
-    <span class="kw">let</span> <span class="ident">zeta_n_minus_one_fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(
-        <span class="ident">circuit</span>,
-        <span class="kw-2">&amp;</span><span class="ident">zeta_n_minus_one</span>,
-        <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-        <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+    // zeta^n = zeta_n_minus_1 + 1
+    </span><span class="kw">let </span>zeta_n = zeta_n_fp_elem_var.witness(circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>zeta_n_minus_one =
+        field_switching::&lt;<span class="kw">_</span>, F&gt;(<span class="kw-2">&amp;</span>(field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta_n) - E::Fr::one()));
+    <span class="kw">let </span>zeta_n_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
+        circuit,
+        <span class="kw-2">&amp;</span>zeta_n_minus_one,
+        non_native_field_info.m,
+        non_native_field_info.two_power_m,
     )<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">one_fp_elem</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(
-        <span class="kw-2">&amp;</span><span class="ident">F::one</span>(),
-        <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-        <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+    <span class="kw">let </span>one_fp_elem = FpElem::new(
+        <span class="kw-2">&amp;</span>F::one(),
+        non_native_field_info.m,
+        non_native_field_info.two_power_m,
     )<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">zeta_n_fp_elem_var_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_constant</span>(
-        <span class="kw-2">&amp;</span><span class="ident">zeta_n_minus_one_fp_elem_var</span>,
-        <span class="kw-2">&amp;</span><span class="ident">one_fp_elem</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="kw">let </span>zeta_n_fp_elem_var_rec = circuit.mod_add_constant(
+        <span class="kw-2">&amp;</span>zeta_n_minus_one_fp_elem_var,
+        <span class="kw-2">&amp;</span>one_fp_elem,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
-    <span class="ident">zeta_n_fp_elem_var</span>.<span class="ident">enforce_equal</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">zeta_n_fp_elem_var_rec</span>)<span class="question-mark">?</span>;
+    zeta_n_fp_elem_var.enforce_equal(circuit, <span class="kw-2">&amp;</span>zeta_n_fp_elem_var_rec)<span class="question-mark">?</span>;
 
-    <span class="comment">// ================================</span>
-    <span class="comment">// evaluate lagrange at 1</span>
-    <span class="comment">//  lagrange_1_eval = (zeta^n - 1) / (zeta - 1) / domain_size</span>
-    <span class="comment">//</span>
-    <span class="comment">// which is proven via</span>
-    <span class="comment">//  domain_size * lagrange_1_eval * (zeta - 1) = zeta^n - 1 mod Fr::modulus</span>
-    <span class="comment">// ================================</span>
+    <span class="comment">// ================================
+    // evaluate lagrange at 1
+    //  lagrange_1_eval = (zeta^n - 1) / (zeta - 1) / domain_size
+    //
+    // which is proven via
+    //  domain_size * lagrange_1_eval * (zeta - 1) = zeta^n - 1 mod Fr::modulus
+    // ================================
 
-    <span class="comment">// lagrange_1_eval</span>
-    <span class="kw">let</span> <span class="ident">zeta_n_minus_one</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">zeta_n_minus_one</span>);
-    <span class="kw">let</span> <span class="ident">divisor</span> <span class="op">=</span> <span class="ident">E::Fr::from</span>(<span class="ident">domain_size</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">*</span> (<span class="ident">zeta_fr</span> <span class="op">-</span> <span class="ident">E::Fr::one</span>());
-    <span class="kw">let</span> <span class="ident">lagrange_1_eval</span> <span class="op">=</span> <span class="ident">zeta_n_minus_one</span> <span class="op">/</span> <span class="ident">divisor</span>;
-    <span class="kw">let</span> <span class="ident">lagrange_1_eval_fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(
-        <span class="ident">circuit</span>,
-        <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">lagrange_1_eval</span>),
-        <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-        <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+    // lagrange_1_eval
+    </span><span class="kw">let </span>zeta_n_minus_one = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta_n_minus_one);
+    <span class="kw">let </span>divisor = E::Fr::from(domain_size <span class="kw">as </span>u64) * (zeta_fr - E::Fr::one());
+    <span class="kw">let </span>lagrange_1_eval = zeta_n_minus_one / divisor;
+    <span class="kw">let </span>lagrange_1_eval_fp_elem_var = FpElemVar::new_from_field_element(
+        circuit,
+        <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>lagrange_1_eval),
+        non_native_field_info.m,
+        non_native_field_info.two_power_m,
     )<span class="question-mark">?</span>;
 
-    <span class="comment">// zeta - 1</span>
-    <span class="kw">let</span> <span class="ident">zeta_minus_one_fr</span> <span class="op">=</span> <span class="ident">zeta_fr</span> <span class="op">-</span> <span class="ident">E::Fr::one</span>();
-    <span class="kw">let</span> <span class="ident">zeta_minus_one_fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(
-        <span class="ident">circuit</span>,
-        <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">zeta_minus_one_fr</span>),
-        <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-        <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+    <span class="comment">// zeta - 1
+    </span><span class="kw">let </span>zeta_minus_one_fr = zeta_fr - E::Fr::one();
+    <span class="kw">let </span>zeta_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
+        circuit,
+        <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>zeta_minus_one_fr),
+        non_native_field_info.m,
+        non_native_field_info.two_power_m,
     )<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">zeta_fp_elem_var_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_constant</span>(
-        <span class="kw-2">&amp;</span><span class="ident">zeta_minus_one_fp_elem_var</span>,
-        <span class="kw-2">&amp;</span><span class="ident">one_fp_elem</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="kw">let </span>zeta_fp_elem_var_rec = circuit.mod_add_constant(
+        <span class="kw-2">&amp;</span>zeta_minus_one_fp_elem_var,
+        <span class="kw-2">&amp;</span>one_fp_elem,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
-    <span class="ident">zeta_fp_elem_var</span>.<span class="ident">enforce_equal</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">zeta_fp_elem_var_rec</span>)<span class="question-mark">?</span>;
+    zeta_fp_elem_var.enforce_equal(circuit, <span class="kw-2">&amp;</span>zeta_fp_elem_var_rec)<span class="question-mark">?</span>;
 
-    <span class="comment">// left</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul_constant</span>(
-        <span class="kw-2">&amp;</span><span class="ident">lagrange_1_eval_fp_elem_var</span>,
-        <span class="kw-2">&amp;</span><span class="ident">domain_size_fp_elem</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="comment">// left
+    </span><span class="kw">let </span><span class="kw-2">mut </span>left = circuit.mod_mul_constant(
+        <span class="kw-2">&amp;</span>lagrange_1_eval_fp_elem_var,
+        <span class="kw-2">&amp;</span>domain_size_fp_elem,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
-    <span class="ident">left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">left</span>,
-        <span class="kw-2">&amp;</span><span class="ident">zeta_minus_one_fp_elem_var</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    left = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>left,
+        <span class="kw-2">&amp;</span>zeta_minus_one_fp_elem_var,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
-    <span class="ident">left</span>.<span class="ident">enforce_equal</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">zeta_n_minus_one_fp_elem_var</span>)<span class="question-mark">?</span>;
+    left.enforce_equal(circuit, <span class="kw-2">&amp;</span>zeta_n_minus_one_fp_elem_var)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>([
-        <span class="ident">zeta_n_fp_elem_var</span>,
-        <span class="ident">zeta_n_minus_one_fp_elem_var</span>,
-        <span class="ident">lagrange_1_eval_fp_elem_var</span>,
+        zeta_n_fp_elem_var,
+        zeta_n_minus_one_fp_elem_var,
+        lagrange_1_eval_fp_elem_var,
     ])
 }
 
-<span class="doccomment">/// Evaluate public input polynomial at point `z`.</span>
-<span class="doccomment">/// Define the following as</span>
-<span class="doccomment">/// - H: The domain with generator g</span>
-<span class="doccomment">/// - n: The size of the domain H</span>
-<span class="doccomment">/// - Z_H: The vanishing polynomial for H.</span>
-<span class="doccomment">/// - v_i: A sequence of values, where v_i = g^i / n</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// We then compute L_{i,H}(z) as `L_{i,H}(z) = Z_H(z) * v_i / (z - g^i)`</span>
-<span class="doccomment">/// The public input polynomial evaluation for the merged circuit is:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] +</span>
-<span class="doccomment">/// \sum_{i=0..l/2} L_{n-i,H}(z) * pub_input[l/2+i]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">evaluate_pi_poly_circuit</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">domain_size</span>: <span class="ident">usize</span>,
-    <span class="ident">pub_inputs_fp_elem_var</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    <span class="ident">zeta_fp_elem_var</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">vanish_eval_fp_elem_var</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">circuit_is_merged</span>: <span class="ident">bool</span>,
-    <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// Evaluate public input polynomial at point `z`.
+/// Define the following as
+/// - H: The domain with generator g
+/// - n: The size of the domain H
+/// - Z_H: The vanishing polynomial for H.
+/// - v_i: A sequence of values, where v_i = g^i / n
+///
+/// We then compute L_{i,H}(z) as `L_{i,H}(z) = Z_H(z) * v_i / (z - g^i)`
+/// The public input polynomial evaluation for the merged circuit is:
+///
+/// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] +
+/// \sum_{i=0..l/2} L_{n-i,H}(z) * pub_input[l/2+i]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>evaluate_pi_poly_circuit&lt;E, F&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    domain_size: usize,
+    pub_inputs_fp_elem_var: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
+    zeta_fp_elem_var: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+    vanish_eval_fp_elem_var: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+    circuit_is_merged: bool,
+    non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F&gt;,
+    F: PrimeField,
 {
-    <span class="comment">// the circuit is already merged</span>
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">circuit_is_merged</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(
-            <span class="string">&quot;Circuit should already been merged&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="comment">// the circuit is already merged
+    </span><span class="kw">if </span>!circuit_is_merged {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(
+            <span class="string">&quot;Circuit should already been merged&quot;</span>.to_string(),
         ));
     }
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">pub_inputs_fp_elem_var</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>;
+    <span class="kw">let </span>len = pub_inputs_fp_elem_var.len() &gt;&gt; <span class="number">1</span>;
 
-    <span class="comment">// constants</span>
-    <span class="kw">let</span> <span class="ident">zeta</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">zeta_fp_elem_var</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>);
-    <span class="kw">let</span> <span class="ident">vanish_eval</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">vanish_eval_fp_elem_var</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>);
+    <span class="comment">// constants
+    </span><span class="kw">let </span>zeta = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
+    <span class="kw">let </span>vanish_eval = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>vanish_eval_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
 
-    <span class="comment">// compute v_i = g^i / n in the clear</span>
-    <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="ident">Radix2EvaluationDomain</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">domain_size</span>).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">v_i</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">domain_size</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">domain</span>.<span class="ident">element</span>(<span class="ident">x</span>) <span class="op">/</span> <span class="ident">E::Fr::from</span>(<span class="ident">domain_size</span> <span class="kw">as</span> <span class="ident">u64</span>))
-        .<span class="ident">collect</span>();
+    <span class="comment">// compute v_i = g^i / n in the clear
+    </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(domain_size).unwrap();
+    <span class="kw">let </span>v_i: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..domain_size)
+        .map(|x| domain.element(x) / E::Fr::from(domain_size <span class="kw">as </span>u64))
+        .collect();
 
-    <span class="comment">// compute L_{i,H}(zeta) = Z_H(zeta) * v_i / (zeta - g^i)</span>
-    <span class="comment">// where Z_H(z) is the vanishing evaluation</span>
-    <span class="comment">// compute for both i in [0, len) and [domain_size-len, domain_size)</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lagrange_eval_fp_elem_var</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">len</span>)
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">chain</span>((<span class="ident">domain_size</span> <span class="op">-</span> <span class="ident">len</span>..<span class="ident">domain_size</span>).<span class="ident">into_iter</span>());
+    <span class="comment">// compute L_{i,H}(zeta) = Z_H(zeta) * v_i / (zeta - g^i)
+    // where Z_H(z) is the vanishing evaluation
+    // compute for both i in [0, len) and [domain_size-len, domain_size)
+    </span><span class="kw">let </span><span class="kw-2">mut </span>lagrange_eval_fp_elem_var: Vec&lt;FpElemVar&lt;F&gt;&gt; = Vec::new();
+    <span class="kw">let </span>range = (<span class="number">0</span>..len)
+        .into_iter()
+        .chain((domain_size - len..domain_size).into_iter());
 
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">range</span> {
-        <span class="comment">// compute L_{i,H}(zeta) and related values in the clear</span>
-        <span class="kw">let</span> <span class="ident">v_i_fp_elem</span> <span class="op">=</span> <span class="ident">FpElem</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(
-            <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">v_i</span>[<span class="ident">i</span>]),
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+    <span class="kw">for </span>i <span class="kw">in </span>range {
+        <span class="comment">// compute L_{i,H}(zeta) and related values in the clear
+        </span><span class="kw">let </span>v_i_fp_elem = FpElem::&lt;F&gt;::new(
+            <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>v_i[i]),
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">g_i_fp_elem</span> <span class="op">=</span> <span class="ident">FpElem</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="ident">::new</span>(
-            <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">domain</span>.<span class="ident">element</span>(<span class="ident">i</span>)),
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        <span class="kw">let </span>g_i_fp_elem = FpElem::&lt;F&gt;::new(
+            <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>domain.element(i)),
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">zeta_minus_gi</span> <span class="op">=</span> <span class="ident">zeta</span> <span class="op">-</span> <span class="ident">domain</span>.<span class="ident">element</span>(<span class="ident">i</span>);
-        <span class="kw">let</span> <span class="ident">eval_i</span> <span class="op">=</span> <span class="ident">vanish_eval</span> <span class="op">*</span> <span class="ident">v_i</span>[<span class="ident">i</span>] <span class="op">/</span> <span class="ident">zeta_minus_gi</span>;
+        <span class="kw">let </span>zeta_minus_gi = zeta - domain.element(i);
+        <span class="kw">let </span>eval_i = vanish_eval * v_i[i] / zeta_minus_gi;
 
-        <span class="comment">// prove zeta_minus_gi = zeta - g^i</span>
-        <span class="kw">let</span> <span class="ident">zeta_minus_gi_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(
-            <span class="ident">circuit</span>,
-            <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">zeta_minus_gi</span>),
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        <span class="comment">// prove zeta_minus_gi = zeta - g^i
+        </span><span class="kw">let </span>zeta_minus_gi_elem_var = FpElemVar::new_from_field_element(
+            circuit,
+            <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>zeta_minus_gi),
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">zeta_fp_elem_var_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_constant</span>(
-            <span class="kw-2">&amp;</span><span class="ident">zeta_minus_gi_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">g_i_fp_elem</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="kw">let </span>zeta_fp_elem_var_rec = circuit.mod_add_constant(
+            <span class="kw-2">&amp;</span>zeta_minus_gi_elem_var,
+            <span class="kw-2">&amp;</span>g_i_fp_elem,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="ident">zeta_fp_elem_var</span>.<span class="ident">enforce_equal</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">zeta_fp_elem_var_rec</span>)<span class="question-mark">?</span>;
+        zeta_fp_elem_var.enforce_equal(circuit, <span class="kw-2">&amp;</span>zeta_fp_elem_var_rec)<span class="question-mark">?</span>;
 
-        <span class="comment">// prove L_{i,H}(zeta) * zeta_minus_gi = Z_H(zeta) * v_i</span>
-        <span class="kw">let</span> <span class="ident">eval_i_fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(
-            <span class="ident">circuit</span>,
-            <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">eval_i</span>),
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        <span class="comment">// prove L_{i,H}(zeta) * zeta_minus_gi = Z_H(zeta) * v_i
+        </span><span class="kw">let </span>eval_i_fp_elem_var = FpElemVar::new_from_field_element(
+            circuit,
+            <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>eval_i),
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">eval_i_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">zeta_minus_gi_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="kw">let </span>left = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>eval_i_fp_elem_var,
+            <span class="kw-2">&amp;</span>zeta_minus_gi_elem_var,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">right</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul_constant</span>(
-            <span class="ident">vanish_eval_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">v_i_fp_elem</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="kw">let </span>right = circuit.mod_mul_constant(
+            vanish_eval_fp_elem_var,
+            <span class="kw-2">&amp;</span>v_i_fp_elem,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="ident">left</span>.<span class="ident">enforce_equal</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">right</span>)<span class="question-mark">?</span>;
+        left.enforce_equal(circuit, <span class="kw-2">&amp;</span>right)<span class="question-mark">?</span>;
 
-        <span class="comment">// finish</span>
-        <span class="ident">lagrange_eval_fp_elem_var</span>.<span class="ident">push</span>(<span class="ident">eval_i_fp_elem_var</span>);
+        <span class="comment">// finish
+        </span>lagrange_eval_fp_elem_var.push(eval_i_fp_elem_var);
     }
 
-    <span class="comment">// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] + \sum_{i=0..l/2} L_{n-i,H}(z)</span>
-    <span class="comment">// * pub_input[l/2+i]</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res_i_fp_elem_var</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len</span> {
-        <span class="kw">let</span> <span class="ident">first_term</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">lagrange_eval_fp_elem_var</span>[<span class="ident">i</span>],
-            <span class="kw-2">&amp;</span><span class="ident">pub_inputs_fp_elem_var</span>[<span class="ident">i</span>],
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="comment">// \sum_{i=0..l/2} L_{i,H}(z) * pub_input[i] + \sum_{i=0..l/2} L_{n-i,H}(z)
+    // * pub_input[l/2+i]
+    </span><span class="kw">let </span><span class="kw-2">mut </span>res_i_fp_elem_var = Vec::new();
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..len {
+        <span class="kw">let </span>first_term = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>lagrange_eval_fp_elem_var[i],
+            <span class="kw-2">&amp;</span>pub_inputs_fp_elem_var[i],
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">second_term</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">lagrange_eval_fp_elem_var</span>[(<span class="ident">len</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>) <span class="op">-</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">pub_inputs_fp_elem_var</span>[<span class="ident">len</span> <span class="op">+</span> <span class="ident">i</span>],
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="kw">let </span>second_term = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>lagrange_eval_fp_elem_var[(len &lt;&lt; <span class="number">1</span>) - i - <span class="number">1</span>],
+            <span class="kw-2">&amp;</span>pub_inputs_fp_elem_var[len + i],
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="ident">res_i_fp_elem_var</span>.<span class="ident">push</span>(<span class="ident">first_term</span>);
-        <span class="ident">res_i_fp_elem_var</span>.<span class="ident">push</span>(<span class="ident">second_term</span>);
+        res_i_fp_elem_var.push(first_term);
+        res_i_fp_elem_var.push(second_term);
     }
-    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_vec</span>(<span class="kw-2">&amp;</span><span class="ident">res_i_fp_elem_var</span>, <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>res = circuit.mod_add_vec(<span class="kw-2">&amp;</span>res_i_fp_elem_var, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+    <span class="prelude-val">Ok</span>(res)
 }
 
-<span class="doccomment">/// Compute the constant term of the linearization polynomial:</span>
-<span class="doccomment">/// For each instance j:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// r_plonk_j</span>
-<span class="doccomment">///  = PI - L1(x) * alpha^2 - alpha *</span>
-<span class="doccomment">///  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)</span>
-<span class="doccomment">///  * (w_{j,m} + gamma) * z_j(xw)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// return r_0 = \sum_{j=1..m} alpha^{k_j} * r_plonk_j</span>
-<span class="doccomment">/// where m is the number of instances, and k_j is the number of alpha power</span>
-<span class="doccomment">/// terms added to the first j-1 instances.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - input evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that this function cannot evaluate plookup verification circuits.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">compute_lin_poly_constant_term_circuit</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">domain_size</span>: <span class="ident">usize</span>,
-    <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">ChallengesFpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">verify_keys</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">VerifyingKeyVar</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-    <span class="ident">public_inputs</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>]],
-    <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident">BatchProofVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">evals</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>],
-    <span class="ident">alpha_bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// Compute the constant term of the linearization polynomial:
+/// For each instance j:
+///
+/// r_plonk_j
+///  = PI - L1(x) * alpha^2 - alpha *
+///  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)
+///  * (w_{j,m} + gamma) * z_j(xw)
+///
+/// return r_0 = \sum_{j=1..m} alpha^{k_j} * r_plonk_j
+/// where m is the number of instances, and k_j is the number of alpha power
+/// terms added to the first j-1 instances.
+///
+/// - input evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1
+///
+/// Note that this function cannot evaluate plookup verification circuits.
+</span><span class="attribute">#[allow(clippy::too_many_arguments)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>compute_lin_poly_constant_term_circuit&lt;E, F&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    domain_size: usize,
+    challenges: <span class="kw-2">&amp;</span>ChallengesFpElemVar&lt;F&gt;,
+    verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKeyVar&lt;E&gt;],
+    public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;]],
+    batch_proof: <span class="kw-2">&amp;</span>BatchProofVar&lt;F&gt;,
+    evals: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;; <span class="number">3</span>],
+    alpha_bases: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
+    non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F&gt;,
+    F: PrimeField,
 {
-    <span class="kw">if</span> <span class="ident">verify_keys</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">batch_proof</span>.<span class="ident">len</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">verify_keys</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">public_inputs</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
+    <span class="kw">if </span>verify_keys.len() != batch_proof.len() || verify_keys.len() != public_inputs.len() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
             <span class="string">&quot;the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}&quot;</span>,
-            <span class="ident">verify_keys</span>.<span class="ident">len</span>(),
-            <span class="ident">batch_proof</span>.<span class="ident">len</span>(),
-            <span class="ident">public_inputs</span>.<span class="ident">len</span>(),
+            verify_keys.len(),
+            batch_proof.len(),
+            public_inputs.len(),
         )));
     }
 
-    <span class="kw">let</span> <span class="ident">zeta_fp_elem_var</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">zeta</span>;
+    <span class="kw">let </span>zeta_fp_elem_var = challenges.zeta;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alpha_bases_elem_var</span> <span class="op">=</span> <span class="ident">alpha_bases</span>.<span class="ident">iter</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r_0_components</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>alpha_bases_elem_var = alpha_bases.iter();
+    <span class="kw">let </span><span class="kw-2">mut </span>r_0_components = Vec::new();
 
-    <span class="comment">// making sure the public inputs are the same for all instances</span>
-    <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">public_inputs</span>[<span class="number">0</span>];
-    <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">pi_i</span> <span class="kw">in</span> <span class="ident">public_inputs</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-        <span class="kw">if</span> <span class="ident">pi</span> <span class="op">!</span><span class="op">=</span> <span class="ident">pi_i</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::PublicInputsDoNotMatch</span>)<span class="question-mark">?</span>;
+    <span class="comment">// making sure the public inputs are the same for all instances
+    </span><span class="kw">let </span>pi = public_inputs[<span class="number">0</span>];
+    <span class="kw">for </span><span class="kw-2">&amp;</span>pi_i <span class="kw">in </span>public_inputs.iter().skip(<span class="number">1</span>) {
+        <span class="kw">if </span>pi != pi_i {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PlonkError::PublicInputsDoNotMatch)<span class="question-mark">?</span>;
         }
     }
 
-    <span class="comment">// compute public inputs</span>
-    <span class="kw">let</span> <span class="ident">pi_fp_elem_var</span> <span class="op">=</span> <span class="ident">evaluate_pi_poly_circuit</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span><span class="op">&gt;</span>(
-        <span class="ident">circuit</span>,
-        <span class="ident">domain_size</span>,
-        <span class="ident">pi</span>,
-        <span class="kw-2">&amp;</span><span class="ident">zeta_fp_elem_var</span>,
-        <span class="kw-2">&amp;</span><span class="ident">evals</span>[<span class="number">1</span>],
+    <span class="comment">// compute public inputs
+    </span><span class="kw">let </span>pi_fp_elem_var = evaluate_pi_poly_circuit::&lt;E, F&gt;(
+        circuit,
+        domain_size,
+        pi,
+        <span class="kw-2">&amp;</span>zeta_fp_elem_var,
+        <span class="kw-2">&amp;</span>evals[<span class="number">1</span>],
         <span class="bool-val">true</span>,
-        <span class="ident">non_native_field_info</span>,
+        non_native_field_info,
     )<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">pi_fr</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">pi_fp_elem_var</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>);
+    <span class="kw">let </span>pi_fr = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>pi_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
 
-    <span class="comment">// L1(x)*alpha_2</span>
-    <span class="kw">let</span> <span class="ident">l1_mul_alpha_2_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">evals</span>[<span class="number">2</span>],
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">alphas</span>[<span class="number">1</span>],
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="comment">// L1(x)*alpha_2
+    </span><span class="kw">let </span>l1_mul_alpha_2_fp_elem_var = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>evals[<span class="number">2</span>],
+        <span class="kw-2">&amp;</span>challenges.alphas[<span class="number">1</span>],
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">l1_mul_alpha_2_fr</span> <span class="op">=</span>
-        <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">l1_mul_alpha_2_fp_elem_var</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>);
+    <span class="kw">let </span>l1_mul_alpha_2_fr =
+        field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>l1_mul_alpha_2_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
 
-    <span class="comment">// the big loop to compute r_0[j]</span>
-    <span class="comment">//</span>
-    <span class="comment">// For each instance j:</span>
-    <span class="comment">//</span>
-    <span class="comment">// r_plonk_j</span>
-    <span class="comment">//  = PI - L1(x) * alpha^2 - alpha *</span>
-    <span class="comment">//  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)</span>
-    <span class="comment">//  * (w_{j,m} + gamma) * z_j(xw)</span>
-    <span class="comment">//</span>
-    <span class="comment">// r_0[j] = alpha^{k_j} * r_plonk_j</span>
-    <span class="comment">// where m is the number of instances, and k_j is the number of alpha power</span>
-    <span class="comment">// terms added to the first j-1 instances.</span>
-    <span class="kw">for</span> <span class="ident">poly_evals</span> <span class="kw">in</span> <span class="ident">batch_proof</span>.<span class="ident">poly_evals_vec</span>.<span class="ident">iter</span>() {
-        <span class="comment">// =====================================================</span>
-        <span class="comment">// r_plonk_j</span>
-        <span class="comment">//  = PI - L1(x) * alpha^2 - alpha *</span>
-        <span class="comment">//  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)</span>
-        <span class="comment">//  * (w_{j,m} + gamma) * z_j(xw)</span>
-        <span class="comment">// =====================================================</span>
+    <span class="comment">// the big loop to compute r_0[j]
+    //
+    // For each instance j:
+    //
+    // r_plonk_j
+    //  = PI - L1(x) * alpha^2 - alpha *
+    //  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)
+    //  * (w_{j,m} + gamma) * z_j(xw)
+    //
+    // r_0[j] = alpha^{k_j} * r_plonk_j
+    // where m is the number of instances, and k_j is the number of alpha power
+    // terms added to the first j-1 instances.
+    </span><span class="kw">for </span>poly_evals <span class="kw">in </span>batch_proof.poly_evals_vec.iter() {
+        <span class="comment">// =====================================================
+        // r_plonk_j
+        //  = PI - L1(x) * alpha^2 - alpha *
+        //  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)
+        //  * (w_{j,m} + gamma) * z_j(xw)
+        // =====================================================
 
-        <span class="comment">// \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prod</span> <span class="op">=</span> <span class="ident">FpElemVar::one</span>(
-            <span class="ident">circuit</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        // \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>prod = FpElemVar::one(
+            circuit,
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         );
-        <span class="kw">for</span> (<span class="ident">w_j_i_var</span>, <span class="ident">sigma_j_i_var</span>) <span class="kw">in</span> <span class="ident">poly_evals</span>.<span class="ident">wires_evals</span>[..<span class="ident">GATE_WIDTH</span>]
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">poly_evals</span>.<span class="ident">wire_sigma_evals</span>.<span class="ident">iter</span>())
+        <span class="kw">for </span>(w_j_i_var, sigma_j_i_var) <span class="kw">in </span>poly_evals.wires_evals[..GATE_WIDTH]
+            .iter()
+            .zip(poly_evals.wire_sigma_evals.iter())
         {
-            <span class="kw">let</span> <span class="ident">beta_sigma_j_i</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-                <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">beta</span>,
-                <span class="ident">sigma_j_i_var</span>,
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>beta_sigma_j_i = circuit.mod_mul(
+                <span class="kw-2">&amp;</span>challenges.beta,
+                sigma_j_i_var,
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_vec</span>(
-                <span class="kw-2">&amp;</span>[<span class="kw-2">*</span><span class="ident">w_j_i_var</span>, <span class="ident">beta_sigma_j_i</span>, <span class="ident">challenges</span>.<span class="ident">gamma</span>],
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>sum = circuit.mod_add_vec(
+                <span class="kw-2">&amp;</span>[<span class="kw-2">*</span>w_j_i_var, beta_sigma_j_i, challenges.gamma],
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
-            <span class="ident">prod</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">prod</span>, <span class="kw-2">&amp;</span><span class="ident">sum</span>, <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
+            prod = circuit.mod_mul(<span class="kw-2">&amp;</span>prod, <span class="kw-2">&amp;</span>sum, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
         }
 
-        <span class="comment">// tmp = (w_{j,m} + gamma) * z_j(xw)</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add</span>(
-            <span class="kw-2">&amp;</span><span class="ident">poly_evals</span>.<span class="ident">wires_evals</span>[<span class="ident">GATE_WIDTH</span>],
-            <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">gamma</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// tmp = (w_{j,m} + gamma) * z_j(xw)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tmp = circuit.mod_add(
+            <span class="kw-2">&amp;</span>poly_evals.wires_evals[GATE_WIDTH],
+            <span class="kw-2">&amp;</span>challenges.gamma,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">tmp</span>,
-            <span class="kw-2">&amp;</span><span class="ident">poly_evals</span>.<span class="ident">perm_next_eval</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
-        )<span class="question-mark">?</span>;
-
-        <span class="comment">// tmp = alpha *</span>
-        <span class="comment">//  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)</span>
-        <span class="comment">//  * (w_{j,m} + gamma) * z_j(xw)</span>
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">tmp</span>,
-            <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">alphas</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
-        )<span class="question-mark">?</span>;
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>, <span class="kw-2">&amp;</span><span class="ident">prod</span>, <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">tmp_fr</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>.<span class="ident">witness</span>(<span class="ident">circuit</span>)<span class="question-mark">?</span>);
-
-        <span class="comment">// r_plonk_j</span>
-        <span class="kw">let</span> <span class="ident">r_plonk_j_fr</span> <span class="op">=</span> <span class="ident">pi_fr</span> <span class="op">-</span> <span class="ident">l1_mul_alpha_2_fr</span> <span class="op">-</span> <span class="ident">tmp_fr</span>;
-        <span class="kw">let</span> <span class="ident">r_plonk_j_fp_elem_var</span> <span class="op">=</span> <span class="ident">FpElemVar::new_from_field_element</span>(
-            <span class="ident">circuit</span>,
-            <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">r_plonk_j_fr</span>),
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        tmp = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>tmp,
+            <span class="kw-2">&amp;</span>poly_evals.perm_next_eval,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
 
-        <span class="comment">// proving r_plonk_j + L1(x)*alpha_2 + tmp = PI</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add</span>(
-            <span class="kw-2">&amp;</span><span class="ident">r_plonk_j_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">l1_mul_alpha_2_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// tmp = alpha *
+        //  \prod_i=1..m-1 (w_{j,i} + beta * sigma_{j,i} + gamma)
+        //  * (w_{j,m} + gamma) * z_j(xw)
+        </span>tmp = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>tmp,
+            <span class="kw-2">&amp;</span>challenges.alphas[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="ident">left</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add</span>(<span class="kw-2">&amp;</span><span class="ident">left</span>, <span class="kw-2">&amp;</span><span class="ident">tmp</span>, <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
-        <span class="ident">left</span>.<span class="ident">enforce_equal</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">pi_fp_elem_var</span>)<span class="question-mark">?</span>;
+        tmp = circuit.mod_mul(<span class="kw-2">&amp;</span>tmp, <span class="kw-2">&amp;</span>prod, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
+        <span class="kw">let </span>tmp_fr = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>tmp.witness(circuit)<span class="question-mark">?</span>);
 
-        <span class="comment">// preparing data for second statement</span>
-        <span class="kw">let</span> <span class="ident">r_0_component</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="ident">alpha_bases_elem_var</span>
-                .<span class="ident">next</span>()
-                .<span class="ident">ok_or</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>,
-            <span class="kw-2">&amp;</span><span class="ident">r_plonk_j_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// r_plonk_j
+        </span><span class="kw">let </span>r_plonk_j_fr = pi_fr - l1_mul_alpha_2_fr - tmp_fr;
+        <span class="kw">let </span>r_plonk_j_fp_elem_var = FpElemVar::new_from_field_element(
+            circuit,
+            <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>r_plonk_j_fr),
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         )<span class="question-mark">?</span>;
 
-        <span class="ident">r_0_components</span>.<span class="ident">push</span>(<span class="ident">r_0_component</span>);
+        <span class="comment">// proving r_plonk_j + L1(x)*alpha_2 + tmp = PI
+        </span><span class="kw">let </span><span class="kw-2">mut </span>left = circuit.mod_add(
+            <span class="kw-2">&amp;</span>r_plonk_j_fp_elem_var,
+            <span class="kw-2">&amp;</span>l1_mul_alpha_2_fp_elem_var,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
+        )<span class="question-mark">?</span>;
+        left = circuit.mod_add(<span class="kw-2">&amp;</span>left, <span class="kw-2">&amp;</span>tmp, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
+        left.enforce_equal(circuit, <span class="kw-2">&amp;</span>pi_fp_elem_var)<span class="question-mark">?</span>;
+
+        <span class="comment">// preparing data for second statement
+        </span><span class="kw">let </span>r_0_component = circuit.mod_mul(
+            alpha_bases_elem_var
+                .next()
+                .ok_or(PlonkError::IteratorOutOfRange)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span>r_plonk_j_fp_elem_var,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
+        )<span class="question-mark">?</span>;
+
+        r_0_components.push(r_0_component);
     }
-    <span class="comment">// ensure all the buffer has been consumed</span>
-    <span class="kw">if</span> <span class="ident">alpha_bases_elem_var</span>.<span class="ident">next</span>().<span class="ident">is_some</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>;
+    <span class="comment">// ensure all the buffer has been consumed
+    </span><span class="kw">if </span>alpha_bases_elem_var.next().is_some() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PlonkError::IteratorOutOfRange)<span class="question-mark">?</span>;
     }
-    <span class="comment">// =====================================================</span>
-    <span class="comment">// second statement</span>
-    <span class="comment">// r_0 = \sum_{j=1..m} alpha^{k_j} * r_plonk_j</span>
-    <span class="comment">// =====================================================</span>
-    <span class="kw">let</span> <span class="ident">res_elem_var</span> <span class="op">=</span>
-        <span class="ident">circuit</span>.<span class="ident">mod_add_vec</span>(<span class="kw-2">&amp;</span><span class="ident">r_0_components</span>, <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
+    <span class="comment">// =====================================================
+    // second statement
+    // r_0 = \sum_{j=1..m} alpha^{k_j} * r_plonk_j
+    // =====================================================
+    </span><span class="kw">let </span>res_elem_var =
+        circuit.mod_add_vec(<span class="kw-2">&amp;</span>r_0_components, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">res_elem_var</span>)
+    <span class="prelude-val">Ok</span>(res_elem_var)
 }
 
-<span class="doccomment">/// Compute the bases and scalars in the batched polynomial commitment,</span>
-<span class="doccomment">/// which is a generalization of `[D]1` specified in Sec 8.3, Verifier</span>
-<span class="doccomment">/// algorithm step 9 of https://eprint.iacr.org/2019/953.pdf.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - input evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Do not compute plookup related variables.</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">linearization_scalars_and_bases_circuit</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">vks</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">VerifyingKeyVar</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>],
-    <span class="ident">challenges</span>: <span class="kw-2">&amp;</span><span class="ident">ChallengesFpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">poly_evals</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>; <span class="number">3</span>],
-    <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident">BatchProofVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">alpha_bases</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-    <span class="ident">non_native_field_info</span>: <span class="ident">NonNativeFieldInfo</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ScalarsAndBasesVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// Compute the bases and scalars in the batched polynomial commitment,
+/// which is a generalization of `[D]1` specified in Sec 8.3, Verifier
+/// algorithm step 9 of https://eprint.iacr.org/2019/953.pdf.
+///
+/// - input evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1
+///
+/// Do not compute plookup related variables.
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>linearization_scalars_and_bases_circuit&lt;E, F&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    vks: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKeyVar&lt;E&gt;],
+    challenges: <span class="kw-2">&amp;</span>ChallengesFpElemVar&lt;F&gt;,
+    poly_evals: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;; <span class="number">3</span>],
+    batch_proof: <span class="kw-2">&amp;</span>BatchProofVar&lt;F&gt;,
+    alpha_bases: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
+    non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ScalarsAndBasesVar&lt;F&gt;, CircuitError&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F&gt;,
+    F: PrimeField,
 {
-    <span class="kw">let</span> <span class="ident">beta_times_zeta_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">beta</span>,
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">zeta</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="kw">let </span>beta_times_zeta_fp_elem_var = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>challenges.beta,
+        <span class="kw-2">&amp;</span>challenges.zeta,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">alpha_times_beta_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">alphas</span>[<span class="number">0</span>],
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">beta</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
-    )<span class="question-mark">?</span>;
-
-    <span class="kw">let</span> <span class="ident">alpha_2_mul_l1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">alphas</span>[<span class="number">1</span>],
-        <span class="kw-2">&amp;</span><span class="ident">poly_evals</span>[<span class="number">2</span>],
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="kw">let </span>alpha_times_beta_fp_elem_var = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>challenges.alphas[<span class="number">0</span>],
+        <span class="kw-2">&amp;</span>challenges.beta,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alpha_bases_elem_var</span> <span class="op">=</span> <span class="ident">alpha_bases</span>.<span class="ident">iter</span>();
+    <span class="kw">let </span>alpha_2_mul_l1 = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>challenges.alphas[<span class="number">1</span>],
+        <span class="kw-2">&amp;</span>poly_evals[<span class="number">2</span>],
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
+    )<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scalars_and_bases</span> <span class="op">=</span> <span class="ident">ScalarsAndBasesVar::new</span>();
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">vk</span>) <span class="kw">in</span> <span class="ident">vks</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="comment">// ============================================</span>
-        <span class="comment">// Compute coefficient for the permutation product polynomial commitment.</span>
-        <span class="comment">// coeff = [z]_1 *</span>
-        <span class="comment">//       ( L1(zeta) * alpha^2</span>
-        <span class="comment">//          + alpha</span>
-        <span class="comment">//              * (beta * zeta      + a_bar + gamma)    &lt;- computed via the loop</span>
-        <span class="comment">//              * (beta * k1 * zeta + b_bar + gamma)    &lt;- computed via the loop</span>
-        <span class="comment">//              * (beta * k2 * zeta + c_bar + gamma)    &lt;- computed via the loop</span>
-        <span class="comment">//       )</span>
-        <span class="comment">// where a_bar, b_bar and c_bar are in w_evals</span>
-        <span class="comment">// ============================================</span>
+    <span class="kw">let </span><span class="kw-2">mut </span>alpha_bases_elem_var = alpha_bases.iter();
 
-        <span class="kw">let</span> <span class="ident">current_alpha_bases</span> <span class="op">=</span> <span class="ident">alpha_bases_elem_var</span>
-            .<span class="ident">next</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>scalars_and_bases = ScalarsAndBasesVar::new();
+    <span class="kw">for </span>(i, vk) <span class="kw">in </span>vks.iter().enumerate() {
+        <span class="comment">// ============================================
+        // Compute coefficient for the permutation product polynomial commitment.
+        // coeff = [z]_1 *
+        //       ( L1(zeta) * alpha^2
+        //          + alpha
+        //              * (beta * zeta      + a_bar + gamma)    &lt;- computed via the loop
+        //              * (beta * k1 * zeta + b_bar + gamma)    &lt;- computed via the loop
+        //              * (beta * k2 * zeta + c_bar + gamma)    &lt;- computed via the loop
+        //       )
+        // where a_bar, b_bar and c_bar are in w_evals
+        // ============================================
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">coeff_fp_elem_var</span> <span class="op">=</span> <span class="ident">alpha_2_mul_l1</span>;
-        <span class="kw">let</span> <span class="ident">w_evals</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">poly_evals_vec</span>[<span class="ident">i</span>].<span class="ident">wires_evals</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prod</span> <span class="op">=</span> <span class="ident">challenges</span>.<span class="ident">alphas</span>[<span class="number">0</span>];
-        <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">x_bar</span>, <span class="ident">k_i</span>) <span class="kw">in</span> <span class="ident">w_evals</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">vk</span>.<span class="ident">k</span>.<span class="ident">iter</span>()) {
-            <span class="kw">let</span> <span class="ident">beta_k_zeta_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul_constant</span>(
-                <span class="kw-2">&amp;</span><span class="ident">beta_times_zeta_fp_elem_var</span>,
-                <span class="kw-2">&amp;</span><span class="ident">FpElem::new</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">k_i</span>),
-                    <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-                    <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        </span><span class="kw">let </span>current_alpha_bases = alpha_bases_elem_var
+            .next()
+            .ok_or(PlonkError::IteratorOutOfRange)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>coeff_fp_elem_var = alpha_2_mul_l1;
+        <span class="kw">let </span>w_evals = <span class="kw-2">&amp;</span>batch_proof.poly_evals_vec[i].wires_evals;
+        <span class="kw">let </span><span class="kw-2">mut </span>prod = challenges.alphas[<span class="number">0</span>];
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>x_bar, k_i) <span class="kw">in </span>w_evals.iter().zip(vk.k.iter()) {
+            <span class="kw">let </span>beta_k_zeta_fp_elem_var = circuit.mod_mul_constant(
+                <span class="kw-2">&amp;</span>beta_times_zeta_fp_elem_var,
+                <span class="kw-2">&amp;</span>FpElem::new(
+                    <span class="kw-2">&amp;</span>field_switching::&lt;<span class="kw">_</span>, F&gt;(k_i),
+                    non_native_field_info.m,
+                    non_native_field_info.two_power_m,
                 )<span class="question-mark">?</span>,
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_vec</span>(
-                <span class="kw-2">&amp;</span>[<span class="ident">beta_k_zeta_fp_elem_var</span>, <span class="ident">x_bar</span>, <span class="ident">challenges</span>.<span class="ident">gamma</span>],
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>sum = circuit.mod_add_vec(
+                <span class="kw-2">&amp;</span>[beta_k_zeta_fp_elem_var, x_bar, challenges.gamma],
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
-            <span class="ident">prod</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">prod</span>, <span class="kw-2">&amp;</span><span class="ident">sum</span>, <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
+            prod = circuit.mod_mul(<span class="kw-2">&amp;</span>prod, <span class="kw-2">&amp;</span>sum, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
         }
-        <span class="ident">coeff_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add</span>(
-            <span class="kw-2">&amp;</span><span class="ident">coeff_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">prod</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        coeff_fp_elem_var = circuit.mod_add(
+            <span class="kw-2">&amp;</span>coeff_fp_elem_var,
+            <span class="kw-2">&amp;</span>prod,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="comment">// multiply the final results with alpha_base</span>
-        <span class="ident">coeff_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">coeff_fp_elem_var</span>,
-            <span class="ident">current_alpha_bases</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// multiply the final results with alpha_base
+        </span>coeff_fp_elem_var = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>coeff_fp_elem_var,
+            current_alpha_bases,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="comment">// Add permutation product polynomial commitment.</span>
-        <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">coeff_fp_elem_var</span>);
-        <span class="ident">scalars_and_bases</span>
-            .<span class="ident">bases</span>
-            .<span class="ident">push</span>(<span class="ident">batch_proof</span>.<span class="ident">prod_perm_poly_comms_vec</span>[<span class="ident">i</span>]);
+        <span class="comment">// Add permutation product polynomial commitment.
+        </span>scalars_and_bases.scalars.push(coeff_fp_elem_var);
+        scalars_and_bases
+            .bases
+            .push(batch_proof.prod_perm_poly_comms_vec[i]);
 
-        <span class="comment">// ============================================</span>
-        <span class="comment">// Compute coefficient for the last wire sigma polynomial commitment.</span>
-        <span class="comment">// coeff = alpha * beta * z_w * [s_sigma_3]_1</span>
-        <span class="comment">//       * (a_bar + gamma + beta * s_bar_sigma_1)</span>
-        <span class="comment">//       * (b_bar + gamma + beta * s_bar_sigma_2)</span>
-        <span class="comment">// ============================================</span>
-        <span class="kw">let</span> <span class="ident">num_wire_types</span> <span class="op">=</span> <span class="ident">batch_proof</span>.<span class="ident">wires_poly_comms_vec</span>[<span class="ident">i</span>].<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">sigma_evals</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">poly_evals_vec</span>[<span class="ident">i</span>].<span class="ident">wire_sigma_evals</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">coeff_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">alpha_times_beta_fp_elem_var</span>,
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">poly_evals_vec</span>[<span class="ident">i</span>].<span class="ident">perm_next_eval</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// ============================================
+        // Compute coefficient for the last wire sigma polynomial commitment.
+        // coeff = alpha * beta * z_w * [s_sigma_3]_1
+        //       * (a_bar + gamma + beta * s_bar_sigma_1)
+        //       * (b_bar + gamma + beta * s_bar_sigma_2)
+        // ============================================
+        </span><span class="kw">let </span>num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
+        <span class="kw">let </span>sigma_evals = <span class="kw-2">&amp;</span>batch_proof.poly_evals_vec[i].wire_sigma_evals;
+        <span class="kw">let </span><span class="kw-2">mut </span>coeff_fp_elem_var = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>alpha_times_beta_fp_elem_var,
+            <span class="kw-2">&amp;</span>batch_proof.poly_evals_vec[i].perm_next_eval,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">x_bar</span>, <span class="ident">sigma_i</span>) <span class="kw">in</span> <span class="ident">w_evals</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">take</span>(<span class="ident">num_wire_types</span> <span class="op">-</span> <span class="number">1</span>)
-            .<span class="ident">zip</span>(<span class="ident">sigma_evals</span>.<span class="ident">iter</span>())
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>x_bar, sigma_i) <span class="kw">in </span>w_evals
+            .iter()
+            .take(num_wire_types - <span class="number">1</span>)
+            .zip(sigma_evals.iter())
         {
-            <span class="kw">let</span> <span class="ident">beta_times_s_bar_sigma_1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-                <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">beta</span>,
-                <span class="ident">sigma_i</span>,
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>beta_times_s_bar_sigma_1 = circuit.mod_mul(
+                <span class="kw-2">&amp;</span>challenges.beta,
+                sigma_i,
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_add_vec</span>(
-                <span class="kw-2">&amp;</span>[<span class="ident">x_bar</span>, <span class="ident">challenges</span>.<span class="ident">gamma</span>, <span class="ident">beta_times_s_bar_sigma_1</span>],
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>sum = circuit.mod_add_vec(
+                <span class="kw-2">&amp;</span>[x_bar, challenges.gamma, beta_times_s_bar_sigma_1],
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
 
-            <span class="ident">coeff_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-                <span class="kw-2">&amp;</span><span class="ident">coeff_fp_elem_var</span>,
-                <span class="kw-2">&amp;</span><span class="ident">sum</span>,
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            coeff_fp_elem_var = circuit.mod_mul(
+                <span class="kw-2">&amp;</span>coeff_fp_elem_var,
+                <span class="kw-2">&amp;</span>sum,
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
         }
 
-        <span class="comment">// multiply the final results with alpha_base</span>
-        <span class="ident">coeff_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">coeff_fp_elem_var</span>,
-            <span class="ident">current_alpha_bases</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// multiply the final results with alpha_base
+        </span>coeff_fp_elem_var = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>coeff_fp_elem_var,
+            current_alpha_bases,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
 
-        <span class="comment">// Add output wire sigma polynomial commitment.</span>
-        <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">coeff_fp_elem_var</span>);
-        <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="ident">vk</span>.<span class="ident">sigma_comms</span>.<span class="ident">last</span>().<span class="ident">ok_or</span>(<span class="ident">CircuitError::IndexError</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="comment">// Add output wire sigma polynomial commitment.
+        </span>scalars_and_bases.scalars.push(coeff_fp_elem_var);
+        <span class="kw">let </span>tmp = circuit.inverse_point(vk.sigma_comms.last().ok_or(CircuitError::IndexError)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 
-        <span class="ident">scalars_and_bases</span>.<span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+        scalars_and_bases.bases.push(tmp);
 
-        <span class="comment">// ============================================</span>
-        <span class="comment">// Add selector polynomial commitments.</span>
-        <span class="comment">// Compute coefficients for selector polynomial commitments.</span>
-        <span class="comment">// The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc</span>
-        <span class="comment">// ============================================</span>
-        <span class="comment">// q_scalars[0..3]</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q_scalars_fp_elem_vars</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">w_evals</span>[<span class="number">0</span>], <span class="ident">w_evals</span>[<span class="number">1</span>], <span class="ident">w_evals</span>[<span class="number">2</span>], <span class="ident">w_evals</span>[<span class="number">3</span>]];
-        <span class="comment">// q_scalars[4] = w_evals[0] * w_evals[1];</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// ============================================
+        // Add selector polynomial commitments.
+        // Compute coefficients for selector polynomial commitments.
+        // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
+        // ============================================
+        // q_scalars[0..3]
+        </span><span class="kw">let </span><span class="kw-2">mut </span>q_scalars_fp_elem_vars = <span class="macro">vec!</span>[w_evals[<span class="number">0</span>], w_evals[<span class="number">1</span>], w_evals[<span class="number">2</span>], w_evals[<span class="number">3</span>]];
+        <span class="comment">// q_scalars[4] = w_evals[0] * w_evals[1];
+        </span>q_scalars_fp_elem_vars.push(circuit.mod_mul(
+            <span class="kw-2">&amp;</span>w_evals[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>w_evals[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>);
-        <span class="comment">// q_scalars[5] = w_evals[2] * w_evals[3];</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">2</span>],
-            <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">3</span>],
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// q_scalars[5] = w_evals[2] * w_evals[3];
+        </span>q_scalars_fp_elem_vars.push(circuit.mod_mul(
+            <span class="kw-2">&amp;</span>w_evals[<span class="number">2</span>],
+            <span class="kw-2">&amp;</span>w_evals[<span class="number">3</span>],
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>);
-        <span class="comment">// q_scalars[6] = w_evals[0].pow([5]);</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">non_native_power_5_gen</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">0</span>])<span class="question-mark">?</span>);
-        <span class="comment">// q_scalars[7] = w_evals[1].pow([5]);</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">non_native_power_5_gen</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">1</span>])<span class="question-mark">?</span>);
-        <span class="comment">// q_scalars[8] = w_evals[2].pow([5]);</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">non_native_power_5_gen</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">2</span>])<span class="question-mark">?</span>);
-        <span class="comment">// q_scalars[9] = w_evals[3].pow([5]);</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">non_native_power_5_gen</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">3</span>])<span class="question-mark">?</span>);
-        <span class="comment">// q_scalars[10] = -w_evals[4];</span>
-        <span class="comment">// note that we push w_eval to the buffer, so we will need to inverse the basis</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">w_evals</span>[<span class="number">4</span>]);
-        <span class="comment">// q_scalars[11] = E::Fr::one();</span>
-        <span class="comment">// TODO(optimization): public wire?</span>
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">FpElemVar::one</span>(
-            <span class="ident">circuit</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">m</span>,
-            <span class="ident">non_native_field_info</span>.<span class="ident">two_power_m</span>,
+        <span class="comment">// q_scalars[6] = w_evals[0].pow([5]);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">0</span>])<span class="question-mark">?</span>);
+        <span class="comment">// q_scalars[7] = w_evals[1].pow([5]);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">1</span>])<span class="question-mark">?</span>);
+        <span class="comment">// q_scalars[8] = w_evals[2].pow([5]);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">2</span>])<span class="question-mark">?</span>);
+        <span class="comment">// q_scalars[9] = w_evals[3].pow([5]);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">3</span>])<span class="question-mark">?</span>);
+        <span class="comment">// q_scalars[10] = -w_evals[4];
+        // note that we push w_eval to the buffer, so we will need to inverse the basis
+        </span>q_scalars_fp_elem_vars.push(w_evals[<span class="number">4</span>]);
+        <span class="comment">// q_scalars[11] = E::Fr::one();
+        // TODO(optimization): public wire?
+        </span>q_scalars_fp_elem_vars.push(FpElemVar::one(
+            circuit,
+            non_native_field_info.m,
+            non_native_field_info.two_power_m,
         ));
-        <span class="comment">// q_scalars[12]</span>
-        <span class="comment">// = w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4];</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">0</span>],
-            <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">1</span>],
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+        <span class="comment">// q_scalars[12]
+        // = w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4];
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tmp = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>w_evals[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>w_evals[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>, <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">2</span>], <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>, <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">3</span>], <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
-        <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>, <span class="kw-2">&amp;</span><span class="ident">w_evals</span>[<span class="number">4</span>], <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>)<span class="question-mark">?</span>;
-        <span class="ident">q_scalars_fp_elem_vars</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+        tmp = circuit.mod_mul(<span class="kw-2">&amp;</span>tmp, <span class="kw-2">&amp;</span>w_evals[<span class="number">2</span>], <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
+        tmp = circuit.mod_mul(<span class="kw-2">&amp;</span>tmp, <span class="kw-2">&amp;</span>w_evals[<span class="number">3</span>], <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
+        tmp = circuit.mod_mul(<span class="kw-2">&amp;</span>tmp, <span class="kw-2">&amp;</span>w_evals[<span class="number">4</span>], <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
+        q_scalars_fp_elem_vars.push(tmp);
 
-        <span class="kw">for</span> (<span class="ident">i</span>, (<span class="ident">s</span>, <span class="kw-2">&amp;</span><span class="ident">poly</span>)) <span class="kw">in</span> <span class="ident">q_scalars_fp_elem_vars</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">vk</span>.<span class="ident">selector_comms</span>.<span class="ident">iter</span>())
-            .<span class="ident">enumerate</span>()
+        <span class="kw">for </span>(i, (s, <span class="kw-2">&amp;</span>poly)) <span class="kw">in </span>q_scalars_fp_elem_vars
+            .iter()
+            .zip(vk.selector_comms.iter())
+            .enumerate()
         {
-            <span class="comment">// inverse the bases for w_eval[10]</span>
-            <span class="kw">let</span> <span class="ident">bases</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="number">10</span> {
-                <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="kw-2">&amp;</span><span class="ident">poly</span>)<span class="question-mark">?</span>
-            } <span class="kw">else</span> {
-                <span class="ident">poly</span>
+            <span class="comment">// inverse the bases for w_eval[10]
+            </span><span class="kw">let </span>bases = <span class="kw">if </span>i == <span class="number">10 </span>{
+                circuit.inverse_point(<span class="kw-2">&amp;</span>poly)<span class="question-mark">?
+            </span>} <span class="kw">else </span>{
+                poly
             };
 
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-                <span class="ident">s</span>,
-                <span class="ident">current_alpha_bases</span>,
-                <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>tmp = circuit.mod_mul(
+                s,
+                current_alpha_bases,
+                <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
             )<span class="question-mark">?</span>;
-            <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
-            <span class="ident">scalars_and_bases</span>.<span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">bases</span>);
+            scalars_and_bases.scalars.push(tmp);
+            scalars_and_bases.bases.push(bases);
         }
     }
 
-    <span class="comment">// ensure all the buffer has been consumed</span>
-    <span class="kw">if</span> <span class="ident">alpha_bases_elem_var</span>.<span class="ident">next</span>().<span class="ident">is_some</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::IteratorOutOfRange</span>)<span class="question-mark">?</span>;
+    <span class="comment">// ensure all the buffer has been consumed
+    </span><span class="kw">if </span>alpha_bases_elem_var.next().is_some() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PlonkError::IteratorOutOfRange)<span class="question-mark">?</span>;
     }
-    <span class="comment">// ============================================</span>
-    <span class="comment">// Add splitted quotient commitments</span>
-    <span class="comment">// ============================================</span>
-    <span class="kw">let</span> <span class="ident">zeta_square_fp_elem_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">zeta</span>,
-        <span class="kw-2">&amp;</span><span class="ident">challenges</span>.<span class="ident">zeta</span>,
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="comment">// ============================================
+    // Add splitted quotient commitments
+    // ============================================
+    </span><span class="kw">let </span>zeta_square_fp_elem_var = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>challenges.zeta,
+        <span class="kw-2">&amp;</span>challenges.zeta,
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">zeta_to_n_plus_2</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-        <span class="kw-2">&amp;</span><span class="ident">zeta_square_fp_elem_var</span>,
-        <span class="kw-2">&amp;</span><span class="ident">poly_evals</span>[<span class="number">0</span>],
-        <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="kw">let </span>zeta_to_n_plus_2 = circuit.mod_mul(
+        <span class="kw-2">&amp;</span>zeta_square_fp_elem_var,
+        <span class="kw-2">&amp;</span>poly_evals[<span class="number">0</span>],
+        <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
     )<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">coeff</span> <span class="op">=</span> <span class="ident">poly_evals</span>[<span class="number">1</span>];
-    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(
-        <span class="ident">batch_proof</span>
-            .<span class="ident">split_quot_poly_comms</span>
-            .<span class="ident">first</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">CircuitError::IndexError</span>)<span class="question-mark">?</span>,
+    <span class="kw">let </span><span class="kw-2">mut </span>coeff = poly_evals[<span class="number">1</span>];
+    <span class="kw">let </span>tmp = circuit.inverse_point(
+        batch_proof
+            .split_quot_poly_comms
+            .first()
+            .ok_or(CircuitError::IndexError)<span class="question-mark">?</span>,
     )<span class="question-mark">?</span>;
-    <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">poly_evals</span>[<span class="number">1</span>]);
-    <span class="ident">scalars_and_bases</span>.<span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+    scalars_and_bases.scalars.push(poly_evals[<span class="number">1</span>]);
+    scalars_and_bases.bases.push(tmp);
 
-    <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">poly</span> <span class="kw">in</span> <span class="ident">batch_proof</span>.<span class="ident">split_quot_poly_comms</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-        <span class="ident">coeff</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mod_mul</span>(
-            <span class="kw-2">&amp;</span><span class="ident">coeff</span>,
-            <span class="kw-2">&amp;</span><span class="ident">zeta_to_n_plus_2</span>,
-            <span class="kw-2">&amp;</span><span class="ident">non_native_field_info</span>.<span class="ident">modulus_fp_elem</span>,
+    <span class="kw">for </span><span class="kw-2">&amp;</span>poly <span class="kw">in </span>batch_proof.split_quot_poly_comms.iter().skip(<span class="number">1</span>) {
+        coeff = circuit.mod_mul(
+            <span class="kw-2">&amp;</span>coeff,
+            <span class="kw-2">&amp;</span>zeta_to_n_plus_2,
+            <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">poly</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="kw-2">&amp;</span><span class="ident">poly</span>)<span class="question-mark">?</span>;
-        <span class="ident">scalars_and_bases</span>.<span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">coeff</span>);
-        <span class="ident">scalars_and_bases</span>.<span class="ident">bases</span>.<span class="ident">push</span>(<span class="ident">poly</span>);
+        <span class="kw">let </span>poly = circuit.inverse_point(<span class="kw-2">&amp;</span>poly)<span class="question-mark">?</span>;
+        scalars_and_bases.scalars.push(coeff);
+        scalars_and_bases.bases.push(poly);
     }
 
-    <span class="prelude-val">Ok</span>(<span class="ident">scalars_and_bases</span>)
+    <span class="prelude-val">Ok</span>(scalars_and_bases)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Bls12_377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::Field</span>;
-    <span class="kw">use</span> <span class="ident">ark_poly::Radix2EvaluationDomain</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">One</span>, <span class="ident">UniformRand</span>};
-    <span class="kw">use</span> <span class="ident">jf_relation::Circuit</span>;
-    <span class="kw">use</span> <span class="ident">jf_utils::field_switching</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_bls12_377::Bls12_377;
+    <span class="kw">use </span>ark_ff::Field;
+    <span class="kw">use </span>ark_poly::Radix2EvaluationDomain;
+    <span class="kw">use </span>ark_std::{test_rng, One, UniformRand};
+    <span class="kw">use </span>jf_relation::Circuit;
+    <span class="kw">use </span>jf_utils::field_switching;
 
-    <span class="kw">const</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
+    <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_evaluate_poly</span>() {
-        <span class="ident">test_evaluate_poly_helper</span>::<span class="op">&lt;</span><span class="ident">Bls12_377</span><span class="op">&gt;</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_evaluate_poly() {
+        test_evaluate_poly_helper::&lt;Bls12_377&gt;();
     }
 
-    <span class="kw">fn</span> <span class="ident">test_evaluate_poly_helper</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+    <span class="kw">fn </span>test_evaluate_poly_helper&lt;E: PairingEngine&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span> <span class="op">=</span> <span class="ident">PlonkCircuit</span>::<span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span><span class="ident">::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
-        <span class="kw">let</span> <span class="ident">zeta</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">zeta_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">zeta</span>)).<span class="ident">unwrap</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;E::Fq&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        <span class="kw">let </span>zeta = E::Fr::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>zeta_var = circuit.create_variable(field_switching(<span class="kw-2">&amp;</span>zeta)).unwrap();
 
-        <span class="kw">for</span> <span class="ident">domain_size</span> <span class="kw">in</span> [<span class="number">64</span>, <span class="number">128</span>, <span class="number">256</span>, <span class="number">512</span>, <span class="number">1024</span>] {
-            <span class="comment">// compute the result in the clear</span>
-            <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="ident">Radix2EvaluationDomain</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">domain_size</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">vanish_eval</span> <span class="op">=</span> <span class="ident">domain</span>.<span class="ident">evaluate_vanishing_polynomial</span>(<span class="ident">zeta</span>);
-            <span class="kw">let</span> <span class="ident">zeta_n</span> <span class="op">=</span> <span class="ident">vanish_eval</span> <span class="op">+</span> <span class="ident">E::Fr::one</span>();
-            <span class="kw">let</span> <span class="ident">divisor</span> <span class="op">=</span> <span class="ident">E::Fr::from</span>(<span class="ident">domain_size</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">*</span> (<span class="ident">zeta</span> <span class="op">-</span> <span class="ident">E::Fr::one</span>());
-            <span class="kw">let</span> <span class="ident">lagrange_1_eval</span> <span class="op">=</span> <span class="ident">vanish_eval</span> <span class="op">/</span> <span class="ident">divisor</span>;
+        <span class="kw">for </span>domain_size <span class="kw">in </span>[<span class="number">64</span>, <span class="number">128</span>, <span class="number">256</span>, <span class="number">512</span>, <span class="number">1024</span>] {
+            <span class="comment">// compute the result in the clear
+            </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(domain_size).unwrap();
+            <span class="kw">let </span>vanish_eval = domain.evaluate_vanishing_polynomial(zeta);
+            <span class="kw">let </span>zeta_n = vanish_eval + E::Fr::one();
+            <span class="kw">let </span>divisor = E::Fr::from(domain_size <span class="kw">as </span>u32) * (zeta - E::Fr::one());
+            <span class="kw">let </span>lagrange_1_eval = vanish_eval / divisor;
 
-            <span class="comment">// compute the variables</span>
-            <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="number">128</span>;
-            <span class="comment">// constants</span>
-            <span class="kw">let</span> <span class="ident">two_power_m</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">E::Fq::from</span>(<span class="number">2u8</span>).<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="ident">m</span> <span class="kw">as</span> <span class="ident">u64</span>]));
+            <span class="comment">// compute the variables
+            </span><span class="kw">let </span>m = <span class="number">128</span>;
+            <span class="comment">// constants
+            </span><span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(E::Fq::from(<span class="number">2u8</span>).pow([m <span class="kw">as </span>u64]));
 
-            <span class="kw">let</span> <span class="ident">fr_modulus_bits</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">E::Fr</span> <span class="kw">as</span> <span class="ident">PrimeField</span><span class="op">&gt;</span><span class="ident">::Params::MODULUS</span>.<span class="ident">to_bytes_le</span>();
-            <span class="kw">let</span> <span class="ident">modulus_in_f</span> <span class="op">=</span> <span class="ident">E::Fq::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">fr_modulus_bits</span>);
-            <span class="kw">let</span> <span class="ident">modulus_fp_elem</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">modulus_in_f</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>fr_modulus_bits = &lt;E::Fr <span class="kw">as </span>PrimeField&gt;::Params::MODULUS.to_bytes_le();
+            <span class="kw">let </span>modulus_in_f = E::Fq::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>fr_modulus_bits);
+            <span class="kw">let </span>modulus_fp_elem = FpElem::new(<span class="kw-2">&amp;</span>modulus_in_f, m, two_power_m).unwrap();
 
-            <span class="kw">let</span> <span class="ident">non_native_field_info</span> <span class="op">=</span> <span class="ident">NonNativeFieldInfo</span>::<span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span> {
-                <span class="ident">m</span>,
-                <span class="ident">two_power_m</span>,
-                <span class="ident">modulus_in_f</span>,
-                <span class="ident">modulus_fp_elem</span>,
+            <span class="kw">let </span>non_native_field_info = NonNativeFieldInfo::&lt;E::Fq&gt; {
+                m,
+                two_power_m,
+                modulus_in_f,
+                modulus_fp_elem,
             };
 
-            <span class="kw">let</span> <span class="ident">zeta_fp_elem_var</span> <span class="op">=</span>
-                <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">zeta_var</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">eval_results</span> <span class="op">=</span> <span class="ident">evaluate_poly_helper</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(
-                <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
-                <span class="kw-2">&amp;</span><span class="ident">zeta_fp_elem_var</span>,
-                <span class="ident">domain_size</span>,
-                <span class="ident">non_native_field_info</span>,
+            <span class="kw">let </span>zeta_fp_elem_var =
+                FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, zeta_var, m, <span class="prelude-val">None</span>).unwrap();
+            <span class="kw">let </span>eval_results = evaluate_poly_helper::&lt;E, <span class="kw">_</span>&gt;(
+                <span class="kw-2">&amp;mut </span>circuit,
+                <span class="kw-2">&amp;</span>zeta_fp_elem_var,
+                domain_size,
+                non_native_field_info,
             )
-            .<span class="ident">unwrap</span>();
+            .unwrap();
 
-            <span class="comment">// check the correctness</span>
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">eval_results</span>[<span class="number">0</span>].<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>).<span class="ident">unwrap</span>();
+            <span class="comment">// check the correctness
+            </span><span class="kw">let </span>tmp = eval_results[<span class="number">0</span>].convert_to_var(<span class="kw-2">&amp;mut </span>circuit).unwrap();
             <span class="macro">assert_eq!</span>(
-                <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fq</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">zeta_n</span>),
-                <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">tmp</span>).<span class="ident">unwrap</span>(),
+                field_switching::&lt;<span class="kw">_</span>, E::Fq&gt;(<span class="kw-2">&amp;</span>zeta_n),
+                circuit.witness(tmp).unwrap(),
             );
 
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">eval_results</span>[<span class="number">1</span>].<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>tmp = eval_results[<span class="number">1</span>].convert_to_var(<span class="kw-2">&amp;mut </span>circuit).unwrap();
             <span class="macro">assert_eq!</span>(
-                <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fq</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">vanish_eval</span>),
-                <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">tmp</span>).<span class="ident">unwrap</span>(),
+                field_switching::&lt;<span class="kw">_</span>, E::Fq&gt;(<span class="kw-2">&amp;</span>vanish_eval),
+                circuit.witness(tmp).unwrap(),
             );
 
-            <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">eval_results</span>[<span class="number">2</span>].<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>tmp = eval_results[<span class="number">2</span>].convert_to_var(<span class="kw-2">&amp;mut </span>circuit).unwrap();
             <span class="macro">assert_eq!</span>(
-                <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">E::Fq</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">lagrange_1_eval</span>),
-                <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">tmp</span>).<span class="ident">unwrap</span>(),
+                field_switching::&lt;<span class="kw">_</span>, E::Fq&gt;(<span class="kw-2">&amp;</span>lagrange_1_eval),
+                circuit.witness(tmp).unwrap(),
             );
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

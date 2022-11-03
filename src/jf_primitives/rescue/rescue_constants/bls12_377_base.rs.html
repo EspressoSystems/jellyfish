@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/rescue_constants/bls12_377_base.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bls12_377_base.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/rescue_constants/bls12_377_base.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bls12_377_base.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1520,26 +1520,26 @@
 <span id="1520">1520</span>
 <span id="1521">1521</span>
 <span id="1522">1522</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">ROUNDS</span>, <span class="ident">STATE_SIZE</span>};
-<span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::rescue::{RescueParameter, ROUNDS, STATE_SIZE};
+<span class="kw">use </span>ark_bls12_377::Fq;
 
-<span class="comment">// the constants in this file are generated with</span>
-<span class="comment">// https://github.com/EspressoSystems/Marvellous/blob/fcd4c41672f485ac2f62526bc87a16789d4d0459/rescue761.sage</span>
+<span class="comment">// the constants in this file are generated with
+// https://github.com/EspressoSystems/Marvellous/blob/fcd4c41672f485ac2f62526bc87a16789d4d0459/rescue761.sage
 
-<span class="comment">// q761 = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177</span>
-<span class="comment">// rescue761 = Rescue(128, q761, 4, 5)</span>
+// q761 = 258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177
+// rescue761 = Rescue(128, q761, 4, 5)
 
-<span class="kw">impl</span> <span class="ident">RescueParameter</span> <span class="kw">for</span> <span class="ident">Fq</span> {
-    <span class="kw">const</span> <span class="ident">A</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">5</span>;
-    <span class="comment">// 1/5%(q761-1) =</span>
-    <span class="comment">// 206931540810375275208522186955914826829114810203931728431907410133376374678672658219975110511658688099552257166541</span>
-    <span class="kw">const</span> <span class="ident">A_INV</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u64</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+</span><span class="kw">impl </span>RescueParameter <span class="kw">for </span>Fq {
+    <span class="kw">const </span>A: u64 = <span class="number">5</span>;
+    <span class="comment">// 1/5%(q761-1) =
+    // 206931540810375275208522186955914826829114810203931728431907410133376374678672658219975110511658688099552257166541
+    </span><span class="kw">const </span>A_INV: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u64] = <span class="kw-2">&amp;</span>[
         <span class="number">0xd0d3cccccccccccd</span>,
         <span class="number">0x126f7dd026666666</span>,
         <span class="number">0x18c2b4f2fb3aa000</span>,
@@ -1548,26 +1548,26 @@
         <span class="number">0x1582e9e796a73ef</span>,
     ];
 
-    <span class="comment">// The following constants are from the output of</span>
-    <span class="comment">//  rescue761.MDS</span>
-    <span class="comment">// MDS[0,0]= &quot;52435875175126190479447740508185965837690552500527637822603658699938581066864&quot;</span>
-    <span class="comment">// MDS[0,1]= &quot;52435875175126190479447740508185965837690552500527637822603658699938534124913&quot;</span>
-    <span class="comment">// MDS[0,2]= &quot;52435875175126190479447740508185965837690552500527637822603658699922104442063&quot;</span>
-    <span class="comment">// MDS[0,3]= &quot;52435875175126190479447740508185965837690552500527637822603658694270581781713&quot;</span>
-    <span class="comment">// MDS[1,0]= &quot;137200&quot;</span>
-    <span class="comment">// MDS[1,1]= &quot;54762351&quot;</span>
-    <span class="comment">// MDS[1,2]= &quot;19167800400&quot;</span>
-    <span class="comment">// MDS[1,3]= &quot;6593435097550&quot;</span>
-    <span class="comment">// MDS[2,0]= &quot;52435875175126190479447740508185965837690552500527637822603658699938581164563&quot;</span>
-    <span class="comment">// MDS[2,1]= &quot;52435875175126190479447740508185965837690552500527637822603658699938573341713&quot;</span>
-    <span class="comment">// MDS[2,2]= &quot;52435875175126190479447740508185965837690552500527637822603658699935841949364&quot;</span>
-    <span class="comment">// MDS[2,3]= &quot;52435875175126190479447740508185965837690552500527637822603658698996613844913&quot;</span>
-    <span class="comment">// MDS[3,0]= &quot;400&quot;</span>
-    <span class="comment">// MDS[3,1]= &quot;140050&quot;</span>
-    <span class="comment">// MDS[3,2]= &quot;48177200&quot;</span>
-    <span class="comment">// MDS[3,3]= &quot;16531644851&quot;</span>
-    <span class="comment">// MDS matrix in little-endian 32 bytes elements</span>
-    <span class="kw">const</span> <span class="ident">MDS_LE</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="ident">STATE_SIZE</span>]; <span class="ident">STATE_SIZE</span>] <span class="op">=</span> [
+    <span class="comment">// The following constants are from the output of
+    //  rescue761.MDS
+    // MDS[0,0]= &quot;52435875175126190479447740508185965837690552500527637822603658699938581066864&quot;
+    // MDS[0,1]= &quot;52435875175126190479447740508185965837690552500527637822603658699938534124913&quot;
+    // MDS[0,2]= &quot;52435875175126190479447740508185965837690552500527637822603658699922104442063&quot;
+    // MDS[0,3]= &quot;52435875175126190479447740508185965837690552500527637822603658694270581781713&quot;
+    // MDS[1,0]= &quot;137200&quot;
+    // MDS[1,1]= &quot;54762351&quot;
+    // MDS[1,2]= &quot;19167800400&quot;
+    // MDS[1,3]= &quot;6593435097550&quot;
+    // MDS[2,0]= &quot;52435875175126190479447740508185965837690552500527637822603658699938581164563&quot;
+    // MDS[2,1]= &quot;52435875175126190479447740508185965837690552500527637822603658699938573341713&quot;
+    // MDS[2,2]= &quot;52435875175126190479447740508185965837690552500527637822603658699935841949364&quot;
+    // MDS[2,3]= &quot;52435875175126190479447740508185965837690552500527637822603658698996613844913&quot;
+    // MDS[3,0]= &quot;400&quot;
+    // MDS[3,1]= &quot;140050&quot;
+    // MDS[3,2]= &quot;48177200&quot;
+    // MDS[3,3]= &quot;16531644851&quot;
+    // MDS matrix in little-endian 32 bytes elements
+    </span><span class="kw">const </span>MDS_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; STATE_SIZE]; STATE_SIZE] = [
         [
             <span class="kw-2">&amp;</span>[
                 <span class="number">0x60</span>, <span class="number">0x31</span>, <span class="number">0x52</span>, <span class="number">0xFF</span>, <span class="number">0xFF</span>, <span class="number">0xBF</span>, <span class="number">0x08</span>, <span class="number">0x85</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0x30</span>, <span class="number">0x44</span>, <span class="number">0x5D</span>,
@@ -1674,15 +1674,15 @@
         ],
     ];
 
-    <span class="comment">// The following constants are from the output of</span>
-    <span class="comment">// rescue761.initial_constant</span>
-    <span class="comment">// a.k.a. INIT_VEC</span>
-    <span class="comment">// [ 77507741804555316993326082334329667156580222818473918560077191823296473118317123729262887858623098431781053309697]</span>
-    <span class="comment">// [177993200452785627663434075184773911478631764927526237009207307351752484358508273099085386344157374772412110572723]</span>
-    <span class="comment">// [ 42671898647707236005613181291770821066233014145576918788154689427213509168112961864404241863766382952036322055440]</span>
-    <span class="comment">// [ 45033590264584434678143420627501913399760575844210996496564881493751236188913039187009657997807557295408210829651]</span>
+    <span class="comment">// The following constants are from the output of
+    // rescue761.initial_constant
+    // a.k.a. INIT_VEC
+    // [ 77507741804555316993326082334329667156580222818473918560077191823296473118317123729262887858623098431781053309697]
+    // [177993200452785627663434075184773911478631764927526237009207307351752484358508273099085386344157374772412110572723]
+    // [ 42671898647707236005613181291770821066233014145576918788154689427213509168112961864404241863766382952036322055440]
+    // [ 45033590264584434678143420627501913399760575844210996496564881493751236188913039187009657997807557295408210829651]
 
-    <span class="kw">const</span> <span class="ident">INIT_VEC_LE</span>: [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="ident">STATE_SIZE</span>] <span class="op">=</span> [
+    </span><span class="kw">const </span>INIT_VEC_LE: [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; STATE_SIZE] = [
         <span class="kw-2">&amp;</span>[
             <span class="number">0x01</span>, <span class="number">0xA3</span>, <span class="number">0xE6</span>, <span class="number">0xF7</span>, <span class="number">0xEB</span>, <span class="number">0x5C</span>, <span class="number">0x3E</span>, <span class="number">0xA8</span>, <span class="number">0x11</span>, <span class="number">0x17</span>, <span class="number">0xC8</span>, <span class="number">0xD8</span>, <span class="number">0xA7</span>, <span class="number">0x9B</span>,
             <span class="number">0x1D</span>, <span class="number">0x50</span>, <span class="number">0x86</span>, <span class="number">0x39</span>, <span class="number">0xCF</span>, <span class="number">0xF8</span>, <span class="number">0xA2</span>, <span class="number">0x59</span>, <span class="number">0xB9</span>, <span class="number">0xE0</span>, <span class="number">0x70</span>, <span class="number">0x1F</span>, <span class="number">0x45</span>, <span class="number">0x88</span>,
@@ -1709,45 +1709,45 @@
         ],
     ];
 
-    <span class="comment">// The following constants are from the output of</span>
-    <span class="comment">// sage: rescue761.constants_matrix</span>
-    <span class="comment">// a.k.a., KEY_SCHED_MATRIX</span>
-    <span class="comment">// [ 21388085173807843040147935573417925569769020225193617578144868856502027742399743078769141493256606803926503599374</span>
-    <span class="comment">// 148746542684121341018714066208374265919075055377306679043064024347118850671751185133057962508923687274838824500925</span>
-    <span class="comment">// 143819582770047829101663158711390879513705210146311295028160623473148675467598427198647083753029698768858402079541</span>
-    <span class="comment">// 3320680946084112103693932626141017732413334717099114430920766606434955369475855543216863218041474664802403073058]</span>
-    <span class="comment">// [183768457328422669222977223024408961920779409488665102575667756351407991511156109410669976864277433172454062790865</span>
-    <span class="comment">// 86262470992355870287064697438766110866091133226131257608030067284797613730404633680389970467544288414448970640431</span>
-    <span class="comment">// 10141529452607706846164010038504864885212242001966416290596439642012716063698654410399480463149170988637418892069</span>
-    <span class="comment">// 34929829384562879985325569510344487753295144848070995250563110087160439452627991533789013213400479994287969078208]</span>
-    <span class="comment">// [  6650937378529070682526639898286326847015452054856629877525247129417093488313988331200070521759802495574854233202</span>
-    <span class="comment">// 11207651975622440481011491604501335135454465278672018847895237603502933967106346119682895132466234315451111630038</span>
-    <span class="comment">// 178758033912697096063915270457152713862989796724245057415505952206286592260540400038234250838461711082589505119629</span>
-    <span class="comment">// 37770614912116059492309039778060447526645530728888326579646215635246607032626978794416808338344285355744338833098]</span>
-    <span class="comment">// [ 48007962636822532786431277677071434318837497813225484890354314276686082130099472494756251599795523661039717661648</span>
-    <span class="comment">// 40817968235770745163853460250471094884778138289227149084515575536005465633031575643407841686155502248718950599741</span>
-    <span class="comment">// 117774843913239531037310660892595295228882572377609668933575123042777696376612146381343869264422107812884980847766</span>
-    <span class="comment">// 247129210489551277563634781872704504466060455510724849767887332822384975784500582930038181009342808401241993040433]</span>
-    <span class="comment">//</span>
+    <span class="comment">// The following constants are from the output of
+    // sage: rescue761.constants_matrix
+    // a.k.a., KEY_SCHED_MATRIX
+    // [ 21388085173807843040147935573417925569769020225193617578144868856502027742399743078769141493256606803926503599374
+    // 148746542684121341018714066208374265919075055377306679043064024347118850671751185133057962508923687274838824500925
+    // 143819582770047829101663158711390879513705210146311295028160623473148675467598427198647083753029698768858402079541
+    // 3320680946084112103693932626141017732413334717099114430920766606434955369475855543216863218041474664802403073058]
+    // [183768457328422669222977223024408961920779409488665102575667756351407991511156109410669976864277433172454062790865
+    // 86262470992355870287064697438766110866091133226131257608030067284797613730404633680389970467544288414448970640431
+    // 10141529452607706846164010038504864885212242001966416290596439642012716063698654410399480463149170988637418892069
+    // 34929829384562879985325569510344487753295144848070995250563110087160439452627991533789013213400479994287969078208]
+    // [  6650937378529070682526639898286326847015452054856629877525247129417093488313988331200070521759802495574854233202
+    // 11207651975622440481011491604501335135454465278672018847895237603502933967106346119682895132466234315451111630038
+    // 178758033912697096063915270457152713862989796724245057415505952206286592260540400038234250838461711082589505119629
+    // 37770614912116059492309039778060447526645530728888326579646215635246607032626978794416808338344285355744338833098]
+    // [ 48007962636822532786431277677071434318837497813225484890354314276686082130099472494756251599795523661039717661648
+    // 40817968235770745163853460250471094884778138289227149084515575536005465633031575643407841686155502248718950599741
+    // 117774843913239531037310660892595295228882572377609668933575123042777696376612146381343869264422107812884980847766
+    // 247129210489551277563634781872704504466060455510724849767887332822384975784500582930038181009342808401241993040433]
+    //
 
-    <span class="comment">// The following constants are from the output of</span>
-    <span class="comment">// sage: rescue761.constants_constant</span>
-    <span class="comment">// a.k.a., KEY_SCHED_VEC</span>
-    <span class="comment">// [ 79702341772299253897339955563653516863594788002161465441781145347864436800928803472079765054940723020608613684412]</span>
-    <span class="comment">// [175404047423848792009109941610650776559153917447549764559702460944568985816882495819821877031781301935630268652925]</span>
-    <span class="comment">// [163231881198883668972116510882189788203165805540745582259684539022051705322963949586079216081621597497526516392877]</span>
-    <span class="comment">// [111733091351916013764359218715441472223367220983119617059118647873633602779707362569392865689770593452084742051420]</span>
+    // The following constants are from the output of
+    // sage: rescue761.constants_constant
+    // a.k.a., KEY_SCHED_VEC
+    // [ 79702341772299253897339955563653516863594788002161465441781145347864436800928803472079765054940723020608613684412]
+    // [175404047423848792009109941610650776559153917447549764559702460944568985816882495819821877031781301935630268652925]
+    // [163231881198883668972116510882189788203165805540745582259684539022051705322963949586079216081621597497526516392877]
+    // [111733091351916013764359218715441472223367220983119617059118647873633602779707362569392865689770593452084742051420]
 
-    <span class="comment">// The key injection constants are precomputed computed as</span>
-    <span class="comment">// 1. KEY_INJECTION[-1] = INIT_VECTOR</span>
-    <span class="comment">// 2. for i in [0 .. 2 * ROUNDS]</span>
-    <span class="comment">// 3.   KEY_INJECTION[i] = KEY_SCHED_MATRIX * KEY_INJECTION[ i - 1] +</span>
-    <span class="comment">// KEY_SCHED_VEC</span>
-    <span class="comment">// where the INIT_VECTOR, KEY_SCHED_MATRIX and KEY_INJECTION are defined above</span>
-    <span class="comment">// Those constants can be obtained via</span>
-    <span class="comment">//   key_injection(init_vec_761, key_sched_matrix_761, key_sched_vec_761, q761)</span>
-    <span class="comment">// from rescue761.sage</span>
-    <span class="kw">const</span> <span class="ident">KEY_INJECTION_LE</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="number">4</span>]; <span class="number">2</span> <span class="op">*</span> <span class="ident">ROUNDS</span>] <span class="op">=</span> [
+    // The key injection constants are precomputed computed as
+    // 1. KEY_INJECTION[-1] = INIT_VECTOR
+    // 2. for i in [0 .. 2 * ROUNDS]
+    // 3.   KEY_INJECTION[i] = KEY_SCHED_MATRIX * KEY_INJECTION[ i - 1] +
+    // KEY_SCHED_VEC
+    // where the INIT_VECTOR, KEY_SCHED_MATRIX and KEY_INJECTION are defined above
+    // Those constants can be obtained via
+    //   key_injection(init_vec_761, key_sched_matrix_761, key_sched_vec_761, q761)
+    // from rescue761.sage
+    </span><span class="kw">const </span>KEY_INJECTION_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; <span class="number">4</span>]; <span class="number">2 </span>* ROUNDS] = [
         [
             <span class="kw-2">&amp;</span>[
                 <span class="number">0xB6</span>, <span class="number">0x52</span>, <span class="number">0xFA</span>, <span class="number">0xF2</span>, <span class="number">0x03</span>, <span class="number">0x38</span>, <span class="number">0x3B</span>, <span class="number">0xE7</span>, <span class="number">0x58</span>, <span class="number">0x96</span>, <span class="number">0xA2</span>, <span class="number">0x4A</span>, <span class="number">0x53</span>, <span class="number">0x8A</span>,
@@ -2374,22 +2374,22 @@
         ],
     ];
 
-    <span class="comment">// // the following code is used to dump the key schedule to screen</span>
-    <span class="comment">// // in a sage friendly format</span>
-    <span class="comment">// let keys2 = rescue_perm.key_schedule(&amp;zero);</span>
-    <span class="comment">// for e in keys2.iter() {</span>
-    <span class="comment">//     for f in e.vec.iter() {</span>
-    <span class="comment">//         ark_std::println!(&quot;permutation_round_key.append(0x{})&quot;,</span>
-    <span class="comment">// f.into_repr());     }</span>
-    <span class="comment">// }</span>
-    <span class="comment">// The keys are not cross-checked with sage, however, the hash function</span>
-    <span class="comment">// is, which implies that the permutation round keys must be correct</span>
-    <span class="comment">// (or else, the hash function outputs will not match)</span>
-    <span class="comment">// see unit tests:</span>
-    <span class="comment">//   - test_sponge()</span>
-    <span class="comment">//   - test_rescue_hash_on_0_vec()</span>
-    <span class="comment">//   - test_rescue_perm_on_0_vec()</span>
-    <span class="kw">const</span> <span class="ident">PERMUTATION_ROUND_KEYS</span>: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]; <span class="number">4</span>]; <span class="number">25</span>] <span class="op">=</span> [
+    <span class="comment">// // the following code is used to dump the key schedule to screen
+    // // in a sage friendly format
+    // let keys2 = rescue_perm.key_schedule(&amp;zero);
+    // for e in keys2.iter() {
+    //     for f in e.vec.iter() {
+    //         ark_std::println!(&quot;permutation_round_key.append(0x{})&quot;,
+    // f.into_repr());     }
+    // }
+    // The keys are not cross-checked with sage, however, the hash function
+    // is, which implies that the permutation round keys must be correct
+    // (or else, the hash function outputs will not match)
+    // see unit tests:
+    //   - test_sponge()
+    //   - test_rescue_hash_on_0_vec()
+    //   - test_rescue_perm_on_0_vec()
+    </span><span class="kw">const </span>PERMUTATION_ROUND_KEYS: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; <span class="number">4</span>]; <span class="number">25</span>] = [
         [
             <span class="kw-2">&amp;</span>[
                 <span class="number">0x01</span>, <span class="number">0xA3</span>, <span class="number">0xE6</span>, <span class="number">0xF7</span>, <span class="number">0xEB</span>, <span class="number">0x5C</span>, <span class="number">0x3E</span>, <span class="number">0xA8</span>, <span class="number">0x11</span>, <span class="number">0x17</span>, <span class="number">0xC8</span>, <span class="number">0xD8</span>, <span class="number">0xA7</span>, <span class="number">0x9B</span>,
@@ -3043,4 +3043,4 @@
     ];
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

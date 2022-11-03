@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ultraplonk/non_native_gates.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>non_native_gates.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ultraplonk/non_native_gates.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>non_native_gates.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -414,421 +414,421 @@
 <span id="414">414</span>
 <span id="415">415</span>
 <span id="416">416</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! This module implements non-native circuits that are mainly</span>
-<span class="doccomment">//! useful for rescue hash function.</span>
+</span><span class="doccomment">//! This module implements non-native circuits that are mainly
+//! useful for rescue hash function.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mod_arith</span>::{<span class="ident">FpElem</span>, <span class="ident">FpElemVar</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>};
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger</span>, <span class="ident">FpParameters</span>, <span class="ident">PrimeField</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">format</span>, <span class="ident">vec::Vec</span>};
+</span><span class="kw">use </span><span class="kw">super</span>::mod_arith::{FpElem, FpElemVar};
+<span class="kw">use crate</span>::{errors::CircuitError, Circuit, PlonkCircuit};
+<span class="kw">use </span>ark_ff::{BigInteger, FpParameters, PrimeField};
+<span class="kw">use </span>ark_std::{format, vec::Vec};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// generate a non-native circuit for the statement x^11 = y</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Input:</span>
-    <span class="doccomment">///  - variable representation of x over a target field `T` whose order is</span>
-    <span class="doccomment">///    less than F.</span>
-    <span class="doccomment">///  - variable representation of x^11 over a same field</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Cost: 5 mod_mul + 2 equal gate</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_native_power_11_gate</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">x_to_11</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x</span>.<span class="ident">components</span>().<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x</span>.<span class="ident">components</span>().<span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x_to_11</span>.<span class="ident">components</span>().<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">x_to_11</span>.<span class="ident">components</span>().<span class="number">1</span>)<span class="question-mark">?</span>;
+<span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
+    <span class="doccomment">/// generate a non-native circuit for the statement x^11 = y
+    ///
+    /// Input:
+    ///  - variable representation of x over a target field `T` whose order is
+    ///    less than F.
+    ///  - variable representation of x^11 over a same field
+    ///
+    /// Cost: 5 mod_mul + 2 equal gate
+    </span><span class="kw">pub fn </span>non_native_power_11_gate&lt;T: PrimeField&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        x: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+        x_to_11: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="self">self</span>.check_var_bound(x.components().<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(x.components().<span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(x_to_11.components().<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_var_bound(x_to_11.components().<span class="number">1</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">T::size_in_bits</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">F::size_in_bits</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::NotSupported</span>(<span class="macro">format!</span>(
+        <span class="kw">if </span>T::size_in_bits() &gt;= F::size_in_bits() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::NotSupported(<span class="macro">format!</span>(
                 <span class="string">&quot;Target field size ({}) is greater than evaluation field size (P{})&quot;</span>,
-                <span class="ident">T::size_in_bits</span>(),
-                <span class="ident">F::size_in_bits</span>()
+                T::size_in_bits(),
+                F::size_in_bits()
             )));
         }
 
-        <span class="comment">// x^11 = y</span>
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">non_native_power_11_gen</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">x</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_equal</span>(<span class="ident">x_to_11</span>.<span class="ident">components</span>().<span class="number">0</span>, <span class="ident">y</span>.<span class="ident">components</span>().<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">enforce_equal</span>(<span class="ident">x_to_11</span>.<span class="ident">components</span>().<span class="number">1</span>, <span class="ident">y</span>.<span class="ident">components</span>().<span class="number">1</span>)
+        <span class="comment">// x^11 = y
+        </span><span class="kw">let </span>y = <span class="self">self</span>.non_native_power_11_gen::&lt;T&gt;(x)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_equal(x_to_11.components().<span class="number">0</span>, y.components().<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_equal(x_to_11.components().<span class="number">1</span>, y.components().<span class="number">1</span>)
     }
 
-    <span class="doccomment">/// generate a non-native circuit for the statement x^11 = y</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Input: variable representation of x over a target</span>
-    <span class="doccomment">/// field `T` whose order is less than F.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Output: variable representation of x^11</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Cost: 5 mod_mul</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_native_power_11_gen</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// // checks already done by the caller</span>
-        <span class="comment">// if T::size_in_bits() &gt;= F::size_in_bits() {</span>
-        <span class="comment">//     return Err(CircuitError::NotSupported(format!(</span>
-        <span class="comment">//         &quot;Target field size ({}) is greater than evaluation field size (P{})&quot;,</span>
-        <span class="comment">//         T::size_in_bits(),</span>
-        <span class="comment">//         F::size_in_bits()</span>
-        <span class="comment">//     ))</span>
-        <span class="comment">//     .into());</span>
-        <span class="comment">// }</span>
+    <span class="doccomment">/// generate a non-native circuit for the statement x^11 = y
+    ///
+    /// Input: variable representation of x over a target
+    /// field `T` whose order is less than F.
+    ///
+    /// Output: variable representation of x^11
+    ///
+    /// Cost: 5 mod_mul
+    </span><span class="kw">pub fn </span>non_native_power_11_gen&lt;T: PrimeField&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        x: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
+        <span class="comment">// // checks already done by the caller
+        // if T::size_in_bits() &gt;= F::size_in_bits() {
+        //     return Err(CircuitError::NotSupported(format!(
+        //         &quot;Target field size ({}) is greater than evaluation field size (P{})&quot;,
+        //         T::size_in_bits(),
+        //         F::size_in_bits()
+        //     ))
+        //     .into());
+        // }
 
-        <span class="comment">// convert T::MODULUS into an element in F</span>
-        <span class="comment">// Guaranteed without mod reduction since T::size_in_bits() &lt; F::size_in_bits()</span>
-        <span class="kw">let</span> <span class="ident">t_modulus</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">T::Params::MODULUS</span>.<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        // convert T::MODULUS into an element in F
+        // Guaranteed without mod reduction since T::size_in_bits() &lt; F::size_in_bits()
+        </span><span class="kw">let </span>t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
 
-        <span class="comment">// convert t_modulus into FpElem</span>
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">param_m</span>();
-        <span class="kw">let</span> <span class="ident">two_power_m</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">x</span>.<span class="ident">two_power_m</span>());
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">t_modulus</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
+        <span class="comment">// convert t_modulus into FpElem
+        </span><span class="kw">let </span>m = x.param_m();
+        <span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(x.two_power_m());
+        <span class="kw">let </span>p = FpElem::new(<span class="kw-2">&amp;</span>t_modulus, m, two_power_m)<span class="question-mark">?</span>;
 
-        <span class="comment">// x^11 = y</span>
-        <span class="kw">let</span> <span class="ident">x2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="ident">x</span>, <span class="ident">x</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x2</span>, <span class="ident">x</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x4</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x2</span>, <span class="kw-2">&amp;</span><span class="ident">x2</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x8</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x4</span>, <span class="kw-2">&amp;</span><span class="ident">x4</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x3</span>, <span class="kw-2">&amp;</span><span class="ident">x8</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)
+        <span class="comment">// x^11 = y
+        </span><span class="kw">let </span>x2 = <span class="self">self</span>.mod_mul(x, x, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x3 = <span class="self">self</span>.mod_mul(<span class="kw-2">&amp;</span>x2, x, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x4 = <span class="self">self</span>.mod_mul(<span class="kw-2">&amp;</span>x2, <span class="kw-2">&amp;</span>x2, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x8 = <span class="self">self</span>.mod_mul(<span class="kw-2">&amp;</span>x4, <span class="kw-2">&amp;</span>x4, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="self">self</span>.mod_mul(<span class="kw-2">&amp;</span>x3, <span class="kw-2">&amp;</span>x8, <span class="kw-2">&amp;</span>p)
     }
 
-    <span class="doccomment">/// generate a non-native circuit for the statement x^5 = y</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Input: variable representation of x over a target</span>
-    <span class="doccomment">/// field `T` whose order is less than F.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Output: variable representation of x^5</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Cost: 3 mod_mul</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_native_power_5_gen</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// checks already done by the caller</span>
-        <span class="kw">if</span> <span class="ident">T::size_in_bits</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">F::size_in_bits</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::NotSupported</span>(<span class="macro">format!</span>(
+    <span class="doccomment">/// generate a non-native circuit for the statement x^5 = y
+    ///
+    /// Input: variable representation of x over a target
+    /// field `T` whose order is less than F.
+    ///
+    /// Output: variable representation of x^5
+    ///
+    /// Cost: 3 mod_mul
+    </span><span class="kw">pub fn </span>non_native_power_5_gen&lt;T: PrimeField&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        x: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
+        <span class="comment">// checks already done by the caller
+        </span><span class="kw">if </span>T::size_in_bits() &gt;= F::size_in_bits() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::NotSupported(<span class="macro">format!</span>(
                 <span class="string">&quot;Target field size ({}) is greater than evaluation field size (P{})&quot;</span>,
-                <span class="ident">T::size_in_bits</span>(),
-                <span class="ident">F::size_in_bits</span>()
+                T::size_in_bits(),
+                F::size_in_bits()
             )));
         }
 
-        <span class="comment">// convert T::MODULUS into an element in F</span>
-        <span class="comment">// Guaranteed without mod reduction since T::size_in_bits() &lt; F::size_in_bits()</span>
-        <span class="kw">let</span> <span class="ident">t_modulus</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">T::Params::MODULUS</span>.<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="comment">// convert T::MODULUS into an element in F
+        // Guaranteed without mod reduction since T::size_in_bits() &lt; F::size_in_bits()
+        </span><span class="kw">let </span>t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
 
-        <span class="comment">// convert t_modulus into FpElem</span>
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">param_m</span>();
-        <span class="kw">let</span> <span class="ident">two_power_m</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">x</span>.<span class="ident">two_power_m</span>());
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">t_modulus</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
+        <span class="comment">// convert t_modulus into FpElem
+        </span><span class="kw">let </span>m = x.param_m();
+        <span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(x.two_power_m());
+        <span class="kw">let </span>p = FpElem::new(<span class="kw-2">&amp;</span>t_modulus, m, two_power_m)<span class="question-mark">?</span>;
 
-        <span class="comment">// x^5 = y</span>
-        <span class="kw">let</span> <span class="ident">x2</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="ident">x</span>, <span class="ident">x</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x2</span>, <span class="ident">x</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">mod_mul</span>(<span class="kw-2">&amp;</span><span class="ident">x2</span>, <span class="kw-2">&amp;</span><span class="ident">x3</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)
+        <span class="comment">// x^5 = y
+        </span><span class="kw">let </span>x2 = <span class="self">self</span>.mod_mul(x, x, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x3 = <span class="self">self</span>.mod_mul(<span class="kw-2">&amp;</span>x2, x, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="self">self</span>.mod_mul(<span class="kw-2">&amp;</span>x2, <span class="kw-2">&amp;</span>x3, <span class="kw-2">&amp;</span>p)
     }
 
-    <span class="doccomment">/// Input vector x and y, and a constant c,</span>
-    <span class="doccomment">/// generate a non-native circuit for the statement</span>
-    <span class="doccomment">///     var_output = inner_product(x, y) + c</span>
-    <span class="doccomment">/// Input: variable representation of x, y, c over a target</span>
-    <span class="doccomment">/// field `T` whose order is less than F.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Cost: 4 mod_mul_constant + 1 mod_add_internal</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::many_single_char_names</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">non_native_linear_gen</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-        <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>],
-        <span class="ident">c</span>: <span class="kw-2">&amp;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">param_m</span>();
-        <span class="kw">let</span> <span class="ident">two_power_m</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">c</span>.<span class="ident">two_power_m</span>());
+    <span class="doccomment">/// Input vector x and y, and a constant c,
+    /// generate a non-native circuit for the statement
+    ///     var_output = inner_product(x, y) + c
+    /// Input: variable representation of x, y, c over a target
+    /// field `T` whose order is less than F.
+    ///
+    /// Cost: 4 mod_mul_constant + 1 mod_add_internal
+    </span><span class="attribute">#[allow(clippy::many_single_char_names)]
+    </span><span class="kw">pub fn </span>non_native_linear_gen&lt;T: PrimeField&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        x: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
+        y: <span class="kw-2">&amp;</span>[FpElem&lt;F&gt;],
+        c: <span class="kw-2">&amp;</span>FpElem&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
+        <span class="kw">let </span>m = c.param_m();
+        <span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(c.two_power_m());
 
-        <span class="comment">// check the correctness of parameters</span>
-        <span class="kw">if</span> <span class="ident">T::size_in_bits</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">F::size_in_bits</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::NotSupported</span>(<span class="macro">format!</span>(
+        <span class="comment">// check the correctness of parameters
+        </span><span class="kw">if </span>T::size_in_bits() &gt;= F::size_in_bits() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::NotSupported(<span class="macro">format!</span>(
                 <span class="string">&quot;Target field size ({}) is greater than evaluation field size ({})&quot;</span>,
-                <span class="ident">T::size_in_bits</span>(),
-                <span class="ident">F::size_in_bits</span>()
+                T::size_in_bits(),
+                F::size_in_bits()
             )));
         }
 
-        <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">y</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">if </span>x.len() != y.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;inputs x any y has different length ({} vs {})&quot;</span>,
-                <span class="ident">x</span>.<span class="ident">len</span>(),
-                <span class="ident">y</span>.<span class="ident">len</span>()
+                x.len(),
+                y.len()
             )));
         }
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">x</span> {
-            <span class="kw">if</span> <span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">e</span>.<span class="ident">param_m</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">for </span>e <span class="kw">in </span>x {
+            <span class="kw">if </span>m != e.param_m() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="macro">format!</span>(
                     <span class="string">&quot;inputs x any c has different m parameter ({} vs {})&quot;</span>,
-                    <span class="ident">e</span>.<span class="ident">param_m</span>(),
-                    <span class="ident">m</span>
+                    e.param_m(),
+                    m
                 )));
             }
         }
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">y</span> {
-            <span class="kw">if</span> <span class="ident">m</span> <span class="op">!</span><span class="op">=</span> <span class="ident">e</span>.<span class="ident">param_m</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CircuitError::ParameterError</span>(<span class="macro">format!</span>(
+        <span class="kw">for </span>e <span class="kw">in </span>y {
+            <span class="kw">if </span>m != e.param_m() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="macro">format!</span>(
                     <span class="string">&quot;inputs y any c has different m parameter ({} vs {})&quot;</span>,
-                    <span class="ident">e</span>.<span class="ident">param_m</span>(),
-                    <span class="ident">m</span>
+                    e.param_m(),
+                    m
                 )));
             }
         }
 
-        <span class="comment">// convert T::MODULUS into an element in F</span>
-        <span class="comment">// Guaranteed without mod reduction since T::size_in_bits() &lt; F::size_in_bits()</span>
-        <span class="kw">let</span> <span class="ident">t_modulus</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">T::Params::MODULUS</span>.<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="comment">// convert T::MODULUS into an element in F
+        // Guaranteed without mod reduction since T::size_in_bits() &lt; F::size_in_bits()
+        </span><span class="kw">let </span>t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
 
-        <span class="comment">// convert t_modulus into FpElem</span>
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">t_modulus</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>)<span class="question-mark">?</span>;
+        <span class="comment">// convert t_modulus into FpElem
+        </span><span class="kw">let </span>p = FpElem::new(<span class="kw-2">&amp;</span>t_modulus, m, two_power_m)<span class="question-mark">?</span>;
 
-        <span class="comment">// generate the linear statement</span>
-        <span class="comment">// (\sum x[i] * y[i]) + c</span>
-        <span class="kw">let</span> <span class="ident">xiyi</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">x</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">y</span>)
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">xi</span>, <span class="ident">yi</span>)<span class="op">|</span> <span class="self">self</span>.<span class="ident">mod_mul_constant</span>(<span class="ident">xi</span>, <span class="ident">yi</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">sum_xiyi</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mod_add_vec</span>(<span class="ident">xiyi</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">p</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">mod_add_constant</span>(<span class="kw-2">&amp;</span><span class="ident">sum_xiyi</span>, <span class="ident">c</span>, <span class="kw-2">&amp;</span><span class="ident">p</span>)
+        <span class="comment">// generate the linear statement
+        // (\sum x[i] * y[i]) + c
+        </span><span class="kw">let </span>xiyi: Vec&lt;FpElemVar&lt;F&gt;&gt; = x
+            .iter()
+            .zip(y)
+            .map(|(xi, yi)| <span class="self">self</span>.mod_mul_constant(xi, yi, <span class="kw-2">&amp;</span>p))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;FpElemVar&lt;F&gt;&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>sum_xiyi = <span class="self">self</span>.mod_add_vec(xiyi.as_ref(), <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+        <span class="self">self</span>.mod_add_constant(<span class="kw-2">&amp;</span>sum_xiyi, c, <span class="kw-2">&amp;</span>p)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Circuit</span>, <span class="ident">Variable</span>};
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::test_rng</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{Circuit, Variable};
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_std::test_rng;
 
-    <span class="kw">const</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
+    <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">8</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_non_native_power_11_gen</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// use bls12-377 base field to prove rescue over jubjub377 base field</span>
-        <span class="ident">test_non_native_power_11_gen_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_non_native_power_11_gen() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// use bls12-377 base field to prove rescue over jubjub377 base field
+        </span>test_non_native_power_11_gen_helper::&lt;FqEd377, Fq377&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_non_native_power_11_gen_helper</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span>, <span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
+    <span class="kw">fn </span>test_non_native_power_11_gen_helper&lt;T: PrimeField, F: PrimeField&gt;(
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">x_t</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">y_t</span> <span class="op">=</span> <span class="ident">x_t</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">11</span>]);
-        <span class="kw">let</span> <span class="ident">x_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">x_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
-        <span class="kw">let</span> <span class="ident">y_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">y_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+        <span class="kw">let </span>x_t = T::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>y_t = x_t.pow([<span class="number">11</span>]);
+        <span class="kw">let </span>x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
+        <span class="kw">let </span>y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
 
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="ident">T::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span> <span class="op">/</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>;
+        <span class="kw">let </span>m = (T::size_in_bits() / <span class="number">2 </span>/ RANGE_BIT_LEN_FOR_TEST + <span class="number">1</span>) * RANGE_BIT_LEN_FOR_TEST;
 
-        <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">x_p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">y_p</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_var = circuit.create_variable(x_p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>y_var = circuit.create_variable(y_p)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x11_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">non_native_power_11_gen</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x11_var</span> <span class="op">=</span> <span class="ident">x11_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_split_vars = FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, x_var, m, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x11_split_vars = circuit.non_native_power_11_gen::&lt;T&gt;(<span class="kw-2">&amp;</span>x_split_vars)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x11_var = x11_split_vars.convert_to_var(<span class="kw-2">&amp;mut </span>circuit)<span class="question-mark">?</span>;
 
-        <span class="comment">// good path</span>
-        <span class="ident">circuit</span>.<span class="ident">enforce_equal</span>(<span class="ident">x11_var</span>, <span class="ident">y_var</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// good path
+        </span>circuit.enforce_equal(x11_var, y_var)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// bad path: wrong witness should fail</span>
-        <span class="kw">let</span> <span class="ident">witness</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">y_var</span>)<span class="question-mark">?</span>;
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_var</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_var</span>) <span class="op">=</span> <span class="ident">witness</span>;
+        <span class="comment">// bad path: wrong witness should fail
+        </span><span class="kw">let </span>witness = circuit.witness(y_var)<span class="question-mark">?</span>;
+        <span class="kw-2">*</span>circuit.witness_mut(y_var) = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="kw-2">*</span>circuit.witness_mut(y_var) = witness;
 
-        <span class="comment">// bad path: wrong value should fail</span>
-        <span class="kw">let</span> <span class="ident">y_wrong</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">y_wrong_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">y_wrong</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_equal</span>(<span class="ident">x11_var</span>, <span class="ident">y_wrong_var</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// bad path: wrong value should fail
+        </span><span class="kw">let </span>y_wrong = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>y_wrong_var = circuit.create_variable(y_wrong)<span class="question-mark">?</span>;
+        circuit.enforce_equal(x11_var, y_wrong_var)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_non_native_power_5_gen</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// use bls12-377 base field to prove rescue over jubjub377 base field</span>
-        <span class="ident">test_non_native_power_5_gen_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_non_native_power_5_gen() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// use bls12-377 base field to prove rescue over jubjub377 base field
+        </span>test_non_native_power_5_gen_helper::&lt;FqEd377, Fq377&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_non_native_power_5_gen_helper</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span>, <span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
+    <span class="kw">fn </span>test_non_native_power_5_gen_helper&lt;T: PrimeField, F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">x_t</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">y_t</span> <span class="op">=</span> <span class="ident">x_t</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">5</span>]);
-        <span class="kw">let</span> <span class="ident">x_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">x_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
-        <span class="kw">let</span> <span class="ident">y_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">y_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+        <span class="kw">let </span>x_t = T::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>y_t = x_t.pow([<span class="number">5</span>]);
+        <span class="kw">let </span>x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
+        <span class="kw">let </span>y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
 
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="ident">T::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span> <span class="op">/</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>;
+        <span class="kw">let </span>m = (T::size_in_bits() / <span class="number">2 </span>/ RANGE_BIT_LEN_FOR_TEST + <span class="number">1</span>) * RANGE_BIT_LEN_FOR_TEST;
 
-        <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">x_p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">y_p</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_var = circuit.create_variable(x_p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>y_var = circuit.create_variable(y_p)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x5_split_vars</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">non_native_power_5_gen</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">x5_var</span> <span class="op">=</span> <span class="ident">x5_split_vars</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_split_vars = FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, x_var, m, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x5_split_vars = circuit.non_native_power_5_gen::&lt;T&gt;(<span class="kw-2">&amp;</span>x_split_vars)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x5_var = x5_split_vars.convert_to_var(<span class="kw-2">&amp;mut </span>circuit)<span class="question-mark">?</span>;
 
-        <span class="comment">// good path</span>
-        <span class="ident">circuit</span>.<span class="ident">enforce_equal</span>(<span class="ident">x5_var</span>, <span class="ident">y_var</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// good path
+        </span>circuit.enforce_equal(x5_var, y_var)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// bad path: wrong witness should fail</span>
-        <span class="kw">let</span> <span class="ident">witness</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">y_var</span>)<span class="question-mark">?</span>;
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_var</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_var</span>) <span class="op">=</span> <span class="ident">witness</span>;
+        <span class="comment">// bad path: wrong witness should fail
+        </span><span class="kw">let </span>witness = circuit.witness(y_var)<span class="question-mark">?</span>;
+        <span class="kw-2">*</span>circuit.witness_mut(y_var) = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="kw-2">*</span>circuit.witness_mut(y_var) = witness;
 
-        <span class="comment">// bad path: wrong value should fail</span>
-        <span class="kw">let</span> <span class="ident">y_wrong</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">y_wrong_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">y_wrong</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_equal</span>(<span class="ident">x5_var</span>, <span class="ident">y_wrong_var</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// bad path: wrong value should fail
+        </span><span class="kw">let </span>y_wrong = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>y_wrong_var = circuit.create_variable(y_wrong)<span class="question-mark">?</span>;
+        circuit.enforce_equal(x5_var, y_wrong_var)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_non_native_power_11_gate</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// use bls12-377 base field to prove rescue over bls scalar field</span>
-        <span class="ident">test_non_native_power_11_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_non_native_power_11_gate() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// use bls12-377 base field to prove rescue over bls scalar field
+        </span>test_non_native_power_11_gate_helper::&lt;FqEd377, Fq377&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_non_native_power_11_gate_helper</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span>, <span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
+    <span class="kw">fn </span>test_non_native_power_11_gate_helper&lt;T: PrimeField, F: PrimeField&gt;(
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">x_t</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">y_t</span> <span class="op">=</span> <span class="ident">x_t</span>.<span class="ident">pow</span>(<span class="kw-2">&amp;</span>[<span class="number">11</span>]);
-        <span class="kw">let</span> <span class="ident">x_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">x_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
-        <span class="kw">let</span> <span class="ident">y_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">y_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+        <span class="kw">let </span>x_t = T::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>y_t = x_t.pow([<span class="number">11</span>]);
+        <span class="kw">let </span>x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
+        <span class="kw">let </span>y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
 
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="ident">T::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span> <span class="op">/</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>;
+        <span class="kw">let </span>m = (T::size_in_bits() / <span class="number">2 </span>/ RANGE_BIT_LEN_FOR_TEST + <span class="number">1</span>) * RANGE_BIT_LEN_FOR_TEST;
 
-        <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">x_p</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">y_p</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_var = circuit.create_variable(x_p)<span class="question-mark">?</span>;
+        <span class="kw">let </span>y_var = circuit.create_variable(y_p)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">x_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">x_var</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_split_vars</span> <span class="op">=</span>
-            <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="ident">y_var</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">x_split_vars</span>.<span class="ident">two_power_m</span>()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_split_vars = FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, x_var, m, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>y_split_vars =
+            FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, y_var, m, <span class="prelude-val">Some</span>(x_split_vars.two_power_m()))<span class="question-mark">?</span>;
 
-        <span class="ident">circuit</span>.<span class="ident">non_native_power_11_gate</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split_vars</span>)<span class="question-mark">?</span>;
+        circuit.non_native_power_11_gate::&lt;T&gt;(<span class="kw-2">&amp;</span>x_split_vars, <span class="kw-2">&amp;</span>y_split_vars)<span class="question-mark">?</span>;
 
-        <span class="comment">// good path</span>
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// good path
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// bad path: wrong witness should fail</span>
-        <span class="kw">let</span> <span class="ident">witness</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">y_var</span>)<span class="question-mark">?</span>;
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_var</span>) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">y_var</span>) <span class="op">=</span> <span class="ident">witness</span>;
+        <span class="comment">// bad path: wrong witness should fail
+        </span><span class="kw">let </span>witness = circuit.witness(y_var)<span class="question-mark">?</span>;
+        <span class="kw-2">*</span>circuit.witness_mut(y_var) = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="kw-2">*</span>circuit.witness_mut(y_var) = witness;
 
-        <span class="comment">// bad path: wrong value should fail</span>
-        <span class="kw">let</span> <span class="ident">y_wrong</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">y_wrong_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">y_wrong</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_wrong_split_vars</span> <span class="op">=</span> <span class="ident">FpElemVar::new_unchecked</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>,
-            <span class="ident">y_wrong_var</span>,
-            <span class="ident">m</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">x_split_vars</span>.<span class="ident">two_power_m</span>()),
+        <span class="comment">// bad path: wrong value should fail
+        </span><span class="kw">let </span>y_wrong = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>y_wrong_var = circuit.create_variable(y_wrong)<span class="question-mark">?</span>;
+        <span class="kw">let </span>y_wrong_split_vars = FpElemVar::new_unchecked(
+            <span class="kw-2">&amp;mut </span>circuit,
+            y_wrong_var,
+            m,
+            <span class="prelude-val">Some</span>(x_split_vars.two_power_m()),
         )<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">non_native_power_11_gate</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_wrong_split_vars</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        circuit.non_native_power_11_gate::&lt;T&gt;(<span class="kw-2">&amp;</span>x_split_vars, <span class="kw-2">&amp;</span>y_wrong_split_vars)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_non_native_linear_gate</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// use bls12-377 base field to prove rescue over jubjub377 base field</span>
-        <span class="ident">test_non_native_linear_gate_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span>, <span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_non_native_linear_gate() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="comment">// use bls12-377 base field to prove rescue over jubjub377 base field
+        </span>test_non_native_linear_gate_helper::&lt;FqEd377, Fq377&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_non_native_linear_gate_helper</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span>, <span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
+    <span class="kw">fn </span>test_non_native_linear_gate_helper&lt;T: PrimeField, F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="ident">RANGE_BIT_LEN_FOR_TEST</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> (<span class="ident">T::size_in_bits</span>() <span class="op">/</span> <span class="number">2</span> <span class="op">/</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">RANGE_BIT_LEN_FOR_TEST</span>;
+        <span class="kw">let </span>m = (T::size_in_bits() / <span class="number">2 </span>/ RANGE_BIT_LEN_FOR_TEST + <span class="number">1</span>) * RANGE_BIT_LEN_FOR_TEST;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="kw">let</span> <span class="ident">x_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">4</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">y_t</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">4</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">c_t</span> <span class="op">=</span> <span class="ident">T::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res_t</span> <span class="op">=</span> <span class="ident">c_t</span>;
-        <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">xi</span>, <span class="kw-2">&amp;</span><span class="ident">yi</span>) <span class="kw">in</span> <span class="ident">x_t</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">y_t</span>.<span class="ident">iter</span>()) {
-            <span class="ident">res_t</span> <span class="op">+</span><span class="op">=</span> <span class="ident">xi</span> <span class="op">*</span> <span class="ident">yi</span>;
+        <span class="kw">let </span>x_t: Vec&lt;T&gt; = (<span class="number">0</span>..<span class="number">4</span>).map(|<span class="kw">_</span>| T::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
+        <span class="kw">let </span>y_t: Vec&lt;T&gt; = (<span class="number">0</span>..<span class="number">4</span>).map(|<span class="kw">_</span>| T::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
+        <span class="kw">let </span>c_t = T::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>res_t = c_t;
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>xi, <span class="kw-2">&amp;</span>yi) <span class="kw">in </span>x_t.iter().zip(y_t.iter()) {
+            res_t += xi * yi;
         }
-        <span class="kw">let</span> <span class="ident">res_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">res_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="kw">let </span>res_p = F::from_le_bytes_mod_order(res_t.into_repr().to_bytes_le().as_ref());
 
-        <span class="kw">let</span> <span class="ident">x_p</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">x_t</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">x</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>()))
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">y_p</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">y_t</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">y</span><span class="op">|</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">y</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>()))
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">c_p</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">c_t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>().<span class="ident">as_ref</span>());
+        <span class="kw">let </span>x_p: Vec&lt;F&gt; = x_t
+            .iter()
+            .map(|x| F::from_le_bytes_mod_order(x.into_repr().to_bytes_le().as_ref()))
+            .collect();
+        <span class="kw">let </span>y_p: Vec&lt;F&gt; = y_t
+            .iter()
+            .map(|y| F::from_le_bytes_mod_order(y.into_repr().to_bytes_le().as_ref()))
+            .collect();
+        <span class="kw">let </span>c_p = F::from_le_bytes_mod_order(c_t.into_repr().to_bytes_le().as_ref());
 
-        <span class="kw">let</span> <span class="ident">x_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">x_p</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="kw-2">*</span><span class="ident">x</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_vars: Vec&lt;Variable&gt; = x_p
+            .iter()
+            .map(|x| circuit.create_variable(<span class="kw-2">*</span>x))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Variable&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">x_split_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">x_vars</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">FpElemVar::new_unchecked</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">*</span><span class="ident">x</span>, <span class="ident">m</span>, <span class="prelude-val">None</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElemVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">y_split</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">y_p</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">y</span><span class="op">|</span> <span class="ident">FpElem::new</span>(<span class="ident">y</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">x_split_vars</span>[<span class="number">0</span>].<span class="ident">two_power_m</span>())))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FpElem</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">c_split</span> <span class="op">=</span> <span class="ident">FpElem::new</span>(<span class="kw-2">&amp;</span><span class="ident">c_p</span>, <span class="ident">m</span>, <span class="prelude-val">Some</span>(<span class="ident">x_split_vars</span>[<span class="number">0</span>].<span class="ident">two_power_m</span>()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>x_split_vars: Vec&lt;FpElemVar&lt;F&gt;&gt; = x_vars
+            .iter()
+            .map(|x| FpElemVar::new_unchecked(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">*</span>x, m, <span class="prelude-val">None</span>))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;FpElemVar&lt;F&gt;&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>y_split: Vec&lt;FpElem&lt;F&gt;&gt; = y_p
+            .iter()
+            .map(|y| FpElem::new(y, m, <span class="prelude-val">Some</span>(x_split_vars[<span class="number">0</span>].two_power_m())))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;FpElem&lt;F&gt;&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>c_split = FpElem::new(<span class="kw-2">&amp;</span>c_p, m, <span class="prelude-val">Some</span>(x_split_vars[<span class="number">0</span>].two_power_m()))<span class="question-mark">?</span>;
 
-        <span class="comment">// check the result is correct</span>
-        <span class="kw">let</span> <span class="ident">res_split_var</span> <span class="op">=</span>
-            <span class="ident">circuit</span>.<span class="ident">non_native_linear_gen</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">x_split_vars</span>, <span class="kw-2">&amp;</span><span class="ident">y_split</span>, <span class="kw-2">&amp;</span><span class="ident">c_split</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">res_var</span> <span class="op">=</span> <span class="ident">res_split_var</span>.<span class="ident">convert_to_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">res_var</span>)<span class="question-mark">?</span>, <span class="ident">res_p</span>);
+        <span class="comment">// check the result is correct
+        </span><span class="kw">let </span>res_split_var =
+            circuit.non_native_linear_gen::&lt;T&gt;(<span class="kw-2">&amp;</span>x_split_vars, <span class="kw-2">&amp;</span>y_split, <span class="kw-2">&amp;</span>c_split)<span class="question-mark">?</span>;
+        <span class="kw">let </span>res_var = res_split_var.convert_to_var(<span class="kw-2">&amp;mut </span>circuit)<span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(circuit.witness(res_var)<span class="question-mark">?</span>, res_p);
 
-        <span class="comment">// good path: the circuit is satisfied</span>
-        <span class="kw">let</span> <span class="ident">res_var2</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">res_p</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_equal</span>(<span class="ident">res_var</span>, <span class="ident">res_var2</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// good path: the circuit is satisfied
+        </span><span class="kw">let </span>res_var2 = circuit.create_variable(res_p)<span class="question-mark">?</span>;
+        circuit.enforce_equal(res_var, res_var2)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// bad path: wrong witness should fail</span>
-        <span class="kw">let</span> <span class="ident">witness</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">x_vars</span>[<span class="number">0</span>])<span class="question-mark">?</span>;
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">x_vars</span>[<span class="number">0</span>]) <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
-        <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">x_vars</span>[<span class="number">0</span>]) <span class="op">=</span> <span class="ident">witness</span>;
+        <span class="comment">// bad path: wrong witness should fail
+        </span><span class="kw">let </span>witness = circuit.witness(x_vars[<span class="number">0</span>])<span class="question-mark">?</span>;
+        <span class="kw-2">*</span>circuit.witness_mut(x_vars[<span class="number">0</span>]) = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+        <span class="kw-2">*</span>circuit.witness_mut(x_vars[<span class="number">0</span>]) = witness;
 
-        <span class="comment">// bad path: wrong value should fail</span>
-        <span class="kw">let</span> <span class="ident">res_var3</span> <span class="op">=</span> <span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">res_var3</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">res_var3</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">enforce_equal</span>(<span class="ident">res_var</span>, <span class="ident">res_var3</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// bad path: wrong value should fail
+        </span><span class="kw">let </span>res_var3 = F::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>res_var3 = circuit.create_variable(res_var3)<span class="question-mark">?</span>;
+        circuit.enforce_equal(res_var, res_var3)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities/src/conversion.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>conversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities/src/conversion.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>conversion.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -160,167 +160,167 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="kw">use</span> <span class="ident">ark_ec::ModelParameters</span>;
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger</span>, <span class="ident">PrimeField</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">cmp::min</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha512</span>};
+</span><span class="kw">use </span>ark_ec::ModelParameters;
+<span class="kw">use </span>ark_ff::{BigInteger, PrimeField};
+<span class="kw">use </span>ark_std::{cmp::min, vec::Vec};
+<span class="kw">use </span>sha2::{Digest, Sha512};
 
-<span class="doccomment">/// Convert a scalar field element to a base field element.</span>
-<span class="doccomment">/// Mod reduction is not performed since the conversion occurs</span>
-<span class="doccomment">/// for fields on a same curve.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fr_to_fq</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">scalar</span>: <span class="kw-2">&amp;</span><span class="ident">P::ScalarField</span>) -&gt; <span class="ident">F</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">ModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Convert a scalar field element to a base field element.
+/// Mod reduction is not performed since the conversion occurs
+/// for fields on a same curve.
+</span><span class="kw">pub fn </span>fr_to_fq&lt;F, P&gt;(scalar: <span class="kw-2">&amp;</span>P::ScalarField) -&gt; F
+<span class="kw">where
+    </span>F: PrimeField,
+    P: ModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="comment">// sanity checks:</span>
-    <span class="comment">// ensure | jubjub scalar field | &lt;= | BLS Scalar field |</span>
-    <span class="comment">// jubjub scalar field:</span>
-    <span class="comment">// 6554484396890773809930967563523245729705921265872317281365359162392183254199</span>
-    <span class="comment">// BLS12-381 scalar field:</span>
-    <span class="comment">// 52435875175126190479447740508185965837690552500527637822603658699938581184513</span>
-    <span class="comment">// jubjub377 scalar field:</span>
-    <span class="comment">// 2111115437357092606062206234695386632838870926408408195193685246394721360383</span>
-    <span class="comment">// BLS12-377 scalar field:</span>
-    <span class="comment">// 8444461749428370424248824938781546531375899335154063827935233455917409239041</span>
-    <span class="ident">F::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">scalar</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>())
+    <span class="comment">// sanity checks:
+    // ensure | jubjub scalar field | &lt;= | BLS Scalar field |
+    // jubjub scalar field:
+    // 6554484396890773809930967563523245729705921265872317281365359162392183254199
+    // BLS12-381 scalar field:
+    // 52435875175126190479447740508185965837690552500527637822603658699938581184513
+    // jubjub377 scalar field:
+    // 2111115437357092606062206234695386632838870926408408195193685246394721360383
+    // BLS12-377 scalar field:
+    // 8444461749428370424248824938781546531375899335154063827935233455917409239041
+    </span>F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>scalar.into_repr().to_bytes_le())
 }
 
-<span class="doccomment">/// Convert a base field element to a scalar field element.</span>
-<span class="doccomment">/// Perform a mod reduction if the base field element is greater than</span>
-<span class="doccomment">/// the modulus of the scalar field.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fq_to_fr</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="ident">P::ScalarField</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">ModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Convert a base field element to a scalar field element.
+/// Perform a mod reduction if the base field element is greater than
+/// the modulus of the scalar field.
+</span><span class="kw">pub fn </span>fq_to_fr&lt;F, P&gt;(base: <span class="kw-2">&amp;</span>F) -&gt; P::ScalarField
+<span class="kw">where
+    </span>F: PrimeField,
+    P: ModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="ident">P::ScalarField::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>())
+    P::ScalarField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>base.into_repr().to_bytes_le())
 }
 
-<span class="doccomment">/// Convert a field element in F(rom) to a field element in T(o),</span>
-<span class="doccomment">/// with |T| &lt; |F|; truncating the element via masking the top</span>
-<span class="doccomment">/// F::size_in_bits() - T::size_in_bits() with 0s</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fq_to_fr_with_mask</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">T</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// Convert a field element in F(rom) to a field element in T(o),
+/// with |T| &lt; |F|; truncating the element via masking the top
+/// F::size_in_bits() - T::size_in_bits() with 0s
+</span><span class="kw">pub fn </span>fq_to_fr_with_mask&lt;F, T&gt;(base: <span class="kw-2">&amp;</span>F) -&gt; T
+<span class="kw">where
+    </span>F: PrimeField,
+    T: PrimeField,
 {
-    <span class="macro">assert!</span>(<span class="ident">T::size_in_bits</span>() <span class="op">&lt;</span> <span class="ident">F::size_in_bits</span>());
-    <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">T::size_in_bits</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>;
-    <span class="comment">// ensure that no mod reduction happened</span>
-    <span class="ident">T::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>()[<span class="number">0</span>..<span class="ident">length</span>])
+    <span class="macro">assert!</span>(T::size_in_bits() &lt; F::size_in_bits());
+    <span class="kw">let </span>length = T::size_in_bits() &gt;&gt; <span class="number">3</span>;
+    <span class="comment">// ensure that no mod reduction happened
+    </span>T::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>base.into_repr().to_bytes_le()[<span class="number">0</span>..length])
 }
 
-<span class="comment">// convert a field element in F(rom)</span>
-<span class="comment">// to a field element in T(o).</span>
-<span class="comment">// return an error if a mod reduction occurs.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">field_switching</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">T</span>: <span class="ident">PrimeField</span>,
+<span class="comment">// convert a field element in F(rom)
+// to a field element in T(o).
+// return an error if a mod reduction occurs.
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub fn </span>field_switching&lt;F, T&gt;(base: <span class="kw-2">&amp;</span>F) -&gt; T
+<span class="kw">where
+    </span>F: PrimeField,
+    T: PrimeField,
 {
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">base</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>();
-    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">T::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>);
+    <span class="kw">let </span>bytes = base.into_repr().to_bytes_le();
+    <span class="kw">let </span>t = T::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>bytes);
 
-    <span class="comment">// check t == base</span>
-    <span class="comment">// i.e., t did not overflow the target field</span>
-    <span class="kw">let</span> <span class="ident">bytes_rec</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">into_repr</span>().<span class="ident">to_bytes_le</span>();
-    <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">bytes</span>.<span class="ident">len</span>(), <span class="ident">bytes_rec</span>.<span class="ident">len</span>());
-    <span class="macro">assert_eq!</span>(<span class="ident">bytes_rec</span>[<span class="number">0</span>..<span class="ident">length</span>], <span class="ident">bytes</span>[<span class="number">0</span>..<span class="ident">length</span>],);
-    <span class="ident">t</span>
+    <span class="comment">// check t == base
+    // i.e., t did not overflow the target field
+    </span><span class="kw">let </span>bytes_rec = t.into_repr().to_bytes_le();
+    <span class="kw">let </span>length = min(bytes.len(), bytes_rec.len());
+    <span class="macro">assert_eq!</span>(bytes_rec[<span class="number">0</span>..length], bytes[<span class="number">0</span>..length],);
+    t
 }
 
-<span class="doccomment">/// Hash a sequence of bytes to into a field</span>
-<span class="doccomment">/// element, whose order is less than 256 bits.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_to_field</span><span class="op">&lt;</span><span class="ident">B</span>, <span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">bytes</span>: <span class="ident">B</span>) -&gt; <span class="ident">F</span>
-<span class="kw">where</span>
-    <span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// Hash a sequence of bytes to into a field
+/// element, whose order is less than 256 bits.
+</span><span class="kw">pub fn </span>hash_to_field&lt;B, F&gt;(bytes: B) -&gt; F
+<span class="kw">where
+    </span>B: AsRef&lt;[u8]&gt;,
+    F: PrimeField,
 {
-    <span class="comment">// we extract a random `rand_byte_len` bytes from the hash</span>
-    <span class="comment">// the compute res = OS2IP(output) mod p</span>
-    <span class="comment">// which is less than 2^-128 from uniform</span>
-    <span class="kw">let</span> <span class="ident">rand_byte_len</span> <span class="op">=</span> (<span class="ident">F::size_in_bits</span>() <span class="op">+</span> <span class="number">7</span>) <span class="op">/</span> <span class="number">8</span> <span class="op">+</span> <span class="number">128</span> <span class="op">/</span> <span class="number">8</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha512::default</span>();
-    <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">hasher</span>.<span class="ident">finalize</span>()[<span class="number">0</span>..<span class="ident">rand_byte_len</span>];
+    <span class="comment">// we extract a random `rand_byte_len` bytes from the hash
+    // the compute res = OS2IP(output) mod p
+    // which is less than 2^-128 from uniform
+    </span><span class="kw">let </span>rand_byte_len = (F::size_in_bits() + <span class="number">7</span>) / <span class="number">8 </span>+ <span class="number">128 </span>/ <span class="number">8</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>hasher = Sha512::default();
+    hasher.update(bytes.as_ref());
+    <span class="kw">let </span>output = <span class="kw-2">&amp;</span>hasher.finalize()[<span class="number">0</span>..rand_byte_len];
 
-    <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">output</span>)
+    F::from_le_bytes_mod_order(output)
 }
 
-<span class="doccomment">/// One-way, deterministic, infallible conversion between arbitrary bytes (of</span>
-<span class="doccomment">/// unknown length and potentially non-canonical) to field elements.</span>
-<span class="doccomment">/// This function converts bytes to vector of BaseField.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_to_field_elements</span><span class="op">&lt;</span><span class="ident">B</span>, <span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">bytes</span>: <span class="ident">B</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">B</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="doccomment">/// One-way, deterministic, infallible conversion between arbitrary bytes (of
+/// unknown length and potentially non-canonical) to field elements.
+/// This function converts bytes to vector of BaseField.
+</span><span class="kw">pub fn </span>bytes_to_field_elements&lt;B, F&gt;(bytes: B) -&gt; Vec&lt;F&gt;
+<span class="kw">where
+    </span>B: AsRef&lt;[u8]&gt; + Clone,
+    F: PrimeField,
 {
-    <span class="comment">// segment the bytes into chunks of bytes, each chunk is of size</span>
-    <span class="comment">// that is floor(F::size_in_bits/8). then, cast each chunk</span>
-    <span class="comment">// into F via F::from_le_bytes_mod_order</span>
-    <span class="comment">// note that mod_reduction is guaranteed to not occur</span>
+    <span class="comment">// segment the bytes into chunks of bytes, each chunk is of size
+    // that is floor(F::size_in_bits/8). then, cast each chunk
+    // into F via F::from_le_bytes_mod_order
+    // note that mod_reduction is guaranteed to not occur
 
-    <span class="comment">// Field order is never a multiple of 8</span>
-    <span class="kw">let</span> <span class="ident">chunk_length</span> <span class="op">=</span> <span class="ident">F::size_in_bits</span>() <span class="op">/</span> <span class="number">8</span>;
+    // Field order is never a multiple of 8
+    </span><span class="kw">let </span>chunk_length = F::size_in_bits() / <span class="number">8</span>;
 
-    <span class="comment">// pad the input to a multiple of chunk_length</span>
-    <span class="kw">let</span> <span class="ident">padded_length</span> <span class="op">=</span> (<span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="op">+</span> <span class="ident">chunk_length</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">/</span> <span class="ident">chunk_length</span> <span class="op">*</span> <span class="ident">chunk_length</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">to_vec</span>();
-    <span class="ident">padded_bytes</span>.<span class="ident">resize</span>(<span class="ident">padded_length</span>, <span class="number">0u8</span>);
-    <span class="macro">assert!</span>(<span class="ident">padded_bytes</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">chunk_length</span> <span class="op">==</span> <span class="number">0</span>);
+    <span class="comment">// pad the input to a multiple of chunk_length
+    </span><span class="kw">let </span>padded_length = (bytes.as_ref().len() + chunk_length - <span class="number">1</span>) / chunk_length * chunk_length;
+    <span class="kw">let </span><span class="kw-2">mut </span>padded_bytes: Vec&lt;u8&gt; = bytes.as_ref().to_vec();
+    padded_bytes.resize(padded_length, <span class="number">0u8</span>);
+    <span class="macro">assert!</span>(padded_bytes.len() % chunk_length == <span class="number">0</span>);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="ident">padded_bytes</span>.<span class="ident">chunks</span>(<span class="ident">chunk_length</span>) {
-        <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">chunk</span>));
+    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
+    <span class="kw">for </span>chunk <span class="kw">in </span>padded_bytes.chunks(chunk_length) {
+        result.push(F::from_le_bytes_mod_order(chunk));
     }
-    <span class="ident">result</span>
+    result
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param377</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">Fr377</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param381</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">Fr381</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">Param254</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">Fr254</span>};
-    <span class="kw">use</span> <span class="ident">ark_std::UniformRand</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsParameters <span class="kw">as </span>Param377, Fr <span class="kw">as </span>Fr377};
+    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsParameters <span class="kw">as </span>Param381, Fr <span class="kw">as </span>Fr381};
+    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>Param254, Fr <span class="kw">as </span>Fr254};
+    <span class="kw">use </span>ark_std::UniformRand;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_bn254_scalar_conversion</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-            <span class="kw">let</span> <span class="ident">jj</span> <span class="op">=</span> <span class="ident">Fr254::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">jj_bls</span> <span class="op">=</span> <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param254</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">jj</span>);
-            <span class="macro">assert!</span>(<span class="ident">jj</span>.<span class="ident">into_repr</span>() <span class="op">==</span> <span class="ident">jj_bls</span>.<span class="ident">into_repr</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_bn254_scalar_conversion() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
+            <span class="kw">let </span>jj = Fr254::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>jj_bls = fr_to_fq::&lt;<span class="kw">_</span>, Param254&gt;(<span class="kw-2">&amp;</span>jj);
+            <span class="macro">assert!</span>(jj.into_repr() == jj_bls.into_repr());
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_jubjub_bls_scalar_conversion_377</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-            <span class="kw">let</span> <span class="ident">jj</span> <span class="op">=</span> <span class="ident">Fr377::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">jj_bls</span> <span class="op">=</span> <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param377</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">jj</span>);
-            <span class="macro">assert!</span>(<span class="ident">jj</span>.<span class="ident">into_repr</span>() <span class="op">==</span> <span class="ident">jj_bls</span>.<span class="ident">into_repr</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_jubjub_bls_scalar_conversion_377() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
+            <span class="kw">let </span>jj = Fr377::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>jj_bls = fr_to_fq::&lt;<span class="kw">_</span>, Param377&gt;(<span class="kw-2">&amp;</span>jj);
+            <span class="macro">assert!</span>(jj.into_repr() == jj_bls.into_repr());
         }
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_jubjub_bls_scalar_conversion_381</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-            <span class="kw">let</span> <span class="ident">jj</span> <span class="op">=</span> <span class="ident">Fr381::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">jj_bls</span> <span class="op">=</span> <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Param381</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">jj</span>);
-            <span class="macro">assert!</span>(<span class="ident">jj</span>.<span class="ident">into_repr</span>() <span class="op">==</span> <span class="ident">jj_bls</span>.<span class="ident">into_repr</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_jubjub_bls_scalar_conversion_381() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
+            <span class="kw">let </span>jj = Fr381::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>jj_bls = fr_to_fq::&lt;<span class="kw">_</span>, Param381&gt;(<span class="kw-2">&amp;</span>jj);
+            <span class="macro">assert!</span>(jj.into_repr() == jj_bls.into_repr());
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

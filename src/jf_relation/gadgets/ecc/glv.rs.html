@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/glv.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>glv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/glv.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>glv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -711,718 +711,718 @@
 <span id="711">711</span>
 <span id="712">712</span>
 <span id="713">713</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">errors::CircuitError</span>,
-    <span class="ident">gadgets::ecc</span>::{<span class="ident">MultiScalarMultiplicationCircuit</span>, <span class="ident">PointVariable</span>},
-    <span class="ident">BoolVar</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>,
+</span><span class="kw">use crate</span>::{
+    errors::CircuitError,
+    gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
+    BoolVar, Circuit, PlonkCircuit, Variable,
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">twisted_edwards_extended::GroupProjective</span>, <span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span>};
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FpParameters</span>, <span class="ident">PrimeField</span>, <span class="ident">Zero</span>};
-<span class="kw">use</span> <span class="ident">jf_utils::field_switching</span>;
-<span class="kw">use</span> <span class="ident">num_bigint</span>::{<span class="ident">BigInt</span>, <span class="ident">BigUint</span>};
+<span class="kw">use </span>ark_ec::{twisted_edwards_extended::GroupProjective, ProjectiveCurve, TEModelParameters};
+<span class="kw">use </span>ark_ff::{FpParameters, PrimeField, Zero};
+<span class="kw">use </span>jf_utils::field_switching;
+<span class="kw">use </span>num_bigint::{BigInt, BigUint};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Point</span>;
+<span class="kw">use </span><span class="kw">super</span>::Point;
 
-<span class="comment">// phi(P) = lambda*P for all P</span>
-<span class="comment">// constants that are used to calculate phi(P)</span>
-<span class="comment">// see &lt;https://eprint.iacr.org/2021/1152&gt;</span>
-<span class="kw">const</span> <span class="ident">COEFF_B</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="comment">// phi(P) = lambda*P for all P
+// constants that are used to calculate phi(P)
+// see &lt;https://eprint.iacr.org/2021/1152&gt;
+</span><span class="kw">const </span>COEFF_B: [u8; <span class="number">32</span>] = [
     <span class="number">180</span>, <span class="number">16</span>, <span class="number">37</span>, <span class="number">23</span>, <span class="number">77</span>, <span class="number">1</span>, <span class="number">15</span>, <span class="number">238</span>, <span class="number">214</span>, <span class="number">244</span>, <span class="number">154</span>, <span class="number">13</span>, <span class="number">119</span>, <span class="number">18</span>, <span class="number">167</span>, <span class="number">46</span>, <span class="number">136</span>, <span class="number">26</span>, <span class="number">81</span>, <span class="number">99</span>, <span class="number">58</span>, <span class="number">13</span>,
     <span class="number">240</span>, <span class="number">97</span>, <span class="number">165</span>, <span class="number">38</span>, <span class="number">132</span>, <span class="number">130</span>, <span class="number">139</span>, <span class="number">242</span>, <span class="number">201</span>, <span class="number">82</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">COEFF_C</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">const </span>COEFF_C: [u8; <span class="number">32</span>] = [
     <span class="number">61</span>, <span class="number">11</span>, <span class="number">101</span>, <span class="number">223</span>, <span class="number">108</span>, <span class="number">128</span>, <span class="number">92</span>, <span class="number">81</span>, <span class="number">233</span>, <span class="number">244</span>, <span class="number">54</span>, <span class="number">255</span>, <span class="number">207</span>, <span class="number">171</span>, <span class="number">86</span>, <span class="number">132</span>, <span class="number">7</span>, <span class="number">209</span>, <span class="number">23</span>, <span class="number">108</span>, <span class="number">253</span>,
     <span class="number">110</span>, <span class="number">124</span>, <span class="number">169</span>, <span class="number">195</span>, <span class="number">87</span>, <span class="number">84</span>, <span class="number">134</span>, <span class="number">207</span>, <span class="number">36</span>, <span class="number">198</span>, <span class="number">108</span>,
 ];
-<span class="doccomment">/// The lambda parameter for decomposition.</span>
-<span class="kw">const</span> <span class="ident">LAMBDA</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="doccomment">/// The lambda parameter for decomposition.
+</span><span class="kw">const </span>LAMBDA: [u8; <span class="number">32</span>] = [
     <span class="number">5</span>, <span class="number">223</span>, <span class="number">131</span>, <span class="number">135</span>, <span class="number">64</span>, <span class="number">33</span>, <span class="number">61</span>, <span class="number">209</span>, <span class="number">110</span>, <span class="number">5</span>, <span class="number">165</span>, <span class="number">112</span>, <span class="number">185</span>, <span class="number">157</span>, <span class="number">196</span>, <span class="number">207</span>, <span class="number">43</span>, <span class="number">199</span>, <span class="number">56</span>, <span class="number">43</span>, <span class="number">86</span>,
     <span class="number">73</span>, <span class="number">248</span>, <span class="number">237</span>, <span class="number">147</span>, <span class="number">164</span>, <span class="number">57</span>, <span class="number">74</span>, <span class="number">220</span>, <span class="number">243</span>, <span class="number">180</span>, <span class="number">19</span>,
 ];
-<span class="doccomment">/// Lower bits of Lambda, s.t. LAMBDA = LAMBDA_1 + 2^128 LAMBDA_2</span>
-<span class="kw">const</span> <span class="ident">LAMBDA_1</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="doccomment">/// Lower bits of Lambda, s.t. LAMBDA = LAMBDA_1 + 2^128 LAMBDA_2
+</span><span class="kw">const </span>LAMBDA_1: [u8; <span class="number">32</span>] = [
     <span class="number">5</span>, <span class="number">223</span>, <span class="number">131</span>, <span class="number">135</span>, <span class="number">64</span>, <span class="number">33</span>, <span class="number">61</span>, <span class="number">209</span>, <span class="number">110</span>, <span class="number">5</span>, <span class="number">165</span>, <span class="number">112</span>, <span class="number">185</span>, <span class="number">157</span>, <span class="number">196</span>, <span class="number">207</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
-<span class="doccomment">/// Higher bits of Lambda, s.t.</span>
-<span class="comment">// LAMBDA = LAMBDA_1 + 2^128 LAMBDA_2</span>
-<span class="kw">const</span> <span class="ident">LAMBDA_2</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="doccomment">/// Higher bits of Lambda, s.t.
+</span><span class="comment">// LAMBDA = LAMBDA_1 + 2^128 LAMBDA_2
+</span><span class="kw">const </span>LAMBDA_2: [u8; <span class="number">32</span>] = [
     <span class="number">43</span>, <span class="number">199</span>, <span class="number">56</span>, <span class="number">43</span>, <span class="number">86</span>, <span class="number">73</span>, <span class="number">248</span>, <span class="number">237</span>, <span class="number">147</span>, <span class="number">164</span>, <span class="number">57</span>, <span class="number">74</span>, <span class="number">220</span>, <span class="number">243</span>, <span class="number">180</span>, <span class="number">19</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
-<span class="doccomment">/// Lower bits of r, s.t. r = r1 +</span>
-<span class="comment">// 2^128 r2</span>
-<span class="kw">const</span> <span class="ident">R1</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="doccomment">/// Lower bits of r, s.t. r = r1 +
+</span><span class="comment">// 2^128 r2
+</span><span class="kw">const </span>R1: [u8; <span class="number">32</span>] = [
     <span class="number">225</span>, <span class="number">231</span>, <span class="number">118</span>, <span class="number">40</span>, <span class="number">181</span>, <span class="number">6</span>, <span class="number">253</span>, <span class="number">116</span>, <span class="number">113</span>, <span class="number">4</span>, <span class="number">25</span>, <span class="number">116</span>, <span class="number">0</span>, <span class="number">135</span>, <span class="number">143</span>, <span class="number">255</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
-<span class="doccomment">/// Higher bits of r, s.t. r = r1</span>
-<span class="comment">// + 2^128 r2</span>
-<span class="kw">const</span> <span class="ident">R2</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="doccomment">/// Higher bits of r, s.t. r = r1
+</span><span class="comment">// + 2^128 r2
+</span><span class="kw">const </span>R2: [u8; <span class="number">32</span>] = [
     <span class="number">0</span>, <span class="number">118</span>, <span class="number">104</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">118</span>, <span class="number">206</span>, <span class="number">12</span>, <span class="number">82</span>, <span class="number">95</span>, <span class="number">103</span>, <span class="number">202</span>, <span class="number">212</span>, <span class="number">105</span>, <span class="number">251</span>, <span class="number">28</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">COEFF_N11</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">const </span>COEFF_N11: [u8; <span class="number">32</span>] = [
     <span class="number">31</span>, <span class="number">24</span>, <span class="number">137</span>, <span class="number">151</span>, <span class="number">74</span>, <span class="number">249</span>, <span class="number">2</span>, <span class="number">75</span>, <span class="number">142</span>, <span class="number">146</span>, <span class="number">230</span>, <span class="number">75</span>, <span class="number">0</span>, <span class="number">226</span>, <span class="number">95</span>, <span class="number">85</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">COEFF_N12</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">const </span>COEFF_N12: [u8; <span class="number">32</span>] = [
     <span class="number">68</span>, <span class="number">31</span>, <span class="number">214</span>, <span class="number">35</span>, <span class="number">26</span>, <span class="number">89</span>, <span class="number">226</span>, <span class="number">248</span>, <span class="number">93</span>, <span class="number">143</span>, <span class="number">94</span>, <span class="number">229</span>, <span class="number">238</span>, <span class="number">179</span>, <span class="number">20</span>, <span class="number">8</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">COEFF_N21</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">const </span>COEFF_N21: [u8; <span class="number">32</span>] = [
     <span class="number">136</span>, <span class="number">62</span>, <span class="number">172</span>, <span class="number">71</span>, <span class="number">52</span>, <span class="number">178</span>, <span class="number">196</span>, <span class="number">241</span>, <span class="number">187</span>, <span class="number">30</span>, <span class="number">189</span>, <span class="number">202</span>, <span class="number">221</span>, <span class="number">103</span>, <span class="number">41</span>, <span class="number">16</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
     <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>,
 ];
-<span class="kw">const</span> <span class="ident">COEFF_N22</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">const </span>COEFF_N22: [u8; <span class="number">32</span>] = [
     <span class="number">194</span>, <span class="number">207</span>, <span class="number">237</span>, <span class="number">144</span>, <span class="number">106</span>, <span class="number">13</span>, <span class="number">250</span>, <span class="number">41</span>, <span class="number">227</span>, <span class="number">113</span>, <span class="number">50</span>, <span class="number">40</span>, <span class="number">0</span>, <span class="number">165</span>, <span class="number">47</span>, <span class="number">170</span>, <span class="number">0</span>, <span class="number">118</span>, <span class="number">104</span>, <span class="number">2</span>, <span class="number">2</span>,
     <span class="number">118</span>, <span class="number">206</span>, <span class="number">12</span>, <span class="number">82</span>, <span class="number">95</span>, <span class="number">103</span>, <span class="number">202</span>, <span class="number">212</span>, <span class="number">105</span>, <span class="number">251</span>, <span class="number">28</span>,
 ];
 
-<span class="comment">// GLV related gates</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="comment">// GLV related gates
+</span><span class="kw">impl</span>&lt;F&gt; PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
 {
-    <span class="doccomment">/// Perform GLV multiplication in circuit (which costs a few less</span>
-    <span class="doccomment">/// constraints).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">glv_mul</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">scalar</span>: <span class="ident">Variable</span>,
-        <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">scalar</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">check_point_var_bound</span>(<span class="ident">base</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Perform GLV multiplication in circuit (which costs a few less
+    /// constraints).
+    </span><span class="kw">pub fn </span>glv_mul&lt;P: TEModelParameters&lt;BaseField = F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        scalar: Variable,
+        base: <span class="kw-2">&amp;</span>PointVariable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
+        <span class="self">self</span>.check_var_bound(scalar)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_point_var_bound(base)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">s1_var</span>, <span class="ident">s2_var</span>, <span class="ident">s2_sign_var</span>) <span class="op">=</span> <span class="ident">scalar_decomposition_gate</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">scalar</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(s1_var, s2_var, s2_sign_var) = scalar_decomposition_gate::&lt;<span class="kw">_</span>, P, <span class="kw">_</span>&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>scalar)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">endo_base_var</span> <span class="op">=</span> <span class="ident">endomorphism_circuit</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">base</span>)<span class="question-mark">?</span>;
-        <span class="ident">multi_scalar_mul_circuit</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">base</span>, <span class="ident">s1_var</span>, <span class="kw-2">&amp;</span><span class="ident">endo_base_var</span>, <span class="ident">s2_var</span>, <span class="ident">s2_sign_var</span>)
+        <span class="kw">let </span>endo_base_var = endomorphism_circuit::&lt;<span class="kw">_</span>, P&gt;(<span class="self">self</span>, base)<span class="question-mark">?</span>;
+        multi_scalar_mul_circuit::&lt;<span class="kw">_</span>, P&gt;(<span class="self">self</span>, base, s1_var, <span class="kw-2">&amp;</span>endo_base_var, s2_var, s2_sign_var)
     }
 }
 
-<span class="doccomment">/// The circuit for 2 base scalar multiplication with scalar bit length 128.</span>
-<span class="kw">fn</span> <span class="ident">multi_scalar_mul_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    <span class="ident">scalar_1</span>: <span class="ident">Variable</span>,
-    <span class="ident">endo_base</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-    <span class="ident">scalar_2</span>: <span class="ident">Variable</span>,
-    <span class="ident">scalar_2_sign_var</span>: <span class="ident">BoolVar</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// The circuit for 2 base scalar multiplication with scalar bit length 128.
+</span><span class="kw">fn </span>multi_scalar_mul_circuit&lt;F, P&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    base: <span class="kw-2">&amp;</span>PointVariable,
+    scalar_1: Variable,
+    endo_base: <span class="kw-2">&amp;</span>PointVariable,
+    scalar_2: Variable,
+    scalar_2_sign_var: BoolVar,
+) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: TEModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">let</span> <span class="ident">endo_base_neg</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">inverse_point</span>(<span class="ident">endo_base</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">endo_base</span> <span class="op">=</span>
-        <span class="ident">circuit</span>.<span class="ident">binary_point_vars_select</span>(<span class="ident">scalar_2_sign_var</span>, <span class="ident">endo_base</span>, <span class="kw-2">&amp;</span><span class="ident">endo_base_neg</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>endo_base_neg = circuit.inverse_point(endo_base)<span class="question-mark">?</span>;
+    <span class="kw">let </span>endo_base =
+        circuit.binary_point_vars_select(scalar_2_sign_var, endo_base, <span class="kw-2">&amp;</span>endo_base_neg)<span class="question-mark">?</span>;
 
-    <span class="ident">MultiScalarMultiplicationCircuit</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span><span class="ident">::msm_with_var_scalar_length</span>(
-        <span class="ident">circuit</span>,
-        <span class="kw-2">&amp;</span>[<span class="kw-2">*</span><span class="ident">base</span>, <span class="ident">endo_base</span>],
-        <span class="kw-2">&amp;</span>[<span class="ident">scalar_1</span>, <span class="ident">scalar_2</span>],
+    MultiScalarMultiplicationCircuit::&lt;F, P&gt;::msm_with_var_scalar_length(
+        circuit,
+        <span class="kw-2">&amp;</span>[<span class="kw-2">*</span>base, endo_base],
+        <span class="kw-2">&amp;</span>[scalar_1, scalar_2],
         <span class="number">128</span>,
     )
 }
 
-<span class="doccomment">/// Mapping a point G to phi(G):= lambda G where phi is the endomorphism</span>
-<span class="kw">fn</span> <span class="ident">endomorphism</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Mapping a point G to phi(G):= lambda G where phi is the endomorphism
+</span><span class="kw">fn </span>endomorphism&lt;F, P&gt;(base: <span class="kw-2">&amp;</span>Point&lt;F&gt;) -&gt; Point&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: TEModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">base</span>.<span class="ident">get_x</span>();
-    <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">base</span>.<span class="ident">get_y</span>();
-    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_B</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_C</span>.<span class="ident">as_ref</span>());
+    <span class="kw">let </span>x = base.get_x();
+    <span class="kw">let </span>y = base.get_y();
+    <span class="kw">let </span>b = F::from_le_bytes_mod_order(COEFF_B.as_ref());
+    <span class="kw">let </span>c = F::from_le_bytes_mod_order(COEFF_C.as_ref());
 
-    <span class="kw">let</span> <span class="ident">xy</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span>;
-    <span class="kw">let</span> <span class="ident">y_square</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">y</span>;
-    <span class="kw">let</span> <span class="ident">f_y</span> <span class="op">=</span> <span class="ident">c</span> <span class="op">*</span> (<span class="ident">F::one</span>() <span class="op">-</span> <span class="ident">y_square</span>);
-    <span class="kw">let</span> <span class="ident">g_y</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">*</span> (<span class="ident">y_square</span> <span class="op">+</span> <span class="ident">b</span>);
-    <span class="kw">let</span> <span class="ident">h_y</span> <span class="op">=</span> <span class="ident">y_square</span> <span class="op">-</span> <span class="ident">b</span>;
+    <span class="kw">let </span>xy = x * y;
+    <span class="kw">let </span>y_square = y * y;
+    <span class="kw">let </span>f_y = c * (F::one() - y_square);
+    <span class="kw">let </span>g_y = b * (y_square + b);
+    <span class="kw">let </span>h_y = y_square - b;
 
-    <span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">f_y</span> <span class="op">*</span> <span class="ident">h_y</span>, <span class="ident">g_y</span> <span class="op">*</span> <span class="ident">xy</span>, <span class="ident">F::one</span>(), <span class="ident">h_y</span> <span class="op">*</span> <span class="ident">xy</span>)
-        .<span class="ident">into_affine</span>()
-        .<span class="ident">into</span>()
+    GroupProjective::&lt;P&gt;::new(f_y * h_y, g_y * xy, F::one(), h_y * xy)
+        .into_affine()
+        .into()
 }
 
-<span class="doccomment">/// The circuit for computing the point endomorphism.</span>
-<span class="kw">fn</span> <span class="ident">endomorphism_circuit</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">point_var</span>: <span class="kw-2">&amp;</span><span class="ident">PointVariable</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PointVariable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// The circuit for computing the point endomorphism.
+</span><span class="kw">fn </span>endomorphism_circuit&lt;F, P&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    point_var: <span class="kw-2">&amp;</span>PointVariable,
+) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: TEModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="ident">point_var</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">endo_point</span> <span class="op">=</span> <span class="ident">endomorphism</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>);
-    <span class="kw">let</span> <span class="ident">endo_point_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">endo_point</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>base = circuit.point_witness(point_var)<span class="question-mark">?</span>;
+    <span class="kw">let </span>endo_point = endomorphism::&lt;<span class="kw">_</span>, P&gt;(<span class="kw-2">&amp;</span>base);
+    <span class="kw">let </span>endo_point_var = circuit.create_point_variable(endo_point)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_B</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_C</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">b_square</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">*</span> <span class="ident">b</span>;
+    <span class="kw">let </span>b = F::from_le_bytes_mod_order(COEFF_B.as_ref());
+    <span class="kw">let </span>c = F::from_le_bytes_mod_order(COEFF_C.as_ref());
+    <span class="kw">let </span>b_square = b * b;
 
-    <span class="kw">let</span> <span class="ident">x_var</span> <span class="op">=</span> <span class="ident">point_var</span>.<span class="ident">get_x</span>();
-    <span class="kw">let</span> <span class="ident">y_var</span> <span class="op">=</span> <span class="ident">point_var</span>.<span class="ident">get_y</span>();
+    <span class="kw">let </span>x_var = point_var.get_x();
+    <span class="kw">let </span>y_var = point_var.get_y();
 
-    <span class="comment">// xy = x * y</span>
-    <span class="kw">let</span> <span class="ident">xy_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mul</span>(<span class="ident">x_var</span>, <span class="ident">y_var</span>)<span class="question-mark">?</span>;
+    <span class="comment">// xy = x * y
+    </span><span class="kw">let </span>xy_var = circuit.mul(x_var, y_var)<span class="question-mark">?</span>;
 
-    <span class="comment">// f(y) = c(1 - y^2)</span>
-    <span class="kw">let</span> <span class="ident">wire</span> <span class="op">=</span> [<span class="ident">y_var</span>, <span class="ident">y_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-    <span class="kw">let</span> <span class="ident">coeff</span> <span class="op">=</span> [<span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-    <span class="kw">let</span> <span class="ident">q_mul</span> <span class="op">=</span> [<span class="op">-</span><span class="ident">c</span>, <span class="ident">F::zero</span>()];
-    <span class="kw">let</span> <span class="ident">q_c</span> <span class="op">=</span> <span class="ident">c</span>;
-    <span class="kw">let</span> <span class="ident">f_y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">gen_quad_poly</span>(<span class="kw-2">&amp;</span><span class="ident">wire</span>, <span class="kw-2">&amp;</span><span class="ident">coeff</span>, <span class="kw-2">&amp;</span><span class="ident">q_mul</span>, <span class="ident">q_c</span>)<span class="question-mark">?</span>;
+    <span class="comment">// f(y) = c(1 - y^2)
+    </span><span class="kw">let </span>wire = [y_var, y_var, circuit.zero(), circuit.zero()];
+    <span class="kw">let </span>coeff = [F::zero(), F::zero(), F::zero(), F::zero()];
+    <span class="kw">let </span>q_mul = [-c, F::zero()];
+    <span class="kw">let </span>q_c = c;
+    <span class="kw">let </span>f_y_var = circuit.gen_quad_poly(<span class="kw-2">&amp;</span>wire, <span class="kw-2">&amp;</span>coeff, <span class="kw-2">&amp;</span>q_mul, q_c)<span class="question-mark">?</span>;
 
-    <span class="comment">// g(y) = b(y^2 + b)</span>
-    <span class="kw">let</span> <span class="ident">wire</span> <span class="op">=</span> [<span class="ident">y_var</span>, <span class="ident">y_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-    <span class="kw">let</span> <span class="ident">coeff</span> <span class="op">=</span> [<span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-    <span class="kw">let</span> <span class="ident">q_mul</span> <span class="op">=</span> [<span class="ident">b</span>, <span class="ident">F::zero</span>()];
-    <span class="kw">let</span> <span class="ident">q_c</span> <span class="op">=</span> <span class="ident">b_square</span>;
-    <span class="kw">let</span> <span class="ident">g_y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">gen_quad_poly</span>(<span class="kw-2">&amp;</span><span class="ident">wire</span>, <span class="kw-2">&amp;</span><span class="ident">coeff</span>, <span class="kw-2">&amp;</span><span class="ident">q_mul</span>, <span class="ident">q_c</span>)<span class="question-mark">?</span>;
+    <span class="comment">// g(y) = b(y^2 + b)
+    </span><span class="kw">let </span>wire = [y_var, y_var, circuit.zero(), circuit.zero()];
+    <span class="kw">let </span>coeff = [F::zero(), F::zero(), F::zero(), F::zero()];
+    <span class="kw">let </span>q_mul = [b, F::zero()];
+    <span class="kw">let </span>q_c = b_square;
+    <span class="kw">let </span>g_y_var = circuit.gen_quad_poly(<span class="kw-2">&amp;</span>wire, <span class="kw-2">&amp;</span>coeff, <span class="kw-2">&amp;</span>q_mul, q_c)<span class="question-mark">?</span>;
 
-    <span class="comment">// h(y) = y^2 - b</span>
-    <span class="kw">let</span> <span class="ident">wire</span> <span class="op">=</span> [<span class="ident">y_var</span>, <span class="ident">y_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-    <span class="kw">let</span> <span class="ident">coeff</span> <span class="op">=</span> [<span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-    <span class="kw">let</span> <span class="ident">q_mul</span> <span class="op">=</span> [<span class="ident">F::one</span>(), <span class="ident">F::zero</span>()];
-    <span class="kw">let</span> <span class="ident">q_c</span> <span class="op">=</span> <span class="op">-</span><span class="ident">b</span>;
-    <span class="kw">let</span> <span class="ident">h_y_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">gen_quad_poly</span>(<span class="kw-2">&amp;</span><span class="ident">wire</span>, <span class="kw-2">&amp;</span><span class="ident">coeff</span>, <span class="kw-2">&amp;</span><span class="ident">q_mul</span>, <span class="ident">q_c</span>)<span class="question-mark">?</span>;
+    <span class="comment">// h(y) = y^2 - b
+    </span><span class="kw">let </span>wire = [y_var, y_var, circuit.zero(), circuit.zero()];
+    <span class="kw">let </span>coeff = [F::zero(), F::zero(), F::zero(), F::zero()];
+    <span class="kw">let </span>q_mul = [F::one(), F::zero()];
+    <span class="kw">let </span>q_c = -b;
+    <span class="kw">let </span>h_y_var = circuit.gen_quad_poly(<span class="kw-2">&amp;</span>wire, <span class="kw-2">&amp;</span>coeff, <span class="kw-2">&amp;</span>q_mul, q_c)<span class="question-mark">?</span>;
 
-    <span class="comment">// res_x = f(y) / (xy)</span>
-    <span class="ident">circuit</span>.<span class="ident">mul_gate</span>(<span class="ident">endo_point_var</span>.<span class="ident">get_x</span>(), <span class="ident">xy_var</span>, <span class="ident">f_y_var</span>)<span class="question-mark">?</span>;
-    <span class="comment">// res_y = g(y) / h(y)</span>
-    <span class="ident">circuit</span>.<span class="ident">mul_gate</span>(<span class="ident">endo_point_var</span>.<span class="ident">get_y</span>(), <span class="ident">h_y_var</span>, <span class="ident">g_y_var</span>)<span class="question-mark">?</span>;
+    <span class="comment">// res_x = f(y) / (xy)
+    </span>circuit.mul_gate(endo_point_var.get_x(), xy_var, f_y_var)<span class="question-mark">?</span>;
+    <span class="comment">// res_y = g(y) / h(y)
+    </span>circuit.mul_gate(endo_point_var.get_y(), h_y_var, g_y_var)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">endo_point_var</span>)
+    <span class="prelude-val">Ok</span>(endo_point_var)
 }
 
-<span class="doccomment">/// Decompose a scalar s into k1, k2, s.t.</span>
-<span class="doccomment">///     scalar = k1 - k2_sign * k2 * lambda</span>
-<span class="doccomment">/// via a Babai&#39;s nearest plane algorithm</span>
-<span class="doccomment">/// Guarantees that k1 and k2 are less than 128 bits.</span>
-<span class="kw">fn</span> <span class="ident">scalar_decomposition</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>(<span class="ident">scalar</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; (<span class="ident">F</span>, <span class="ident">F</span>, <span class="ident">bool</span>) {
-    <span class="kw">let</span> <span class="ident">scalar_z</span>: <span class="ident">BigUint</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">scalar</span>).<span class="ident">into</span>();
+<span class="doccomment">/// Decompose a scalar s into k1, k2, s.t.
+///     scalar = k1 - k2_sign * k2 * lambda
+/// via a Babai&#39;s nearest plane algorithm
+/// Guarantees that k1 and k2 are less than 128 bits.
+</span><span class="kw">fn </span>scalar_decomposition&lt;F: PrimeField&gt;(scalar: <span class="kw-2">&amp;</span>F) -&gt; (F, F, bool) {
+    <span class="kw">let </span>scalar_z: BigUint = (<span class="kw-2">*</span>scalar).into();
 
-    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_N11</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">n11</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">tmp</span>.<span class="ident">into</span>();
+    <span class="kw">let </span>tmp = F::from_le_bytes_mod_order(COEFF_N11.as_ref());
+    <span class="kw">let </span>n11: BigUint = tmp.into();
 
-    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_N12</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">n12</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">tmp</span>.<span class="ident">into</span>();
+    <span class="kw">let </span>tmp = F::from_le_bytes_mod_order(COEFF_N12.as_ref());
+    <span class="kw">let </span>n12: BigUint = tmp.into();
 
-    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_N21</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">n21</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">tmp</span>.<span class="ident">into</span>();
+    <span class="kw">let </span>tmp = F::from_le_bytes_mod_order(COEFF_N21.as_ref());
+    <span class="kw">let </span>n21: BigUint = tmp.into();
 
-    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">COEFF_N22</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">n22</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">tmp</span>.<span class="ident">into</span>();
+    <span class="kw">let </span>tmp = F::from_le_bytes_mod_order(COEFF_N22.as_ref());
+    <span class="kw">let </span>n22: BigUint = tmp.into();
 
-    <span class="kw">let</span> <span class="ident">r</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">F::Params</span> <span class="kw">as</span> <span class="ident">FpParameters</span><span class="op">&gt;</span><span class="ident">::MODULUS</span>.<span class="ident">into</span>();
-    <span class="kw">let</span> <span class="ident">r_over_2</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">r</span> <span class="op">/</span> <span class="ident">BigUint::from</span>(<span class="number">2u8</span>);
+    <span class="kw">let </span>r: BigUint = &lt;F::Params <span class="kw">as </span>FpParameters&gt;::MODULUS.into();
+    <span class="kw">let </span>r_over_2 = <span class="kw-2">&amp;</span>r / BigUint::from(<span class="number">2u8</span>);
 
-    <span class="comment">// beta = vector([n,0]) * self.curve.N_inv</span>
-    <span class="kw">let</span> <span class="ident">beta_1</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">scalar_z</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">n11</span>;
-    <span class="kw">let</span> <span class="ident">beta_2</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">scalar_z</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">n12</span>;
+    <span class="comment">// beta = vector([n,0]) * self.curve.N_inv
+    </span><span class="kw">let </span>beta_1 = <span class="kw-2">&amp;</span>scalar_z * <span class="kw-2">&amp;</span>n11;
+    <span class="kw">let </span>beta_2 = <span class="kw-2">&amp;</span>scalar_z * <span class="kw-2">&amp;</span>n12;
 
-    <span class="kw">let</span> <span class="ident">beta_1</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">beta_1</span> <span class="op">/</span> <span class="kw-2">&amp;</span><span class="ident">r</span>;
-    <span class="kw">let</span> <span class="ident">beta_2</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">beta_2</span> <span class="op">/</span> <span class="kw-2">&amp;</span><span class="ident">r</span>;
+    <span class="kw">let </span>beta_1 = <span class="kw-2">&amp;</span>beta_1 / <span class="kw-2">&amp;</span>r;
+    <span class="kw">let </span>beta_2 = <span class="kw-2">&amp;</span>beta_2 / <span class="kw-2">&amp;</span>r;
 
-    <span class="comment">// b = vector([int(beta[0]), int(beta[1])]) * self.curve.N</span>
-    <span class="kw">let</span> <span class="ident">b1</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">beta_1</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">n11</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">beta_2</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">n21</span>;
-    <span class="kw">let</span> <span class="ident">b2</span>: <span class="ident">BigUint</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">beta_1</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">n12</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">beta_2</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">n22</span>) <span class="op">%</span> <span class="ident">r</span>;
+    <span class="comment">// b = vector([int(beta[0]), int(beta[1])]) * self.curve.N
+    </span><span class="kw">let </span>b1: BigUint = <span class="kw-2">&amp;</span>beta_1 * <span class="kw-2">&amp;</span>n11 + <span class="kw-2">&amp;</span>beta_2 * <span class="kw-2">&amp;</span>n21;
+    <span class="kw">let </span>b2: BigUint = (<span class="kw-2">&amp;</span>beta_1 * <span class="kw-2">&amp;</span>n12 + <span class="kw-2">&amp;</span>beta_2 * <span class="kw-2">&amp;</span>n22) % r;
 
-    <span class="kw">let</span> <span class="ident">k1</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">scalar_z</span> <span class="op">-</span> <span class="ident">b1</span>);
-    <span class="kw">let</span> <span class="ident">is_k2_pos</span> <span class="op">=</span> <span class="ident">b2</span> <span class="op">&lt;</span> <span class="ident">r_over_2</span>;
+    <span class="kw">let </span>k1 = F::from(scalar_z - b1);
+    <span class="kw">let </span>is_k2_pos = b2 &lt; r_over_2;
 
-    <span class="kw">let</span> <span class="ident">k2</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_k2_pos</span> { <span class="ident">F::from</span>(<span class="ident">b2</span>) } <span class="kw">else</span> { <span class="op">-</span><span class="ident">F::from</span>(<span class="ident">b2</span>) };
+    <span class="kw">let </span>k2 = <span class="kw">if </span>is_k2_pos { F::from(b2) } <span class="kw">else </span>{ -F::from(b2) };
 
-    (<span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">is_k2_pos</span>)
+    (k1, k2, is_k2_pos)
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">fq_to_big_int</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq</span>: <span class="ident">expr</span>) =&gt; {
-        <span class="op">&lt;</span><span class="ident">BigInt</span> <span class="kw">as</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BigUint</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">fq</span>.<span class="ident">into_repr</span>().<span class="ident">into</span>())
+<span class="macro">macro_rules! </span>fq_to_big_int {
+    (<span class="macro-nonterminal">$fq</span>: expr) =&gt; {
+        &lt;BigInt <span class="kw">as </span>From&lt;BigUint&gt;&gt;::from(<span class="macro-nonterminal">$fq</span>.into_repr().into())
     };
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">int_to_fq</span> {
+<span class="macro">macro_rules! </span>int_to_fq {
     (<span class="macro-nonterminal">$</span><span class="kw">in</span>: <span class="macro-nonterminal">expr</span>) =&gt; {
-        <span class="ident">F::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="kw">in</span>.<span class="macro-nonterminal">to_bytes_le</span>().<span class="number">1</span>)
+        F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="kw">in</span>.<span class="macro-nonterminal">to_bytes_le</span>().<span class="number">1</span>)
     };
 }
 
-<span class="comment">// Input a scalar s as in Fq wires,</span>
-<span class="comment">// compute k1, k2 and a k2_sign s.t.</span>
-<span class="comment">//  s = k1 - k2_sign * k2 * lambda mod |Fr|</span>
-<span class="comment">// where</span>
-<span class="comment">// * s ~ 253 bits, private input</span>
-<span class="comment">// * lambda ~ 253 bits, public input</span>
-<span class="comment">// * k1, k2 each ~ 128 bits, private inputs</span>
-<span class="comment">// * k2_sign - Boolean, private inputs</span>
-<span class="comment">// Return the variables for k1 and k2</span>
-<span class="comment">// and sign bit for k2.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-<span class="kw">fn</span> <span class="ident">scalar_decomposition_gate</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span>, <span class="ident">S</span><span class="op">&gt;</span>(
-    <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">s_var</span>: <span class="kw-2">&amp;</span><span class="ident">Variable</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Variable</span>, <span class="ident">Variable</span>, <span class="ident">BoolVar</span>), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">TEModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>: <span class="ident">PrimeField</span>,
+<span class="comment">// Input a scalar s as in Fq wires,
+// compute k1, k2 and a k2_sign s.t.
+//  s = k1 - k2_sign * k2 * lambda mod |Fr|
+// where
+// * s ~ 253 bits, private input
+// * lambda ~ 253 bits, public input
+// * k1, k2 each ~ 128 bits, private inputs
+// * k2_sign - Boolean, private inputs
+// Return the variables for k1 and k2
+// and sign bit for k2.
+</span><span class="attribute">#[allow(clippy::type_complexity)]
+</span><span class="kw">fn </span>scalar_decomposition_gate&lt;F, P, S&gt;(
+    circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+    s_var: <span class="kw-2">&amp;</span>Variable,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(Variable, Variable, BoolVar), CircuitError&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: TEModelParameters&lt;BaseField = F, ScalarField = S&gt;,
+    S: PrimeField,
 {
-    <span class="comment">// the order of scalar field</span>
-    <span class="comment">// r = 13108968793781547619861935127046491459309155893440570251786403306729687672801 &lt; 2^253</span>
-    <span class="comment">// q = 52435875175126190479447740508185965837690552500527637822603658699938581184513 &lt; 2^255</span>
+    <span class="comment">// the order of scalar field
+    // r = 13108968793781547619861935127046491459309155893440570251786403306729687672801 &lt; 2^253
+    // q = 52435875175126190479447740508185965837690552500527637822603658699938581184513 &lt; 2^255
 
-    <span class="comment">// for an input scalar s,</span>
-    <span class="comment">// we need to prove the following statement over ZZ</span>
-    <span class="comment">//</span>
-    <span class="comment">// (0) lambda * k2_sign * k2 + s = t * Fr::modulus + k1</span>
-    <span class="comment">//</span>
-    <span class="comment">// for some t, where</span>
-    <span class="comment">// * t &lt; (k2 + 1) &lt; 2^128</span>
-    <span class="comment">// * k1, k2 &lt; sqrt{2r} &lt; 2^128</span>
-    <span class="comment">// * lambda, s, modulus are ~253 bits</span>
-    <span class="comment">//</span>
-    <span class="comment">// which becomes</span>
-    <span class="comment">// (1) lambda_1 * k2_sign * k2 + 2^128 lambda_2 * k2_sign * k2 + s</span>
-    <span class="comment">//        - t * r1 - t *2^128 r2 - k1 = 0</span>
-    <span class="comment">// where</span>
-    <span class="comment">// (2) lambda = lambda_1 + 2^128 lambda_2   &lt;- public info</span>
-    <span class="comment">// (3) Fr::modulus = r1 + 2^128 r2          &lt;- public info</span>
-    <span class="comment">// with</span>
-    <span class="comment">//  lambda_1 and r1 &lt; 2^128</span>
-    <span class="comment">//  lambda_2 and r2 &lt; 2^125</span>
-    <span class="comment">//</span>
-    <span class="comment">// reorganizing (1) gives us</span>
-    <span class="comment">// (4)          lambda_1 * k2_sign * k2 + s - t * r1 - k1</span>
-    <span class="comment">//     + 2^128 (lambda_2 * k2_sign * k2 - t * r2)</span>
-    <span class="comment">//     = 0</span>
-    <span class="comment">//</span>
-    <span class="comment">// Now set</span>
-    <span class="comment">// (5) tmp = lambda_1 * k2_sign * k2 + s - t * r1 - k1</span>
-    <span class="comment">// with</span>
-    <span class="comment">// (6) tmp = tmp1 + 2^128 tmp2</span>
-    <span class="comment">// for tmp1 &lt; 2^128 and tmp2 &lt; 2^128</span>
-    <span class="comment">//</span>
-    <span class="comment">// that is</span>
-    <span class="comment">// tmp1 will be the lower 128 bits of</span>
-    <span class="comment">//     lambda * k2_sign * k2 + s - t * Fr::modulus + k1</span>
-    <span class="comment">// which will be 0 due to (0).</span>
-    <span class="comment">// (7) tmp1 =  (lambda_1 * k2_sign * k2 + s - t * r1 - k1) % 2^128 = 0</span>
-    <span class="comment">// note that t * r1 &lt; 2^254</span>
-    <span class="comment">//</span>
-    <span class="comment">// i.e. tmp2 will be the carrier overflowing 2^128,</span>
-    <span class="comment">// and on the 2^128 term, we have</span>
-    <span class="comment">// (8) tmp2 + lambda_2 * k2_sign * k2 - t * r2 = 0</span>
-    <span class="comment">// also due to (0).</span>
-    <span class="comment">//</span>
-    <span class="comment">// the concrete statements that we need to prove (0) are</span>
-    <span class="comment">//  (a) k1 &lt; 2^128</span>
-    <span class="comment">//  (b) k2 &lt; 2^128</span>
-    <span class="comment">//  (c) tmp1 = 0</span>
-    <span class="comment">//  (d) tmp2 &lt; 2^128</span>
-    <span class="comment">//  (e) tmp = tmp1 + 2^128 tmp2</span>
-    <span class="comment">//  (f) tmp =  lambda_1 * k2_sign * k2 + s - t * r1 - k1</span>
-    <span class="comment">//  (g) tmp2 + lambda_2 * k2_sign * k2   = t * r2</span>
-    <span class="comment">// which can all be evaluated over Fq without overflow</span>
+    // for an input scalar s,
+    // we need to prove the following statement over ZZ
+    //
+    // (0) lambda * k2_sign * k2 + s = t * Fr::modulus + k1
+    //
+    // for some t, where
+    // * t &lt; (k2 + 1) &lt; 2^128
+    // * k1, k2 &lt; sqrt{2r} &lt; 2^128
+    // * lambda, s, modulus are ~253 bits
+    //
+    // which becomes
+    // (1) lambda_1 * k2_sign * k2 + 2^128 lambda_2 * k2_sign * k2 + s
+    //        - t * r1 - t *2^128 r2 - k1 = 0
+    // where
+    // (2) lambda = lambda_1 + 2^128 lambda_2   &lt;- public info
+    // (3) Fr::modulus = r1 + 2^128 r2          &lt;- public info
+    // with
+    //  lambda_1 and r1 &lt; 2^128
+    //  lambda_2 and r2 &lt; 2^125
+    //
+    // reorganizing (1) gives us
+    // (4)          lambda_1 * k2_sign * k2 + s - t * r1 - k1
+    //     + 2^128 (lambda_2 * k2_sign * k2 - t * r2)
+    //     = 0
+    //
+    // Now set
+    // (5) tmp = lambda_1 * k2_sign * k2 + s - t * r1 - k1
+    // with
+    // (6) tmp = tmp1 + 2^128 tmp2
+    // for tmp1 &lt; 2^128 and tmp2 &lt; 2^128
+    //
+    // that is
+    // tmp1 will be the lower 128 bits of
+    //     lambda * k2_sign * k2 + s - t * Fr::modulus + k1
+    // which will be 0 due to (0).
+    // (7) tmp1 =  (lambda_1 * k2_sign * k2 + s - t * r1 - k1) % 2^128 = 0
+    // note that t * r1 &lt; 2^254
+    //
+    // i.e. tmp2 will be the carrier overflowing 2^128,
+    // and on the 2^128 term, we have
+    // (8) tmp2 + lambda_2 * k2_sign * k2 - t * r2 = 0
+    // also due to (0).
+    //
+    // the concrete statements that we need to prove (0) are
+    //  (a) k1 &lt; 2^128
+    //  (b) k2 &lt; 2^128
+    //  (c) tmp1 = 0
+    //  (d) tmp2 &lt; 2^128
+    //  (e) tmp = tmp1 + 2^128 tmp2
+    //  (f) tmp =  lambda_1 * k2_sign * k2 + s - t * r1 - k1
+    //  (g) tmp2 + lambda_2 * k2_sign * k2   = t * r2
+    // which can all be evaluated over Fq without overflow
 
-    <span class="comment">// ============================================</span>
-    <span class="comment">// step 1: build integers</span>
-    <span class="comment">// ============================================</span>
-    <span class="comment">// 2^128</span>
-    <span class="kw">let</span> <span class="ident">two_to_128</span> <span class="op">=</span> <span class="ident">BigInt::from</span>(<span class="number">2u64</span>).<span class="ident">pow</span>(<span class="number">128</span>);
+    // ============================================
+    // step 1: build integers
+    // ============================================
+    // 2^128
+    </span><span class="kw">let </span>two_to_128 = BigInt::from(<span class="number">2u64</span>).pow(<span class="number">128</span>);
 
-    <span class="comment">// s</span>
-    <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="kw-2">*</span><span class="ident">s_var</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">s_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">s</span>);
-    <span class="kw">let</span> <span class="ident">s_fr</span> <span class="op">=</span> <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>);
+    <span class="comment">// s
+    </span><span class="kw">let </span>s = circuit.witness(<span class="kw-2">*</span>s_var)<span class="question-mark">?</span>;
+    <span class="kw">let </span>s_int = <span class="macro">fq_to_big_int!</span>(s);
+    <span class="kw">let </span>s_fr = field_switching::&lt;<span class="kw">_</span>, S&gt;(<span class="kw-2">&amp;</span>s);
 
-    <span class="comment">// lambda = lambda_1 + 2^128 lambda_2</span>
-    <span class="kw">let</span> <span class="ident">lambda</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">LAMBDA</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">lambda_1</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">LAMBDA_1</span>.<span class="ident">as_ref</span>());
+    <span class="comment">// lambda = lambda_1 + 2^128 lambda_2
+    </span><span class="kw">let </span>lambda = F::from_le_bytes_mod_order(LAMBDA.as_ref());
+    <span class="kw">let </span>lambda_1 = F::from_le_bytes_mod_order(LAMBDA_1.as_ref());
 
-    <span class="kw">let</span> <span class="ident">lambda_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">lambda</span>);
-    <span class="kw">let</span> <span class="ident">lambda_1_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">lambda_1</span>);
-    <span class="kw">let</span> <span class="ident">lambda_2</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">LAMBDA_2</span>.<span class="ident">as_ref</span>());
+    <span class="kw">let </span>lambda_int = <span class="macro">fq_to_big_int!</span>(lambda);
+    <span class="kw">let </span>lambda_1_int = <span class="macro">fq_to_big_int!</span>(lambda_1);
+    <span class="kw">let </span>lambda_2 = F::from_le_bytes_mod_order(LAMBDA_2.as_ref());
 
-    <span class="comment">// s = k1 - lambda * k2 * k2_sign</span>
-    <span class="kw">let</span> (<span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">is_k2_positive</span>) <span class="op">=</span> <span class="ident">scalar_decomposition</span>(<span class="kw-2">&amp;</span><span class="ident">s_fr</span>);
-    <span class="kw">let</span> <span class="ident">k1_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">k1</span>);
-    <span class="kw">let</span> <span class="ident">k2_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">k2</span>);
-    <span class="kw">let</span> <span class="ident">k2_sign</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_k2_positive</span> {
-        <span class="ident">BigInt::from</span>(<span class="number">1</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">BigInt::from</span>(<span class="op">-</span><span class="number">1</span>)
+    <span class="comment">// s = k1 - lambda * k2 * k2_sign
+    </span><span class="kw">let </span>(k1, k2, is_k2_positive) = scalar_decomposition(<span class="kw-2">&amp;</span>s_fr);
+    <span class="kw">let </span>k1_int = <span class="macro">fq_to_big_int!</span>(k1);
+    <span class="kw">let </span>k2_int = <span class="macro">fq_to_big_int!</span>(k2);
+    <span class="kw">let </span>k2_sign = <span class="kw">if </span>is_k2_positive {
+        BigInt::from(<span class="number">1</span>)
+    } <span class="kw">else </span>{
+        BigInt::from(-<span class="number">1</span>)
     };
-    <span class="kw">let</span> <span class="ident">k2_with_sign</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">k2_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_sign</span>;
+    <span class="kw">let </span>k2_with_sign = <span class="kw-2">&amp;</span>k2_int * <span class="kw-2">&amp;</span>k2_sign;
 
-    <span class="comment">// fr_order = r1 + 2^128 r2</span>
-    <span class="kw">let</span> <span class="ident">fr_order_uint</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">S::Params::MODULUS</span>.<span class="ident">into</span>();
-    <span class="kw">let</span> <span class="ident">fr_order_int</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="ident">fr_order_uint</span>.<span class="ident">into</span>();
-    <span class="kw">let</span> <span class="ident">r1</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">R1</span>.<span class="ident">as_ref</span>());
-    <span class="kw">let</span> <span class="ident">r1_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">r1</span>);
-    <span class="kw">let</span> <span class="ident">r2</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="ident">R2</span>.<span class="ident">as_ref</span>());
+    <span class="comment">// fr_order = r1 + 2^128 r2
+    </span><span class="kw">let </span>fr_order_uint: BigUint = S::Params::MODULUS.into();
+    <span class="kw">let </span>fr_order_int: BigInt = fr_order_uint.into();
+    <span class="kw">let </span>r1 = F::from_le_bytes_mod_order(R1.as_ref());
+    <span class="kw">let </span>r1_int = <span class="macro">fq_to_big_int!</span>(r1);
+    <span class="kw">let </span>r2 = F::from_le_bytes_mod_order(R2.as_ref());
 
-    <span class="comment">// t * t_sign = (lambda * k2 * k2_sign + s - k1) / fr_order</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t_int</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">lambda_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">s_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">k1_int</span>) <span class="op">/</span> <span class="kw-2">&amp;</span><span class="ident">fr_order_int</span>;
-    <span class="kw">let</span> <span class="ident">t_int_sign</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">t_int</span> <span class="op">&lt;</span> <span class="ident">BigInt::zero</span>() {
-        <span class="ident">t_int</span> <span class="op">=</span> <span class="op">-</span><span class="ident">t_int</span>;
-        <span class="ident">BigInt::from</span>(<span class="op">-</span><span class="number">1</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">BigInt::from</span>(<span class="number">1</span>)
+    <span class="comment">// t * t_sign = (lambda * k2 * k2_sign + s - k1) / fr_order
+    </span><span class="kw">let </span><span class="kw-2">mut </span>t_int = (<span class="kw-2">&amp;</span>lambda_int * <span class="kw-2">&amp;</span>k2_with_sign + <span class="kw-2">&amp;</span>s_int - <span class="kw-2">&amp;</span>k1_int) / <span class="kw-2">&amp;</span>fr_order_int;
+    <span class="kw">let </span>t_int_sign = <span class="kw">if </span>t_int &lt; BigInt::zero() {
+        t_int = -t_int;
+        BigInt::from(-<span class="number">1</span>)
+    } <span class="kw">else </span>{
+        BigInt::from(<span class="number">1</span>)
     };
-    <span class="kw">let</span> <span class="ident">t_int_with_sign</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">t_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">t_int_sign</span>;
+    <span class="kw">let </span>t_int_with_sign = <span class="kw-2">&amp;</span>t_int * <span class="kw-2">&amp;</span>t_int_sign;
 
-    <span class="comment">// tmp = tmp1 + 2^128 tmp2 =  lambda_1 * k2 * k2_sign + s - t * t_sign * r1 - k1</span>
-    <span class="kw">let</span> <span class="ident">tmp_int</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">lambda_1_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">s_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">r1_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">k1_int</span>;
-    <span class="kw">let</span> <span class="ident">tmp2_int</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tmp_int</span> <span class="op">/</span> <span class="kw-2">&amp;</span><span class="ident">two_to_128</span>;
+    <span class="comment">// tmp = tmp1 + 2^128 tmp2 =  lambda_1 * k2 * k2_sign + s - t * t_sign * r1 - k1
+    </span><span class="kw">let </span>tmp_int = <span class="kw-2">&amp;</span>lambda_1_int * <span class="kw-2">&amp;</span>k2_with_sign + <span class="kw-2">&amp;</span>s_int - <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>r1_int - <span class="kw-2">&amp;</span>k1_int;
+    <span class="kw">let </span>tmp2_int = <span class="kw-2">&amp;</span>tmp_int / <span class="kw-2">&amp;</span>two_to_128;
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    {
-        <span class="kw">use</span> <span class="ident">ark_ff::BigInteger</span>;
+    <span class="attribute">#[cfg(test)]
+    </span>{
+        <span class="kw">use </span>ark_ff::BigInteger;
 
-        <span class="kw">let</span> <span class="ident">fq_uint</span>: <span class="ident">BigUint</span> <span class="op">=</span> <span class="ident">F::Params::MODULUS</span>.<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">fq_int</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="ident">fq_uint</span>.<span class="ident">into</span>();
+        <span class="kw">let </span>fq_uint: BigUint = F::Params::MODULUS.into();
+        <span class="kw">let </span>fq_int: BigInt = fq_uint.into();
 
-        <span class="kw">let</span> <span class="ident">tmp1_int</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tmp_int</span> <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">two_to_128</span>;
+        <span class="kw">let </span>tmp1_int = <span class="kw-2">&amp;</span>tmp_int % <span class="kw-2">&amp;</span>two_to_128;
 
-        <span class="kw">let</span> <span class="ident">lambda_2_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">lambda_2</span>);
-        <span class="kw">let</span> <span class="ident">r2_int</span> <span class="op">=</span> <span class="macro">fq_to_big_int!</span>(<span class="ident">r2</span>);
-        <span class="comment">// sanity checks</span>
-        <span class="comment">// equation (0): lambda * k2_sign * k2 + s = t * t_sign * Fr::modulus + k1</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="kw-2">&amp;</span><span class="ident">s_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">lambda_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span>,
-            <span class="kw-2">&amp;</span><span class="ident">k1_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">fr_order_int</span>
+        <span class="kw">let </span>lambda_2_int = <span class="macro">fq_to_big_int!</span>(lambda_2);
+        <span class="kw">let </span>r2_int = <span class="macro">fq_to_big_int!</span>(r2);
+        <span class="comment">// sanity checks
+        // equation (0): lambda * k2_sign * k2 + s = t * t_sign * Fr::modulus + k1
+        </span><span class="macro">assert_eq!</span>(
+            <span class="kw-2">&amp;</span>s_int + <span class="kw-2">&amp;</span>lambda_int * <span class="kw-2">&amp;</span>k2_with_sign,
+            <span class="kw-2">&amp;</span>k1_int + <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>fr_order_int
         );
 
-        <span class="comment">// equation (4)</span>
-        <span class="comment">//              lambda_1 * k2_sign * k2 + s - t * t_sign * r1 - k1</span>
-        <span class="comment">//     + 2^128 (lambda_2 * k2_sign * k2 - t * r2)</span>
-        <span class="comment">//     = 0</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="kw-2">&amp;</span><span class="ident">lambda_1_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">s_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">r1_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">k1_int</span>
-                <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">two_to_128</span> <span class="op">*</span> (<span class="kw-2">&amp;</span><span class="ident">lambda_2_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">r2_int</span>),
-            <span class="ident">BigInt::zero</span>()
+        <span class="comment">// equation (4)
+        //              lambda_1 * k2_sign * k2 + s - t * t_sign * r1 - k1
+        //     + 2^128 (lambda_2 * k2_sign * k2 - t * r2)
+        //     = 0
+        </span><span class="macro">assert_eq!</span>(
+            <span class="kw-2">&amp;</span>lambda_1_int * <span class="kw-2">&amp;</span>k2_with_sign + <span class="kw-2">&amp;</span>s_int - <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>r1_int - <span class="kw-2">&amp;</span>k1_int
+                + <span class="kw-2">&amp;</span>two_to_128 * (<span class="kw-2">&amp;</span>lambda_2_int * <span class="kw-2">&amp;</span>k2_with_sign - <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>r2_int),
+            BigInt::zero()
         );
 
-        <span class="comment">//  (a) k1 &lt; 2^128</span>
-        <span class="comment">//  (b) k2 &lt; 2^128</span>
-        <span class="kw">let</span> <span class="ident">k1_bits</span> <span class="op">=</span> <span class="ident">get_bits</span>(<span class="kw-2">&amp;</span><span class="ident">k1</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>());
-        <span class="kw">let</span> <span class="ident">k2_bits</span> <span class="op">=</span> <span class="ident">get_bits</span>(<span class="kw-2">&amp;</span><span class="ident">k1</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>());
+        <span class="comment">//  (a) k1 &lt; 2^128
+        //  (b) k2 &lt; 2^128
+        </span><span class="kw">let </span>k1_bits = get_bits(<span class="kw-2">&amp;</span>k1.into_repr().to_bits_le());
+        <span class="kw">let </span>k2_bits = get_bits(<span class="kw-2">&amp;</span>k1.into_repr().to_bits_le());
 
-        <span class="macro">assert!</span>(<span class="ident">k1_bits</span> <span class="op">&lt;</span> <span class="number">128</span>, <span class="string">&quot;k1 bits {}&quot;</span>, <span class="ident">k1_bits</span>);
-        <span class="macro">assert!</span>(<span class="ident">k2_bits</span> <span class="op">&lt;</span> <span class="number">128</span>, <span class="string">&quot;k2 bits {}&quot;</span>, <span class="ident">k1_bits</span>);
+        <span class="macro">assert!</span>(k1_bits &lt; <span class="number">128</span>, <span class="string">&quot;k1 bits {}&quot;</span>, k1_bits);
+        <span class="macro">assert!</span>(k2_bits &lt; <span class="number">128</span>, <span class="string">&quot;k2 bits {}&quot;</span>, k1_bits);
 
-        <span class="comment">//  (c) tmp1 = 0</span>
-        <span class="comment">//  (d) tmp2 &lt; 2^128</span>
-        <span class="comment">//  (e) tmp = tmp1 + 2^128 tmp2</span>
-        <span class="macro">assert!</span>(<span class="ident">tmp1_int</span> <span class="op">==</span> <span class="ident">BigInt::from</span>(<span class="number">0</span>));
-        <span class="kw">let</span> <span class="ident">tmp2_fq</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">tmp2_int</span>.<span class="ident">to_bytes_le</span>().<span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">tmp2_bits</span> <span class="op">=</span> <span class="ident">get_bits</span>(<span class="kw-2">&amp;</span><span class="ident">tmp2_fq</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>());
-        <span class="macro">assert!</span>(<span class="ident">tmp1_int</span> <span class="op">==</span> <span class="ident">BigInt::from</span>(<span class="number">0</span>));
-        <span class="macro">assert!</span>(<span class="ident">tmp2_bits</span> <span class="op">&lt;</span> <span class="number">128</span>, <span class="string">&quot;tmp2 bits {}&quot;</span>, <span class="ident">tmp2_bits</span>);
+        <span class="comment">//  (c) tmp1 = 0
+        //  (d) tmp2 &lt; 2^128
+        //  (e) tmp = tmp1 + 2^128 tmp2
+        </span><span class="macro">assert!</span>(tmp1_int == BigInt::from(<span class="number">0</span>));
+        <span class="kw">let </span>tmp2_fq = F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>tmp2_int.to_bytes_le().<span class="number">1</span>);
+        <span class="kw">let </span>tmp2_bits = get_bits(<span class="kw-2">&amp;</span>tmp2_fq.into_repr().to_bits_le());
+        <span class="macro">assert!</span>(tmp1_int == BigInt::from(<span class="number">0</span>));
+        <span class="macro">assert!</span>(tmp2_bits &lt; <span class="number">128</span>, <span class="string">&quot;tmp2 bits {}&quot;</span>, tmp2_bits);
 
-        <span class="comment">// equation (f): tmp1 + 2^128 tmp2 =  lambda_1 * k2_sign * k2 + s - t * t_sign *</span>
-        <span class="comment">// r1 - k1</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="kw-2">&amp;</span><span class="ident">tmp1_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">two_to_128</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">tmp2_int</span>,
-            <span class="kw-2">&amp;</span><span class="ident">lambda_1_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">s_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">r1_int</span> <span class="op">-</span> <span class="kw-2">&amp;</span><span class="ident">k1_int</span>
+        <span class="comment">// equation (f): tmp1 + 2^128 tmp2 =  lambda_1 * k2_sign * k2 + s - t * t_sign *
+        // r1 - k1
+        </span><span class="macro">assert_eq!</span>(
+            <span class="kw-2">&amp;</span>tmp1_int + <span class="kw-2">&amp;</span>two_to_128 * <span class="kw-2">&amp;</span>tmp2_int,
+            <span class="kw-2">&amp;</span>lambda_1_int * <span class="kw-2">&amp;</span>k2_with_sign + <span class="kw-2">&amp;</span>s_int - <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>r1_int - <span class="kw-2">&amp;</span>k1_int
         );
-        <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">tmp_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">r1_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">k1_int</span> <span class="op">&lt;</span> <span class="ident">fq_int</span>);
+        <span class="macro">assert!</span>(<span class="kw-2">&amp;</span>tmp_int + <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>r1_int + <span class="kw-2">&amp;</span>k1_int &lt; fq_int);
 
-        <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">lambda_1_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">s_int</span> <span class="op">&lt;</span> <span class="ident">fq_int</span>);
+        <span class="macro">assert!</span>(<span class="kw-2">&amp;</span>lambda_1_int * <span class="kw-2">&amp;</span>k2_int + <span class="kw-2">&amp;</span>s_int &lt; fq_int);
 
-        <span class="comment">// equation (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="kw-2">&amp;</span><span class="ident">tmp2_int</span> <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">lambda_2_int</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">k2_with_sign</span>,
-            <span class="kw-2">&amp;</span><span class="ident">t_int_with_sign</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">r2_int</span>
+        <span class="comment">// equation (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2
+        </span><span class="macro">assert_eq!</span>(
+            <span class="kw-2">&amp;</span>tmp2_int + <span class="kw-2">&amp;</span>lambda_2_int * <span class="kw-2">&amp;</span>k2_with_sign,
+            <span class="kw-2">&amp;</span>t_int_with_sign * <span class="kw-2">&amp;</span>r2_int
         );
 
-        <span class="comment">// all intermediate data are positive</span>
-        <span class="macro">assert!</span>(<span class="ident">k1_int</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BigInt::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">k2_int</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BigInt::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">t_int</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BigInt::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">tmp_int</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BigInt::zero</span>());
-        <span class="macro">assert!</span>(<span class="ident">tmp2_int</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BigInt::zero</span>());
+        <span class="comment">// all intermediate data are positive
+        </span><span class="macro">assert!</span>(k1_int &gt;= BigInt::zero());
+        <span class="macro">assert!</span>(k2_int &gt;= BigInt::zero());
+        <span class="macro">assert!</span>(t_int &gt;= BigInt::zero());
+        <span class="macro">assert!</span>(tmp_int &gt;= BigInt::zero());
+        <span class="macro">assert!</span>(tmp2_int &gt;= BigInt::zero());
 
-        <span class="comment">// t and k2 has a same sign</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">t_int_sign</span>, <span class="ident">k2_sign</span>);
+        <span class="comment">// t and k2 has a same sign
+        </span><span class="macro">assert_eq!</span>(t_int_sign, k2_sign);
     }
 
-    <span class="comment">// ============================================</span>
-    <span class="comment">// step 2. build the variables</span>
-    <span class="comment">// ============================================</span>
-    <span class="kw">let</span> <span class="ident">two_to_128</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="ident">BigUint::from</span>(<span class="number">2u64</span>).<span class="ident">pow</span>(<span class="number">128</span>));
+    <span class="comment">// ============================================
+    // step 2. build the variables
+    // ============================================
+    </span><span class="kw">let </span>two_to_128 = F::from(BigUint::from(<span class="number">2u64</span>).pow(<span class="number">128</span>));
 
-    <span class="kw">let</span> <span class="ident">k1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">k1_int</span>))<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">k2_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">k2_int</span>))<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">k2_sign_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_boolean_variable</span>(<span class="ident">is_k2_positive</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>k1_var = circuit.create_variable(<span class="macro">int_to_fq!</span>(k1_int))<span class="question-mark">?</span>;
+    <span class="kw">let </span>k2_var = circuit.create_variable(<span class="macro">int_to_fq!</span>(k2_int))<span class="question-mark">?</span>;
+    <span class="kw">let </span>k2_sign_var = circuit.create_boolean_variable(is_k2_positive)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">t_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">t_int</span>))<span class="question-mark">?</span>;
+    <span class="kw">let </span>t_var = circuit.create_variable(<span class="macro">int_to_fq!</span>(t_int))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">tmp_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">tmp_int</span>))<span class="question-mark">?</span>;
+    <span class="kw">let </span>tmp_var = circuit.create_variable(<span class="macro">int_to_fq!</span>(tmp_int))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">tmp2_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="macro">int_to_fq!</span>(<span class="ident">tmp2_int</span>))<span class="question-mark">?</span>;
+    <span class="kw">let </span>tmp2_var = circuit.create_variable(<span class="macro">int_to_fq!</span>(tmp2_int))<span class="question-mark">?</span>;
 
-    <span class="comment">// ============================================</span>
-    <span class="comment">// step 3. range proofs</span>
-    <span class="comment">// ============================================</span>
-    <span class="comment">//  (a) k1 &lt; 2^128</span>
-    <span class="comment">//  (b) k2 &lt; 2^128</span>
-    <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">k1_var</span>, <span class="number">128</span>)<span class="question-mark">?</span>;
-    <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">k2_var</span>, <span class="number">128</span>)<span class="question-mark">?</span>;
+    <span class="comment">// ============================================
+    // step 3. range proofs
+    // ============================================
+    //  (a) k1 &lt; 2^128
+    //  (b) k2 &lt; 2^128
+    </span>circuit.enforce_in_range(k1_var, <span class="number">128</span>)<span class="question-mark">?</span>;
+    circuit.enforce_in_range(k2_var, <span class="number">128</span>)<span class="question-mark">?</span>;
 
-    <span class="comment">//  (c) tmp1 = 0        &lt;- implied by tmp = 2^128 * tmp2</span>
-    <span class="comment">//  (d) tmp2 &lt; 2^128</span>
-    <span class="comment">//  (e) tmp = tmp1 + 2^128 tmp2</span>
-    <span class="ident">circuit</span>.<span class="ident">mul_constant_gate</span>(<span class="ident">tmp2_var</span>, <span class="ident">two_to_128</span>, <span class="ident">tmp_var</span>)<span class="question-mark">?</span>;
-    <span class="ident">circuit</span>.<span class="ident">enforce_in_range</span>(<span class="ident">tmp2_var</span>, <span class="number">128</span>)<span class="question-mark">?</span>;
+    <span class="comment">//  (c) tmp1 = 0        &lt;- implied by tmp = 2^128 * tmp2
+    //  (d) tmp2 &lt; 2^128
+    //  (e) tmp = tmp1 + 2^128 tmp2
+    </span>circuit.mul_constant_gate(tmp2_var, two_to_128, tmp_var)<span class="question-mark">?</span>;
+    circuit.enforce_in_range(tmp2_var, <span class="number">128</span>)<span class="question-mark">?</span>;
 
-    <span class="comment">// ============================================</span>
-    <span class="comment">// step 4. equality proofs</span>
-    <span class="comment">// ============================================</span>
-    <span class="comment">//  (f) tmp + t * k2_sign * r1 + k1 =  lambda_1 * k2_sign * k2 + s</span>
-    <span class="comment">//  (note that we cannot do subtraction because subtraction is over Fq)</span>
-    <span class="kw">let</span> <span class="ident">k2_is_pos_sat</span> <span class="op">=</span> {
-        <span class="comment">//  (f.1) if k2_sign = 1, then, we prove over Z</span>
-        <span class="comment">//      tmp + t * r1 + k1 =  lambda_1 * k2 + s</span>
-        <span class="kw">let</span> <span class="ident">left_wire</span> <span class="op">=</span> [<span class="ident">tmp_var</span>, <span class="ident">t_var</span>, <span class="ident">k1_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_coeff</span> <span class="op">=</span> [<span class="ident">F::one</span>(), <span class="ident">r1</span>, <span class="ident">F::one</span>(), <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">lc</span>(<span class="kw-2">&amp;</span><span class="ident">left_wire</span>, <span class="kw-2">&amp;</span><span class="ident">left_coeff</span>)<span class="question-mark">?</span>;
+    <span class="comment">// ============================================
+    // step 4. equality proofs
+    // ============================================
+    //  (f) tmp + t * k2_sign * r1 + k1 =  lambda_1 * k2_sign * k2 + s
+    //  (note that we cannot do subtraction because subtraction is over Fq)
+    </span><span class="kw">let </span>k2_is_pos_sat = {
+        <span class="comment">//  (f.1) if k2_sign = 1, then, we prove over Z
+        //      tmp + t * r1 + k1 =  lambda_1 * k2 + s
+        </span><span class="kw">let </span>left_wire = [tmp_var, t_var, k1_var, circuit.zero()];
+        <span class="kw">let </span>left_coeff = [F::one(), r1, F::one(), F::zero()];
+        <span class="kw">let </span>left_var = circuit.lc(<span class="kw-2">&amp;</span>left_wire, <span class="kw-2">&amp;</span>left_coeff)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">right_wire</span> <span class="op">=</span> [<span class="ident">k2_var</span>, <span class="kw-2">*</span><span class="ident">s_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-        <span class="kw">let</span> <span class="ident">right_coeff</span> <span class="op">=</span> [<span class="ident">lambda_1</span>, <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">right_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">lc</span>(<span class="kw-2">&amp;</span><span class="ident">right_wire</span>, <span class="kw-2">&amp;</span><span class="ident">right_coeff</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>right_wire = [k2_var, <span class="kw-2">*</span>s_var, circuit.zero(), circuit.zero()];
+        <span class="kw">let </span>right_coeff = [lambda_1, F::one(), F::zero(), F::zero()];
+        <span class="kw">let </span>right_var = circuit.lc(<span class="kw-2">&amp;</span>right_wire, <span class="kw-2">&amp;</span>right_coeff)<span class="question-mark">?</span>;
 
-        <span class="ident">circuit</span>.<span class="ident">is_equal</span>(<span class="ident">left_var</span>, <span class="ident">right_var</span>)<span class="question-mark">?</span>
-    };
+        circuit.is_equal(left_var, right_var)<span class="question-mark">?
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">k2_is_neg_sat</span> <span class="op">=</span> {
-        <span class="comment">//  (f.2) if k2_sign = -1, then, we prove over Z</span>
-        <span class="comment">//    lambda_1 * k2 +  tmp + k1 =   s  + t * r1</span>
-        <span class="kw">let</span> <span class="ident">left_wire</span> <span class="op">=</span> [<span class="ident">k2_var</span>, <span class="ident">tmp_var</span>, <span class="ident">k1_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_coeff</span> <span class="op">=</span> [<span class="ident">lambda_1</span>, <span class="ident">F::one</span>(), <span class="ident">F::one</span>(), <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">lc</span>(<span class="kw-2">&amp;</span><span class="ident">left_wire</span>, <span class="kw-2">&amp;</span><span class="ident">left_coeff</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>k2_is_neg_sat = {
+        <span class="comment">//  (f.2) if k2_sign = -1, then, we prove over Z
+        //    lambda_1 * k2 +  tmp + k1 =   s  + t * r1
+        </span><span class="kw">let </span>left_wire = [k2_var, tmp_var, k1_var, circuit.zero()];
+        <span class="kw">let </span>left_coeff = [lambda_1, F::one(), F::one(), F::zero()];
+        <span class="kw">let </span>left_var = circuit.lc(<span class="kw-2">&amp;</span>left_wire, <span class="kw-2">&amp;</span>left_coeff)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">right_wire</span> <span class="op">=</span> [<span class="kw-2">*</span><span class="ident">s_var</span>, <span class="ident">t_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-        <span class="kw">let</span> <span class="ident">right_coeff</span> <span class="op">=</span> [<span class="ident">F::one</span>(), <span class="ident">r1</span>, <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">right_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">lc</span>(<span class="kw-2">&amp;</span><span class="ident">right_wire</span>, <span class="kw-2">&amp;</span><span class="ident">right_coeff</span>)<span class="question-mark">?</span>;
-        <span class="ident">circuit</span>.<span class="ident">is_equal</span>(<span class="ident">left_var</span>, <span class="ident">right_var</span>)<span class="question-mark">?</span>
-    };
+        <span class="kw">let </span>right_wire = [<span class="kw-2">*</span>s_var, t_var, circuit.zero(), circuit.zero()];
+        <span class="kw">let </span>right_coeff = [F::one(), r1, F::zero(), F::zero()];
+        <span class="kw">let </span>right_var = circuit.lc(<span class="kw-2">&amp;</span>right_wire, <span class="kw-2">&amp;</span>right_coeff)<span class="question-mark">?</span>;
+        circuit.is_equal(left_var, right_var)<span class="question-mark">?
+    </span>};
 
-    <span class="comment">//  (f.3) either f.1 or f.2 is satisfied</span>
-    <span class="kw">let</span> <span class="ident">sat</span> <span class="op">=</span>
-        <span class="ident">circuit</span>.<span class="ident">conditional_select</span>(<span class="ident">k2_sign_var</span>, <span class="ident">k2_is_neg_sat</span>.<span class="ident">into</span>(), <span class="ident">k2_is_pos_sat</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
-    <span class="ident">circuit</span>.<span class="ident">enforce_true</span>(<span class="ident">sat</span>)<span class="question-mark">?</span>;
+    <span class="comment">//  (f.3) either f.1 or f.2 is satisfied
+    </span><span class="kw">let </span>sat =
+        circuit.conditional_select(k2_sign_var, k2_is_neg_sat.into(), k2_is_pos_sat.into())<span class="question-mark">?</span>;
+    circuit.enforce_true(sat)<span class="question-mark">?</span>;
 
-    <span class="comment">//  (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2</span>
+    <span class="comment">//  (g) tmp2 + lambda_2 * k2_sign * k2 + s2  = t * t_sign * r2
 
-    <span class="kw">let</span> <span class="ident">k2_is_pos_sat</span> <span class="op">=</span> {
-        <span class="comment">//  (g.1) if k2_sign = 1 then</span>
-        <span class="comment">//      tmp2 + lambda_2 * k_2_var = t * r2</span>
-        <span class="kw">let</span> <span class="ident">left_wire</span> <span class="op">=</span> [<span class="ident">tmp2_var</span>, <span class="ident">k2_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_coeff</span> <span class="op">=</span> [<span class="ident">F::one</span>(), <span class="ident">lambda_2</span>, <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">lc</span>(<span class="kw-2">&amp;</span><span class="ident">left_wire</span>, <span class="kw-2">&amp;</span><span class="ident">left_coeff</span>)<span class="question-mark">?</span>;
+    </span><span class="kw">let </span>k2_is_pos_sat = {
+        <span class="comment">//  (g.1) if k2_sign = 1 then
+        //      tmp2 + lambda_2 * k_2_var = t * r2
+        </span><span class="kw">let </span>left_wire = [tmp2_var, k2_var, circuit.zero(), circuit.zero()];
+        <span class="kw">let </span>left_coeff = [F::one(), lambda_2, F::zero(), F::zero()];
+        <span class="kw">let </span>left_var = circuit.lc(<span class="kw-2">&amp;</span>left_wire, <span class="kw-2">&amp;</span>left_coeff)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">right_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mul_constant</span>(<span class="ident">t_var</span>, <span class="kw-2">&amp;</span><span class="ident">r2</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>right_var = circuit.mul_constant(t_var, <span class="kw-2">&amp;</span>r2)<span class="question-mark">?</span>;
 
-        <span class="ident">circuit</span>.<span class="ident">is_equal</span>(<span class="ident">left_var</span>, <span class="ident">right_var</span>)<span class="question-mark">?</span>
-    };
+        circuit.is_equal(left_var, right_var)<span class="question-mark">?
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">k2_is_neg_sat</span> <span class="op">=</span> {
-        <span class="comment">//  (g.2) if k2_sign = -1 then</span>
-        <span class="comment">//      tmp2  + t * r2 = lambda_2 * k_2_var</span>
-        <span class="kw">let</span> <span class="ident">left_wire</span> <span class="op">=</span> [<span class="ident">tmp2_var</span>, <span class="ident">t_var</span>, <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_coeff</span> <span class="op">=</span> [<span class="ident">F::one</span>(), <span class="ident">r2</span>, <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()];
-        <span class="kw">let</span> <span class="ident">left_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">lc</span>(<span class="kw-2">&amp;</span><span class="ident">left_wire</span>, <span class="kw-2">&amp;</span><span class="ident">left_coeff</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>k2_is_neg_sat = {
+        <span class="comment">//  (g.2) if k2_sign = -1 then
+        //      tmp2  + t * r2 = lambda_2 * k_2_var
+        </span><span class="kw">let </span>left_wire = [tmp2_var, t_var, circuit.zero(), circuit.zero()];
+        <span class="kw">let </span>left_coeff = [F::one(), r2, F::zero(), F::zero()];
+        <span class="kw">let </span>left_var = circuit.lc(<span class="kw-2">&amp;</span>left_wire, <span class="kw-2">&amp;</span>left_coeff)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">right_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">mul_constant</span>(<span class="ident">k2_var</span>, <span class="kw-2">&amp;</span><span class="ident">lambda_2</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>right_var = circuit.mul_constant(k2_var, <span class="kw-2">&amp;</span>lambda_2)<span class="question-mark">?</span>;
 
-        <span class="ident">circuit</span>.<span class="ident">is_equal</span>(<span class="ident">left_var</span>, <span class="ident">right_var</span>)<span class="question-mark">?</span>
-    };
+        circuit.is_equal(left_var, right_var)<span class="question-mark">?
+    </span>};
 
-    <span class="comment">//  (g.3) either g.1 or g.2 is satisfied</span>
-    <span class="kw">let</span> <span class="ident">sat</span> <span class="op">=</span>
-        <span class="ident">circuit</span>.<span class="ident">conditional_select</span>(<span class="ident">k2_sign_var</span>, <span class="ident">k2_is_neg_sat</span>.<span class="ident">into</span>(), <span class="ident">k2_is_pos_sat</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
-    <span class="ident">circuit</span>.<span class="ident">enforce_true</span>(<span class="ident">sat</span>)<span class="question-mark">?</span>;
+    <span class="comment">//  (g.3) either g.1 or g.2 is satisfied
+    </span><span class="kw">let </span>sat =
+        circuit.conditional_select(k2_sign_var, k2_is_neg_sat.into(), k2_is_pos_sat.into())<span class="question-mark">?</span>;
+    circuit.enforce_true(sat)<span class="question-mark">?</span>;
 
-    <span class="comment">// extract the output</span>
-    <span class="prelude-val">Ok</span>((<span class="ident">k1_var</span>, <span class="ident">k2_var</span>, <span class="ident">k2_sign_var</span>))
+    <span class="comment">// extract the output
+    </span><span class="prelude-val">Ok</span>((k1_var, k2_var, k2_sign_var))
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="doccomment">/// return the highest non-zero bits of a bit string.</span>
-<span class="kw">fn</span> <span class="ident">get_bits</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span>[<span class="ident">bool</span>]) -&gt; <span class="ident">u16</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="number">256</span>;
-    <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">a</span>.<span class="ident">iter</span>().<span class="ident">rev</span>() {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">e</span> {
-            <span class="ident">res</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="ident">res</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="doccomment">/// return the highest non-zero bits of a bit string.
+</span><span class="kw">fn </span>get_bits(a: <span class="kw-2">&amp;</span>[bool]) -&gt; u16 {
+    <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="number">256</span>;
+    <span class="kw">for </span>e <span class="kw">in </span>a.iter().rev() {
+        <span class="kw">if </span>!e {
+            res -= <span class="number">1</span>;
+        } <span class="kw">else </span>{
+            <span class="kw">return </span>res;
         }
     }
-    <span class="ident">res</span>
+    res
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">gadgets::ecc::Point</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>};
-    <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">twisted_edwards_extended::GroupAffine</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch</span>::{<span class="ident">EdwardsAffine</span>, <span class="ident">EdwardsParameters</span>, <span class="ident">Fq</span>, <span class="ident">Fr</span>};
-    <span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">BigInteger</span>, <span class="ident">One</span>, <span class="ident">PrimeField</span>, <span class="ident">UniformRand</span>};
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">str::FromStr</span>, <span class="ident">test_rng</span>};
-    <span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">field_switching</span>, <span class="ident">fr_to_fq</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
+    <span class="kw">use </span>ark_ec::{twisted_edwards_extended::GroupAffine, TEModelParameters <span class="kw">as </span>Parameters};
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsParameters, Fq, Fr};
+    <span class="kw">use </span>ark_ff::{BigInteger, One, PrimeField, UniformRand};
+    <span class="kw">use </span>ark_std::{str::FromStr, test_rng};
+    <span class="kw">use </span>jf_utils::{field_switching, fr_to_fq};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_glv</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_glv_helper</span>::<span class="op">&lt;</span><span class="ident">Fq</span>, <span class="ident">EdwardsParameters</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_glv() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_glv_helper::&lt;Fq, EdwardsParameters&gt;()
     }
 
-    <span class="kw">fn</span> <span class="ident">test_glv_helper</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-        <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="kw">fn </span>test_glv_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">where
+        </span>F: PrimeField,
+        P: Parameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
+                <span class="kw">let </span><span class="kw-2">mut </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
 
-                <span class="kw">let</span> <span class="ident">s_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
-                <span class="ident">base</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">s</span>;
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">variable_base_scalar_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">s_var</span>, <span class="kw-2">&amp;</span><span class="ident">base_var</span>)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>), <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>)<span class="question-mark">?</span>);
+                <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                base <span class="kw-2">*</span>= s;
+                <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
+                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Turbo Plonk: {} constraints&quot;, circuit.num_gates());</span>
-                <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+                <span class="comment">// ark_std::println!(&quot;Turbo Plonk: {} constraints&quot;, circuit.num_gates());
+                </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">16</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">16</span>);
 
-                <span class="kw">let</span> <span class="ident">s_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
-                <span class="ident">base</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">s</span>;
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">variable_base_scalar_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">s_var</span>, <span class="kw-2">&amp;</span><span class="ident">base_var</span>)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>), <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>)<span class="question-mark">?</span>);
+                <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                base <span class="kw-2">*</span>= s;
+                <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
+                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Ultra Plonk: {} constraints&quot;, circuit.num_gates());</span>
-                <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-            }
-
-            {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-
-                <span class="kw">let</span> <span class="ident">s_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
-                <span class="ident">base</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">s</span>;
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">glv_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">s_var</span>, <span class="kw-2">&amp;</span><span class="ident">base_var</span>)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>), <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>)<span class="question-mark">?</span>);
-
-                <span class="comment">// ark_std::println!(&quot;Turbo Plonk GLV: {} constraints&quot;, circuit.num_gates());</span>
-                <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+                <span class="comment">// ark_std::println!(&quot;Ultra Plonk: {} constraints&quot;, circuit.num_gates());
+                </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
 
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">GroupAffine</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">P::ScalarField::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">16</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
 
-                <span class="kw">let</span> <span class="ident">s_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">base_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
-                <span class="ident">base</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">s</span>;
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">glv_mul</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">s_var</span>, <span class="kw-2">&amp;</span><span class="ident">base_var</span>)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(<span class="ident">Point::from</span>(<span class="ident">base</span>), <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>)<span class="question-mark">?</span>);
+                <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                base <span class="kw-2">*</span>= s;
+                <span class="kw">let </span>result = circuit.glv_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
+                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Ultra Plonk GLV: {} constraints&quot;, circuit.num_gates());</span>
-                <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+                <span class="comment">// ark_std::println!(&quot;Turbo Plonk GLV: {} constraints&quot;, circuit.num_gates());
+                </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+            }
+
+            {
+                <span class="kw">let </span><span class="kw-2">mut </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
+                <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">16</span>);
+
+                <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                base <span class="kw-2">*</span>= s;
+                <span class="kw">let </span>result = circuit.glv_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
+                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+
+                <span class="comment">// ark_std::println!(&quot;Ultra Plonk GLV: {} constraints&quot;, circuit.num_gates());
+                </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_endomorphism</span>() {
-        <span class="kw">let</span> <span class="ident">base_point</span> <span class="op">=</span> <span class="ident">EdwardsAffine::from_str</span>(
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_endomorphism() {
+        <span class="kw">let </span>base_point = EdwardsAffine::from_str(
             <span class="string">&quot;(29627151942733444043031429156003786749302466371339015363120350521834195802525, \
         27488387519748396681411951718153463804682561779047093991696427532072116857978)&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">endo_point</span> <span class="op">=</span> <span class="ident">EdwardsAffine::from_str</span>(
+        .unwrap();
+        <span class="kw">let </span>endo_point = EdwardsAffine::from_str(
             <span class="string">&quot;(3995099504672814451457646880854530097687530507181962222512229786736061793535, \
          33370049900732270411777328808452912493896532385897059012214433666611661340894)&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">base_point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">base_point</span>.<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">endo_point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">endo_point</span>.<span class="ident">into</span>();
+        .unwrap();
+        <span class="kw">let </span>base_point: Point&lt;Fq&gt; = base_point.into();
+        <span class="kw">let </span>endo_point: Point&lt;Fq&gt; = endo_point.into();
 
-        <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">endomorphism</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">EdwardsParameters</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">base_point</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">t</span>, <span class="ident">endo_point</span>);
+        <span class="kw">let </span>t = endomorphism::&lt;<span class="kw">_</span>, EdwardsParameters&gt;(<span class="kw-2">&amp;</span>base_point);
+        <span class="macro">assert_eq!</span>(t, endo_point);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-        <span class="kw">let</span> <span class="ident">point_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">base_point</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">endo_var</span> <span class="op">=</span>
-            <span class="ident">endomorphism_circuit</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">EdwardsParameters</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">point_var</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">endo_point_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">point_witness</span>(<span class="kw-2">&amp;</span><span class="ident">endo_var</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">endo_point_rec</span>, <span class="ident">endo_point</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;Fq&gt; = PlonkCircuit::new_turbo_plonk();
+        <span class="kw">let </span>point_var = circuit.create_point_variable(base_point).unwrap();
+        <span class="kw">let </span>endo_var =
+            endomorphism_circuit::&lt;<span class="kw">_</span>, EdwardsParameters&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>point_var).unwrap();
+        <span class="kw">let </span>endo_point_rec = circuit.point_witness(<span class="kw-2">&amp;</span>endo_var).unwrap();
+        <span class="macro">assert_eq!</span>(endo_point_rec, endo_point);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_decomposition</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
-        <span class="kw">let</span> <span class="ident">lambda</span>: <span class="ident">Fr</span> <span class="op">=</span> <span class="ident">Fr::from_le_bytes_mod_order</span>(<span class="ident">LAMBDA</span>.<span class="ident">as_ref</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_decomposition() {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+        <span class="kw">let </span>lambda: Fr = Fr::from_le_bytes_mod_order(LAMBDA.as_ref());
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
-            <span class="kw">let</span> <span class="ident">scalar</span> <span class="op">=</span> <span class="ident">Fr::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> (<span class="ident">k1</span>, <span class="ident">k2</span>, <span class="ident">is_k2_pos</span>) <span class="op">=</span> <span class="ident">scalar_decomposition</span>(<span class="kw-2">&amp;</span><span class="ident">scalar</span>);
-            <span class="macro">assert!</span>(<span class="ident">get_bits</span>(<span class="kw-2">&amp;</span><span class="ident">k1</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>()) <span class="op">&lt;</span><span class="op">=</span> <span class="number">128</span>);
-            <span class="macro">assert!</span>(<span class="ident">get_bits</span>(<span class="kw-2">&amp;</span><span class="ident">k2</span>.<span class="ident">into_repr</span>().<span class="ident">to_bits_le</span>()) <span class="op">&lt;</span><span class="op">=</span> <span class="number">128</span>);
-            <span class="kw">let</span> <span class="ident">k2</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_k2_pos</span> { <span class="ident">k2</span> } <span class="kw">else</span> { <span class="op">-</span><span class="ident">k2</span> };
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
+            <span class="kw">let </span>scalar = Fr::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>(k1, k2, is_k2_pos) = scalar_decomposition(<span class="kw-2">&amp;</span>scalar);
+            <span class="macro">assert!</span>(get_bits(<span class="kw-2">&amp;</span>k1.into_repr().to_bits_le()) &lt;= <span class="number">128</span>);
+            <span class="macro">assert!</span>(get_bits(<span class="kw-2">&amp;</span>k2.into_repr().to_bits_le()) &lt;= <span class="number">128</span>);
+            <span class="kw">let </span>k2 = <span class="kw">if </span>is_k2_pos { k2 } <span class="kw">else </span>{ -k2 };
 
-            <span class="macro">assert_eq!</span>(<span class="ident">k1</span> <span class="op">-</span> <span class="ident">k2</span> <span class="op">*</span> <span class="ident">lambda</span>, <span class="ident">scalar</span>,);
+            <span class="macro">assert_eq!</span>(k1 - k2 * lambda, scalar,);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">16</span>);
-            <span class="kw">let</span> <span class="ident">scalar_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="ident">scalar</span>)).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> (<span class="ident">k1_var</span>, <span class="ident">k2_var</span>, <span class="ident">k2_sign_var</span>) <span class="op">=</span>
-                <span class="ident">scalar_decomposition_gate</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">EdwardsParameters</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">scalar_var</span>)
-                    .<span class="ident">unwrap</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;Fq&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">16</span>);
+            <span class="kw">let </span>scalar_var = circuit.create_variable(field_switching(<span class="kw-2">&amp;</span>scalar)).unwrap();
+            <span class="kw">let </span>(k1_var, k2_var, k2_sign_var) =
+                scalar_decomposition_gate::&lt;<span class="kw">_</span>, EdwardsParameters, <span class="kw">_</span>&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>scalar_var)
+                    .unwrap();
 
-            <span class="kw">let</span> <span class="ident">k1_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">k1_var</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Fq</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">k1</span>), <span class="ident">k1_rec</span>);
+            <span class="kw">let </span>k1_rec = circuit.witness(k1_var).unwrap();
+            <span class="macro">assert_eq!</span>(field_switching::&lt;<span class="kw">_</span>, Fq&gt;(<span class="kw-2">&amp;</span>k1), k1_rec);
 
-            <span class="kw">let</span> <span class="ident">k2_rec</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">k2_var</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">k2_sign</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">k2_sign_var</span>.<span class="ident">into</span>()).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">k2_with_sign_rec</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">k2_sign</span> <span class="op">==</span> <span class="ident">Fq::one</span>() {
-                <span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">k2_rec</span>)
-            } <span class="kw">else</span> {
-                <span class="op">-</span><span class="ident">field_switching</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Fr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">k2_rec</span>)
+            <span class="kw">let </span>k2_rec = circuit.witness(k2_var).unwrap();
+            <span class="kw">let </span>k2_sign = circuit.witness(k2_sign_var.into()).unwrap();
+            <span class="kw">let </span>k2_with_sign_rec = <span class="kw">if </span>k2_sign == Fq::one() {
+                field_switching::&lt;<span class="kw">_</span>, Fr&gt;(<span class="kw-2">&amp;</span>k2_rec)
+            } <span class="kw">else </span>{
+                -field_switching::&lt;<span class="kw">_</span>, Fr&gt;(<span class="kw-2">&amp;</span>k2_rec)
             };
 
-            <span class="macro">assert_eq!</span>(<span class="ident">k2</span>, <span class="ident">k2_with_sign_rec</span>);
+            <span class="macro">assert_eq!</span>(k2, k2_with_sign_rec);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

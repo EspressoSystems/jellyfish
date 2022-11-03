@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities_derive/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils_derive/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities_derive/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils_derive/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -145,152 +145,152 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="attribute">#![<span class="ident">no_std</span>]</span>
+</span><span class="attribute">#![no_std]
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">proc_macro</span>;
+</span><span class="kw">extern crate </span>proc_macro;
 
-<span class="kw">use</span> <span class="ident">ark_std::format</span>;
-<span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
-<span class="kw">use</span> <span class="ident">quote::quote</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parse_macro_input</span>, <span class="ident">AttributeArgs</span>, <span class="ident">Item</span>, <span class="ident">Meta</span>, <span class="ident">NestedMeta</span>};
+<span class="kw">use </span>ark_std::format;
+<span class="kw">use </span>proc_macro::TokenStream;
+<span class="kw">use </span>quote::quote;
+<span class="kw">use </span>syn::{parse_macro_input, AttributeArgs, Item, Meta, NestedMeta};
 
-<span class="doccomment">/// Derive serdes for a type which serializes as a binary blob.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This macro can be used to easily derive friendly serde implementations for a</span>
-<span class="doccomment">/// binary type which implements</span>
-<span class="doccomment">/// [CanonicalSerialize](ark_serialize::CanonicalSerialize) and</span>
-<span class="doccomment">/// [CanonicalDeserialize](ark_serialize::CanonicalDeserialize). This is useful</span>
-<span class="doccomment">/// for cryptographic primitives and other types which do not have a</span>
-<span class="doccomment">/// human-readable serialization, but which may be embedded in structs with a</span>
-<span class="doccomment">/// human-readable serialization. The serde implementations derived by this</span>
-<span class="doccomment">/// macro will serialize the type as bytes for binary encodings and as base 64</span>
-<span class="doccomment">/// for human readable encodings.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Specifically, this macro does 4 things when applied to a type definition:</span>
-<span class="doccomment">/// * It adds `#[derive(Serialize, Deserialize)]` to the type definition, along</span>
-<span class="doccomment">///   with serde attributes to serialize using the</span>
-<span class="doccomment">///   [TaggedBlob](../jf_utils/struct.TaggedBlob.html) serialization helper.</span>
-<span class="doccomment">/// * It creates an implementation of [Tagged](../jf_utils/trait.Tagged.html)</span>
-<span class="doccomment">///   for the type using the specified tag. This tag will be used to identify</span>
-<span class="doccomment">///   base 64 strings which represent this type in human-readable encodings.</span>
-<span class="doccomment">/// * It creates an implementation of `TryFrom&lt;TaggedBlob&lt;T&gt;&gt;` for the type `T`,</span>
-<span class="doccomment">///   which is needed to make the `serde(try_from)` attribute work.</span>
-<span class="doccomment">/// * It creates implementations of [Display](ark_std::fmt::Display) and</span>
-<span class="doccomment">///   [FromStr](ark_std::str::FromStr) using tagged base 64 as a display format.</span>
-<span class="doccomment">///   This allows tagged blob types to be conveniently displayed and read to and</span>
-<span class="doccomment">///   from user interfaces in a manner consistent with how they are serialized.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Usage example:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// #[macro_use] extern crate jf_utils_derive;</span>
-<span class="doccomment">/// use ark_serialize::*;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[tagged_blob(&quot;NUL&quot;)]</span>
-<span class="doccomment">/// #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]</span>
-<span class="doccomment">/// pub struct Nullifier(</span>
-<span class="doccomment">///     // This type can only be serialied as an opaque, binary blob using ark_serialize.</span>
-<span class="doccomment">///     pub(crate) ark_bls12_381::Fr,</span>
-<span class="doccomment">/// );</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The type Nullifier can now be serialized as binary:</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use ark_serialize::*;</span>
-<span class="doccomment">/// # use ark_std::UniformRand;</span>
-<span class="doccomment">/// # use jf_utils_derive::tagged_blob;</span>
-<span class="doccomment">/// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};</span>
-<span class="doccomment">/// # #[tagged_blob(&quot;NUL&quot;)]</span>
-<span class="doccomment">/// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]</span>
-<span class="doccomment">/// # struct Nullifier(ark_bls12_381::Fr);</span>
-<span class="doccomment">/// # let nullifier = Nullifier(ark_bls12_381::Fr::rand(&amp;mut ChaChaRng::from_seed([42; 32])));</span>
-<span class="doccomment">/// bincode::serialize(&amp;nullifier).unwrap();</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// or as base64:</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use ark_serialize::*;</span>
-<span class="doccomment">/// # use ark_std::UniformRand;</span>
-<span class="doccomment">/// # use jf_utils_derive::tagged_blob;</span>
-<span class="doccomment">/// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};</span>
-<span class="doccomment">/// # #[tagged_blob(&quot;NUL&quot;)]</span>
-<span class="doccomment">/// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]</span>
-<span class="doccomment">/// # struct Nullifier(ark_bls12_381::Fr);</span>
-<span class="doccomment">/// # let nullifier = Nullifier(ark_bls12_381::Fr::rand(&amp;mut ChaChaRng::from_seed([42; 32])));</span>
-<span class="doccomment">/// serde_json::to_string(&amp;nullifier).unwrap();</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// which will produce a tagged base64 string like</span>
-<span class="doccomment">/// &quot;NUL~8oaujwbov8h4eEq7HFpqW6mIXhVbtJGxLUgiKrGpMCoJ&quot;.</span>
-<span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tagged_blob</span>(<span class="ident">args</span>: <span class="ident">TokenStream</span>, <span class="ident">input</span>: <span class="ident">TokenStream</span>) -&gt; <span class="ident">TokenStream</span> {
-    <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">args</span> <span class="kw">as</span> <span class="ident">AttributeArgs</span>);
-    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">Item</span>);
-    <span class="kw">let</span> (<span class="ident">name</span>, <span class="ident">generics</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">input</span> {
-        <span class="ident">Item::Struct</span>(<span class="ident">item</span>) =&gt; (<span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">ident</span>, <span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">generics</span>),
-        <span class="ident">Item::Enum</span>(<span class="ident">item</span>) =&gt; (<span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">ident</span>, <span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">generics</span>),
-        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected struct or enum&quot;</span>),
+<span class="doccomment">/// Derive serdes for a type which serializes as a binary blob.
+///
+/// This macro can be used to easily derive friendly serde implementations for a
+/// binary type which implements
+/// [CanonicalSerialize](ark_serialize::CanonicalSerialize) and
+/// [CanonicalDeserialize](ark_serialize::CanonicalDeserialize). This is useful
+/// for cryptographic primitives and other types which do not have a
+/// human-readable serialization, but which may be embedded in structs with a
+/// human-readable serialization. The serde implementations derived by this
+/// macro will serialize the type as bytes for binary encodings and as base 64
+/// for human readable encodings.
+///
+/// Specifically, this macro does 4 things when applied to a type definition:
+/// * It adds `#[derive(Serialize, Deserialize)]` to the type definition, along
+///   with serde attributes to serialize using the
+///   [TaggedBlob](../jf_utils/struct.TaggedBlob.html) serialization helper.
+/// * It creates an implementation of [Tagged](../jf_utils/trait.Tagged.html)
+///   for the type using the specified tag. This tag will be used to identify
+///   base 64 strings which represent this type in human-readable encodings.
+/// * It creates an implementation of `TryFrom&lt;TaggedBlob&lt;T&gt;&gt;` for the type `T`,
+///   which is needed to make the `serde(try_from)` attribute work.
+/// * It creates implementations of [Display](ark_std::fmt::Display) and
+///   [FromStr](ark_std::str::FromStr) using tagged base 64 as a display format.
+///   This allows tagged blob types to be conveniently displayed and read to and
+///   from user interfaces in a manner consistent with how they are serialized.
+///
+/// Usage example:
+///
+/// ```
+/// #[macro_use] extern crate jf_utils_derive;
+/// use ark_serialize::*;
+///
+/// #[tagged_blob(&quot;NUL&quot;)]
+/// #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]
+/// pub struct Nullifier(
+///     // This type can only be serialied as an opaque, binary blob using ark_serialize.
+///     pub(crate) ark_bls12_381::Fr,
+/// );
+/// ```
+///
+/// The type Nullifier can now be serialized as binary:
+/// ```
+/// # use ark_serialize::*;
+/// # use ark_std::UniformRand;
+/// # use jf_utils_derive::tagged_blob;
+/// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};
+/// # #[tagged_blob(&quot;NUL&quot;)]
+/// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]
+/// # struct Nullifier(ark_bls12_381::Fr);
+/// # let nullifier = Nullifier(ark_bls12_381::Fr::rand(&amp;mut ChaChaRng::from_seed([42; 32])));
+/// bincode::serialize(&amp;nullifier).unwrap();
+/// ```
+/// or as base64:
+/// ```
+/// # use ark_serialize::*;
+/// # use ark_std::UniformRand;
+/// # use jf_utils_derive::tagged_blob;
+/// # use rand_chacha::{ChaChaRng, rand_core::SeedableRng};
+/// # #[tagged_blob(&quot;NUL&quot;)]
+/// # #[derive(Clone, CanonicalSerialize, CanonicalDeserialize, /* any other derives */)]
+/// # struct Nullifier(ark_bls12_381::Fr);
+/// # let nullifier = Nullifier(ark_bls12_381::Fr::rand(&amp;mut ChaChaRng::from_seed([42; 32])));
+/// serde_json::to_string(&amp;nullifier).unwrap();
+/// ```
+/// which will produce a tagged base64 string like
+/// &quot;NUL~8oaujwbov8h4eEq7HFpqW6mIXhVbtJGxLUgiKrGpMCoJ&quot;.
+</span><span class="attribute">#[proc_macro_attribute]
+</span><span class="kw">pub fn </span>tagged_blob(args: TokenStream, input: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span>args = <span class="macro">parse_macro_input!</span>(args <span class="kw">as </span>AttributeArgs);
+    <span class="kw">let </span>input = <span class="macro">parse_macro_input!</span>(input <span class="kw">as </span>Item);
+    <span class="kw">let </span>(name, generics) = <span class="kw">match </span><span class="kw-2">&amp;</span>input {
+        Item::Struct(item) =&gt; (<span class="kw-2">&amp;</span>item.ident, <span class="kw-2">&amp;</span>item.generics),
+        Item::Enum(item) =&gt; (<span class="kw-2">&amp;</span>item.ident, <span class="kw-2">&amp;</span>item.generics),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected struct or enum&quot;</span>),
     };
-    <span class="kw">let</span> (<span class="ident">impl_generics</span>, <span class="ident">ty_generics</span>, <span class="ident">where_clause</span>) <span class="op">=</span> <span class="ident">generics</span>.<span class="ident">split_for_impl</span>();
-    <span class="kw">let</span> <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">quote::ToTokens</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">as_slice</span>() {
-        [<span class="ident">NestedMeta::Lit</span>(<span class="ident">tag</span>)] =&gt; <span class="ident">tag</span>,
-        [<span class="ident">NestedMeta::Meta</span>(<span class="ident">Meta::Path</span>(<span class="ident">path</span>))] =&gt; <span class="ident">path</span>,
-        <span class="ident">x</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;tagged_blob takes one argument, the tag, as a string literal or expression, found {:?}&quot;</span>, <span class="ident">x</span>),
+    <span class="kw">let </span>(impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    <span class="kw">let </span>tag: <span class="kw-2">&amp;</span><span class="kw">dyn </span>quote::ToTokens = <span class="kw">match </span>args.as_slice() {
+        [NestedMeta::Lit(tag)] =&gt; tag,
+        [NestedMeta::Meta(Meta::Path(path))] =&gt; path,
+        x =&gt; <span class="macro">panic!</span>(<span class="string">&quot;tagged_blob takes one argument, the tag, as a string literal or expression, found {:?}&quot;</span>, x),
     };
-    <span class="kw">let</span> <span class="ident">serde_str</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;jf_utils::TaggedBlob&lt;{}&gt;&quot;</span>, <span class="macro">quote!</span>(#<span class="ident">name</span> #<span class="ident">ty_generics</span>));
-    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="macro">quote!</span> {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Serialize</span>, <span class="ident">serde::Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">try_from</span> <span class="op">=</span> #<span class="ident">serde_str</span>, <span class="ident">into</span> <span class="op">=</span> #<span class="ident">serde_str</span>)]</span>
-        <span class="comment">// Override the inferred bound for Serialize/Deserialize impls. If we&#39;re converting to and</span>
-        <span class="comment">// from CanonicalBytes as an intermediate, the impls should work for any generic parameters.</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>)]</span>
-        #<span class="ident">input</span>
+    <span class="kw">let </span>serde_str = <span class="macro">format!</span>(<span class="string">&quot;jf_utils::TaggedBlob&lt;{}&gt;&quot;</span>, <span class="macro">quote!</span>(#name #ty_generics));
+    <span class="kw">let </span>output = <span class="macro">quote! </span>{
+        <span class="attribute">#[derive(serde::Serialize, serde::Deserialize)]
+        #[serde(try_from = #serde_str, into = #serde_str)]
+        </span><span class="comment">// Override the inferred bound for Serialize/Deserialize impls. If we&#39;re converting to and
+        // from CanonicalBytes as an intermediate, the impls should work for any generic parameters.
+        </span><span class="attribute">#[serde(bound = <span class="string">&quot;&quot;</span>)]
+        </span>#input
 
-        <span class="kw">impl</span> #<span class="ident">impl_generics</span> <span class="ident">jf_utils::Tagged</span> <span class="kw">for</span> #<span class="ident">name</span> #<span class="ident">ty_generics</span> #<span class="ident">where_clause</span> {
-            <span class="kw">fn</span> <span class="ident">tag</span>() -&gt; <span class="ident">ark_std::string::String</span> {
-                <span class="ident">ark_std::string::String::from</span>(#<span class="ident">tag</span>)
+        <span class="kw">impl </span>#impl_generics jf_utils::Tagged <span class="kw">for </span>#name #ty_generics #where_clause {
+            <span class="kw">fn </span>tag() -&gt; ark_std::string::String {
+                ark_std::string::String::from(#tag)
             }
         }
 
-        <span class="kw">impl</span> #<span class="ident">impl_generics</span> <span class="ident">core::convert::TryFrom</span><span class="op">&lt;</span><span class="ident">jf_utils::TaggedBlob</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>
-            <span class="kw">for</span> #<span class="ident">name</span> #<span class="ident">ty_generics</span>
-        #<span class="ident">where_clause</span>
+        <span class="kw">impl </span>#impl_generics core::convert::TryFrom&lt;jf_utils::TaggedBlob&lt;<span class="self">Self</span>&gt;&gt;
+            <span class="kw">for </span>#name #ty_generics
+        #where_clause
         {
-            <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">ark_serialize::SerializationError</span>;
-            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">v</span>: <span class="ident">jf_utils::TaggedBlob</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-                <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">CanonicalDeserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(
-                    <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">v</span>.<span class="ident">bytes</span>().<span class="number">0</span>,
+            <span class="kw">type </span>Error = ark_serialize::SerializationError;
+            <span class="kw">fn </span>try_from(v: jf_utils::TaggedBlob&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+                &lt;<span class="self">Self </span><span class="kw">as </span>CanonicalDeserialize&gt;::deserialize(
+                    <span class="kw-2">&amp;*</span>v.bytes().<span class="number">0</span>,
                 )
             }
         }
 
-        <span class="kw">impl</span> #<span class="ident">impl_generics</span> <span class="ident">ark_std::fmt::Display</span> <span class="kw">for</span> #<span class="ident">name</span> #<span class="ident">ty_generics</span> #<span class="ident">where_clause</span> {
-            <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ark_std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">ark_std::fmt::Result</span> {
+        <span class="kw">impl </span>#impl_generics ark_std::fmt::Display <span class="kw">for </span>#name #ty_generics #where_clause {
+            <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>ark_std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; ark_std::fmt::Result {
                 <span class="macro">ark_std::write!</span>(
-                    <span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>,
-                    <span class="ident">jf_utils::TaggedBlob::from</span>(<span class="self">self</span>)
-                        .<span class="ident">tagged_base64</span>()
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ark_std::fmt::Error</span>)<span class="question-mark">?</span>
-                )
+                    f, <span class="string">&quot;{}&quot;</span>,
+                    jf_utils::TaggedBlob::from(<span class="self">self</span>)
+                        .tagged_base64()
+                        .map_err(|<span class="kw">_</span>| ark_std::fmt::Error)<span class="question-mark">?
+                </span>)
             }
         }
 
-        <span class="kw">impl</span> #<span class="ident">impl_generics</span> <span class="ident">ark_std::str::FromStr</span> <span class="kw">for</span> #<span class="ident">name</span> #<span class="ident">ty_generics</span> #<span class="ident">where_clause</span> {
-            <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">jf_utils::TaggedBlobError</span>;
-            <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
-                <span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>;
-                <span class="ident"><span class="self">Self</span>::try_from</span>(<span class="ident">jf_utils::TaggedBlob::from_str</span>(<span class="ident">s</span>)<span class="question-mark">?</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> {
-                        <span class="ident">jf_utils::TaggedBlobError::DeserializationError</span> { <span class="ident">source</span> }
+        <span class="kw">impl </span>#impl_generics ark_std::str::FromStr <span class="kw">for </span>#name #ty_generics #where_clause {
+            <span class="kw">type </span><span class="prelude-val">Err </span>= jf_utils::TaggedBlobError;
+            <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
+                <span class="kw">use </span>core::convert::TryFrom;
+                <span class="self">Self</span>::try_from(jf_utils::TaggedBlob::from_str(s)<span class="question-mark">?</span>)
+                    .map_err(|source| {
+                        jf_utils::TaggedBlobError::DeserializationError { source }
                     })
             }
         }
     };
-    <span class="ident">output</span>.<span class="ident">into</span>()
+    output.into()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

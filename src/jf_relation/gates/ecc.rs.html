@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gates/ecc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ecc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_relation/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gates/ecc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ecc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_relation/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -161,168 +161,168 @@
 <span id="161">161</span>
 <span id="162">162</span>
 <span id="163">163</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implementation of ECC related gates</span>
+</span><span class="doccomment">//! Implementation of ECC related gates
 
-<span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
+</span><span class="kw">use </span>core::marker::PhantomData;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">constants</span>::{<span class="ident">GATE_WIDTH</span>, <span class="ident">N_MUL_SELECTORS</span>},
-    <span class="ident">gates::Gate</span>,
+<span class="kw">use crate</span>::{
+    constants::{GATE_WIDTH, N_MUL_SELECTORS},
+    gates::Gate,
 };
-<span class="kw">use</span> <span class="ident">ark_ec::TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>;
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">derivative::Derivative</span>;
+<span class="kw">use </span>ark_ec::TEModelParameters <span class="kw">as </span>Parameters;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>derivative::Derivative;
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">edwards_coeff_d</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span>() -&gt; <span class="ident">P::BaseField</span> {
-    <span class="ident">P::COEFF_D</span>
+<span class="attribute">#[inline]
+</span><span class="kw">fn </span>edwards_coeff_d&lt;P: Parameters&gt;() -&gt; P::BaseField {
+    P::COEFF_D
 }
 
-<span class="doccomment">/// A gate for checking a point conforming the twisted Edwards curve equation</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EdwardsCurveEquationGate</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A gate for checking a point conforming the twisted Edwards curve equation
+</span><span class="attribute">#[derive(Derivative)]
+#[derivative(Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>))]
+</span><span class="kw">pub struct </span>EdwardsCurveEquationGate&lt;P: Parameters&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) _phantom: PhantomData&lt;P&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EdwardsCurveEquationGate</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; Gate&lt;F&gt; <span class="kw">for </span>EdwardsCurveEquationGate&lt;P&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="string">&quot;Curve Equation Gate&quot;</span>
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="string">&quot;Curve Equation Gate&quot;
+    </span>}
+    <span class="kw">fn </span>q_mul(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; N_MUL_SELECTORS] {
+        <span class="comment">// edwards equation: ax^2 + y^2 =1 + dx^2y^2
+        // for ed_on_bn curves, we have a = 1
+        // for ed_on_bls curves, we have a = -1
+        </span>[-P::COEFF_A, -F::one()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
-        <span class="comment">// edwards equation: ax^2 + y^2 =1 + dx^2y^2</span>
-        <span class="comment">// for ed_on_bn curves, we have a = 1</span>
-        <span class="comment">// for ed_on_bls curves, we have a = -1</span>
-        [<span class="op">-</span><span class="ident">P::COEFF_A</span>, <span class="op">-</span><span class="ident">F::one</span>()]
+    <span class="kw">fn </span>q_c(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        F::one()
     }
-    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">F::one</span>()
-    }
-    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">edwards_coeff_d</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>()
+    <span class="kw">fn </span>q_ecc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        edwards_coeff_d::&lt;P&gt;()
     }
 }
 
-<span class="doccomment">/// A gate for point addition on x-coordinate between two Curve Points</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CurvePointXAdditionGate</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A gate for point addition on x-coordinate between two Curve Points
+</span><span class="attribute">#[derive(Derivative)]
+#[derivative(Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>))]
+</span><span class="kw">pub struct </span>CurvePointXAdditionGate&lt;P: Parameters&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) _phantom: PhantomData&lt;P&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CurvePointXAdditionGate</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; Gate&lt;F&gt; <span class="kw">for </span>CurvePointXAdditionGate&lt;P&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="string">&quot;Point Addition X-coordinate Gate&quot;</span>
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="string">&quot;Point Addition X-coordinate Gate&quot;
+    </span>}
+    <span class="kw">fn </span>q_mul(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; N_MUL_SELECTORS] {
+        [F::one(), F::one()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
-        [<span class="ident">F::one</span>(), <span class="ident">F::one</span>()]
+    <span class="kw">fn </span>q_o(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        F::one()
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">F::one</span>()
-    }
-    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="kw">let</span> <span class="ident">d</span>: <span class="ident">F</span> <span class="op">=</span> <span class="ident">edwards_coeff_d</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>();
-        <span class="op">-</span><span class="ident">d</span>
+    <span class="kw">fn </span>q_ecc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        <span class="kw">let </span>d: F = edwards_coeff_d::&lt;P&gt;();
+        -d
     }
 }
 
-<span class="doccomment">/// A gate for point addition on y-coordinate between two Curve Points</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CurvePointYAdditionGate</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A gate for point addition on y-coordinate between two Curve Points
+</span><span class="attribute">#[derive(Derivative)]
+#[derivative(Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>))]
+</span><span class="kw">pub struct </span>CurvePointYAdditionGate&lt;P: Parameters&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) _phantom: PhantomData&lt;P&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CurvePointYAdditionGate</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; Gate&lt;F&gt; <span class="kw">for </span>CurvePointYAdditionGate&lt;P&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="string">&quot;Point Addition Y-coordinate Gate&quot;</span>
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="string">&quot;Point Addition Y-coordinate Gate&quot;
+    </span>}
+    <span class="kw">fn </span>q_mul(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; N_MUL_SELECTORS] {
+        [-P::COEFF_A, F::one()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
-        [<span class="op">-</span><span class="ident">P::COEFF_A</span>, <span class="ident">F::one</span>()]
+    <span class="kw">fn </span>q_o(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        F::one()
     }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">F::one</span>()
-    }
-    <span class="kw">fn</span> <span class="ident">q_ecc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">edwards_coeff_d</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>()
+    <span class="kw">fn </span>q_ecc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        edwards_coeff_d::&lt;P&gt;()
     }
 }
 
-<span class="doccomment">/// A point selection gate on x-coordinate for conditional selection among 4</span>
-<span class="doccomment">/// point candidates</span>
-<span class="doccomment">/// P0 is default neutral point, P1, P2, P3 are public constants</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QuaternaryPointSelectXGate</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">x1</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">x2</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">x3</span>: <span class="ident">F</span>,
+<span class="doccomment">/// A point selection gate on x-coordinate for conditional selection among 4
+/// point candidates
+/// P0 is default neutral point, P1, P2, P3 are public constants
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>QuaternaryPointSelectXGate&lt;F: PrimeField&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) x1: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) x2: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) x3: F,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">QuaternaryPointSelectXGate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="kw">impl</span>&lt;F&gt; Gate&lt;F&gt; <span class="kw">for </span>QuaternaryPointSelectXGate&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="string">&quot;4-ary Point Selection X-coordinate Gate&quot;</span>
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="string">&quot;4-ary Point Selection X-coordinate Gate&quot;
+    </span>}
+    <span class="kw">fn </span>q_lc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; GATE_WIDTH] {
+        [<span class="self">self</span>.x1, <span class="self">self</span>.x2, F::zero(), F::zero()]
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
-        [<span class="self">self</span>.<span class="ident">x1</span>, <span class="self">self</span>.<span class="ident">x2</span>, <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
+    <span class="kw">fn </span>q_mul(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; N_MUL_SELECTORS] {
+        [<span class="self">self</span>.x3 - <span class="self">self</span>.x2 - <span class="self">self</span>.x1, F::zero()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
-        [<span class="self">self</span>.<span class="ident">x3</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">x2</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">x1</span>, <span class="ident">F::zero</span>()]
-    }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">F::one</span>()
+    <span class="kw">fn </span>q_o(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        F::one()
     }
 }
 
-<span class="doccomment">/// A point selection gate on y-coordinate for conditional selection among 4</span>
-<span class="doccomment">/// point candidates</span>
-<span class="doccomment">/// P0 is default neutral point, P1, P2, P3 are public constants</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QuaternaryPointSelectYGate</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">y1</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">y2</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">y3</span>: <span class="ident">F</span>,
+<span class="doccomment">/// A point selection gate on y-coordinate for conditional selection among 4
+/// point candidates
+/// P0 is default neutral point, P1, P2, P3 are public constants
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>QuaternaryPointSelectYGate&lt;F: PrimeField&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) y1: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) y2: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) y3: F,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">Gate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">QuaternaryPointSelectYGate</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">PrimeField</span>,
+<span class="kw">impl</span>&lt;F&gt; Gate&lt;F&gt; <span class="kw">for </span>QuaternaryPointSelectYGate&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-        <span class="string">&quot;4-ary Point Selection Y-coordinate Gate&quot;</span>
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="string">&quot;4-ary Point Selection Y-coordinate Gate&quot;
+    </span>}
+    <span class="kw">fn </span>q_lc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; GATE_WIDTH] {
+        [<span class="self">self</span>.y1 - F::one(), <span class="self">self</span>.y2 - F::one(), F::zero(), F::zero()]
     }
-    <span class="kw">fn</span> <span class="ident">q_lc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">GATE_WIDTH</span>] {
-        [<span class="self">self</span>.<span class="ident">y1</span> <span class="op">-</span> <span class="ident">F::one</span>(), <span class="self">self</span>.<span class="ident">y2</span> <span class="op">-</span> <span class="ident">F::one</span>(), <span class="ident">F::zero</span>(), <span class="ident">F::zero</span>()]
+    <span class="kw">fn </span>q_mul(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [F; N_MUL_SELECTORS] {
+        [<span class="self">self</span>.y3 - <span class="self">self</span>.y2 - <span class="self">self</span>.y1 + F::one(), F::zero()]
     }
-    <span class="kw">fn</span> <span class="ident">q_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">F</span>; <span class="ident">N_MUL_SELECTORS</span>] {
-        [<span class="self">self</span>.<span class="ident">y3</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">y2</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">y1</span> <span class="op">+</span> <span class="ident">F::one</span>(), <span class="ident">F::zero</span>()]
+    <span class="kw">fn </span>q_c(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        F::one()
     }
-    <span class="kw">fn</span> <span class="ident">q_c</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">F::one</span>()
-    }
-    <span class="kw">fn</span> <span class="ident">q_o</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">F</span> {
-        <span class="ident">F::one</span>()
+    <span class="kw">fn </span>q_o(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
+        F::one()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

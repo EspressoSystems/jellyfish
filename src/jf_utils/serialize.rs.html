@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities/src/serialize.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>serialize.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `utilities/src/serialize.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>serialize.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -280,287 +280,287 @@
 <span id="280">280</span>
 <span id="281">281</span>
 <span id="282">282</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Various serialization functions.</span>
+</span><span class="doccomment">//! Various serialization functions.
 
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">string::String</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">tagged_base64</span>::{<span class="ident">TaggedBase64</span>, <span class="ident">Tb64Error</span>};
+</span><span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+<span class="kw">use </span>ark_std::{marker::PhantomData, string::String, vec::Vec};
+<span class="kw">use </span>displaydoc::Display;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>tagged_base64::{TaggedBase64, Tb64Error};
 
-<span class="doccomment">/// A helper for converting CanonicalSerde bytes to standard Serde bytes.</span>
-<span class="doccomment">/// use this struct as intermediate target instead of directly deriving</span>
-<span class="doccomment">/// serde::Serialize/Deserialize to avoid implementation of Visitors.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CanonicalBytes</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
+<span class="doccomment">/// A helper for converting CanonicalSerde bytes to standard Serde bytes.
+/// use this struct as intermediate target instead of directly deriving
+/// serde::Serialize/Deserialize to avoid implementation of Visitors.
+</span><span class="attribute">#[derive(Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>CanonicalBytes(<span class="kw">pub </span>Vec&lt;u8&gt;);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">ark_serialize::CanonicalSerialize</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CanonicalBytes</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">obj</span>: <span class="ident">T</span>) -&gt; <span class="ident">CanonicalBytes</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">obj</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;fail to serialize to canonical bytes&quot;</span>);
-        <span class="ident">CanonicalBytes</span>(<span class="ident">bytes</span>)
+<span class="kw">impl</span>&lt;T: ark_serialize::CanonicalSerialize&gt; From&lt;T&gt; <span class="kw">for </span>CanonicalBytes {
+    <span class="kw">fn </span>from(obj: T) -&gt; CanonicalBytes {
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes = Vec::new();
+        obj.serialize(<span class="kw-2">&amp;mut </span>bytes)
+            .expect(<span class="string">&quot;fail to serialize to canonical bytes&quot;</span>);
+        CanonicalBytes(bytes)
     }
 }
 
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">deserialize_canonical_bytes</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="macro">deserialize_canonical_bytes!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&lt;</span><span class="op">&gt;</span>);
+<span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>deserialize_canonical_bytes {
+    (<span class="macro-nonterminal">$t</span>:ident) =&gt; {
+        <span class="macro">deserialize_canonical_bytes!</span>(<span class="macro-nonterminal">$t</span>&lt;&gt;);
     };
 
-    <span class="comment">// match MyStruct&lt;&#39;a, &#39;b, T: MyTrait, R: MyTrait2, ...&gt; where any number of lifetime and generic parameters</span>
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span> <span class="op">&lt;</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>:<span class="ident">lifetime</span> ),<span class="op">*</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident</span> ),<span class="op">*</span> <span class="op">&gt;</span>) =&gt; {
-        <span class="kw">impl</span><span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>),<span class="op">*</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>: <span class="macro-nonterminal">$</span><span class="kw">trait</span> ),<span class="kw-2">*</span><span class="op">&gt;</span> <span class="macro-nonterminal">From</span><span class="op">&lt;</span><span class="ident">CanonicalBytes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&lt;</span>$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">lt</span>),<span class="op">*</span> $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span> ),<span class="kw-2">*</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">bytes</span>: <span class="ident">CanonicalBytes</span>) -&gt; <span class="self">Self</span> {
-                <span class="ident">ark_serialize::CanonicalDeserialize::deserialize</span>(<span class="ident">bytes</span>.<span class="number">0</span>.<span class="ident">as_slice</span>())
-                    .<span class="ident">expect</span>(<span class="string">&quot;fail to deserialize canonical bytes&quot;</span>)
+    <span class="comment">// match MyStruct&lt;&#39;a, &#39;b, T: MyTrait, R: MyTrait2, ...&gt; where any number of lifetime and generic parameters
+    </span>(<span class="macro-nonterminal">$t</span>:ident &lt; $( <span class="macro-nonterminal">$lt</span>:lifetime ),* $( <span class="macro-nonterminal">$T</span>:ident : <span class="macro-nonterminal">$</span><span class="kw">trait</span>:<span class="macro-nonterminal">ident </span>),* &gt;) =&gt; {
+        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$lt</span>),* $( <span class="macro-nonterminal">$T</span>: <span class="macro-nonterminal">$</span><span class="kw">trait </span>),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">From</span>&lt;CanonicalBytes&gt; <span class="kw">for </span><span class="macro-nonterminal">$t</span>&lt;$(<span class="macro-nonterminal">$lt</span>),* $( <span class="macro-nonterminal">$T </span>),<span class="kw-2">*</span>&gt; {
+            <span class="kw">fn </span>from(bytes: CanonicalBytes) -&gt; <span class="self">Self </span>{
+                ark_serialize::CanonicalDeserialize::deserialize(bytes.<span class="number">0</span>.as_slice())
+                    .expect(<span class="string">&quot;fail to deserialize canonical bytes&quot;</span>)
             }
         }
     };
 }
 
-<span class="doccomment">/// Trait for types whose serialization is not human-readable.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Such types have a human-readable tag which is used to identify tagged base</span>
-<span class="doccomment">/// 64 blobs representing a serialization of that type.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Rather than implement this trait manually, it is recommended to use the</span>
-<span class="doccomment">/// [macro@tagged_blob] macro to specify a tag for your type. That macro also</span>
-<span class="doccomment">/// derives appropriate serde implementations for serializing as an opaque blob.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Tagged</span> {
-    <span class="kw">fn</span> <span class="ident">tag</span>() -&gt; <span class="ident">String</span>;
+<span class="doccomment">/// Trait for types whose serialization is not human-readable.
+///
+/// Such types have a human-readable tag which is used to identify tagged base
+/// 64 blobs representing a serialization of that type.
+///
+/// Rather than implement this trait manually, it is recommended to use the
+/// [macro@tagged_blob] macro to specify a tag for your type. That macro also
+/// derives appropriate serde implementations for serializing as an opaque blob.
+</span><span class="kw">pub trait </span>Tagged {
+    <span class="kw">fn </span>tag() -&gt; String;
 }
 
-<span class="doccomment">/// Helper type for serializing tagged blobs.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A type which can only be serialized using ark_serialize (for example,</span>
-<span class="doccomment">/// cryptographic primitives) can derive serde implementations using `serde(from</span>
-<span class="doccomment">/// = &quot;TaggedBlob&lt;T&gt;&quot;, into = &quot;TaggedBlob&lt;T&gt;&quot;)`. The serde implementations for</span>
-<span class="doccomment">/// TaggedBlob generate either a packed bytes encoding, if the serialization</span>
-<span class="doccomment">/// format is binary, or a tagged base 64 encoding, if the serialization format</span>
-<span class="doccomment">/// is human-readable.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Types which are serialized using TaggedBlob can then be embedded as fields</span>
-<span class="doccomment">/// in structs which derive serde implementations, and those structs can then be</span>
-<span class="doccomment">/// serialized using an efficient binary encoding or a browser-friendly,</span>
-<span class="doccomment">/// human-readable encoding like JSON.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Rather than manually tag types with `serde(from = &quot;TaggedBlob&lt;T&gt;&quot;, into =</span>
-<span class="doccomment">/// &quot;TaggedBlob&lt;T&gt;&quot;)`, it is recommended to use the [macro@tagged_blob] macro,</span>
-<span class="doccomment">/// which will automatically add the appropriate serde attributes as well as the</span>
-<span class="doccomment">/// necessary [Tagged] and [From] implementations to allow `serde(from)` to</span>
-<span class="doccomment">/// work.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TaggedBlob</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tagged</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;tagged_blob&quot;</span>)]</span>
-    <span class="ident">inner</span>: (<span class="ident">CanonicalBytes</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
+<span class="doccomment">/// Helper type for serializing tagged blobs.
+///
+/// A type which can only be serialized using ark_serialize (for example,
+/// cryptographic primitives) can derive serde implementations using `serde(from
+/// = &quot;TaggedBlob&lt;T&gt;&quot;, into = &quot;TaggedBlob&lt;T&gt;&quot;)`. The serde implementations for
+/// TaggedBlob generate either a packed bytes encoding, if the serialization
+/// format is binary, or a tagged base 64 encoding, if the serialization format
+/// is human-readable.
+///
+/// Types which are serialized using TaggedBlob can then be embedded as fields
+/// in structs which derive serde implementations, and those structs can then be
+/// serialized using an efficient binary encoding or a browser-friendly,
+/// human-readable encoding like JSON.
+///
+/// Rather than manually tag types with `serde(from = &quot;TaggedBlob&lt;T&gt;&quot;, into =
+/// &quot;TaggedBlob&lt;T&gt;&quot;)`, it is recommended to use the [macro@tagged_blob] macro,
+/// which will automatically add the appropriate serde attributes as well as the
+/// necessary [Tagged] and [From] implementations to allow `serde(from)` to
+/// work.
+</span><span class="attribute">#[derive(Deserialize, Serialize)]
+#[serde(transparent)]
+</span><span class="kw">pub struct </span>TaggedBlob&lt;T: Tagged&gt; {
+    <span class="attribute">#[serde(with = <span class="string">&quot;tagged_blob&quot;</span>)]
+    </span>inner: (CanonicalBytes, PhantomData&lt;T&gt;),
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tagged</span><span class="op">&gt;</span> <span class="ident">TaggedBlob</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">CanonicalBytes</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="number">0</span>
+<span class="kw">impl</span>&lt;T: Tagged&gt; TaggedBlob&lt;T&gt; {
+    <span class="kw">pub fn </span>bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>CanonicalBytes {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.inner.<span class="number">0
+    </span>}
+
+    <span class="kw">pub fn </span>tagged_base64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TaggedBase64, Tb64Error&gt; {
+        TaggedBase64::new(T::tag().as_str(), <span class="kw-2">&amp;</span><span class="self">self</span>.inner.<span class="number">0 </span>.<span class="number">0</span>)
     }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tagged_base64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TaggedBase64</span>, <span class="ident">Tb64Error</span><span class="op">&gt;</span> {
-        <span class="ident">TaggedBase64::new</span>(<span class="ident">T::tag</span>().<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="number">0</span> .<span class="number">0</span>)
-    }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tagged</span> <span class="op">+</span> <span class="ident">CanonicalSerialize</span> <span class="op">+</span> <span class="ident">CanonicalDeserialize</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TaggedBlob</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: (<span class="ident">CanonicalBytes::from</span>(<span class="ident">v</span>), <span class="ident">Default::default</span>()),
+<span class="kw">impl</span>&lt;T: Tagged + CanonicalSerialize + CanonicalDeserialize&gt; From&lt;T&gt; <span class="kw">for </span>TaggedBlob&lt;T&gt; {
+    <span class="kw">fn </span>from(v: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: (CanonicalBytes::from(v), Default::default()),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tagged</span> <span class="op">+</span> <span class="ident">CanonicalSerialize</span> <span class="op">+</span> <span class="ident">CanonicalDeserialize</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TaggedBlob</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">v</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;fail to serialize to canonical bytes&quot;</span>);
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: (<span class="ident">CanonicalBytes</span>(<span class="ident">bytes</span>), <span class="ident">Default::default</span>()),
+<span class="kw">impl</span>&lt;T: Tagged + CanonicalSerialize + CanonicalDeserialize&gt; From&lt;<span class="kw-2">&amp;</span>T&gt; <span class="kw">for </span>TaggedBlob&lt;T&gt; {
+    <span class="kw">fn </span>from(v: <span class="kw-2">&amp;</span>T) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes = Vec::new();
+        v.serialize(<span class="kw-2">&amp;mut </span>bytes)
+            .expect(<span class="string">&quot;fail to serialize to canonical bytes&quot;</span>);
+        <span class="self">Self </span>{
+            inner: (CanonicalBytes(bytes), Default::default()),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TaggedBlobError</span> {
-    <span class="doccomment">/// TaggedBase64 parsing failure</span>
-    <span class="ident">Base64Error</span> { <span class="ident">source</span>: <span class="ident">Tb64Error</span> },
-    <span class="doccomment">/// CanonicalSerialize failure</span>
-    <span class="ident">DeserializationError</span> {
-        <span class="ident">source</span>: <span class="ident">ark_serialize::SerializationError</span>,
+<span class="attribute">#[derive(Debug, Display)]
+</span><span class="kw">pub enum </span>TaggedBlobError {
+    <span class="doccomment">/// TaggedBase64 parsing failure
+    </span>Base64Error { source: Tb64Error },
+    <span class="doccomment">/// CanonicalSerialize failure
+    </span>DeserializationError {
+        source: ark_serialize::SerializationError,
     },
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tagged</span><span class="op">&gt;</span> <span class="ident">ark_std::str::FromStr</span> <span class="kw">for</span> <span class="ident">TaggedBlob</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">TaggedBlobError</span>;
+<span class="kw">impl</span>&lt;T: Tagged&gt; ark_std::str::FromStr <span class="kw">for </span>TaggedBlob&lt;T&gt; {
+    <span class="kw">type </span><span class="prelude-val">Err </span>= TaggedBlobError;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">tb64</span> <span class="op">=</span>
-            <span class="ident">TaggedBase64::parse</span>(<span class="ident">s</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">TaggedBlobError::Base64Error</span> { <span class="ident">source</span> })<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">tb64</span>.<span class="ident">tag</span>() <span class="op">==</span> <span class="ident">T::tag</span>() {
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-                <span class="ident">inner</span>: (<span class="ident">CanonicalBytes</span>(<span class="ident">tb64</span>.<span class="ident">value</span>()), <span class="ident">Default::default</span>()),
+    <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
+        <span class="kw">let </span>tb64 =
+            TaggedBase64::parse(s).map_err(|source| TaggedBlobError::Base64Error { source })<span class="question-mark">?</span>;
+        <span class="kw">if </span>tb64.tag() == T::tag() {
+            <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+                inner: (CanonicalBytes(tb64.value()), Default::default()),
             })
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">TaggedBlobError::Base64Error</span> {
-                <span class="ident">source</span>: <span class="ident">Tb64Error::InvalidTag</span>,
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(TaggedBlobError::Base64Error {
+                source: Tb64Error::InvalidTag,
             })
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tagged_blob</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::format</span>;
-    <span class="kw">use</span> <span class="ident">serde</span>::{
-        <span class="ident">de</span>::{<span class="ident">Deserializer</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">DeError</span>},
-        <span class="ident">ser</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">SerError</span>, <span class="ident">Serializer</span>},
+<span class="kw">pub mod </span>tagged_blob {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_std::format;
+    <span class="kw">use </span>serde::{
+        de::{Deserializer, Error <span class="kw">as </span>DeError},
+        ser::{Error <span class="kw">as </span>SerError, Serializer},
     };
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize_with_tag</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span><span class="op">&gt;</span>(
-        <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="ident">CanonicalBytes</span>,
-        <span class="ident">serializer</span>: <span class="ident">S</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">serializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">tagged_base64::to_string</span>(
-                <span class="kw-2">&amp;</span><span class="ident">TaggedBase64::new</span>(<span class="ident">tag</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>.<span class="number">0</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">S::Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>)))<span class="question-mark">?</span>,
+    <span class="kw">pub fn </span>serialize_with_tag&lt;S: Serializer&gt;(
+        tag: <span class="kw-2">&amp;</span>str,
+        bytes: <span class="kw-2">&amp;</span>CanonicalBytes,
+        serializer: S,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt; {
+        <span class="kw">if </span>serializer.is_human_readable() {
+            <span class="kw">let </span>string = tagged_base64::to_string(
+                <span class="kw-2">&amp;</span>TaggedBase64::new(tag, <span class="kw-2">&amp;</span>bytes.<span class="number">0</span>)
+                    .map_err(|err| S::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, err)))<span class="question-mark">?</span>,
             );
-            <span class="ident">Serialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">string</span>, <span class="ident">serializer</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">Serialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>.<span class="number">0</span>, <span class="ident">serializer</span>)
+            Serialize::serialize(<span class="kw-2">&amp;</span>string, serializer)
+        } <span class="kw">else </span>{
+            Serialize::serialize(<span class="kw-2">&amp;</span>bytes.<span class="number">0</span>, serializer)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span>, <span class="ident">T</span>: <span class="ident">Tagged</span><span class="op">&gt;</span>(
-        <span class="ident">v</span>: <span class="kw-2">&amp;</span>(<span class="ident">CanonicalBytes</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-        <span class="ident">serializer</span>: <span class="ident">S</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
-        <span class="ident">serialize_with_tag</span>(<span class="ident">T::tag</span>().<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span><span class="ident">v</span>.<span class="number">0</span>, <span class="ident">serializer</span>)
+    <span class="kw">pub fn </span>serialize&lt;S: Serializer, T: Tagged&gt;(
+        v: <span class="kw-2">&amp;</span>(CanonicalBytes, PhantomData&lt;T&gt;),
+        serializer: S,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt; {
+        serialize_with_tag(T::tag().as_str(), <span class="kw-2">&amp;</span>v.<span class="number">0</span>, serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize_with_tag</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">deserializer</span>: <span class="ident">D</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CanonicalBytes</span>, <span class="ident">D::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">deserializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">String</span> <span class="kw">as</span> <span class="ident">Deserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">tb64</span> <span class="op">=</span>
-                <span class="ident">TaggedBase64::parse</span>(<span class="kw-2">&amp;</span><span class="ident">string</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>)))<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">tb64</span>.<span class="ident">tag</span>() <span class="op">==</span> <span class="ident">tag</span> {
-                <span class="ident">tb64</span>.<span class="ident">value</span>()
-            } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">D::Error::custom</span>(<span class="macro">format!</span>(
+    <span class="kw">pub fn </span>deserialize_with_tag&lt;<span class="lifetime">&#39;de</span>, D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;&gt;(
+        tag: <span class="kw-2">&amp;</span>str,
+        deserializer: D,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;CanonicalBytes, D::Error&gt; {
+        <span class="kw">let </span>bytes = <span class="kw">if </span>deserializer.is_human_readable() {
+            <span class="kw">let </span>string = &lt;String <span class="kw">as </span>Deserialize&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+            <span class="kw">let </span>tb64 =
+                TaggedBase64::parse(<span class="kw-2">&amp;</span>string).map_err(|err| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, err)))<span class="question-mark">?</span>;
+            <span class="kw">if </span>tb64.tag() == tag {
+                tb64.value()
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(D::Error::custom(<span class="macro">format!</span>(
                     <span class="string">&quot;tag mismatch: expected {}, but got {}&quot;</span>,
-                    <span class="ident">tag</span>,
-                    <span class="ident">tb64</span>.<span class="ident">tag</span>()
+                    tag,
+                    tb64.tag()
                 )));
             }
-        } <span class="kw">else</span> {
-            <span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">Deserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>
-        };
-        <span class="prelude-val">Ok</span>(<span class="ident">CanonicalBytes</span>(<span class="ident">bytes</span>))
+        } <span class="kw">else </span>{
+            &lt;Vec&lt;u8&gt; <span class="kw">as </span>Deserialize&gt;::deserialize(deserializer)<span class="question-mark">?
+        </span>};
+        <span class="prelude-val">Ok</span>(CanonicalBytes(bytes))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>, <span class="ident">T</span>: <span class="ident">Tagged</span><span class="op">&gt;</span>(
-        <span class="ident">deserializer</span>: <span class="ident">D</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">CanonicalBytes</span>, <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>), <span class="ident">D::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">deserialize_with_tag</span>(<span class="ident">T::tag</span>().<span class="ident">as_str</span>(), <span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">bytes</span>, <span class="ident">Default::default</span>()))
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;, T: Tagged&gt;(
+        deserializer: D,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(CanonicalBytes, PhantomData&lt;T&gt;), D::Error&gt; {
+        <span class="kw">let </span>bytes = deserialize_with_tag(T::tag().as_str(), deserializer)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((bytes, Default::default()))
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">mod</span> <span class="ident">test</span> {
-        <span class="kw">use</span> <span class="kw">crate</span> <span class="kw">as</span> <span class="ident">jf_utils</span>;
-        <span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
-        <span class="kw">use</span> <span class="ident">jf_utils::tagged_blob</span>;
-        <span class="kw">use</span> <span class="ident">std::vec::Vec</span>;
+    <span class="attribute">#[cfg(test)]
+    </span><span class="kw">mod </span>test {
+        <span class="kw">use crate as </span>jf_utils;
+        <span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
+        <span class="kw">use </span>jf_utils::tagged_blob;
+        <span class="kw">use </span>std::vec::Vec;
 
-        <span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="string">&quot;A&quot;</span>)]</span>
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">A</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
+        <span class="attribute">#[tagged_blob(<span class="string">&quot;A&quot;</span>)]
+        #[derive(Debug, Clone, PartialEq, Eq, CanonicalDeserialize, CanonicalSerialize)]
+        </span><span class="kw">pub struct </span>A(Vec&lt;u8&gt;);
 
-        <span class="attribute">#[<span class="ident">test</span>]</span>
-        <span class="kw">fn</span> <span class="ident">test_tagged_blob_static_str</span>() {
-            <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">A</span>(<span class="ident">Vec::new</span>());
-            <span class="kw">let</span> <span class="ident">str</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">str</span>, <span class="string">r#&quot;&quot;A~AAAAAAAAAABr&quot;&quot;#</span>);
+        <span class="attribute">#[test]
+        </span><span class="kw">fn </span>test_tagged_blob_static_str() {
+            <span class="kw">let </span>a = A(Vec::new());
+            <span class="kw">let </span>str = serde_json::to_string(<span class="kw-2">&amp;</span>a).unwrap();
+            <span class="macro">assert_eq!</span>(str, <span class="string">r#&quot;&quot;A~AAAAAAAAAABr&quot;&quot;#</span>);
         }
 
-        <span class="kw">mod</span> <span class="ident">tags</span> {
-            <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;B&quot;</span>;
+        <span class="kw">mod </span>tags {
+            <span class="kw">pub const </span>B: <span class="kw-2">&amp;</span>str = <span class="string">&quot;B&quot;</span>;
         }
-        <span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tags::B</span>)]</span>
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">B</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
+        <span class="attribute">#[tagged_blob(tags::B)]
+        #[derive(Debug, Clone, PartialEq, Eq, CanonicalDeserialize, CanonicalSerialize)]
+        </span><span class="kw">pub struct </span>B(Vec&lt;u8&gt;);
 
-        <span class="attribute">#[<span class="ident">test</span>]</span>
-        <span class="kw">fn</span> <span class="ident">test_tagged_blob_const_str</span>() {
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">B</span>(<span class="ident">Vec::new</span>());
-            <span class="kw">let</span> <span class="ident">str</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">str</span>, <span class="string">r#&quot;&quot;B~AAAAAAAAAADg&quot;&quot;#</span>);
+        <span class="attribute">#[test]
+        </span><span class="kw">fn </span>test_tagged_blob_const_str() {
+            <span class="kw">let </span>b = B(Vec::new());
+            <span class="kw">let </span>str = serde_json::to_string(<span class="kw-2">&amp;</span>b).unwrap();
+            <span class="macro">assert_eq!</span>(str, <span class="string">r#&quot;&quot;B~AAAAAAAAAADg&quot;&quot;#</span>);
         }
     }
 }
 
-<span class="doccomment">/// Serializers for finite field elements.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Field elements are typically foreign types that we cannot apply the</span>
-<span class="doccomment">/// [macro@tagged_blob] macro to. Instead, use `#[serde(with = &quot;field_elem&quot;)]`</span>
-<span class="doccomment">/// at the point where the field element is used inside a struct or enum</span>
-<span class="doccomment">/// definition.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">field_elem</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::format</span>;
-    <span class="kw">use</span> <span class="ident">serde</span>::{
-        <span class="ident">de</span>::{<span class="ident">Deserializer</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">DeError</span>},
-        <span class="ident">ser</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">SerError</span>, <span class="ident">Serializer</span>},
+<span class="doccomment">/// Serializers for finite field elements.
+///
+/// Field elements are typically foreign types that we cannot apply the
+/// [macro@tagged_blob] macro to. Instead, use `#[serde(with = &quot;field_elem&quot;)]`
+/// at the point where the field element is used inside a struct or enum
+/// definition.
+</span><span class="kw">pub mod </span>field_elem {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_std::format;
+    <span class="kw">use </span>serde::{
+        de::{Deserializer, Error <span class="kw">as </span>DeError},
+        ser::{Error <span class="kw">as </span>SerError, Serializer},
     };
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span>, <span class="ident">T</span>: <span class="ident">CanonicalSerialize</span><span class="op">&gt;</span>(
-        <span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>,
-        <span class="ident">serializer</span>: <span class="ident">S</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">T::serialize</span>(<span class="ident">elem</span>, <span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">S::Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>)))<span class="question-mark">?</span>;
-        <span class="ident">tagged_blob::serialize_with_tag</span>(<span class="string">&quot;FIELD&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">CanonicalBytes</span>(<span class="ident">bytes</span>), <span class="ident">serializer</span>)
+    <span class="kw">pub fn </span>serialize&lt;S: Serializer, T: CanonicalSerialize&gt;(
+        elem: <span class="kw-2">&amp;</span>T,
+        serializer: S,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes = Vec::new();
+        T::serialize(elem, <span class="kw-2">&amp;mut </span>bytes).map_err(|err| S::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, err)))<span class="question-mark">?</span>;
+        tagged_blob::serialize_with_tag(<span class="string">&quot;FIELD&quot;</span>, <span class="kw-2">&amp;</span>CanonicalBytes(bytes), serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>, <span class="ident">T</span>: <span class="ident">CanonicalDeserialize</span><span class="op">&gt;</span>(
-        <span class="ident">deserializer</span>: <span class="ident">D</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">tagged_blob::deserialize_with_tag</span>(<span class="string">&quot;FIELD&quot;</span>, <span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="ident">T::deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">bytes</span>.<span class="number">0</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>)))
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;, T: CanonicalDeserialize&gt;(
+        deserializer: D,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;T, D::Error&gt; {
+        <span class="kw">let </span>bytes = tagged_blob::deserialize_with_tag(<span class="string">&quot;FIELD&quot;</span>, deserializer)<span class="question-mark">?</span>;
+        T::deserialize(<span class="kw-2">&amp;*</span>bytes.<span class="number">0</span>).map_err(|err| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, err)))
     }
 }
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">jf_utils_derive</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">jf_utils_derive</span>::<span class="kw-2">*</span>;
+<span class="kw">extern crate </span>jf_utils_derive;
+<span class="kw">pub use </span>jf_utils_derive::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">test_serde_default</span> {
+<span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>test_serde_default {
     (<span class="macro-nonterminal">$</span><span class="kw">struct</span>:<span class="macro-nonterminal">tt</span>) =&gt; {
-        <span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
+        <span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="kw">struct</span><span class="macro-nonterminal">::default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::Vec::new</span>();
-        <span class="ident">data</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">de</span>: <span class="macro-nonterminal">$</span><span class="kw">struct</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="kw">struct</span><span class="macro-nonterminal">::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..]).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">de</span>, <span class="ident">data</span>);
+        <span class="kw">let </span>data = <span class="macro-nonterminal">$</span><span class="kw">struct</span><span class="macro-nonterminal">::default</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: <span class="macro-nonterminal">$crate::Vec</span>&lt;u8&gt; = <span class="macro-nonterminal">$crate::Vec::new</span>();
+        data.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+        <span class="kw">let </span>de: <span class="macro-nonterminal">$</span><span class="kw">struct </span>= <span class="macro-nonterminal">$</span><span class="kw">struct</span><span class="macro-nonterminal">::deserialize</span>(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+        <span class="macro">assert_eq!</span>(de, data);
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/prf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prf.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/prf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prf.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -90,97 +90,97 @@
 <span id="90">90</span>
 <span id="91">91</span>
 <span id="92">92</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Circuit implementation of a PRF.</span>
+</span><span class="doccomment">//! Circuit implementation of a PRF.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::rescue::RescueGadget</span>,
-    <span class="ident">rescue</span>::{<span class="ident">RescueParameter</span>, <span class="ident">STATE_SIZE</span>},
-    <span class="ident">utils::pad_with</span>,
+</span><span class="kw">use crate</span>::{
+    circuit::rescue::RescueGadget,
+    rescue::{RescueParameter, STATE_SIZE},
+    utils::pad_with,
 };
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+<span class="kw">use </span>jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
-<span class="doccomment">/// Circuit implementation of a PRF.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PrfGadget</span> {
-    <span class="doccomment">/// PRF many to one</span>
-    <span class="doccomment">/// * `key` - key variable</span>
-    <span class="doccomment">/// * `input` - input variables,</span>
-    <span class="doccomment">/// * `returns` variables that refers to the output</span>
-    <span class="kw">fn</span> <span class="ident">eval_prf</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Variable</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Circuit implementation of a PRF.
+</span><span class="kw">pub trait </span>PrfGadget {
+    <span class="doccomment">/// PRF many to one
+    /// * `key` - key variable
+    /// * `input` - input variables,
+    /// * `returns` variables that refers to the output
+    </span><span class="kw">fn </span>eval_prf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: Variable, input: <span class="kw-2">&amp;</span>[Variable]) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">PrfGadget</span> <span class="kw">for</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
+<span class="kw">impl</span>&lt;F&gt; PrfGadget <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
 {
-    <span class="kw">fn</span> <span class="ident">eval_prf</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">Variable</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">Variable</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Variable</span>, <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="comment">// pad input: it is ok to pad with zeroes, PRF instance is bound to a specific</span>
-        <span class="comment">// input length</span>
+    <span class="kw">fn </span>eval_prf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: Variable, input: <span class="kw-2">&amp;</span>[Variable]) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="comment">// pad input: it is ok to pad with zeroes, PRF instance is bound to a specific
+        // input length
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_vec</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">to_vec</span>();
-        <span class="ident">pad_with</span>(<span class="kw-2">&amp;mut</span> <span class="ident">input_vec</span>, <span class="ident">STATE_SIZE</span>, <span class="self">self</span>.<span class="ident">zero</span>());
-        <span class="self">self</span>.<span class="ident">rescue_full_state_keyed_sponge_no_padding</span>(<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">input_vec</span>)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>input_vec = input.to_vec();
+        pad_with(<span class="kw-2">&amp;mut </span>input_vec, STATE_SIZE, <span class="self">self</span>.zero());
+        <span class="self">self</span>.rescue_full_state_keyed_sponge_no_padding(key, <span class="kw-2">&amp;</span>input_vec)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::PrfGadget</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::prf</span>::{<span class="ident">PrfKey</span>, <span class="ident">PRF</span>};
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381b</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_ff::UniformRand</span>;
-    <span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
-    <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
-    <span class="kw">use</span> <span class="ident">jf_relation</span>::{<span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">super</span>::PrfGadget;
+    <span class="kw">use </span><span class="kw">crate</span>::prf::{PrfKey, PRF};
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::Fq <span class="kw">as </span>FqEd381b;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_ff::UniformRand;
+    <span class="kw">use </span>ark_std::vec::Vec;
+    <span class="kw">use </span>itertools::Itertools;
+    <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit, Variable};
 
-    <span class="macro">macro_rules!</span> <span class="ident">test_prf_circuit</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span>:<span class="ident">tt</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_turbo_plonk</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-            <span class="kw">let</span> <span class="ident">rand_scalar</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>);
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">PrfKey::from</span>(<span class="ident">rand_scalar</span>);
-            <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">rand_scalar</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">input_len</span> <span class="op">=</span> <span class="number">10</span>;
-            <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">input_len</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">prng</span>))
-                .<span class="ident">collect_vec</span>();
-            <span class="kw">let</span> <span class="ident">data_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Variable</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">data</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">x</span>).<span class="ident">unwrap</span>())
-                .<span class="ident">collect_vec</span>();
+    <span class="macro">macro_rules! </span>test_prf_circuit {
+        (<span class="macro-nonterminal">$base_field</span>:tt) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;<span class="macro-nonterminal">$base_field</span>&gt; = PlonkCircuit::new_turbo_plonk();
+            <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+            <span class="kw">let </span>rand_scalar = <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng);
+            <span class="kw">let </span>key = PrfKey::from(rand_scalar);
+            <span class="kw">let </span>key_var = circuit.create_variable(rand_scalar).unwrap();
+            <span class="kw">let </span>input_len = <span class="number">10</span>;
+            <span class="kw">let </span>data: Vec&lt;<span class="macro-nonterminal">$base_field</span>&gt; = (<span class="number">0</span>..input_len)
+                .map(|<span class="kw">_</span>| <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng))
+                .collect_vec();
+            <span class="kw">let </span>data_vars: Vec&lt;Variable&gt; = data
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>x| circuit.create_variable(x).unwrap())
+                .collect_vec();
 
-            <span class="kw">let</span> <span class="ident">prf</span> <span class="op">=</span> <span class="ident">PRF::new</span>(<span class="ident">input_len</span>, <span class="number">1</span>);
-            <span class="kw">let</span> <span class="ident">expected_prf_output</span> <span class="op">=</span> <span class="ident">prf</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>prf = PRF::new(input_len, <span class="number">1</span>);
+            <span class="kw">let </span>expected_prf_output = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>data).unwrap();
 
-            <span class="kw">let</span> <span class="ident">prf_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">eval_prf</span>(<span class="ident">key_var</span>, <span class="kw-2">&amp;</span><span class="ident">data_vars</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let </span>prf_var = circuit.eval_prf(key_var, <span class="kw-2">&amp;</span>data_vars).unwrap();
 
-            <span class="comment">// Check prf output consistency</span>
-            <span class="macro">assert_eq!</span>(<span class="ident">expected_prf_output</span>[<span class="number">0</span>], <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">prf_var</span>).<span class="ident">unwrap</span>());
+            <span class="comment">// Check prf output consistency
+            </span><span class="macro">assert_eq!</span>(expected_prf_output[<span class="number">0</span>], circuit.witness(prf_var).unwrap());
 
-            <span class="comment">// Check constraints</span>
-            <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-            <span class="kw-2">*</span><span class="ident">circuit</span>.<span class="ident">witness_mut</span>(<span class="ident">prf_var</span>) <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::from</span>(<span class="number">1_u32</span>);
-            <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+            <span class="comment">// Check constraints
+            </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+            <span class="kw-2">*</span>circuit.witness_mut(prf_var) = <span class="macro-nonterminal">$base_field::from</span>(<span class="number">1_u32</span>);
+            <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
         };
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_prf_circuit</span>() {
-        <span class="macro">test_prf_circuit!</span>(<span class="ident">FqEd254</span>);
-        <span class="macro">test_prf_circuit!</span>(<span class="ident">FqEd377</span>);
-        <span class="macro">test_prf_circuit!</span>(<span class="ident">FqEd381</span>);
-        <span class="macro">test_prf_circuit!</span>(<span class="ident">FqEd381b</span>);
-        <span class="macro">test_prf_circuit!</span>(<span class="ident">Fq377</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_prf_circuit() {
+        <span class="macro">test_prf_circuit!</span>(FqEd254);
+        <span class="macro">test_prf_circuit!</span>(FqEd377);
+        <span class="macro">test_prf_circuit!</span>(FqEd381);
+        <span class="macro">test_prf_circuit!</span>(FqEd381b);
+        <span class="macro">test_prf_circuit!</span>(Fq377);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

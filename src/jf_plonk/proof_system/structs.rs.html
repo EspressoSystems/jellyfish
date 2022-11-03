@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/structs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>structs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/structs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>structs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -947,954 +947,954 @@
 <span id="947">947</span>
 <span id="948">948</span>
 <span id="949">949</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Data structures used in Plonk proof systems</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">circuit::plonk_verifier</span>::{<span class="ident">BatchProofVar</span>, <span class="ident">ProofEvaluationsVar</span>},
-    <span class="ident">errors</span>::{
-        <span class="ident">PlonkError</span>,
-        <span class="ident">SnarkError</span>::{<span class="self">self</span>, <span class="ident">ParameterError</span>, <span class="ident">SnarkLookupUnsupported</span>},
+</span><span class="doccomment">//! Data structures used in Plonk proof systems
+</span><span class="kw">use crate</span>::{
+    circuit::plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
+    errors::{
+        PlonkError,
+        SnarkError::{<span class="self">self</span>, ParameterError, SnarkLookupUnsupported},
     },
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{
-    <span class="ident">msm::VariableBaseMSM</span>, <span class="ident">short_weierstrass_jacobian::GroupAffine</span>, <span class="ident">PairingEngine</span>, <span class="ident">SWModelParameters</span>,
+<span class="kw">use </span>ark_ec::{
+    msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters,
 };
-<span class="kw">use</span> <span class="ident">ark_ff</span>::{<span class="ident">FftField</span>, <span class="ident">Field</span>, <span class="ident">Fp2</span>, <span class="ident">Fp2Parameters</span>, <span class="ident">PrimeField</span>, <span class="ident">Zero</span>};
-<span class="kw">use</span> <span class="ident">ark_poly::univariate::DensePolynomial</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>},
-    <span class="ident">format</span>,
-    <span class="ident">string::ToString</span>,
-    <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
+<span class="kw">use </span>ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
+<span class="kw">use </span>ark_poly::univariate::DensePolynomial;
+<span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
+<span class="kw">use </span>ark_std::{
+    convert::{TryFrom, TryInto},
+    format,
+    string::ToString,
+    vec,
+    vec::Vec,
 };
-<span class="kw">use</span> <span class="ident">espresso_systems_common::jellyfish::tag</span>;
-<span class="kw">use</span> <span class="ident">hashbrown::HashMap</span>;
-<span class="kw">use</span> <span class="ident">jf_primitives</span>::{
-    <span class="ident">pcs::prelude</span>::{
-        <span class="ident">Commitment</span>, <span class="ident">UnivariateProverParam</span>, <span class="ident">UnivariateUniversalParams</span>, <span class="ident">UnivariateVerifierParam</span>,
+<span class="kw">use </span>espresso_systems_common::jellyfish::tag;
+<span class="kw">use </span>hashbrown::HashMap;
+<span class="kw">use </span>jf_primitives::{
+    pcs::prelude::{
+        Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
     },
-    <span class="ident">rescue::RescueParameter</span>,
+    rescue::RescueParameter,
 };
-<span class="kw">use</span> <span class="ident">jf_relation</span>::{
-    <span class="ident">constants</span>::{<span class="ident">compute_coset_representatives</span>, <span class="ident">GATE_WIDTH</span>, <span class="ident">N_TURBO_PLONK_SELECTORS</span>},
-    <span class="ident">gadgets</span>::{
-        <span class="ident">ecc</span>::{<span class="ident">Point</span>, <span class="ident">SWToTEConParam</span>},
-        <span class="ident">ultraplonk::mod_arith::FpElemVar</span>,
+<span class="kw">use </span>jf_relation::{
+    constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
+    gadgets::{
+        ecc::{Point, SWToTEConParam},
+        ultraplonk::mod_arith::FpElemVar,
     },
-    <span class="ident">PlonkCircuit</span>,
+    PlonkCircuit,
 };
-<span class="kw">use</span> <span class="ident">jf_utils</span>::{<span class="ident">field_switching</span>, <span class="ident">fq_to_fr</span>, <span class="ident">fr_to_fq</span>, <span class="ident">tagged_blob</span>};
+<span class="kw">use </span>jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
 
-<span class="doccomment">/// Universal StructuredReferenceString</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">UniversalSrs</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
-<span class="doccomment">/// Commitment key</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateProverParam</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine</span><span class="op">&gt;</span>;
-<span class="doccomment">/// Key for verifying PCS opening proof.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OpenKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Universal StructuredReferenceString
+</span><span class="kw">pub type </span>UniversalSrs&lt;E&gt; = UnivariateUniversalParams&lt;E&gt;;
+<span class="doccomment">/// Commitment key
+</span><span class="kw">pub type </span>CommitKey&lt;E&gt; = UnivariateProverParam&lt;&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine&gt;;
+<span class="doccomment">/// Key for verifying PCS opening proof.
+</span><span class="kw">pub type </span>OpenKey&lt;E&gt; = UnivariateVerifierParam&lt;E&gt;;
 
-<span class="doccomment">/// A Plonk SNARK proof.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::PROOF</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;E:PairingEngine&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Wire witness polynomials commitments.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">wires_poly_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A Plonk SNARK proof.
+</span><span class="attribute">#[tagged_blob(tag::PROOF)]
+#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(Hash(bound = <span class="string">&quot;E:PairingEngine&quot;</span>))]
+</span><span class="kw">pub struct </span>Proof&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// Wire witness polynomials commitments.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// The polynomial commitment for the wire permutation argument.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">prod_perm_poly_comm</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The polynomial commitment for the wire permutation argument.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) prod_perm_poly_comm: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// Splitted quotient polynomial commitments.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">split_quot_poly_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Splitted quotient polynomial commitments.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) split_quot_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// (Aggregated) proof of evaluations at challenge point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">opening_proof</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// (Aggregated) proof of evaluations at challenge point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) opening_proof: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// (Aggregated) proof of evaluation at challenge point `zeta * g` where `g`</span>
-    <span class="doccomment">/// is the root of unity.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">shifted_opening_proof</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// (Aggregated) proof of evaluation at challenge point `zeta * g` where `g`
+    /// is the root of unity.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) shifted_opening_proof: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// Polynomial evaluations.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">poly_evals</span>: <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Polynomial evaluations.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) poly_evals: ProofEvaluations&lt;E::Fr&gt;,
 
-    <span class="doccomment">/// The partial proof for Plookup argument</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">plookup_proof</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PlookupProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The partial proof for Plookup argument
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) plookup_proof: <span class="prelude-ty">Option</span>&lt;PlookupProof&lt;E&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;E, P&gt; TryFrom&lt;Vec&lt;E::Fq&gt;&gt; <span class="kw">for </span>Proof&lt;E&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P&gt;&gt;,
+    P: SWModelParameters&lt;BaseField = E::Fq, ScalarField = E::Fr&gt;,
 {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SnarkError</span>;
+    <span class="kw">type </span>Error = SnarkError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="comment">// both wires_poly_comms and split_quot_poly_comms are (GATE_WIDTH +1)</span>
-        <span class="comment">// // Commitments, each point takes two base fields elements;</span>
-        <span class="comment">// 3 individual commitment points;</span>
-        <span class="comment">// (GATE_WIDTH + 1) * 2 scalar fields in poly_evals are  converted to base</span>
-        <span class="comment">// fields.</span>
-        <span class="kw">const</span> <span class="ident">TURBO_PLONK_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span> <span class="op">*</span> <span class="number">2</span> <span class="op">+</span> <span class="number">2</span> <span class="op">*</span> <span class="number">3</span> <span class="op">+</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span>;
-        <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">TURBO_PLONK_LEN</span> {
-            <span class="comment">// NOTE: for convenience, we slightly reordered our fields in Proof.</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">let</span> <span class="ident">wires_poly_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">value</span>[<span class="ident">ptr</span>..<span class="ident">ptr</span> <span class="op">+</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span>]
-                .<span class="ident">chunks_exact</span>(<span class="number">2</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> {
-                    <span class="kw">if</span> <span class="ident">chunk</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span> {
-                        <span class="ident">Commitment</span>(<span class="ident">GroupAffine::new</span>(<span class="ident">chunk</span>[<span class="number">0</span>], <span class="ident">chunk</span>[<span class="number">1</span>], <span class="bool-val">false</span>))
-                    } <span class="kw">else</span> {
+    <span class="kw">fn </span>try_from(value: Vec&lt;E::Fq&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="comment">// both wires_poly_comms and split_quot_poly_comms are (GATE_WIDTH +1)
+        // // Commitments, each point takes two base fields elements;
+        // 3 individual commitment points;
+        // (GATE_WIDTH + 1) * 2 scalar fields in poly_evals are  converted to base
+        // fields.
+        </span><span class="kw">const </span>TURBO_PLONK_LEN: usize = (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2 </span>* <span class="number">2 </span>+ <span class="number">2 </span>* <span class="number">3 </span>+ (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2</span>;
+        <span class="kw">if </span>value.len() == TURBO_PLONK_LEN {
+            <span class="comment">// NOTE: for convenience, we slightly reordered our fields in Proof.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>ptr = <span class="number">0</span>;
+            <span class="kw">let </span>wires_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt; = value[ptr..ptr + (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2</span>]
+                .chunks_exact(<span class="number">2</span>)
+                .map(|chunk| {
+                    <span class="kw">if </span>chunk.len() == <span class="number">2 </span>{
+                        Commitment(GroupAffine::new(chunk[<span class="number">0</span>], chunk[<span class="number">1</span>], <span class="bool-val">false</span>))
+                    } <span class="kw">else </span>{
                         <span class="macro">unreachable!</span>(<span class="string">&quot;Internal error&quot;</span>);
                     }
                 })
-                .<span class="ident">collect</span>();
-            <span class="ident">ptr</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span>;
+                .collect();
+            ptr += (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2</span>;
 
-            <span class="kw">let</span> <span class="ident">split_quot_poly_comms</span> <span class="op">=</span> <span class="ident">value</span>[<span class="ident">ptr</span>..<span class="ident">ptr</span> <span class="op">+</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span>]
-                .<span class="ident">chunks_exact</span>(<span class="number">2</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> {
-                    <span class="kw">if</span> <span class="ident">chunk</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">2</span> {
-                        <span class="ident">Commitment</span>(<span class="ident">GroupAffine::new</span>(<span class="ident">chunk</span>[<span class="number">0</span>], <span class="ident">chunk</span>[<span class="number">1</span>], <span class="bool-val">false</span>))
-                    } <span class="kw">else</span> {
+            <span class="kw">let </span>split_quot_poly_comms = value[ptr..ptr + (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2</span>]
+                .chunks_exact(<span class="number">2</span>)
+                .map(|chunk| {
+                    <span class="kw">if </span>chunk.len() == <span class="number">2 </span>{
+                        Commitment(GroupAffine::new(chunk[<span class="number">0</span>], chunk[<span class="number">1</span>], <span class="bool-val">false</span>))
+                    } <span class="kw">else </span>{
                         <span class="macro">unreachable!</span>(<span class="string">&quot;Internal error&quot;</span>);
                     }
                 })
-                .<span class="ident">collect</span>();
-            <span class="ident">ptr</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span>;
+                .collect();
+            ptr += (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2</span>;
 
-            <span class="kw">let</span> <span class="ident">prod_perm_poly_comm</span> <span class="op">=</span>
-                <span class="ident">Commitment</span>(<span class="ident">GroupAffine::new</span>(<span class="ident">value</span>[<span class="ident">ptr</span>], <span class="ident">value</span>[<span class="ident">ptr</span> <span class="op">+</span> <span class="number">1</span>], <span class="bool-val">false</span>));
-            <span class="ident">ptr</span> <span class="op">+</span><span class="op">=</span> <span class="number">2</span>;
+            <span class="kw">let </span>prod_perm_poly_comm =
+                Commitment(GroupAffine::new(value[ptr], value[ptr + <span class="number">1</span>], <span class="bool-val">false</span>));
+            ptr += <span class="number">2</span>;
 
-            <span class="kw">let</span> <span class="ident">opening_proof</span> <span class="op">=</span> <span class="ident">Commitment</span>(<span class="ident">GroupAffine::new</span>(<span class="ident">value</span>[<span class="ident">ptr</span>], <span class="ident">value</span>[<span class="ident">ptr</span> <span class="op">+</span> <span class="number">1</span>], <span class="bool-val">false</span>));
-            <span class="ident">ptr</span> <span class="op">+</span><span class="op">=</span> <span class="number">2</span>;
+            <span class="kw">let </span>opening_proof = Commitment(GroupAffine::new(value[ptr], value[ptr + <span class="number">1</span>], <span class="bool-val">false</span>));
+            ptr += <span class="number">2</span>;
 
-            <span class="kw">let</span> <span class="ident">shifted_opening_proof</span> <span class="op">=</span>
-                <span class="ident">Commitment</span>(<span class="ident">GroupAffine::new</span>(<span class="ident">value</span>[<span class="ident">ptr</span>], <span class="ident">value</span>[<span class="ident">ptr</span> <span class="op">+</span> <span class="number">1</span>], <span class="bool-val">false</span>));
-            <span class="ident">ptr</span> <span class="op">+</span><span class="op">=</span> <span class="number">2</span>;
+            <span class="kw">let </span>shifted_opening_proof =
+                Commitment(GroupAffine::new(value[ptr], value[ptr + <span class="number">1</span>], <span class="bool-val">false</span>));
+            ptr += <span class="number">2</span>;
 
-            <span class="kw">let</span> <span class="ident">poly_evals_scalars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">value</span>[<span class="ident">ptr</span>..]
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">fq_to_fr</span>::<span class="op">&lt;</span><span class="ident">E::Fq</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">f</span>))
-                .<span class="ident">collect</span>();
-            <span class="kw">let</span> <span class="ident">poly_evals</span> <span class="op">=</span> <span class="ident">poly_evals_scalars</span>.<span class="ident">try_into</span>()<span class="question-mark">?</span>;
+            <span class="kw">let </span>poly_evals_scalars: Vec&lt;E::Fr&gt; = value[ptr..]
+                .iter()
+                .map(|f| fq_to_fr::&lt;E::Fq, P&gt;(f))
+                .collect();
+            <span class="kw">let </span>poly_evals = poly_evals_scalars.try_into()<span class="question-mark">?</span>;
 
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-                <span class="ident">wires_poly_comms</span>,
-                <span class="ident">prod_perm_poly_comm</span>,
-                <span class="ident">split_quot_poly_comms</span>,
-                <span class="ident">opening_proof</span>,
-                <span class="ident">shifted_opening_proof</span>,
-                <span class="ident">poly_evals</span>,
-                <span class="ident">plookup_proof</span>: <span class="prelude-val">None</span>,
+            <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+                wires_poly_comms,
+                prod_perm_poly_comm,
+                split_quot_poly_comms,
+                opening_proof,
+                shifted_opening_proof,
+                poly_evals,
+                plookup_proof: <span class="prelude-val">None</span>,
             })
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">SnarkError::ParameterError</span>(
-                <span class="string">&quot;Wrong number of scalars for proof, only support TurboPlonk for now&quot;</span>.<span class="ident">to_string</span>(),
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(SnarkError::ParameterError(
+                <span class="string">&quot;Wrong number of scalars for proof, only support TurboPlonk for now&quot;</span>.to_string(),
             ))
         }
     }
 }
 
-<span class="comment">// helper function to convert a G1Affine or G2Affine into two base fields</span>
-<span class="kw">fn</span> <span class="ident">group1_to_fields</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span><span class="op">&gt;</span>,
+<span class="comment">// helper function to convert a G1Affine or G2Affine into two base fields
+</span><span class="kw">fn </span>group1_to_fields&lt;E, P&gt;(p: GroupAffine&lt;P&gt;) -&gt; Vec&lt;E::Fq&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P&gt;&gt;,
+    P: SWModelParameters&lt;BaseField = E::Fq&gt;,
 {
-    <span class="comment">// contains x, y, infinity_flag, only need the first 2 field elements</span>
-    <span class="macro">vec!</span>[<span class="ident">p</span>.<span class="ident">x</span>, <span class="ident">p</span>.<span class="ident">y</span>]
+    <span class="comment">// contains x, y, infinity_flag, only need the first 2 field elements
+    </span><span class="macro">vec!</span>[p.x, p.y]
 }
 
-<span class="kw">fn</span> <span class="ident">group2_to_fields</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">p</span>: <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G2Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>, <span class="ident">Fqe</span> <span class="op">=</span> <span class="ident">Fp2</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">Fp2Parameters</span><span class="op">&lt;</span><span class="ident">Fp</span> <span class="op">=</span> <span class="ident">E::Fq</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fqe</span><span class="op">&gt;</span>,
+<span class="kw">fn </span>group2_to_fields&lt;E, F, P&gt;(p: GroupAffine&lt;P&gt;) -&gt; Vec&lt;E::Fq&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;G2Affine = GroupAffine&lt;P&gt;, Fqe = Fp2&lt;F&gt;&gt;,
+    F: Fp2Parameters&lt;Fp = E::Fq&gt;,
+    P: SWModelParameters&lt;BaseField = E::Fqe&gt;,
 {
-    <span class="comment">// contains x, y, infinity_flag, only need the first 2 field elements</span>
-    <span class="macro">vec!</span>[<span class="ident">p</span>.<span class="ident">x</span>.<span class="ident">c0</span>, <span class="ident">p</span>.<span class="ident">x</span>.<span class="ident">c1</span>, <span class="ident">p</span>.<span class="ident">y</span>.<span class="ident">c0</span>, <span class="ident">p</span>.<span class="ident">y</span>.<span class="ident">c1</span>]
+    <span class="comment">// contains x, y, infinity_flag, only need the first 2 field elements
+    </span><span class="macro">vec!</span>[p.x.c0, p.x.c1, p.y.c0, p.y.c1]
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;E, P&gt; From&lt;Proof&lt;E&gt;&gt; <span class="kw">for </span>Vec&lt;E::Fq&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P&gt;&gt;,
+    P: SWModelParameters&lt;BaseField = E::Fq, ScalarField = E::Fr&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">proof</span>: <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">if</span> <span class="ident">proof</span>.<span class="ident">plookup_proof</span>.<span class="ident">is_some</span>() {
+    <span class="kw">fn </span>from(proof: Proof&lt;E&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">if </span>proof.plookup_proof.is_some() {
             <span class="macro">panic!</span>(<span class="string">&quot;Only support TurboPlonk for now.&quot;</span>);
         }
-        <span class="kw">let</span> <span class="ident">poly_evals_scalars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">proof</span>.<span class="ident">poly_evals</span>.<span class="ident">into</span>();
+        <span class="kw">let </span>poly_evals_scalars: Vec&lt;E::Fr&gt; = proof.poly_evals.into();
 
-        <span class="comment">// NOTE: order of these fields must match deserialization</span>
-        [
-            <span class="ident">proof</span>
-                .<span class="ident">wires_poly_comms</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">cm</span><span class="op">|</span> <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">cm</span>.<span class="number">0</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">concat</span>(),
-            <span class="ident">proof</span>
-                .<span class="ident">split_quot_poly_comms</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">cm</span><span class="op">|</span> <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">cm</span>.<span class="number">0</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">concat</span>(),
-            <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proof</span>.<span class="ident">prod_perm_poly_comm</span>.<span class="number">0</span>),
-            <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proof</span>.<span class="ident">opening_proof</span>.<span class="number">0</span>),
-            <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">proof</span>.<span class="ident">shifted_opening_proof</span>.<span class="number">0</span>),
-            <span class="ident">poly_evals_scalars</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">E::Fq</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">s</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+        <span class="comment">// NOTE: order of these fields must match deserialization
+        </span>[
+            proof
+                .wires_poly_comms
+                .iter()
+                .map(|cm| group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(cm.<span class="number">0</span>))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                .concat(),
+            proof
+                .split_quot_poly_comms
+                .iter()
+                .map(|cm| group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(cm.<span class="number">0</span>))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                .concat(),
+            group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(proof.prod_perm_poly_comm.<span class="number">0</span>),
+            group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(proof.opening_proof.<span class="number">0</span>),
+            group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(proof.shifted_opening_proof.<span class="number">0</span>),
+            poly_evals_scalars
+                .iter()
+                .map(|s| fr_to_fq::&lt;E::Fq, P&gt;(s))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
         ]
-        .<span class="ident">concat</span>()
+        .concat()
     }
 }
 
-<span class="doccomment">/// A Plookup argument proof.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;E:PairingEngine&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PlookupProof</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The commitments for the polynomials that interpolate the sorted</span>
-    <span class="doccomment">/// concatenation of the lookup table and the witnesses in the lookup gates.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">h_poly_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A Plookup argument proof.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(Hash(bound = <span class="string">&quot;E:PairingEngine&quot;</span>))]
+</span><span class="kw">pub struct </span>PlookupProof&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// The commitments for the polynomials that interpolate the sorted
+    /// concatenation of the lookup table and the witnesses in the lookup gates.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) h_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// The product accumulation polynomial commitment for the Plookup argument</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">prod_lookup_poly_comm</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The product accumulation polynomial commitment for the Plookup argument
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) prod_lookup_poly_comm: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// Polynomial evaluations.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">poly_evals</span>: <span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Polynomial evaluations.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) poly_evals: PlookupEvaluations&lt;E::Fr&gt;,
 }
 
-<span class="doccomment">/// An aggregated SNARK proof that batchly proving multiple instances.</span>
-<span class="attribute">#[<span class="ident">tagged_blob</span>(<span class="ident">tag::BATCHPROOF</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;E:PairingEngine&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The list of wire witness polynomials commitments.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">wires_poly_comms_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An aggregated SNARK proof that batchly proving multiple instances.
+</span><span class="attribute">#[tagged_blob(tag::BATCHPROOF)]
+#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(Hash(bound = <span class="string">&quot;E:PairingEngine&quot;</span>))]
+</span><span class="kw">pub struct </span>BatchProof&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// The list of wire witness polynomials commitments.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_poly_comms_vec: Vec&lt;Vec&lt;Commitment&lt;E&gt;&gt;&gt;,
 
-    <span class="doccomment">/// The list of polynomial commitment for the wire permutation argument.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">prod_perm_poly_comms_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The list of polynomial commitment for the wire permutation argument.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) prod_perm_poly_comms_vec: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// The list of polynomial evaluations.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">poly_evals_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The list of polynomial evaluations.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) poly_evals_vec: Vec&lt;ProofEvaluations&lt;E::Fr&gt;&gt;,
 
-    <span class="doccomment">/// The list of partial proofs for Plookup argument</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">plookup_proofs_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PlookupProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The list of partial proofs for Plookup argument
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) plookup_proofs_vec: Vec&lt;<span class="prelude-ty">Option</span>&lt;PlookupProof&lt;E&gt;&gt;&gt;,
 
-    <span class="doccomment">/// Splitted quotient polynomial commitments.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">split_quot_poly_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Splitted quotient polynomial commitments.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) split_quot_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// (Aggregated) proof of evaluations at challenge point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">opening_proof</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// (Aggregated) proof of evaluations at challenge point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) opening_proof: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// (Aggregated) proof of evaluation at challenge point `zeta * g` where `g`</span>
-    <span class="doccomment">/// is the root of unity.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">shifted_opening_proof</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// (Aggregated) proof of evaluation at challenge point `zeta * g` where `g`
+    /// is the root of unity.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) shifted_opening_proof: Commitment&lt;E&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The number of instances being proved in a batch proof.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">prod_perm_poly_comms_vec</span>.<span class="ident">len</span>()
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; BatchProof&lt;E&gt; {
+    <span class="doccomment">/// The number of instances being proved in a batch proof.
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.prod_perm_poly_comms_vec.len()
     }
-    <span class="doccomment">/// Check whether a BatchProof proves nothing.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">prod_perm_poly_comms_vec</span>.<span class="ident">is_empty</span>()
+    <span class="doccomment">/// Check whether a BatchProof proves nothing.
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.prod_perm_poly_comms_vec.is_empty()
     }
-    <span class="doccomment">/// Create a dummy batch proof over `n` TurboPlonk instances.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dummy</span>(<span class="ident">n</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">num_wire_types</span> <span class="op">=</span> <span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>;
-        <span class="self">Self</span> {
-            <span class="ident">wires_poly_comms_vec</span>: <span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="ident">Commitment::default</span>(); <span class="ident">num_wire_types</span>]; <span class="ident">n</span>],
-            <span class="ident">prod_perm_poly_comms_vec</span>: <span class="macro">vec!</span>[<span class="ident">Commitment::default</span>(); <span class="ident">n</span>],
-            <span class="ident">poly_evals_vec</span>: <span class="macro">vec!</span>[<span class="ident">ProofEvaluations::default</span>(); <span class="ident">n</span>],
-            <span class="ident">plookup_proofs_vec</span>: <span class="macro">vec!</span>[<span class="prelude-val">None</span>; <span class="ident">n</span>],
-            <span class="ident">split_quot_poly_comms</span>: <span class="macro">vec!</span>[<span class="ident">Commitment::default</span>(); <span class="ident">num_wire_types</span>],
-            <span class="ident">opening_proof</span>: <span class="ident">Commitment::default</span>(),
-            <span class="ident">shifted_opening_proof</span>: <span class="ident">Commitment::default</span>(),
+    <span class="doccomment">/// Create a dummy batch proof over `n` TurboPlonk instances.
+    </span><span class="kw">pub fn </span>dummy(n: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>num_wire_types = GATE_WIDTH + <span class="number">1</span>;
+        <span class="self">Self </span>{
+            wires_poly_comms_vec: <span class="macro">vec!</span>[<span class="macro">vec!</span>[Commitment::default(); num_wire_types]; n],
+            prod_perm_poly_comms_vec: <span class="macro">vec!</span>[Commitment::default(); n],
+            poly_evals_vec: <span class="macro">vec!</span>[ProofEvaluations::default(); n],
+            plookup_proofs_vec: <span class="macro">vec!</span>[<span class="prelude-val">None</span>; n],
+            split_quot_poly_comms: <span class="macro">vec!</span>[Commitment::default(); num_wire_types],
+            opening_proof: Commitment::default(),
+            shifted_opening_proof: Commitment::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">proof</span>: <span class="ident">Proof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">wires_poly_comms_vec</span>: <span class="macro">vec!</span>[<span class="ident">proof</span>.<span class="ident">wires_poly_comms</span>],
-            <span class="ident">prod_perm_poly_comms_vec</span>: <span class="macro">vec!</span>[<span class="ident">proof</span>.<span class="ident">prod_perm_poly_comm</span>],
-            <span class="ident">poly_evals_vec</span>: <span class="macro">vec!</span>[<span class="ident">proof</span>.<span class="ident">poly_evals</span>],
-            <span class="ident">plookup_proofs_vec</span>: <span class="macro">vec!</span>[<span class="ident">proof</span>.<span class="ident">plookup_proof</span>],
-            <span class="ident">split_quot_poly_comms</span>: <span class="ident">proof</span>.<span class="ident">split_quot_poly_comms</span>,
-            <span class="ident">opening_proof</span>: <span class="ident">proof</span>.<span class="ident">opening_proof</span>,
-            <span class="ident">shifted_opening_proof</span>: <span class="ident">proof</span>.<span class="ident">shifted_opening_proof</span>,
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; From&lt;Proof&lt;E&gt;&gt; <span class="kw">for </span>BatchProof&lt;E&gt; {
+    <span class="kw">fn </span>from(proof: Proof&lt;E&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            wires_poly_comms_vec: <span class="macro">vec!</span>[proof.wires_poly_comms],
+            prod_perm_poly_comms_vec: <span class="macro">vec!</span>[proof.prod_perm_poly_comm],
+            poly_evals_vec: <span class="macro">vec!</span>[proof.poly_evals],
+            plookup_proofs_vec: <span class="macro">vec!</span>[proof.plookup_proof],
+            split_quot_poly_comms: proof.split_quot_poly_comms,
+            opening_proof: proof.opening_proof,
+            shifted_opening_proof: proof.shifted_opening_proof,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// create variables for the ProofEvaluations who&#39;s field</span>
-    <span class="doccomment">/// is smaller than plonk circuit field.</span>
-    <span class="doccomment">/// The output wires are in the FpElemVar form.</span>
+<span class="kw">impl</span>&lt;T: PrimeField&gt; ProofEvaluations&lt;T&gt; {
+    <span class="doccomment">/// create variables for the ProofEvaluations who&#39;s field
+    /// is smaller than plonk circuit field.
+    /// The output wires are in the FpElemVar form.
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">create_variables</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_variables&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">m</span>: <span class="ident">usize</span>,
-        <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ProofEvaluationsVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        m: usize,
+        two_power_m: <span class="prelude-ty">Option</span>&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ProofEvaluationsVar&lt;F&gt;, PlonkError&gt;
+    <span class="kw">where
+        </span>F: RescueParameter + SWToTEConParam,
     {
-        <span class="kw">if</span> <span class="ident">T::size_in_bits</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">F::size_in_bits</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PlonkError::InvalidParameters</span>(<span class="macro">format!</span>(
+        <span class="kw">if </span>T::size_in_bits() &gt;= F::size_in_bits() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PlonkError::InvalidParameters(<span class="macro">format!</span>(
                 <span class="string">&quot;circuit field size {} is not greater than Plookup Evaluation field size {}&quot;</span>,
-                <span class="ident">F::size_in_bits</span>(),
-                <span class="ident">T::size_in_bits</span>()
+                F::size_in_bits(),
+                T::size_in_bits()
             )));
         }
-        <span class="kw">let</span> <span class="ident">wires_evals</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">wires_evals</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
-                <span class="ident">FpElemVar::new_from_field_element</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="ident">x</span>), <span class="ident">m</span>, <span class="ident">two_power_m</span>)
+        <span class="kw">let </span>wires_evals = <span class="self">self
+            </span>.wires_evals
+            .iter()
+            .map(|x| {
+                FpElemVar::new_from_field_element(circuit, <span class="kw-2">&amp;</span>field_switching(x), m, two_power_m)
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">wire_sigma_evals</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">wire_sigma_evals</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
-                <span class="ident">FpElemVar::new_from_field_element</span>(<span class="ident">circuit</span>, <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="ident">x</span>), <span class="ident">m</span>, <span class="ident">two_power_m</span>)
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>wire_sigma_evals = <span class="self">self
+            </span>.wire_sigma_evals
+            .iter()
+            .map(|x| {
+                FpElemVar::new_from_field_element(circuit, <span class="kw-2">&amp;</span>field_switching(x), m, two_power_m)
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ProofEvaluationsVar</span> {
-            <span class="ident">wires_evals</span>,
-            <span class="ident">wire_sigma_evals</span>,
-            <span class="ident">perm_next_eval</span>: <span class="ident">FpElemVar::new_from_field_element</span>(
-                <span class="ident">circuit</span>,
-                <span class="kw-2">&amp;</span><span class="ident">field_switching</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">perm_next_eval</span>),
-                <span class="ident">m</span>,
-                <span class="ident">two_power_m</span>,
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(ProofEvaluationsVar {
+            wires_evals,
+            wire_sigma_evals,
+            perm_next_eval: FpElemVar::new_from_field_element(
+                circuit,
+                <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span><span class="self">self</span>.perm_next_eval),
+                m,
+                two_power_m,
             )<span class="question-mark">?</span>,
         })
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">BatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a `BatchProofVar` variable from a `BatchProof`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_variables</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; BatchProof&lt;E&gt; {
+    <span class="doccomment">/// Create a `BatchProofVar` variable from a `BatchProof`.
+    </span><span class="kw">pub fn </span>create_variables&lt;F, P&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">circuit</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-        <span class="ident">m</span>: <span class="ident">usize</span>,
-        <span class="ident">two_power_m</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BatchProofVar</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">F</span>: <span class="ident">RescueParameter</span> <span class="op">+</span> <span class="ident">SWToTEConParam</span>,
-        <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        m: usize,
+        two_power_m: <span class="prelude-ty">Option</span>&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BatchProofVar&lt;F&gt;, PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        F: RescueParameter + SWToTEConParam,
+        P: SWModelParameters&lt;BaseField = F&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wires_poly_comms_vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">wires_poly_comms_vec</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="ident">e</span>.<span class="ident">iter</span>() {
-                <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">f</span>.<span class="number">0</span>).<span class="ident">into</span>();
-                <span class="ident">tmp</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>wires_poly_comms_vec = Vec::new();
+        <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.wires_poly_comms_vec.iter() {
+            <span class="kw">let </span><span class="kw-2">mut </span>tmp = Vec::new();
+            <span class="kw">for </span>f <span class="kw">in </span>e.iter() {
+                <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>f.<span class="number">0</span>).into();
+                tmp.push(circuit.create_point_variable(p)<span class="question-mark">?</span>);
             }
-            <span class="ident">wires_poly_comms_vec</span>.<span class="ident">push</span>(<span class="ident">tmp</span>);
+            wires_poly_comms_vec.push(tmp);
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prod_perm_poly_comms_vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">prod_perm_poly_comms_vec</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="number">0</span>).<span class="ident">into</span>();
-            <span class="ident">prod_perm_poly_comms_vec</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>);
-        }
-
-        <span class="kw">let</span> <span class="ident">poly_evals_vec</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">poly_evals_vec</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">create_variables</span>(<span class="ident">circuit</span>, <span class="ident">m</span>, <span class="ident">two_power_m</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">split_quot_poly_comms</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">split_quot_poly_comms</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="number">0</span>).<span class="ident">into</span>();
-            <span class="ident">split_quot_poly_comms</span>.<span class="ident">push</span>(<span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>prod_perm_poly_comms_vec = Vec::new();
+        <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.prod_perm_poly_comms_vec.iter() {
+            <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+            prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)<span class="question-mark">?</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">opening_proof</span>.<span class="number">0</span>).<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">opening_proof</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>poly_evals_vec = <span class="self">self
+            </span>.poly_evals_vec
+            .iter()
+            .map(|x| x.create_variables(circuit, m, two_power_m))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">p</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shifted_opening_proof</span>.<span class="number">0</span>).<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">shifted_opening_proof</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_point_variable</span>(<span class="ident">p</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>split_quot_poly_comms = Vec::new();
+        <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.split_quot_poly_comms.iter() {
+            <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+            split_quot_poly_comms.push(circuit.create_point_variable(p)<span class="question-mark">?</span>);
+        }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">BatchProofVar</span> {
-            <span class="ident">wires_poly_comms_vec</span>,
-            <span class="ident">prod_perm_poly_comms_vec</span>,
-            <span class="ident">poly_evals_vec</span>,
-            <span class="ident">split_quot_poly_comms</span>,
-            <span class="ident">opening_proof</span>,
-            <span class="ident">shifted_opening_proof</span>,
+        <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span><span class="self">self</span>.opening_proof.<span class="number">0</span>).into();
+        <span class="kw">let </span>opening_proof = circuit.create_point_variable(p)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span><span class="self">self</span>.shifted_opening_proof.<span class="number">0</span>).into();
+        <span class="kw">let </span>shifted_opening_proof = circuit.create_point_variable(p)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(BatchProofVar {
+            wires_poly_comms_vec,
+            prod_perm_poly_comms_vec,
+            poly_evals_vec,
+            split_quot_poly_comms,
+            opening_proof,
+            shifted_opening_proof,
         })
     }
 }
 
-<span class="doccomment">/// A struct that stores the polynomial evaluations in a Plonk proof.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Wire witness polynomials evaluations at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">wires_evals</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A struct that stores the polynomial evaluations in a Plonk proof.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>ProofEvaluations&lt;F: Field&gt; {
+    <span class="doccomment">/// Wire witness polynomials evaluations at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_evals: Vec&lt;F&gt;,
 
-    <span class="doccomment">/// Extended permutation (sigma) polynomials evaluations at point `zeta`.</span>
-    <span class="doccomment">/// We do not include the last sigma polynomial evaluation.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">wire_sigma_evals</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Extended permutation (sigma) polynomials evaluations at point `zeta`.
+    /// We do not include the last sigma polynomial evaluation.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wire_sigma_evals: Vec&lt;F&gt;,
 
-    <span class="doccomment">/// Permutation product polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">perm_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Permutation product polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) perm_next_eval: F,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">SnarkError</span>;
+<span class="kw">impl</span>&lt;F: Field&gt; TryFrom&lt;Vec&lt;F&gt;&gt; <span class="kw">for </span>ProofEvaluations&lt;F&gt; {
+    <span class="kw">type </span>Error = SnarkError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="comment">// | wires_evals | = | wire_sigma_evals | + 1</span>
-        <span class="comment">// = GATE_WIDTH + 1 + 0/1 (0 for TurboPlonk and 1 for UltraPlonk)</span>
-        <span class="comment">// thanks to Maller optimization.</span>
-        <span class="kw">const</span> <span class="ident">TURBO_PLONK_EVAL_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">ULTRA_PLONK_EVAL_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> (<span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">2</span>) <span class="op">*</span> <span class="number">2</span>;
+    <span class="kw">fn </span>try_from(value: Vec&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="comment">// | wires_evals | = | wire_sigma_evals | + 1
+        // = GATE_WIDTH + 1 + 0/1 (0 for TurboPlonk and 1 for UltraPlonk)
+        // thanks to Maller optimization.
+        </span><span class="kw">const </span>TURBO_PLONK_EVAL_LEN: usize = (GATE_WIDTH + <span class="number">1</span>) * <span class="number">2</span>;
+        <span class="kw">const </span>ULTRA_PLONK_EVAL_LEN: usize = (GATE_WIDTH + <span class="number">2</span>) * <span class="number">2</span>;
 
-        <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">TURBO_PLONK_EVAL_LEN</span> <span class="op">|</span><span class="op">|</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">ULTRA_PLONK_EVAL_LEN</span> {
-            <span class="kw">let</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">len</span>();
-            <span class="kw">let</span> <span class="ident">wires_evals</span> <span class="op">=</span> <span class="ident">value</span>[..<span class="ident">l</span> <span class="op">/</span> <span class="number">2</span>].<span class="ident">to_vec</span>();
-            <span class="kw">let</span> <span class="ident">wire_sigma_evals</span> <span class="op">=</span> <span class="ident">value</span>[<span class="ident">l</span> <span class="op">/</span> <span class="number">2</span>..<span class="ident">l</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">to_vec</span>();
-            <span class="kw">let</span> <span class="ident">perm_next_eval</span> <span class="op">=</span> <span class="ident">value</span>[<span class="ident">l</span> <span class="op">-</span> <span class="number">1</span>];
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-                <span class="ident">wires_evals</span>,
-                <span class="ident">wire_sigma_evals</span>,
-                <span class="ident">perm_next_eval</span>,
+        <span class="kw">if </span>value.len() == TURBO_PLONK_EVAL_LEN || value.len() == ULTRA_PLONK_EVAL_LEN {
+            <span class="kw">let </span>l = value.len();
+            <span class="kw">let </span>wires_evals = value[..l / <span class="number">2</span>].to_vec();
+            <span class="kw">let </span>wire_sigma_evals = value[l / <span class="number">2</span>..l - <span class="number">1</span>].to_vec();
+            <span class="kw">let </span>perm_next_eval = value[l - <span class="number">1</span>];
+            <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+                wires_evals,
+                wire_sigma_evals,
+                perm_next_eval,
             })
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">SnarkError::ParameterError</span>(
-                <span class="string">&quot;Wrong number of scalars for proof evals.&quot;</span>.<span class="ident">to_string</span>(),
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(SnarkError::ParameterError(
+                <span class="string">&quot;Wrong number of scalars for proof evals.&quot;</span>.to_string(),
             ))
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">evals</span>: <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+<span class="kw">impl</span>&lt;F: Field&gt; From&lt;ProofEvaluations&lt;F&gt;&gt; <span class="kw">for </span>Vec&lt;F&gt; {
+    <span class="kw">fn </span>from(evals: ProofEvaluations&lt;F&gt;) -&gt; <span class="self">Self </span>{
         [
-            <span class="ident">evals</span>.<span class="ident">wires_evals</span>,
-            <span class="ident">evals</span>.<span class="ident">wire_sigma_evals</span>,
-            <span class="macro">vec!</span>[<span class="ident">evals</span>.<span class="ident">perm_next_eval</span>],
+            evals.wires_evals,
+            evals.wire_sigma_evals,
+            <span class="macro">vec!</span>[evals.perm_next_eval],
         ]
-        .<span class="ident">concat</span>()
+        .concat()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ProofEvaluations</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">Field</span>,
+<span class="kw">impl</span>&lt;F&gt; Default <span class="kw">for </span>ProofEvaluations&lt;F&gt;
+<span class="kw">where
+    </span>F: Field,
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">num_wire_types</span> <span class="op">=</span> <span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>;
-        <span class="self">Self</span> {
-            <span class="ident">wires_evals</span>: <span class="macro">vec!</span>[<span class="ident">F::zero</span>(); <span class="ident">num_wire_types</span>],
-            <span class="ident">wire_sigma_evals</span>: <span class="macro">vec!</span>[<span class="ident">F::zero</span>(); <span class="ident">num_wire_types</span> <span class="op">-</span> <span class="number">1</span>],
-            <span class="ident">perm_next_eval</span>: <span class="ident">F::zero</span>(),
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>num_wire_types = GATE_WIDTH + <span class="number">1</span>;
+        <span class="self">Self </span>{
+            wires_evals: <span class="macro">vec!</span>[F::zero(); num_wire_types],
+            wire_sigma_evals: <span class="macro">vec!</span>[F::zero(); num_wire_types - <span class="number">1</span>],
+            perm_next_eval: F::zero(),
         }
     }
 }
 
-<span class="doccomment">/// A struct that stores the polynomial evaluations in a Plookup argument proof.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Range table polynomial evaluation at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">range_table_eval</span>: <span class="ident">F</span>,
+<span class="doccomment">/// A struct that stores the polynomial evaluations in a Plookup argument proof.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>PlookupEvaluations&lt;F: Field&gt; {
+    <span class="doccomment">/// Range table polynomial evaluation at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) range_table_eval: F,
 
-    <span class="doccomment">/// Key table polynomial evaluation at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">key_table_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Key table polynomial evaluation at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) key_table_eval: F,
 
-    <span class="doccomment">/// Table domain separation polynomial evaluation at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">table_dom_sep_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Table domain separation polynomial evaluation at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) table_dom_sep_eval: F,
 
-    <span class="doccomment">/// Domain separation selector polynomial evaluation at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">q_dom_sep_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Domain separation selector polynomial evaluation at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q_dom_sep_eval: F,
 
-    <span class="doccomment">/// The first sorted vector polynomial evaluation at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">h_1_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The first sorted vector polynomial evaluation at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) h_1_eval: F,
 
-    <span class="doccomment">/// The lookup selector polynomial evaluation at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">q_lookup_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The lookup selector polynomial evaluation at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q_lookup_eval: F,
 
-    <span class="doccomment">/// Lookup product polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">prod_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Lookup product polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) prod_next_eval: F,
 
-    <span class="doccomment">/// Range table polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">range_table_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Range table polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) range_table_next_eval: F,
 
-    <span class="doccomment">/// Key table polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">key_table_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Key table polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) key_table_next_eval: F,
 
-    <span class="doccomment">/// Table domain separation polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">table_dom_sep_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Table domain separation polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) table_dom_sep_next_eval: F,
 
-    <span class="doccomment">/// The first sorted vector polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">h_1_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The first sorted vector polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) h_1_next_eval: F,
 
-    <span class="doccomment">/// The second sorted vector polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">h_2_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The second sorted vector polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) h_2_next_eval: F,
 
-    <span class="doccomment">/// The lookup selector polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">q_lookup_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The lookup selector polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q_lookup_next_eval: F,
 
-    <span class="doccomment">/// The 4th witness polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">w_3_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The 4th witness polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) w_3_next_eval: F,
 
-    <span class="doccomment">/// The 5th witness polynomial evaluation at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">w_4_next_eval</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// The 5th witness polynomial evaluation at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) w_4_next_eval: F,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> <span class="ident">PlookupEvaluations</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Return the list of evaluations at point `zeta`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">evals_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+<span class="kw">impl</span>&lt;F: Field&gt; PlookupEvaluations&lt;F&gt; {
+    <span class="doccomment">/// Return the list of evaluations at point `zeta`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>evals_vec(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt; {
         <span class="macro">vec!</span>[
-            <span class="self">self</span>.<span class="ident">range_table_eval</span>,
-            <span class="self">self</span>.<span class="ident">key_table_eval</span>,
-            <span class="self">self</span>.<span class="ident">h_1_eval</span>,
-            <span class="self">self</span>.<span class="ident">q_lookup_eval</span>,
-            <span class="self">self</span>.<span class="ident">table_dom_sep_eval</span>,
-            <span class="self">self</span>.<span class="ident">q_dom_sep_eval</span>,
+            <span class="self">self</span>.range_table_eval,
+            <span class="self">self</span>.key_table_eval,
+            <span class="self">self</span>.h_1_eval,
+            <span class="self">self</span>.q_lookup_eval,
+            <span class="self">self</span>.table_dom_sep_eval,
+            <span class="self">self</span>.q_dom_sep_eval,
         ]
     }
 
-    <span class="doccomment">/// Return the list of evaluations at point `zeta * g`.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">next_evals_vec</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Return the list of evaluations at point `zeta * g`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>next_evals_vec(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt; {
         <span class="macro">vec!</span>[
-            <span class="self">self</span>.<span class="ident">prod_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">range_table_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">key_table_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">h_1_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">h_2_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">q_lookup_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">w_3_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">w_4_next_eval</span>,
-            <span class="self">self</span>.<span class="ident">table_dom_sep_next_eval</span>,
+            <span class="self">self</span>.prod_next_eval,
+            <span class="self">self</span>.range_table_next_eval,
+            <span class="self">self</span>.key_table_next_eval,
+            <span class="self">self</span>.h_1_next_eval,
+            <span class="self">self</span>.h_2_next_eval,
+            <span class="self">self</span>.q_lookup_next_eval,
+            <span class="self">self</span>.w_3_next_eval,
+            <span class="self">self</span>.w_4_next_eval,
+            <span class="self">self</span>.table_dom_sep_next_eval,
         ]
     }
 }
 
-<span class="doccomment">/// Preprocessed prover parameters used to compute Plonk proofs for a certain</span>
-<span class="doccomment">/// circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Extended permutation (sigma) polynomials.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">sigmas</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Preprocessed prover parameters used to compute Plonk proofs for a certain
+/// circuit.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>ProvingKey&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// Extended permutation (sigma) polynomials.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) sigmas: Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt;,
 
-    <span class="doccomment">/// Selector polynomials.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">selectors</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Selector polynomials.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) selectors: Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt;,
 
-    <span class="comment">// KZG PCS committing key.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">commit_key</span>: <span class="ident">CommitKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="comment">// KZG PCS committing key.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) commit_key: CommitKey&lt;E&gt;,
 
-    <span class="doccomment">/// The verifying key. It is used by prover to initialize transcripts.</span>
-    <span class="kw">pub</span> <span class="ident">vk</span>: <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The verifying key. It is used by prover to initialize transcripts.
+    </span><span class="kw">pub </span>vk: VerifyingKey&lt;E&gt;,
 
-    <span class="doccomment">/// Proving key for Plookup, None if not support lookup.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">plookup_pk</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PlookupProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Proving key for Plookup, None if not support lookup.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) plookup_pk: <span class="prelude-ty">Option</span>&lt;PlookupProvingKey&lt;E&gt;&gt;,
 }
 
-<span class="doccomment">/// Preprocessed prover parameters used to compute Plookup proofs for a certain</span>
-<span class="doccomment">/// circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PlookupProvingKey</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Range table polynomial.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">range_table_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Preprocessed prover parameters used to compute Plookup proofs for a certain
+/// circuit.
+</span><span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>PlookupProvingKey&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// Range table polynomial.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) range_table_poly: DensePolynomial&lt;E::Fr&gt;,
 
-    <span class="doccomment">/// Key table polynomial.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">key_table_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Key table polynomial.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) key_table_poly: DensePolynomial&lt;E::Fr&gt;,
 
-    <span class="doccomment">/// Table domain separation polynomial.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">table_dom_sep_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Table domain separation polynomial.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) table_dom_sep_poly: DensePolynomial&lt;E::Fr&gt;,
 
-    <span class="doccomment">/// Lookup domain separation selector polynomial.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">q_dom_sep_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Lookup domain separation selector polynomial.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q_dom_sep_poly: DensePolynomial&lt;E::Fr&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">ProvingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The size of the evaluation domain. Should be a power of two.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">domain_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">vk</span>.<span class="ident">domain_size</span>
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; ProvingKey&lt;E&gt; {
+    <span class="doccomment">/// The size of the evaluation domain. Should be a power of two.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>domain_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.vk.domain_size
     }
-    <span class="doccomment">/// The number of public inputs.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">num_inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">vk</span>.<span class="ident">num_inputs</span>
+    <span class="doccomment">/// The number of public inputs.
+    </span><span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>num_inputs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.vk.num_inputs
     }
-    <span class="doccomment">/// The constants K0, ..., K4 that ensure wire subsets are disjoint.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">k</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vk</span>.<span class="ident">k</span>
+    <span class="doccomment">/// The constants K0, ..., K4 that ensure wire subsets are disjoint.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>k(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[E::Fr] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.vk.k
     }
 
-    <span class="doccomment">/// The lookup selector polynomial</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">q_lookup_poly</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_none</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SnarkLookupUnsupported</span>.<span class="ident">into</span>());
+    <span class="doccomment">/// The lookup selector polynomial
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>q_lookup_poly(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;, PlonkError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.plookup_pk.is_none() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SnarkLookupUnsupported.into());
         }
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">selectors</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>())
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.selectors.last().unwrap())
     }
 
-    <span class="doccomment">/// Merge with another TurboPlonk proving key to obtain a new TurboPlonk</span>
-    <span class="doccomment">/// proving key. Return error if any of the following holds:</span>
-    <span class="doccomment">/// 1. the other proving key has a different domain size;</span>
-    <span class="doccomment">/// 2. the circuit underlying the other key has different number of inputs;</span>
-    <span class="doccomment">/// 3. the key or the other key is not a TurboPlonk key.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other_pk</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">domain_size</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">other_pk</span>.<span class="ident">domain_size</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="macro">format!</span>(
+    <span class="doccomment">/// Merge with another TurboPlonk proving key to obtain a new TurboPlonk
+    /// proving key. Return error if any of the following holds:
+    /// 1. the other proving key has a different domain size;
+    /// 2. the circuit underlying the other key has different number of inputs;
+    /// 3. the key or the other key is not a TurboPlonk key.
+    </span><span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>merge(<span class="kw-2">&amp;</span><span class="self">self</span>, other_pk: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PlonkError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.domain_size() != other_pk.domain_size() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;mismatched domain size ({} vs {}) when merging proving keys&quot;</span>,
-                <span class="self">self</span>.<span class="ident">domain_size</span>(),
-                <span class="ident">other_pk</span>.<span class="ident">domain_size</span>()
+                <span class="self">self</span>.domain_size(),
+                other_pk.domain_size()
             ))
-            .<span class="ident">into</span>());
+            .into());
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_inputs</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">other_pk</span>.<span class="ident">num_inputs</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
-                <span class="string">&quot;mismatched number of public inputs when merging proving keys&quot;</span>.<span class="ident">to_string</span>(),
+        <span class="kw">if </span><span class="self">self</span>.num_inputs() != other_pk.num_inputs() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
+                <span class="string">&quot;mismatched number of public inputs when merging proving keys&quot;</span>.to_string(),
             )
-            .<span class="ident">into</span>());
+            .into());
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">other_pk</span>.<span class="ident">plookup_pk</span>.<span class="ident">is_some</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="string">&quot;cannot merge UltraPlonk proving keys&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>());
+        <span class="kw">if </span><span class="self">self</span>.plookup_pk.is_some() || other_pk.plookup_pk.is_some() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;cannot merge UltraPlonk proving keys&quot;</span>.to_string()).into());
         }
-        <span class="kw">let</span> <span class="ident">sigmas</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">sigmas</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">other_pk</span>.<span class="ident">sigmas</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">poly1</span>, <span class="ident">poly2</span>)<span class="op">|</span> <span class="ident">poly1</span> <span class="op">+</span> <span class="ident">poly2</span>)
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">selectors</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">selectors</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">other_pk</span>.<span class="ident">selectors</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">poly1</span>, <span class="ident">poly2</span>)<span class="op">|</span> <span class="ident">poly1</span> <span class="op">+</span> <span class="ident">poly2</span>)
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>sigmas: Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt; = <span class="self">self
+            </span>.sigmas
+            .iter()
+            .zip(other_pk.sigmas.iter())
+            .map(|(poly1, poly2)| poly1 + poly2)
+            .collect();
+        <span class="kw">let </span>selectors: Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt; = <span class="self">self
+            </span>.selectors
+            .iter()
+            .zip(other_pk.selectors.iter())
+            .map(|(poly1, poly2)| poly1 + poly2)
+            .collect();
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">sigmas</span>,
-            <span class="ident">selectors</span>,
-            <span class="ident">commit_key</span>: <span class="self">self</span>.<span class="ident">commit_key</span>.<span class="ident">clone</span>(),
-            <span class="ident">vk</span>: <span class="self">self</span>.<span class="ident">vk</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">other_pk</span>.<span class="ident">vk</span>)<span class="question-mark">?</span>,
-            <span class="ident">plookup_pk</span>: <span class="prelude-val">None</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            sigmas,
+            selectors,
+            commit_key: <span class="self">self</span>.commit_key.clone(),
+            vk: <span class="self">self</span>.vk.merge(<span class="kw-2">&amp;</span>other_pk.vk)<span class="question-mark">?</span>,
+            plookup_pk: <span class="prelude-val">None</span>,
         })
     }
 }
 
-<span class="doccomment">/// Preprocessed verifier parameters used to verify Plonk proofs for a certain</span>
-<span class="doccomment">/// circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The size of the evaluation domain. Should be a power of two.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">domain_size</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// Preprocessed verifier parameters used to verify Plonk proofs for a certain
+/// circuit.
+</span><span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>VerifyingKey&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// The size of the evaluation domain. Should be a power of two.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) domain_size: usize,
 
-    <span class="doccomment">/// The number of public inputs.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">num_inputs</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// The number of public inputs.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) num_inputs: usize,
 
-    <span class="doccomment">/// The permutation polynomial commitments. The commitments are not hiding.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">sigma_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The permutation polynomial commitments. The commitments are not hiding.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) sigma_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// The selector polynomial commitments. The commitments are not hiding.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">selector_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The selector polynomial commitments. The commitments are not hiding.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) selector_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
-    <span class="doccomment">/// The constants K0, ..., K_num_wire_types that ensure wire subsets are</span>
-    <span class="doccomment">/// disjoint.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">k</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The constants K0, ..., K_num_wire_types that ensure wire subsets are
+    /// disjoint.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) k: Vec&lt;E::Fr&gt;,
 
-    <span class="doccomment">/// KZG PCS opening key.</span>
-    <span class="kw">pub</span> <span class="ident">open_key</span>: <span class="ident">OpenKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// KZG PCS opening key.
+    </span><span class="kw">pub </span>open_key: OpenKey&lt;E&gt;,
 
-    <span class="doccomment">/// A flag indicating whether the key is a merged key.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_merged</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// A flag indicating whether the key is a merged key.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) is_merged: bool,
 
-    <span class="doccomment">/// Plookup verifying key, None if not support lookup.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">plookup_vk</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PlookupVerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Plookup verifying key, None if not support lookup.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) plookup_vk: <span class="prelude-ty">Option</span>&lt;PlookupVerifyingKey&lt;E&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P1</span>, <span class="ident">P2</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fq</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P1</span><span class="op">&gt;</span>, <span class="ident">G2Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P2</span><span class="op">&gt;</span>, <span class="ident">Fqe</span> <span class="op">=</span> <span class="ident">Fp2</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">Fp2Parameters</span><span class="op">&lt;</span><span class="ident">Fp</span> <span class="op">=</span> <span class="ident">E::Fq</span><span class="op">&gt;</span>,
-    <span class="ident">P1</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fq</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span>,
-    <span class="ident">P2</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">E::Fqe</span>, <span class="ident">ScalarField</span> <span class="op">=</span> <span class="ident">E::Fr</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;E, F, P1, P2&gt; From&lt;VerifyingKey&lt;E&gt;&gt; <span class="kw">for </span>Vec&lt;E::Fq&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P1&gt;, G2Affine = GroupAffine&lt;P2&gt;, Fqe = Fp2&lt;F&gt;&gt;,
+    F: Fp2Parameters&lt;Fp = E::Fq&gt;,
+    P1: SWModelParameters&lt;BaseField = E::Fq, ScalarField = E::Fr&gt;,
+    P2: SWModelParameters&lt;BaseField = E::Fqe, ScalarField = E::Fr&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vk</span>: <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">if</span> <span class="ident">vk</span>.<span class="ident">plookup_vk</span>.<span class="ident">is_some</span>() {
+    <span class="kw">fn </span>from(vk: VerifyingKey&lt;E&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">if </span>vk.plookup_vk.is_some() {
             <span class="macro">panic!</span>(<span class="string">&quot;Only support TurboPlonk VerifyingKey for now.&quot;</span>);
         }
 
         [
-            <span class="macro">vec!</span>[<span class="ident">E::Fq::from</span>(<span class="ident">vk</span>.<span class="ident">domain_size</span> <span class="kw">as</span> <span class="ident">u64</span>)],
-            <span class="macro">vec!</span>[<span class="ident">E::Fq::from</span>(<span class="ident">vk</span>.<span class="ident">num_inputs</span> <span class="kw">as</span> <span class="ident">u64</span>)],
-            <span class="ident">vk</span>.<span class="ident">sigma_comms</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">cm</span><span class="op">|</span> <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">cm</span>.<span class="number">0</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">concat</span>(),
-            <span class="ident">vk</span>.<span class="ident">selector_comms</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">cm</span><span class="op">|</span> <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">cm</span>.<span class="number">0</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">concat</span>(),
-            <span class="ident">vk</span>.<span class="ident">k</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">fr</span><span class="op">|</span> <span class="ident">fr_to_fq</span>::<span class="op">&lt;</span><span class="ident">E::Fq</span>, <span class="ident">P1</span><span class="op">&gt;</span>(<span class="ident">fr</span>)).<span class="ident">collect</span>(),
-            <span class="comment">// NOTE: only adding g, h, beta_h since only these are used.</span>
-            <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">P1</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">g</span>),
-            <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P2</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">h</span>),
-            <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P2</span><span class="op">&gt;</span>(<span class="ident">vk</span>.<span class="ident">open_key</span>.<span class="ident">beta_h</span>),
+            <span class="macro">vec!</span>[E::Fq::from(vk.domain_size <span class="kw">as </span>u64)],
+            <span class="macro">vec!</span>[E::Fq::from(vk.num_inputs <span class="kw">as </span>u64)],
+            vk.sigma_comms
+                .iter()
+                .map(|cm| group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(cm.<span class="number">0</span>))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                .concat(),
+            vk.selector_comms
+                .iter()
+                .map(|cm| group1_to_fields::&lt;E, <span class="kw">_</span>&gt;(cm.<span class="number">0</span>))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                .concat(),
+            vk.k.iter().map(|fr| fr_to_fq::&lt;E::Fq, P1&gt;(fr)).collect(),
+            <span class="comment">// NOTE: only adding g, h, beta_h since only these are used.
+            </span>group1_to_fields::&lt;E, P1&gt;(vk.open_key.g),
+            group2_to_fields::&lt;E, F, P2&gt;(vk.open_key.h),
+            group2_to_fields::&lt;E, F, P2&gt;(vk.open_key.beta_h),
         ]
-        .<span class="ident">concat</span>()
+        .concat()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>, <span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&lt;</span><span class="ident">Fq</span> <span class="op">=</span> <span class="ident">F</span>, <span class="ident">G1Affine</span> <span class="op">=</span> <span class="ident">GroupAffine</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">F</span>: <span class="ident">SWToTEConParam</span>,
-    <span class="ident">P</span>: <span class="ident">SWModelParameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;E, F, P&gt; VerifyingKey&lt;E&gt;
+<span class="kw">where
+    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    F: SWToTEConParam,
+    P: SWModelParameters&lt;BaseField = F&gt;,
 {
-    <span class="doccomment">/// Convert the group elements to a list of scalars that represent the</span>
-    <span class="doccomment">/// Twisted Edwards coordinates.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_te_coordinates_to_scalars</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> <span class="ident">sigma_comm</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">sigma_comms</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">sigma_comm</span>.<span class="number">0</span>).<span class="ident">into</span>();
-            <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">point</span>.<span class="ident">get_x</span>());
-            <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">point</span>.<span class="ident">get_y</span>());
+    <span class="doccomment">/// Convert the group elements to a list of scalars that represent the
+    /// Twisted Edwards coordinates.
+    </span><span class="kw">pub fn </span>convert_te_coordinates_to_scalars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>sigma_comm <span class="kw">in </span><span class="self">self</span>.sigma_comms.iter() {
+            <span class="kw">let </span>point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>sigma_comm.<span class="number">0</span>).into();
+            res.push(point.get_x());
+            res.push(point.get_y());
         }
-        <span class="kw">for</span> <span class="ident">selector_comm</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">selector_comms</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">selector_comm</span>.<span class="number">0</span>).<span class="ident">into</span>();
-            <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">point</span>.<span class="ident">get_x</span>());
-            <span class="ident">res</span>.<span class="ident">push</span>(<span class="ident">point</span>.<span class="ident">get_y</span>());
+        <span class="kw">for </span>selector_comm <span class="kw">in </span><span class="self">self</span>.selector_comms.iter() {
+            <span class="kw">let </span>point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>selector_comm.<span class="number">0</span>).into();
+            res.push(point.get_x());
+            res.push(point.get_y());
         }
-        <span class="ident">res</span>
+        res
     }
 }
 
-<span class="doccomment">/// Preprocessed verifier parameters used to verify Plookup proofs for a certain</span>
-<span class="doccomment">/// circuit.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PlookupVerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Range table polynomial commitment. The commitment is not hiding.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">range_table_comm</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Preprocessed verifier parameters used to verify Plookup proofs for a certain
+/// circuit.
+</span><span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="kw">pub struct </span>PlookupVerifyingKey&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// Range table polynomial commitment. The commitment is not hiding.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) range_table_comm: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// Key table polynomial commitment. The commitment is not hiding.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">key_table_comm</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Key table polynomial commitment. The commitment is not hiding.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) key_table_comm: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// Table domain separation polynomial commitment. The commitment is not</span>
-    <span class="doccomment">/// hiding.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">table_dom_sep_comm</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Table domain separation polynomial commitment. The commitment is not
+    /// hiding.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) table_dom_sep_comm: Commitment&lt;E&gt;,
 
-    <span class="doccomment">/// Lookup domain separation selector polynomial commitment. The commitment</span>
-    <span class="doccomment">/// is not hiding.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">q_dom_sep_comm</span>: <span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Lookup domain separation selector polynomial commitment. The commitment
+    /// is not hiding.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q_dom_sep_comm: Commitment&lt;E&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">VerifyingKey</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a dummy TurboPlonk verification key for a circuit with</span>
-    <span class="doccomment">/// `num_inputs` public inputs and domain size `domain_size`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dummy</span>(<span class="ident">num_inputs</span>: <span class="ident">usize</span>, <span class="ident">domain_size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">num_wire_types</span> <span class="op">=</span> <span class="ident">GATE_WIDTH</span> <span class="op">+</span> <span class="number">1</span>;
-        <span class="self">Self</span> {
-            <span class="ident">domain_size</span>,
-            <span class="ident">num_inputs</span>,
-            <span class="ident">sigma_comms</span>: <span class="macro">vec!</span>[<span class="ident">Commitment::default</span>(); <span class="ident">num_wire_types</span>],
-            <span class="ident">selector_comms</span>: <span class="macro">vec!</span>[<span class="ident">Commitment::default</span>(); <span class="ident">N_TURBO_PLONK_SELECTORS</span>],
-            <span class="ident">k</span>: <span class="ident">compute_coset_representatives</span>(<span class="ident">num_wire_types</span>, <span class="prelude-val">Some</span>(<span class="ident">domain_size</span>)),
-            <span class="ident">open_key</span>: <span class="ident">OpenKey::default</span>(),
-            <span class="ident">is_merged</span>: <span class="bool-val">false</span>,
-            <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; VerifyingKey&lt;E&gt; {
+    <span class="doccomment">/// Create a dummy TurboPlonk verification key for a circuit with
+    /// `num_inputs` public inputs and domain size `domain_size`.
+    </span><span class="kw">pub fn </span>dummy(num_inputs: usize, domain_size: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>num_wire_types = GATE_WIDTH + <span class="number">1</span>;
+        <span class="self">Self </span>{
+            domain_size,
+            num_inputs,
+            sigma_comms: <span class="macro">vec!</span>[Commitment::default(); num_wire_types],
+            selector_comms: <span class="macro">vec!</span>[Commitment::default(); N_TURBO_PLONK_SELECTORS],
+            k: compute_coset_representatives(num_wire_types, <span class="prelude-val">Some</span>(domain_size)),
+            open_key: OpenKey::default(),
+            is_merged: <span class="bool-val">false</span>,
+            plookup_vk: <span class="prelude-val">None</span>,
         }
     }
-    <span class="doccomment">/// Merge with another TurboPlonk verifying key to obtain a new TurboPlonk</span>
-    <span class="doccomment">/// verifying key. Return error if any of the following holds:</span>
-    <span class="doccomment">/// 1. the other verifying key has a different domain size;</span>
-    <span class="doccomment">/// 2. the circuit underlying the other key has different number of inputs.</span>
-    <span class="doccomment">/// 3. the key or the other key is not a TurboPlonk key.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other_vk</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_merged</span> <span class="op">|</span><span class="op">|</span> <span class="ident">other_vk</span>.<span class="ident">is_merged</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(<span class="string">&quot;cannot merge a merged key again&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>());
+    <span class="doccomment">/// Merge with another TurboPlonk verifying key to obtain a new TurboPlonk
+    /// verifying key. Return error if any of the following holds:
+    /// 1. the other verifying key has a different domain size;
+    /// 2. the circuit underlying the other key has different number of inputs.
+    /// 3. the key or the other key is not a TurboPlonk key.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>merge(<span class="kw-2">&amp;</span><span class="self">self</span>, other_vk: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PlonkError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_merged || other_vk.is_merged {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;cannot merge a merged key again&quot;</span>.to_string()).into());
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">domain_size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other_vk</span>.<span class="ident">domain_size</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
-                <span class="string">&quot;mismatched domain size when merging verifying keys&quot;</span>.<span class="ident">to_string</span>(),
+        <span class="kw">if </span><span class="self">self</span>.domain_size != other_vk.domain_size {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
+                <span class="string">&quot;mismatched domain size when merging verifying keys&quot;</span>.to_string(),
             )
-            .<span class="ident">into</span>());
+            .into());
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_inputs</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other_vk</span>.<span class="ident">num_inputs</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParameterError</span>(
-                <span class="string">&quot;mismatched number of public inputs when merging verifying keys&quot;</span>.<span class="ident">to_string</span>(),
+        <span class="kw">if </span><span class="self">self</span>.num_inputs != other_vk.num_inputs {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
+                <span class="string">&quot;mismatched number of public inputs when merging verifying keys&quot;</span>.to_string(),
             )
-            .<span class="ident">into</span>());
+            .into());
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">plookup_vk</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">other_vk</span>.<span class="ident">plookup_vk</span>.<span class="ident">is_some</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(
-                <span class="ident">ParameterError</span>(<span class="string">&quot;cannot merge UltraPlonk verifying keys&quot;</span>.<span class="ident">to_string</span>()).<span class="ident">into</span>(),
+        <span class="kw">if </span><span class="self">self</span>.plookup_vk.is_some() || other_vk.plookup_vk.is_some() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(
+                ParameterError(<span class="string">&quot;cannot merge UltraPlonk verifying keys&quot;</span>.to_string()).into(),
             );
         }
-        <span class="kw">let</span> <span class="ident">sigma_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">sigma_comms</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">other_vk</span>.<span class="ident">sigma_comms</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">com1</span>, <span class="ident">com2</span>)<span class="op">|</span> <span class="ident">Commitment</span>(<span class="ident">com1</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">com2</span>.<span class="number">0</span>))
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">selector_comms</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">selector_comms</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">zip</span>(<span class="ident">other_vk</span>.<span class="ident">selector_comms</span>.<span class="ident">iter</span>())
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">com1</span>, <span class="ident">com2</span>)<span class="op">|</span> <span class="ident">Commitment</span>(<span class="ident">com1</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">com2</span>.<span class="number">0</span>))
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>sigma_comms: Vec&lt;Commitment&lt;E&gt;&gt; = <span class="self">self
+            </span>.sigma_comms
+            .iter()
+            .zip(other_vk.sigma_comms.iter())
+            .map(|(com1, com2)| Commitment(com1.<span class="number">0 </span>+ com2.<span class="number">0</span>))
+            .collect();
+        <span class="kw">let </span>selector_comms: Vec&lt;Commitment&lt;E&gt;&gt; = <span class="self">self
+            </span>.selector_comms
+            .iter()
+            .zip(other_vk.selector_comms.iter())
+            .map(|(com1, com2)| Commitment(com1.<span class="number">0 </span>+ com2.<span class="number">0</span>))
+            .collect();
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">domain_size</span>: <span class="self">self</span>.<span class="ident">domain_size</span>,
-            <span class="ident">num_inputs</span>: <span class="self">self</span>.<span class="ident">num_inputs</span> <span class="op">+</span> <span class="ident">other_vk</span>.<span class="ident">num_inputs</span>,
-            <span class="ident">sigma_comms</span>,
-            <span class="ident">selector_comms</span>,
-            <span class="ident">k</span>: <span class="self">self</span>.<span class="ident">k</span>.<span class="ident">clone</span>(),
-            <span class="ident">open_key</span>: <span class="self">self</span>.<span class="ident">open_key</span>,
-            <span class="ident">plookup_vk</span>: <span class="prelude-val">None</span>,
-            <span class="ident">is_merged</span>: <span class="bool-val">true</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            domain_size: <span class="self">self</span>.domain_size,
+            num_inputs: <span class="self">self</span>.num_inputs + other_vk.num_inputs,
+            sigma_comms,
+            selector_comms,
+            k: <span class="self">self</span>.k.clone(),
+            open_key: <span class="self">self</span>.open_key,
+            plookup_vk: <span class="prelude-val">None</span>,
+            is_merged: <span class="bool-val">true</span>,
         })
     }
 
-    <span class="doccomment">/// The lookup selector polynomial commitment</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">q_lookup_comm</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">plookup_vk</span>.<span class="ident">is_none</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SnarkLookupUnsupported</span>.<span class="ident">into</span>());
+    <span class="doccomment">/// The lookup selector polynomial commitment
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>q_lookup_comm(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Commitment&lt;E&gt;, PlonkError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.plookup_vk.is_none() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SnarkLookupUnsupported.into());
         }
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">selector_comms</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>())
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.selector_comms.last().unwrap())
     }
 }
 
-<span class="doccomment">/// Plonk IOP verifier challenges.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Challenges</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Field</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">tau</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">alpha</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">beta</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">gamma</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">zeta</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">v</span>: <span class="ident">F</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">u</span>: <span class="ident">F</span>,
+<span class="doccomment">/// Plonk IOP verifier challenges.
+</span><span class="attribute">#[derive(Debug, Default)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Challenges&lt;F: Field&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tau: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) alpha: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) beta: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) gamma: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) zeta: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) v: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) u: F,
 }
 
-<span class="doccomment">/// Plonk IOP online polynomial oracles.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Oracles</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FftField</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">wire_polys</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pub_inp_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">prod_perm_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">plookup_oracles</span>: <span class="ident">PlookupOracles</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Plonk IOP online polynomial oracles.
+</span><span class="attribute">#[derive(Debug, Default, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Oracles&lt;F: FftField&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) wire_polys: Vec&lt;DensePolynomial&lt;F&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pub_inp_poly: DensePolynomial&lt;F&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) prod_perm_poly: DensePolynomial&lt;F&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) plookup_oracles: PlookupOracles&lt;F&gt;,
 }
 
-<span class="doccomment">/// Plookup IOP online polynomial oracles.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">PlookupOracles</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FftField</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">h_polys</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">prod_lookup_poly</span>: <span class="ident">DensePolynomial</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Plookup IOP online polynomial oracles.
+</span><span class="attribute">#[derive(Debug, Default, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PlookupOracles&lt;F: FftField&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) h_polys: Vec&lt;DensePolynomial&lt;F&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) prod_lookup_poly: DensePolynomial&lt;F&gt;,
 }
 
-<span class="doccomment">/// The vector representation of bases and corresponding scalars.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">ScalarsAndBases</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">base_scalar_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span>, <span class="ident">E::Fr</span><span class="op">&gt;</span>,
+<span class="doccomment">/// The vector representation of bases and corresponding scalars.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ScalarsAndBases&lt;E: PairingEngine&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) base_scalar_map: HashMap&lt;E::G1Affine, E::Fr&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">ScalarsAndBases</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">base_scalar_map</span>: <span class="ident">HashMap::new</span>(),
-        }
-    }
-    <span class="doccomment">/// Insert a base point and the corresponding scalar.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">scalar</span>: <span class="ident">E::Fr</span>, <span class="ident">base</span>: <span class="ident">E::G1Affine</span>) {
-        <span class="kw">let</span> <span class="ident">entry_scalar</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">base_scalar_map</span>.<span class="ident">entry</span>(<span class="ident">base</span>).<span class="ident">or_insert_with</span>(<span class="ident">E::Fr::zero</span>);
-        <span class="kw-2">*</span><span class="ident">entry_scalar</span> <span class="op">+</span><span class="op">=</span> <span class="ident">scalar</span>;
-    }
-
-    <span class="doccomment">/// Add a list of scalars and bases into self, where each scalar is</span>
-    <span class="doccomment">/// multiplied by a constant c.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">merge</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">c</span>: <span class="ident">E::Fr</span>, <span class="ident">scalars_and_bases</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
-        <span class="kw">for</span> (<span class="ident">base</span>, <span class="ident">scalar</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">scalars_and_bases</span>.<span class="ident">base_scalar_map</span> {
-            <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">c</span> <span class="op">*</span> <span class="ident">scalar</span>, <span class="kw-2">*</span><span class="ident">base</span>);
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; ScalarsAndBases&lt;E&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            base_scalar_map: HashMap::new(),
         }
     }
-    <span class="doccomment">/// Compute the multi-scalar multiplication.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">multi_scalar_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">E::G1Projective</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bases</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scalars</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">for</span> (<span class="ident">base</span>, <span class="ident">scalar</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">base_scalar_map</span> {
-            <span class="ident">bases</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">base</span>);
-            <span class="ident">scalars</span>.<span class="ident">push</span>(<span class="ident">scalar</span>.<span class="ident">into_repr</span>());
+    <span class="doccomment">/// Insert a base point and the corresponding scalar.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scalar: E::Fr, base: E::G1Affine) {
+        <span class="kw">let </span>entry_scalar = <span class="self">self</span>.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
+        <span class="kw-2">*</span>entry_scalar += scalar;
+    }
+
+    <span class="doccomment">/// Add a list of scalars and bases into self, where each scalar is
+    /// multiplied by a constant c.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>merge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: E::Fr, scalars_and_bases: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
+        <span class="kw">for </span>(base, scalar) <span class="kw">in </span><span class="kw-2">&amp;</span>scalars_and_bases.base_scalar_map {
+            <span class="self">self</span>.push(c * scalar, <span class="kw-2">*</span>base);
         }
-        <span class="ident">VariableBaseMSM::multi_scalar_mul</span>(<span class="kw-2">&amp;</span><span class="ident">bases</span>, <span class="kw-2">&amp;</span><span class="ident">scalars</span>)
+    }
+    <span class="doccomment">/// Compute the multi-scalar multiplication.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>multi_scalar_mul(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; E::G1Projective {
+        <span class="kw">let </span><span class="kw-2">mut </span>bases = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>scalars = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>(base, scalar) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.base_scalar_map {
+            bases.push(<span class="kw-2">*</span>base);
+            scalars.push(scalar.into_repr());
+        }
+        VariableBaseMSM::multi_scalar_mul(<span class="kw-2">&amp;</span>bases, <span class="kw-2">&amp;</span>scalars)
     }
 }
 
-<span class="comment">// Utility function for computing merged table evaluations.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">eval_merged_table</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    <span class="ident">tau</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">range_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">key_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">q_lookup_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">w3_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">w4_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">table_dom_sep_eval</span>: <span class="ident">E::Fr</span>,
-) -&gt; <span class="ident">E::Fr</span> {
-    <span class="ident">range_eval</span>
-        <span class="op">+</span> <span class="ident">q_lookup_eval</span>
-            <span class="op">*</span> <span class="ident">tau</span>
-            <span class="op">*</span> (<span class="ident">table_dom_sep_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">key_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w3_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">w4_eval</span>)))
+<span class="comment">// Utility function for computing merged table evaluations.
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eval_merged_table&lt;E: PairingEngine&gt;(
+    tau: E::Fr,
+    range_eval: E::Fr,
+    key_eval: E::Fr,
+    q_lookup_eval: E::Fr,
+    w3_eval: E::Fr,
+    w4_eval: E::Fr,
+    table_dom_sep_eval: E::Fr,
+) -&gt; E::Fr {
+    range_eval
+        + q_lookup_eval
+            * tau
+            * (table_dom_sep_eval + tau * (key_eval + tau * (w3_eval + tau * w4_eval)))
 }
 
-<span class="comment">// Utility function for computing merged lookup witness evaluations.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">eval_merged_lookup_witness</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    <span class="ident">tau</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">w_range_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">w_0_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">w_1_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">w_2_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">q_lookup_eval</span>: <span class="ident">E::Fr</span>,
-    <span class="ident">q_dom_sep_eval</span>: <span class="ident">E::Fr</span>,
-) -&gt; <span class="ident">E::Fr</span> {
-    <span class="ident">w_range_eval</span>
-        <span class="op">+</span> <span class="ident">q_lookup_eval</span>
-            <span class="op">*</span> <span class="ident">tau</span>
-            <span class="op">*</span> (<span class="ident">q_dom_sep_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w_0_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> (<span class="ident">w_1_eval</span> <span class="op">+</span> <span class="ident">tau</span> <span class="op">*</span> <span class="ident">w_2_eval</span>)))
+<span class="comment">// Utility function for computing merged lookup witness evaluations.
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eval_merged_lookup_witness&lt;E: PairingEngine&gt;(
+    tau: E::Fr,
+    w_range_eval: E::Fr,
+    w_0_eval: E::Fr,
+    w_1_eval: E::Fr,
+    w_2_eval: E::Fr,
+    q_lookup_eval: E::Fr,
+    q_dom_sep_eval: E::Fr,
+) -&gt; E::Fr {
+    w_range_eval
+        + q_lookup_eval
+            * tau
+            * (q_dom_sep_eval + tau * (w_0_eval + tau * (w_1_eval + tau * w_2_eval)))
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_bn254</span>::{<span class="ident">g1::Parameters</span>, <span class="ident">Bn254</span>, <span class="ident">Fq</span>};
-    <span class="kw">use</span> <span class="ident">ark_ec::AffineCurve</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_bn254::{g1::Parameters, Bn254, Fq};
+    <span class="kw">use </span>ark_ec::AffineCurve;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_group_to_field</span>() {
-        <span class="kw">let</span> <span class="ident">g1</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Bn254</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::prime_subgroup_generator</span>();
-        <span class="kw">let</span> <span class="ident">f1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">group1_to_fields</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="ident">Parameters</span><span class="op">&gt;</span>(<span class="ident">g1</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">f1</span>.<span class="ident">len</span>(), <span class="number">2</span>);
-        <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Bn254</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G2Affine::prime_subgroup_generator</span>();
-        <span class="kw">let</span> <span class="ident">f2</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Fq</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">group2_to_fields</span>::<span class="op">&lt;</span><span class="ident">Bn254</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">g2</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">f2</span>.<span class="ident">len</span>(), <span class="number">4</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_group_to_field() {
+        <span class="kw">let </span>g1 = &lt;Bn254 <span class="kw">as </span>PairingEngine&gt;::G1Affine::prime_subgroup_generator();
+        <span class="kw">let </span>f1: Vec&lt;Fq&gt; = group1_to_fields::&lt;Bn254, Parameters&gt;(g1);
+        <span class="macro">assert_eq!</span>(f1.len(), <span class="number">2</span>);
+        <span class="kw">let </span>g2 = &lt;Bn254 <span class="kw">as </span>PairingEngine&gt;::G2Affine::prime_subgroup_generator();
+        <span class="kw">let </span>f2: Vec&lt;Fq&gt; = group2_to_fields::&lt;Bn254, <span class="kw">_</span>, <span class="kw">_</span>&gt;(g2);
+        <span class="macro">assert_eq!</span>(f2.len(), <span class="number">4</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

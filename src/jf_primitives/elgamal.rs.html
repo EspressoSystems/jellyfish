@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/elgamal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elgamal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/elgamal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elgamal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../jf_primitives/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -448,455 +448,455 @@
 <span id="448">448</span>
 <span id="449">449</span>
 <span id="450">450</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implements the ElGamal encryption scheme.</span>
+</span><span class="doccomment">//! Implements the ElGamal encryption scheme.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">elgamal::Direction</span>::{<span class="ident">Decrypt</span>, <span class="ident">Encrypt</span>},
-    <span class="ident">errors::PrimitivesError</span>,
-    <span class="ident">rescue</span>::{<span class="ident">Permutation</span>, <span class="ident">RescueParameter</span>, <span class="ident">RescueVector</span>, <span class="ident">PRP</span>, <span class="ident">STATE_SIZE</span>},
+</span><span class="kw">use crate</span>::{
+    elgamal::Direction::{Decrypt, Encrypt},
+    errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
 };
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{
-    <span class="ident">group::Group</span>,
-    <span class="ident">twisted_edwards_extended</span>::{<span class="ident">GroupAffine</span>, <span class="ident">GroupProjective</span>},
-    <span class="ident">AffineCurve</span>, <span class="ident">ProjectiveCurve</span>, <span class="ident">TEModelParameters</span> <span class="kw">as</span> <span class="ident">Parameters</span>,
+<span class="kw">use </span>ark_ec::{
+    group::Group,
+    twisted_edwards_extended::{GroupAffine, GroupProjective},
+    AffineCurve, ProjectiveCurve, TEModelParameters <span class="kw">as </span>Parameters,
 };
-<span class="kw">use</span> <span class="ident">ark_ff::UniformRand</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
-    <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">Rng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">string::ToString</span>,
-    <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
+<span class="kw">use </span>ark_ff::UniformRand;
+<span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
+<span class="kw">use </span>ark_std::{
+    hash::{Hash, Hasher},
+    rand::{CryptoRng, Rng, RngCore},
+    string::ToString,
+    vec,
+    vec::Vec,
 };
-<span class="kw">use</span> <span class="ident">jf_utils::pad_with_zeros</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">rayon::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
+<span class="kw">use </span>jf_utils::pad_with_zeros;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+</span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>zeroize::Zeroize;
 
-<span class="comment">// =====================================================</span>
-<span class="comment">// encrypt key</span>
-<span class="comment">// =====================================================</span>
-<span class="doccomment">/// Encryption key for encryption scheme</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Zeroize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(
-    <span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Eq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>)
-)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+<span class="comment">// =====================================================
+// encrypt key
+// =====================================================
+</span><span class="doccomment">/// Encryption key for encryption scheme
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Derivative)]
+#[derivative(
+    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Eq(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Default(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+)]
+</span><span class="kw">pub struct </span>EncKey&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">key</span>: <span class="ident">GroupProjective</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) key: GroupProjective&lt;P&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) {
-        <span class="ident">Hash::hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>(), <span class="ident">state</span>)
+<span class="kw">impl</span>&lt;P: Parameters&gt; Hash <span class="kw">for </span>EncKey&lt;P&gt; {
+    <span class="kw">fn </span>hash&lt;H: Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+        Hash::hash(<span class="kw-2">&amp;</span><span class="self">self</span>.key.into_affine(), state)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>() <span class="op">==</span> <span class="ident">other</span>.<span class="ident">key</span>.<span class="ident">into_affine</span>()
+<span class="kw">impl</span>&lt;P: Parameters&gt; PartialEq <span class="kw">for </span>EncKey&lt;P&gt; {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.key.into_affine() == other.key.into_affine()
     }
 }
 
-<span class="comment">// =====================================================</span>
-<span class="comment">// decrypt key</span>
-<span class="comment">// =====================================================</span>
-<span class="doccomment">/// Decryption key for encryption scheme</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Zeroize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(
-    <span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">PartialEq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>)
-)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+<span class="comment">// =====================================================
+// decrypt key
+// =====================================================
+</span><span class="doccomment">/// Decryption key for encryption scheme
+</span><span class="attribute">#[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DecKey&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="ident">key</span>: <span class="ident">P::ScalarField</span>,
+    key: P::ScalarField,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">key</span>.<span class="ident">zeroize</span>();
+<span class="kw">impl</span>&lt;P: Parameters&gt; Drop <span class="kw">for </span>DecKey&lt;P&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.key.zeroize();
     }
 }
 
-<span class="comment">// =====================================================</span>
-<span class="comment">// key pair</span>
-<span class="comment">// =====================================================</span>
+<span class="comment">// =====================================================
+// key pair
+// =====================================================
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(
-    <span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">PartialEq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>)
-)]</span>
-<span class="doccomment">/// KeyPair structure for encryption scheme</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+)]
+</span><span class="doccomment">/// KeyPair structure for encryption scheme
+</span><span class="kw">pub struct </span>KeyPair&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">enc</span>: <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    <span class="ident">dec</span>: <span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) enc: EncKey&lt;P&gt;,
+    dec: DecKey&lt;P&gt;,
 }
 
-<span class="comment">// =====================================================</span>
-<span class="comment">// ciphertext</span>
-<span class="comment">// =====================================================</span>
-<span class="doccomment">/// Public encryption cipher text</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(
-    <span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">PartialEq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Eq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>),
-    <span class="ident">Hash</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;P: Parameters&quot;</span>)
-)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+<span class="comment">// =====================================================
+// ciphertext
+// =====================================================
+</span><span class="doccomment">/// Public encryption cipher text
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Eq(bound = <span class="string">&quot;P: Parameters&quot;</span>),
+    Hash(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+)]
+</span><span class="kw">pub struct </span>Ciphertext&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">ephemeral</span>: <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">P::BaseField</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) ephemeral: EncKey&lt;P&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Vec&lt;P::BaseField&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+<span class="kw">impl</span>&lt;P&gt; Ciphertext&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="doccomment">/// Flatten out the ciphertext into a vector of scalars</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_scalars</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">P::BaseField</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ephemeral</span>).<span class="ident">into</span>();
-        <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">x</span>);
-        <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">y</span>);
-        <span class="ident">result</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>);
-        <span class="ident">result</span>
+    <span class="doccomment">/// Flatten out the ciphertext into a vector of scalars
+    </span><span class="kw">pub fn </span>to_scalars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;P::BaseField&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[];
+        <span class="kw">let </span>(x, y) = (<span class="kw-2">&amp;</span><span class="self">self</span>.ephemeral).into();
+        result.push(x);
+        result.push(y);
+        result.extend_from_slice(<span class="kw-2">&amp;</span><span class="self">self</span>.data);
+        result
     }
 
-    <span class="doccomment">/// Reconstruct the ciphertext from a list of scalars.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_scalars</span>(<span class="ident">scalars</span>: <span class="kw-2">&amp;</span>[<span class="ident">P::BaseField</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PrimitivesError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">scalars</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::ParameterError</span>(
-                <span class="string">&quot;At least 2 scalars in length for ciphertext&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Reconstruct the ciphertext from a list of scalars.
+    </span><span class="kw">pub fn </span>from_scalars(scalars: <span class="kw-2">&amp;</span>[P::BaseField]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
+        <span class="kw">if </span>scalars.len() &lt; <span class="number">2 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
+                <span class="string">&quot;At least 2 scalars in length for ciphertext&quot;</span>.to_string(),
             ));
         }
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">GroupAffine::new</span>(<span class="ident">scalars</span>[<span class="number">0</span>], <span class="ident">scalars</span>[<span class="number">1</span>]);
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">key</span>.<span class="ident">is_on_curve</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PrimitivesError::ParameterError</span>(
-                <span class="string">&quot;ephemeral pk should be a point on curve&quot;</span>.<span class="ident">to_string</span>(),
+        <span class="kw">let </span>key = GroupAffine::new(scalars[<span class="number">0</span>], scalars[<span class="number">1</span>]);
+        <span class="kw">if </span>!key.is_on_curve() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
+                <span class="string">&quot;ephemeral pk should be a point on curve&quot;</span>.to_string(),
             ));
         }
 
-        <span class="kw">let</span> <span class="ident">ephemeral</span> <span class="op">=</span> <span class="ident">EncKey</span> {
-            <span class="ident">key</span>: <span class="ident">key</span>.<span class="ident">into_projective</span>(),
+        <span class="kw">let </span>ephemeral = EncKey {
+            key: key.into_projective(),
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">data</span>.<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">scalars</span>[<span class="number">2</span>..]);
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">ephemeral</span>, <span class="ident">data</span> })
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[];
+        data.extend_from_slice(<span class="kw-2">&amp;</span>scalars[<span class="number">2</span>..]);
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ ephemeral, data })
     }
 }
 
-<span class="comment">// =====================================================</span>
-<span class="comment">// end of definitions</span>
-<span class="comment">// =====================================================</span>
+<span class="comment">// =====================================================
+// end of definitions
+// =====================================================
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+</span><span class="kw">impl</span>&lt;P&gt; KeyPair&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="doccomment">/// Key generation algorithm for public key encryption scheme</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(<span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">dec</span> <span class="op">=</span> <span class="ident">DecKey</span> {
-            <span class="ident">key</span>: <span class="ident">P::ScalarField::rand</span>(<span class="ident">rng</span>),
+    <span class="doccomment">/// Key generation algorithm for public key encryption scheme
+    </span><span class="kw">pub fn </span>generate&lt;R: CryptoRng + RngCore&gt;(rng: <span class="kw-2">&amp;mut </span>R) -&gt; KeyPair&lt;P&gt; {
+        <span class="kw">let </span>dec = DecKey {
+            key: P::ScalarField::rand(rng),
         };
-        <span class="kw">let</span> <span class="ident">enc</span> <span class="op">=</span> <span class="ident">EncKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">dec</span>);
-        <span class="ident">KeyPair</span> { <span class="ident">enc</span>, <span class="ident">dec</span> }
+        <span class="kw">let </span>enc = EncKey::from(<span class="kw-2">&amp;</span>dec);
+        KeyPair { enc, dec }
     }
 
-    <span class="doccomment">/// Get decryption key reference</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">dec_key_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dec</span>
+    <span class="doccomment">/// Get decryption key reference
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>dec_key_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>DecKey&lt;P&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.dec
     }
 
-    <span class="doccomment">/// Get encryption key</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enc_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">enc</span>.<span class="ident">clone</span>()
+    <span class="doccomment">/// Get encryption key
+    </span><span class="kw">pub fn </span>enc_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; EncKey&lt;P&gt; {
+        <span class="self">self</span>.enc.clone()
     }
 
-    <span class="doccomment">/// Get encryption key reference</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enc_key_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">enc</span>
+    <span class="doccomment">/// Get encryption key reference
+    </span><span class="kw">pub fn </span>enc_key_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>EncKey&lt;P&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.enc
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+<span class="kw">impl</span>&lt;P&gt; From&lt;DecKey&lt;P&gt;&gt; <span class="kw">for </span>KeyPair&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dec</span>: <span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">enc</span> <span class="op">=</span> <span class="ident">EncKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">dec</span>);
-        <span class="ident">KeyPair</span> { <span class="ident">enc</span>, <span class="ident">dec</span> }
+    <span class="kw">fn </span>from(dec: DecKey&lt;P&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>enc = EncKey::from(<span class="kw-2">&amp;</span>dec);
+        KeyPair { enc, dec }
     }
 }
 
-<span class="doccomment">/// Sample a random public key with unknown associated secret key</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&gt;</span> <span class="ident">UniformRand</span> <span class="kw">for</span> <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">rand</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">Rng</span> <span class="op">+</span> <span class="ident">RngCore</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span>,
+<span class="doccomment">/// Sample a random public key with unknown associated secret key
+</span><span class="kw">impl</span>&lt;P: Parameters&gt; UniformRand <span class="kw">for </span>EncKey&lt;P&gt; {
+    <span class="kw">fn </span>rand&lt;R&gt;(rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>R: Rng + RngCore + <span class="question-mark">?</span>Sized,
     {
-        <span class="ident">EncKey</span> {
-            <span class="ident">key</span>: <span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::rand</span>(<span class="ident">rng</span>),
+        EncKey {
+            key: GroupProjective::&lt;P&gt;::rand(rng),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; EncKey&lt;P&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn</span> <span class="ident">compute_cipher_text_from_ephemeral_key_pair</span>(
+    <span class="kw">fn </span>compute_cipher_text_from_ephemeral_key_pair(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ephemeral_key_pair</span>: <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-    ) -&gt; <span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">shared_key</span> <span class="op">=</span> <span class="ident">Group::mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">ephemeral_key_pair</span>.<span class="ident">dec_key_ref</span>().<span class="ident">key</span>).<span class="ident">into_affine</span>();
-        <span class="kw">let</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="comment">// TODO check if ok to use (x,y,0,0) as a key, since</span>
-        <span class="comment">// key = perm(x,y,0,0) doesn&#39;t buy us anything.</span>
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">perm</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-            <span class="ident">shared_key</span>.<span class="ident">x</span>,
-            <span class="ident">shared_key</span>.<span class="ident">y</span>,
-            <span class="ident">F::zero</span>(),
-            <span class="ident">F::zero</span>(),
+        ephemeral_key_pair: KeyPair&lt;P&gt;,
+        msg: <span class="kw-2">&amp;</span>[F],
+    ) -&gt; Ciphertext&lt;P&gt; {
+        <span class="kw">let </span>shared_key = Group::mul(<span class="kw-2">&amp;</span><span class="self">self</span>.key, <span class="kw-2">&amp;</span>ephemeral_key_pair.dec_key_ref().key).into_affine();
+        <span class="kw">let </span>perm = Permutation::default();
+        <span class="comment">// TODO check if ok to use (x,y,0,0) as a key, since
+        // key = perm(x,y,0,0) doesn&#39;t buy us anything.
+        </span><span class="kw">let </span>key = perm.eval(<span class="kw-2">&amp;</span>RescueVector::from(<span class="kw-2">&amp;</span>[
+            shared_key.x,
+            shared_key.y,
+            F::zero(),
+            F::zero(),
         ]));
-        <span class="comment">// since key was just sampled and to be used only once, we can allow NONCE = 0</span>
-        <span class="ident">Ciphertext</span> {
-            <span class="ident">ephemeral</span>: <span class="ident">ephemeral_key_pair</span>.<span class="ident">enc_key</span>(),
-            <span class="ident">data</span>: <span class="ident">apply_counter_mode_stream</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">msg</span>, <span class="kw-2">&amp;</span><span class="ident">F::zero</span>(), <span class="ident">Encrypt</span>),
+        <span class="comment">// since key was just sampled and to be used only once, we can allow NONCE = 0
+        </span>Ciphertext {
+            ephemeral: ephemeral_key_pair.enc_key(),
+            data: apply_counter_mode_stream::&lt;F, P&gt;(<span class="kw-2">&amp;</span>key, msg, <span class="kw-2">&amp;</span>F::zero(), Encrypt),
         }
     }
 
-    <span class="doccomment">/// Public key encryption function with pre-sampled randomness</span>
-    <span class="doccomment">/// * `r` - randomness</span>
-    <span class="doccomment">/// * `msg` - plaintext</span>
-    <span class="doccomment">/// * `returns` - Ciphertext</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deterministic_encrypt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="ident">P::ScalarField</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>]) -&gt; <span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ephemeral_key_pair</span> <span class="op">=</span> <span class="ident">KeyPair::from</span>(<span class="ident">DecKey</span> { <span class="ident">key</span>: <span class="ident">r</span> });
-        <span class="self">self</span>.<span class="ident">compute_cipher_text_from_ephemeral_key_pair</span>(<span class="ident">ephemeral_key_pair</span>, <span class="ident">msg</span>)
+    <span class="doccomment">/// Public key encryption function with pre-sampled randomness
+    /// * `r` - randomness
+    /// * `msg` - plaintext
+    /// * `returns` - Ciphertext
+    </span><span class="kw">pub fn </span>deterministic_encrypt(<span class="kw-2">&amp;</span><span class="self">self</span>, r: P::ScalarField, msg: <span class="kw-2">&amp;</span>[F]) -&gt; Ciphertext&lt;P&gt; {
+        <span class="kw">let </span>ephemeral_key_pair = KeyPair::from(DecKey { key: r });
+        <span class="self">self</span>.compute_cipher_text_from_ephemeral_key_pair(ephemeral_key_pair, msg)
     }
 
-    <span class="doccomment">/// Public key encryption function</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encrypt</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span><span class="op">&gt;</span>(
+    <span class="doccomment">/// Public key encryption function
+    </span><span class="kw">pub fn </span>encrypt&lt;R: CryptoRng + RngCore&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">P::BaseField</span>],
-    ) -&gt; <span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ephemeral_key_pair</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="ident">prng</span>);
-        <span class="self">self</span>.<span class="ident">compute_cipher_text_from_ephemeral_key_pair</span>(<span class="ident">ephemeral_key_pair</span>, <span class="ident">msg</span>)
+        prng: <span class="kw-2">&amp;mut </span>R,
+        msg: <span class="kw-2">&amp;</span>[P::BaseField],
+    ) -&gt; Ciphertext&lt;P&gt; {
+        <span class="kw">let </span>ephemeral_key_pair = KeyPair::generate(prng);
+        <span class="self">self</span>.compute_cipher_text_from_ephemeral_key_pair(ephemeral_key_pair, msg)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; DecKey&lt;P&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="doccomment">/// Decryption function</span>
-    <span class="kw">fn</span> <span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ctext</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">P::BaseField</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">perm</span> <span class="op">=</span> <span class="ident">Permutation::default</span>();
-        <span class="kw">let</span> <span class="ident">shared_key</span> <span class="op">=</span> <span class="ident">Group::mul</span>(<span class="kw-2">&amp;</span><span class="ident">ctext</span>.<span class="ident">ephemeral</span>.<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>).<span class="ident">into_affine</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">perm</span>.<span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-            <span class="ident">shared_key</span>.<span class="ident">x</span>,
-            <span class="ident">shared_key</span>.<span class="ident">y</span>,
-            <span class="ident">F::zero</span>(),
-            <span class="ident">F::zero</span>(),
+    <span class="doccomment">/// Decryption function
+    </span><span class="kw">fn </span>decrypt(<span class="kw-2">&amp;</span><span class="self">self</span>, ctext: <span class="kw-2">&amp;</span>Ciphertext&lt;P&gt;) -&gt; Vec&lt;P::BaseField&gt; {
+        <span class="kw">let </span>perm = Permutation::default();
+        <span class="kw">let </span>shared_key = Group::mul(<span class="kw-2">&amp;</span>ctext.ephemeral.key, <span class="kw-2">&amp;</span><span class="self">self</span>.key).into_affine();
+        <span class="kw">let </span>key = perm.eval(<span class="kw-2">&amp;</span>RescueVector::from(<span class="kw-2">&amp;</span>[
+            shared_key.x,
+            shared_key.y,
+            F::zero(),
+            F::zero(),
         ]));
-        <span class="comment">// since key was just samples and to be used only once, we can have NONCE = 0</span>
-        <span class="ident">apply_counter_mode_stream</span>::<span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">ctext</span>.<span class="ident">data</span>.<span class="ident">as_slice</span>(), <span class="kw-2">&amp;</span><span class="ident">F::zero</span>(), <span class="ident">Decrypt</span>)
+        <span class="comment">// since key was just samples and to be used only once, we can have NONCE = 0
+        </span>apply_counter_mode_stream::&lt;F, P&gt;(<span class="kw-2">&amp;</span>key, ctext.data.as_slice(), <span class="kw-2">&amp;</span>F::zero(), Decrypt)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EncKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Parameters</span>,
+<span class="kw">impl</span>&lt;P&gt; From&lt;<span class="kw-2">&amp;</span>DecKey&lt;P&gt;&gt; <span class="kw">for </span>EncKey&lt;P&gt;
+<span class="kw">where
+    </span>P: Parameters,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dec_key</span>: <span class="kw-2">&amp;</span><span class="ident">DecKey</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">GroupProjective</span>::<span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span><span class="ident">::prime_subgroup_generator</span>();
-        <span class="ident">point</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">dec_key</span>.<span class="ident">key</span>;
-        <span class="self">Self</span> { <span class="ident">key</span>: <span class="ident">point</span> }
+    <span class="kw">fn </span>from(dec_key: <span class="kw-2">&amp;</span>DecKey&lt;P&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>point = GroupProjective::&lt;P&gt;::prime_subgroup_generator();
+        point <span class="kw-2">*</span>= dec_key.key;
+        <span class="self">Self </span>{ key: point }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span> <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, P&gt; KeyPair&lt;P&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="doccomment">/// Decryption function</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ctext</span>: <span class="kw-2">&amp;</span><span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">dec</span>.<span class="ident">decrypt</span>(<span class="ident">ctext</span>)
+    <span class="doccomment">/// Decryption function
+    </span><span class="kw">pub fn </span>decrypt(<span class="kw-2">&amp;</span><span class="self">self</span>, ctext: <span class="kw-2">&amp;</span>Ciphertext&lt;P&gt;) -&gt; Vec&lt;F&gt; {
+        <span class="self">self</span>.dec.decrypt(ctext)
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">Direction</span> {
-    <span class="ident">Encrypt</span>,
-    <span class="ident">Decrypt</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Direction {
+    Encrypt,
+    Decrypt,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">apply_counter_mode_stream</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">P</span><span class="op">&gt;</span>(
-    <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">RescueVector</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">F</span>],
-    <span class="ident">nonce</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>,
-    <span class="ident">direction</span>: <span class="ident">Direction</span>,
-) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">RescueParameter</span>,
-    <span class="ident">P</span>: <span class="ident">Parameters</span><span class="op">&lt;</span><span class="ident">BaseField</span> <span class="op">=</span> <span class="ident">F</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>apply_counter_mode_stream&lt;F, P&gt;(
+    key: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;,
+    data: <span class="kw-2">&amp;</span>[F],
+    nonce: <span class="kw-2">&amp;</span>F,
+    direction: Direction,
+) -&gt; Vec&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+    P: Parameters&lt;BaseField = F&gt;,
 {
-    <span class="kw">let</span> <span class="ident">prp</span> <span class="op">=</span> <span class="ident">PRP::default</span>();
-    <span class="kw">let</span> <span class="ident">round_keys</span> <span class="op">=</span> <span class="ident">prp</span>.<span class="ident">key_schedule</span>(<span class="ident">key</span>);
-    <span class="comment">// compute stream</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">to_vec</span>();
-    <span class="comment">// temporarily append dummy padding element</span>
-    <span class="ident">pad_with_zeros</span>(<span class="kw-2">&amp;mut</span> <span class="ident">output</span>, <span class="ident">STATE_SIZE</span>);
+    <span class="kw">let </span>prp = PRP::default();
+    <span class="kw">let </span>round_keys = prp.key_schedule(key);
+    <span class="comment">// compute stream
+    </span><span class="kw">let </span><span class="kw-2">mut </span>output = data.to_vec();
+    <span class="comment">// temporarily append dummy padding element
+    </span>pad_with_zeros(<span class="kw-2">&amp;mut </span>output, STATE_SIZE);
 
-    <span class="kw">let</span> <span class="ident">round_fn</span> <span class="op">=</span> <span class="op">|</span>(<span class="ident">idx</span>, <span class="ident">output_chunk</span>): (<span class="ident">usize</span>, <span class="kw-2">&amp;mut</span> [<span class="ident">F</span>])<span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">stream_chunk</span> <span class="op">=</span> <span class="ident">prp</span>.<span class="ident">prp_with_round_keys</span>(
-            <span class="kw-2">&amp;</span><span class="ident">round_keys</span>,
-            <span class="kw-2">&amp;</span><span class="ident">RescueVector::from</span>(<span class="kw-2">&amp;</span>[
-                <span class="ident">nonce</span>.<span class="ident">add</span>(<span class="ident">F::from</span>(<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">u64</span>)),
-                <span class="ident">F::zero</span>(),
-                <span class="ident">F::zero</span>(),
-                <span class="ident">F::zero</span>(),
+    <span class="kw">let </span>round_fn = |(idx, output_chunk): (usize, <span class="kw-2">&amp;mut </span>[F])| {
+        <span class="kw">let </span>stream_chunk = prp.prp_with_round_keys(
+            <span class="kw-2">&amp;</span>round_keys,
+            <span class="kw-2">&amp;</span>RescueVector::from(<span class="kw-2">&amp;</span>[
+                nonce.add(F::from(idx <span class="kw">as </span>u64)),
+                F::zero(),
+                F::zero(),
+                F::zero(),
             ]),
         );
-        <span class="kw">for</span> (<span class="ident">output_elem</span>, <span class="ident">stream_elem</span>) <span class="kw">in</span> <span class="ident">output_chunk</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">stream_chunk</span>.<span class="ident">elems</span>().<span class="ident">iter</span>()) {
-            <span class="kw">match</span> <span class="ident">direction</span> {
-                <span class="ident">Direction::Encrypt</span> =&gt; <span class="ident">output_elem</span>.<span class="ident">add_assign</span>(<span class="ident">stream_elem</span>),
-                <span class="ident">Direction::Decrypt</span> =&gt; <span class="ident">output_elem</span>.<span class="ident">sub_assign</span>(<span class="ident">stream_elem</span>),
+        <span class="kw">for </span>(output_elem, stream_elem) <span class="kw">in </span>output_chunk.iter_mut().zip(stream_chunk.elems().iter()) {
+            <span class="kw">match </span>direction {
+                Direction::Encrypt =&gt; output_elem.add_assign(stream_elem),
+                Direction::Decrypt =&gt; output_elem.sub_assign(stream_elem),
             }
         }
     };
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>)]</span>
-    {
-        <span class="ident">output</span>
-            .<span class="ident">par_chunks_exact_mut</span>(<span class="ident">STATE_SIZE</span>)
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">for_each</span>(<span class="ident">round_fn</span>);
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+    </span>{
+        output
+            .par_chunks_exact_mut(STATE_SIZE)
+            .enumerate()
+            .for_each(round_fn);
     }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parallel&quot;</span>))]</span>
-    {
-        <span class="ident">output</span>
-            .<span class="ident">chunks_exact_mut</span>(<span class="ident">STATE_SIZE</span>)
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">for_each</span>(<span class="ident">round_fn</span>);
+    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;parallel&quot;</span>))]
+    </span>{
+        output
+            .chunks_exact_mut(STATE_SIZE)
+            .enumerate()
+            .for_each(round_fn);
     }
-    <span class="comment">// remove dummy padding elements</span>
-    <span class="ident">output</span>.<span class="ident">truncate</span>(<span class="ident">data</span>.<span class="ident">len</span>());
-    <span class="ident">output</span>
+    <span class="comment">// remove dummy padding elements
+    </span>output.truncate(data.len());
+    output
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ciphertext</span>, <span class="ident">DecKey</span>, <span class="ident">EncKey</span>, <span class="ident">KeyPair</span>, <span class="ident">UniformRand</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd377</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">FrEd377</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd381</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">FrEd381</span>};
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381_bandersnatch</span>::{
-        <span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd381b</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd381b</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">FrEd381b</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::{Ciphertext, DecKey, EncKey, KeyPair, UniformRand};
+    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsParameters <span class="kw">as </span>ParamEd377, Fq <span class="kw">as </span>FqEd377, Fr <span class="kw">as </span>FrEd377};
+    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsParameters <span class="kw">as </span>ParamEd381, Fq <span class="kw">as </span>FqEd381, Fr <span class="kw">as </span>FrEd381};
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{
+        EdwardsParameters <span class="kw">as </span>ParamEd381b, Fq <span class="kw">as </span>FqEd381b, Fr <span class="kw">as </span>FrEd381b,
     };
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254</span>::{<span class="ident">EdwardsParameters</span> <span class="kw">as</span> <span class="ident">ParamEd254</span>, <span class="ident">Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>, <span class="ident">Fr</span> <span class="kw">as</span> <span class="ident">FrEd254</span>};
-    <span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
+    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>ParamEd254, Fq <span class="kw">as </span>FqEd254, Fr <span class="kw">as </span>FrEd254};
+    <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+    <span class="kw">use </span>ark_std::{vec, vec::Vec};
 
-    <span class="macro">macro_rules!</span> <span class="ident">test_enc_and_dec</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>: <span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">scalar_field</span>: <span class="ident">tt</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-            <span class="kw">let</span> <span class="ident">keypair</span>: <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">KeyPair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="macro">macro_rules! </span>test_enc_and_dec {
+        (<span class="macro-nonterminal">$param</span>: tt, <span class="macro-nonterminal">$base_field</span>:tt, <span class="macro-nonterminal">$scalar_field</span>: tt) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+            <span class="kw">let </span>keypair: KeyPair&lt;<span class="macro-nonterminal">$param</span>&gt; = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[];
+            <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
 
-            <span class="kw">let</span> <span class="ident">pub_key</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">enc_key_ref</span>();
+            <span class="kw">let </span>pub_key = keypair.enc_key_ref();
 
-            <span class="kw">loop</span> {
-                <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="number">17</span> {
+            <span class="kw">loop </span>{
+                <span class="kw">if </span>i == <span class="number">17 </span>{
                     <span class="kw">break</span>;
                 }
 
-                <span class="kw">let</span> <span class="ident">ctext1</span> <span class="op">=</span> <span class="ident">pub_key</span>.<span class="ident">encrypt</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
-                <span class="kw">let</span> <span class="ident">decrypted1</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ctext1</span>);
-                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="ident">decrypted1</span>.<span class="ident">as_slice</span>());
-                <span class="kw">let</span> <span class="ident">decrypted1</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">dec_key_ref</span>().<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ctext1</span>);
-                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="ident">decrypted1</span>.<span class="ident">as_slice</span>());
+                <span class="kw">let </span>ctext1 = pub_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>data);
+                <span class="kw">let </span>decrypted1 = keypair.decrypt(<span class="kw-2">&amp;</span>ctext1);
+                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>data, decrypted1.as_slice());
+                <span class="kw">let </span>decrypted1 = keypair.dec_key_ref().decrypt(<span class="kw-2">&amp;</span>ctext1);
+                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>data, decrypted1.as_slice());
 
-                <span class="kw">let</span> <span class="ident">ctext2</span> <span class="op">=</span> <span class="ident">pub_key</span>.<span class="ident">deterministic_encrypt</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">scalar_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>), <span class="kw-2">&amp;</span><span class="ident">data</span>);
-                <span class="kw">let</span> <span class="ident">decrypted2</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">ctext2</span>);
-                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="ident">decrypted2</span>.<span class="ident">as_slice</span>());
+                <span class="kw">let </span>ctext2 = pub_key.deterministic_encrypt(<span class="macro-nonterminal">$scalar_field::rand</span>(<span class="kw-2">&amp;mut </span>rng), <span class="kw-2">&amp;</span>data);
+                <span class="kw">let </span>decrypted2 = keypair.decrypt(<span class="kw-2">&amp;</span>ctext2);
+                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>data, decrypted2.as_slice());
 
-                <span class="ident">data</span>.<span class="ident">push</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>));
-                <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                data.push(<span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>rng));
+                i += <span class="number">1</span>;
             }
         };
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_enc_and_dec</span>() {
-        <span class="macro">test_enc_and_dec!</span>(<span class="ident">ParamEd254</span>, <span class="ident">FqEd254</span>, <span class="ident">FrEd254</span>);
-        <span class="macro">test_enc_and_dec!</span>(<span class="ident">ParamEd377</span>, <span class="ident">FqEd377</span>, <span class="ident">FrEd377</span>);
-        <span class="macro">test_enc_and_dec!</span>(<span class="ident">ParamEd381</span>, <span class="ident">FqEd381</span>, <span class="ident">FrEd381</span>);
-        <span class="macro">test_enc_and_dec!</span>(<span class="ident">ParamEd381b</span>, <span class="ident">FqEd381b</span>, <span class="ident">FrEd381b</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_enc_and_dec() {
+        <span class="macro">test_enc_and_dec!</span>(ParamEd254, FqEd254, FrEd254);
+        <span class="macro">test_enc_and_dec!</span>(ParamEd377, FqEd377, FrEd377);
+        <span class="macro">test_enc_and_dec!</span>(ParamEd381, FqEd381, FrEd381);
+        <span class="macro">test_enc_and_dec!</span>(ParamEd381b, FqEd381b, FrEd381b);
     }
 
-    <span class="macro">macro_rules!</span> <span class="ident">test_serdes</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>: <span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field</span>:<span class="ident">tt</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">scalar_field</span>: <span class="ident">tt</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">ark_std::test_rng</span>();
-            <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">KeyPair</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span><span class="ident">::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base_field::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)];
-            <span class="kw">let</span> <span class="ident">ct</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">enc_key</span>().<span class="ident">encrypt</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>[..]);
+    <span class="macro">macro_rules! </span>test_serdes {
+        (<span class="macro-nonterminal">$param</span>: tt, <span class="macro-nonterminal">$base_field</span>:tt, <span class="macro-nonterminal">$scalar_field</span>: tt) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+            <span class="kw">let </span>keypair = KeyPair::&lt;<span class="macro-nonterminal">$param</span>&gt;::generate(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>msg = <span class="macro">vec!</span>[<span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>rng)];
+            <span class="kw">let </span>ct = keypair.enc_key().encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg[..]);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="ident">keypair</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">de</span>: <span class="ident">KeyPair</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">KeyPair::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..]).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">de</span>, <span class="ident">keypair</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
+            keypair.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+            <span class="kw">let </span>de: KeyPair&lt;<span class="macro-nonterminal">$param</span>&gt; = KeyPair::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+            <span class="macro">assert_eq!</span>(de, keypair);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="ident">keypair</span>.<span class="ident">enc</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">de</span>: <span class="ident">EncKey</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">EncKey::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..]).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">keypair</span>.<span class="ident">enc</span>, <span class="ident">de</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
+            keypair.enc.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+            <span class="kw">let </span>de: EncKey&lt;<span class="macro-nonterminal">$param</span>&gt; = EncKey::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+            <span class="macro">assert_eq!</span>(keypair.enc, de);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="ident">keypair</span>.<span class="ident">dec</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">de</span>: <span class="ident">DecKey</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">DecKey::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..]).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">keypair</span>.<span class="ident">dec</span>, <span class="ident">de</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
+            keypair.dec.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+            <span class="kw">let </span>de: DecKey&lt;<span class="macro-nonterminal">$param</span>&gt; = DecKey::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+            <span class="macro">assert_eq!</span>(keypair.dec, de);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ser_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="ident">ct</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ser_bytes</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">de</span>: <span class="ident">Ciphertext</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Ciphertext::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">ser_bytes</span>[..]).<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">ct</span>, <span class="ident">de</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
+            ct.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+            <span class="kw">let </span>de: Ciphertext&lt;<span class="macro-nonterminal">$param</span>&gt; = Ciphertext::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+            <span class="macro">assert_eq!</span>(ct, de);
         };
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_serde</span>() {
-        <span class="macro">test_serdes!</span>(<span class="ident">ParamEd254</span>, <span class="ident">FqEd254</span>, <span class="ident">FrEd254</span>);
-        <span class="macro">test_serdes!</span>(<span class="ident">ParamEd377</span>, <span class="ident">FqEd377</span>, <span class="ident">FrEd377</span>);
-        <span class="macro">test_serdes!</span>(<span class="ident">ParamEd381</span>, <span class="ident">FqEd381</span>, <span class="ident">FrEd381</span>);
-        <span class="macro">test_serdes!</span>(<span class="ident">ParamEd381b</span>, <span class="ident">FqEd381b</span>, <span class="ident">FrEd381b</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_serde() {
+        <span class="macro">test_serdes!</span>(ParamEd254, FqEd254, FrEd254);
+        <span class="macro">test_serdes!</span>(ParamEd377, FqEd377, FrEd377);
+        <span class="macro">test_serdes!</span>(ParamEd381, FqEd381, FrEd381);
+        <span class="macro">test_serdes!</span>(ParamEd381b, FqEd381b, FrEd381b);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

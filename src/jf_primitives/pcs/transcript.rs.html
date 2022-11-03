@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/transcript.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transcript.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/transcript.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transcript.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -107,114 +107,114 @@
 <span id="107">107</span>
 <span id="108">108</span>
 <span id="109">109</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Module for PolyIOP transcript.</span>
-<span class="comment">// TODO(chengyu): merge it with jf-plonk/transcript or remove transcript</span>
-<span class="comment">// dependency for pcs module</span>
+</span><span class="doccomment">//! Module for PolyIOP transcript.
+</span><span class="comment">// TODO(chengyu): merge it with jf-plonk/transcript or remove transcript
+// dependency for pcs module
 
-<span class="kw">mod</span> <span class="ident">errors</span> {
-    <span class="kw">use</span> <span class="ident">ark_std::string::String</span>;
-    <span class="kw">use</span> <span class="ident">displaydoc::Display</span>;
+</span><span class="kw">mod </span>errors {
+    <span class="kw">use </span>ark_std::string::String;
+    <span class="kw">use </span>displaydoc::Display;
 
-    <span class="doccomment">/// A `enum` specifying the possible failure modes of the Transcript.</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Display</span>, <span class="ident">Debug</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TranscriptError</span> {
-        <span class="doccomment">/// Invalid Transcript: {0}</span>
-        <span class="ident">InvalidTranscript</span>(<span class="ident">String</span>),
-        <span class="doccomment">/// An error during (de)serialization: {0}</span>
-        <span class="ident">SerializationError</span>(<span class="ident">ark_serialize::SerializationError</span>),
+    <span class="doccomment">/// A `enum` specifying the possible failure modes of the Transcript.
+    </span><span class="attribute">#[derive(Display, Debug)]
+    </span><span class="kw">pub enum </span>TranscriptError {
+        <span class="doccomment">/// Invalid Transcript: {0}
+        </span>InvalidTranscript(String),
+        <span class="doccomment">/// An error during (de)serialization: {0}
+        </span>SerializationError(ark_serialize::SerializationError),
     }
 
-    <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ark_serialize::SerializationError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TranscriptError</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">ark_serialize::SerializationError</span>) -&gt; <span class="self">Self</span> {
-            <span class="ident"><span class="self">Self</span>::SerializationError</span>(<span class="ident">e</span>)
+    <span class="kw">impl </span>From&lt;ark_serialize::SerializationError&gt; <span class="kw">for </span>TranscriptError {
+        <span class="kw">fn </span>from(e: ark_serialize::SerializationError) -&gt; <span class="self">Self </span>{
+            <span class="self">Self</span>::SerializationError(e)
         }
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">errors::TranscriptError</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>errors::TranscriptError;
 
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize::CanonicalSerialize</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">string::ToString</span>};
-<span class="kw">use</span> <span class="ident">jf_utils::to_bytes</span>;
-<span class="kw">use</span> <span class="ident">merlin::Transcript</span>;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_serialize::CanonicalSerialize;
+<span class="kw">use </span>ark_std::{marker::PhantomData, string::ToString};
+<span class="kw">use </span>jf_utils::to_bytes;
+<span class="kw">use </span>merlin::Transcript;
 
-<span class="doccomment">/// An IOP transcript consists of a Merlin transcript and a flag `is_empty` to</span>
-<span class="doccomment">/// indicate that if the transcript is empty.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is associated with a prime field `F` for which challenges are generated</span>
-<span class="doccomment">/// over.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The `is_empty` flag is useful in the case where a protocol is initiated by</span>
-<span class="doccomment">/// the verifier, in which case the prover should start its phase by receiving a</span>
-<span class="doccomment">/// `non-empty` transcript.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">IOPTranscript</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> {
-    <span class="ident">transcript</span>: <span class="ident">Transcript</span>,
-    <span class="ident">is_empty</span>: <span class="ident">bool</span>,
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="ident">phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An IOP transcript consists of a Merlin transcript and a flag `is_empty` to
+/// indicate that if the transcript is empty.
+///
+/// It is associated with a prime field `F` for which challenges are generated
+/// over.
+///
+/// The `is_empty` flag is useful in the case where a protocol is initiated by
+/// the verifier, in which case the prover should start its phase by receiving a
+/// `non-empty` transcript.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>IOPTranscript&lt;F: PrimeField&gt; {
+    transcript: Transcript,
+    is_empty: bool,
+    <span class="attribute">#[doc(hidden)]
+    </span>phantom: PhantomData&lt;F&gt;,
 }
 
-<span class="comment">// TODO: merge this with jf_plonk::transcript</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">IOPTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new IOP transcript.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">transcript</span>: <span class="ident">Transcript::new</span>(<span class="ident">label</span>),
-            <span class="ident">is_empty</span>: <span class="bool-val">true</span>,
-            <span class="ident">phantom</span>: <span class="ident">PhantomData::default</span>(),
+<span class="comment">// TODO: merge this with jf_plonk::transcript
+</span><span class="kw">impl</span>&lt;F: PrimeField&gt; IOPTranscript&lt;F&gt; {
+    <span class="doccomment">/// Create a new IOP transcript.
+    </span><span class="kw">pub fn </span>new(label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            transcript: Transcript::new(label),
+            is_empty: <span class="bool-val">true</span>,
+            phantom: PhantomData::default(),
         }
     }
 
-    <span class="doccomment">/// Append the message to the transcript.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_message</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TranscriptError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">transcript</span>.<span class="ident">append_message</span>(<span class="ident">label</span>, <span class="ident">msg</span>);
-        <span class="self">self</span>.<span class="ident">is_empty</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="doccomment">/// Append the message to the transcript.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_message(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        msg: <span class="kw-2">&amp;</span>[u8],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TranscriptError&gt; {
+        <span class="self">self</span>.transcript.append_message(label, msg);
+        <span class="self">self</span>.is_empty = <span class="bool-val">false</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Append the message to the transcript.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">append_serializable_element</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">CanonicalSerialize</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-        <span class="ident">group_elem</span>: <span class="kw-2">&amp;</span><span class="ident">S</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TranscriptError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">append_message</span>(<span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="ident">group_elem</span>)<span class="question-mark">?</span>)
+    <span class="doccomment">/// Append the message to the transcript.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_serializable_element&lt;S: CanonicalSerialize&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        group_elem: <span class="kw-2">&amp;</span>S,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TranscriptError&gt; {
+        <span class="self">self</span>.append_message(label, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(group_elem)<span class="question-mark">?</span>)
     }
 
-    <span class="doccomment">/// Generate the challenge from the current transcript</span>
-    <span class="doccomment">/// and append it to the transcript.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The output field element is statistical uniform as long</span>
-    <span class="doccomment">/// as the field has a size less than 2^384.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_and_append_challenge</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">TranscriptError</span><span class="op">&gt;</span> {
-        <span class="comment">//  we need to reject when transcript is empty</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_empty</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TranscriptError::InvalidTranscript</span>(
-                <span class="string">&quot;transcript is empty&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="doccomment">/// Generate the challenge from the current transcript
+    /// and append it to the transcript.
+    ///
+    /// The output field element is statistical uniform as long
+    /// as the field has a size less than 2^384.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_and_append_challenge(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;F, TranscriptError&gt; {
+        <span class="comment">//  we need to reject when transcript is empty
+        </span><span class="kw">if </span><span class="self">self</span>.is_empty {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(TranscriptError::InvalidTranscript(
+                <span class="string">&quot;transcript is empty&quot;</span>.to_string(),
             ));
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">64</span>];
-        <span class="self">self</span>.<span class="ident">transcript</span>.<span class="ident">challenge_bytes</span>(<span class="ident">label</span>, <span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
-        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">F::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>);
-        <span class="self">self</span>.<span class="ident">append_serializable_element</span>(<span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="ident">challenge</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">challenge</span>)
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">64</span>];
+        <span class="self">self</span>.transcript.challenge_bytes(label, <span class="kw-2">&amp;mut </span>buf);
+        <span class="kw">let </span>challenge = F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>buf);
+        <span class="self">self</span>.append_serializable_element(label, <span class="kw-2">&amp;</span>challenge)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(challenge)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

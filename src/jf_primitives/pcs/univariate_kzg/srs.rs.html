@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/srs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>srs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/srs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>srs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -153,160 +153,160 @@
 <span id="153">153</span>
 <span id="154">154</span>
 <span id="155">155</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Implementing Structured Reference Strings for univariate polynomial KZG</span>
+</span><span class="doccomment">//! Implementing Structured Reference Strings for univariate polynomial KZG
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pcs</span>::{<span class="ident">PCSError</span>, <span class="ident">StructuredReferenceString</span>};
-<span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">msm::FixedBaseMSM</span>, <span class="ident">AffineCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">ProjectiveCurve</span>};
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">Read</span>, <span class="ident">SerializationError</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{
-    <span class="ident">end_timer</span>,
-    <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>},
-    <span class="ident">start_timer</span>, <span class="ident">vec</span>,
-    <span class="ident">vec::Vec</span>,
-    <span class="ident">One</span>, <span class="ident">UniformRand</span>,
+</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{PCSError, StructuredReferenceString};
+<span class="kw">use </span>ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+<span class="kw">use </span>ark_std::{
+    end_timer,
+    rand::{CryptoRng, RngCore},
+    start_timer, vec,
+    vec::Vec,
+    One, UniformRand,
 };
 
-<span class="doccomment">/// `UniversalParams` are the universal parameters for the KZG10 scheme.</span>
-<span class="comment">// Adapted from</span>
-<span class="comment">// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L20</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Group elements of the form `{ \beta^i G }`, where `i` ranges from 0 to</span>
-    <span class="doccomment">/// `degree`.</span>
-    <span class="kw">pub</span> <span class="ident">powers_of_g</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The generator of G2.</span>
-    <span class="kw">pub</span> <span class="ident">h</span>: <span class="ident">E::G2Affine</span>,
-    <span class="doccomment">/// \beta times the above generator of G2.</span>
-    <span class="kw">pub</span> <span class="ident">beta_h</span>: <span class="ident">E::G2Affine</span>,
+<span class="doccomment">/// `UniversalParams` are the universal parameters for the KZG10 scheme.
+</span><span class="comment">// Adapted from
+// https://github.com/arkworks-rs/poly-commit/blob/master/src/kzg10/data_structures.rs#L20
+</span><span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Default)]
+</span><span class="kw">pub struct </span>UnivariateUniversalParams&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// Group elements of the form `{ \beta^i G }`, where `i` ranges from 0 to
+    /// `degree`.
+    </span><span class="kw">pub </span>powers_of_g: Vec&lt;E::G1Affine&gt;,
+    <span class="doccomment">/// The generator of G2.
+    </span><span class="kw">pub </span>h: E::G2Affine,
+    <span class="doccomment">/// \beta times the above generator of G2.
+    </span><span class="kw">pub </span>beta_h: E::G2Affine,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns the maximum supported degree</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_degree</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">powers_of_g</span>.<span class="ident">len</span>()
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; UnivariateUniversalParams&lt;E&gt; {
+    <span class="doccomment">/// Returns the maximum supported degree
+    </span><span class="kw">pub fn </span>max_degree(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.powers_of_g.len()
     }
 }
 
-<span class="doccomment">/// `UnivariateProverParam` is used to generate a proof</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnivariateProverParam</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">AffineCurve</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Parameters</span>
-    <span class="kw">pub</span> <span class="ident">powers_of_g</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
+<span class="doccomment">/// `UnivariateProverParam` is used to generate a proof
+</span><span class="attribute">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
+</span><span class="kw">pub struct </span>UnivariateProverParam&lt;C: AffineCurve&gt; {
+    <span class="doccomment">/// Parameters
+    </span><span class="kw">pub </span>powers_of_g: Vec&lt;C&gt;,
 }
 
-<span class="doccomment">/// `UnivariateVerifierParam` is used to check evaluation proofs for a given</span>
-<span class="doccomment">/// commitment.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Derivative</span>, <span class="ident">CanonicalSerialize</span>, <span class="ident">CanonicalDeserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(
-    <span class="ident">Default</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>),
-    <span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>),
-    <span class="ident">Copy</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>),
-    <span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>),
-    <span class="ident">PartialEq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>),
-    <span class="ident">Eq</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>)
-)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The generator of G1.</span>
-    <span class="kw">pub</span> <span class="ident">g</span>: <span class="ident">E::G1Affine</span>,
-    <span class="doccomment">/// The generator of G2.</span>
-    <span class="kw">pub</span> <span class="ident">h</span>: <span class="ident">E::G2Affine</span>,
-    <span class="doccomment">/// \beta times the above generator of G2.</span>
-    <span class="kw">pub</span> <span class="ident">beta_h</span>: <span class="ident">E::G2Affine</span>,
+<span class="doccomment">/// `UnivariateVerifierParam` is used to check evaluation proofs for a given
+/// commitment.
+</span><span class="attribute">#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize)]
+#[derivative(
+    Default(bound = <span class="string">&quot;&quot;</span>),
+    Clone(bound = <span class="string">&quot;&quot;</span>),
+    Copy(bound = <span class="string">&quot;&quot;</span>),
+    Debug(bound = <span class="string">&quot;&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;&quot;</span>),
+    Eq(bound = <span class="string">&quot;&quot;</span>)
+)]
+</span><span class="kw">pub struct </span>UnivariateVerifierParam&lt;E: PairingEngine&gt; {
+    <span class="doccomment">/// The generator of G1.
+    </span><span class="kw">pub </span>g: E::G1Affine,
+    <span class="doccomment">/// The generator of G2.
+    </span><span class="kw">pub </span>h: E::G2Affine,
+    <span class="doccomment">/// \beta times the above generator of G2.
+    </span><span class="kw">pub </span>beta_h: E::G2Affine,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span> <span class="ident">StructuredReferenceString</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">ProverParam</span> <span class="op">=</span> <span class="ident">UnivariateProverParam</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">VerifierParam</span> <span class="op">=</span> <span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;E: PairingEngine&gt; StructuredReferenceString&lt;E&gt; <span class="kw">for </span>UnivariateUniversalParams&lt;E&gt; {
+    <span class="kw">type </span>ProverParam = UnivariateProverParam&lt;E::G1Affine&gt;;
+    <span class="kw">type </span>VerifierParam = UnivariateVerifierParam&lt;E&gt;;
 
-    <span class="doccomment">/// Extract the prover parameters from the public parameters.</span>
-    <span class="kw">fn</span> <span class="ident">extract_prover_param</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">supported_size</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::ProverParam</span> {
-        <span class="kw">let</span> <span class="ident">powers_of_g</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">powers_of_g</span>[..<span class="op">=</span><span class="ident">supported_size</span>].<span class="ident">to_vec</span>();
+    <span class="doccomment">/// Extract the prover parameters from the public parameters.
+    </span><span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::ProverParam {
+        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_size].to_vec();
 
-        <span class="ident"><span class="self">Self</span>::ProverParam</span> { <span class="ident">powers_of_g</span> }
+        <span class="self">Self</span>::ProverParam { powers_of_g }
     }
 
-    <span class="doccomment">/// Extract the verifier parameters from the public parameters.</span>
-    <span class="kw">fn</span> <span class="ident">extract_verifier_param</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_supported_size</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::VerifierParam</span> {
-        <span class="ident"><span class="self">Self</span>::VerifierParam</span> {
-            <span class="ident">g</span>: <span class="self">self</span>.<span class="ident">powers_of_g</span>[<span class="number">0</span>],
-            <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">h</span>,
-            <span class="ident">beta_h</span>: <span class="self">self</span>.<span class="ident">beta_h</span>,
+    <span class="doccomment">/// Extract the verifier parameters from the public parameters.
+    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, _supported_size: usize) -&gt; <span class="self">Self</span>::VerifierParam {
+        <span class="self">Self</span>::VerifierParam {
+            g: <span class="self">self</span>.powers_of_g[<span class="number">0</span>],
+            h: <span class="self">self</span>.h,
+            beta_h: <span class="self">self</span>.beta_h,
         }
     }
 
-    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters</span>
-    <span class="doccomment">/// for univariate polynomials to the given `supported_size`, and</span>
-    <span class="doccomment">/// returns committer key and verifier key. `supported_size` should</span>
-    <span class="doccomment">/// be in range `1..params.len()`</span>
-    <span class="kw">fn</span> <span class="ident">trim</span>(
+    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters
+    /// for univariate polynomials to the given `supported_size`, and
+    /// returns committer key and verifier key. `supported_size` should
+    /// be in range `1..params.len()`
+    </span><span class="kw">fn </span>trim(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">supported_size</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::ProverParam</span>, <span class="ident"><span class="self">Self</span>::VerifierParam</span>), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">powers_of_g</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">powers_of_g</span>[..<span class="op">=</span><span class="ident">supported_size</span>].<span class="ident">to_vec</span>();
+        supported_size: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
+        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_size].to_vec();
 
-        <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ProverParam</span> { <span class="ident">powers_of_g</span> };
-        <span class="kw">let</span> <span class="ident">vk</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::VerifierParam</span> {
-            <span class="ident">g</span>: <span class="self">self</span>.<span class="ident">powers_of_g</span>[<span class="number">0</span>],
-            <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">h</span>,
-            <span class="ident">beta_h</span>: <span class="self">self</span>.<span class="ident">beta_h</span>,
+        <span class="kw">let </span>pk = <span class="self">Self</span>::ProverParam { powers_of_g };
+        <span class="kw">let </span>vk = <span class="self">Self</span>::VerifierParam {
+            g: <span class="self">self</span>.powers_of_g[<span class="number">0</span>],
+            h: <span class="self">self</span>.h,
+            beta_h: <span class="self">self</span>.beta_h,
         };
-        <span class="prelude-val">Ok</span>((<span class="ident">pk</span>, <span class="ident">vk</span>))
+        <span class="prelude-val">Ok</span>((pk, vk))
     }
 
-    <span class="doccomment">/// Build SRS for testing.</span>
-    <span class="doccomment">/// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.</span>
-    <span class="doccomment">/// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.</span>
-    <span class="kw">fn</span> <span class="ident">gen_srs_for_testing</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-        <span class="ident">max_degree</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">setup_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;KZG10::Setup with degree {}&quot;</span>, <span class="ident">max_degree</span>));
-        <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">E::Fr::rand</span>(<span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">E::G1Projective::rand</span>(<span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">E::G2Projective::rand</span>(<span class="ident">rng</span>);
+    <span class="doccomment">/// Build SRS for testing.
+    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
+    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
+        rng: <span class="kw-2">&amp;mut </span>R,
+        max_degree: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;KZG10::Setup with degree {}&quot;</span>, max_degree));
+        <span class="kw">let </span>beta = E::Fr::rand(rng);
+        <span class="kw">let </span>g = E::G1Projective::rand(rng);
+        <span class="kw">let </span>h = E::G2Projective::rand(rng);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">powers_of_beta</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">E::Fr::one</span>()];
+        <span class="kw">let </span><span class="kw-2">mut </span>powers_of_beta = <span class="macro">vec!</span>[E::Fr::one()];
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cur</span> <span class="op">=</span> <span class="ident">beta</span>;
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">max_degree</span> {
-            <span class="ident">powers_of_beta</span>.<span class="ident">push</span>(<span class="ident">cur</span>);
-            <span class="ident">cur</span> <span class="kw-2">*</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">beta</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cur = beta;
+        <span class="kw">for _ in </span><span class="number">0</span>..max_degree {
+            powers_of_beta.push(cur);
+            cur <span class="kw-2">*</span>= <span class="kw-2">&amp;</span>beta;
         }
 
-        <span class="kw">let</span> <span class="ident">window_size</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::get_mul_window_size</span>(<span class="ident">max_degree</span> <span class="op">+</span> <span class="number">1</span>);
+        <span class="kw">let </span>window_size = FixedBaseMSM::get_mul_window_size(max_degree + <span class="number">1</span>);
 
-        <span class="kw">let</span> <span class="ident">scalar_bits</span> <span class="op">=</span> <span class="ident">E::Fr::size_in_bits</span>();
-        <span class="kw">let</span> <span class="ident">g_time</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;Generating powers of G&quot;</span>);
-        <span class="comment">// TODO: parallelization</span>
-        <span class="kw">let</span> <span class="ident">g_table</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::get_window_table</span>(<span class="ident">scalar_bits</span>, <span class="ident">window_size</span>, <span class="ident">g</span>);
-        <span class="kw">let</span> <span class="ident">powers_of_g</span> <span class="op">=</span> <span class="ident">FixedBaseMSM::multi_scalar_mul</span>::<span class="op">&lt;</span><span class="ident">E::G1Projective</span><span class="op">&gt;</span>(
-            <span class="ident">scalar_bits</span>,
-            <span class="ident">window_size</span>,
-            <span class="kw-2">&amp;</span><span class="ident">g_table</span>,
-            <span class="kw-2">&amp;</span><span class="ident">powers_of_beta</span>,
+        <span class="kw">let </span>scalar_bits = E::Fr::size_in_bits();
+        <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Generating powers of G&quot;</span>);
+        <span class="comment">// TODO: parallelization
+        </span><span class="kw">let </span>g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
+        <span class="kw">let </span>powers_of_g = FixedBaseMSM::multi_scalar_mul::&lt;E::G1Projective&gt;(
+            scalar_bits,
+            window_size,
+            <span class="kw-2">&amp;</span>g_table,
+            <span class="kw-2">&amp;</span>powers_of_beta,
         );
-        <span class="macro">end_timer!</span>(<span class="ident">g_time</span>);
+        <span class="macro">end_timer!</span>(g_time);
 
-        <span class="kw">let</span> <span class="ident">powers_of_g</span> <span class="op">=</span> <span class="ident">E::G1Projective::batch_normalization_into_affine</span>(<span class="kw-2">&amp;</span><span class="ident">powers_of_g</span>);
+        <span class="kw">let </span>powers_of_g = E::G1Projective::batch_normalization_into_affine(<span class="kw-2">&amp;</span>powers_of_g);
 
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">h</span>.<span class="ident">into_affine</span>();
-        <span class="kw">let</span> <span class="ident">beta_h</span> <span class="op">=</span> <span class="ident">h</span>.<span class="ident">mul</span>(<span class="ident">beta</span>).<span class="ident">into_affine</span>();
+        <span class="kw">let </span>h = h.into_affine();
+        <span class="kw">let </span>beta_h = h.mul(beta).into_affine();
 
-        <span class="kw">let</span> <span class="ident">pp</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">powers_of_g</span>,
-            <span class="ident">h</span>,
-            <span class="ident">beta_h</span>,
+        <span class="kw">let </span>pp = <span class="self">Self </span>{
+            powers_of_g,
+            h,
+            beta_h,
         };
-        <span class="macro">end_timer!</span>(<span class="ident">setup_time</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">pp</span>)
+        <span class="macro">end_timer!</span>(setup_time);
+        <span class="prelude-val">Ok</span>(pp)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

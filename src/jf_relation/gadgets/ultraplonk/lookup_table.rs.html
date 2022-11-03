@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ultraplonk/lookup_table.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lookup_table.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ultraplonk/lookup_table.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lookup_table.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_relation/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -169,176 +169,176 @@
 <span id="169">169</span>
 <span id="170">170</span>
 <span id="171">171</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! Lookup gates over variable tables.</span>
+</span><span class="doccomment">//! Lookup gates over variable tables.
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::CircuitError</span>, <span class="ident">gates::LookupGate</span>, <span class="ident">Circuit</span>, <span class="ident">PlonkCircuit</span>, <span class="ident">Variable</span>};
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">boxed::Box</span>, <span class="ident">cmp::max</span>};
+</span><span class="kw">use crate</span>::{errors::CircuitError, gates::LookupGate, Circuit, PlonkCircuit, Variable};
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{boxed::Box, cmp::max};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span> <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a table with keys/values</span>
-    <span class="doccomment">///     [0, ..., n - 1] and</span>
-    <span class="doccomment">///     [table_vars\[0\], ..., table_vars\[n - 1\]];</span>
-    <span class="doccomment">/// and create a list of variable tuples to be looked up:</span>
-    <span class="doccomment">///     [lookup_vars\[0\], ..., lookup_vars\[m - 1\]];</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_table_and_lookup_variables</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">lookup_vars</span>: <span class="kw-2">&amp;</span>[(<span class="ident">Variable</span>, <span class="ident">Variable</span>, <span class="ident">Variable</span>)],
-        <span class="ident">table_vars</span>: <span class="kw-2">&amp;</span>[(<span class="ident">Variable</span>, <span class="ident">Variable</span>)],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">lookup_var</span> <span class="kw">in</span> <span class="ident">lookup_vars</span>.<span class="ident">iter</span>() {
-            <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">lookup_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">lookup_var</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">lookup_var</span>.<span class="number">2</span>)<span class="question-mark">?</span>;
+<span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
+    <span class="doccomment">/// Create a table with keys/values
+    ///     [0, ..., n - 1] and
+    ///     [table_vars\[0\], ..., table_vars\[n - 1\]];
+    /// and create a list of variable tuples to be looked up:
+    ///     [lookup_vars\[0\], ..., lookup_vars\[m - 1\]];
+    ///
+    /// w.l.o.g we assume n = m as we can pad with dummy tuples when n != m
+    </span><span class="kw">pub fn </span>create_table_and_lookup_variables(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        lookup_vars: <span class="kw-2">&amp;</span>[(Variable, Variable, Variable)],
+        table_vars: <span class="kw-2">&amp;</span>[(Variable, Variable)],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">for </span>lookup_var <span class="kw">in </span>lookup_vars.iter() {
+            <span class="self">self</span>.check_var_bound(lookup_var.<span class="number">0</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.check_var_bound(lookup_var.<span class="number">1</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.check_var_bound(lookup_var.<span class="number">2</span>)<span class="question-mark">?</span>;
         }
-        <span class="kw">for</span> <span class="ident">table_var</span> <span class="kw">in</span> <span class="ident">table_vars</span>.<span class="ident">iter</span>() {
-            <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">table_var</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">check_var_bound</span>(<span class="ident">table_var</span>.<span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="kw">for </span>table_var <span class="kw">in </span>table_vars.iter() {
+            <span class="self">self</span>.check_var_bound(table_var.<span class="number">0</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.check_var_bound(table_var.<span class="number">1</span>)<span class="question-mark">?</span>;
         }
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">max</span>(<span class="ident">lookup_vars</span>.<span class="ident">len</span>(), <span class="ident">table_vars</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">n_gate</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">num_gates</span>();
-        (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table_gate_ids_mut</span>()).<span class="ident">push</span>((<span class="ident">n_gate</span>, <span class="ident">n</span>));
-        <span class="kw">let</span> <span class="ident">table_ctr</span> <span class="op">=</span> <span class="ident">F::from</span>(<span class="self">self</span>.<span class="ident">table_gate_ids_mut</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
-            <span class="kw">let</span> (<span class="ident">q_dom_sep</span>, <span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">lookup_vars</span>.<span class="ident">len</span>() {
-                <span class="bool-val">true</span> =&gt; (
-                    <span class="ident">table_ctr</span>,
-                    <span class="ident">lookup_vars</span>[<span class="ident">i</span>].<span class="number">0</span>,
-                    <span class="ident">lookup_vars</span>[<span class="ident">i</span>].<span class="number">1</span>,
-                    <span class="ident">lookup_vars</span>[<span class="ident">i</span>].<span class="number">2</span>,
+        <span class="kw">let </span>n = max(lookup_vars.len(), table_vars.len());
+        <span class="kw">let </span>n_gate = <span class="self">self</span>.num_gates();
+        (<span class="kw-2">*</span><span class="self">self</span>.table_gate_ids_mut()).push((n_gate, n));
+        <span class="kw">let </span>table_ctr = F::from(<span class="self">self</span>.table_gate_ids_mut().len() <span class="kw">as </span>u64);
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..n {
+            <span class="kw">let </span>(q_dom_sep, key, val0, val1) = <span class="kw">match </span>i &lt; lookup_vars.len() {
+                <span class="bool-val">true </span>=&gt; (
+                    table_ctr,
+                    lookup_vars[i].<span class="number">0</span>,
+                    lookup_vars[i].<span class="number">1</span>,
+                    lookup_vars[i].<span class="number">2</span>,
                 ),
-                <span class="bool-val">false</span> =&gt; (<span class="ident">F::zero</span>(), <span class="self">self</span>.<span class="ident">zero</span>(), <span class="self">self</span>.<span class="ident">zero</span>(), <span class="self">self</span>.<span class="ident">zero</span>()),
+                <span class="bool-val">false </span>=&gt; (F::zero(), <span class="self">self</span>.zero(), <span class="self">self</span>.zero(), <span class="self">self</span>.zero()),
             };
-            <span class="kw">let</span> (<span class="ident">table_dom_sep</span>, <span class="ident">table_key</span>, <span class="ident">table_val0</span>, <span class="ident">table_val1</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">table_vars</span>.<span class="ident">len</span>() {
-                <span class="bool-val">true</span> =&gt; (
-                    <span class="ident">table_ctr</span>,
-                    <span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>),
-                    <span class="ident">table_vars</span>[<span class="ident">i</span>].<span class="number">0</span>,
-                    <span class="ident">table_vars</span>[<span class="ident">i</span>].<span class="number">1</span>,
+            <span class="kw">let </span>(table_dom_sep, table_key, table_val0, table_val1) = <span class="kw">match </span>i &lt; table_vars.len() {
+                <span class="bool-val">true </span>=&gt; (
+                    table_ctr,
+                    F::from(i <span class="kw">as </span>u64),
+                    table_vars[i].<span class="number">0</span>,
+                    table_vars[i].<span class="number">1</span>,
                 ),
-                <span class="bool-val">false</span> =&gt; (<span class="ident">F::zero</span>(), <span class="ident">F::zero</span>(), <span class="self">self</span>.<span class="ident">zero</span>(), <span class="self">self</span>.<span class="ident">zero</span>()),
+                <span class="bool-val">false </span>=&gt; (F::zero(), F::zero(), <span class="self">self</span>.zero(), <span class="self">self</span>.zero()),
             };
-            <span class="kw">let</span> <span class="ident">wire_vars</span> <span class="op">=</span> [<span class="ident">key</span>, <span class="ident">val0</span>, <span class="ident">val1</span>, <span class="ident">table_val0</span>, <span class="ident">table_val1</span>];
+            <span class="kw">let </span>wire_vars = [key, val0, val1, table_val0, table_val1];
 
-            <span class="self">self</span>.<span class="ident">insert_gate</span>(
-                <span class="kw-2">&amp;</span><span class="ident">wire_vars</span>,
-                <span class="ident">Box::new</span>(<span class="ident">LookupGate</span> {
-                    <span class="ident">q_dom_sep</span>,
-                    <span class="ident">table_dom_sep</span>,
-                    <span class="ident">table_key</span>,
+            <span class="self">self</span>.insert_gate(
+                <span class="kw-2">&amp;</span>wire_vars,
+                Box::new(LookupGate {
+                    q_dom_sep,
+                    table_dom_sep,
+                    table_key,
                 }),
             )<span class="question-mark">?</span>;
         }
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">num_table_elems_mut</span>() <span class="op">+</span><span class="op">=</span> <span class="ident">n</span>;
+        <span class="kw-2">*</span><span class="self">self</span>.num_table_elems_mut() += n;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">ark_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">Fq377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_377::Fq</span> <span class="kw">as</span> <span class="ident">FqEd377</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bls12_381::Fq</span> <span class="kw">as</span> <span class="ident">FqEd381</span>;
-    <span class="kw">use</span> <span class="ident">ark_ed_on_bn254::Fq</span> <span class="kw">as</span> <span class="ident">FqEd254</span>;
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">test_rng</span>, <span class="ident">vec</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
+    <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
+    <span class="kw">use </span>ark_std::{test_rng, vec};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_lookup_table</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="ident">test_lookup_table_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd254</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_lookup_table_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd377</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_lookup_table_helper</span>::<span class="op">&lt;</span><span class="ident">FqEd381</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="ident">test_lookup_table_helper</span>::<span class="op">&lt;</span><span class="ident">Fq377</span><span class="op">&gt;</span>()
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_lookup_table() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        test_lookup_table_helper::&lt;FqEd254&gt;()<span class="question-mark">?</span>;
+        test_lookup_table_helper::&lt;FqEd377&gt;()<span class="question-mark">?</span>;
+        test_lookup_table_helper::&lt;FqEd381&gt;()<span class="question-mark">?</span>;
+        test_lookup_table_helper::&lt;Fq377&gt;()
     }
-    <span class="kw">fn</span> <span class="ident">test_lookup_table_helper</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">PrimeField</span><span class="op">&gt;</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CircuitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">4</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+    <span class="kw">fn </span>test_lookup_table_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">4</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="comment">// create table variables</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_vars</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">10</span>;
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
-            <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))<span class="question-mark">?</span>;
-            <span class="ident">table_vars</span>.<span class="ident">push</span>((<span class="ident">val0</span>, <span class="ident">val1</span>));
+        <span class="comment">// create table variables
+        </span><span class="kw">let </span><span class="kw-2">mut </span>table_vars = <span class="macro">vec!</span>[];
+        <span class="kw">let </span>n = <span class="number">10</span>;
+        <span class="kw">for _ in </span><span class="number">0</span>..n {
+            <span class="kw">let </span>val0 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>rng))<span class="question-mark">?</span>;
+            <span class="kw">let </span>val1 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>rng))<span class="question-mark">?</span>;
+            table_vars.push((val0, val1));
         }
-        <span class="comment">// create lookup variables</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lookup_vars</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">table_vars</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">try_for_each</span>(<span class="op">|</span>(<span class="ident">i</span>, (<span class="ident">idx0</span>, <span class="ident">idx1</span>))<span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="kw-2">*</span><span class="ident">idx0</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="kw-2">*</span><span class="ident">idx1</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">key_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::from</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>))<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">val0_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">val0</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">val1_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">val1</span>)<span class="question-mark">?</span>;
-                <span class="ident">lookup_vars</span>.<span class="ident">push</span>((<span class="ident">key_var</span>, <span class="ident">val0_var</span>, <span class="ident">val1_var</span>));
+        <span class="comment">// create lookup variables
+        </span><span class="kw">let </span><span class="kw-2">mut </span>lookup_vars = <span class="macro">vec!</span>[];
+        table_vars
+            .iter()
+            .enumerate()
+            .try_for_each(|(i, (idx0, idx1))| {
+                <span class="kw">let </span>val0 = circuit.witness(<span class="kw-2">*</span>idx0)<span class="question-mark">?</span>;
+                <span class="kw">let </span>val1 = circuit.witness(<span class="kw-2">*</span>idx1)<span class="question-mark">?</span>;
+                <span class="kw">let </span>key_var = circuit.create_variable(F::from(i <span class="kw">as </span>u32))<span class="question-mark">?</span>;
+                <span class="kw">let </span>val0_var = circuit.create_variable(val0)<span class="question-mark">?</span>;
+                <span class="kw">let </span>val1_var = circuit.create_variable(val1)<span class="question-mark">?</span>;
+                lookup_vars.push((key_var, val0_var, val1_var));
                 <span class="prelude-val">Ok</span>(())
             })<span class="question-mark">?</span>;
-        <span class="comment">// add lookup variables and tables</span>
-        <span class="ident">circuit</span>.<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars</span>, <span class="kw-2">&amp;</span><span class="ident">table_vars</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// add lookup variables and tables
+        </span>circuit.create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars, <span class="kw-2">&amp;</span>table_vars)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// the number of added lookup vars is less than the added table size</span>
-        <span class="ident">circuit</span>.<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars</span>[..<span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>], <span class="kw-2">&amp;</span><span class="ident">table_vars</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        <span class="comment">// the number of added lookup vars is less than the added table size
+        </span>circuit.create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars[..n - <span class="number">1</span>], <span class="kw-2">&amp;</span>table_vars)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// the number of added lookup vars is larger than the added table size</span>
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
-            <span class="comment">// add a new lookup var</span>
-            <span class="ident">lookup_vars</span>.<span class="ident">push</span>(<span class="ident">lookup_vars</span>[<span class="ident">i</span>]);
+        <span class="comment">// the number of added lookup vars is larger than the added table size
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..n {
+            <span class="comment">// add a new lookup var
+            </span>lookup_vars.push(lookup_vars[i]);
         }
-        <span class="ident">circuit</span>.<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars</span>, <span class="kw-2">&amp;</span><span class="ident">table_vars</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
+        circuit.create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars, <span class="kw-2">&amp;</span>table_vars)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="comment">// Error paths</span>
-        <span class="comment">// lookup variable outside the table.</span>
-        <span class="ident">lookup_vars</span>[<span class="number">0</span>].<span class="number">1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">zero</span>();
-        <span class="ident">circuit</span>.<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars</span>[..<span class="number">1</span>], <span class="kw-2">&amp;</span><span class="ident">table_vars</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        <span class="comment">// Error paths
+        // lookup variable outside the table.
+        </span>lookup_vars[<span class="number">0</span>].<span class="number">1 </span>= circuit.zero();
+        circuit.create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars[..<span class="number">1</span>], <span class="kw-2">&amp;</span>table_vars)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
-        <span class="comment">// out-of-bound variables</span>
-        <span class="kw">let</span> <span class="ident">bad_lookup_vars</span> <span class="op">=</span> <span class="macro">vec!</span>[(<span class="ident">circuit</span>.<span class="ident">num_vars</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>())];
-        <span class="kw">let</span> <span class="ident">bad_table_vars</span> <span class="op">=</span> <span class="macro">vec!</span>[(<span class="ident">circuit</span>.<span class="ident">num_vars</span>(), <span class="ident">circuit</span>.<span class="ident">zero</span>())];
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>
-            .<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">bad_lookup_vars</span>, <span class="kw-2">&amp;</span><span class="ident">table_vars</span>)
-            .<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>
-            .<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars</span>, <span class="kw-2">&amp;</span><span class="ident">bad_table_vars</span>)
-            .<span class="ident">is_err</span>());
+        <span class="comment">// out-of-bound variables
+        </span><span class="kw">let </span>bad_lookup_vars = <span class="macro">vec!</span>[(circuit.num_vars(), circuit.zero(), circuit.zero())];
+        <span class="kw">let </span>bad_table_vars = <span class="macro">vec!</span>[(circuit.num_vars(), circuit.zero())];
+        <span class="macro">assert!</span>(circuit
+            .create_table_and_lookup_variables(<span class="kw-2">&amp;</span>bad_lookup_vars, <span class="kw-2">&amp;</span>table_vars)
+            .is_err());
+        <span class="macro">assert!</span>(circuit
+            .create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars, <span class="kw-2">&amp;</span>bad_table_vars)
+            .is_err());
 
-        <span class="comment">// A lookup over a separate table should not satisfy the circuit.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">circuit</span>: <span class="ident">PlonkCircuit</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PlonkCircuit::new_ultra_plonk</span>(<span class="number">4</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+        <span class="comment">// A lookup over a separate table should not satisfy the circuit.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">4</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="kw">let</span> <span class="ident">val0</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">val1</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">table_vars_1</span> <span class="op">=</span> <span class="macro">vec!</span>[(<span class="ident">val0</span>, <span class="ident">val1</span>)];
-        <span class="kw">let</span> <span class="ident">val2</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">val3</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">F::rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">table_vars_2</span> <span class="op">=</span> <span class="macro">vec!</span>[(<span class="ident">val2</span>, <span class="ident">val3</span>)];
-        <span class="kw">let</span> <span class="ident">val2</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">table_vars_2</span>[<span class="number">0</span>].<span class="number">0</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">val3</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">witness</span>(<span class="ident">table_vars_2</span>[<span class="number">0</span>].<span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">val2_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">val2</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">val3_var</span> <span class="op">=</span> <span class="ident">circuit</span>.<span class="ident">create_variable</span>(<span class="ident">val3</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">lookup_vars_1</span> <span class="op">=</span> <span class="macro">vec!</span>[(<span class="ident">circuit</span>.<span class="ident">zero</span>(), <span class="ident">val2_var</span>, <span class="ident">val3_var</span>)];
+        <span class="kw">let </span>val0 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>rng))<span class="question-mark">?</span>;
+        <span class="kw">let </span>val1 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>rng))<span class="question-mark">?</span>;
+        <span class="kw">let </span>table_vars_1 = <span class="macro">vec!</span>[(val0, val1)];
+        <span class="kw">let </span>val2 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>rng))<span class="question-mark">?</span>;
+        <span class="kw">let </span>val3 = circuit.create_variable(F::rand(<span class="kw-2">&amp;mut </span>rng))<span class="question-mark">?</span>;
+        <span class="kw">let </span>table_vars_2 = <span class="macro">vec!</span>[(val2, val3)];
+        <span class="kw">let </span>val2 = circuit.witness(table_vars_2[<span class="number">0</span>].<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>val3 = circuit.witness(table_vars_2[<span class="number">0</span>].<span class="number">1</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>val2_var = circuit.create_variable(val2)<span class="question-mark">?</span>;
+        <span class="kw">let </span>val3_var = circuit.create_variable(val3)<span class="question-mark">?</span>;
+        <span class="kw">let </span>lookup_vars_1 = <span class="macro">vec!</span>[(circuit.zero(), val2_var, val3_var)];
 
-        <span class="ident">circuit</span>.<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars_1</span>, <span class="kw-2">&amp;</span><span class="ident">table_vars_2</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_ok</span>());
-        <span class="ident">circuit</span>.<span class="ident">create_table_and_lookup_variables</span>(<span class="kw-2">&amp;</span><span class="ident">lookup_vars_1</span>, <span class="kw-2">&amp;</span><span class="ident">table_vars_1</span>)<span class="question-mark">?</span>;
-        <span class="macro">assert!</span>(<span class="ident">circuit</span>.<span class="ident">check_circuit_satisfiability</span>(<span class="kw-2">&amp;</span>[]).<span class="ident">is_err</span>());
+        circuit.create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars_1, <span class="kw-2">&amp;</span>table_vars_2)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        circuit.create_table_and_lookup_variables(<span class="kw-2">&amp;</span>lookup_vars_1, <span class="kw-2">&amp;</span>table_vars_1)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_relation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

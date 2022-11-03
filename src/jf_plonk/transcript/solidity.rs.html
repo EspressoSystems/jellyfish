@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/transcript/solidity.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>solidity.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/transcript/solidity.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>solidity.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_plonk/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -94,101 +94,101 @@
 <span id="94">94</span>
 <span id="95">95</span>
 <span id="96">96</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="doccomment">//! This module implements solidity transcript.</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::PlonkTranscript</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">constants::KECCAK256_STATE_SIZE</span>, <span class="ident">errors::PlonkError</span>};
-<span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-<span class="kw">use</span> <span class="ident">ark_ff::PrimeField</span>;
-<span class="kw">use</span> <span class="ident">ark_std::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">sha3</span>::{<span class="ident">Digest</span>, <span class="ident">Keccak256</span>};
+</span><span class="doccomment">//! This module implements solidity transcript.
+</span><span class="kw">use </span><span class="kw">super</span>::PlonkTranscript;
+<span class="kw">use crate</span>::{constants::KECCAK256_STATE_SIZE, errors::PlonkError};
+<span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::vec::Vec;
+<span class="kw">use </span>sha3::{Digest, Keccak256};
 
-<span class="doccomment">/// Transcript with `keccak256` hash function.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is almost identical to `RescueTranscript` except using Solidity&#39;s</span>
-<span class="doccomment">/// `keccak256` for Solidity-friendly protocols.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is currently implemented simply as</span>
-<span class="doccomment">/// - an append only vector of field elements</span>
-<span class="doccomment">/// - a state that is initialized with 0</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// We keep appending new elements to the transcript vector,</span>
-<span class="doccomment">/// and when a challenge is to be generated,</span>
-<span class="doccomment">/// we reset the state with the fresh challenge.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)</span>
-<span class="doccomment">/// 2. challenge = state\[0\]</span>
-<span class="doccomment">/// 3. transcript = vec!\[challenge\]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SolidityTranscript</span> {
-    <span class="ident">transcript</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">state</span>: [<span class="ident">u8</span>; <span class="ident">KECCAK256_STATE_SIZE</span>], <span class="comment">// 64 bytes state size</span>
-}
+<span class="doccomment">/// Transcript with `keccak256` hash function.
+///
+/// It is almost identical to `RescueTranscript` except using Solidity&#39;s
+/// `keccak256` for Solidity-friendly protocols.
+///
+/// It is currently implemented simply as
+/// - an append only vector of field elements
+/// - a state that is initialized with 0
+///
+/// We keep appending new elements to the transcript vector,
+/// and when a challenge is to be generated,
+/// we reset the state with the fresh challenge.
+///
+/// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)
+/// 2. challenge = state\[0\]
+/// 3. transcript = vec!\[challenge\]
+</span><span class="kw">pub struct </span>SolidityTranscript {
+    transcript: Vec&lt;u8&gt;,
+    state: [u8; KECCAK256_STATE_SIZE], <span class="comment">// 64 bytes state size
+</span>}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">PlonkTranscript</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SolidityTranscript</span> {
-    <span class="doccomment">/// Create a new plonk transcript. `label` is omitted for efficiency.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="self">Self</span> {
-        <span class="ident">SolidityTranscript</span> {
-            <span class="ident">transcript</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">state</span>: [<span class="number">0u8</span>; <span class="ident">KECCAK256_STATE_SIZE</span>],
+<span class="kw">impl</span>&lt;F&gt; PlonkTranscript&lt;F&gt; <span class="kw">for </span>SolidityTranscript {
+    <span class="doccomment">/// Create a new plonk transcript. `label` is omitted for efficiency.
+    </span><span class="kw">fn </span>new(_label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="self">Self </span>{
+        SolidityTranscript {
+            transcript: Vec::new(),
+            state: [<span class="number">0u8</span>; KECCAK256_STATE_SIZE],
         }
     }
 
-    <span class="doccomment">/// Append the message to the transcript. `_label` is omitted for</span>
-    <span class="doccomment">/// efficiency.</span>
-    <span class="kw">fn</span> <span class="ident">append_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>], <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PlonkError</span><span class="op">&gt;</span> {
-        <span class="comment">// We remove the labels for better efficiency</span>
-        <span class="self">self</span>.<span class="ident">transcript</span>.<span class="ident">extend_from_slice</span>(<span class="ident">msg</span>);
+    <span class="doccomment">/// Append the message to the transcript. `_label` is omitted for
+    /// efficiency.
+    </span><span class="kw">fn </span>append_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8], msg: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
+        <span class="comment">// We remove the labels for better efficiency
+        </span><span class="self">self</span>.transcript.extend_from_slice(msg);
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Generate the challenge for the current transcript,</span>
-    <span class="doccomment">/// and then append it to the transcript. `_label` is omitted for</span>
-    <span class="doccomment">/// efficiency.</span>
-    <span class="kw">fn</span> <span class="ident">get_and_append_challenge</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_label</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">E::Fr</span>, <span class="ident">PlonkError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">E</span>: <span class="ident">PairingEngine</span>,
+    <span class="doccomment">/// Generate the challenge for the current transcript,
+    /// and then append it to the transcript. `_label` is omitted for
+    /// efficiency.
+    </span><span class="kw">fn </span>get_and_append_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt;
+    <span class="kw">where
+        </span>E: PairingEngine,
     {
-        <span class="comment">// 1. state = keccak256(state|transcript|0) || keccak256(state|transcript|1)</span>
-        <span class="kw">let</span> <span class="ident">input0</span> <span class="op">=</span> [<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">as_ref</span>(), <span class="self">self</span>.<span class="ident">transcript</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span>[<span class="number">0u8</span>]].<span class="ident">concat</span>();
-        <span class="kw">let</span> <span class="ident">input1</span> <span class="op">=</span> [<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">as_ref</span>(), <span class="self">self</span>.<span class="ident">transcript</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span>[<span class="number">1u8</span>]].<span class="ident">concat</span>();
+        <span class="comment">// 1. state = keccak256(state|transcript|0) || keccak256(state|transcript|1)
+        </span><span class="kw">let </span>input0 = [<span class="self">self</span>.state.as_ref(), <span class="self">self</span>.transcript.as_ref(), <span class="kw-2">&amp;</span>[<span class="number">0u8</span>]].concat();
+        <span class="kw">let </span>input1 = [<span class="self">self</span>.state.as_ref(), <span class="self">self</span>.transcript.as_ref(), <span class="kw-2">&amp;</span>[<span class="number">1u8</span>]].concat();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Keccak256::new</span>();
-        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">input0</span>);
-        <span class="kw">let</span> <span class="ident">buf0</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = Keccak256::new();
+        hasher.update(<span class="kw-2">&amp;</span>input0);
+        <span class="kw">let </span>buf0 = hasher.finalize();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Keccak256::new</span>();
-        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">input1</span>);
-        <span class="kw">let</span> <span class="ident">buf1</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = Keccak256::new();
+        hasher.update(<span class="kw-2">&amp;</span>input1);
+        <span class="kw">let </span>buf1 = hasher.finalize();
 
-        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span>[<span class="ident">buf0</span>, <span class="ident">buf1</span>].<span class="ident">concat</span>());
+        <span class="self">self</span>.state.copy_from_slice(<span class="kw-2">&amp;</span>[buf0, buf1].concat());
 
-        <span class="comment">// 2. challenge: sample field from random bytes.</span>
-        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">E::Fr::from_le_bytes_mod_order</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>[..<span class="number">48</span>]);
-        <span class="prelude-val">Ok</span>(<span class="ident">challenge</span>)
+        <span class="comment">// 2. challenge: sample field from random bytes.
+        </span><span class="kw">let </span>challenge = E::Fr::from_le_bytes_mod_order(<span class="kw-2">&amp;</span><span class="self">self</span>.state[..<span class="number">48</span>]);
+        <span class="prelude-val">Ok</span>(challenge)
     }
 }
 
-<span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">test_solidity_keccak</span>() {
-    <span class="kw">use</span> <span class="ident">hex::FromHex</span>;
-    <span class="kw">use</span> <span class="ident">sha3</span>::{<span class="ident">Digest</span>, <span class="ident">Keccak256</span>};
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="string">&quot;the quick brown fox jumps over the lazy dog&quot;</span>.<span class="ident">as_bytes</span>();
+<span class="attribute">#[test]
+</span><span class="kw">fn </span>test_solidity_keccak() {
+    <span class="kw">use </span>hex::FromHex;
+    <span class="kw">use </span>sha3::{Digest, Keccak256};
+    <span class="kw">let </span>message = <span class="string">&quot;the quick brown fox jumps over the lazy dog&quot;</span>.as_bytes();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Keccak256::new</span>();
-    <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">message</span>);
-    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>hasher = Keccak256::new();
+    hasher.update(message);
+    <span class="kw">let </span>output = hasher.finalize();
 
-    <span class="comment">// test example result yanked from smart contract execution</span>
-    <span class="macro">assert_eq!</span>(
-        <span class="ident">output</span>[..],
-        <span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span><span class="ident">::from_hex</span>(<span class="string">&quot;865bf05cca7ba26fb8051e8366c6d19e21cadeebe3ee6bfa462b5c72275414ec&quot;</span>)
-            .<span class="ident">unwrap</span>()
+    <span class="comment">// test example result yanked from smart contract execution
+    </span><span class="macro">assert_eq!</span>(
+        output[..],
+        &lt;[u8; <span class="number">32</span>]&gt;::from_hex(<span class="string">&quot;865bf05cca7ba26fb8051e8366c6d19e21cadeebe3ee6bfa462b5c72275414ec&quot;</span>)
+            .unwrap()
     );
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

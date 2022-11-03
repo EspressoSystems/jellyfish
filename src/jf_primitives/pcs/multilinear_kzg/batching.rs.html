@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/batching.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batching.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/batching.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batching.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -432,439 +432,439 @@
 <span id="432">432</span>
 <span id="433">433</span>
 <span id="434">434</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)</span>
-<span class="comment">// This file is part of the Jellyfish library.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-<span class="comment">// You should have received a copy of the MIT License</span>
-<span class="comment">// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.</span>
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-<span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">open_internal</span>,
-    <span class="ident">srs</span>::{<span class="ident">MultilinearProverParam</span>, <span class="ident">MultilinearVerifierParam</span>},
-    <span class="ident">util</span>::{<span class="ident">build_l</span>, <span class="ident">compute_w_circ_l</span>, <span class="ident">merge_polynomials</span>},
-    <span class="ident">verify_internal</span>, <span class="ident">MultilinearKzgBatchProof</span>,
+</span><span class="kw">use super</span>::{
+    open_internal,
+    srs::{MultilinearProverParam, MultilinearVerifierParam},
+    util::{build_l, compute_w_circ_l, merge_polynomials},
+    verify_internal, MultilinearKzgBatchProof,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pcs</span>::{
-    <span class="ident">multilinear_kzg::util::get_uni_domain</span>,
-    <span class="ident">prelude</span>::{<span class="ident">Commitment</span>, <span class="ident">UnivariateProverParam</span>, <span class="ident">UnivariateVerifierParam</span>},
-    <span class="ident">transcript::IOPTranscript</span>,
-    <span class="ident">univariate_kzg::UnivariateKzgPCS</span>,
-    <span class="ident">PCSError</span>, <span class="ident">PolynomialCommitmentScheme</span>,
+<span class="kw">use </span><span class="kw">crate</span>::pcs::{
+    multilinear_kzg::util::get_uni_domain,
+    prelude::{Commitment, UnivariateProverParam, UnivariateVerifierParam},
+    transcript::IOPTranscript,
+    univariate_kzg::UnivariateKzgPCS,
+    PCSError, PolynomialCommitmentScheme,
 };
-<span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-<span class="kw">use</span> <span class="ident">ark_poly</span>::{<span class="ident">DenseMultilinearExtension</span>, <span class="ident">EvaluationDomain</span>, <span class="ident">MultilinearExtension</span>, <span class="ident">Polynomial</span>};
-<span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">end_timer</span>, <span class="ident">format</span>, <span class="ident">rc::Rc</span>, <span class="ident">start_timer</span>, <span class="ident">string::ToString</span>, <span class="ident">vec</span>, <span class="ident">vec::Vec</span>};
+<span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_poly::{DenseMultilinearExtension, EvaluationDomain, MultilinearExtension, Polynomial};
+<span class="kw">use </span>ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
 
-<span class="doccomment">/// Input</span>
-<span class="doccomment">/// - the prover parameters for univariate KZG,</span>
-<span class="doccomment">/// - the prover parameters for multilinear KZG,</span>
-<span class="doccomment">/// - a list of MLEs,</span>
-<span class="doccomment">/// - a commitment to all MLEs</span>
-<span class="doccomment">/// - and a same number of points,</span>
-<span class="doccomment">/// compute a multi-opening for all the polynomials.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// For simplicity, this API requires each MLE to have only one point. If</span>
-<span class="doccomment">/// the caller wish to use more than one points per MLE, it should be</span>
-<span class="doccomment">/// handled at the caller layer.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Returns an error if the lengths do not match.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Returns the proof, consists of</span>
-<span class="doccomment">/// - the multilinear KZG opening</span>
-<span class="doccomment">/// - the univariate KZG commitment to q(x)</span>
-<span class="doccomment">/// - the openings and evaluations of q(x) at omega^i and r</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Steps:</span>
-<span class="doccomment">/// 1. build `l(points)` which is a list of univariate polynomials that goes</span>
-<span class="doccomment">/// through the points</span>
-<span class="doccomment">/// 2. build MLE `w` which is the merge of all MLEs.</span>
-<span class="doccomment">/// 3. build `q(x)` which is a univariate polynomial `W circ l`</span>
-<span class="doccomment">/// 4. commit to q(x) and sample r from transcript</span>
-<span class="doccomment">/// transcript contains: w commitment, points, q(x)&#39;s commitment</span>
-<span class="doccomment">/// 5. build q(omega^i) and their openings</span>
-<span class="doccomment">/// 6. build q(r) and its opening</span>
-<span class="doccomment">/// 7. get a point `p := l(r)`</span>
-<span class="doccomment">/// 8. output an opening of `w` over point `p`</span>
-<span class="doccomment">/// 9. output `w(p)`</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">multi_open_internal</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    <span class="ident">uni_prover_param</span>: <span class="kw-2">&amp;</span><span class="ident">UnivariateProverParam</span><span class="op">&lt;</span><span class="ident">E::G1Affine</span><span class="op">&gt;</span>,
-    <span class="ident">ml_prover_param</span>: <span class="kw-2">&amp;</span><span class="ident">MultilinearProverParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="ident">polynomials</span>: <span class="kw-2">&amp;</span>[<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">DenseMultilinearExtension</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>],
-    <span class="ident">multi_commitment</span>: <span class="kw-2">&amp;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="ident">points</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">MultilinearKzgBatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">open_timer</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;multi open&quot;</span>);
+<span class="doccomment">/// Input
+/// - the prover parameters for univariate KZG,
+/// - the prover parameters for multilinear KZG,
+/// - a list of MLEs,
+/// - a commitment to all MLEs
+/// - and a same number of points,
+/// compute a multi-opening for all the polynomials.
+///
+/// For simplicity, this API requires each MLE to have only one point. If
+/// the caller wish to use more than one points per MLE, it should be
+/// handled at the caller layer.
+///
+/// Returns an error if the lengths do not match.
+///
+/// Returns the proof, consists of
+/// - the multilinear KZG opening
+/// - the univariate KZG commitment to q(x)
+/// - the openings and evaluations of q(x) at omega^i and r
+///
+/// Steps:
+/// 1. build `l(points)` which is a list of univariate polynomials that goes
+/// through the points
+/// 2. build MLE `w` which is the merge of all MLEs.
+/// 3. build `q(x)` which is a univariate polynomial `W circ l`
+/// 4. commit to q(x) and sample r from transcript
+/// transcript contains: w commitment, points, q(x)&#39;s commitment
+/// 5. build q(omega^i) and their openings
+/// 6. build q(r) and its opening
+/// 7. get a point `p := l(r)`
+/// 8. output an opening of `w` over point `p`
+/// 9. output `w(p)`
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>multi_open_internal&lt;E: PairingEngine&gt;(
+    uni_prover_param: <span class="kw-2">&amp;</span>UnivariateProverParam&lt;E::G1Affine&gt;,
+    ml_prover_param: <span class="kw-2">&amp;</span>MultilinearProverParam&lt;E&gt;,
+    polynomials: <span class="kw-2">&amp;</span>[Rc&lt;DenseMultilinearExtension&lt;E::Fr&gt;&gt;],
+    multi_commitment: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,
+    points: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
+) -&gt; <span class="prelude-ty">Result</span>&lt;(MultilinearKzgBatchProof&lt;E&gt;, Vec&lt;E::Fr&gt;), PCSError&gt; {
+    <span class="kw">let </span>open_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;multi open&quot;</span>);
 
-    <span class="comment">// ===================================</span>
-    <span class="comment">// Sanity checks on inputs</span>
-    <span class="comment">// ===================================</span>
-    <span class="kw">let</span> <span class="ident">points_len</span> <span class="op">=</span> <span class="ident">points</span>.<span class="ident">len</span>();
-    <span class="kw">if</span> <span class="ident">points_len</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(<span class="string">&quot;points is empty&quot;</span>.<span class="ident">to_string</span>()));
+    <span class="comment">// ===================================
+    // Sanity checks on inputs
+    // ===================================
+    </span><span class="kw">let </span>points_len = points.len();
+    <span class="kw">if </span>points_len == <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="string">&quot;points is empty&quot;</span>.to_string()));
     }
 
-    <span class="kw">if</span> <span class="ident">points_len</span> <span class="op">!</span><span class="op">=</span> <span class="ident">polynomials</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-            <span class="string">&quot;polynomial length does not match point length&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="kw">if </span>points_len != polynomials.len() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+            <span class="string">&quot;polynomial length does not match point length&quot;</span>.to_string(),
         ));
     }
 
-    <span class="kw">let</span> <span class="ident">num_var</span> <span class="op">=</span> <span class="ident">polynomials</span>[<span class="number">0</span>].<span class="ident">num_vars</span>();
-    <span class="kw">for</span> <span class="ident">poly</span> <span class="kw">in</span> <span class="ident">polynomials</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-        <span class="kw">if</span> <span class="ident">poly</span>.<span class="ident">num_vars</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">num_var</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-                <span class="string">&quot;polynomials do not have same num_vars&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="kw">let </span>num_var = polynomials[<span class="number">0</span>].num_vars();
+    <span class="kw">for </span>poly <span class="kw">in </span>polynomials.iter().skip(<span class="number">1</span>) {
+        <span class="kw">if </span>poly.num_vars() != num_var {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+                <span class="string">&quot;polynomials do not have same num_vars&quot;</span>.to_string(),
             ));
         }
     }
-    <span class="kw">for</span> <span class="ident">point</span> <span class="kw">in</span> <span class="ident">points</span>.<span class="ident">iter</span>() {
-        <span class="kw">if</span> <span class="ident">point</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">num_var</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-                <span class="string">&quot;points do not have same num_vars&quot;</span>.<span class="ident">to_string</span>(),
-            ));
-        }
-    }
-
-    <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="ident">get_uni_domain</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="ident">points_len</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// 1. build `l(points)` which is a list of univariate polynomials that goes</span>
-    <span class="comment">// through the points</span>
-    <span class="kw">let</span> <span class="ident">uni_polys</span> <span class="op">=</span> <span class="ident">build_l</span>(<span class="ident">num_var</span>, <span class="ident">points</span>, <span class="kw-2">&amp;</span><span class="ident">domain</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// 2. build MLE `w` which is the merge of all MLEs.</span>
-    <span class="kw">let</span> <span class="ident">merge_poly</span> <span class="op">=</span> <span class="ident">merge_polynomials</span>(<span class="ident">polynomials</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// 3. build `q(x)` which is a univariate polynomial `W circ l`</span>
-    <span class="kw">let</span> <span class="ident">q_x</span> <span class="op">=</span> <span class="ident">compute_w_circ_l</span>(<span class="kw-2">&amp;</span><span class="ident">merge_poly</span>, <span class="kw-2">&amp;</span><span class="ident">uni_polys</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// 4. commit to q(x) and sample r from transcript</span>
-    <span class="comment">// transcript contains: w commitment, points, q(x)&#39;s commitment</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript</span> <span class="op">=</span> <span class="ident">IOPTranscript::new</span>(<span class="string">b&quot;ml kzg&quot;</span>);
-    <span class="ident">transcript</span>.<span class="ident">append_serializable_element</span>(<span class="string">b&quot;w&quot;</span>, <span class="ident">multi_commitment</span>)<span class="question-mark">?</span>;
-    <span class="kw">for</span> <span class="ident">point</span> <span class="kw">in</span> <span class="ident">points</span> {
-        <span class="ident">transcript</span>.<span class="ident">append_serializable_element</span>(<span class="string">b&quot;w&quot;</span>, <span class="ident">point</span>)<span class="question-mark">?</span>;
-    }
-
-    <span class="kw">let</span> <span class="ident">q_x_commit</span> <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::commit</span>(<span class="ident">uni_prover_param</span>, <span class="kw-2">&amp;</span><span class="ident">q_x</span>)<span class="question-mark">?</span>;
-    <span class="ident">transcript</span>.<span class="ident">append_serializable_element</span>(<span class="string">b&quot;q(x)&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">q_x_commit</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">transcript</span>.<span class="ident">get_and_append_challenge</span>(<span class="string">b&quot;r&quot;</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// 5. build q(omega^i) and their openings</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q_x_opens</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q_x_evals</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">points_len</span> {
-        <span class="kw">let</span> (<span class="ident">q_x_open</span>, <span class="ident">q_x_eval</span>) <span class="op">=</span>
-            <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::open</span>(<span class="ident">uni_prover_param</span>, <span class="kw-2">&amp;</span><span class="ident">q_x</span>, <span class="kw-2">&amp;</span><span class="ident">domain</span>.<span class="ident">element</span>(<span class="ident">i</span>))<span class="question-mark">?</span>;
-        <span class="ident">q_x_opens</span>.<span class="ident">push</span>(<span class="ident">q_x_open</span>);
-        <span class="ident">q_x_evals</span>.<span class="ident">push</span>(<span class="ident">q_x_eval</span>);
-
-        <span class="comment">// sanity check</span>
-        <span class="kw">let</span> <span class="ident">point</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">uni_polys</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">rev</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> <span class="ident">poly</span>.<span class="ident">evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">domain</span>.<span class="ident">element</span>(<span class="ident">i</span>)))
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">mle_eval</span> <span class="op">=</span> <span class="ident">merge_poly</span>.<span class="ident">evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">point</span>).<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="ident">mle_eval</span> <span class="op">!</span><span class="op">=</span> <span class="ident">q_x_eval</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidProver</span>(
-                <span class="string">&quot;Q(omega) does not match W(l(omega))&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="kw">for </span>point <span class="kw">in </span>points.iter() {
+        <span class="kw">if </span>point.len() != num_var {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+                <span class="string">&quot;points do not have same num_vars&quot;</span>.to_string(),
             ));
         }
     }
 
-    <span class="comment">// 6. build q(r) and its opening</span>
-    <span class="kw">let</span> (<span class="ident">q_x_open</span>, <span class="ident">q_r_value</span>) <span class="op">=</span> <span class="ident">UnivariateKzgPCS</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::open</span>(<span class="ident">uni_prover_param</span>, <span class="kw-2">&amp;</span><span class="ident">q_x</span>, <span class="kw-2">&amp;</span><span class="ident">r</span>)<span class="question-mark">?</span>;
-    <span class="ident">q_x_opens</span>.<span class="ident">push</span>(<span class="ident">q_x_open</span>);
-    <span class="ident">q_x_evals</span>.<span class="ident">push</span>(<span class="ident">q_r_value</span>);
+    <span class="kw">let </span>domain = get_uni_domain::&lt;E::Fr&gt;(points_len)<span class="question-mark">?</span>;
 
-    <span class="comment">// 7. get a point `p := l(r)`</span>
-    <span class="kw">let</span> <span class="ident">point</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">uni_polys</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">rev</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">poly</span><span class="op">|</span> <span class="ident">poly</span>.<span class="ident">evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>))
-        .<span class="ident">collect</span>();
+    <span class="comment">// 1. build `l(points)` which is a list of univariate polynomials that goes
+    // through the points
+    </span><span class="kw">let </span>uni_polys = build_l(num_var, points, <span class="kw-2">&amp;</span>domain)<span class="question-mark">?</span>;
 
-    <span class="comment">// 8. output an opening of `w` over point `p`</span>
-    <span class="kw">let</span> (<span class="ident">mle_opening</span>, <span class="ident">mle_eval</span>) <span class="op">=</span> <span class="ident">open_internal</span>(<span class="ident">ml_prover_param</span>, <span class="kw-2">&amp;</span><span class="ident">merge_poly</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>)<span class="question-mark">?</span>;
+    <span class="comment">// 2. build MLE `w` which is the merge of all MLEs.
+    </span><span class="kw">let </span>merge_poly = merge_polynomials(polynomials)<span class="question-mark">?</span>;
 
-    <span class="comment">// 9. output value that is `w` evaluated at `p` (which should match `q(r)`)</span>
-    <span class="kw">if</span> <span class="ident">mle_eval</span> <span class="op">!</span><span class="op">=</span> <span class="ident">q_r_value</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidProver</span>(
-            <span class="string">&quot;Q(r) does not match W(l(r))&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="comment">// 3. build `q(x)` which is a univariate polynomial `W circ l`
+    </span><span class="kw">let </span>q_x = compute_w_circ_l(<span class="kw-2">&amp;</span>merge_poly, <span class="kw-2">&amp;</span>uni_polys)<span class="question-mark">?</span>;
+
+    <span class="comment">// 4. commit to q(x) and sample r from transcript
+    // transcript contains: w commitment, points, q(x)&#39;s commitment
+    </span><span class="kw">let </span><span class="kw-2">mut </span>transcript = IOPTranscript::new(<span class="string">b&quot;ml kzg&quot;</span>);
+    transcript.append_serializable_element(<span class="string">b&quot;w&quot;</span>, multi_commitment)<span class="question-mark">?</span>;
+    <span class="kw">for </span>point <span class="kw">in </span>points {
+        transcript.append_serializable_element(<span class="string">b&quot;w&quot;</span>, point)<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">let </span>q_x_commit = UnivariateKzgPCS::&lt;E&gt;::commit(uni_prover_param, <span class="kw-2">&amp;</span>q_x)<span class="question-mark">?</span>;
+    transcript.append_serializable_element(<span class="string">b&quot;q(x)&quot;</span>, <span class="kw-2">&amp;</span>q_x_commit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>r = transcript.get_and_append_challenge(<span class="string">b&quot;r&quot;</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// 5. build q(omega^i) and their openings
+    </span><span class="kw">let </span><span class="kw-2">mut </span>q_x_opens = <span class="macro">vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>q_x_evals = <span class="macro">vec!</span>[];
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..points_len {
+        <span class="kw">let </span>(q_x_open, q_x_eval) =
+            UnivariateKzgPCS::&lt;E&gt;::open(uni_prover_param, <span class="kw-2">&amp;</span>q_x, <span class="kw-2">&amp;</span>domain.element(i))<span class="question-mark">?</span>;
+        q_x_opens.push(q_x_open);
+        q_x_evals.push(q_x_eval);
+
+        <span class="comment">// sanity check
+        </span><span class="kw">let </span>point: Vec&lt;E::Fr&gt; = uni_polys
+            .iter()
+            .rev()
+            .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>domain.element(i)))
+            .collect();
+        <span class="kw">let </span>mle_eval = merge_poly.evaluate(<span class="kw-2">&amp;</span>point).unwrap();
+        <span class="kw">if </span>mle_eval != q_x_eval {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidProver(
+                <span class="string">&quot;Q(omega) does not match W(l(omega))&quot;</span>.to_string(),
+            ));
+        }
+    }
+
+    <span class="comment">// 6. build q(r) and its opening
+    </span><span class="kw">let </span>(q_x_open, q_r_value) = UnivariateKzgPCS::&lt;E&gt;::open(uni_prover_param, <span class="kw-2">&amp;</span>q_x, <span class="kw-2">&amp;</span>r)<span class="question-mark">?</span>;
+    q_x_opens.push(q_x_open);
+    q_x_evals.push(q_r_value);
+
+    <span class="comment">// 7. get a point `p := l(r)`
+    </span><span class="kw">let </span>point: Vec&lt;E::Fr&gt; = uni_polys
+        .iter()
+        .rev()
+        .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>r))
+        .collect();
+
+    <span class="comment">// 8. output an opening of `w` over point `p`
+    </span><span class="kw">let </span>(mle_opening, mle_eval) = open_internal(ml_prover_param, <span class="kw-2">&amp;</span>merge_poly, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
+
+    <span class="comment">// 9. output value that is `w` evaluated at `p` (which should match `q(r)`)
+    </span><span class="kw">if </span>mle_eval != q_r_value {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidProver(
+            <span class="string">&quot;Q(r) does not match W(l(r))&quot;</span>.to_string(),
         ));
     }
-    <span class="macro">end_timer!</span>(<span class="ident">open_timer</span>);
+    <span class="macro">end_timer!</span>(open_timer);
 
     <span class="prelude-val">Ok</span>((
-        <span class="ident">MultilinearKzgBatchProof</span> {
-            <span class="ident">proof</span>: <span class="ident">mle_opening</span>,
-            <span class="ident">q_x_commit</span>,
-            <span class="ident">q_x_opens</span>,
+        MultilinearKzgBatchProof {
+            proof: mle_opening,
+            q_x_commit,
+            q_x_opens,
         },
-        <span class="ident">q_x_evals</span>,
+        q_x_evals,
     ))
 }
 
-<span class="doccomment">/// Verifies that the `multi_commitment` is a valid commitment</span>
-<span class="doccomment">/// to a list of MLEs for the given openings and evaluations in</span>
-<span class="doccomment">/// the batch_proof.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// steps:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// 1. push w, points and q_com into transcript</span>
-<span class="doccomment">/// 2. sample `r` from transcript</span>
-<span class="doccomment">/// 3. check `q(r) == batch_proof.q_x_value.last` and</span>
-<span class="doccomment">/// `q(omega^i) == batch_proof.q_x_value[i]`</span>
-<span class="doccomment">/// 4. build `l(points)` which is a list of univariate</span>
-<span class="doccomment">/// polynomials that goes through the points</span>
-<span class="doccomment">/// 5. get a point `p := l(r)`</span>
-<span class="doccomment">/// 6. verifies `p` is valid against multilinear KZG proof</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">batch_verify_internal</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">PairingEngine</span><span class="op">&gt;</span>(
-    <span class="ident">uni_verifier_param</span>: <span class="kw-2">&amp;</span><span class="ident">UnivariateVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="ident">ml_verifier_param</span>: <span class="kw-2">&amp;</span><span class="ident">MultilinearVerifierParam</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="ident">multi_commitment</span>: <span class="kw-2">&amp;</span><span class="ident">Commitment</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-    <span class="ident">points</span>: <span class="kw-2">&amp;</span>[<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>],
-    <span class="ident">values</span>: <span class="kw-2">&amp;</span>[<span class="ident">E::Fr</span>],
-    <span class="ident">batch_proof</span>: <span class="kw-2">&amp;</span><span class="ident">MultilinearKzgBatchProof</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">PCSError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">verify_timer</span> <span class="op">=</span> <span class="macro">start_timer!</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;batch verify&quot;</span>);
+<span class="doccomment">/// Verifies that the `multi_commitment` is a valid commitment
+/// to a list of MLEs for the given openings and evaluations in
+/// the batch_proof.
+///
+/// steps:
+///
+/// 1. push w, points and q_com into transcript
+/// 2. sample `r` from transcript
+/// 3. check `q(r) == batch_proof.q_x_value.last` and
+/// `q(omega^i) == batch_proof.q_x_value[i]`
+/// 4. build `l(points)` which is a list of univariate
+/// polynomials that goes through the points
+/// 5. get a point `p := l(r)`
+/// 6. verifies `p` is valid against multilinear KZG proof
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_verify_internal&lt;E: PairingEngine&gt;(
+    uni_verifier_param: <span class="kw-2">&amp;</span>UnivariateVerifierParam&lt;E&gt;,
+    ml_verifier_param: <span class="kw-2">&amp;</span>MultilinearVerifierParam&lt;E&gt;,
+    multi_commitment: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,
+    points: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
+    values: <span class="kw-2">&amp;</span>[E::Fr],
+    batch_proof: <span class="kw-2">&amp;</span>MultilinearKzgBatchProof&lt;E&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
+    <span class="kw">let </span>verify_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;batch verify&quot;</span>);
 
-    <span class="comment">// ===================================</span>
-    <span class="comment">// Sanity checks on inputs</span>
-    <span class="comment">// ===================================</span>
-    <span class="kw">let</span> <span class="ident">points_len</span> <span class="op">=</span> <span class="ident">points</span>.<span class="ident">len</span>();
-    <span class="kw">if</span> <span class="ident">points_len</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(<span class="string">&quot;points is empty&quot;</span>.<span class="ident">to_string</span>()));
+    <span class="comment">// ===================================
+    // Sanity checks on inputs
+    // ===================================
+    </span><span class="kw">let </span>points_len = points.len();
+    <span class="kw">if </span>points_len == <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="string">&quot;points is empty&quot;</span>.to_string()));
     }
 
-    <span class="comment">// add one here because we also have q(r) and its opening</span>
-    <span class="kw">if</span> <span class="ident">points_len</span> <span class="op">+</span> <span class="number">1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">batch_proof</span>.<span class="ident">q_x_opens</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-            <span class="string">&quot;openings length does not match point length&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="comment">// add one here because we also have q(r) and its opening
+    </span><span class="kw">if </span>points_len + <span class="number">1 </span>!= batch_proof.q_x_opens.len() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+            <span class="string">&quot;openings length does not match point length&quot;</span>.to_string(),
         ));
     }
 
-    <span class="kw">if</span> <span class="ident">points_len</span> <span class="op">+</span> <span class="number">1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">values</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(
-            <span class="string">&quot;values length does not match point length&quot;</span>.<span class="ident">to_string</span>(),
+    <span class="kw">if </span>points_len + <span class="number">1 </span>!= values.len() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+            <span class="string">&quot;values length does not match point length&quot;</span>.to_string(),
         ));
     }
 
-    <span class="kw">let</span> <span class="ident">num_var</span> <span class="op">=</span> <span class="ident">points</span>[<span class="number">0</span>].<span class="ident">len</span>();
-    <span class="kw">for</span> <span class="ident">point</span> <span class="kw">in</span> <span class="ident">points</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>) {
-        <span class="kw">if</span> <span class="ident">point</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">num_var</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PCSError::InvalidParameters</span>(<span class="macro">format!</span>(
+    <span class="kw">let </span>num_var = points[<span class="number">0</span>].len();
+    <span class="kw">for </span>point <span class="kw">in </span>points.iter().skip(<span class="number">1</span>) {
+        <span class="kw">if </span>point.len() != num_var {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
                 <span class="string">&quot;points do not have same num_vars ({} vs {})&quot;</span>,
-                <span class="ident">point</span>.<span class="ident">len</span>(),
-                <span class="ident">num_var</span>,
+                point.len(),
+                num_var,
             )));
         }
     }
 
-    <span class="kw">let</span> <span class="ident">domain</span> <span class="op">=</span> <span class="ident">get_uni_domain</span>::<span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span>(<span class="ident">points_len</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>domain = get_uni_domain::&lt;E::Fr&gt;(points_len)<span class="question-mark">?</span>;
 
-    <span class="comment">// 1. push w, points and q_com into transcript</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transcript</span> <span class="op">=</span> <span class="ident">IOPTranscript::new</span>(<span class="string">b&quot;ml kzg&quot;</span>);
-    <span class="ident">transcript</span>.<span class="ident">append_serializable_element</span>(<span class="string">b&quot;w&quot;</span>, <span class="ident">multi_commitment</span>)<span class="question-mark">?</span>;
-    <span class="kw">for</span> <span class="ident">point</span> <span class="kw">in</span> <span class="ident">points</span> {
-        <span class="ident">transcript</span>.<span class="ident">append_serializable_element</span>(<span class="string">b&quot;w&quot;</span>, <span class="ident">point</span>)<span class="question-mark">?</span>;
+    <span class="comment">// 1. push w, points and q_com into transcript
+    </span><span class="kw">let </span><span class="kw-2">mut </span>transcript = IOPTranscript::new(<span class="string">b&quot;ml kzg&quot;</span>);
+    transcript.append_serializable_element(<span class="string">b&quot;w&quot;</span>, multi_commitment)<span class="question-mark">?</span>;
+    <span class="kw">for </span>point <span class="kw">in </span>points {
+        transcript.append_serializable_element(<span class="string">b&quot;w&quot;</span>, point)<span class="question-mark">?</span>;
     }
 
-    <span class="ident">transcript</span>.<span class="ident">append_serializable_element</span>(<span class="string">b&quot;q(x)&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">q_x_commit</span>)<span class="question-mark">?</span>;
+    transcript.append_serializable_element(<span class="string">b&quot;q(x)&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.q_x_commit)<span class="question-mark">?</span>;
 
-    <span class="comment">// 2. sample `r` from transcript</span>
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">transcript</span>.<span class="ident">get_and_append_challenge</span>(<span class="string">b&quot;r&quot;</span>)<span class="question-mark">?</span>;
+    <span class="comment">// 2. sample `r` from transcript
+    </span><span class="kw">let </span>r = transcript.get_and_append_challenge(<span class="string">b&quot;r&quot;</span>)<span class="question-mark">?</span>;
 
-    <span class="comment">// 3. check `q(r) == batch_proof.q_x_value.last` and `q(omega^i) =</span>
-    <span class="comment">// batch_proof.q_x_value[i]`</span>
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">value</span>) <span class="kw">in</span> <span class="ident">values</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">take</span>(<span class="ident">points_len</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">UnivariateKzgPCS::verify</span>(
-            <span class="ident">uni_verifier_param</span>,
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">q_x_commit</span>,
-            <span class="kw-2">&amp;</span><span class="ident">domain</span>.<span class="ident">element</span>(<span class="ident">i</span>),
-            <span class="ident">value</span>,
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">q_x_opens</span>[<span class="ident">i</span>],
-        )<span class="question-mark">?</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertion</span>)]</span>
-            <span class="macro">println!</span>(<span class="string">&quot;q(omega^{}) verification failed&quot;</span>, <span class="ident">i</span>);
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+    <span class="comment">// 3. check `q(r) == batch_proof.q_x_value.last` and `q(omega^i) =
+    // batch_proof.q_x_value[i]`
+    </span><span class="kw">for </span>(i, value) <span class="kw">in </span>values.iter().enumerate().take(points_len) {
+        <span class="kw">if </span>!UnivariateKzgPCS::verify(
+            uni_verifier_param,
+            <span class="kw-2">&amp;</span>batch_proof.q_x_commit,
+            <span class="kw-2">&amp;</span>domain.element(i),
+            value,
+            <span class="kw-2">&amp;</span>batch_proof.q_x_opens[i],
+        )<span class="question-mark">? </span>{
+            <span class="attribute">#[cfg(debug_assertion)]
+            </span><span class="macro">println!</span>(<span class="string">&quot;q(omega^{}) verification failed&quot;</span>, i);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
     }
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">UnivariateKzgPCS::verify</span>(
-        <span class="ident">uni_verifier_param</span>,
-        <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">q_x_commit</span>,
-        <span class="kw-2">&amp;</span><span class="ident">r</span>,
-        <span class="kw-2">&amp;</span><span class="ident">values</span>[<span class="ident">points_len</span>],
-        <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">q_x_opens</span>[<span class="ident">points_len</span>],
-    )<span class="question-mark">?</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertion</span>)]</span>
-        <span class="macro">println!</span>(<span class="string">&quot;q(r) verification failed&quot;</span>);
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+    <span class="kw">if </span>!UnivariateKzgPCS::verify(
+        uni_verifier_param,
+        <span class="kw-2">&amp;</span>batch_proof.q_x_commit,
+        <span class="kw-2">&amp;</span>r,
+        <span class="kw-2">&amp;</span>values[points_len],
+        <span class="kw-2">&amp;</span>batch_proof.q_x_opens[points_len],
+    )<span class="question-mark">? </span>{
+        <span class="attribute">#[cfg(debug_assertion)]
+        </span><span class="macro">println!</span>(<span class="string">&quot;q(r) verification failed&quot;</span>);
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
     }
 
-    <span class="comment">// 4. build `l(points)` which is a list of univariate polynomials that goes</span>
-    <span class="comment">// through the points</span>
-    <span class="kw">let</span> <span class="ident">uni_polys</span> <span class="op">=</span> <span class="ident">build_l</span>(<span class="ident">num_var</span>, <span class="ident">points</span>, <span class="kw-2">&amp;</span><span class="ident">domain</span>)<span class="question-mark">?</span>;
+    <span class="comment">// 4. build `l(points)` which is a list of univariate polynomials that goes
+    // through the points
+    </span><span class="kw">let </span>uni_polys = build_l(num_var, points, <span class="kw-2">&amp;</span>domain)<span class="question-mark">?</span>;
 
-    <span class="comment">// 5. get a point `p := l(r)`</span>
-    <span class="kw">let</span> <span class="ident">point</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">E::Fr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">uni_polys</span>.<span class="ident">iter</span>().<span class="ident">rev</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>)).<span class="ident">collect</span>();
+    <span class="comment">// 5. get a point `p := l(r)`
+    </span><span class="kw">let </span>point: Vec&lt;E::Fr&gt; = uni_polys.iter().rev().map(|x| x.evaluate(<span class="kw-2">&amp;</span>r)).collect();
 
-    <span class="comment">// 6. verifies `p` is valid against multilinear KZG proof</span>
-    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">verify_internal</span>(
-        <span class="ident">ml_verifier_param</span>,
-        <span class="ident">multi_commitment</span>,
-        <span class="kw-2">&amp;</span><span class="ident">point</span>,
-        <span class="kw-2">&amp;</span><span class="ident">values</span>[<span class="ident">points_len</span>],
-        <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>.<span class="ident">proof</span>,
+    <span class="comment">// 6. verifies `p` is valid against multilinear KZG proof
+    </span><span class="kw">let </span>res = verify_internal(
+        ml_verifier_param,
+        multi_commitment,
+        <span class="kw-2">&amp;</span>point,
+        <span class="kw-2">&amp;</span>values[points_len],
+        <span class="kw-2">&amp;</span>batch_proof.proof,
     )<span class="question-mark">?</span>;
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertion</span>)]</span>
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">res</span> {
+    <span class="attribute">#[cfg(debug_assertion)]
+    </span><span class="kw">if </span>!res {
         <span class="macro">println!</span>(<span class="string">&quot;multilinear KZG verification failed&quot;</span>);
     }
 
-    <span class="macro">end_timer!</span>(<span class="ident">verify_timer</span>);
+    <span class="macro">end_timer!</span>(verify_timer);
 
-    <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+    <span class="prelude-val">Ok</span>(res)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::{
-        <span class="kw">super</span>::{<span class="ident">util::get_batched_nv</span>, <span class="kw-2">*</span>},
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::{
+        <span class="kw">super</span>::{util::get_batched_nv, <span class="kw-2">*</span>},
         <span class="kw-2">*</span>,
     };
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pcs</span>::{
-        <span class="ident">multilinear_kzg::util</span>::{<span class="ident">compute_qx_degree</span>, <span class="ident">generate_evaluations</span>},
-        <span class="ident">prelude::UnivariateUniversalParams</span>,
-        <span class="ident">StructuredReferenceString</span>,
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::{
+        multilinear_kzg::util::{compute_qx_degree, generate_evaluations},
+        prelude::UnivariateUniversalParams,
+        StructuredReferenceString,
     };
-    <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span> <span class="kw">as</span> <span class="ident">E</span>;
-    <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-    <span class="kw">use</span> <span class="ident">ark_poly</span>::{<span class="ident">DenseMultilinearExtension</span>, <span class="ident">MultilinearExtension</span>};
-    <span class="kw">use</span> <span class="ident">ark_std</span>::{<span class="ident">log2</span>, <span class="ident">rand::RngCore</span>, <span class="ident">test_rng</span>, <span class="ident">vec::Vec</span>, <span class="ident">UniformRand</span>};
-    <span class="kw">type</span> <span class="ident">Fr</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::Fr</span>;
+    <span class="kw">use </span>ark_bls12_381::Bls12_381 <span class="kw">as </span>E;
+    <span class="kw">use </span>ark_ec::PairingEngine;
+    <span class="kw">use </span>ark_poly::{DenseMultilinearExtension, MultilinearExtension};
+    <span class="kw">use </span>ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
+    <span class="kw">type </span>Fr = &lt;E <span class="kw">as </span>PairingEngine&gt;::Fr;
 
-    <span class="kw">fn</span> <span class="ident">test_multi_commit_helper</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">RngCore</span> <span class="op">+</span> <span class="ident">CryptoRng</span><span class="op">&gt;</span>(
-        <span class="ident">uni_params</span>: <span class="kw-2">&amp;</span><span class="ident">UnivariateUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">ml_params</span>: <span class="kw-2">&amp;</span><span class="ident">MultilinearUniversalParams</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>,
-        <span class="ident">polys</span>: <span class="kw-2">&amp;</span>[<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">DenseMultilinearExtension</span><span class="op">&lt;</span><span class="ident">Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>],
-        <span class="ident">rng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">merged_nv</span> <span class="op">=</span> <span class="ident">get_batched_nv</span>(<span class="ident">polys</span>[<span class="number">0</span>].<span class="ident">num_vars</span>(), <span class="ident">polys</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">qx_degree</span> <span class="op">=</span> <span class="ident">compute_qx_degree</span>(<span class="ident">merged_nv</span>, <span class="ident">polys</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">padded_qx_degree</span> <span class="op">=</span> <span class="number">1usize</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">log2</span>(<span class="ident">qx_degree</span>);
+    <span class="kw">fn </span>test_multi_commit_helper&lt;R: RngCore + CryptoRng&gt;(
+        uni_params: <span class="kw-2">&amp;</span>UnivariateUniversalParams&lt;E&gt;,
+        ml_params: <span class="kw-2">&amp;</span>MultilinearUniversalParams&lt;E&gt;,
+        polys: <span class="kw-2">&amp;</span>[Rc&lt;DenseMultilinearExtension&lt;Fr&gt;&gt;],
+        rng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
+        <span class="kw">let </span>merged_nv = get_batched_nv(polys[<span class="number">0</span>].num_vars(), polys.len());
+        <span class="kw">let </span>qx_degree = compute_qx_degree(merged_nv, polys.len());
+        <span class="kw">let </span>padded_qx_degree = <span class="number">1usize </span>&lt;&lt; log2(qx_degree);
 
-        <span class="kw">let</span> (<span class="ident">uni_ck</span>, <span class="ident">uni_vk</span>) <span class="op">=</span> <span class="ident">uni_params</span>.<span class="ident">trim</span>(<span class="ident">padded_qx_degree</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> (<span class="ident">ml_ck</span>, <span class="ident">ml_vk</span>) <span class="op">=</span> <span class="ident">ml_params</span>.<span class="ident">trim</span>(<span class="ident">merged_nv</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(uni_ck, uni_vk) = uni_params.trim(padded_qx_degree)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(ml_ck, ml_vk) = ml_params.trim(merged_nv)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">points</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">poly</span> <span class="kw">in</span> <span class="ident">polys</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">poly</span>.<span class="ident">num_vars</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Fr::rand</span>(<span class="ident">rng</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Fr</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-            <span class="ident">points</span>.<span class="ident">push</span>(<span class="ident">point</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>points = Vec::new();
+        <span class="kw">for </span>poly <span class="kw">in </span>polys.iter() {
+            <span class="kw">let </span>point = (<span class="number">0</span>..poly.num_vars())
+                .map(|<span class="kw">_</span>| Fr::rand(rng))
+                .collect::&lt;Vec&lt;Fr&gt;&gt;();
+            points.push(point);
         }
 
-        <span class="kw">let</span> <span class="ident">evals</span> <span class="op">=</span> <span class="ident">generate_evaluations</span>(<span class="ident">polys</span>, <span class="kw-2">&amp;</span><span class="ident">points</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>evals = generate_evaluations(polys, <span class="kw-2">&amp;</span>points)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">com</span> <span class="op">=</span> <span class="ident">MultilinearKzgPCS::multi_commit</span>(<span class="kw-2">&amp;</span>(<span class="ident">ml_ck</span>.<span class="ident">clone</span>(), <span class="ident">uni_ck</span>.<span class="ident">clone</span>()), <span class="ident">polys</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> (<span class="ident">batch_proof</span>, <span class="ident">evaluations</span>) <span class="op">=</span>
-            <span class="ident">multi_open_internal</span>(<span class="kw-2">&amp;</span><span class="ident">uni_ck</span>, <span class="kw-2">&amp;</span><span class="ident">ml_ck</span>, <span class="ident">polys</span>, <span class="kw-2">&amp;</span><span class="ident">com</span>, <span class="kw-2">&amp;</span><span class="ident">points</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>com = MultilinearKzgPCS::multi_commit(<span class="kw-2">&amp;</span>(ml_ck.clone(), uni_ck.clone()), polys)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(batch_proof, evaluations) =
+            multi_open_internal(<span class="kw-2">&amp;</span>uni_ck, <span class="kw-2">&amp;</span>ml_ck, polys, <span class="kw-2">&amp;</span>com, <span class="kw-2">&amp;</span>points)<span class="question-mark">?</span>;
 
-        <span class="kw">for</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">evals</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">evaluations</span>.<span class="ident">iter</span>()) {
-            <span class="macro">assert_eq!</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+        <span class="kw">for </span>(a, b) <span class="kw">in </span>evals.iter().zip(evaluations.iter()) {
+            <span class="macro">assert_eq!</span>(a, b)
         }
 
-        <span class="comment">// good path</span>
-        <span class="macro">assert!</span>(<span class="ident">batch_verify_internal</span>(
-            <span class="kw-2">&amp;</span><span class="ident">uni_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">ml_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">com</span>,
-            <span class="kw-2">&amp;</span><span class="ident">points</span>,
-            <span class="kw-2">&amp;</span><span class="ident">evaluations</span>,
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
+        <span class="comment">// good path
+        </span><span class="macro">assert!</span>(batch_verify_internal(
+            <span class="kw-2">&amp;</span>uni_vk,
+            <span class="kw-2">&amp;</span>ml_vk,
+            <span class="kw-2">&amp;</span>com,
+            <span class="kw-2">&amp;</span>points,
+            <span class="kw-2">&amp;</span>evaluations,
+            <span class="kw-2">&amp;</span>batch_proof,
         )<span class="question-mark">?</span>);
 
-        <span class="comment">// bad commitment</span>
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">batch_verify_internal</span>(
-            <span class="kw-2">&amp;</span><span class="ident">uni_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">ml_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">Commitment</span>(<span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::default</span>()),
-            <span class="kw-2">&amp;</span><span class="ident">points</span>,
-            <span class="kw-2">&amp;</span><span class="ident">evaluations</span>,
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,
+        <span class="comment">// bad commitment
+        </span><span class="macro">assert!</span>(!batch_verify_internal(
+            <span class="kw-2">&amp;</span>uni_vk,
+            <span class="kw-2">&amp;</span>ml_vk,
+            <span class="kw-2">&amp;</span>Commitment(&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine::default()),
+            <span class="kw-2">&amp;</span>points,
+            <span class="kw-2">&amp;</span>evaluations,
+            <span class="kw-2">&amp;</span>batch_proof,
         )<span class="question-mark">?</span>);
 
-        <span class="comment">// bad points</span>
-        <span class="macro">assert!</span>(
-            <span class="ident">batch_verify_internal</span>(<span class="kw-2">&amp;</span><span class="ident">uni_vk</span>, <span class="kw-2">&amp;</span><span class="ident">ml_vk</span>, <span class="kw-2">&amp;</span><span class="ident">com</span>, <span class="kw-2">&amp;</span><span class="ident">points</span>[<span class="number">1</span>..], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>,).<span class="ident">is_err</span>()
+        <span class="comment">// bad points
+        </span><span class="macro">assert!</span>(
+            batch_verify_internal(<span class="kw-2">&amp;</span>uni_vk, <span class="kw-2">&amp;</span>ml_vk, <span class="kw-2">&amp;</span>com, <span class="kw-2">&amp;</span>points[<span class="number">1</span>..], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>batch_proof,).is_err()
         );
 
-        <span class="comment">// bad proof</span>
-        <span class="macro">assert!</span>(<span class="ident">batch_verify_internal</span>(
-            <span class="kw-2">&amp;</span><span class="ident">uni_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">ml_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">com</span>,
-            <span class="kw-2">&amp;</span><span class="ident">points</span>,
-            <span class="kw-2">&amp;</span><span class="ident">evaluations</span>,
-            <span class="kw-2">&amp;</span><span class="ident">MultilinearKzgBatchProof</span> {
-                <span class="ident">proof</span>: <span class="ident">MultilinearKzgProof</span> { <span class="ident">proofs</span>: <span class="ident">Vec::new</span>() },
-                <span class="ident">q_x_commit</span>: <span class="ident">Commitment</span>(<span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::default</span>()),
-                <span class="ident">q_x_opens</span>: <span class="macro">vec!</span>[],
+        <span class="comment">// bad proof
+        </span><span class="macro">assert!</span>(batch_verify_internal(
+            <span class="kw-2">&amp;</span>uni_vk,
+            <span class="kw-2">&amp;</span>ml_vk,
+            <span class="kw-2">&amp;</span>com,
+            <span class="kw-2">&amp;</span>points,
+            <span class="kw-2">&amp;</span>evaluations,
+            <span class="kw-2">&amp;</span>MultilinearKzgBatchProof {
+                proof: MultilinearKzgProof { proofs: Vec::new() },
+                q_x_commit: Commitment(&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine::default()),
+                q_x_opens: <span class="macro">vec!</span>[],
             },
         )
-        .<span class="ident">is_err</span>());
+        .is_err());
 
-        <span class="comment">// bad value</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrong_evals</span> <span class="op">=</span> <span class="ident">evaluations</span>.<span class="ident">clone</span>();
-        <span class="ident">wrong_evals</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">Fr::default</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">batch_verify_internal</span>(
-            <span class="kw-2">&amp;</span><span class="ident">uni_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">ml_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">com</span>,
-            <span class="kw-2">&amp;</span><span class="ident">points</span>,
-            <span class="kw-2">&amp;</span><span class="ident">wrong_evals</span>,
-            <span class="kw-2">&amp;</span><span class="ident">batch_proof</span>
+        <span class="comment">// bad value
+        </span><span class="kw">let </span><span class="kw-2">mut </span>wrong_evals = evaluations.clone();
+        wrong_evals[<span class="number">0</span>] = Fr::default();
+        <span class="macro">assert!</span>(!batch_verify_internal(
+            <span class="kw-2">&amp;</span>uni_vk,
+            <span class="kw-2">&amp;</span>ml_vk,
+            <span class="kw-2">&amp;</span>com,
+            <span class="kw-2">&amp;</span>points,
+            <span class="kw-2">&amp;</span>wrong_evals,
+            <span class="kw-2">&amp;</span>batch_proof
         )<span class="question-mark">?</span>);
 
-        <span class="comment">// bad q(x) commit</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrong_proof</span> <span class="op">=</span> <span class="ident">batch_proof</span>;
-        <span class="ident">wrong_proof</span>.<span class="ident">q_x_commit</span> <span class="op">=</span> <span class="ident">Commitment</span>(<span class="op">&lt;</span><span class="ident">E</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::default</span>());
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">batch_verify_internal</span>(
-            <span class="kw-2">&amp;</span><span class="ident">uni_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">ml_vk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">com</span>,
-            <span class="kw-2">&amp;</span><span class="ident">points</span>,
-            <span class="kw-2">&amp;</span><span class="ident">evaluations</span>,
-            <span class="kw-2">&amp;</span><span class="ident">wrong_proof</span>,
+        <span class="comment">// bad q(x) commit
+        </span><span class="kw">let </span><span class="kw-2">mut </span>wrong_proof = batch_proof;
+        wrong_proof.q_x_commit = Commitment(&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine::default());
+        <span class="macro">assert!</span>(!batch_verify_internal(
+            <span class="kw-2">&amp;</span>uni_vk,
+            <span class="kw-2">&amp;</span>ml_vk,
+            <span class="kw-2">&amp;</span>com,
+            <span class="kw-2">&amp;</span>points,
+            <span class="kw-2">&amp;</span>evaluations,
+            <span class="kw-2">&amp;</span>wrong_proof,
         )<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_multi_commit_internal</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PCSError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">test_rng</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_multi_commit_internal() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="kw">let</span> <span class="ident">uni_params</span> <span class="op">=</span>
-            <span class="ident">UnivariateUniversalParams</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::gen_srs_for_testing</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="number">1usize</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">15</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">ml_params</span> <span class="op">=</span> <span class="ident">MultilinearUniversalParams</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::gen_srs_for_testing</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>, <span class="number">15</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>uni_params =
+            UnivariateUniversalParams::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, <span class="number">1usize </span>&lt;&lt; <span class="number">15</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>ml_params = MultilinearUniversalParams::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, <span class="number">15</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// normal polynomials</span>
-        <span class="kw">let</span> <span class="ident">polys1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">5</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Rc::new</span>(<span class="ident">DenseMultilinearExtension::rand</span>(<span class="number">4</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)))
-            .<span class="ident">collect</span>();
-        <span class="ident">test_multi_commit_helper</span>(<span class="kw-2">&amp;</span><span class="ident">uni_params</span>, <span class="kw-2">&amp;</span><span class="ident">ml_params</span>, <span class="kw-2">&amp;</span><span class="ident">polys1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)<span class="question-mark">?</span>;
+        <span class="comment">// normal polynomials
+        </span><span class="kw">let </span>polys1: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..<span class="number">5</span>)
+            .map(|<span class="kw">_</span>| Rc::new(DenseMultilinearExtension::rand(<span class="number">4</span>, <span class="kw-2">&amp;mut </span>rng)))
+            .collect();
+        test_multi_commit_helper(<span class="kw-2">&amp;</span>uni_params, <span class="kw-2">&amp;</span>ml_params, <span class="kw-2">&amp;</span>polys1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
-        <span class="comment">// single-variate polynomials</span>
-        <span class="kw">let</span> <span class="ident">polys1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">5</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Rc::new</span>(<span class="ident">DenseMultilinearExtension::rand</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)))
-            .<span class="ident">collect</span>();
-        <span class="ident">test_multi_commit_helper</span>(<span class="kw-2">&amp;</span><span class="ident">uni_params</span>, <span class="kw-2">&amp;</span><span class="ident">ml_params</span>, <span class="kw-2">&amp;</span><span class="ident">polys1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)<span class="question-mark">?</span>;
+        <span class="comment">// single-variate polynomials
+        </span><span class="kw">let </span>polys1: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..<span class="number">5</span>)
+            .map(|<span class="kw">_</span>| Rc::new(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng)))
+            .collect();
+        test_multi_commit_helper(<span class="kw-2">&amp;</span>uni_params, <span class="kw-2">&amp;</span>ml_params, <span class="kw-2">&amp;</span>polys1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
