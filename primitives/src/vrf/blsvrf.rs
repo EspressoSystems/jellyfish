@@ -75,7 +75,7 @@ where
     ) -> Result<Self::Output, PrimitivesError> {
         let proof_serialized = proof.serialize();
         let mut hasher = H::new();
-        hasher.update(&proof_serialized);
+        hasher.update(proof_serialized);
         let mut output = [0u8; 32];
         output.copy_from_slice(hasher.finalize().as_ref());
         Ok(output)

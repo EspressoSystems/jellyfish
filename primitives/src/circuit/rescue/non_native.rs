@@ -579,7 +579,7 @@ where
                 modulus: input_var.modulus,
             };
             for i in 0..STATE_SIZE {
-                let power_eleventh_t = input_val_fields_elems_t[i].pow(&[T::A]);
+                let power_eleventh_t = input_val_fields_elems_t[i].pow([T::A]);
                 let power_eleventh_f = field_switching::<T, F>(&power_eleventh_t);
                 let power_eleventh_fp_elem_var = FpElemVar::new_from_field_element(
                     self,
@@ -855,7 +855,7 @@ mod tests {
         let out_var = circuit.pow_alpha_inv_state::<T>(&input_var).unwrap();
 
         let out_value: Vec<T> = (0..STATE_SIZE)
-            .map(|i| state.elems()[i].pow(&T::A_INV))
+            .map(|i| state.elems()[i].pow(T::A_INV))
             .collect();
 
         check_state(
