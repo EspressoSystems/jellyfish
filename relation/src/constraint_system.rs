@@ -905,10 +905,10 @@ impl<F: FftField> PlonkCircuit<F> {
             + q_mul[0] * w_vals[0] * w_vals[1]
             + q_mul[1] * w_vals[2] * w_vals[3]
             + q_ecc * w_vals[0] * w_vals[1] * w_vals[2] * w_vals[3] * w_vals[4]
-            + q_hash[0] * w_vals[0].pow(&[5])
-            + q_hash[1] * w_vals[1].pow(&[5])
-            + q_hash[2] * w_vals[2].pow(&[5])
-            + q_hash[3] * w_vals[3].pow(&[5])
+            + q_hash[0] * w_vals[0].pow([5])
+            + q_hash[1] * w_vals[1].pow([5])
+            + q_hash[2] * w_vals[2].pow([5])
+            + q_hash[3] * w_vals[3].pow([5])
             + q_c;
         let gate_output = q_o * w_vals[4];
         if expected_gate_output != gate_output {

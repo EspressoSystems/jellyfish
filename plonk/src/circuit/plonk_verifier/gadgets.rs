@@ -548,7 +548,7 @@ mod test {
 
         // constants
         let m = 128;
-        let two_power_m = Some(E::Fq::from(2u8).pow(&[m as u64]));
+        let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
 
         let fr_modulus_bits = <E::Fr as PrimeField>::Params::MODULUS.to_bytes_le();
         let modulus_in_f = F::from_le_bytes_mod_order(&fr_modulus_bits);
