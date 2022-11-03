@@ -292,7 +292,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // now we prove that x^11 = x_to_11
         let x_val = self.witness(x)?;
-        let x_to_5_val = x_val.pow(&[5]);
+        let x_to_5_val = x_val.pow([5]);
         let x_to_5 = self.create_variable(x_to_5_val)?;
         let wire_vars = &[x, 0, 0, 0, x_to_5];
         self.insert_gate(wire_vars, Box::new(FifthRootGate))?;
@@ -309,7 +309,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // now we prove that x^11 = x_to_11
         let x_val = self.witness(x)?;
-        let x_to_5_val = x_val.pow(&[5]);
+        let x_to_5_val = x_val.pow([5]);
         let x_to_5 = self.create_variable(x_to_5_val)?;
         let wire_vars = &[x, 0, 0, 0, x_to_5];
         self.insert_gate(wire_vars, Box::new(FifthRootGate))?;
@@ -325,7 +325,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.check_var_bound(a)?;
         let a_val = self.witness(a)?;
         let a_uint: BigUint = a_val.into();
-        let modulus = F::from(2u8).pow(&[bit_length as u64]);
+        let modulus = F::from(2u8).pow([bit_length as u64]);
         let modulus_uint: BigUint = modulus.into();
         let res = F::from(a_uint % modulus_uint);
         let b = self.create_variable(res)?;
@@ -353,7 +353,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         let a_val = self.witness(a)?;
         let b_val = self.witness(b)?;
-        let modulus = F::from(2u8).pow(&[bit_length as u64]);
+        let modulus = F::from(2u8).pow([bit_length as u64]);
         let modulus_uint: BigUint = modulus.into();
 
         if b_val >= modulus {
@@ -410,12 +410,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         // step 1. setup the constants
         let two_to_bit_length_lookup_component =
-            F::from(2u8).pow(&[bit_length_lookup_component as u64]);
+            F::from(2u8).pow([bit_length_lookup_component as u64]);
         let two_to_bit_length_lookup_component_uint: BigUint =
             two_to_bit_length_lookup_component.into();
 
         let two_to_delta_length_lookup_component =
-            F::from(2u8).pow(&[delta_length_lookup_component as u64]);
+            F::from(2u8).pow([delta_length_lookup_component as u64]);
         let two_to_delta_length_lookup_component_uint: BigUint =
             two_to_delta_length_lookup_component.into();
 
@@ -779,7 +779,7 @@ mod test {
         let mut rng = test_rng();
         let x = F::rand(&mut rng);
         let y = F::rand(&mut rng);
-        let x11 = x.pow(&[11]);
+        let x11 = x.pow([11]);
 
         // Create a satisfied circuit
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
@@ -824,7 +824,7 @@ mod test {
         let mut rng = test_rng();
         let x = F::rand(&mut rng);
         let y = F::rand(&mut rng);
-        let x11 = x.pow(&[11]);
+        let x11 = x.pow([11]);
 
         // Create a satisfied circuit
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
@@ -869,7 +869,7 @@ mod test {
         for len in [80, 100, 201, 248] {
             let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
             let x_var = circuit.create_variable(x)?;
-            let modulus = F::from(2u8).pow(&[len as u64]);
+            let modulus = F::from(2u8).pow([len as u64]);
             let modulus_uint: BigUint = modulus.into();
             let y_var = circuit.truncate(x_var, len)?;
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -883,7 +883,7 @@ mod test {
             let len = F::size_in_bits() - minus_len;
             let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
             let x_var = circuit.create_variable(x)?;
-            let modulus = F::from(2u8).pow(&[len as u64]);
+            let modulus = F::from(2u8).pow([len as u64]);
             let modulus_uint: BigUint = modulus.into();
             let y_var = circuit.truncate(x_var, len)?;
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok());

@@ -78,13 +78,13 @@ mod tests {
         let rng = &mut test_rng();
         let parameters = S::param_gen(Some(rng)).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
-        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
-        assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
+        let sig = S::sign(&parameters, &sk, message, rng).unwrap();
+        assert!(S::verify(&parameters, &pk, message, &sig).is_ok());
 
         let parameters = S::param_gen::<StdRng>(None).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
-        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
-        assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
+        let sig = S::sign(&parameters, &sk, message, rng).unwrap();
+        assert!(S::verify(&parameters, &pk, message, &sig).is_ok());
     }
 
     pub(crate) fn failed_verification<S: SignatureScheme>(
