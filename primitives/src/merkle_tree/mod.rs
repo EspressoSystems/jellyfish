@@ -16,7 +16,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, Serializatio
 use ark_std::{
     borrow::Borrow,
     fmt::{Debug, Display},
-    ops::{Add, AddAssign},
+    ops::AddAssign,
     string::ToString,
     vec,
     vec::Vec,
@@ -50,16 +50,19 @@ impl<F, P> LookupResult<F, P> {
 }
 
 /// Merkle tree hash function
-pub trait DigestAlgorithm<T> {
+pub trait DigestAlgorithm<E, I, T> {
     // Possible improvement: adding digest_element() and digest_index()
     /// Digest a list of values
     fn digest(data: &[T]) -> T;
+
+    /// Digest a leaf (an indexed element)
+    fn digest_leaf(pos: &I, elem: &E) -> T;
 }
 
 /// Ops needs to be performed over index
-pub trait IndexOps<Rhs = Self>: AddAssign<Rhs> + Add<Rhs, Output = Self> {}
+pub trait IndexOps<Rhs = Self>: AddAssign<Rhs> {}
 
-impl<T, Rhs> IndexOps<Rhs> for T where T: AddAssign<Rhs> + Add<Rhs, Output = Self> {}
+impl<T, Rhs> IndexOps<Rhs> for T where T: AddAssign<Rhs> {}
 
 /// An trait for Merkle tree index type.
 pub trait ToBranches {
@@ -78,12 +81,6 @@ impl ToBranches for u64 {
         }
         ret
     }
-}
-
-/// Convert into a vector of T
-pub trait ToVec<T> {
-    /// Return a vector of T
-    fn to_vec(&self) -> Vec<T>;
 }
 
 /// A merkle commitment consists a root hash value, a tree height and number of
@@ -105,18 +102,11 @@ pub struct MerkleCommitment<T: CanonicalSerialize + CanonicalDeserialize> {
 /// given position and verify a membership proof.
 pub trait MerkleTreeScheme: Sized {
     /// Merkle tree element type
-    type Element: Clone
-        + Copy
-        + CanonicalSerialize
-        + CanonicalDeserialize
-        + Eq
-        + PartialEq
-        + ToVec<Self::NodeValue>;
+    type Element: Clone + Copy + CanonicalSerialize + CanonicalDeserialize + Eq + PartialEq;
     /// Hash algorithm used in merkle tree
-    type Digest: DigestAlgorithm<Self::NodeValue>;
+    type Digest: DigestAlgorithm<Self::Element, Self::Index, Self::NodeValue>;
     /// Index type for this merkle tree
-    type Index: ToVec<Self::NodeValue>
-        + Debug
+    type Index: Debug
         + Eq
         + PartialEq
         + Ord

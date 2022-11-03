@@ -6,7 +6,7 @@
 
 use core::convert::TryInto;
 
-use super::{DigestAlgorithm, IndexOps, LookupResult, ToBranches, ToVec};
+use super::{DigestAlgorithm, IndexOps, LookupResult, ToBranches};
 use crate::errors::PrimitivesError;
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Display, format, iter::Peekable, string::ToString, vec,
@@ -35,8 +35,7 @@ pub enum MerkleNode<E, I, T> {
 
 impl<E, I, T> MerkleNode<E, I, T>
 where
-    E: ToVec<T>,
-    I: IndexOps + ToVec<T>,
+    I: IndexOps,
     T: Default + Copy,
 {
     /// Return the value of this [`MerkleNode`].
@@ -77,9 +76,9 @@ pub(crate) fn build_tree_internal<E, H, I, TreeArity, T>(
     iter: impl IntoIterator<Item = impl Borrow<E>>,
 ) -> Result<(BoxMTNode<E, I, T>, u64), PrimitivesError>
 where
-    E: ToVec<T> + Clone + Copy,
-    H: DigestAlgorithm<T>,
-    I: IndexOps + From<u64> + Default + Ord + PartialOrd + ToVec<T> + Clone + Copy,
+    E: Clone + Copy,
+    H: DigestAlgorithm<E, I, T>,
+    I: IndexOps + From<u64> + Default + Ord + PartialOrd + Clone + Copy,
     TreeArity: Unsigned,
     T: Default + Clone + Copy,
 {
@@ -101,11 +100,7 @@ where
                     .map(|(pos, elem)| {
                         let pos = I::from(pos as u64);
                         Box::new(MerkleNode::Leaf {
-                            value: digest_leaf::<E, H, I, T>(
-                                pos,
-                                elem.borrow(),
-                                TreeArity::to_usize(),
-                            ),
+                            value: H::digest_leaf(&pos, elem.borrow()),
                             pos,
                             elem: *elem.borrow(),
                         })
@@ -142,25 +137,10 @@ where
     }
 }
 
-pub(crate) fn digest_leaf<E, H, I, T>(pos: impl Borrow<I>, elem: impl Borrow<E>, arity: usize) -> T
-where
-    E: ToVec<T>,
-    H: DigestAlgorithm<T>,
-    I: ToVec<T>,
-    T: Default + Clone,
-{
-    let mut data = Vec::with_capacity(arity);
-    data.extend(pos.borrow().to_vec());
-    data.extend(elem.borrow().to_vec());
-    data.extend(vec![T::default(); arity - data.len()]);
-    H::digest(&data)
-}
-
 pub(crate) fn digest_branch<E, H, I, T>(data: &[Box<MerkleNode<E, I, T>>]) -> T
 where
-    E: ToVec<T>,
-    H: DigestAlgorithm<T>,
-    I: IndexOps + ToVec<T>,
+    H: DigestAlgorithm<E, I, T>,
+    I: IndexOps,
     T: Default + Copy,
 {
     // Question(Chengyu): any more efficient implementation?
@@ -170,8 +150,8 @@ where
 
 impl<E, I, T> MerkleNode<E, I, T>
 where
-    E: ToVec<T> + Clone + Copy,
-    I: ToVec<T> + IndexOps + Clone + From<u64> + Copy,
+    E: Clone + Copy,
+    I: IndexOps + Clone + From<u64> + Copy,
     T: Default + Eq + PartialEq + Display + Clone + Copy,
 {
     /// Forget a leaf from the merkle tree. Internal branch merkle node will
@@ -238,7 +218,7 @@ where
         proof: &[MerkleNode<E, I, T>],
     ) -> Result<(), PrimitivesError>
     where
-        H: DigestAlgorithm<T>,
+        H: DigestAlgorithm<E, I, T>,
         TreeArity: Unsigned,
     {
         if self.value() != path_values[depth] {
@@ -363,17 +343,18 @@ where
         elem: impl Borrow<E>,
     ) -> Result<(), PrimitivesError>
     where
-        H: DigestAlgorithm<T>,
+        H: DigestAlgorithm<E, I, T>,
         TreeArity: Unsigned,
     {
+        let elem = elem.borrow();
         match self {
             MerkleNode::Leaf {
                 elem: node_elem,
                 value,
                 pos,
             } => {
-                *node_elem = *elem.borrow();
-                *value = digest_leaf::<E, H, I, T>(pos, elem, TreeArity::to_usize());
+                *node_elem = *elem;
+                *value = H::digest_leaf(pos, elem);
                 Ok(())
             },
             MerkleNode::Branch { value: _, children } => (*children[branches[depth - 1]])
@@ -381,7 +362,7 @@ where
             MerkleNode::Empty => {
                 if depth == 0 {
                     *self = MerkleNode::Leaf {
-                        value: digest_leaf::<E, H, I, T>(pos, elem.borrow(), TreeArity::to_usize()),
+                        value: H::digest_leaf(&pos, elem),
                         pos,
                         elem: *elem.borrow(),
                     };
@@ -415,7 +396,7 @@ where
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
     ) -> Result<u64, PrimitivesError>
     where
-        H: DigestAlgorithm<T>,
+        H: DigestAlgorithm<E, I, T>,
         TreeArity: Unsigned,
     {
         if data.peek().is_none() {
@@ -449,9 +430,10 @@ where
                 MerkleNode::Empty => {
                     if depth == 0 {
                         let elem = data.next().unwrap();
+                        let elem = elem.borrow();
                         *self = MerkleNode::Leaf {
-                            elem: *elem.borrow(),
-                            value: digest_leaf::<E, H, I, T>(pos, elem, TreeArity::to_usize()),
+                            elem: *elem,
+                            value: H::digest_leaf(&pos, elem),
                             pos,
                         };
                         Ok(1)
@@ -501,13 +483,13 @@ where
 
 impl<E, I, T> MerkleProof<E, I, T>
 where
-    E: ToVec<T> + Copy,
-    I: ToVec<T> + From<u64> + ToBranches + IndexOps + Copy,
+    E: Copy,
+    I: From<u64> + ToBranches + IndexOps + Copy,
     T: Default + Clone + Copy,
 {
     pub(crate) fn verify_membership_proof<H, TreeArity>(&self) -> Result<T, PrimitivesError>
     where
-        H: DigestAlgorithm<T>,
+        H: DigestAlgorithm<E, I, T>,
         TreeArity: Unsigned,
     {
         if let MerkleNode::<E, I, T>::Leaf {
@@ -516,7 +498,7 @@ where
             elem,
         } = &self.proof[0]
         {
-            let init = digest_leaf::<E, H, I, T>(pos, elem, TreeArity::to_usize());
+            let init = H::digest_leaf(pos, elem);
             self.pos
                 .to_branches(self.proof.len() - 1, TreeArity::to_usize())
                 .iter()

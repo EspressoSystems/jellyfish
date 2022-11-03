@@ -7,9 +7,9 @@
 //! Implementation of a typical append only merkle tree
 
 use super::{
-    internal::{build_tree_internal, calculate_capacity, digest_leaf, MerkleNode, MerkleProof},
+    internal::{build_tree_internal, calculate_capacity, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, ForgetableMerkleTreeScheme, IndexOps,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, ToBranches, ToVec,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, ToBranches,
 };
 use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -29,10 +29,9 @@ use typenum::Unsigned;
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct MerkleTree<E, H, I, TreeArity, T>
 where
-    E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
-    H: DigestAlgorithm<T>,
+    E: CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
+    H: DigestAlgorithm<E, I, T>,
     I: IndexOps
-        + ToVec<T>
         + Ord
         + PartialOrd
         + CanonicalDeserialize
@@ -56,11 +55,10 @@ where
 
 impl<E, H, I, TreeArity, T> MerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
 where
-    E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Clone + Eq + PartialEq + Debug,
-    H: DigestAlgorithm<T>,
+    E: CanonicalSerialize + CanonicalDeserialize + Copy + Clone + Eq + PartialEq + Debug,
+    H: DigestAlgorithm<E, I, T>,
     I: IndexOps
         + Default
-        + ToVec<T>
         + Ord
         + PartialOrd
         + CanonicalDeserialize
@@ -165,10 +163,9 @@ where
 
 impl<E, H, I, TreeArity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
 where
-    E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
-    H: DigestAlgorithm<T>,
+    E: CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
+    H: DigestAlgorithm<E, I, T>,
     I: IndexOps
-        + ToVec<T>
         + Ord
         + Default
         + PartialOrd
@@ -234,10 +231,9 @@ where
 
 impl<E, H, I, TreeArity, T> ForgetableMerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
 where
-    E: ToVec<T> + CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
-    H: DigestAlgorithm<T>,
+    E: CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
+    H: DigestAlgorithm<E, I, T>,
     I: IndexOps
-        + ToVec<T>
         + Ord
         + Default
         + PartialOrd
@@ -285,7 +281,8 @@ where
             elem,
         } = proof.proof[0]
         {
-            let proof_leaf_value = digest_leaf::<E, H, I, T>(pos, elem, Self::ARITY);
+            // let proof_leaf_value = digest_leaf::<E, H, I, T>(pos, elem, Self::ARITY);
+            let proof_leaf_value = H::digest_leaf(&pos, &elem);
             let mut path_values = vec![proof_leaf_value];
             branches.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(proof_leaf_value),
