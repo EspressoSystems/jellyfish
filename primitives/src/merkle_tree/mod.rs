@@ -14,7 +14,7 @@ mod internal;
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
 use ark_std::{borrow::Borrow, fmt::Debug, ops::AddAssign, string::ToString, vec, vec::Vec};
-use num::BigUint;
+use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
@@ -50,7 +50,7 @@ impl<F: Field> Element for F {}
 
 /// An index type of a leaf in a Merkle tree.
 pub trait Index:
-    Debug + Eq + PartialEq + Ord + PartialOrd + Clone + Copy + ToBranches + IndexOps
+    Debug + Eq + PartialEq + Ord + PartialOrd + Clone + Copy + ToTreversalPath + IndexOps
 {
 }
 impl Index for u64 {}
@@ -80,14 +80,14 @@ pub trait IndexOps<Rhs = Self>: AddAssign<Rhs> {}
 impl<T, Rhs> IndexOps<Rhs> for T where T: AddAssign<Rhs> {}
 
 /// An trait for Merkle tree index type.
-pub trait ToBranches {
+pub trait ToTreversalPath {
     /// Convert the given index to a vector of branch indices given tree height
     /// and arity.
-    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize>;
+    fn to_treverse_path(&self, height: usize, arity: usize) -> Vec<usize>;
 }
 
-impl ToBranches for u64 {
-    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize> {
+impl ToTreversalPath for u64 {
+    fn to_treverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
         let mut pos = *self;
         let mut ret = vec![];
         for _i in 0..height {
@@ -98,8 +98,8 @@ impl ToBranches for u64 {
     }
 }
 
-impl ToBranches for BigUint {
-    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize> {
+impl ToTreversalPath for BigUint {
+    fn to_treverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
         let mut pos = self.clone();
         let mut ret = vec![];
         for _i in 0..height {

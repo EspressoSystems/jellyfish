@@ -11,7 +11,7 @@ use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index, NodeValue}
 use crate::rescue::{Permutation, RescueParameter};
 use ark_ff::Field;
 use ark_std::marker::PhantomData;
-use num::BigUint;
+use num_bigint::BigUint;
 use sha3::{Digest, Sha3_256};
 use typenum::U3;
 

@@ -80,7 +80,7 @@ where
 {
     let mut root = Box::new(MerkleNode::Empty);
     let pos = I::from(0);
-    let branches = pos.to_branches(height, Arity::to_usize());
+    let branches = pos.to_treverse_path(height, Arity::to_usize());
     let mut iter = elems.into_iter().peekable();
     let num_leaves =
         root.extend_internal::<H, Arity>(height, I::from(0), &branches, true, &mut iter)?;
@@ -456,7 +456,7 @@ where
         {
             let init = H::digest_leaf(pos, elem);
             self.pos
-                .to_branches(self.proof.len() - 1, Arity::to_usize())
+                .to_treverse_path(self.proof.len() - 1, Arity::to_usize())
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(

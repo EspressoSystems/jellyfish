@@ -9,13 +9,14 @@
 use super::{
     internal::{build_tree_internal, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToBranches,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTreversalPath,
 };
 use crate::errors::PrimitivesError;
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
-use num::{pow::pow, BigUint};
+use num_bigint::BigUint;
+use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
@@ -94,7 +95,7 @@ where
     }
 
     fn lookup(&self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let branches = pos.to_branches(self.height, Self::ARITY);
+        let branches = pos.to_treverse_path(self.height, Self::ARITY);
         match self.root.lookup_internal(self.height, &branches) {
             LookupResult::Ok(value, proof) => LookupResult::Ok(value, MerkleProof { pos, proof }),
             LookupResult::NotInMemory => LookupResult::NotInMemory,
@@ -141,7 +142,7 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let branches = self.num_leaves.to_branches(self.height, Self::ARITY);
+        let branches = self.num_leaves.to_treverse_path(self.height, Self::ARITY);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
             I::from(self.num_leaves),
@@ -167,7 +168,7 @@ where
     T: NodeValue,
 {
     fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let branches = pos.to_branches(self.height, Self::ARITY);
+        let branches = pos.to_treverse_path(self.height, Self::ARITY);
         match self.root.forget_internal(self.height, &branches) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
@@ -184,7 +185,7 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
-        let branches = pos.to_branches(self.height, Self::ARITY);
+        let branches = pos.to_treverse_path(self.height, Self::ARITY);
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,
             pos,
