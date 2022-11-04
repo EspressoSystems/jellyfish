@@ -65,12 +65,11 @@ where
     pub proof: Vec<MerkleNode<E, I, T>>,
 }
 
-type BoxedMTNode<E, I, T> = Box<MerkleNode<E, I, T>>;
-
+#[allow(clippy::type_complexity)]
 pub(crate) fn build_tree_internal<E, H, I, Arity, T>(
     height: usize,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(BoxedMTNode<E, I, T>, u64), PrimitivesError>
+) -> Result<(Box<MerkleNode<E, I, T>>, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
@@ -80,10 +79,10 @@ where
 {
     let mut root = Box::new(MerkleNode::Empty);
     let pos = I::from(0);
-    let branches = pos.to_treverse_path(height, Arity::to_usize());
+    let traversal_path = pos.to_treverse_path(height, Arity::to_usize());
     let mut iter = elems.into_iter().peekable();
     let num_leaves =
-        root.extend_internal::<H, Arity>(height, I::from(0), &branches, true, &mut iter)?;
+        root.extend_internal::<H, Arity>(height, I::from(0), &traversal_path, true, &mut iter)?;
     if iter.peek().is_some() {
         Err(PrimitivesError::ParameterError(
             "Exceed merkle tree capacity".to_string(),
@@ -115,13 +114,13 @@ where
     /// also be forgotten if all its leafs are forgotten.
     pub(crate) fn forget_internal(
         &mut self,
-        depth: usize,
-        branches: &[usize],
+        height: usize,
+        traversal_path: &[usize],
     ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>> {
         match self {
             MerkleNode::Empty => LookupResult::EmptyLeaf,
             MerkleNode::Branch { value, children } => {
-                match children[branches[depth - 1]].forget_internal(depth, branches) {
+                match children[traversal_path[height - 1]].forget_internal(height, traversal_path) {
                     LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
                             value: T::default(),
@@ -168,8 +167,8 @@ where
 
     pub(crate) fn remember_internal<H, Arity>(
         &mut self,
-        depth: usize,
-        branches: &[usize],
+        height: usize,
+        traversal_path: &[usize],
         path_values: &[T],
         proof: &[MerkleNode<E, I, T>],
     ) -> Result<(), PrimitivesError>
@@ -177,25 +176,25 @@ where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
     {
-        if self.value() != path_values[depth] {
+        if self.value() != path_values[height] {
             return Err(PrimitivesError::ParameterError(format!(
                 "Invalid proof. Hash differs at height {}: (expected: {:?}, received: {:?})",
-                depth,
+                height,
                 self.value(),
-                path_values[depth]
+                path_values[height]
             )));
         }
-        if depth == 0 && matches!(self, MerkleNode::ForgettenSubtree { value: _ }) {
-            *self = proof[depth].clone();
+        if height == 0 && matches!(self, MerkleNode::ForgettenSubtree { value: _ }) {
+            *self = proof[height].clone();
             Ok(())
         } else if let MerkleNode::Branch {
             value: _,
             children: proof_children,
-        } = &proof[depth]
+        } = &proof[height]
         {
             match &mut *self {
                 MerkleNode::Branch { value: _, children } => {
-                    let branch = branches[depth - 1];
+                    let branch = traversal_path[height - 1];
                     if !children.iter().zip(proof_children.iter()).enumerate().all(
                         |(index, (child, proof_child))| {
                             index == branch
@@ -206,12 +205,12 @@ where
                     ) {
                         Err(PrimitivesError::ParameterError(format!(
                             "Invalid proof. Sibling differs at height {}",
-                            depth
+                            height
                         )))
                     } else {
                         children[branch].remember_internal::<H, Arity>(
-                            depth - 1,
-                            branches,
+                            height - 1,
+                            traversal_path,
                             path_values,
                             proof,
                         )
@@ -219,12 +218,12 @@ where
                 },
                 MerkleNode::ForgettenSubtree { value: _ } => {
                     *self = MerkleNode::Branch {
-                        value: path_values[depth],
+                        value: path_values[height],
                         children: {
                             let mut children = proof_children.clone();
-                            children[branches[depth - 1]].remember_internal::<H, Arity>(
-                                depth - 1,
-                                branches,
+                            children[traversal_path[height - 1]].remember_internal::<H, Arity>(
+                                height - 1,
+                                traversal_path,
                                 path_values,
                                 proof,
                             )?;
@@ -251,13 +250,15 @@ where
 
     pub(crate) fn lookup_internal(
         &self,
-        depth: usize,
-        branches: &[usize],
+        height: usize,
+        traversal_path: &[usize],
     ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>> {
         match self {
             MerkleNode::Empty => LookupResult::EmptyLeaf,
             MerkleNode::Branch { value: _, children } => {
-                match children[branches[depth - 1]].lookup_internal(depth - 1, branches) {
+                match children[traversal_path[height - 1]]
+                    .lookup_internal(height - 1, traversal_path)
+                {
                     LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
                             value: T::default(),
@@ -293,9 +294,9 @@ where
     #[allow(dead_code)]
     pub(crate) fn update_internal<H, Arity>(
         &mut self,
-        depth: usize,
+        height: usize,
         pos: I,
-        branches: &[usize],
+        traversal_path: &[usize],
         elem: impl Borrow<E>,
     ) -> Result<(), PrimitivesError>
     where
@@ -313,10 +314,15 @@ where
                 *value = H::digest_leaf(pos, elem);
                 Ok(())
             },
-            MerkleNode::Branch { value: _, children } => (*children[branches[depth - 1]])
-                .update_internal::<H, Arity>(depth - 1, pos, branches, elem),
+            MerkleNode::Branch { value: _, children } => (*children[traversal_path[height - 1]])
+                .update_internal::<H, Arity>(
+                height - 1,
+                pos,
+                traversal_path,
+                elem,
+            ),
             MerkleNode::Empty => {
-                if depth == 0 {
+                if height == 0 {
                     *self = MerkleNode::Leaf {
                         value: H::digest_leaf(&pos, elem),
                         pos,
@@ -324,10 +330,10 @@ where
                     };
                 } else {
                     let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
-                    (*children[branches[depth - 1]]).update_internal::<H, Arity>(
-                        depth - 1,
+                    (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
+                        height - 1,
                         pos,
-                        branches,
+                        traversal_path,
                         elem,
                     )?;
                     *self = MerkleNode::Branch {
@@ -345,9 +351,9 @@ where
 
     pub(crate) fn extend_internal<H, Arity>(
         &mut self,
-        depth: usize,
+        height: usize,
         pos: I,
-        branches: &[usize],
+        traversal_path: &[usize],
         tight_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
     ) -> Result<u64, PrimitivesError>
@@ -356,83 +362,78 @@ where
         Arity: Unsigned,
     {
         if data.peek().is_none() {
-            Ok(0)
-        } else {
-            match self {
-                MerkleNode::Branch { value, children } => {
+            return Ok(0);
+        }
+        match self {
+            MerkleNode::Branch { value, children } => {
+                let mut pos = pos;
+                let mut cnt = 0u64;
+                let mut frontier = if tight_frontier {
+                    traversal_path[height - 1]
+                } else {
+                    0
+                };
+                let cap = Arity::to_usize();
+                while data.peek().is_some() && frontier < cap {
+                    let increment = children[frontier].extend_internal::<H, Arity>(
+                        height - 1,
+                        pos,
+                        traversal_path,
+                        tight_frontier && frontier == traversal_path[height - 1],
+                        data,
+                    )?;
+                    cnt += increment;
+                    pos += I::from(increment);
+                    frontier += 1;
+                }
+                *value = digest_branch::<E, H, I, T>(children);
+                Ok(cnt)
+            },
+            MerkleNode::Empty => {
+                if height == 0 {
+                    let elem = data.next().unwrap();
+                    let elem = elem.borrow();
+                    *self = MerkleNode::Leaf {
+                        elem: *elem,
+                        value: H::digest_leaf(&pos, elem),
+                        pos,
+                    };
+                    Ok(1)
+                } else {
                     let mut pos = pos;
                     let mut cnt = 0u64;
                     let mut frontier = if tight_frontier {
-                        branches[depth - 1]
+                        traversal_path[height - 1]
                     } else {
                         0
                     };
                     let cap = Arity::to_usize();
+                    let mut children = vec![Box::new(MerkleNode::Empty); cap];
                     while data.peek().is_some() && frontier < cap {
                         let increment = children[frontier].extend_internal::<H, Arity>(
-                            depth - 1,
+                            height - 1,
                             pos,
-                            branches,
-                            tight_frontier && frontier == branches[depth - 1],
+                            traversal_path,
+                            tight_frontier && frontier == traversal_path[height - 1],
                             data,
                         )?;
                         cnt += increment;
                         pos += I::from(increment);
                         frontier += 1;
                     }
-                    *value = digest_branch::<E, H, I, T>(children);
+                    *self = MerkleNode::Branch {
+                        value: digest_branch::<E, H, I, T>(&children),
+                        children,
+                    };
                     Ok(cnt)
-                },
-                MerkleNode::Empty => {
-                    if depth == 0 {
-                        let elem = data.next().unwrap();
-                        let elem = elem.borrow();
-                        *self = MerkleNode::Leaf {
-                            elem: *elem,
-                            value: H::digest_leaf(&pos, elem),
-                            pos,
-                        };
-                        Ok(1)
-                    } else {
-                        let mut pos = pos;
-                        let mut cnt = 0u64;
-                        let mut frontier = if tight_frontier {
-                            branches[depth - 1]
-                        } else {
-                            0
-                        };
-                        let cap = Arity::to_usize();
-                        let mut children = vec![Box::new(MerkleNode::Empty); cap];
-                        while data.peek().is_some() && frontier < cap {
-                            let increment = children[frontier].extend_internal::<H, Arity>(
-                                depth - 1,
-                                pos,
-                                branches,
-                                tight_frontier && frontier == branches[depth - 1],
-                                data,
-                            )?;
-                            cnt += increment;
-                            pos += I::from(increment);
-                            frontier += 1;
-                        }
-                        *self = MerkleNode::Branch {
-                            value: digest_branch::<E, H, I, T>(&children),
-                            children,
-                        };
-                        Ok(cnt)
-                    }
-                },
-                MerkleNode::Leaf {
-                    elem: _,
-                    value: _,
-                    pos: _,
-                } => Err(PrimitivesError::ParameterError(
-                    "Incompatible merkle tree: index already occupied".to_string(),
-                )),
-                _ => Err(PrimitivesError::ParameterError(
-                    "Given part of merkle tree is not in memory".to_string(),
-                )),
-            }
+                }
+            },
+            MerkleNode::Leaf { .. } => Err(PrimitivesError::ParameterError(
+                "Incompatible merkle tree: index already occupied".to_string(),
+            )),
+            MerkleNode::ForgettenSubtree { .. } => Err(PrimitivesError::ParameterError(
+                "Given part of merkle tree is not in memory".to_string(),
+            )),
         }
     }
 }

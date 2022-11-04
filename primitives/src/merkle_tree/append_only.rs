@@ -95,8 +95,8 @@ where
     }
 
     fn lookup(&self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let branches = pos.to_treverse_path(self.height, Self::ARITY);
-        match self.root.lookup_internal(self.height, &branches) {
+        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+        match self.root.lookup_internal(self.height, &traversal_path) {
             LookupResult::Ok(value, proof) => LookupResult::Ok(value, MerkleProof { pos, proof }),
             LookupResult::NotInMemory => LookupResult::NotInMemory,
             LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
@@ -142,11 +142,11 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let branches = self.num_leaves.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = self.num_leaves.to_treverse_path(self.height, Self::ARITY);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
             I::from(self.num_leaves),
-            &branches,
+            &traversal_path,
             true,
             &mut iter,
         )?;
@@ -168,8 +168,8 @@ where
     T: NodeValue,
 {
     fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let branches = pos.to_treverse_path(self.height, Self::ARITY);
-        match self.root.forget_internal(self.height, &branches) {
+        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+        match self.root.forget_internal(self.height, &traversal_path) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
             },
@@ -185,7 +185,7 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
-        let branches = pos.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,
             pos,
@@ -195,7 +195,7 @@ where
             // let proof_leaf_value = digest_leaf::<E, H, I, T>(pos, elem, Self::ARITY);
             let proof_leaf_value = H::digest_leaf(&pos, &elem);
             let mut path_values = vec![proof_leaf_value];
-            branches.iter().zip(proof.proof.iter().skip(1)).fold(
+            traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(proof_leaf_value),
                 |result, (branch, node)| -> Result<T, PrimitivesError> {
                     match result {
@@ -218,7 +218,7 @@ where
             )?;
             self.root.remember_internal::<H, Arity>(
                 self.height,
-                &branches,
+                &traversal_path,
                 &path_values,
                 &proof.proof,
             )
