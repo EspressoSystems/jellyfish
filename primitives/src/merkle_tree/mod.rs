@@ -12,15 +12,10 @@ pub mod sparse_merkle_tree;
 mod internal;
 
 use crate::errors::PrimitivesError;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
-use ark_std::{
-    borrow::Borrow,
-    fmt::{Debug, Display},
-    ops::AddAssign,
-    string::ToString,
-    vec,
-    vec::Vec,
-};
+use ark_ff::Field;
+use ark_std::{borrow::Borrow, fmt::Debug, ops::AddAssign, string::ToString, vec, vec::Vec};
+use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
@@ -49,8 +44,29 @@ impl<F, P> LookupResult<F, P> {
     }
 }
 
+/// An element of a Merkle tree.
+pub trait Element: Clone + Copy + Eq + PartialEq {}
+impl<F: Field> Element for F {}
+
+/// An index type of a leaf in a Merkle tree.
+pub trait Index:
+    Debug + Eq + PartialEq + Ord + PartialOrd + Clone + Copy + ToBranches + IndexOps
+{
+}
+impl Index for u64 {}
+// impl<F: Field> Index for F {}
+
+/// An internal node value type in a Merkle tree.
+pub trait NodeValue: Default + Eq + PartialEq + Copy + Clone + Debug {}
+impl<F: Field> NodeValue for F {}
+
 /// Merkle tree hash function
-pub trait DigestAlgorithm<E, I, T> {
+pub trait DigestAlgorithm<E, I, T>
+where
+    E: Element,
+    I: Index,
+    T: NodeValue,
+{
     // Possible improvement: adding digest_element() and digest_index()
     /// Digest a list of values
     fn digest(data: &[T]) -> T;
@@ -83,12 +99,22 @@ impl ToBranches for u64 {
     }
 }
 
+impl ToBranches for BigUint {
+    fn to_branches(&self, height: usize, arity: usize) -> Vec<usize> {
+        let mut pos = self.clone();
+        let mut ret = vec![];
+        for _i in 0..height {
+            ret.push((&pos % (arity as u64)).to_usize().unwrap());
+            pos /= arity as u64;
+        }
+        ret
+    }
+}
+
 /// A merkle commitment consists a root hash value, a tree height and number of
 /// leaves
-#[derive(
-    Eq, PartialEq, Clone, Copy, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
-)]
-pub struct MerkleCommitment<T: CanonicalSerialize + CanonicalDeserialize> {
+#[derive(Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
+pub struct MerkleCommitment<T: NodeValue> {
     /// Root of a tree
     pub root_value: T,
     /// Height of a tree
@@ -102,34 +128,17 @@ pub struct MerkleCommitment<T: CanonicalSerialize + CanonicalDeserialize> {
 /// given position and verify a membership proof.
 pub trait MerkleTreeScheme: Sized {
     /// Merkle tree element type
-    type Element: Clone + Copy + CanonicalSerialize + CanonicalDeserialize + Eq + PartialEq;
+    type Element: Element;
     /// Hash algorithm used in merkle tree
     type Digest: DigestAlgorithm<Self::Element, Self::Index, Self::NodeValue>;
     /// Index type for this merkle tree
-    type Index: Debug
-        + Eq
-        + PartialEq
-        + Ord
-        + PartialOrd
-        + IndexOps
-        + Clone
-        + Copy
-        + ToBranches
-        + CanonicalDeserialize
-        + CanonicalSerialize;
+    type Index: Index;
     /// Internal and root node value
-    type NodeValue: Default
-        + Eq
-        + PartialEq
-        + Copy
-        + Clone
-        + Display
-        + CanonicalSerialize
-        + CanonicalDeserialize;
+    type NodeValue: NodeValue;
     /// Merkle proof
-    type MembershipProof;
+    type MembershipProof: Clone;
     /// Batch proof
-    type BatchMembershipProof;
+    type BatchMembershipProof: Clone;
 
     /// Tree arity
     const ARITY: usize;
