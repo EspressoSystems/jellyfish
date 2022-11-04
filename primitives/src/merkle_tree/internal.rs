@@ -6,18 +6,17 @@
 
 use core::convert::TryInto;
 
-use super::{DigestAlgorithm, IndexOps, LookupResult, ToBranches};
+use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue};
 use crate::errors::PrimitivesError;
 use ark_std::{
-    borrow::Borrow, boxed::Box, fmt::Display, format, iter::Peekable, string::ToString, vec,
-    vec::Vec,
+    borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
 };
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum MerkleNode<E, I, T> {
+pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
     Empty,
     Branch {
         value: T,
@@ -35,8 +34,9 @@ pub enum MerkleNode<E, I, T> {
 
 impl<E, I, T> MerkleNode<E, I, T>
 where
-    I: IndexOps,
-    T: Default + Copy,
+    E: Element,
+    I: Index,
+    T: NodeValue,
 {
     /// Return the value of this [`MerkleNode`].
     #[inline]
@@ -55,7 +55,12 @@ where
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleProof<E, I, T> {
+pub struct MerkleProof<E, I, T>
+where
+    E: Element,
+    I: Index,
+    T: NodeValue,
+{
     /// Proof of inclusion for element at index `pos`
     pub pos: I,
     /// Nodes of proof path, from root to leaf
@@ -70,17 +75,17 @@ pub(crate) fn calculate_capacity(height: usize, arity: u64) -> u64 {
 
 type BoxMTNode<E, I, T> = Box<MerkleNode<E, I, T>>;
 
-pub(crate) fn build_tree_internal<E, H, I, TreeArity, T>(
+pub(crate) fn build_tree_internal<E, H, I, Arity, T>(
     height: usize,
     capacity: u64,
     iter: impl IntoIterator<Item = impl Borrow<E>>,
 ) -> Result<(BoxMTNode<E, I, T>, u64), PrimitivesError>
 where
-    E: Clone + Copy,
+    E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: IndexOps + From<u64> + Default + Ord + PartialOrd + Clone + Copy,
-    TreeArity: Unsigned,
-    T: Default + Clone + Copy,
+    I: Index + From<u64>,
+    Arity: Unsigned,
+    T: NodeValue,
 {
     let leaves: Vec<_> = iter.into_iter().collect();
     let num_leaves = leaves.len() as u64;
@@ -93,7 +98,7 @@ where
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
-            .chunks(TreeArity::to_usize())
+            .chunks(Arity::to_usize())
             .into_iter()
             .map(|chunk| {
                 let children = chunk
@@ -105,7 +110,7 @@ where
                             elem: *elem.borrow(),
                         })
                     })
-                    .pad_using(TreeArity::to_usize(), |_| Box::new(MerkleNode::Empty))
+                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
                     .collect_vec();
                 Box::new(MerkleNode::<E, I, T>::Branch {
                     value: digest_branch::<E, H, I, T>(&children),
@@ -116,11 +121,11 @@ where
         for _ in 1..height {
             cur_nodes = cur_nodes
                 .into_iter()
-                .chunks(TreeArity::to_usize())
+                .chunks(Arity::to_usize())
                 .into_iter()
                 .map(|chunk| {
                     let children = chunk
-                        .pad_using(TreeArity::to_usize(), |_| {
+                        .pad_using(Arity::to_usize(), |_| {
                             Box::new(MerkleNode::<E, I, T>::Empty)
                         })
                         .collect_vec();
@@ -139,9 +144,10 @@ where
 
 pub(crate) fn digest_branch<E, H, I, T>(data: &[Box<MerkleNode<E, I, T>>]) -> T
 where
+    E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: IndexOps,
-    T: Default + Copy,
+    I: Index,
+    T: NodeValue,
 {
     // Question(Chengyu): any more efficient implementation?
     let data = data.iter().map(|node| node.value()).collect_vec();
@@ -150,9 +156,9 @@ where
 
 impl<E, I, T> MerkleNode<E, I, T>
 where
-    E: Clone + Copy,
-    I: IndexOps + Clone + From<u64> + Copy,
-    T: Default + Eq + PartialEq + Display + Clone + Copy,
+    E: Element,
+    I: Index + From<u64>,
+    T: NodeValue,
 {
     /// Forget a leaf from the merkle tree. Internal branch merkle node will
     /// also be forgotten if all its leafs are forgotten.
@@ -209,21 +215,20 @@ where
         }
     }
 
-    pub(crate) fn remember_internal<H, TreeArity>(
+    pub(crate) fn remember_internal<H, Arity>(
         &mut self,
         depth: usize,
-        pos: I,
         branches: &[usize],
         path_values: &[T],
         proof: &[MerkleNode<E, I, T>],
     ) -> Result<(), PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        TreeArity: Unsigned,
+        Arity: Unsigned,
     {
         if self.value() != path_values[depth] {
             return Err(PrimitivesError::ParameterError(format!(
-                "Invalid proof. Hash differs at height {}: (expected: {}, received: {})",
+                "Invalid proof. Hash differs at height {}: (expected: {:?}, received: {:?})",
                 depth,
                 self.value(),
                 path_values[depth]
@@ -253,9 +258,8 @@ where
                             depth
                         )))
                     } else {
-                        children[branch].remember_internal::<H, TreeArity>(
+                        children[branch].remember_internal::<H, Arity>(
                             depth - 1,
-                            pos,
                             branches,
                             path_values,
                             proof,
@@ -267,9 +271,8 @@ where
                         value: path_values[depth],
                         children: {
                             let mut children = proof_children.clone();
-                            children[branches[depth - 1]].remember_internal::<H, TreeArity>(
+                            children[branches[depth - 1]].remember_internal::<H, Arity>(
                                 depth - 1,
-                                pos,
                                 branches,
                                 path_values,
                                 proof,
@@ -335,7 +338,7 @@ where
         }
     }
 
-    pub(crate) fn update_internal<H, TreeArity>(
+    pub(crate) fn update_internal<H, Arity>(
         &mut self,
         depth: usize,
         pos: I,
@@ -344,7 +347,7 @@ where
     ) -> Result<(), PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        TreeArity: Unsigned,
+        Arity: Unsigned,
     {
         let elem = elem.borrow();
         match self {
@@ -358,7 +361,7 @@ where
                 Ok(())
             },
             MerkleNode::Branch { value: _, children } => (*children[branches[depth - 1]])
-                .update_internal::<H, TreeArity>(depth - 1, pos, branches, elem),
+                .update_internal::<H, Arity>(depth - 1, pos, branches, elem),
             MerkleNode::Empty => {
                 if depth == 0 {
                     *self = MerkleNode::Leaf {
@@ -367,8 +370,8 @@ where
                         elem: *elem.borrow(),
                     };
                 } else {
-                    let mut children = vec![Box::new(MerkleNode::Empty); TreeArity::to_usize()];
-                    (*children[branches[depth - 1]]).update_internal::<H, TreeArity>(
+                    let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
+                    (*children[branches[depth - 1]]).update_internal::<H, Arity>(
                         depth - 1,
                         pos,
                         branches,
@@ -387,7 +390,7 @@ where
         }
     }
 
-    pub(crate) fn extend_internal<H, TreeArity>(
+    pub(crate) fn extend_internal<H, Arity>(
         &mut self,
         depth: usize,
         pos: I,
@@ -397,7 +400,7 @@ where
     ) -> Result<u64, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        TreeArity: Unsigned,
+        Arity: Unsigned,
     {
         if data.peek().is_none() {
             Ok(0)
@@ -411,9 +414,9 @@ where
                     } else {
                         0
                     };
-                    let cap = TreeArity::to_usize();
+                    let cap = Arity::to_usize();
                     while data.peek().is_some() && frontier < cap {
-                        let increment = children[frontier].extend_internal::<H, TreeArity>(
+                        let increment = children[frontier].extend_internal::<H, Arity>(
                             depth - 1,
                             pos,
                             branches,
@@ -445,10 +448,10 @@ where
                         } else {
                             0
                         };
-                        let cap = TreeArity::to_usize();
+                        let cap = Arity::to_usize();
                         let mut children = vec![Box::new(MerkleNode::Empty); cap];
                         while data.peek().is_some() && frontier < cap {
-                            let increment = children[frontier].extend_internal::<H, TreeArity>(
+                            let increment = children[frontier].extend_internal::<H, Arity>(
                                 depth - 1,
                                 pos,
                                 branches,
@@ -483,14 +486,14 @@ where
 
 impl<E, I, T> MerkleProof<E, I, T>
 where
-    E: Copy,
-    I: From<u64> + ToBranches + IndexOps + Copy,
-    T: Default + Clone + Copy,
+    E: Element,
+    I: Index + From<u64>,
+    T: NodeValue,
 {
-    pub(crate) fn verify_membership_proof<H, TreeArity>(&self) -> Result<T, PrimitivesError>
+    pub(crate) fn verify_membership_proof<H, Arity>(&self) -> Result<T, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        TreeArity: Unsigned,
+        Arity: Unsigned,
     {
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,
@@ -500,7 +503,7 @@ where
         {
             let init = H::digest_leaf(pos, elem);
             self.pos
-                .to_branches(self.proof.len() - 1, TreeArity::to_usize())
+                .to_branches(self.proof.len() - 1, Arity::to_usize())
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(

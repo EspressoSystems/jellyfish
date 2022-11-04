@@ -8,41 +8,25 @@
 
 use super::{
     internal::{build_tree_internal, calculate_capacity, MerkleNode, MerkleProof},
-    AppendableMerkleTreeScheme, DigestAlgorithm, ForgetableMerkleTreeScheme, IndexOps,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, ToBranches,
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToBranches,
 };
 use crate::errors::PrimitivesError;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
-    borrow::Borrow,
-    boxed::Box,
-    fmt::{Debug, Display},
-    marker::PhantomData,
-    string::ToString,
-    vec,
-    vec::Vec,
+    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 /// A standard append only Merkle tree implementation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleTree<E, H, I, TreeArity, T>
+pub struct MerkleTree<E, H, I, Arity, T>
 where
-    E: CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
+    E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: IndexOps
-        + Ord
-        + PartialOrd
-        + CanonicalDeserialize
-        + CanonicalSerialize
-        + ToBranches
-        + Eq
-        + PartialEq
-        + Clone
-        + Copy
-        + Debug
-        + From<u64>,
+    I: Index + From<u64>,
+    Arity: Unsigned,
+    T: NodeValue,
 {
     root: Box<MerkleNode<E, I, T>>,
     height: usize,
@@ -50,35 +34,16 @@ where
     num_leaves: u64,
 
     _phantom_h: PhantomData<H>,
-    _phantom_ta: PhantomData<TreeArity>,
+    _phantom_ta: PhantomData<Arity>,
 }
 
-impl<E, H, I, TreeArity, T> MerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
+impl<E, H, I, Arity, T> MerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
 where
-    E: CanonicalSerialize + CanonicalDeserialize + Copy + Clone + Eq + PartialEq + Debug,
+    E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: IndexOps
-        + Default
-        + Ord
-        + PartialOrd
-        + CanonicalDeserialize
-        + CanonicalSerialize
-        + ToBranches
-        + Eq
-        + PartialEq
-        + Clone
-        + Copy
-        + Debug
-        + From<u64>,
-    TreeArity: Unsigned,
-    T: Default
-        + Eq
-        + PartialEq
-        + CanonicalDeserialize
-        + CanonicalSerialize
-        + Clone
-        + Display
-        + Copy,
+    I: Index + From<u64>,
+    Arity: Unsigned,
+    T: NodeValue,
 {
     type Element = E;
     type Digest = H;
@@ -88,15 +53,14 @@ where
     // TODO(Chengyu): implement batch membership proof
     type BatchMembershipProof = ();
 
-    const ARITY: usize = TreeArity::USIZE;
+    const ARITY: usize = Arity::USIZE;
 
     fn from_elems(
         height: usize,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
-        let capacity = calculate_capacity(height, TreeArity::to_u64());
-        let (root, num_leaves) =
-            build_tree_internal::<E, H, I, TreeArity, T>(height, capacity, elems)?;
+        let capacity = calculate_capacity(height, Arity::to_u64());
+        let (root, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, capacity, elems)?;
         Ok(MerkleTree {
             root,
             height,
@@ -156,37 +120,18 @@ where
                 "Inconsistent proof index".to_string(),
             ));
         }
-        let computed_root_value = proof.verify_membership_proof::<H, TreeArity>()?;
+        let computed_root_value = proof.verify_membership_proof::<H, Arity>()?;
         Ok(computed_root_value == self.root.value())
     }
 }
 
-impl<E, H, I, TreeArity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
+impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
 where
-    E: CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
+    E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: IndexOps
-        + Ord
-        + Default
-        + PartialOrd
-        + CanonicalSerialize
-        + CanonicalDeserialize
-        + ToBranches
-        + Eq
-        + PartialEq
-        + Clone
-        + Copy
-        + Debug
-        + From<u64>,
-    TreeArity: Unsigned,
-    T: Default
-        + Eq
-        + PartialEq
-        + CanonicalSerialize
-        + CanonicalDeserialize
-        + Clone
-        + Display
-        + Copy,
+    I: Index + From<u64>,
+    Arity: Unsigned,
+    T: NodeValue,
 {
     fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
         if self.num_leaves >= self.capacity {
@@ -196,7 +141,7 @@ where
         }
 
         let branches = self.num_leaves.to_branches(self.height, Self::ARITY);
-        self.root.update_internal::<H, TreeArity>(
+        self.root.update_internal::<H, Arity>(
             self.height,
             I::from(self.num_leaves),
             &branches,
@@ -213,7 +158,7 @@ where
         let mut iter = elems.into_iter().peekable();
 
         let branches = self.num_leaves.to_branches(self.height, Self::ARITY);
-        self.num_leaves += self.root.extend_internal::<H, TreeArity>(
+        self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
             I::from(self.num_leaves),
             &branches,
@@ -229,32 +174,13 @@ where
     }
 }
 
-impl<E, H, I, TreeArity, T> ForgetableMerkleTreeScheme for MerkleTree<E, H, I, TreeArity, T>
+impl<E, H, I, Arity, T> ForgetableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
 where
-    E: CanonicalSerialize + CanonicalDeserialize + Copy + Eq + PartialEq + Debug,
+    E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: IndexOps
-        + Ord
-        + Default
-        + PartialOrd
-        + CanonicalDeserialize
-        + CanonicalSerialize
-        + ToBranches
-        + Eq
-        + PartialEq
-        + Clone
-        + Copy
-        + Debug
-        + From<u64>,
-    TreeArity: Unsigned,
-    T: Default
-        + Eq
-        + PartialEq
-        + CanonicalDeserialize
-        + CanonicalSerialize
-        + Clone
-        + Display
-        + Copy,
+    I: Index + From<u64>,
+    Arity: Unsigned,
+    T: NodeValue,
 {
     fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
         let branches = pos.to_branches(self.height, Self::ARITY);
@@ -305,9 +231,8 @@ where
                     }
                 },
             )?;
-            self.root.remember_internal::<H, TreeArity>(
+            self.root.remember_internal::<H, Arity>(
                 self.height,
-                pos,
                 &branches,
                 &path_values,
                 &proof.proof,
