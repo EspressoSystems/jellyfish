@@ -4,8 +4,6 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use core::convert::TryInto;
-
 use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue};
 use crate::errors::PrimitivesError;
 use ark_std::{
@@ -67,19 +65,12 @@ where
     pub proof: Vec<MerkleNode<E, I, T>>,
 }
 
-pub(crate) fn calculate_capacity(height: usize, arity: u64) -> u64 {
-    arity
-        .checked_pow(height.try_into().unwrap())
-        .unwrap_or(u64::MAX)
-}
-
-type BoxMTNode<E, I, T> = Box<MerkleNode<E, I, T>>;
+type BoxedMTNode<E, I, T> = Box<MerkleNode<E, I, T>>;
 
 pub(crate) fn build_tree_internal<E, H, I, Arity, T>(
     height: usize,
-    capacity: u64,
-    iter: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(BoxMTNode<E, I, T>, u64), PrimitivesError>
+    elems: impl IntoIterator<Item = impl Borrow<E>>,
+) -> Result<(BoxedMTNode<E, I, T>, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
@@ -87,58 +78,18 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    let leaves: Vec<_> = iter.into_iter().collect();
-    let num_leaves = leaves.len() as u64;
-
-    if num_leaves > capacity {
+    let mut root = Box::new(MerkleNode::Empty);
+    let pos = I::from(0);
+    let branches = pos.to_branches(height, Arity::to_usize());
+    let mut iter = elems.into_iter().peekable();
+    let num_leaves =
+        root.extend_internal::<H, Arity>(height, I::from(0), &branches, true, &mut iter)?;
+    if iter.peek().is_some() {
         Err(PrimitivesError::ParameterError(
-            "Too many data for merkle tree".to_string(),
+            "Exceed merkle tree capacity".to_string(),
         ))
-    } else if num_leaves > 0 {
-        let mut cur_nodes = leaves
-            .into_iter()
-            .enumerate()
-            .chunks(Arity::to_usize())
-            .into_iter()
-            .map(|chunk| {
-                let children = chunk
-                    .map(|(pos, elem)| {
-                        let pos = I::from(pos as u64);
-                        Box::new(MerkleNode::Leaf {
-                            value: H::digest_leaf(&pos, elem.borrow()),
-                            pos,
-                            elem: *elem.borrow(),
-                        })
-                    })
-                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::<E, I, T>::Branch {
-                    value: digest_branch::<E, H, I, T>(&children),
-                    children,
-                })
-            })
-            .collect_vec();
-        for _ in 1..height {
-            cur_nodes = cur_nodes
-                .into_iter()
-                .chunks(Arity::to_usize())
-                .into_iter()
-                .map(|chunk| {
-                    let children = chunk
-                        .pad_using(Arity::to_usize(), |_| {
-                            Box::new(MerkleNode::<E, I, T>::Empty)
-                        })
-                        .collect_vec();
-                    Box::new(MerkleNode::<E, I, T>::Branch {
-                        value: digest_branch::<E, H, I, T>(&children),
-                        children,
-                    })
-                })
-                .collect_vec();
-        }
-        Ok((cur_nodes[0].clone(), num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, I, T>::Empty), 0))
+        Ok((root, num_leaves))
     }
 }
 
@@ -338,6 +289,8 @@ where
         }
     }
 
+    // For future sparse merkle tree use
+    #[allow(dead_code)]
     pub(crate) fn update_internal<H, Arity>(
         &mut self,
         depth: usize,

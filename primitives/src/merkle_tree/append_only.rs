@@ -7,7 +7,7 @@
 //! Implementation of a typical append only merkle tree
 
 use super::{
-    internal::{build_tree_internal, calculate_capacity, MerkleNode, MerkleProof},
+    internal::{build_tree_internal, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToBranches,
 };
@@ -15,6 +15,7 @@ use crate::errors::PrimitivesError;
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
+use num::{pow::pow, BigUint};
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
@@ -30,7 +31,6 @@ where
 {
     root: Box<MerkleNode<E, I, T>>,
     height: usize,
-    capacity: u64,
     num_leaves: u64,
 
     _phantom_h: PhantomData<H>,
@@ -59,12 +59,10 @@ where
         height: usize,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
-        let capacity = calculate_capacity(height, Arity::to_u64());
-        let (root, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, capacity, elems)?;
+        let (root, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, elems)?;
         Ok(MerkleTree {
             root,
             height,
-            capacity,
             num_leaves,
             _phantom_h: PhantomData,
             _phantom_ta: PhantomData,
@@ -75,8 +73,8 @@ where
         self.height
     }
 
-    fn capacity(&self) -> u64 {
-        self.capacity
+    fn capacity(&self) -> BigUint {
+        pow(BigUint::from(Self::ARITY), self.height)
     }
 
     fn num_leaves(&self) -> u64 {
@@ -134,21 +132,7 @@ where
     T: NodeValue,
 {
     fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
-        if self.num_leaves >= self.capacity {
-            return Err(PrimitivesError::InternalError(
-                "Merkle tree full".to_string(),
-            ));
-        }
-
-        let branches = self.num_leaves.to_branches(self.height, Self::ARITY);
-        self.root.update_internal::<H, Arity>(
-            self.height,
-            I::from(self.num_leaves),
-            &branches,
-            elem.borrow(),
-        )?;
-        self.num_leaves += 1;
-        Ok(())
+        self.extend([elem])
     }
 
     fn extend(
@@ -167,7 +151,7 @@ where
         )?;
         if iter.peek().is_some() {
             return Err(PrimitivesError::ParameterError(
-                "To much data for extension".to_string(),
+                "Exceed merkle tree capacity".to_string(),
             ));
         }
         Ok(())
@@ -283,7 +267,7 @@ mod mt_tests {
 
     fn test_mt_insertion_helper<F: RescueParameter>() {
         let mut mt = RescueMerkleTree::<F>::from_elems(2, &[]).unwrap();
-        assert_eq!(mt.capacity(), 9u64);
+        assert_eq!(mt.capacity(), BigUint::from(9u64));
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
         assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first 7 items will be inserted

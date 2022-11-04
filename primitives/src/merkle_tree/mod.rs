@@ -14,7 +14,7 @@ mod internal;
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
 use ark_std::{borrow::Borrow, fmt::Debug, ops::AddAssign, string::ToString, vec, vec::Vec};
-use num_bigint::BigUint;
+use num::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
@@ -54,7 +54,6 @@ pub trait Index:
 {
 }
 impl Index for u64 {}
-// impl<F: Field> Index for F {}
 
 /// An internal node value type in a Merkle tree.
 pub trait NodeValue: Default + Eq + PartialEq + Copy + Clone + Debug {}
@@ -152,7 +151,7 @@ pub trait MerkleTreeScheme: Sized {
     /// Return the height of this merkle tree
     fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
-    fn capacity(&self) -> u64;
+    fn capacity(&self) -> BigUint;
     /// Return the current number of leaves
     fn num_leaves(&self) -> u64;
 
