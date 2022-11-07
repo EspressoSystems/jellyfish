@@ -59,6 +59,15 @@
                 entry = "cargo sort -w";
                 pass_filenames = false;
               };
+              # license-header-c-style = {
+              #   enable = true;
+              #   description =
+              #     "Ensure files with c-style comments have license header";
+              #   entry = ''
+              #     insert_license --license-filepath .license-header  --comment-style "//"'';
+              #   types_or = [ "rust" ];
+              #   pass_filenames = true;
+              # };
             };
           };
         };
