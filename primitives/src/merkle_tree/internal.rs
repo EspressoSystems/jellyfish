@@ -65,6 +65,17 @@ where
     pub proof: Vec<MerkleNode<E, I, T>>,
 }
 
+impl<E, I, T> MerkleProof<E, I, T>
+where
+    E: Element,
+    I: Index,
+    T: NodeValue,
+{
+    pub fn tree_height(&self) -> usize {
+        self.proof.len()
+    }
+}
+
 #[allow(clippy::type_complexity)]
 pub(crate) fn build_tree_internal<E, H, I, Arity, T>(
     height: usize,
@@ -444,7 +455,10 @@ where
     I: Index + From<u64>,
     T: NodeValue,
 {
-    pub(crate) fn verify_membership_proof<H, Arity>(&self) -> Result<T, PrimitivesError>
+    pub(crate) fn verify_membership_proof<H, Arity>(
+        &self,
+        expected_root: &T,
+    ) -> Result<bool, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -456,8 +470,9 @@ where
         } = &self.proof[0]
         {
             let init = H::digest_leaf(pos, elem);
-            self.pos
-                .to_treverse_path(self.proof.len() - 1, Arity::to_usize())
+            let computed_root = self
+                .pos
+                .to_treverse_path(self.tree_height() - 1, Arity::to_usize())
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(
@@ -478,7 +493,8 @@ where
                             Err(e) => Err(e),
                         }
                     },
-                )
+                )?;
+            Ok(computed_root == *expected_root)
         } else {
             Err(PrimitivesError::ParameterError(
                 "Invalid proof type".to_string(),

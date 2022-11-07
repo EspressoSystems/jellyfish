@@ -109,7 +109,7 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<bool, PrimitivesError> {
         let proof = proof.borrow();
-        if self.height != proof.proof.len() - 1 {
+        if self.height != proof.tree_height() - 1 {
             return Err(PrimitivesError::ParameterError(
                 "Incompatible membership proof for this merkle tree".to_string(),
             ));
@@ -119,8 +119,7 @@ where
                 "Inconsistent proof index".to_string(),
             ));
         }
-        let computed_root_value = proof.verify_membership_proof::<H, Arity>()?;
-        Ok(computed_root_value == self.root.value())
+        proof.verify_membership_proof::<H, Arity>(&self.root())
     }
 }
 
@@ -291,7 +290,7 @@ mod mt_tests {
         let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
-        assert_eq!(proof.proof.len(), 3);
+        assert_eq!(proof.tree_height(), 3);
         assert!(mt.verify(0u64, &proof).unwrap());
 
         let mut bad_proof = proof.clone();
@@ -343,7 +342,7 @@ mod mt_tests {
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_proof, proof);
         assert_eq!(elem, F::from(3u64));
-        assert_eq!(proof.proof.len(), 3);
+        assert_eq!(proof.tree_height(), 3);
         assert!(mt.verify(0, &lookup_proof).unwrap());
         assert!(mt.verify(0, &proof).unwrap());
 
