@@ -32,8 +32,8 @@ pub trait Gate<F: Field>: Downcast + DynClone {
         [F::zero(); GATE_WIDTH]
     }
     /// Selectors for Rescue hashes.
-    fn q_hash(&self) -> [F; GATE_WIDTH] {
-        [F::zero(); GATE_WIDTH]
+    fn q_hash(&self) -> F {
+        F::zero()
     }
     /// Selectors for multiplication.
     fn q_mul(&self) -> [F; N_MUL_SELECTORS] {

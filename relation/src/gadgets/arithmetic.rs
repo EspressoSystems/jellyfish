@@ -313,7 +313,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let x_to_5 = self.create_variable(x_to_5_val)?;
         let wire_vars = &[x, 0, 0, 0, x_to_5];
         self.insert_gate(wire_vars, Box::new(FifthRootGate))?;
-
         let x_to_10 = self.mul(x_to_5, x_to_5)?;
         self.mul_gate(x_to_10, x, x_to_11)
     }

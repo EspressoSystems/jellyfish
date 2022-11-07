@@ -193,8 +193,12 @@ impl<F: Field> Gate<F> for FifthRootGate {
         "Raise to the inverse of 5 power Gate"
     }
 
-    fn q_hash(&self) -> [F; GATE_WIDTH] {
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
         [F::one(), F::zero(), F::zero(), F::zero()]
+    }
+
+    fn q_hash(&self) -> F {
+        F::one()
     }
 
     fn q_o(&self) -> F {

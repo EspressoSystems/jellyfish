@@ -879,8 +879,10 @@ impl<F: FftField> PlonkCircuit<F> {
     /// be in the range. The gate equation:
     /// qo * wo = pub_input + q_c +
     ///           q_mul0 * w0 * w1 + q_mul1 * w2 * w3 +
-    ///           q_lc0 * w0 + q_lc1 * w1 + q_lc2 * w2 + q_lc3 * w3 +
-    ///           q_hash0 * w0 + q_hash1 * w1 + q_hash2 * w2 + q_hash3 * w3 +
+    ///           (1-q_hash) * (q_lc0 * w0 + q_lc1 * w1 +
+    ///                         q_lc2 * w2 + q_lc3 * w3) +
+    ///           q_hash * (q_lc0 * w0^5 + q_lc1 * w1^5 +
+    ///                     q_lc2 * w2^5 + q_lc3 * w3^5) +
     ///           q_ecc * w0 * w1 * w2 * w3 * wo
     fn check_gate(&self, gate_id: Variable, pub_input: &F) -> Result<(), CircuitError> {
         // Compute wire values
@@ -891,24 +893,26 @@ impl<F: FftField> PlonkCircuit<F> {
         // Compute selector values.
         let q_lc: [F; GATE_WIDTH] = self.gates[gate_id].q_lc();
         let q_mul: [F; N_MUL_SELECTORS] = self.gates[gate_id].q_mul();
-        let q_hash: [F; GATE_WIDTH] = self.gates[gate_id].q_hash();
+        let q_hash: F = self.gates[gate_id].q_hash();
         let q_c = self.gates[gate_id].q_c();
         let q_o = self.gates[gate_id].q_o();
         let q_ecc = self.gates[gate_id].q_ecc();
 
         // Compute the gate output
         let expected_gate_output = *pub_input
-            + q_lc[0] * w_vals[0]
-            + q_lc[1] * w_vals[1]
-            + q_lc[2] * w_vals[2]
-            + q_lc[3] * w_vals[3]
+            + (F::one() - q_hash)
+                * (q_lc[0] * w_vals[0]
+                    + q_lc[1] * w_vals[1]
+                    + q_lc[2] * w_vals[2]
+                    + q_lc[3] * w_vals[3])
             + q_mul[0] * w_vals[0] * w_vals[1]
             + q_mul[1] * w_vals[2] * w_vals[3]
             + q_ecc * w_vals[0] * w_vals[1] * w_vals[2] * w_vals[3] * w_vals[4]
-            + q_hash[0] * w_vals[0].pow([5])
-            + q_hash[1] * w_vals[1].pow([5])
-            + q_hash[2] * w_vals[2].pow([5])
-            + q_hash[3] * w_vals[3].pow([5])
+            + q_hash
+                * (q_lc[0] * w_vals[0].pow([5])
+                    + q_lc[1] * w_vals[1].pow([5])
+                    + q_lc[2] * w_vals[2].pow([5])
+                    + q_lc[3] * w_vals[3].pow([5]))
             + q_c;
         let gate_output = q_o * w_vals[4];
         if expected_gate_output != gate_output {
@@ -1031,17 +1035,10 @@ impl<F: FftField> PlonkCircuit<F> {
     }
     // getter for all hash selector
     #[inline]
-    fn q_hash(&self) -> [Vec<F>; GATE_WIDTH] {
-        let mut result = [vec![], vec![], vec![], vec![]];
-        for gate in &self.gates {
-            let q_hash_vec = gate.q_hash();
-            result[0].push(q_hash_vec[0]);
-            result[1].push(q_hash_vec[1]);
-            result[2].push(q_hash_vec[2]);
-            result[3].push(q_hash_vec[3]);
-        }
-        result
+    fn q_hash(&self) -> Vec<F> {
+        self.gates.iter().map(|g| g.q_hash()).collect()
     }
+
     // getter for all output selector
     #[inline]
     fn q_o(&self) -> Vec<F> {
@@ -1087,8 +1084,8 @@ impl<F: FftField> PlonkCircuit<F> {
             .as_ref()
             .iter()
             .chain(self.q_mul().as_ref().iter())
-            .chain(self.q_hash().as_ref().iter())
             .for_each(|s| selectors.push(s.clone()));
+        selectors.push(self.q_hash());
         selectors.push(self.q_o());
         selectors.push(self.q_c());
         selectors.push(self.q_ecc());

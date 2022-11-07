@@ -83,9 +83,13 @@ impl<F: PrimeField> Gate<F> for Power5NonLinearGate<F> {
         "Non linear gate"
     }
 
-    fn q_hash(&self) -> [F; GATE_WIDTH] {
-        let elems = self.matrix_vector.elems();
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
+        let elems: Vec<F> = self.matrix_vector.elems();
         [elems[0], elems[1], elems[2], elems[3]]
+    }
+
+    fn q_hash(&self) -> F {
+        F::one()
     }
 
     fn q_c(&self) -> F {
