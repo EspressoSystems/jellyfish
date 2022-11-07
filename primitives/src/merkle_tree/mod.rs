@@ -7,6 +7,7 @@
 //! Merkle Tree traits and implementations
 pub mod append_only;
 pub mod examples;
+pub mod macros;
 pub mod sparse_merkle_tree;
 
 mod internal;
