@@ -167,7 +167,10 @@ pub trait MerkleTreeScheme: Sized {
     /// * `returns` - Leaf value at the position along with a proof.
     ///   LookupResult::EmptyLeaf if the leaf position is empty or invalid,
     ///   LookupResult::NotInMemory if the leaf position has been forgotten.
-    fn lookup(&self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof>;
+    fn lookup(
+        &self,
+        pos: impl Borrow<Self::Index>,
+    ) -> LookupResult<Self::Element, Self::MembershipProof>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `pos` - zero-based index of the leaf in the tree
@@ -176,7 +179,7 @@ pub trait MerkleTreeScheme: Sized {
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
         &self,
-        pos: Self::Index,
+        pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<bool, PrimitivesError>;
 
@@ -224,9 +227,32 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    fn update(&mut self, pos: Self::Index, elem: &Self::Element)
-        -> LookupResult<Self::Element, ()>;
+    fn update(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+        elem: impl Borrow<Self::Element>,
+    ) -> LookupResult<Self::Element, ()>;
 
+    /// Build a universal merkle tree from a key-value set.
+    /// * `height` - height of the merkle tree
+    /// * `data` - an iterator of key-value pairs. Could be a std hashmap or
+    ///   simply an array or a slice of (key, value) pairs
+    fn from_kv_set<BI, BE>(
+        height: usize,
+        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
+    ) -> Result<Self, PrimitivesError>
+    where
+        BI: Borrow<Self::Index>,
+        BE: Borrow<Self::Element>,
+    {
+        let mut mt = Self::from_elems(height, [] as [&Self::Element; 0])?;
+        for tuple in data.into_iter() {
+            let (key, value) = tuple.borrow();
+            UniversalMerkleTreeScheme::update(&mut mt, *key.borrow(), value.borrow())
+                .expect_ok()?;
+        }
+        Ok(mt)
+    }
     // TODO(Chengyu): non-membership proof interfaces
 }
 

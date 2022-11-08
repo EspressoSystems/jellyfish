@@ -31,7 +31,9 @@ where
     type NonMembershipProof = ();
     type BatchNonMembershipProof = ();
 
-    fn update(&mut self, pos: I, elem: &E) -> LookupResult<E, ()> {
+    fn update(&mut self, pos: impl Borrow<I>, elem: impl Borrow<E>) -> LookupResult<E, ()> {
+        let pos = pos.borrow();
+        let elem = elem.borrow();
         let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
         let ret = self
             .root

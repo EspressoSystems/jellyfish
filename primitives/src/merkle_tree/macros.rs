@@ -86,12 +86,13 @@ macro_rules! generate_merkle_tree_scheme {
 
             fn lookup(
                 &self,
-                pos: Self::Index,
+                pos: impl Borrow<Self::Index>,
             ) -> LookupResult<Self::Element, Self::MembershipProof> {
+                let pos = pos.borrow();
                 let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
                 match self.root.lookup_internal(self.height, &traversal_path) {
                     LookupResult::Ok(value, proof) => {
-                        LookupResult::Ok(value, MerkleProof { pos, proof })
+                        LookupResult::Ok(value, MerkleProof { pos: *pos, proof })
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
@@ -100,16 +101,17 @@ macro_rules! generate_merkle_tree_scheme {
 
             fn verify(
                 &self,
-                pos: Self::Index,
+                pos: impl Borrow<Self::Index>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<bool, PrimitivesError> {
+                let pos = pos.borrow();
                 let proof = proof.borrow();
                 if self.height != proof.tree_height() - 1 {
                     return Err(PrimitivesError::ParameterError(
                         "Incompatible membership proof for this merkle tree".to_string(),
                     ));
                 }
-                if pos != proof.pos {
+                if *pos != proof.pos {
                     return Err(PrimitivesError::ParameterError(
                         "Inconsistent proof index".to_string(),
                     ));

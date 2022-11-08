@@ -306,7 +306,7 @@ where
     pub(crate) fn update_internal<H, Arity>(
         &mut self,
         height: usize,
-        pos: I,
+        pos: impl Borrow<I>,
         traversal_path: &[usize],
         elem: impl Borrow<E>,
     ) -> LookupResult<E, ()>
@@ -314,6 +314,7 @@ where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
     {
+        let pos = pos.borrow();
         let elem = elem.borrow();
         match self {
             MerkleNode::Leaf {
@@ -333,12 +334,12 @@ where
                 elem,
             ),
             MerkleNode::Empty => {
-                if height == 0 {
-                    *self = MerkleNode::Leaf {
-                        value: H::digest_leaf(&pos, elem),
-                        pos,
-                        elem: *elem.borrow(),
-                    };
+                *self = if height == 0 {
+                    MerkleNode::Leaf {
+                        value: H::digest_leaf(pos, elem),
+                        pos: *pos,
+                        elem: *elem,
+                    }
                 } else {
                     let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
                     (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
@@ -347,11 +348,11 @@ where
                         traversal_path,
                         elem,
                     );
-                    *self = MerkleNode::Branch {
+                    MerkleNode::Branch {
                         value: digest_branch::<E, H, I, T>(&children),
                         children,
                     }
-                }
+                };
                 LookupResult::EmptyLeaf
             },
             MerkleNode::ForgettenSubtree { .. } => LookupResult::NotInMemory,
