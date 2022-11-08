@@ -309,7 +309,7 @@ where
         pos: I,
         traversal_path: &[usize],
         elem: impl Borrow<E>,
-    ) -> Result<(), PrimitivesError>
+    ) -> LookupResult<E, ()>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -321,9 +321,9 @@ where
                 value,
                 pos,
             } => {
-                *node_elem = *elem;
+                let ret = ark_std::mem::replace(node_elem, *elem);
                 *value = H::digest_leaf(pos, elem);
-                Ok(())
+                LookupResult::Ok(ret, ())
             },
             MerkleNode::Branch { value: _, children } => (*children[traversal_path[height - 1]])
                 .update_internal::<H, Arity>(
@@ -346,17 +346,15 @@ where
                         pos,
                         traversal_path,
                         elem,
-                    )?;
+                    );
                     *self = MerkleNode::Branch {
                         value: digest_branch::<E, H, I, T>(&children),
                         children,
                     }
                 }
-                Ok(())
+                LookupResult::EmptyLeaf
             },
-            _ => Err(PrimitivesError::ParameterError(
-                "Given index is not in memory".to_string(),
-            )),
+            MerkleNode::ForgettenSubtree { .. } => LookupResult::NotInMemory,
         }
     }
 

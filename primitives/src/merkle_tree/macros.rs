@@ -4,9 +4,9 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Macros for generating a standard merkle tree implementation
+//! Useful macros
 
-/// Macros for generating a standard merkle tree implementation
+/// Macro for generating a standard merkle tree implementation
 #[macro_export]
 macro_rules! generate_merkle_tree_scheme {
     ($name: ident) => {

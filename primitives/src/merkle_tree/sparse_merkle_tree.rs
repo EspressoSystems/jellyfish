@@ -29,10 +29,16 @@ where
     T: NodeValue,
 {
     type NonMembershipProof = ();
-
     type BatchNonMembershipProof = ();
 
-    fn update(&mut self, _pos: Self::Index, _elem: &Self::Element) -> Result<(), PrimitivesError> {
-        todo!()
+    fn update(&mut self, pos: I, elem: &E) -> LookupResult<E, ()> {
+        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+        let ret = self
+            .root
+            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem);
+        if let LookupResult::Ok(..) = ret {
+            self.num_leaves += 1;
+        }
+        ret
     }
 }

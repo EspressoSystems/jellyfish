@@ -224,7 +224,8 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    fn update(&mut self, pos: Self::Index, elem: &Self::Element) -> Result<(), PrimitivesError>;
+    fn update(&mut self, pos: Self::Index, elem: &Self::Element)
+        -> LookupResult<Self::Element, ()>;
 
     // TODO(Chengyu): non-membership proof interfaces
 }
