@@ -9,7 +9,7 @@
 use super::{
     internal::{build_tree_internal, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTreversalPath,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 use crate::{errors::PrimitivesError, generate_merkle_tree_scheme};
 use ark_std::{
@@ -40,10 +40,10 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = self.num_leaves.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = self.num_leaves.to_traverse_path(self.height, Self::ARITY);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
-            I::from(self.num_leaves),
+            &I::from(self.num_leaves),
             &traversal_path,
             true,
             &mut iter,
@@ -66,7 +66,7 @@ where
     T: NodeValue,
 {
     fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
         match self.root.forget_internal(self.height, &traversal_path) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
@@ -83,15 +83,15 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
-        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,
             pos,
             elem,
-        } = proof.proof[0]
+        } = &proof.proof[0]
         {
             // let proof_leaf_value = digest_leaf::<E, H, I, T>(pos, elem, Self::ARITY);
-            let proof_leaf_value = H::digest_leaf(&pos, &elem);
+            let proof_leaf_value = H::digest_leaf(pos, elem);
             let mut path_values = vec![proof_leaf_value];
             traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(proof_leaf_value),

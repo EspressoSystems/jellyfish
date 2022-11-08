@@ -90,10 +90,10 @@ where
 {
     let mut root = Box::new(MerkleNode::Empty);
     let pos = I::from(0);
-    let traversal_path = pos.to_treverse_path(height, Arity::to_usize());
+    let traversal_path = pos.to_traverse_path(height, Arity::to_usize());
     let mut iter = elems.into_iter().peekable();
     let num_leaves =
-        root.extend_internal::<H, Arity>(height, I::from(0), &traversal_path, true, &mut iter)?;
+        root.extend_internal::<H, Arity>(height, &I::from(0), &traversal_path, true, &mut iter)?;
     if iter.peek().is_some() {
         Err(PrimitivesError::ParameterError(
             "Exceed merkle tree capacity".to_string(),
@@ -163,11 +163,11 @@ where
                 }
             },
             MerkleNode::Leaf { value, pos, elem } => {
-                let elem = *elem;
+                let elem = elem.clone();
                 let proof = vec![MerkleNode::<E, I, T>::Leaf {
                     value: *value,
-                    pos: *pos,
-                    elem,
+                    pos: pos.clone(),
+                    elem: elem.clone(),
                 }];
                 *self = MerkleNode::ForgettenSubtree { value: *value };
                 LookupResult::Ok(elem, proof)
@@ -296,7 +296,7 @@ where
                 elem,
                 value: _,
                 pos: _,
-            } => LookupResult::Ok(*elem, vec![self.clone()]),
+            } => LookupResult::Ok(elem.clone(), vec![self.clone()]),
             _ => LookupResult::NotInMemory,
         }
     }
@@ -322,7 +322,7 @@ where
                 value,
                 pos,
             } => {
-                let ret = ark_std::mem::replace(node_elem, *elem);
+                let ret = ark_std::mem::replace(node_elem, elem.clone());
                 *value = H::digest_leaf(pos, elem);
                 LookupResult::Ok(ret, ())
             },
@@ -337,8 +337,8 @@ where
                 *self = if height == 0 {
                     MerkleNode::Leaf {
                         value: H::digest_leaf(pos, elem),
-                        pos: *pos,
-                        elem: *elem,
+                        pos: pos.clone(),
+                        elem: elem.clone(),
                     }
                 } else {
                     let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
@@ -362,7 +362,7 @@ where
     pub(crate) fn extend_internal<H, Arity>(
         &mut self,
         height: usize,
-        pos: I,
+        pos: &I,
         traversal_path: &[usize],
         tight_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
@@ -374,9 +374,9 @@ where
         if data.peek().is_none() {
             return Ok(0);
         }
+        let mut cur_pos = pos.clone();
         match self {
             MerkleNode::Branch { value, children } => {
-                let mut pos = pos;
                 let mut cnt = 0u64;
                 let mut frontier = if tight_frontier {
                     traversal_path[height - 1]
@@ -387,13 +387,13 @@ where
                 while data.peek().is_some() && frontier < cap {
                     let increment = children[frontier].extend_internal::<H, Arity>(
                         height - 1,
-                        pos,
+                        &cur_pos,
                         traversal_path,
                         tight_frontier && frontier == traversal_path[height - 1],
                         data,
                     )?;
                     cnt += increment;
-                    pos += I::from(increment);
+                    cur_pos += I::from(increment);
                     frontier += 1;
                 }
                 *value = digest_branch::<E, H, I, T>(children);
@@ -404,13 +404,12 @@ where
                     let elem = data.next().unwrap();
                     let elem = elem.borrow();
                     *self = MerkleNode::Leaf {
-                        elem: *elem,
-                        value: H::digest_leaf(&pos, elem),
-                        pos,
+                        value: H::digest_leaf(pos, elem),
+                        pos: pos.clone(),
+                        elem: elem.clone(),
                     };
                     Ok(1)
                 } else {
-                    let mut pos = pos;
                     let mut cnt = 0u64;
                     let mut frontier = if tight_frontier {
                         traversal_path[height - 1]
@@ -422,13 +421,13 @@ where
                     while data.peek().is_some() && frontier < cap {
                         let increment = children[frontier].extend_internal::<H, Arity>(
                             height - 1,
-                            pos,
+                            &cur_pos,
                             traversal_path,
                             tight_frontier && frontier == traversal_path[height - 1],
                             data,
                         )?;
                         cnt += increment;
-                        pos += I::from(increment);
+                        cur_pos += I::from(increment);
                         frontier += 1;
                     }
                     *self = MerkleNode::Branch {
@@ -471,7 +470,7 @@ where
             let init = H::digest_leaf(pos, elem);
             let computed_root = self
                 .pos
-                .to_treverse_path(self.tree_height() - 1, Arity::to_usize())
+                .to_traverse_path(self.tree_height() - 1, Arity::to_usize())
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(

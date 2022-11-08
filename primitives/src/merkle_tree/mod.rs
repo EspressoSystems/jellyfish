@@ -46,12 +46,12 @@ impl<F, P> LookupResult<F, P> {
 }
 
 /// An element of a Merkle tree.
-pub trait Element: Clone + Copy + Eq + PartialEq {}
+pub trait Element: Clone + Eq + PartialEq {}
 impl<F: Field> Element for F {}
 
 /// An index type of a leaf in a Merkle tree.
 pub trait Index:
-    Debug + Eq + PartialEq + Ord + PartialOrd + Clone + Copy + ToTreversalPath + IndexOps
+    Debug + Eq + PartialEq + Ord + PartialOrd + Clone + ToTraversalPath + IndexOps
 {
 }
 impl Index for u64 {}
@@ -81,14 +81,14 @@ pub trait IndexOps<Rhs = Self>: AddAssign<Rhs> {}
 impl<T, Rhs> IndexOps<Rhs> for T where T: AddAssign<Rhs> {}
 
 /// An trait for Merkle tree index type.
-pub trait ToTreversalPath {
+pub trait ToTraversalPath {
     /// Convert the given index to a vector of branch indices given tree height
     /// and arity.
-    fn to_treverse_path(&self, height: usize, arity: usize) -> Vec<usize>;
+    fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize>;
 }
 
-impl ToTreversalPath for u64 {
-    fn to_treverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
+impl ToTraversalPath for u64 {
+    fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
         let mut pos = *self;
         let mut ret = vec![];
         for _i in 0..height {
@@ -99,8 +99,8 @@ impl ToTreversalPath for u64 {
     }
 }
 
-impl ToTreversalPath for BigUint {
-    fn to_treverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
+impl ToTraversalPath for BigUint {
+    fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
         let mut pos = self.clone();
         let mut ret = vec![];
         for _i in 0..height {
@@ -243,16 +243,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     ) -> Result<Self, PrimitivesError>
     where
         BI: Borrow<Self::Index>,
-        BE: Borrow<Self::Element>,
-    {
-        let mut mt = Self::from_elems(height, [] as [&Self::Element; 0])?;
-        for tuple in data.into_iter() {
-            let (key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(&mut mt, *key.borrow(), value.borrow())
-                .expect_ok()?;
-        }
-        Ok(mt)
-    }
+        BE: Borrow<Self::Element>;
     // TODO(Chengyu): non-membership proof interfaces
 }
 
