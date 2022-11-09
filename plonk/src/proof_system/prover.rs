@@ -661,25 +661,22 @@ impl<E: PairingEngine> Prover<E> {
         let q_mul: Vec<E::Fr> = (GATE_WIDTH..GATE_WIDTH + 2)
             .map(|j| selectors_coset_fft[j][i])
             .collect();
-        let q_hash: Vec<E::Fr> = (GATE_WIDTH + 2..2 * GATE_WIDTH + 2)
-            .map(|j| selectors_coset_fft[j][i])
-            .collect();
-        let q_o = selectors_coset_fft[2 * GATE_WIDTH + 2][i];
-        let q_c = selectors_coset_fft[2 * GATE_WIDTH + 3][i];
-        let q_ecc = selectors_coset_fft[2 * GATE_WIDTH + 4][i];
+        let q_hash = selectors_coset_fft[GATE_WIDTH + 2][i];
+        let q_o = selectors_coset_fft[GATE_WIDTH + 3][i];
+        let q_c = selectors_coset_fft[GATE_WIDTH + 4][i];
+        let q_ecc = selectors_coset_fft[GATE_WIDTH + 5][i];
 
         q_c + pi
-            + q_lc[0] * w[0]
-            + q_lc[1] * w[1]
-            + q_lc[2] * w[2]
-            + q_lc[3] * w[3]
+            + (E::Fr::one() - q_hash)
+                * (q_lc[0] * w[0] + q_lc[1] * w[1] + q_lc[2] * w[2] + q_lc[3] * w[3])
             + q_mul[0] * w[0] * w[1]
             + q_mul[1] * w[2] * w[3]
             + q_ecc * w[0] * w[1] * w[2] * w[3] * w[4]
-            + q_hash[0] * w[0].pow([5])
-            + q_hash[1] * w[1].pow([5])
-            + q_hash[2] * w[2].pow([5])
-            + q_hash[3] * w[3].pow([5])
+            + q_hash
+                * (q_lc[0] * w[0].pow([5])
+                    + q_lc[1] * w[1].pow([5])
+                    + q_lc[2] * w[2].pow([5])
+                    + q_lc[3] * w[3].pow([5]))
             - q_o * w[4]
     }
 
@@ -934,23 +931,29 @@ impl<E: PairingEngine> Prover<E> {
         // TODO: (binyi) get the order from a function.
         let q_lc = &pk.selectors[..GATE_WIDTH];
         let q_mul = &pk.selectors[GATE_WIDTH..GATE_WIDTH + 2];
-        let q_hash = &pk.selectors[GATE_WIDTH + 2..2 * GATE_WIDTH + 2];
-        let q_o = &pk.selectors[2 * GATE_WIDTH + 2];
-        let q_c = &pk.selectors[2 * GATE_WIDTH + 3];
-        let q_ecc = &pk.selectors[2 * GATE_WIDTH + 4];
+        let q_hash = &pk.selectors[GATE_WIDTH + 2];
+        let q_o = &pk.selectors[GATE_WIDTH + 3];
+        let q_c = &pk.selectors[GATE_WIDTH + 4];
+        let q_ecc = &pk.selectors[GATE_WIDTH + 5];
 
         // TODO(binyi): add polynomials in parallel.
         // Note we don't need to compute the constant term of the polynomial.
+        let _one_minus_q_hash: Vec<E::Fr> = q_hash
+            .coeffs
+            .iter()
+            .map(|q_hash| E::Fr::one() - q_hash)
+            .collect();
+        // FIXME: update lin_poly calculation
         Self::mul_poly(&q_lc[0], &w_evals[0])
             + Self::mul_poly(&q_lc[1], &w_evals[1])
             + Self::mul_poly(&q_lc[2], &w_evals[2])
             + Self::mul_poly(&q_lc[3], &w_evals[3])
             + Self::mul_poly(&q_mul[0], &(w_evals[0] * w_evals[1]))
             + Self::mul_poly(&q_mul[1], &(w_evals[2] * w_evals[3]))
-            + Self::mul_poly(&q_hash[0], &w_evals[0].pow([5]))
-            + Self::mul_poly(&q_hash[1], &w_evals[1].pow([5]))
-            + Self::mul_poly(&q_hash[2], &w_evals[2].pow([5]))
-            + Self::mul_poly(&q_hash[3], &w_evals[3].pow([5]))
+            // + Self::mul_poly(&q_hash[0], &w_evals[0].pow([5]))
+            // + Self::mul_poly(&q_hash[1], &w_evals[1].pow([5]))
+            // + Self::mul_poly(&q_hash[2], &w_evals[2].pow([5]))
+            // + Self::mul_poly(&q_hash[3], &w_evals[3].pow([5]))
             + Self::mul_poly(
                 q_ecc,
                 &(w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4]),
