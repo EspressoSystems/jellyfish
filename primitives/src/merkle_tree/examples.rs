@@ -9,7 +9,7 @@
 
 use super::{
     append_only::MerkleTree, sparse_merkle_tree::UniversalMerkleTree, DigestAlgorithm, Element,
-    Index, NodeValue,
+    Index,
 };
 use crate::rescue::{Permutation, RescueParameter};
 use ark_ff::Field;
@@ -40,14 +40,12 @@ impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for Rescue
 /// A standard merkle tree using RATE-3 rescue hash function
 pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<u64, F>, u64, U3, F>;
 
-impl Index for BigUint {}
 /// Example instantiation of a SparseMerkleTree indexed by BigUInt
 pub type SparseMerkleTree<E, F> = UniversalMerkleTree<E, RescueHash<BigUint, F>, BigUint, U3, F>;
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Interval<F: Field>(pub F, pub F);
-impl<F: Field> Element for Interval<F> {}
 
 impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<u64, F> {
     fn digest(data: &[F]) -> F {
@@ -69,7 +67,6 @@ pub type IntervalMerkleTree<F> = MerkleTree<Interval<F>, RescueHash<u64, F>, u64
 /// Update the array length here
 #[derive(Default, Eq, PartialEq, Clone, Copy, Debug)]
 pub struct Sha3Node([u8; 32]);
-impl NodeValue for Sha3Node {}
 
 impl AsRef<[u8]> for Sha3Node {
     fn as_ref(&self) -> &[u8] {

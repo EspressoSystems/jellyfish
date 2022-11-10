@@ -8,7 +8,7 @@
 
 /// Macro for generating a standard merkle tree implementation
 #[macro_export]
-macro_rules! generate_merkle_tree_scheme {
+macro_rules! impl_merkle_tree_scheme {
     ($name: ident) => {
         /// A standard append only Merkle tree implementation
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

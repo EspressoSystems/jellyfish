@@ -10,7 +10,7 @@ use super::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
     UniversalMerkleTreeScheme,
 };
-use crate::{errors::PrimitivesError, generate_merkle_tree_scheme};
+use crate::{errors::PrimitivesError, impl_merkle_tree_scheme};
 use ark_std::{borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString};
 use num_bigint::BigUint;
 use num_traits::pow::pow;
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 // A standard Universal Merkle tree implementation
-generate_merkle_tree_scheme!(UniversalMerkleTree);
+impl_merkle_tree_scheme!(UniversalMerkleTree);
 
 impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
 where

@@ -13,8 +13,7 @@ pub mod sparse_merkle_tree;
 mod internal;
 
 use crate::errors::PrimitivesError;
-use ark_ff::Field;
-use ark_std::{borrow::Borrow, fmt::Debug, ops::AddAssign, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, fmt::Debug, string::ToString, vec, vec::Vec};
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
@@ -47,18 +46,15 @@ impl<F, P> LookupResult<F, P> {
 
 /// An element of a Merkle tree.
 pub trait Element: Clone + Eq + PartialEq {}
-impl<F: Field> Element for F {}
+impl<T: Clone + Eq + PartialEq> Element for T {}
 
 /// An index type of a leaf in a Merkle tree.
-pub trait Index:
-    Debug + Eq + PartialEq + Ord + PartialOrd + Clone + ToTraversalPath + IndexOps
-{
-}
-impl Index for u64 {}
+pub trait Index: Debug + Eq + PartialEq + Ord + PartialOrd + Clone + ToTraversalPath {}
+impl<T: Debug + Eq + PartialEq + Ord + PartialOrd + Clone + ToTraversalPath> Index for T {}
 
 /// An internal node value type in a Merkle tree.
 pub trait NodeValue: Default + Eq + PartialEq + Copy + Clone + Debug {}
-impl<F: Field> NodeValue for F {}
+impl<T: Default + Eq + PartialEq + Copy + Clone + Debug> NodeValue for T {}
 
 /// Merkle tree hash function
 pub trait DigestAlgorithm<E, I, T>
@@ -75,11 +71,6 @@ where
     fn digest_leaf(pos: &I, elem: &E) -> T;
 }
 
-/// Ops needs to be performed over index
-pub trait IndexOps<Rhs = Self>: AddAssign<Rhs> {}
-
-impl<T, Rhs> IndexOps<Rhs> for T where T: AddAssign<Rhs> {}
-
 /// An trait for Merkle tree index type.
 pub trait ToTraversalPath {
     /// Convert the given index to a vector of branch indices given tree height
@@ -87,21 +78,9 @@ pub trait ToTraversalPath {
     fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize>;
 }
 
-impl ToTraversalPath for u64 {
+impl<F: Into<BigUint> + Clone> ToTraversalPath for F {
     fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
-        let mut pos = *self;
-        let mut ret = vec![];
-        for _i in 0..height {
-            ret.push((pos % (arity as u64)) as usize);
-            pos /= arity as u64;
-        }
-        ret
-    }
-}
-
-impl ToTraversalPath for BigUint {
-    fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
-        let mut pos = self.clone();
+        let mut pos: BigUint = <F as Into<BigUint>>::into(self.clone());
         let mut ret = vec![];
         for _i in 0..height {
             ret.push((&pos % (arity as u64)).to_usize().unwrap());
@@ -235,7 +214,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
 
     /// Build a universal merkle tree from a key-value set.
     /// * `height` - height of the merkle tree
-    /// * `data` - an iterator of key-value pairs. Could be a std hashmap or
+    /// * `data` - an iterator of key-value pairs. Could be a hashmap or
     ///   simply an array or a slice of (key, value) pairs
     fn from_kv_set<BI, BE>(
         height: usize,

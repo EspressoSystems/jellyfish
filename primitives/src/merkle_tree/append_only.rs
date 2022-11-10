@@ -6,12 +6,14 @@
 
 //! Implementation of a typical append only merkle tree
 
+use core::ops::AddAssign;
+
 use super::{
     internal::{build_tree_internal, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
-use crate::{errors::PrimitivesError, generate_merkle_tree_scheme};
+use crate::{errors::PrimitivesError, impl_merkle_tree_scheme};
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -20,13 +22,13 @@ use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
-generate_merkle_tree_scheme!(MerkleTree);
+impl_merkle_tree_scheme!(MerkleTree);
 
 impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
+    I: Index + From<u64> + AddAssign,
     Arity: Unsigned,
     T: NodeValue,
 {
