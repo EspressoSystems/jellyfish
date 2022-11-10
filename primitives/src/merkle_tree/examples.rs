@@ -24,6 +24,19 @@ pub struct RescueHash<I: Index, F: RescueParameter> {
     phantom_f: PhantomData<F>,
 }
 
+impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<(), I, F> for RescueHash<I, F> {
+    fn digest(data: &[F]) -> F {
+        let perm = Permutation::default();
+        perm.sponge_no_padding(data, 1).unwrap()[0]
+    }
+
+    fn digest_leaf(pos: &I, _elem: &()) -> F {
+        let data = [F::from(pos.clone()), F::zero(), F::zero()];
+        let perm = Permutation::default();
+        perm.sponge_no_padding(&data, 1).unwrap()[0]
+    }
+}
+
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<I, F> {
     fn digest(data: &[F]) -> F {
         let perm = Permutation::default();
@@ -42,6 +55,9 @@ pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<u64, F>, u64, U3, F>;
 
 /// Example instantiation of a SparseMerkleTree indexed by BigUInt
 pub type SparseMerkleTree<E, F> = UniversalMerkleTree<E, RescueHash<BigUint, F>, BigUint, U3, F>;
+
+/// Example instantiation of a Set Merkle tree
+pub type SetMerkleTree<F> = UniversalMerkleTree<(), RescueHash<F, F>, F, U3, F>;
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone)]

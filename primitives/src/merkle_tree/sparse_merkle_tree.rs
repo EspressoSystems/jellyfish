@@ -70,7 +70,7 @@ mod mt_tests {
     use ark_ed_on_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_381::Fq as Fq381;
     use ark_ed_on_bn254::Fq as Fq254;
-    use ark_std::collections::HashMap;
+    use hashbrown::HashMap;
     use num_bigint::BigUint;
 
     #[test]

@@ -214,8 +214,8 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
 
     /// Build a universal merkle tree from a key-value set.
     /// * `height` - height of the merkle tree
-    /// * `data` - an iterator of key-value pairs. Could be a hashmap or
-    ///   simply an array or a slice of (key, value) pairs
+    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
+    ///   an array or a slice of (key, value) pairs
     fn from_kv_set<BI, BE>(
         height: usize,
         data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
