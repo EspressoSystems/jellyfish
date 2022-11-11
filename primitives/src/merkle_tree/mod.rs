@@ -47,7 +47,7 @@ impl<F, P, N> LookupResult<F, P, N> {
     pub fn expect_empty(self) -> Result<N, PrimitivesError> {
         match self {
             LookupResult::EmptyLeaf(n) => Ok(n),
-            LookupResult::Ok(_, _) => Err(PrimitivesError::InternalError(
+            LookupResult::Ok(..) => Err(PrimitivesError::InternalError(
                 "Expected EmptyLeaf, found element".to_string(),
             )),
             LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
@@ -240,8 +240,9 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `returns` - Leaf value at the position along with a proof.
-    ///   LookupResult::EmptyLeaf(p) if the leaf position is empty along with a proof p.
-    ///   LookupResult::NotInMemory if the leaf position has been forgotten.
+    ///   LookupResult::EmptyLeaf(p) if the leaf position is empty along with a
+    ///   proof p. LookupResult::NotInMemory if the leaf position has been
+    ///   forgotten.
     fn universal_lookup(
         &self,
         pos: impl Borrow<Self::Index>,
