@@ -20,16 +20,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
-pub enum LookupResult<F, P> {
+pub enum LookupResult<F, P, N> {
     /// The value at the given index, and a proof of validity
     Ok(F, P),
     /// The index is valid but we do not have the leaf in memory
     NotInMemory,
     /// The index is outside the occupied range in the tree
-    EmptyLeaf,
+    EmptyLeaf(N),
 }
 
-impl<F, P> LookupResult<F, P> {
+impl<F, P, N> LookupResult<F, P, N> {
     /// Assert the lookup result is Ok.
     pub fn expect_ok(self) -> Result<(F, P), PrimitivesError> {
         match self {
@@ -37,8 +37,21 @@ impl<F, P> LookupResult<F, P> {
             LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
                 "Expected Ok, found NotInMemory".to_string(),
             )),
-            LookupResult::EmptyLeaf => Err(PrimitivesError::InternalError(
+            LookupResult::EmptyLeaf(_) => Err(PrimitivesError::InternalError(
                 "Expected Ok, found EmptyLeaf".to_string(),
+            )),
+        }
+    }
+
+    /// Assert the lookup result is NotInMemory.
+    pub fn expect_empty(self) -> Result<N, PrimitivesError> {
+        match self {
+            LookupResult::EmptyLeaf(n) => Ok(n),
+            LookupResult::Ok(_, _) => Err(PrimitivesError::InternalError(
+                "Expected EmptyLeaf, found element".to_string(),
+            )),
+            LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
+                "Expected EmptyLeaf, found NotInMemory".to_string(),
             )),
         }
     }
@@ -149,7 +162,7 @@ pub trait MerkleTreeScheme: Sized {
     fn lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> LookupResult<Self::Element, Self::MembershipProof>;
+    ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `pos` - zero-based index of the leaf in the tree
@@ -203,15 +216,6 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Batch non membership proof
     type BatchNonMembershipProof;
 
-    /// Update the leaf value at a given position
-    /// * `pos` - zero-based index of the leaf in the tree
-    /// * `elem` - newly updated element
-    fn update(
-        &mut self,
-        pos: impl Borrow<Self::Index>,
-        elem: impl Borrow<Self::Element>,
-    ) -> LookupResult<Self::Element, ()>;
-
     /// Build a universal merkle tree from a key-value set.
     /// * `height` - height of the merkle tree
     /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
@@ -223,6 +227,36 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     where
         BI: Borrow<Self::Index>,
         BE: Borrow<Self::Element>;
+
+    /// Update the leaf value at a given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `elem` - newly updated element
+    fn update(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+        elem: impl Borrow<Self::Element>,
+    ) -> LookupResult<Self::Element, (), ()>;
+
+    /// Returns the leaf value given a position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `returns` - Leaf value at the position along with a proof.
+    ///   LookupResult::EmptyLeaf(p) if the leaf position is empty along with a proof p.
+    ///   LookupResult::NotInMemory if the leaf position has been forgotten.
+    fn universal_lookup(
+        &self,
+        pos: impl Borrow<Self::Index>,
+    ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof>;
+
+    /// Verify an index is not in this merkle tree
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `proof` - a merkle tree proof
+    /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
+    ///   if the proof is not well structured, E.g. not for this merkle tree.
+    fn non_membership_verify(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        proof: impl Borrow<Self::NonMembershipProof>,
+    ) -> Result<bool, PrimitivesError>;
     // TODO(Chengyu): non-membership proof interfaces
 }
 
@@ -232,7 +266,10 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
     /// Should not trim if position `i` is the last inserted leaf position.
     /// Return is identical to result if `get_leaf(pos)` were called before this
     /// call.
-    fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof>;
+    fn forget(
+        &mut self,
+        pos: Self::Index,
+    ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// "Re-insert" a leaf into the tree using its proof.
     /// Returns Ok(()) if insertion is successful, or Err(err) if the

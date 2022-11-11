@@ -87,7 +87,7 @@ macro_rules! impl_merkle_tree_scheme {
             fn lookup(
                 &self,
                 pos: impl Borrow<Self::Index>,
-            ) -> LookupResult<Self::Element, Self::MembershipProof> {
+            ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
                 let pos = pos.borrow();
                 let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
                 match self.root.lookup_internal(self.height, &traversal_path) {
@@ -99,7 +99,7 @@ macro_rules! impl_merkle_tree_scheme {
                         },
                     ),
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+                    LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
                 }
             }
 

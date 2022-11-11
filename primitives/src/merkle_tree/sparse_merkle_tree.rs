@@ -28,17 +28,17 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    type NonMembershipProof = ();
+    type NonMembershipProof = MerkleProof<E, I, T>;
     type BatchNonMembershipProof = ();
 
-    fn update(&mut self, pos: impl Borrow<I>, elem: impl Borrow<E>) -> LookupResult<E, ()> {
+    fn update(&mut self, pos: impl Borrow<I>, elem: impl Borrow<E>) -> LookupResult<E, (), ()> {
         let pos = pos.borrow();
         let elem = elem.borrow();
         let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
         let ret = self
             .root
             .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem);
-        if let LookupResult::EmptyLeaf = ret {
+        if let LookupResult::EmptyLeaf(_) = ret {
             self.num_leaves += 1;
         }
         ret
@@ -58,6 +58,48 @@ where
             UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow());
         }
         Ok(mt)
+    }
+
+    fn non_membership_verify(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        proof: impl Borrow<Self::NonMembershipProof>,
+    ) -> Result<bool, PrimitivesError> {
+        let pos = pos.borrow();
+        let proof = proof.borrow();
+        if self.height != proof.tree_height() - 1 {
+            return Err(PrimitivesError::ParameterError(
+                "Incompatible membership proof for this merkle tree".to_string(),
+            ));
+        }
+        if *pos != proof.pos {
+            return Err(PrimitivesError::ParameterError(
+                "Inconsistent proof index".to_string(),
+            ));
+        }
+        proof.verify_non_membership_proof::<H, Arity>(&self.root())
+    }
+
+    fn universal_lookup(
+        &self,
+        pos: impl Borrow<Self::Index>,
+    ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
+        let pos = pos.borrow();
+        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
+        match self.root.lookup_internal(self.height, &traversal_path) {
+            LookupResult::Ok(value, proof) => LookupResult::Ok(
+                value,
+                MerkleProof {
+                    pos: pos.clone(),
+                    proof,
+                },
+            ),
+            LookupResult::NotInMemory => LookupResult::NotInMemory,
+            LookupResult::EmptyLeaf(non_membership_proof) => LookupResult::EmptyLeaf(MerkleProof {
+                pos: pos.clone(),
+                proof: non_membership_proof,
+            }),
+        }
     }
 }
 

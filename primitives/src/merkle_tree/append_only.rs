@@ -67,14 +67,17 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
+    fn forget(
+        &mut self,
+        pos: Self::Index,
+    ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
         let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
         match self.root.forget_internal(self.height, &traversal_path) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
             },
             LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+            LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
         }
     }
 

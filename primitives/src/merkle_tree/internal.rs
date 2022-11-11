@@ -171,9 +171,9 @@ where
         &mut self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>> {
+    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, ()> {
         match self {
-            MerkleNode::Empty => LookupResult::EmptyLeaf,
+            MerkleNode::Empty => LookupResult::EmptyLeaf(()),
             MerkleNode::Branch { value, children } => {
                 match children[traversal_path[height - 1]].forget_internal(height, traversal_path) {
                     LookupResult::Ok(elem, mut proof) => {
@@ -203,7 +203,7 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+                    LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
                 }
             },
             MerkleNode::Leaf { value, pos, elem } => {
@@ -303,13 +303,14 @@ where
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub(crate) fn lookup_internal(
         &self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>> {
+    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, Vec<MerkleNode<E, I, T>>> {
         match self {
-            MerkleNode::Empty => LookupResult::EmptyLeaf,
+            MerkleNode::Empty => LookupResult::EmptyLeaf(vec![MerkleNode::<E, I, T>::Empty]),
             MerkleNode::Branch { value: _, children } => {
                 match children[traversal_path[height - 1]]
                     .lookup_internal(height - 1, traversal_path)
@@ -333,7 +334,24 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+                    LookupResult::EmptyLeaf(mut non_membership_proof) => {
+                        non_membership_proof.push(MerkleNode::Branch {
+                            value: T::default(),
+                            children: children
+                                .iter()
+                                .map(|child| {
+                                    if let MerkleNode::Empty = **child {
+                                        Box::new(MerkleNode::Empty)
+                                    } else {
+                                        Box::new(MerkleNode::ForgettenSubtree {
+                                            value: child.value(),
+                                        })
+                                    }
+                                })
+                                .collect_vec(),
+                        });
+                        LookupResult::EmptyLeaf(non_membership_proof)
+                    },
                 }
             },
             MerkleNode::Leaf {
@@ -345,15 +363,13 @@ where
         }
     }
 
-    // For future sparse merkle tree use
-    #[allow(dead_code)]
     pub(crate) fn update_internal<H, Arity>(
         &mut self,
         height: usize,
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         elem: impl Borrow<E>,
-    ) -> LookupResult<E, ()>
+    ) -> LookupResult<E, (), ()>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -397,7 +413,7 @@ where
                         children,
                     }
                 };
-                LookupResult::EmptyLeaf
+                LookupResult::EmptyLeaf(())
             },
             MerkleNode::ForgettenSubtree { .. } => LookupResult::NotInMemory,
         }
@@ -528,6 +544,57 @@ where
                                         children.iter().map(|node| node.value()).collect_vec();
                                     data[*branch] = val;
                                     Ok(H::digest(&data))
+                                },
+                                _ => Err(PrimitivesError::ParameterError(
+                                    "Incompatible proof for this merkle tree".to_string(),
+                                )),
+                            },
+                            Err(e) => Err(e),
+                        }
+                    },
+                )?;
+            Ok(computed_root == *expected_root)
+        } else {
+            Err(PrimitivesError::ParameterError(
+                "Invalid proof type".to_string(),
+            ))
+        }
+    }
+
+    pub(crate) fn verify_non_membership_proof<H, Arity>(
+        &self,
+        expected_root: &T,
+    ) -> Result<bool, PrimitivesError>
+    where
+        H: DigestAlgorithm<E, I, T>,
+        Arity: Unsigned,
+    {
+        if let MerkleNode::<E, I, T>::Empty = &self.proof[0] {
+            let init = T::default();
+            let computed_root = self
+                .pos
+                .to_traverse_path(self.tree_height() - 1, Arity::to_usize())
+                .iter()
+                .zip(self.proof.iter().skip(1))
+                .fold(
+                    Ok(init),
+                    |result, (branch, node)| -> Result<T, PrimitivesError> {
+                        match result {
+                            Ok(val) => match node {
+                                MerkleNode::Branch { value: _, children } => {
+                                    let mut data =
+                                        children.iter().map(|node| node.value()).collect_vec();
+                                    data[*branch] = val;
+                                    Ok(H::digest(&data))
+                                },
+                                MerkleNode::Empty => {
+                                    if init == T::default() {
+                                        Ok(init)
+                                    } else {
+                                        Err(PrimitivesError::ParameterError(
+                                            "In valid proof".to_string(),
+                                        ))
+                                    }
                                 },
                                 _ => Err(PrimitivesError::ParameterError(
                                     "Incompatible proof for this merkle tree".to_string(),
