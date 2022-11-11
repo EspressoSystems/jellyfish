@@ -310,7 +310,9 @@ where
         traversal_path: &[usize],
     ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, Vec<MerkleNode<E, I, T>>> {
         match self {
-            MerkleNode::Empty => LookupResult::EmptyLeaf(vec![MerkleNode::<E, I, T>::Empty]),
+            MerkleNode::Empty => {
+                LookupResult::EmptyLeaf(vec![MerkleNode::<E, I, T>::Empty; height + 1])
+            },
             MerkleNode::Branch { value: _, children } => {
                 match children[traversal_path[height - 1]]
                     .lookup_internal(height - 1, traversal_path)

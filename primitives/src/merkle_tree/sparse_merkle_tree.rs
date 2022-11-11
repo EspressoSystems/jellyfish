@@ -134,4 +134,34 @@ mod mt_tests {
         let mt = SparseMerkleTree::<F, F>::from_kv_set(10, &hashmap).unwrap();
         assert_eq!(mt.num_leaves(), hashmap.len() as u64);
     }
+
+    #[test]
+    fn test_non_membership_lookup_and_verify() {
+        test_non_membership_lookup_and_verify_helper::<Fq254>();
+        test_non_membership_lookup_and_verify_helper::<Fq377>();
+        test_non_membership_lookup_and_verify_helper::<Fq381>();
+    }
+
+    fn test_non_membership_lookup_and_verify_helper<F: RescueParameter>() {
+        let mut hashmap = HashMap::new();
+        hashmap.insert(BigUint::from(1u64), F::from(2u64));
+        hashmap.insert(BigUint::from(2u64), F::from(2u64));
+        hashmap.insert(BigUint::from(1u64), F::from(3u64));
+        let mt = SparseMerkleTree::<F, F>::from_kv_set(10, &hashmap).unwrap();
+        assert_eq!(mt.num_leaves(), hashmap.len() as u64);
+
+        let mut proof = mt
+            .universal_lookup(BigUint::from(3u64))
+            .expect_empty()
+            .unwrap();
+        let verify_result = mt.non_membership_verify(BigUint::from(3u64), &proof);
+        assert!(verify_result.is_ok() && verify_result.unwrap());
+
+        proof.pos = BigUint::from(1u64);
+        let verify_result = mt.non_membership_verify(BigUint::from(1u64), &proof);
+        assert!(verify_result.is_ok() && !verify_result.unwrap());
+
+        let verify_result = mt.non_membership_verify(BigUint::from(4u64), proof);
+        assert!(verify_result.is_err());
+    }
 }
