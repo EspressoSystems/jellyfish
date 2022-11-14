@@ -24,6 +24,7 @@ pub struct RescueHash<I: Index, F: RescueParameter> {
     phantom_f: PhantomData<F>,
 }
 
+// Hash function wrapper for set merkle tree, the element type is set to empty.
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<(), I, F> for RescueHash<I, F> {
     fn digest(data: &[F]) -> F {
         let perm = Permutation::default();
@@ -37,6 +38,7 @@ impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<(), I, F> for Rescu
     }
 }
 
+// Hash function wrapper for merkle tree, the element type is a field element.
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<I, F> {
     fn digest(data: &[F]) -> F {
         let perm = Permutation::default();
@@ -56,13 +58,16 @@ pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<u64, F>, u64, U3, F>;
 /// Example instantiation of a SparseMerkleTree indexed by BigUInt
 pub type SparseMerkleTree<E, F> = UniversalMerkleTree<E, RescueHash<BigUint, F>, BigUint, U3, F>;
 
-/// Example instantiation of a Set Merkle tree
+/// Example instantiation of a Set Merkle tree. The element type is set to
+/// empty.
 pub type SetMerkleTree<F> = UniversalMerkleTree<(), RescueHash<F, F>, F, U3, F>;
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Interval<F: Field>(pub F, pub F);
 
+// Hash function wrapper for interval merkle tree, element type is set to be a
+// pair of field element.
 impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<u64, F> {
     fn digest(data: &[F]) -> F {
         let perm = Permutation::default();

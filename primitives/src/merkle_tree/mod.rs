@@ -20,17 +20,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
+/// Typically, F for element type, P for membership proof type and N for
+/// non-membership proof type
 pub enum LookupResult<F, P, N> {
     /// The value at the given index, and a proof of validity
     Ok(F, P),
     /// The index is valid but we do not have the leaf in memory
     NotInMemory,
-    /// The index is outside the occupied range in the tree
+    /// The index is outside the occupied range in the tree, and a
+    /// non-membership proof
     EmptyLeaf(N),
 }
 
 impl<F, P, N> LookupResult<F, P, N> {
-    /// Assert the lookup result is Ok.
+    /// Assert the lookup result is Ok. Return a tuple of element and membership
+    /// proof.
     pub fn expect_ok(self) -> Result<(F, P), PrimitivesError> {
         match self {
             LookupResult::Ok(x, proof) => Ok((x, proof)),
@@ -43,7 +47,7 @@ impl<F, P, N> LookupResult<F, P, N> {
         }
     }
 
-    /// Assert the lookup result is NotInMemory.
+    /// Assert the lookup result is NotInMemory. Return a non-membership proof.
     pub fn expect_empty(self) -> Result<N, PrimitivesError> {
         match self {
             LookupResult::EmptyLeaf(n) => Ok(n),

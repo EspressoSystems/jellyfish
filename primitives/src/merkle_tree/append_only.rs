@@ -33,7 +33,7 @@ where
     T: NodeValue,
 {
     fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
-        self.extend([elem])
+        <Self as AppendableMerkleTreeScheme>::extend(self, [elem])
     }
 
     fn extend(
