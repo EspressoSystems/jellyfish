@@ -4,12 +4,15 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+use core::ops::AddAssign;
+
 use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue};
 use crate::errors::PrimitivesError;
 use ark_std::{
     borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
 };
 use itertools::Itertools;
+use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
@@ -88,18 +91,59 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    let mut root = Box::new(MerkleNode::Empty);
-    let pos = I::from(0);
-    let traversal_path = pos.to_treverse_path(height, Arity::to_usize());
-    let mut iter = elems.into_iter().peekable();
-    let num_leaves =
-        root.extend_internal::<H, Arity>(height, I::from(0), &traversal_path, true, &mut iter)?;
-    if iter.peek().is_some() {
+    let leaves: Vec<_> = elems.into_iter().collect();
+    let num_leaves = leaves.len() as u64;
+    let capacity = BigUint::from(Arity::to_u64()).pow(height as u32);
+
+    if BigUint::from(num_leaves) > capacity {
         Err(PrimitivesError::ParameterError(
-            "Exceed merkle tree capacity".to_string(),
+            "Too many data for merkle tree".to_string(),
         ))
+    } else if num_leaves > 0 {
+        let mut cur_nodes = leaves
+            .into_iter()
+            .enumerate()
+            .chunks(Arity::to_usize())
+            .into_iter()
+            .map(|chunk| {
+                let children = chunk
+                    .map(|(pos, elem)| {
+                        let pos = I::from(pos as u64);
+                        Box::new(MerkleNode::Leaf {
+                            value: H::digest_leaf(&pos, elem.borrow()),
+                            pos,
+                            elem: elem.borrow().clone(),
+                        })
+                    })
+                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
+                    .collect_vec();
+                Box::new(MerkleNode::<E, I, T>::Branch {
+                    value: digest_branch::<E, H, I, T>(&children),
+                    children,
+                })
+            })
+            .collect_vec();
+        for _ in 1..height {
+            cur_nodes = cur_nodes
+                .into_iter()
+                .chunks(Arity::to_usize())
+                .into_iter()
+                .map(|chunk| {
+                    let children = chunk
+                        .pad_using(Arity::to_usize(), |_| {
+                            Box::new(MerkleNode::<E, I, T>::Empty)
+                        })
+                        .collect_vec();
+                    Box::new(MerkleNode::<E, I, T>::Branch {
+                        value: digest_branch::<E, H, I, T>(&children),
+                        children,
+                    })
+                })
+                .collect_vec();
+        }
+        Ok((cur_nodes[0].clone(), num_leaves))
     } else {
-        Ok((root, num_leaves))
+        Ok((Box::new(MerkleNode::<E, I, T>::Empty), 0))
     }
 }
 
@@ -127,9 +171,9 @@ where
         &mut self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>> {
+    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, ()> {
         match self {
-            MerkleNode::Empty => LookupResult::EmptyLeaf,
+            MerkleNode::Empty => LookupResult::EmptyLeaf(()),
             MerkleNode::Branch { value, children } => {
                 match children[traversal_path[height - 1]].forget_internal(height, traversal_path) {
                     LookupResult::Ok(elem, mut proof) => {
@@ -159,15 +203,15 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+                    LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
                 }
             },
             MerkleNode::Leaf { value, pos, elem } => {
-                let elem = *elem;
+                let elem = elem.clone();
                 let proof = vec![MerkleNode::<E, I, T>::Leaf {
                     value: *value,
-                    pos: *pos,
-                    elem,
+                    pos: pos.clone(),
+                    elem: elem.clone(),
                 }];
                 *self = MerkleNode::ForgettenSubtree { value: *value };
                 LookupResult::Ok(elem, proof)
@@ -259,13 +303,16 @@ where
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub(crate) fn lookup_internal(
         &self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>> {
+    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, Vec<MerkleNode<E, I, T>>> {
         match self {
-            MerkleNode::Empty => LookupResult::EmptyLeaf,
+            MerkleNode::Empty => {
+                LookupResult::EmptyLeaf(vec![MerkleNode::<E, I, T>::Empty; height + 1])
+            },
             MerkleNode::Branch { value: _, children } => {
                 match children[traversal_path[height - 1]]
                     .lookup_internal(height - 1, traversal_path)
@@ -289,31 +336,47 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+                    LookupResult::EmptyLeaf(mut non_membership_proof) => {
+                        non_membership_proof.push(MerkleNode::Branch {
+                            value: T::default(),
+                            children: children
+                                .iter()
+                                .map(|child| {
+                                    if let MerkleNode::Empty = **child {
+                                        Box::new(MerkleNode::Empty)
+                                    } else {
+                                        Box::new(MerkleNode::ForgettenSubtree {
+                                            value: child.value(),
+                                        })
+                                    }
+                                })
+                                .collect_vec(),
+                        });
+                        LookupResult::EmptyLeaf(non_membership_proof)
+                    },
                 }
             },
             MerkleNode::Leaf {
                 elem,
                 value: _,
                 pos: _,
-            } => LookupResult::Ok(*elem, vec![self.clone()]),
+            } => LookupResult::Ok(elem.clone(), vec![self.clone()]),
             _ => LookupResult::NotInMemory,
         }
     }
 
-    // For future sparse merkle tree use
-    #[allow(dead_code)]
     pub(crate) fn update_internal<H, Arity>(
         &mut self,
         height: usize,
-        pos: I,
+        pos: impl Borrow<I>,
         traversal_path: &[usize],
         elem: impl Borrow<E>,
-    ) -> Result<(), PrimitivesError>
+    ) -> LookupResult<E, (), ()>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
     {
+        let pos = pos.borrow();
         let elem = elem.borrow();
         match self {
             MerkleNode::Leaf {
@@ -321,9 +384,9 @@ where
                 value,
                 pos,
             } => {
-                *node_elem = *elem;
+                let ret = ark_std::mem::replace(node_elem, elem.clone());
                 *value = H::digest_leaf(pos, elem);
-                Ok(())
+                LookupResult::Ok(ret, ())
             },
             MerkleNode::Branch { value: _, children } => (*children[traversal_path[height - 1]])
                 .update_internal::<H, Arity>(
@@ -333,12 +396,12 @@ where
                 elem,
             ),
             MerkleNode::Empty => {
-                if height == 0 {
-                    *self = MerkleNode::Leaf {
-                        value: H::digest_leaf(&pos, elem),
-                        pos,
-                        elem: *elem.borrow(),
-                    };
+                *self = if height == 0 {
+                    MerkleNode::Leaf {
+                        value: H::digest_leaf(pos, elem),
+                        pos: pos.clone(),
+                        elem: elem.clone(),
+                    }
                 } else {
                     let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
                     (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
@@ -346,24 +409,22 @@ where
                         pos,
                         traversal_path,
                         elem,
-                    )?;
-                    *self = MerkleNode::Branch {
+                    );
+                    MerkleNode::Branch {
                         value: digest_branch::<E, H, I, T>(&children),
                         children,
                     }
-                }
-                Ok(())
+                };
+                LookupResult::EmptyLeaf(())
             },
-            _ => Err(PrimitivesError::ParameterError(
-                "Given index is not in memory".to_string(),
-            )),
+            MerkleNode::ForgettenSubtree { .. } => LookupResult::NotInMemory,
         }
     }
 
     pub(crate) fn extend_internal<H, Arity>(
         &mut self,
         height: usize,
-        pos: I,
+        pos: &I,
         traversal_path: &[usize],
         tight_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
@@ -371,13 +432,14 @@ where
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
+        I: AddAssign,
     {
         if data.peek().is_none() {
             return Ok(0);
         }
+        let mut cur_pos = pos.clone();
         match self {
             MerkleNode::Branch { value, children } => {
-                let mut pos = pos;
                 let mut cnt = 0u64;
                 let mut frontier = if tight_frontier {
                     traversal_path[height - 1]
@@ -388,13 +450,13 @@ where
                 while data.peek().is_some() && frontier < cap {
                     let increment = children[frontier].extend_internal::<H, Arity>(
                         height - 1,
-                        pos,
+                        &cur_pos,
                         traversal_path,
                         tight_frontier && frontier == traversal_path[height - 1],
                         data,
                     )?;
                     cnt += increment;
-                    pos += I::from(increment);
+                    cur_pos += I::from(increment);
                     frontier += 1;
                 }
                 *value = digest_branch::<E, H, I, T>(children);
@@ -405,13 +467,12 @@ where
                     let elem = data.next().unwrap();
                     let elem = elem.borrow();
                     *self = MerkleNode::Leaf {
-                        elem: *elem,
-                        value: H::digest_leaf(&pos, elem),
-                        pos,
+                        value: H::digest_leaf(pos, elem),
+                        pos: pos.clone(),
+                        elem: elem.clone(),
                     };
                     Ok(1)
                 } else {
-                    let mut pos = pos;
                     let mut cnt = 0u64;
                     let mut frontier = if tight_frontier {
                         traversal_path[height - 1]
@@ -423,13 +484,13 @@ where
                     while data.peek().is_some() && frontier < cap {
                         let increment = children[frontier].extend_internal::<H, Arity>(
                             height - 1,
-                            pos,
+                            &cur_pos,
                             traversal_path,
                             tight_frontier && frontier == traversal_path[height - 1],
                             data,
                         )?;
                         cnt += increment;
-                        pos += I::from(increment);
+                        cur_pos += I::from(increment);
                         frontier += 1;
                     }
                     *self = MerkleNode::Branch {
@@ -472,7 +533,7 @@ where
             let init = H::digest_leaf(pos, elem);
             let computed_root = self
                 .pos
-                .to_treverse_path(self.tree_height() - 1, Arity::to_usize())
+                .to_traverse_path(self.tree_height() - 1, Arity::to_usize())
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(
@@ -485,6 +546,57 @@ where
                                         children.iter().map(|node| node.value()).collect_vec();
                                     data[*branch] = val;
                                     Ok(H::digest(&data))
+                                },
+                                _ => Err(PrimitivesError::ParameterError(
+                                    "Incompatible proof for this merkle tree".to_string(),
+                                )),
+                            },
+                            Err(e) => Err(e),
+                        }
+                    },
+                )?;
+            Ok(computed_root == *expected_root)
+        } else {
+            Err(PrimitivesError::ParameterError(
+                "Invalid proof type".to_string(),
+            ))
+        }
+    }
+
+    pub(crate) fn verify_non_membership_proof<H, Arity>(
+        &self,
+        expected_root: &T,
+    ) -> Result<bool, PrimitivesError>
+    where
+        H: DigestAlgorithm<E, I, T>,
+        Arity: Unsigned,
+    {
+        if let MerkleNode::<E, I, T>::Empty = &self.proof[0] {
+            let init = T::default();
+            let computed_root = self
+                .pos
+                .to_traverse_path(self.tree_height() - 1, Arity::to_usize())
+                .iter()
+                .zip(self.proof.iter().skip(1))
+                .fold(
+                    Ok(init),
+                    |result, (branch, node)| -> Result<T, PrimitivesError> {
+                        match result {
+                            Ok(val) => match node {
+                                MerkleNode::Branch { value: _, children } => {
+                                    let mut data =
+                                        children.iter().map(|node| node.value()).collect_vec();
+                                    data[*branch] = val;
+                                    Ok(H::digest(&data))
+                                },
+                                MerkleNode::Empty => {
+                                    if init == T::default() {
+                                        Ok(init)
+                                    } else {
+                                        Err(PrimitivesError::ParameterError(
+                                            "In valid proof".to_string(),
+                                        ))
+                                    }
                                 },
                                 _ => Err(PrimitivesError::ParameterError(
                                     "Incompatible proof for this merkle tree".to_string(),

@@ -7,7 +7,10 @@
 //! Provides sample instantiations of merkle tree.
 //! E.g. Sparse merkle tree with BigUInt index.
 
-use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index, NodeValue};
+use super::{
+    append_only::MerkleTree, sparse_merkle_tree::UniversalMerkleTree, DigestAlgorithm, Element,
+    Index,
+};
 use crate::rescue::{Permutation, RescueParameter};
 use ark_ff::Field;
 use ark_std::marker::PhantomData;
@@ -16,35 +19,56 @@ use sha3::{Digest, Sha3_256};
 use typenum::U3;
 
 /// Wrapper for rescue hash function
-pub struct RescueHash<F: RescueParameter> {
+pub struct RescueHash<I: Index, F: RescueParameter> {
+    phantom_i: PhantomData<I>,
     phantom_f: PhantomData<F>,
 }
 
-impl<F: RescueParameter> DigestAlgorithm<F, u64, F> for RescueHash<F> {
+// Hash function wrapper for set merkle tree, the element type is set to empty.
+impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<(), I, F> for RescueHash<I, F> {
     fn digest(data: &[F]) -> F {
         let perm = Permutation::default();
         perm.sponge_no_padding(data, 1).unwrap()[0]
     }
 
-    fn digest_leaf(pos: &u64, elem: &F) -> F {
-        let data = [F::from(*pos), *elem, F::zero()];
+    fn digest_leaf(pos: &I, _elem: &()) -> F {
+        let data = [F::from(pos.clone()), F::zero(), F::zero()];
+        let perm = Permutation::default();
+        perm.sponge_no_padding(&data, 1).unwrap()[0]
+    }
+}
+
+// Hash function wrapper for merkle tree, the element type is a field element.
+impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<I, F> {
+    fn digest(data: &[F]) -> F {
+        let perm = Permutation::default();
+        perm.sponge_no_padding(data, 1).unwrap()[0]
+    }
+
+    fn digest_leaf(pos: &I, elem: &F) -> F {
+        let data = [F::from(pos.clone()), *elem, F::zero()];
         let perm = Permutation::default();
         perm.sponge_no_padding(&data, 1).unwrap()[0]
     }
 }
 
 /// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
+pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<u64, F>, u64, U3, F>;
 
 /// Example instantiation of a SparseMerkleTree indexed by BigUInt
-pub type SparseMerkleTree<E, F> = MerkleTree<E, RescueHash<F>, BigUint, U3, F>;
+pub type SparseMerkleTree<E, F> = UniversalMerkleTree<E, RescueHash<BigUint, F>, BigUint, U3, F>;
+
+/// Example instantiation of a Set Merkle tree. The element type is set to
+/// empty.
+pub type SetMerkleTree<F> = UniversalMerkleTree<(), RescueHash<F, F>, F, U3, F>;
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Interval<F: Field>(pub F, pub F);
-impl<F: Field> Element for Interval<F> {}
 
-impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> {
+// Hash function wrapper for interval merkle tree, element type is set to be a
+// pair of field element.
+impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<u64, F> {
     fn digest(data: &[F]) -> F {
         let perm = Permutation::default();
         perm.sponge_no_padding(data, 1).unwrap()[0]
@@ -59,12 +83,11 @@ impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> 
 
 /// Interval merkle tree instantiation for interval merkle tree using Rescue
 /// hash function.
-pub type IntervalMerkleTree<F> = MerkleTree<Interval<F>, RescueHash<F>, u64, U3, F>;
+pub type IntervalMerkleTree<F> = MerkleTree<Interval<F>, RescueHash<u64, F>, u64, U3, F>;
 
 /// Update the array length here
 #[derive(Default, Eq, PartialEq, Clone, Copy, Debug)]
 pub struct Sha3Node([u8; 32]);
-impl NodeValue for Sha3Node {}
 
 impl AsRef<[u8]> for Sha3Node {
     fn as_ref(&self) -> &[u8] {

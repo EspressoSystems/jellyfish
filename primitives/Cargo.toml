@@ -51,6 +51,7 @@ ark-ed-on-bn254 = "0.3.0"
 bincode = "1.0"
 criterion = "0.3.1"
 quickcheck = "1.0.0"
+hashbrown = "0.13.1"
 
 [[bench]]
 name = "merkle_path"

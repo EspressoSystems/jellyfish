@@ -6,12 +6,14 @@
 
 //! Implementation of a typical append only merkle tree
 
+use core::ops::AddAssign;
+
 use super::{
     internal::{build_tree_internal, MerkleNode, MerkleProof},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTreversalPath,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
-use crate::errors::PrimitivesError;
+use crate::{errors::PrimitivesError, impl_merkle_tree_scheme};
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -20,119 +22,18 @@ use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
-/// A standard append only Merkle tree implementation
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleTree<E, H, I, Arity, T>
-where
-    E: Element,
-    H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
-    Arity: Unsigned,
-    T: NodeValue,
-{
-    root: Box<MerkleNode<E, I, T>>,
-    height: usize,
-    num_leaves: u64,
-
-    _phantom_h: PhantomData<H>,
-    _phantom_ta: PhantomData<Arity>,
-}
-
-impl<E, H, I, Arity, T> MerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
-where
-    E: Element,
-    H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
-    Arity: Unsigned,
-    T: NodeValue,
-{
-    type Element = E;
-    type Digest = H;
-    type Index = I;
-    type NodeValue = T;
-    type MembershipProof = MerkleProof<E, I, T>;
-    // TODO(Chengyu): implement batch membership proof
-    type BatchMembershipProof = ();
-
-    const ARITY: usize = Arity::USIZE;
-
-    fn from_elems(
-        height: usize,
-        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<Self, PrimitivesError> {
-        let (root, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, elems)?;
-        Ok(MerkleTree {
-            root,
-            height,
-            num_leaves,
-            _phantom_h: PhantomData,
-            _phantom_ta: PhantomData,
-        })
-    }
-
-    fn height(&self) -> usize {
-        self.height
-    }
-
-    fn capacity(&self) -> BigUint {
-        pow(BigUint::from(Self::ARITY), self.height)
-    }
-
-    fn num_leaves(&self) -> u64 {
-        self.num_leaves
-    }
-
-    fn root(&self) -> T {
-        self.root.value()
-    }
-
-    fn commitment(&self) -> MerkleCommitment<T> {
-        MerkleCommitment {
-            root_value: self.root.value(),
-            height: self.height,
-            num_leaves: self.num_leaves,
-        }
-    }
-
-    fn lookup(&self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
-        match self.root.lookup_internal(self.height, &traversal_path) {
-            LookupResult::Ok(value, proof) => LookupResult::Ok(value, MerkleProof { pos, proof }),
-            LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
-        }
-    }
-
-    fn verify(
-        &self,
-        pos: Self::Index,
-        proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<bool, PrimitivesError> {
-        let proof = proof.borrow();
-        if self.height != proof.tree_height() - 1 {
-            return Err(PrimitivesError::ParameterError(
-                "Incompatible membership proof for this merkle tree".to_string(),
-            ));
-        }
-        if pos != proof.pos {
-            return Err(PrimitivesError::ParameterError(
-                "Inconsistent proof index".to_string(),
-            ));
-        }
-        proof.verify_membership_proof::<H, Arity>(&self.root())
-    }
-}
+impl_merkle_tree_scheme!(MerkleTree);
 
 impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
+    I: Index + From<u64> + AddAssign,
     Arity: Unsigned,
     T: NodeValue,
 {
     fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
-        self.extend([elem])
+        <Self as AppendableMerkleTreeScheme>::extend(self, [elem])
     }
 
     fn extend(
@@ -141,10 +42,10 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = self.num_leaves.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = self.num_leaves.to_traverse_path(self.height, Self::ARITY);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
-            I::from(self.num_leaves),
+            &I::from(self.num_leaves),
             &traversal_path,
             true,
             &mut iter,
@@ -166,14 +67,17 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    fn forget(&mut self, pos: Self::Index) -> LookupResult<Self::Element, Self::MembershipProof> {
-        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+    fn forget(
+        &mut self,
+        pos: Self::Index,
+    ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
+        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
         match self.root.forget_internal(self.height, &traversal_path) {
             LookupResult::Ok(elem, proof) => {
                 LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
             },
             LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::EmptyLeaf => LookupResult::EmptyLeaf,
+            LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
         }
     }
 
@@ -184,15 +88,15 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError> {
         let proof = proof.borrow();
-        let traversal_path = pos.to_treverse_path(self.height, Self::ARITY);
+        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,
             pos,
             elem,
-        } = proof.proof[0]
+        } = &proof.proof[0]
         {
             // let proof_leaf_value = digest_leaf::<E, H, I, T>(pos, elem, Self::ARITY);
-            let proof_leaf_value = H::digest_leaf(&pos, &elem);
+            let proof_leaf_value = H::digest_leaf(pos, elem);
             let mut path_values = vec![proof_leaf_value];
             traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(proof_leaf_value),
