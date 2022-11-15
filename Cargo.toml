@@ -6,4 +6,5 @@ members = [
   "utilities",
   "utilities_derive",
   "zprice",
+  "prover_single_gpu",
 ]

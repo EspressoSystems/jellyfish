@@ -27,7 +27,7 @@ use jf_primitives::{
 /// Merkle Tree height
 pub const TREE_HEIGHT: u8 = 32;
 /// Number of memberships proofs to be verified in the circuit
-pub const NUM_MEMBERSHIP_PROOFS: usize = 20_000;
+pub const NUM_MEMBERSHIP_PROOFS: usize = 640;
 
 /// generate a gigantic circuit (with random, satisfiable wire assignments)
 ///

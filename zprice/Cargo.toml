@@ -11,6 +11,7 @@ jf-plonk = { path = "../plonk" }
 jf-primitives = { path = "../primitives" }
 jf-utils = { path = "../utilities" }
 jf-rescue = { path = "../rescue" }
+prover-single-gpu = { path = "../prover_single_gpu" }
 
 ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
 ark-std = { version = "0.3.0", default-features = false }

@@ -13,9 +13,8 @@ where
     R: CryptoRng + RngCore,
 {
     // TODO: USE THIS DURING ACTUAL BENCHMARK
-    // your_crate::prove(rng, circuit, &prove_key)
-
-    PlonkKzgSnark::<Bls12_381>::prove::<_, _, StandardTranscript>(rng, circuit, &prove_key)
+    prover_single_gpu::Prover::prove(rng, circuit, &prove_key)
+    // PlonkKzgSnark::<Bls12_381>::prove::<_, _, StandardTranscript>(rng, circuit, &prove_key)
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
