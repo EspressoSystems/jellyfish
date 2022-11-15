@@ -7,7 +7,6 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
-anyhow = { version = "^1.0", default-features = false }
 ark-ec = { version = "0.3.0", default-features = false }
 ark-ff = { version = "0.3.0", default-features = false, features = [ "asm" ] }
 ark-serialize = { version = "0.3.0", default-features = false }
