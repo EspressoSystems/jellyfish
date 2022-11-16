@@ -9,11 +9,11 @@
 use core::ops::AddAssign;
 
 use super::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof},
+    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
-use crate::{errors::PrimitivesError, impl_merkle_tree_scheme};
+use crate::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -23,12 +23,13 @@ use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 impl_merkle_tree_scheme!(MerkleTree);
+impl_forgetable_merkle_tree_scheme!(MerkleTree);
 
 impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign,
+    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -42,7 +43,7 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = self.num_leaves.to_traverse_path(self.height, Self::ARITY);
+        let traversal_path = I::from(self.num_leaves).to_traversal_path(self.height);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
             &I::from(self.num_leaves),
@@ -56,80 +57,6 @@ where
             ));
         }
         Ok(())
-    }
-}
-
-impl<E, H, I, Arity, T> ForgetableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
-where
-    E: Element,
-    H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
-    Arity: Unsigned,
-    T: NodeValue,
-{
-    fn forget(
-        &mut self,
-        pos: Self::Index,
-    ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
-        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
-        match self.root.forget_internal(self.height, &traversal_path) {
-            LookupResult::Ok(elem, proof) => {
-                LookupResult::Ok(elem, MerkleProof::<E, I, T> { pos, proof })
-            },
-            LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
-        }
-    }
-
-    fn remember(
-        &mut self,
-        pos: Self::Index,
-        _element: impl Borrow<Self::Element>,
-        proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<(), PrimitivesError> {
-        let proof = proof.borrow();
-        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
-        if let MerkleNode::<E, I, T>::Leaf {
-            value: _,
-            pos,
-            elem,
-        } = &proof.proof[0]
-        {
-            // let proof_leaf_value = digest_leaf::<E, H, I, T>(pos, elem, Self::ARITY);
-            let proof_leaf_value = H::digest_leaf(pos, elem);
-            let mut path_values = vec![proof_leaf_value];
-            traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
-                Ok(proof_leaf_value),
-                |result, (branch, node)| -> Result<T, PrimitivesError> {
-                    match result {
-                        Ok(val) => match node {
-                            MerkleNode::Branch { value: _, children } => {
-                                let mut data: Vec<_> =
-                                    children.iter().map(|node| node.value()).collect();
-                                data[*branch] = val;
-                                let digest = H::digest(&data);
-                                path_values.push(digest);
-                                Ok(digest)
-                            },
-                            _ => Err(PrimitivesError::ParameterError(
-                                "Incompatible proof for this merkle tree".to_string(),
-                            )),
-                        },
-                        Err(e) => Err(e),
-                    }
-                },
-            )?;
-            self.root.remember_internal::<H, Arity>(
-                self.height,
-                &traversal_path,
-                &path_values,
-                &proof.proof,
-            )
-        } else {
-            Err(PrimitivesError::ParameterError(
-                "Invalid proof type".to_string(),
-            ))
-        }
     }
 }
 
@@ -212,10 +139,7 @@ mod mt_tests {
         let result = mt.verify(0u64, &bad_proof);
         assert!(result.is_ok() && !result.unwrap());
 
-        let mut forge_proof = MerkleProof {
-            pos: 2,
-            proof: proof.proof,
-        };
+        let mut forge_proof = MerkleProof::new(2, proof.proof);
         if let MerkleNode::Leaf {
             value: _,
             pos,
@@ -268,10 +192,7 @@ mod mt_tests {
         let result = mt.remember(0u64, elem, &bad_proof);
         assert!(result.is_err());
 
-        let mut forge_proof = MerkleProof {
-            pos: 2,
-            proof: proof.proof.clone(),
-        };
+        let mut forge_proof = MerkleProof::new(2, proof.proof.clone());
         if let MerkleNode::Leaf {
             value: _,
             pos,

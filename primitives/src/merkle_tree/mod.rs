@@ -8,15 +8,19 @@
 pub mod append_only;
 pub mod examples;
 pub mod macros;
-pub mod sparse_merkle_tree;
+pub mod universal_merkle_tree;
 
 mod internal;
 
-use crate::errors::PrimitivesError;
-use ark_std::{borrow::Borrow, fmt::Debug, string::ToString, vec, vec::Vec};
+use crate::{
+    errors::PrimitivesError, impl_to_treversal_path_biguint, impl_to_treversal_path_primitives,
+};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec::Vec};
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
+use typenum::Unsigned;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
@@ -29,7 +33,7 @@ pub enum LookupResult<F, P, N> {
     NotInMemory,
     /// The index is outside the occupied range in the tree, and a
     /// non-membership proof
-    EmptyLeaf(N),
+    NotFound(N),
 }
 
 impl<F, P, N> LookupResult<F, P, N> {
@@ -41,21 +45,21 @@ impl<F, P, N> LookupResult<F, P, N> {
             LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
                 "Expected Ok, found NotInMemory".to_string(),
             )),
-            LookupResult::EmptyLeaf(_) => Err(PrimitivesError::InternalError(
-                "Expected Ok, found EmptyLeaf".to_string(),
+            LookupResult::NotFound(_) => Err(PrimitivesError::InternalError(
+                "Expected Ok, found NotFound".to_string(),
             )),
         }
     }
 
-    /// Assert the lookup result is NotInMemory. Return a non-membership proof.
-    pub fn expect_empty(self) -> Result<N, PrimitivesError> {
+    /// Assert the lookup result is NotFound. Return a non-membership proof.
+    pub fn expect_not_found(self) -> Result<N, PrimitivesError> {
         match self {
-            LookupResult::EmptyLeaf(n) => Ok(n),
+            LookupResult::NotFound(n) => Ok(n),
             LookupResult::Ok(..) => Err(PrimitivesError::InternalError(
-                "Expected EmptyLeaf, found element".to_string(),
+                "Expected NotFound, found Ok".to_string(),
             )),
             LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
-                "Expected EmptyLeaf, found NotInMemory".to_string(),
+                "Expected NotFound, found NotInMemory".to_string(),
             )),
         }
     }
@@ -66,12 +70,38 @@ pub trait Element: Clone + Eq + PartialEq {}
 impl<T: Clone + Eq + PartialEq> Element for T {}
 
 /// An index type of a leaf in a Merkle tree.
-pub trait Index: Debug + Eq + PartialEq + Ord + PartialOrd + Clone + ToTraversalPath {}
-impl<T: Debug + Eq + PartialEq + Ord + PartialOrd + Clone + ToTraversalPath> Index for T {}
+pub trait Index: Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Clone {}
+impl<T: Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Clone> Index for T {}
 
 /// An internal node value type in a Merkle tree.
-pub trait NodeValue: Default + Eq + PartialEq + Copy + Clone + Debug {}
-impl<T: Default + Eq + PartialEq + Copy + Clone + Debug> NodeValue for T {}
+pub trait NodeValue:
+    Default
+    + Eq
+    + PartialEq
+    + Hash
+    + Ord
+    + PartialOrd
+    + Copy
+    + Clone
+    + Debug
+    + CanonicalSerialize
+    + CanonicalDeserialize
+{
+}
+impl<T> NodeValue for T where
+    T: Default
+        + Eq
+        + PartialEq
+        + Hash
+        + Ord
+        + PartialOrd
+        + Copy
+        + Clone
+        + Debug
+        + CanonicalSerialize
+        + CanonicalDeserialize
+{
+}
 
 /// Merkle tree hash function
 pub trait DigestAlgorithm<E, I, T>
@@ -80,44 +110,77 @@ where
     I: Index,
     T: NodeValue,
 {
-    // Possible improvement: adding digest_element() and digest_index()
     /// Digest a list of values
     fn digest(data: &[T]) -> T;
 
-    /// Digest a leaf (an indexed element)
+    /// Digest an indexed element
     fn digest_leaf(pos: &I, elem: &E) -> T;
 }
 
 /// An trait for Merkle tree index type.
-pub trait ToTraversalPath {
+pub trait ToTraversalPath<Arity: Unsigned> {
     /// Convert the given index to a vector of branch indices given tree height
     /// and arity.
-    fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize>;
+    fn to_traversal_path(&self, height: usize) -> Vec<usize>;
 }
 
-impl<F: Into<BigUint> + Clone> ToTraversalPath for F {
-    fn to_traverse_path(&self, height: usize, arity: usize) -> Vec<usize> {
-        let mut pos: BigUint = <F as Into<BigUint>>::into(self.clone());
-        let mut ret = vec![];
-        for _i in 0..height {
-            ret.push((&pos % (arity as u64)).to_usize().unwrap());
-            pos /= arity as u64;
-        }
-        ret
-    }
+impl_to_treversal_path_primitives!(usize);
+impl_to_treversal_path_primitives!(u8);
+impl_to_treversal_path_primitives!(u16);
+impl_to_treversal_path_primitives!(u32);
+impl_to_treversal_path_primitives!(u64);
+impl_to_treversal_path_biguint!(u128);
+impl_to_treversal_path_biguint!(BigUint);
+
+/// Trait for a succint merkle tree commitment
+pub trait MerkleCommitment<T: NodeValue>:
+    Eq
+    + PartialEq
+    + Hash
+    + Ord
+    + PartialOrd
+    + Clone
+    + Copy
+    + Serialize
+    + for<'a> Deserialize<'a>
+    + CanonicalDeserialize
+    + CanonicalSerialize
+{
+    /// Return a digest of the tree
+    fn digest(&self) -> T;
+    /// Return the height of the tree
+    fn height(&self) -> usize;
+    /// Return the number of elements included in the accumulator/tree
+    fn size(&self) -> u64;
 }
 
 /// A merkle commitment consists a root hash value, a tree height and number of
 /// leaves
-#[derive(Eq, PartialEq, Clone, Copy, Serialize, Deserialize)]
-pub struct MerkleCommitment<T: NodeValue> {
-    /// Root of a tree
-    pub root_value: T,
-    /// Height of a tree
-    pub height: usize,
-    /// Number of leaves in the tree
-    pub num_leaves: u64,
-}
+// #[derive(
+//     Eq, PartialEq, Clone, Copy, Serialize, Deserialize, CanonicalSerialize, CanonicalDeserialize,
+// )]
+// pub struct MerkleCommitment<T: NodeValue + CanonicalSerialize + CanonicalDeserialize> {
+//     /// Root of a tree
+//     digest: T,
+//     /// Height of a tree
+//     height: usize,
+//     /// Number of leaves in the tree
+//     num_leaves: u64,
+// }
+
+// impl<T: NodeValue + CanonicalSerialize + CanonicalDeserialize> MerkleCommitment<T> {
+//     fn digest(&self) -> T {
+//         self.digest
+//     }
+
+//     fn height(&self) -> usize {
+//         self.height
+//     }
+
+//     fn size(&self) -> u64 {
+//         self.num_leaves
+//     }
+// }
 
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
 /// accumulator for fixed-length array. Supports generate membership proof at a
@@ -125,8 +188,6 @@ pub struct MerkleCommitment<T: NodeValue> {
 pub trait MerkleTreeScheme: Sized {
     /// Merkle tree element type
     type Element: Element;
-    /// Hash algorithm used in merkle tree
-    type Digest: DigestAlgorithm<Self::Element, Self::Index, Self::NodeValue>;
     /// Index type for this merkle tree
     type Index: Index;
     /// Internal and root node value
@@ -135,6 +196,8 @@ pub trait MerkleTreeScheme: Sized {
     type MembershipProof: Clone;
     /// Batch proof
     type BatchMembershipProof: Clone;
+    /// Merkle tree commitment
+    type Commitment: Clone;
 
     /// Tree arity
     const ARITY: usize;
@@ -152,11 +215,8 @@ pub trait MerkleTreeScheme: Sized {
     /// Return the current number of leaves
     fn num_leaves(&self) -> u64;
 
-    /// Return the current root value
-    fn root(&self) -> Self::NodeValue;
-
     /// Return a merkle commitment
-    fn commitment(&self) -> MerkleCommitment<Self::NodeValue>;
+    fn commitment(&self) -> Self::Commitment;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -285,4 +345,8 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
         element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError>;
+
+    /// Rebuild a merkle tree from a commitment.
+    /// Return a tree which is entirely forgotten.
+    fn from_commitment(commitment: impl Borrow<Self::Commitment>) -> Self;
 }

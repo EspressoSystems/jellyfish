@@ -4,14 +4,18 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use core::ops::AddAssign;
+use core::{marker::PhantomData, ops::AddAssign};
 
-use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue};
+use super::{
+    DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
+};
 use crate::errors::PrimitivesError;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
     borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
 };
 use itertools::Itertools;
+use jf_utils::tagged_blob;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
@@ -55,27 +59,79 @@ where
     }
 }
 
+/// A merkle commitment consists a root hash value, a tree height and number of
+/// leaves
+#[derive(
+    Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash, CanonicalSerialize, CanonicalDeserialize,
+)]
+#[tagged_blob("MERKLE_COMM")]
+pub struct MerkleTreeCommitment<T: NodeValue> {
+    /// Root of a tree
+    digest: T,
+    /// Height of a tree
+    height: usize,
+    /// Number of leaves in the tree
+    num_leaves: u64,
+}
+
+impl<T: NodeValue> MerkleTreeCommitment<T> {
+    pub fn new(digest: T, height: usize, num_leaves: u64) -> Self {
+        MerkleTreeCommitment {
+            digest,
+            height,
+            num_leaves,
+        }
+    }
+}
+
+impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
+    fn digest(&self) -> T {
+        self.digest
+    }
+
+    fn height(&self) -> usize {
+        self.height
+    }
+
+    fn size(&self) -> u64 {
+        self.num_leaves
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct MerkleProof<E, I, T>
+pub struct MerkleProof<E, I, T, Arity>
 where
     E: Element,
     I: Index,
     T: NodeValue,
+    Arity: Unsigned,
 {
     /// Proof of inclusion for element at index `pos`
     pub pos: I,
     /// Nodes of proof path, from root to leaf
     pub proof: Vec<MerkleNode<E, I, T>>,
+
+    /// Place holder for Arity
+    _phantom_arity: PhantomData<Arity>,
 }
 
-impl<E, I, T> MerkleProof<E, I, T>
+impl<E, I, T, Arity> MerkleProof<E, I, T, Arity>
 where
     E: Element,
     I: Index,
     T: NodeValue,
+    Arity: Unsigned,
 {
     pub fn tree_height(&self) -> usize {
         self.proof.len()
+    }
+
+    pub fn new(pos: I, proof: Vec<MerkleNode<E, I, T>>) -> Self {
+        MerkleProof {
+            pos,
+            proof,
+            _phantom_arity: PhantomData,
+        }
     }
 }
 
@@ -173,7 +229,7 @@ where
         traversal_path: &[usize],
     ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, ()> {
         match self {
-            MerkleNode::Empty => LookupResult::EmptyLeaf(()),
+            MerkleNode::Empty => LookupResult::NotFound(()),
             MerkleNode::Branch { value, children } => {
                 match children[traversal_path[height - 1]].forget_internal(height, traversal_path) {
                     LookupResult::Ok(elem, mut proof) => {
@@ -203,7 +259,7 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf(_) => LookupResult::EmptyLeaf(()),
+                    LookupResult::NotFound(_) => LookupResult::NotFound(()),
                 }
             },
             MerkleNode::Leaf { value, pos, elem } => {
@@ -311,7 +367,7 @@ where
     ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, Vec<MerkleNode<E, I, T>>> {
         match self {
             MerkleNode::Empty => {
-                LookupResult::EmptyLeaf(vec![MerkleNode::<E, I, T>::Empty; height + 1])
+                LookupResult::NotFound(vec![MerkleNode::<E, I, T>::Empty; height + 1])
             },
             MerkleNode::Branch { value: _, children } => {
                 match children[traversal_path[height - 1]]
@@ -336,7 +392,7 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::EmptyLeaf(mut non_membership_proof) => {
+                    LookupResult::NotFound(mut non_membership_proof) => {
                         non_membership_proof.push(MerkleNode::Branch {
                             value: T::default(),
                             children: children
@@ -352,7 +408,7 @@ where
                                 })
                                 .collect_vec(),
                         });
-                        LookupResult::EmptyLeaf(non_membership_proof)
+                        LookupResult::NotFound(non_membership_proof)
                     },
                 }
             },
@@ -415,7 +471,7 @@ where
                         children,
                     }
                 };
-                LookupResult::EmptyLeaf(())
+                LookupResult::NotFound(())
             },
             MerkleNode::ForgettenSubtree { .. } => LookupResult::NotInMemory,
         }
@@ -510,13 +566,14 @@ where
     }
 }
 
-impl<E, I, T> MerkleProof<E, I, T>
+impl<E, I, T, Arity> MerkleProof<E, I, T, Arity>
 where
     E: Element,
-    I: Index + From<u64>,
+    I: Index + From<u64> + ToTraversalPath<Arity>,
     T: NodeValue,
+    Arity: Unsigned,
 {
-    pub(crate) fn verify_membership_proof<H, Arity>(
+    pub(crate) fn verify_membership_proof<H>(
         &self,
         expected_root: &T,
     ) -> Result<bool, PrimitivesError>
@@ -533,7 +590,7 @@ where
             let init = H::digest_leaf(pos, elem);
             let computed_root = self
                 .pos
-                .to_traverse_path(self.tree_height() - 1, Arity::to_usize())
+                .to_traversal_path(self.tree_height() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(
@@ -563,19 +620,18 @@ where
         }
     }
 
-    pub(crate) fn verify_non_membership_proof<H, Arity>(
+    pub(crate) fn verify_non_membership_proof<H>(
         &self,
         expected_root: &T,
     ) -> Result<bool, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        Arity: Unsigned,
     {
         if let MerkleNode::<E, I, T>::Empty = &self.proof[0] {
             let init = T::default();
             let computed_root = self
                 .pos
-                .to_traverse_path(self.tree_height() - 1, Arity::to_usize())
+                .to_traversal_path(self.tree_height() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
                 .fold(

@@ -6,12 +6,14 @@
 
 //! Implementation of a typical Sparse Merkle Tree.
 use super::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof},
-    DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
-    UniversalMerkleTreeScheme,
+    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index, LookupResult, MerkleCommitment,
+    MerkleTreeScheme, NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
 };
-use crate::{errors::PrimitivesError, impl_merkle_tree_scheme};
-use ark_std::{borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString};
+use crate::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
+use ark_std::{
+    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
+};
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
@@ -19,26 +21,27 @@ use typenum::Unsigned;
 
 // A standard Universal Merkle tree implementation
 impl_merkle_tree_scheme!(UniversalMerkleTree);
+impl_forgetable_merkle_tree_scheme!(UniversalMerkleTree);
 
 impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
+    I: Index + From<u64> + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
-    type NonMembershipProof = MerkleProof<E, I, T>;
+    type NonMembershipProof = MerkleProof<E, I, T, Arity>;
     type BatchNonMembershipProof = ();
 
     fn update(&mut self, pos: impl Borrow<I>, elem: impl Borrow<E>) -> LookupResult<E, (), ()> {
         let pos = pos.borrow();
         let elem = elem.borrow();
-        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
+        let traversal_path = pos.to_traversal_path(self.height);
         let ret = self
             .root
             .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem);
-        if let LookupResult::EmptyLeaf(_) = ret {
+        if let LookupResult::NotFound(_) = ret {
             self.num_leaves += 1;
         }
         ret
@@ -77,7 +80,7 @@ where
                 "Inconsistent proof index".to_string(),
             ));
         }
-        proof.verify_non_membership_proof::<H, Arity>(&self.root())
+        proof.verify_non_membership_proof::<H>(&self.root.value())
     }
 
     fn universal_lookup(
@@ -85,20 +88,15 @@ where
         pos: impl Borrow<Self::Index>,
     ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
         let pos = pos.borrow();
-        let traversal_path = pos.to_traverse_path(self.height, Self::ARITY);
+        let traversal_path = pos.to_traversal_path(self.height);
         match self.root.lookup_internal(self.height, &traversal_path) {
-            LookupResult::Ok(value, proof) => LookupResult::Ok(
-                value,
-                MerkleProof {
-                    pos: pos.clone(),
-                    proof,
-                },
-            ),
+            LookupResult::Ok(value, proof) => {
+                LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof))
+            },
             LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::EmptyLeaf(non_membership_proof) => LookupResult::EmptyLeaf(MerkleProof {
-                pos: pos.clone(),
-                proof: non_membership_proof,
-            }),
+            LookupResult::NotFound(non_membership_proof) => {
+                LookupResult::NotFound(MerkleProof::new(pos.clone(), non_membership_proof))
+            },
         }
     }
 }
@@ -152,7 +150,7 @@ mod mt_tests {
 
         let mut proof = mt
             .universal_lookup(BigUint::from(3u64))
-            .expect_empty()
+            .expect_not_found()
             .unwrap();
         let verify_result = mt.non_membership_verify(BigUint::from(3u64), &proof);
         assert!(verify_result.is_ok() && verify_result.unwrap());
