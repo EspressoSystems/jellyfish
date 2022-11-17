@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use ark_std::rand::{CryptoRng, RngCore};
+use ark_std::vec::Vec;
 use digest::Digest;
 
 /// BLS VRF scheme.
@@ -38,10 +39,10 @@ where
     type Proof = BLSSignature;
 
     /// The input of VRF proof.
-    type Input = [u8; 32];
+    type Input = Vec<u8>;
 
     /// The output of VRF evaluation.
-    type Output = [u8; 32];
+    type Output = Vec<u8>;
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
@@ -76,9 +77,7 @@ where
         let proof_serialized = proof.serialize();
         let mut hasher = H::new();
         hasher.update(proof_serialized);
-        let mut output = [0u8; 32];
-        output.copy_from_slice(hasher.finalize().as_ref());
-        Ok(output)
+        Ok(hasher.finalize().to_vec())
     }
 
     /// Verifies a VRF proof.
@@ -99,13 +98,16 @@ where
 mod test {
     use super::*;
     use crate::vrf::tests::{failed_verification, sign_and_verify};
-    use sha2::Sha256;
+    use ark_std::vec;
+    use sha2::{Sha256, Sha512};
 
     #[test]
     fn test_bls_vrf() {
-        let message = [0u8; 32];
-        let message_bad = [1u8; 32];
+        let message = vec![0u8; 32];
+        let message_bad = vec![1u8; 32];
         sign_and_verify::<BLSVRFScheme, Sha256>(&message);
+        sign_and_verify::<BLSVRFScheme, Sha512>(&message);
         failed_verification::<BLSVRFScheme, Sha256>(&message, &message_bad);
+        failed_verification::<BLSVRFScheme, Sha512>(&message, &message_bad);
     }
 }

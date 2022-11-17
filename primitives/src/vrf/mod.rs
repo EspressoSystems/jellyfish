@@ -93,7 +93,6 @@ mod tests {
         let parameters = V::param_gen(Some(rng)).unwrap();
         let (sk, pk) = V::key_gen(&parameters, rng).unwrap();
         let vrf_proof = V::prove(&parameters, &sk, message, rng).unwrap();
-        let _vrf_output = V::evaluate(&parameters, &vrf_proof).unwrap();
 
         assert!(!V::verify(&parameters, &vrf_proof, &pk, bad_message).unwrap());
     }
