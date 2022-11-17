@@ -468,8 +468,8 @@ mod test {
         //// Happy path
 
         // 2, because the leaf is inserted in position 2 (see gen_merkle_path_for_test)
-        let uid_u32 = 2u64;
-        let uid = F::from(uid_u32);
+        let uid_u64 = 2u64;
+        let uid = F::from(uid_u64);
         let comm = F::from(310_u64);
 
         let uid_var = circuit.create_variable(uid).unwrap();
@@ -479,10 +479,10 @@ mod test {
             uid: uid_var,
             elem: comm_var,
         };
-        let elements = vec![F::from(1_u32), F::from(2_u32), comm];
+        let elements = vec![F::from(1_u64), F::from(2_u64), comm];
         let mt = RescueMerkleTree::<F>::from_elems(1, elements).unwrap();
         let expected_root = mt.commitment().digest();
-        let (_elem, proof) = mt.lookup(uid_u32).expect_ok().unwrap();
+        let (_elem, proof) = mt.lookup(uid_u64).expect_ok().unwrap();
 
         let path_vars = circuit.add_merkle_path_variable(&proof).unwrap();
 
