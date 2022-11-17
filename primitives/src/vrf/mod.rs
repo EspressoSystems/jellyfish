@@ -32,17 +32,20 @@ pub trait Vrf {
     //   `S::param_gen::<StdRng>(None)`
     // wheere `StdRng` is redundent.
     fn param_gen<R: CryptoRng + RngCore>(
+        &self,
         prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError>;
 
     /// Creates a pair of VRF public and private keys.
     fn key_gen<R: CryptoRng + RngCore>(
+        &self,
         pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SecretKey, Self::PublicKey), PrimitivesError>;
 
     /// Creates the VRF proof associated with a VRF secret key.
     fn prove<R: CryptoRng + RngCore>(
+        &self,
         pp: &Self::PublicParameter,
         secret_key: &Self::SecretKey,
         input: &Self::Input,
@@ -58,6 +61,7 @@ pub trait Vrf {
 
     /// Verifies a VRF proof.
     fn verify(
+        &self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,

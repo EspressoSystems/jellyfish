@@ -69,6 +69,7 @@ impl Vrf for BLSVRFScheme {
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
+        &self,
         _prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
         Ok(())
@@ -76,6 +77,7 @@ impl Vrf for BLSVRFScheme {
 
     /// Creates a pair of VRF public and private keys.
     fn key_gen<R: CryptoRng + RngCore>(
+        &self,
         pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SecretKey, Self::PublicKey), PrimitivesError> {
@@ -84,6 +86,7 @@ impl Vrf for BLSVRFScheme {
 
     /// Creates the VRF proof associated with a VRF secret key.
     fn prove<R: CryptoRng + RngCore>(
+        &self,
         pp: &Self::PublicParameter,
         secret_key: &Self::SecretKey,
         input: &Self::Input,
@@ -107,6 +110,7 @@ impl Vrf for BLSVRFScheme {
 
     /// Verifies a VRF proof.
     fn verify(
+        &self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
@@ -131,12 +135,14 @@ mod test {
     ) {
         let rng = &mut test_rng();
 
-        let parameters = BLSVRFScheme::param_gen(Some(rng)).unwrap();
-        let (sk, pk) = BLSVRFScheme::key_gen(&parameters, rng).unwrap();
-        let vrf_proof = BLSVRFScheme::prove(&parameters, &sk, message, rng).unwrap();
+        let parameters = vrf.param_gen(Some(rng)).unwrap();
+        let (sk, pk) = vrf.key_gen(&parameters, rng).unwrap();
+        let vrf_proof = vrf.prove(&parameters, &sk, message, rng).unwrap();
         let _vrf_output = vrf.evaluate(&parameters, &vrf_proof).unwrap();
-        assert!(BLSVRFScheme::verify(&parameters, &vrf_proof, &pk, message).unwrap());
-        assert!(!BLSVRFScheme::verify(&parameters, &vrf_proof, &pk, bad_message).unwrap());
+        assert!(vrf.verify(&parameters, &vrf_proof, &pk, message).unwrap());
+        assert!(!vrf
+            .verify(&parameters, &vrf_proof, &pk, bad_message)
+            .unwrap());
     }
 
     #[test]
