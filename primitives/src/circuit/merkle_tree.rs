@@ -10,7 +10,9 @@
 
 use crate::{
     circuit::rescue::RescueGadget,
-    merkle_tree::{examples::RescueMerkleTree, MerkleNode, MerkleTreeScheme, ToTraversalPath},
+    merkle_tree::{
+        examples::RescueMerkleTree, internal::MerkleNode, MerkleTreeScheme, ToTraversalPath,
+    },
     rescue::RescueParameter,
 };
 use ark_ec::TEModelParameters as Parameters;
@@ -283,7 +285,8 @@ mod test {
         },
         merkle_tree::{
             examples::{RescueHash, RescueMerkleTree},
-            DigestAlgorithm, MerkleCommitment, MerkleNode, MerkleTreeScheme,
+            internal::MerkleNode,
+            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -467,7 +470,7 @@ mod test {
         // 2, because the leaf is inserted in position 2 (see gen_merkle_path_for_test)
         let uid_u32 = 2u64;
         let uid = F::from(uid_u32);
-        let comm = F::from(3_u64);
+        let comm = F::from(310_u64);
 
         let uid_var = circuit.create_variable(uid).unwrap();
         let comm_var = circuit.create_variable(comm).unwrap();
