@@ -297,7 +297,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::merkle_tree::examples::RescueHash;
-    use crate::merkle_tree::{DigestAlgorithm, MerkleCommitment};
+    use crate::merkle_tree::{DigestAlgorithm, MerkleCommitment, MerkleNode};
     use crate::{
         circuit::merkle_tree::{
             AccElemVars, MerkleNodeBooleanEncoding, MerklePathBooleanEncoding, MerkleProof,
@@ -312,7 +312,7 @@ mod test {
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::{PrimeField, UniformRand};
-    use ark_std::{test_rng, vec, vec::Vec};
+    use ark_std::{boxed::Box, test_rng, vec, vec::Vec};
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     #[test]
@@ -526,23 +526,22 @@ mod test {
             elem: comm_var,
         };
 
-        // let node = MerklePathNode::new(
-        //     NodePos::Right,
-        //     NodeValue(F::zero()), // Left node is zero which is not allowed
-        //     NodeValue(F::from(4_u32)),
-        // );
-        // let leaf = hash(&NodeValue(F::zero()), &NodeValue(uid), &NodeValue(comm));
-        // let expected_root = hash(&node.sibling1, &node.sibling2, &leaf);
+        let mut bad_proof = proof.clone();
 
-        // let merkle_path = MerklePath::new(vec![node]);
-        // let path_vars = circuit.add_merkle_path_variable(&merkle_path).unwrap();
+        if let MerkleNode::Branch { value: _, children } = &mut bad_proof.proof[1] {
+            children[0] = Box::new(MerkleNode::Leaf {
+                value: F::zero(),
+                pos: 0,
+                elem: F::one(),
+            });
+        }
+        let path_vars = circuit.add_merkle_path_variable(&bad_proof).unwrap();
 
-        // let root_var = circuit.compute_merkle_root(elem, &path_vars).unwrap();
+        // new root witness is not correct
+        let root_var = circuit.compute_merkle_root(elem, &path_vars).unwrap();
+        assert_ne!(circuit.witness(root_var).unwrap(), expected_root);
 
-        // // Check Merkle root correctness
-        // assert_eq!(circuit.witness(root_var).unwrap(), expected_root.0);
-
-        // // Circuit does not verify because a left node value is 0
-        // assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        // Circuit does not verify because a left node value is 0
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
     }
 }
