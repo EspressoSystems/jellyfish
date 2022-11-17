@@ -19,6 +19,9 @@ use jf_utils::tagged_blob;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
+extern crate std;
+use std::println;
+
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
@@ -599,6 +602,7 @@ where
                         match result {
                             Ok(val) => match node {
                                 MerkleNode::Branch { value: _, children } => {
+                                    // println!("branch: {}", branch);
                                     let mut data =
                                         children.iter().map(|node| node.value()).collect_vec();
                                     data[*branch] = val;

@@ -11,6 +11,7 @@ pub mod macros;
 pub mod universal_merkle_tree;
 
 mod internal;
+pub use internal::*;
 
 use crate::{
     errors::PrimitivesError, impl_to_treversal_path_biguint, impl_to_treversal_path_primitives,
