@@ -473,10 +473,10 @@ mod test {
     #[test]
     fn test_merkle_root() {
         test_merkle_root_helper::<FqEd254>();
-        // test_merkle_root_helper::<FqEd377>();
-        // test_merkle_root_helper::<FqEd381>();
-        // test_merkle_root_helper::<FqEd381b>();
-        // test_merkle_root_helper::<Fq377>();
+        test_merkle_root_helper::<FqEd377>();
+        test_merkle_root_helper::<FqEd381>();
+        test_merkle_root_helper::<FqEd381b>();
+        test_merkle_root_helper::<Fq377>();
     }
     fn test_merkle_root_helper<F: RescueParameter>() {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
