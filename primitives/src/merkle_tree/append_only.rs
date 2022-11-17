@@ -130,7 +130,7 @@ mod mt_tests {
                 assert_eq!(proof.tree_height(), 4);
                 assert!(mt.verify(i as u64, &proof).unwrap());
             }
-            
+
             let (_elem, proof) = mt.lookup(0u64).expect_ok().unwrap();
             let mut bad_proof = proof.clone();
             if let MerkleNode::Leaf {
@@ -147,10 +147,7 @@ mod mt_tests {
             let result = mt.verify(0u64, &bad_proof);
             assert!(result.is_ok() && !result.unwrap());
 
-            let mut forge_proof = MerkleProof {
-                pos: 2,
-                proof: proof.proof,
-            };
+            let mut forge_proof = MerkleProof::new(2, proof.proof);
             if let MerkleNode::Leaf {
                 value: _,
                 pos,
