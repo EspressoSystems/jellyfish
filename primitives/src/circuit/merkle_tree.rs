@@ -25,6 +25,7 @@ type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
 type MerkleProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
 type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 type MerklePath<F> = Vec<MerkleNode<F, Index<F>, NodeVal<F>>>;
+use typenum::U3;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 struct MerkleNodeBooleanEncoding<F: PrimeField + RescueParameter> {
@@ -65,31 +66,20 @@ impl<F: PrimeField + RescueParameter> MerklePathBooleanEncoding<F> {
 
 impl<F: PrimeField + RescueParameter> From<&MerkleProof<F>> for MerklePathBooleanEncoding<F> {
     fn from(proof: &MerkleProof<F>) -> Self {
-        let path = proof.pos.to_traverse_path(proof.tree_height() - 1, 3);
+        let path =
+            <u64 as ToTraversalPath<U3>>::to_traversal_path(&proof.pos, proof.tree_height() - 1);
 
         let nodes: Vec<MerkleNodeBooleanEncoding<F>> = path
             .iter()
             .zip(proof.proof.iter().skip(1))
             .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => {
-                    // println!("children: {:?}", children);
-                    Some(MerkleNodeBooleanEncoding::new(
-                        // <RescueMerkleTree<F> as MerkleTreeScheme>::Digest::digest_leaf(
-                        //     &0,
-                        //     &children[0].value(),
-                        // ),
-                        children[0].value(),
-                        // <RescueMerkleTree<F> as MerkleTreeScheme>::Digest::digest_leaf(
-                        //     &1,
-                        //     &children[1].value(),
-                        // ),
-                        children[1].value(),
-                        branch == &0,
-                        branch == &2,
-                    ))
-                },
+                MerkleNode::Branch { value: _, children } => Some(MerkleNodeBooleanEncoding::new(
+                    children[0].value(),
+                    children[1].value(),
+                    branch == &0,
+                    branch == &2,
+                )),
                 _ => None,
-                // _ => panic!("unexpected node type"),
             })
             .collect();
         // unimplemented!();
@@ -306,7 +296,8 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::merkle_tree::DigestAlgorithm;
+    use crate::merkle_tree::examples::RescueHash;
+    use crate::merkle_tree::{DigestAlgorithm, MerkleCommitment};
     use crate::{
         circuit::merkle_tree::{
             AccElemVars, MerkleNodeBooleanEncoding, MerklePathBooleanEncoding, MerkleProof,
@@ -466,14 +457,8 @@ mod test {
             assert_eq!(proof.tree_height(), 2);
 
             let expected_bool_node = MerkleNodeBooleanEncoding::<FqEd254> {
-                sibling1: <RescueMerkleTree<FqEd254> as MerkleTreeScheme>::Digest::digest_leaf(
-                    &0,
-                    &elements[0].clone(),
-                ),
-                sibling2: <RescueMerkleTree<FqEd254> as MerkleTreeScheme>::Digest::digest_leaf(
-                    &1,
-                    &elements[1].clone(),
-                ),
+                sibling1: RescueHash::digest_leaf(&0, &elements[0].clone()),
+                sibling2: RescueHash::digest_leaf(&1, &elements[1].clone()),
                 is_left_child: left,
                 is_right_child: right,
             };
@@ -512,7 +497,7 @@ mod test {
         };
         let elements = vec![F::from(1_u32), F::from(2_u32), comm];
         let mt = RescueMerkleTree::<F>::from_elems(1, elements.clone()).unwrap();
-        let expected_root = mt.root();
+        let expected_root = mt.commitment().digest();
         let (_elem, proof) = mt.lookup(uid_u32).expect_ok().unwrap();
 
         let path_vars = circuit.add_merkle_path_variable(&proof).unwrap();
