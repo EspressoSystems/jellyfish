@@ -31,7 +31,7 @@ impl<F: RescueParameter> DigestAlgorithm<F, u64, F> for RescueHash<F> {
     }
 
     fn digest_leaf(pos: &u64, elem: &F) -> F {
-        let data = [F::from(*pos), *elem, F::zero()];
+        let data = [F::zero(), F::from(*pos), *elem];
         let perm = Permutation::default();
         perm.sponge_no_padding(&data, 1).unwrap()[0]
     }
@@ -47,7 +47,7 @@ impl<F: RescueParameter> DigestAlgorithm<F, BigUint, F> for RescueHash<F> {
     }
 
     fn digest_leaf(pos: &BigUint, elem: &F) -> F {
-        let data = [F::from(pos.clone()), *elem, F::zero()];
+        let data = [F::zero(), F::from(pos.clone()), *elem];
         let perm = Permutation::default();
         perm.sponge_no_padding(&data, 1).unwrap()[0]
     }
