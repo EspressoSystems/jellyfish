@@ -20,8 +20,6 @@ use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 extern crate std;
-use std::println;
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {

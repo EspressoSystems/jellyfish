@@ -8,23 +8,18 @@
 
 //! Circuit implementation of a Merkle tree.
 
-use crate::merkle_tree::DigestAlgorithm;
-use crate::merkle_tree::{AppendableMerkleTreeScheme, ToTraversalPath};
 use crate::{
     circuit::rescue::RescueGadget,
-    merkle_tree::{examples::RescueMerkleTree, MerkleNode, MerkleTreeScheme},
+    merkle_tree::{examples::RescueMerkleTree, MerkleNode, MerkleTreeScheme, ToTraversalPath},
     rescue::RescueParameter,
 };
 use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
-use ark_std::{vec, vec::Vec};
+use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
-extern crate std;
-use std::println;
+
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
 type MerkleProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
-type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
-type MerklePath<F> = Vec<MerkleNode<F, Index<F>, NodeVal<F>>>;
 use typenum::U3;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -82,21 +77,6 @@ impl<F: PrimeField + RescueParameter> From<&MerkleProof<F>> for MerklePathBoolea
                 _ => None,
             })
             .collect();
-        // unimplemented!();
-        // for node in proof.nodes.iter() {
-        //     let circuit_node = match node.pos {
-        //         NodePos::Left => {
-        //             MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, true, false)
-        //         },
-        //         NodePos::Middle => {
-        //             MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, false, false)
-        //         },
-        //         NodePos::Right => {
-        //             MerkleNodeBooleanEncoding::new(node.sibling1, node.sibling2, false, true)
-        //         },
-        //     };
-        //     nodes.push(circuit_node);
-        // }
 
         Self::new(&nodes)
     }
@@ -141,7 +121,7 @@ impl AccMemberWitnessVar {
     {
         Ok(Self {
             uid: circuit.create_variable(F::from(acc_member_witness.pos as u64))?,
-            merkle_path: circuit.add_merkle_path_variable(&acc_member_witness)?,
+            merkle_path: circuit.add_merkle_path_variable(acc_member_witness)?,
         })
     }
 }
@@ -296,14 +276,15 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::merkle_tree::examples::RescueHash;
-    use crate::merkle_tree::{DigestAlgorithm, MerkleCommitment, MerkleNode};
     use crate::{
         circuit::merkle_tree::{
-            AccElemVars, MerkleNodeBooleanEncoding, MerklePathBooleanEncoding, MerkleProof,
-            MerkleTreeGadget, MerkleTreeHelperGadget,
+            AccElemVars, MerkleNodeBooleanEncoding, MerklePathBooleanEncoding, MerkleTreeGadget,
+            MerkleTreeHelperGadget,
         },
-        merkle_tree::{examples::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme},
+        merkle_tree::{
+            examples::{RescueHash, RescueMerkleTree},
+            DigestAlgorithm, MerkleCommitment, MerkleNode, MerkleTreeScheme,
+        },
         rescue::RescueParameter,
     };
     use ark_bls12_377::Fq as Fq377;
@@ -463,7 +444,7 @@ mod test {
                 is_right_child: right,
             };
 
-            let expected_bool_path = MerklePathBooleanEncoding::new(&vec![expected_bool_node]);
+            let expected_bool_path = MerklePathBooleanEncoding::new(&[expected_bool_node]);
             let bool_path = MerklePathBooleanEncoding::from(&proof);
 
             assert_eq!(bool_path, expected_bool_path);
@@ -496,7 +477,7 @@ mod test {
             elem: comm_var,
         };
         let elements = vec![F::from(1_u32), F::from(2_u32), comm];
-        let mt = RescueMerkleTree::<F>::from_elems(1, elements.clone()).unwrap();
+        let mt = RescueMerkleTree::<F>::from_elems(1, elements).unwrap();
         let expected_root = mt.commitment().digest();
         let (_elem, proof) = mt.lookup(uid_u32).expect_ok().unwrap();
 
