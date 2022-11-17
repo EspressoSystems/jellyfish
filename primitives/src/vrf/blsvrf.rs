@@ -10,19 +10,18 @@ use crate::{
 };
 use ark_std::boxed::Box;
 use ark_std::rand::{CryptoRng, RngCore};
-// use ark_std::vec;
 use ark_std::vec::Vec;
 use digest::{Digest, DynDigest};
 use sha2::{Sha256, Sha512};
 
-/// Different cipher suites for different curves/algorithms
+/// Supported Cipher Suites for BLS VRF.
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub enum BLSVRFCipherSuite {
-    /// using sha256
-    CS_ID_BLS_VRF_SHA256,
-    /// using sha512
-    CS_ID_BLS_VRF_SHA512,
+    /// using blst library and VRF output from SHA256 hashing
+    VRF_BLS_12_381_SHA256,
+    /// using blst library and VRF output from SHA512 hashing
+    VRF_BLS_12_381_SHA512,
 }
 
 /// BLS VRF scheme.
@@ -32,13 +31,13 @@ pub struct BLSVRFScheme {
 }
 
 impl BLSVRFScheme {
-    /// Creates a new BLS VRF scheme.
+    /// Creates a new BLS VRF instance with the given ciphersuite.
     pub fn new(cs_id: BLSVRFCipherSuite) -> Self {
         match cs_id {
-            BLSVRFCipherSuite::CS_ID_BLS_VRF_SHA256 => Self {
+            BLSVRFCipherSuite::VRF_BLS_12_381_SHA256 => Self {
                 hasher: Box::new(Sha256::new()),
             },
-            BLSVRFCipherSuite::CS_ID_BLS_VRF_SHA512 => Self {
+            BLSVRFCipherSuite::VRF_BLS_12_381_SHA512 => Self {
                 hasher: Box::new(Sha512::new()),
             },
         }
@@ -149,10 +148,10 @@ mod test {
     fn test_bls_vrf() {
         let message = vec![0u8; 32];
         let message_bad = vec![1u8; 32];
-        let mut blsvrf256 = BLSVRFScheme::new(BLSVRFCipherSuite::CS_ID_BLS_VRF_SHA256);
+        let mut blsvrf256 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA256);
         sign_and_verify(&mut blsvrf256, &message, &message_bad);
 
-        let mut blsvrf512 = BLSVRFScheme::new(BLSVRFCipherSuite::CS_ID_BLS_VRF_SHA512);
+        let mut blsvrf512 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA512);
         sign_and_verify(&mut blsvrf512, &message, &message_bad);
     }
 }
