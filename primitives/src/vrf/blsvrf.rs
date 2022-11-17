@@ -8,9 +8,11 @@ use crate::{
         BLSSignatureScheme, SignatureScheme,
     },
 };
-use ark_std::boxed::Box;
-use ark_std::rand::{CryptoRng, RngCore};
-use ark_std::vec::Vec;
+use ark_std::{
+    boxed::Box,
+    rand::{CryptoRng, RngCore},
+    vec::Vec,
+};
 use digest::{Digest, DynDigest};
 use sha2::{Sha256, Sha512};
 
