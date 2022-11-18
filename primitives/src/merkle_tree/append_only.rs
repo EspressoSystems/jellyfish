@@ -67,8 +67,8 @@ where
 mod mt_tests {
     use crate::{
         merkle_tree::{
-            examples::RescueMerkleTree,
             internal::{MerkleNode, MerkleProof},
+            prelude::RescueMerkleTree,
             *,
         },
         rescue::RescueParameter,

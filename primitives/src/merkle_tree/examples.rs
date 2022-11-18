@@ -7,54 +7,12 @@
 //! Provides sample instantiations of merkle tree.
 //! E.g. Sparse merkle tree with BigUInt index.
 
-use super::{
-    append_only::MerkleTree, universal_merkle_tree::UniversalMerkleTree, DigestAlgorithm, Element,
-    Index,
-};
+use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm, Element, Index};
 use crate::rescue::{Permutation, RescueParameter};
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
-use ark_std::marker::PhantomData;
-use num_bigint::BigUint;
 use sha3::{Digest, Sha3_256};
 use typenum::U3;
-
-/// Wrapper for rescue hash function
-pub struct RescueHash<F: RescueParameter> {
-    phantom_f: PhantomData<F>,
-}
-
-impl<F: RescueParameter> DigestAlgorithm<F, u64, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> F {
-        let perm = Permutation::default();
-        perm.sponge_no_padding(data, 1).unwrap()[0]
-    }
-
-    fn digest_leaf(pos: &u64, elem: &F) -> F {
-        let data = [F::from(*pos), *elem, F::zero()];
-        let perm = Permutation::default();
-        perm.sponge_no_padding(&data, 1).unwrap()[0]
-    }
-}
-
-/// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
-
-impl<F: RescueParameter> DigestAlgorithm<F, BigUint, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> F {
-        let perm = Permutation::default();
-        perm.sponge_no_padding(data, 1).unwrap()[0]
-    }
-
-    fn digest_leaf(pos: &BigUint, elem: &F) -> F {
-        let data = [F::from(pos.clone()), *elem, F::zero()];
-        let perm = Permutation::default();
-        perm.sponge_no_padding(&data, 1).unwrap()[0]
-    }
-}
-
-/// Example instantiation of a SparseMerkleTree indexed by BigUInt
-pub type SparseMerkleTree<E, F> = UniversalMerkleTree<E, RescueHash<F>, BigUint, U3, F>;
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone)]
