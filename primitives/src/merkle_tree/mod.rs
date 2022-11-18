@@ -10,7 +10,7 @@ pub mod examples;
 pub mod macros;
 pub mod universal_merkle_tree;
 
-mod internal;
+pub(crate) mod internal;
 
 pub mod prelude;
 
