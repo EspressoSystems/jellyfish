@@ -53,18 +53,19 @@ pub trait Vrf {
     ) -> Result<Self::Proof, PrimitivesError>;
 
     /// Computes the VRF output associated with a VRF proof.
-    fn evaluate(
+    fn proof_to_hash(
         &mut self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
     ) -> Result<Self::Output, PrimitivesError>;
 
     /// Verifies a VRF proof.
+    #[must_use = "Output must be used"]
     fn verify(
-        &self,
+        &mut self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
         input: &Self::Input,
-    ) -> Result<bool, PrimitivesError>;
+    ) -> Result<(bool, Option<Self::Output>), PrimitivesError>;
 }

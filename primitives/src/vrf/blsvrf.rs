@@ -1,5 +1,4 @@
 //! BLS signature based VRF
-
 use super::Vrf;
 use crate::{
     errors::PrimitivesError,
@@ -97,7 +96,7 @@ impl Vrf for BLSVRFScheme {
     }
 
     /// Computes the VRF output associated with a VRF proof.
-    fn evaluate(
+    fn proof_to_hash(
         &mut self,
         _pp: &Self::PublicParameter,
         proof: &Self::Proof,
@@ -111,16 +110,17 @@ impl Vrf for BLSVRFScheme {
 
     /// Verifies a VRF proof.
     fn verify(
-        &self,
+        &mut self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
         input: &Self::Input,
-    ) -> Result<bool, PrimitivesError> {
-        if <BLSSignatureScheme as SignatureScheme>::verify(pp, public_key, input, proof).is_err() {
-            return Ok(false);
+    ) -> Result<(bool, Option<Self::Output>), PrimitivesError> {
+        if <BLSSignatureScheme as SignatureScheme>::verify(pp, public_key, input, proof).is_ok() {
+            Ok((true, Some(Self::proof_to_hash(self, pp, proof).unwrap())))
+        } else {
+            Ok((false, None))
         }
-        Ok(true)
     }
 }
 
@@ -139,11 +139,18 @@ mod test {
         let parameters = vrf.param_gen(Some(rng)).unwrap();
         let (sk, pk) = vrf.key_gen(&parameters, rng).unwrap();
         let vrf_proof = vrf.prove(&parameters, &sk, message, rng).unwrap();
-        let _vrf_output = vrf.evaluate(&parameters, &vrf_proof).unwrap();
-        assert!(vrf.verify(&parameters, &vrf_proof, &pk, message).unwrap());
-        assert!(!vrf
+        let _vrf_output = vrf.proof_to_hash(&parameters, &vrf_proof).unwrap();
+        let (is_correct, output) = vrf.verify(&parameters, &vrf_proof, &pk, message).unwrap();
+        assert!(is_correct);
+        // need to use the result
+        assert!(output.is_some());
+
+        // now test for bad message. User can choose to ignore the output if they really
+        // want to.
+        let (is_correct, _) = vrf
             .verify(&parameters, &vrf_proof, &pk, bad_message)
-            .unwrap());
+            .unwrap();
+        assert!(!is_correct);
     }
 
     #[test]
