@@ -280,8 +280,8 @@ where
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            CommittedElemVar, MerkleNodeBooleanEncoding, MerkleProofBooleanEncoding, MerkleTreeGadget,
-            MerkleTreeHelperGadget,
+            CommittedElemVar, MerkleNodeBooleanEncoding, MerkleProofBooleanEncoding,
+            MerkleTreeGadget, MerkleTreeHelperGadget,
         },
         merkle_tree::{
             examples::{RescueHash, RescueMerkleTree},
