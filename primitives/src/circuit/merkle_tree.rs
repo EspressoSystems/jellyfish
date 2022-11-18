@@ -49,19 +49,19 @@ impl<F: PrimeField + RescueParameter> MerkleNodeBooleanEncoding<F> {
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-struct MerklePathBooleanEncoding<F: PrimeField + RescueParameter> {
+struct MerkleProofBooleanEncoding<F: PrimeField + RescueParameter> {
     pub nodes: Vec<MerkleNodeBooleanEncoding<F>>,
 }
 
-impl<F: PrimeField + RescueParameter> MerklePathBooleanEncoding<F> {
+impl<F: PrimeField + RescueParameter> MerkleProofBooleanEncoding<F> {
     fn new(nodes: &[MerkleNodeBooleanEncoding<F>]) -> Self {
-        MerklePathBooleanEncoding {
+        MerkleProofBooleanEncoding {
             nodes: nodes.to_vec(),
         }
     }
 }
 
-impl<F: PrimeField + RescueParameter> From<&MerkleProof<F>> for MerklePathBooleanEncoding<F> {
+impl<F: PrimeField + RescueParameter> From<&MerkleProof<F>> for MerkleProofBooleanEncoding<F> {
     fn from(proof: &MerkleProof<F>) -> Self {
         let path =
             <u64 as ToTraversalPath<U3>>::to_traversal_path(&proof.pos, proof.tree_height() - 1);
@@ -85,8 +85,8 @@ impl<F: PrimeField + RescueParameter> From<&MerkleProof<F>> for MerklePathBoolea
 }
 
 #[derive(Debug)]
-/// Circuit variables for a Merkle node
-pub struct MerkleNodeVars {
+/// Circuit variable for a Merkle node.
+pub struct MerkleNodeVar {
     pub sibling1: Variable,
     pub sibling2: Variable,
     pub is_left_child: BoolVar,
@@ -94,25 +94,25 @@ pub struct MerkleNodeVars {
 }
 
 #[derive(Debug)]
-/// Circuit variables for a Merkle authentication path
-pub struct MerklePathVars {
-    pub nodes: Vec<MerkleNodeVars>,
+/// Circuit variable for a Merkle authentication path.
+pub struct MerklePathVar {
+    pub nodes: Vec<MerkleNodeVar>,
 }
 
-/// Circuit variables for an accumulated element
-pub struct AccElemVars {
+/// Circuit variable for an accumulated element.
+pub struct CommittedElemVar {
     pub uid: Variable,
     pub elem: Variable,
 }
 
-/// Circuit variables for membership proof.
+/// Circuit variable for a membership proof.
 #[derive(Debug)]
-pub struct AccMemberWitnessVar {
+pub struct MerkleProofVar {
     pub uid: Variable,
-    pub merkle_path: MerklePathVars,
+    pub merkle_path: MerklePathVar,
 }
 
-impl AccMemberWitnessVar {
+impl MerkleProofVar {
     pub fn new<F, P>(
         circuit: &mut PlonkCircuit<F>,
         acc_member_witness: &MerkleProof<F>,
@@ -152,8 +152,8 @@ trait MerkleTreeHelperGadget<F: PrimeField + RescueParameter> {
     /// * `returns` - list of variables corresponding to the authentication path
     fn constrain_merkle_path(
         &mut self,
-        merkle_path: &MerklePathBooleanEncoding<F>,
-    ) -> Result<MerklePathVars, CircuitError>;
+        merkle_path: &MerkleProofBooleanEncoding<F>,
+    ) -> Result<MerklePathVar, CircuitError>;
 }
 
 /// Circuit implementation of a Merkle tree.
@@ -165,7 +165,7 @@ pub trait MerkleTreeGadget<F: PrimeField + RescueParameter> {
     fn add_merkle_path_variable(
         &mut self,
         merkle_proof: &MerkleProof<F>,
-    ) -> Result<MerklePathVars, CircuitError>;
+    ) -> Result<MerklePathVar, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
@@ -176,8 +176,8 @@ pub trait MerkleTreeGadget<F: PrimeField + RescueParameter> {
     ///   tree.
     fn compute_merkle_root(
         &mut self,
-        elem: AccElemVars,
-        path_vars: &MerklePathVars,
+        elem: CommittedElemVar,
+        path_vars: &MerklePathVar,
     ) -> Result<Variable, CircuitError>;
 }
 
@@ -188,17 +188,17 @@ where
     fn add_merkle_path_variable(
         &mut self,
         merkle_proof: &MerkleProof<F>,
-    ) -> Result<MerklePathVars, CircuitError> {
+    ) -> Result<MerklePathVar, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
-        let merkle_path = MerklePathBooleanEncoding::from(merkle_proof);
+        let merkle_path = MerkleProofBooleanEncoding::from(merkle_proof);
 
         self.constrain_merkle_path(&merkle_path)
     }
 
     fn compute_merkle_root(
         &mut self,
-        elem: AccElemVars,
-        path_vars: &MerklePathVars,
+        elem: CommittedElemVar,
+        path_vars: &MerklePathVar,
     ) -> Result<Variable, CircuitError> {
         let zero_var = self.zero();
 
@@ -245,22 +245,22 @@ where
 
     fn constrain_merkle_path(
         &mut self,
-        merkle_path: &MerklePathBooleanEncoding<F>,
-    ) -> Result<MerklePathVars, CircuitError> {
+        merkle_path: &MerkleProofBooleanEncoding<F>,
+    ) -> Result<MerklePathVar, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
             .nodes
             .clone()
             .into_iter()
-            .map(|node| -> Result<MerkleNodeVars, CircuitError> {
-                Ok(MerkleNodeVars {
+            .map(|node| -> Result<MerkleNodeVar, CircuitError> {
+                Ok(MerkleNodeVar {
                     sibling1: self.create_variable(node.sibling1)?,
                     sibling2: self.create_variable(node.sibling2)?,
                     is_left_child: self.create_boolean_variable(node.is_left_child)?,
                     is_right_child: self.create_boolean_variable(node.is_right_child)?,
                 })
             })
-            .collect::<Result<Vec<MerkleNodeVars>, CircuitError>>()?;
+            .collect::<Result<Vec<MerkleNodeVar>, CircuitError>>()?;
 
         // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
         // boolean
@@ -272,7 +272,7 @@ where
             self.enforce_bool(left_plus_right)?;
         }
 
-        Ok(MerklePathVars { nodes })
+        Ok(MerklePathVar { nodes })
     }
 }
 
@@ -280,7 +280,7 @@ where
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            AccElemVars, MerkleNodeBooleanEncoding, MerklePathBooleanEncoding, MerkleTreeGadget,
+            CommittedElemVar, MerkleNodeBooleanEncoding, MerkleProofBooleanEncoding, MerkleTreeGadget,
             MerkleTreeHelperGadget,
         },
         merkle_tree::{
@@ -317,7 +317,7 @@ mod test {
             let zero = F::zero();
             let one = F::one();
             let node = MerkleNodeBooleanEncoding::new(one, zero, is_left_child, is_right_child);
-            let path = MerklePathBooleanEncoding::new(&[node]);
+            let path = MerkleProofBooleanEncoding::new(&[node]);
             let _ = circuit.constrain_merkle_path(&path);
             if accept {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -447,8 +447,8 @@ mod test {
                 is_right_child: right,
             };
 
-            let expected_bool_path = MerklePathBooleanEncoding::new(&[expected_bool_node]);
-            let bool_path = MerklePathBooleanEncoding::from(&proof);
+            let expected_bool_path = MerkleProofBooleanEncoding::new(&[expected_bool_node]);
+            let bool_path = MerkleProofBooleanEncoding::from(&proof);
 
             assert_eq!(bool_path, expected_bool_path);
         }
@@ -475,7 +475,7 @@ mod test {
         let uid_var = circuit.create_variable(uid).unwrap();
         let comm_var = circuit.create_variable(comm).unwrap();
 
-        let elem = AccElemVars {
+        let elem = CommittedElemVar {
             uid: uid_var,
             elem: comm_var,
         };
@@ -505,7 +505,7 @@ mod test {
         let uid_var = circuit.create_variable(uid).unwrap();
         let comm_var = circuit.create_variable(comm).unwrap();
 
-        let elem = AccElemVars {
+        let elem = CommittedElemVar {
             uid: uid_var,
             elem: comm_var,
         };
