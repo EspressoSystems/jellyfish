@@ -6,7 +6,8 @@
 
 #![allow(missing_docs)]
 
-//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated with a Rescue hash function.
+//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated
+//! with a Rescue hash function.
 
 use crate::{
     circuit::rescue::RescueGadget,
@@ -21,7 +22,7 @@ use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
-type MerkleProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
+type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
 use typenum::U3;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -49,20 +50,22 @@ impl<F: PrimeField + RescueParameter> MerkleNodeBooleanEncoding<F> {
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-struct MerkleProofBooleanEncoding<F: PrimeField + RescueParameter> {
+struct MembershipProofBooleanEncoding<F: PrimeField + RescueParameter> {
     pub nodes: Vec<MerkleNodeBooleanEncoding<F>>,
 }
 
-impl<F: PrimeField + RescueParameter> MerkleProofBooleanEncoding<F> {
+impl<F: PrimeField + RescueParameter> MembershipProofBooleanEncoding<F> {
     fn new(nodes: &[MerkleNodeBooleanEncoding<F>]) -> Self {
-        MerkleProofBooleanEncoding {
+        MembershipProofBooleanEncoding {
             nodes: nodes.to_vec(),
         }
     }
 }
 
-impl<F: PrimeField + RescueParameter> From<&MerkleProof<F>> for MerkleProofBooleanEncoding<F> {
-    fn from(proof: &MerkleProof<F>) -> Self {
+impl<F: PrimeField + RescueParameter> From<&MembershipProof<F>>
+    for MembershipProofBooleanEncoding<F>
+{
+    fn from(proof: &MembershipProof<F>) -> Self {
         let path =
             <u64 as ToTraversalPath<U3>>::to_traversal_path(&proof.pos, proof.tree_height() - 1);
 
@@ -107,15 +110,15 @@ pub struct CommittedElemVar {
 
 /// Circuit variable for a membership proof.
 #[derive(Debug)]
-pub struct MerkleProofVar {
+pub struct MembershipProofVar {
     pub uid: Variable,
     pub merkle_path: MerklePathVar,
 }
 
-impl MerkleProofVar {
+impl MembershipProofVar {
     pub fn new<F, P>(
         circuit: &mut PlonkCircuit<F>,
-        acc_member_witness: &MerkleProof<F>,
+        acc_member_witness: &MembershipProof<F>,
     ) -> Result<Self, CircuitError>
     where
         F: RescueParameter,
@@ -152,7 +155,7 @@ trait MerkleTreeHelperGadget<F: PrimeField + RescueParameter> {
     /// * `returns` - list of variables corresponding to the authentication path
     fn constrain_merkle_path(
         &mut self,
-        merkle_path: &MerkleProofBooleanEncoding<F>,
+        merkle_path: &MembershipProofBooleanEncoding<F>,
     ) -> Result<MerklePathVar, CircuitError>;
 }
 
@@ -164,7 +167,7 @@ pub trait MerkleTreeGadget<F: PrimeField + RescueParameter> {
     /// * `returns` - list of variables corresponding to the authentication path
     fn add_merkle_path_variable(
         &mut self,
-        merkle_proof: &MerkleProof<F>,
+        merkle_proof: &MembershipProof<F>,
     ) -> Result<MerklePathVar, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
@@ -187,10 +190,10 @@ where
 {
     fn add_merkle_path_variable(
         &mut self,
-        merkle_proof: &MerkleProof<F>,
+        merkle_proof: &MembershipProof<F>,
     ) -> Result<MerklePathVar, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
-        let merkle_path = MerkleProofBooleanEncoding::from(merkle_proof);
+        let merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
 
         self.constrain_merkle_path(&merkle_path)
     }
@@ -245,7 +248,7 @@ where
 
     fn constrain_merkle_path(
         &mut self,
-        merkle_path: &MerkleProofBooleanEncoding<F>,
+        merkle_path: &MembershipProofBooleanEncoding<F>,
     ) -> Result<MerklePathVar, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
@@ -280,12 +283,13 @@ where
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            CommittedElemVar, MerkleNodeBooleanEncoding, MerkleProofBooleanEncoding,
+            CommittedElemVar, MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding,
             MerkleTreeGadget, MerkleTreeHelperGadget,
         },
         merkle_tree::{
             internal::MerkleNode,
-            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme, prelude::{RescueMerkleTree, RescueHash},
+            prelude::{RescueHash, RescueMerkleTree},
+            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -316,7 +320,7 @@ mod test {
             let zero = F::zero();
             let one = F::one();
             let node = MerkleNodeBooleanEncoding::new(one, zero, is_left_child, is_right_child);
-            let path = MerkleProofBooleanEncoding::new(&[node]);
+            let path = MembershipProofBooleanEncoding::new(&[node]);
             let _ = circuit.constrain_merkle_path(&path);
             if accept {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -446,8 +450,8 @@ mod test {
                 is_right_child: right,
             };
 
-            let expected_bool_path = MerkleProofBooleanEncoding::new(&[expected_bool_node]);
-            let bool_path = MerkleProofBooleanEncoding::from(&proof);
+            let expected_bool_path = MembershipProofBooleanEncoding::new(&[expected_bool_node]);
+            let bool_path = MembershipProofBooleanEncoding::from(&proof);
 
             assert_eq!(bool_path, expected_bool_path);
         }
