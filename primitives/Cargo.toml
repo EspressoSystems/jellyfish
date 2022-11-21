@@ -56,6 +56,10 @@ harness = false
 name = "pcs"
 harness = false
 
+[[bench]]
+name = "vrf"
+harness = false
+
 [features]
 default = ["parallel"]
 std = []
