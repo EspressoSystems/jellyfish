@@ -11,7 +11,7 @@
 use crate::{
     circuit::rescue::RescueGadget,
     merkle_tree::{
-        examples::RescueMerkleTree, internal::MerkleNode, MerkleTreeScheme, ToTraversalPath,
+        internal::MerkleNode, prelude::RescueMerkleTree, MerkleTreeScheme, ToTraversalPath,
     },
     rescue::RescueParameter,
 };
@@ -284,9 +284,8 @@ mod test {
             MerkleTreeGadget, MerkleTreeHelperGadget,
         },
         merkle_tree::{
-            examples::{RescueHash, RescueMerkleTree},
             internal::MerkleNode,
-            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme,
+            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme, prelude::{RescueMerkleTree, RescueHash},
         },
         rescue::RescueParameter,
     };

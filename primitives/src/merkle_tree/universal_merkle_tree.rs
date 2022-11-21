@@ -104,7 +104,9 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        merkle_tree::{examples::SparseMerkleTree, MerkleTreeScheme, UniversalMerkleTreeScheme},
+        merkle_tree::{
+            prelude::RescueSparseMerkleTree, MerkleTreeScheme, UniversalMerkleTreeScheme,
+        },
         rescue::RescueParameter,
     };
     use ark_ed_on_bls12_377::Fq as Fq377;
@@ -121,15 +123,16 @@ mod mt_tests {
     }
 
     fn test_universal_mt_builder_helper<F: RescueParameter>() {
-        let mt = SparseMerkleTree::<F, F>::from_kv_set(1, &[(BigUint::from(1u64), F::from(1u64))])
-            .unwrap();
+        let mt =
+            RescueSparseMerkleTree::<F, F>::from_kv_set(1, &[(BigUint::from(1u64), F::from(1u64))])
+                .unwrap();
         assert_eq!(mt.num_leaves(), 1);
 
         let mut hashmap = HashMap::new();
         hashmap.insert(BigUint::from(1u64), F::from(2u64));
         hashmap.insert(BigUint::from(2u64), F::from(2u64));
         hashmap.insert(BigUint::from(1u64), F::from(3u64));
-        let mt = SparseMerkleTree::<F, F>::from_kv_set(10, &hashmap).unwrap();
+        let mt = RescueSparseMerkleTree::<F, F>::from_kv_set(10, &hashmap).unwrap();
         assert_eq!(mt.num_leaves(), hashmap.len() as u64);
     }
 
@@ -145,7 +148,7 @@ mod mt_tests {
         hashmap.insert(BigUint::from(1u64), F::from(2u64));
         hashmap.insert(BigUint::from(2u64), F::from(2u64));
         hashmap.insert(BigUint::from(1u64), F::from(3u64));
-        let mt = SparseMerkleTree::<F, F>::from_kv_set(10, &hashmap).unwrap();
+        let mt = RescueSparseMerkleTree::<F, F>::from_kv_set(10, &hashmap).unwrap();
         assert_eq!(mt.num_leaves(), hashmap.len() as u64);
 
         let mut proof = mt
