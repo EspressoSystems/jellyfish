@@ -127,9 +127,9 @@ impl Vrf for BLSVRFScheme {
 #[cfg(test)]
 mod test {
     use super::*;
-    use ark_std::{test_rng, vec};
+    use ark_std::{rand::Rng, test_rng};
 
-    pub(crate) fn sign_and_verify(
+    pub(crate) fn sign_and_verify<H: Digest>(
         vrf: &mut BLSVRFScheme,
         message: &<BLSVRFScheme as Vrf>::Input,
         bad_message: &<BLSVRFScheme as Vrf>::Input,
@@ -139,11 +139,21 @@ mod test {
         let parameters = vrf.param_gen(Some(rng)).unwrap();
         let (sk, pk) = vrf.key_gen(&parameters, rng).unwrap();
         let vrf_proof = vrf.prove(&parameters, &sk, message, rng).unwrap();
-        let _vrf_output = vrf.proof_to_hash(&parameters, &vrf_proof).unwrap();
+        let vrf_output = vrf.proof_to_hash(&parameters, &vrf_proof).unwrap();
         let (is_correct, output) = vrf.verify(&parameters, &vrf_proof, &pk, message).unwrap();
         assert!(is_correct);
         // need to use the result
         assert!(output.is_some());
+
+        // check that proof_to_hash(proof) == evaluate(sk, message)
+        let out = vrf.evaluate(&parameters, &sk, &message, rng).unwrap();
+        assert_eq!(out, vrf_output);
+
+        // check the VRF output vs. hashing the proof directly
+        let mut hasher = H::new();
+        hasher.update(vrf_proof.serialize());
+        let direct_hash_output = hasher.finalize().to_vec();
+        assert_eq!(direct_hash_output, vrf_output);
 
         // now test for bad message. User can choose to ignore the output if they really
         // want to.
@@ -155,12 +165,17 @@ mod test {
 
     #[test]
     fn test_bls_vrf() {
-        let message = vec![0u8; 32];
-        let message_bad = vec![1u8; 32];
-        let mut blsvrf256 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA256);
-        sign_and_verify(&mut blsvrf256, &message, &message_bad);
+        let rng = &mut test_rng();
+        for _ in 0..10 {
+            let message = rng.gen::<[u8; 32]>().to_vec();
+            // bad message is truncated
+            let message_bad = message.clone()[..31].to_vec();
+            let mut blsvrf256 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA256);
 
-        let mut blsvrf512 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA512);
-        sign_and_verify(&mut blsvrf512, &message, &message_bad);
+            sign_and_verify::<Sha256>(&mut blsvrf256, &message, &message_bad);
+
+            let mut blsvrf512 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA512);
+            sign_and_verify::<Sha512>(&mut blsvrf512, &message, &message_bad);
+        }
     }
 }
