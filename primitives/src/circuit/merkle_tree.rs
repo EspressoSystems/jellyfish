@@ -6,7 +6,7 @@
 
 #![allow(missing_docs)]
 
-//! Circuit implementation of a Merkle tree.
+//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated with a Rescue hash function.
 
 use crate::{
     circuit::rescue::RescueGadget,
