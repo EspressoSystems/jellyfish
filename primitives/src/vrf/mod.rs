@@ -3,6 +3,7 @@
 use crate::errors::PrimitivesError;
 use ark_std::rand::{CryptoRng, RngCore};
 pub mod blsvrf;
+pub mod blsvrf_generic;
 pub mod ecvrf;
 
 /// A trait for VRF proof, evaluation and verification.

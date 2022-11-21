@@ -51,3 +51,16 @@
 | BN-254    |  70383 | 2.390 ms | 17.173 ms |
 | BW6-761   | 373141 | 13.656 ms | 44.023 ms |
 
+# VRF Benchmarks
+
+Using Sha512
+
+## With generic `<H: Digest>` parameter
+
+`blsvrf/hash_gen         time:   [319.84 ns 319.93 ns 320.04 ns]`
+
+## With dynamic trait: `Box<dyn DynDigest>`
+
+`blsvrf/hash dyn         time:   [360.90 ns 361.04 ns 361.18 ns]`
+
+The dynamic version is about 13% slower than the generic version.
