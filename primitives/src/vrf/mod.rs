@@ -59,6 +59,18 @@ pub trait Vrf {
         proof: &Self::Proof,
     ) -> Result<Self::Output, PrimitivesError>;
 
+    /// Computes the VRF output given a public input and a VRF secret key.
+    fn evaluate<R: CryptoRng + RngCore>(
+        &mut self,
+        pp: &Self::PublicParameter,
+        secret_key: &Self::SecretKey,
+        input: &Self::Input,
+        prng: &mut R,
+    ) -> Result<Self::Output, PrimitivesError> {
+        let proof = self.prove(pp, secret_key, input, prng)?;
+        self.proof_to_hash(pp, &proof)
+    }
+
     /// Verifies a VRF proof.
     #[must_use = "Output must be used"]
     fn verify(
