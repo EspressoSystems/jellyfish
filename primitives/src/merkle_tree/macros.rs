@@ -213,7 +213,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 
 /// Macros for implementing ToTreversalPath for primitive types
 #[macro_export]
-macro_rules! impl_to_treversal_path_primitives {
+macro_rules! impl_to_traversal_path_primitives {
     ($t: ty) => {
         impl<Arity: Unsigned> ToTraversalPath<Arity> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
@@ -231,7 +231,7 @@ macro_rules! impl_to_treversal_path_primitives {
 
 /// Macros for implementing ToTreversalPath for BigUint types
 #[macro_export]
-macro_rules! impl_to_treversal_path_biguint {
+macro_rules! impl_to_traversal_path_biguint {
     ($t: ty) => {
         impl<Arity: Unsigned> ToTraversalPath<Arity> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {

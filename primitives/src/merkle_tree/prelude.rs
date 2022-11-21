@@ -7,7 +7,7 @@
 //! Prelude
 
 pub use crate::{
-    impl_to_treversal_path_biguint, impl_to_treversal_path_primitives,
+    impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
     merkle_tree::{
         append_only::MerkleTree, universal_merkle_tree::UniversalMerkleTree,
         AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
