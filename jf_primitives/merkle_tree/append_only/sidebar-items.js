@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["MerkleTree","A standard append only Merkle tree implementation"]]};

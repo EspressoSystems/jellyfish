@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["RescueHash","Wrapper for rescue hash function"]],"type":[["RescueMerkleTree","A standard merkle tree using RATE-3 rescue hash function"],["RescueSparseMerkleTree","Example instantiation of a SparseMerkleTree indexed by BigUInt"]]};
