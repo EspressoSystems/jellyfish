@@ -21,8 +21,10 @@
 #![deny(warnings)]
 pub mod errors;
 mod rescue_constants;
+pub mod sponge;
 
 use ark_ff::{PrimeField, Zero};
+use ark_sponge::Absorb;
 use ark_std::{string::ToString, vec, vec::Vec};
 use errors::RescueError;
 use jf_utils::pad_with_zeros;
@@ -76,7 +78,7 @@ pub const RATE: usize = 3;
 pub const ROUNDS: usize = 12;
 
 /// This trait defines constants that are used for rescue hash functions.
-pub trait RescueParameter: PrimeField {
+pub trait RescueParameter: PrimeField + Absorb {
     /// parameter A, a.k.a., alpha
     const A: u64;
     /// parameter A^-1
@@ -91,7 +93,7 @@ pub trait RescueParameter: PrimeField {
     const PERMUTATION_ROUND_KEYS: [[&'static [u8]; 4]; 25];
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Copy)]
+#[derive(Clone, Debug, Eq, PartialEq, Copy, Default)]
 /// Data type for rescue prp inputs, keys and internal data
 pub struct RescueVector<F> {
     pub(crate) vec: [F; STATE_SIZE],
@@ -381,6 +383,7 @@ impl<F: RescueParameter> PRP<F> {
 
 /// Instance of a unkeyed cryptographic permutation to be used for instantiation
 /// hashing, pseudo-random function, and other cryptographic primitives
+#[derive(Clone)]
 pub struct Permutation<F> {
     rescue_prp: PRP<F>,
     round_keys: Vec<RescueVector<F>>,
@@ -958,31 +961,6 @@ mod test_permutation {
         ];
         let real_output = rescue.sponge_no_padding(&input, 3).unwrap();
         assert_eq!(real_output, expected);
-    }
-
-    #[test]
-    fn test_sponge_no_padding_errors() {
-        test_sponge_no_padding_errors_helper::<Fr254>();
-        test_sponge_no_padding_errors_helper::<Fr377>();
-        test_sponge_no_padding_errors_helper::<Fr381>();
-        test_sponge_no_padding_errors_helper::<Fq377>();
-    }
-    fn test_sponge_no_padding_errors_helper<F: RescueParameter>() {
-        let rescue = Permutation::default();
-
-        let input = vec![F::from(9u64); 3];
-        assert!(rescue.sponge_no_padding(input.as_slice(), 1).is_ok());
-        let input = vec![F::from(9u64); 12];
-        assert!(rescue.sponge_no_padding(input.as_slice(), 1).is_ok());
-
-        // test should panic because number of inputs is not multiple of 3
-        let input = vec![F::from(9u64); 10];
-        assert!(rescue.sponge_no_padding(input.as_slice(), 1).is_err());
-        let input = vec![F::from(9u64)];
-        assert!(rescue.sponge_no_padding(input.as_slice(), 1).is_err());
-
-        let input = vec![];
-        assert!(rescue.sponge_no_padding(input.as_slice(), 1).is_ok());
     }
 
     #[test]
