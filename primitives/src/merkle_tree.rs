@@ -31,10 +31,14 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use core::{convert::TryFrom, fmt::Debug};
+use core::{
+    convert::{TryFrom, TryInto},
+    fmt::Debug,
+};
 use espresso_systems_common::jellyfish::tag;
-use jf_utils::tagged_blob;
+use jf_utils::field_elem;
 use serde::{Deserialize, Serialize};
+use tagged_base64::tagged;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Deserialize, Serialize)]
 /// Enum for identifying a position of a node (left, middle or right).
@@ -192,7 +196,7 @@ impl<F: PrimeField> MerklePath<F> {
 }
 
 /// Represents the value for a node in the merkle tree.
-#[tagged_blob(tag::NODE)]
+#[tagged(tag::NODE)]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]
@@ -337,7 +341,7 @@ where
     Leaf {
         value: NodeValue<F>,
         uid: u64,
-        #[serde(with = "jf_utils::field_elem")]
+        #[serde(with = "field_elem")]
         elem: F,
     },
 }
@@ -820,7 +824,7 @@ where
 }
 
 /// Data struct for a merkle leaf.
-#[tagged_blob(tag::LEAF)]
+#[tagged(tag::LEAF)]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]

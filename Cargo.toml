@@ -4,5 +4,4 @@ members = [
   "primitives",
   "relation",
   "utilities",
-  "utilities_derive",
 ]
