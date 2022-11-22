@@ -16,7 +16,7 @@ macro_rules! impl_merkle_tree_scheme {
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64>,
+            I: Index,
             Arity: Unsigned,
             T: NodeValue,
         {
