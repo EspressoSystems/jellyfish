@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["CommittedElemVar","Circuit variable for an accumulated element."],["MembershipProofVar","Circuit variable for a membership proof."],["MerkleNodeVar","Circuit variable for a Merkle node."],["MerklePathVar","Circuit variable for a Merkle authentication path."]],"trait":[["MerkleTreeGadget","Circuit implementation of a Merkle tree."]]};
