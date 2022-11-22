@@ -12,12 +12,13 @@ use super::{
 use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
-    borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
+    borrow::Borrow, boxed::Box, convert::TryInto, format, iter::Peekable, string::ToString, vec,
+    vec::Vec,
 };
 use itertools::Itertools;
-use jf_utils::tagged_blob;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
+use tagged_base64::tagged;
 use typenum::Unsigned;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -64,7 +65,7 @@ where
 #[derive(
     Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash, CanonicalSerialize, CanonicalDeserialize,
 )]
-#[tagged_blob("MERKLE_COMM")]
+#[tagged("MERKLE_COMM")]
 pub struct MerkleTreeCommitment<T: NodeValue> {
     /// Root of a tree
     digest: T,

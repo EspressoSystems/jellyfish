@@ -11,6 +11,3 @@ pub const CS_ID_SCHNORR: &str = "SCHNORR_WITH_RESCUE_HASH_v01";
 
 /// ciphersuite identifier for BLS signature
 pub const CS_ID_BLS_SIG_NAIVE: &str = "BLS_SIG_WITH_NAIVE_HtG_v01";
-
-/// ciphersuite identifier for BLS VRF
-pub const CS_ID_BLS_VRF_NAIVE: &str = "BLS_VRF_WITH_NAIVE_HtG_v01";

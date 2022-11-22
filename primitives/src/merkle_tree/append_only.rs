@@ -76,7 +76,6 @@ mod mt_tests {
     use ark_ed_on_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_381::Fq as Fq381;
     use ark_ed_on_bn254::Fq as Fq254;
-    use ark_std::test_rng;
 
     #[test]
     fn test_mt_builder() {
@@ -119,50 +118,42 @@ mod mt_tests {
     }
 
     fn test_mt_lookup_helper<F: RescueParameter>() {
-        let rng = &mut test_rng();
-        for capacity in 1..27_usize {
-            let elements = vec![F::rand(rng); capacity];
-            let mt = RescueMerkleTree::<F>::from_elems(3, &elements).unwrap();
+        let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
+        assert_eq!(elem, F::from(3u64));
+        assert_eq!(proof.tree_height(), 3);
+        assert!(mt.verify(0u64, &proof).unwrap());
 
-            for (i, _elem) in elements.iter().enumerate() {
-                let (elem, proof) = mt.lookup(i as u64).expect_ok().unwrap();
-                assert_eq!(elem, elements[i]);
-                assert_eq!(proof.tree_height(), 4);
-                assert!(mt.verify(i as u64, &proof).unwrap());
-            }
-
-            let (_elem, proof) = mt.lookup(0u64).expect_ok().unwrap();
-            let mut bad_proof = proof.clone();
-            if let MerkleNode::Leaf {
-                value: _,
-                pos: _,
-                elem,
-            } = &mut bad_proof.proof[0]
-            {
-                *elem += F::one();
-            } else {
-                unreachable!()
-            }
-
-            let result = mt.verify(0u64, &bad_proof);
-            assert!(result.is_ok() && !result.unwrap());
-
-            let mut forge_proof = MerkleProof::new(2, proof.proof);
-            if let MerkleNode::Leaf {
-                value: _,
-                pos,
-                elem,
-            } = &mut forge_proof.proof[0]
-            {
-                *pos = 2;
-                *elem = F::from(0u64);
-            } else {
-                unreachable!()
-            }
-            let result = mt.verify(2u64, &forge_proof);
-            assert!(result.is_ok());
-            assert!(!result.unwrap());
+        let mut bad_proof = proof.clone();
+        if let MerkleNode::Leaf {
+            value: _,
+            pos: _,
+            elem,
+        } = &mut bad_proof.proof[0]
+        {
+            *elem = F::from(4u64);
+        } else {
+            unreachable!()
         }
+
+        let result = mt.verify(0u64, &bad_proof);
+        assert!(result.is_ok() && !result.unwrap());
+
+        let mut forge_proof = MerkleProof::new(2, proof.proof);
+        if let MerkleNode::Leaf {
+            value: _,
+            pos,
+            elem,
+        } = &mut forge_proof.proof[0]
+        {
+            *pos = 2;
+            *elem = F::from(0u64);
+        } else {
+            unreachable!()
+        }
+        let result = mt.verify(2u64, &forge_proof);
+        assert!(result.is_ok());
+        assert!(!result.unwrap());
     }
 
     #[test]

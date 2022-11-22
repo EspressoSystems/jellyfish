@@ -15,7 +15,7 @@ pub(crate) mod internal;
 pub mod prelude;
 
 use crate::{
-    errors::PrimitivesError, impl_to_treversal_path_biguint, impl_to_treversal_path_primitives,
+    errors::PrimitivesError, impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec::Vec};
@@ -126,13 +126,13 @@ pub trait ToTraversalPath<Arity: Unsigned> {
     fn to_traversal_path(&self, height: usize) -> Vec<usize>;
 }
 
-impl_to_treversal_path_primitives!(usize);
-impl_to_treversal_path_primitives!(u8);
-impl_to_treversal_path_primitives!(u16);
-impl_to_treversal_path_primitives!(u32);
-impl_to_treversal_path_primitives!(u64);
-impl_to_treversal_path_biguint!(u128);
-impl_to_treversal_path_biguint!(BigUint);
+impl_to_traversal_path_primitives!(usize);
+impl_to_traversal_path_primitives!(u8);
+impl_to_traversal_path_primitives!(u16);
+impl_to_traversal_path_primitives!(u32);
+impl_to_traversal_path_primitives!(u64);
+impl_to_traversal_path_biguint!(u128);
+impl_to_traversal_path_biguint!(BigUint);
 
 /// Trait for a succint merkle tree commitment
 pub trait MerkleCommitment<T: NodeValue>:
@@ -156,34 +156,6 @@ pub trait MerkleCommitment<T: NodeValue>:
     fn size(&self) -> u64;
 }
 
-/// A merkle commitment consists a root hash value, a tree height and number of
-/// leaves
-// #[derive(
-//     Eq, PartialEq, Clone, Copy, Serialize, Deserialize, CanonicalSerialize, CanonicalDeserialize,
-// )]
-// pub struct MerkleCommitment<T: NodeValue + CanonicalSerialize + CanonicalDeserialize> {
-//     /// Root of a tree
-//     digest: T,
-//     /// Height of a tree
-//     height: usize,
-//     /// Number of leaves in the tree
-//     num_leaves: u64,
-// }
-
-// impl<T: NodeValue + CanonicalSerialize + CanonicalDeserialize> MerkleCommitment<T> {
-//     fn digest(&self) -> T {
-//         self.digest
-//     }
-
-//     fn height(&self) -> usize {
-//         self.height
-//     }
-
-//     fn size(&self) -> u64 {
-//         self.num_leaves
-//     }
-// }
-
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
 /// accumulator for fixed-length array. Supports generate membership proof at a
 /// given position and verify a membership proof.
@@ -199,7 +171,7 @@ pub trait MerkleTreeScheme: Sized {
     /// Batch proof
     type BatchMembershipProof: Clone;
     /// Merkle tree commitment
-    type Commitment: Clone;
+    type Commitment: MerkleCommitment<Self::NodeValue>;
 
     /// Tree arity
     const ARITY: usize;
