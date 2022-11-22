@@ -13,14 +13,14 @@ use criterion::Criterion;
 use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, MerkleTreeScheme};
 use std::time::Duration;
 
-// const BENCH_NAME: &str = "merkle_path_height_20";
+const BENCH_NAME: &str = "merkle_path_height_20";
 
 fn twenty_hashes(_c: &mut Criterion) {
-    // let mut benchmark_group = c.benchmark_group(BENCH_NAME);
-    // benchmark_group.sample_size(10);
-    // benchmark_group.measurement_time(Duration::new(10, 0));
+    let mut benchmark_group = c.benchmark_group(BENCH_NAME);
+    benchmark_group.sample_size(10);
+    benchmark_group.measurement_time(Duration::new(10, 0));
 
-    // let mut rng = ark_std::test_rng();
+    let mut rng = ark_std::test_rng();
 
     let leaf: Fq381 = rng.gen();
 
