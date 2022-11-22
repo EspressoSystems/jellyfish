@@ -15,7 +15,7 @@ use std::time::Duration;
 
 const BENCH_NAME: &str = "merkle_path_height_20";
 
-fn twenty_hashes(_c: &mut Criterion) {
+fn twenty_hashes(c: &mut Criterion) {
     let mut benchmark_group = c.benchmark_group(BENCH_NAME);
     benchmark_group.sample_size(10);
     benchmark_group.measurement_time(Duration::new(10, 0));
