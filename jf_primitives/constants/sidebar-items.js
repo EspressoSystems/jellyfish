@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["CS_ID_BLS_SIG_NAIVE","ciphersuite identifier for BLS signature"],["CS_ID_BLS_VRF_NAIVE","ciphersuite identifier for BLS VRF"],["CS_ID_SCHNORR","ciphersuite identifier for schnorr signature"]]};
+window.SIDEBAR_ITEMS = {"constant":[["CS_ID_BLS_SIG_NAIVE","ciphersuite identifier for BLS signature"],["CS_ID_SCHNORR","ciphersuite identifier for schnorr signature"]]};

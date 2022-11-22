@@ -109,30 +109,124 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
 </pre><pre class="rust"><code><span class="doccomment">//! BLS signature based VRF
-
 </span><span class="kw">use </span><span class="kw">super</span>::Vrf;
 <span class="kw">use crate</span>::{
-    constants::CS_ID_BLS_VRF_NAIVE,
     errors::PrimitivesError,
     signatures::{
         bls::{BLSSignKey, BLSSignature, BLSVerKey},
         BLSSignatureScheme, SignatureScheme,
     },
 };
-<span class="kw">use </span>ark_std::rand::{CryptoRng, RngCore};
-<span class="kw">use </span>digest::Digest;
+<span class="kw">use </span>ark_std::{
+    boxed::Box,
+    rand::{CryptoRng, RngCore},
+    vec::Vec,
+};
+<span class="kw">use </span>digest::{Digest, DynDigest};
+<span class="kw">use </span>sha2::{Sha256, Sha512};
+
+<span class="doccomment">/// Supported Cipher Suites for BLS VRF.
+</span><span class="attribute">#[allow(non_camel_case_types)]
+#[derive(Debug)]
+</span><span class="kw">pub enum </span>BLSVRFCipherSuite {
+    <span class="doccomment">/// using blst library and VRF output from SHA256 hashing
+    </span>VRF_BLS_12_381_SHA256,
+    <span class="doccomment">/// using blst library and VRF output from SHA512 hashing
+    </span>VRF_BLS_12_381_SHA512,
+}
 
 <span class="doccomment">/// BLS VRF scheme.
 /// Optimized for signature size, i.e.: PK in G2 and sig in G1
-</span><span class="kw">pub struct </span>BLSVRFScheme;
+</span><span class="kw">pub struct </span>BLSVRFScheme {
+    hasher: Box&lt;<span class="kw">dyn </span>DynDigest&gt;,
+}
 
-<span class="kw">impl</span>&lt;H&gt; Vrf&lt;H&gt; <span class="kw">for </span>BLSVRFScheme
-<span class="kw">where
-    </span>H: Digest,
-{
-    <span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = CS_ID_BLS_VRF_NAIVE;
+<span class="kw">impl </span>BLSVRFScheme {
+    <span class="doccomment">/// Creates a new BLS VRF instance with the given ciphersuite.
+    </span><span class="kw">pub fn </span>new(cs_id: BLSVRFCipherSuite) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>cs_id {
+            BLSVRFCipherSuite::VRF_BLS_12_381_SHA256 =&gt; <span class="self">Self </span>{
+                hasher: Box::new(Sha256::new()),
+            },
+            BLSVRFCipherSuite::VRF_BLS_12_381_SHA512 =&gt; <span class="self">Self </span>{
+                hasher: Box::new(Sha512::new()),
+            },
+        }
+    }
+}
 
+<span class="kw">impl </span>Vrf <span class="kw">for </span>BLSVRFScheme {
     <span class="doccomment">/// Public Parameter.
     /// For BLS signatures, we want to use default
     /// prime subgroup generators. So here we don&#39;t need
@@ -149,13 +243,14 @@
     </span><span class="kw">type </span>Proof = BLSSignature;
 
     <span class="doccomment">/// The input of VRF proof.
-    </span><span class="kw">type </span>Input = [u8; <span class="number">32</span>];
+    </span><span class="kw">type </span>Input = Vec&lt;u8&gt;;
 
     <span class="doccomment">/// The output of VRF evaluation.
-    </span><span class="kw">type </span>Output = [u8; <span class="number">32</span>];
+    </span><span class="kw">type </span>Output = Vec&lt;u8&gt;;
 
     <span class="doccomment">/// generate public parameters from RNG.
     </span><span class="kw">fn </span>param_gen&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         _prng: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>R&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::PublicParameter, PrimitivesError&gt; {
         <span class="prelude-val">Ok</span>(())
@@ -163,6 +258,7 @@
 
     <span class="doccomment">/// Creates a pair of VRF public and private keys.
     </span><span class="kw">fn </span>key_gen&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         prng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::SecretKey, <span class="self">Self</span>::PublicKey), PrimitivesError&gt; {
@@ -171,6 +267,7 @@
 
     <span class="doccomment">/// Creates the VRF proof associated with a VRF secret key.
     </span><span class="kw">fn </span>prove&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         secret_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::SecretKey,
         input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
@@ -180,44 +277,87 @@
     }
 
     <span class="doccomment">/// Computes the VRF output associated with a VRF proof.
-    </span><span class="kw">fn </span>evaluate(
+    </span><span class="kw">fn </span>proof_to_hash(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt; {
         <span class="kw">let </span>proof_serialized = proof.serialize();
-        <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
-        hasher.update(proof_serialized);
-        <span class="kw">let </span><span class="kw-2">mut </span>output = [<span class="number">0u8</span>; <span class="number">32</span>];
-        output.copy_from_slice(hasher.finalize().as_ref());
-        <span class="prelude-val">Ok</span>(output)
+        <span class="kw">let </span><span class="kw-2">mut </span>hasher = (<span class="kw-2">*</span><span class="self">self</span>.hasher).box_clone();
+        hasher.update(<span class="kw-2">&amp;</span>proof_serialized);
+        <span class="kw">let </span>output = hasher.finalize();
+        <span class="prelude-val">Ok</span>(output.to_vec())
     }
 
     <span class="doccomment">/// Verifies a VRF proof.
     </span><span class="kw">fn </span>verify(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
         public_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicKey,
         input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PrimitivesError&gt; {
-        <span class="kw">if </span>&lt;BLSSignatureScheme <span class="kw">as </span>SignatureScheme&gt;::verify(pp, public_key, input, proof).is_err() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(bool, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Output&gt;), PrimitivesError&gt; {
+        <span class="kw">if </span>&lt;BLSSignatureScheme <span class="kw">as </span>SignatureScheme&gt;::verify(pp, public_key, input, proof).is_ok() {
+            <span class="prelude-val">Ok</span>((<span class="bool-val">true</span>, <span class="prelude-val">Some</span>(<span class="self">Self</span>::proof_to_hash(<span class="self">self</span>, pp, proof).unwrap())))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>((<span class="bool-val">false</span>, <span class="prelude-val">None</span>))
         }
-        <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
     }
 }
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::vrf::tests::{failed_verification, sign_and_verify};
-    <span class="kw">use </span>sha2::Sha256;
+    <span class="kw">use </span>ark_std::{rand::Rng, test_rng};
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sign_and_verify&lt;H: Digest&gt;(
+        vrf: <span class="kw-2">&amp;mut </span>BLSVRFScheme,
+        message: <span class="kw-2">&amp;</span>&lt;BLSVRFScheme <span class="kw">as </span>Vrf&gt;::Input,
+        bad_message: <span class="kw-2">&amp;</span>&lt;BLSVRFScheme <span class="kw">as </span>Vrf&gt;::Input,
+    ) {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+
+        <span class="kw">let </span>parameters = vrf.param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
+        <span class="kw">let </span>(sk, pk) = vrf.key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+        <span class="kw">let </span>vrf_proof = vrf.prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+        <span class="kw">let </span>vrf_output = vrf.proof_to_hash(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
+        <span class="kw">let </span>(is_correct, output) = vrf.verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, message).unwrap();
+        <span class="macro">assert!</span>(is_correct);
+        <span class="comment">// need to use the result
+        </span><span class="macro">assert!</span>(output.is_some());
+
+        <span class="comment">// check that proof_to_hash(proof) == evaluate(sk, message)
+        </span><span class="kw">let </span>out = vrf.evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, <span class="kw-2">&amp;</span>message, rng).unwrap();
+        <span class="macro">assert_eq!</span>(out, vrf_output);
+
+        <span class="comment">// check the VRF output vs. hashing the proof directly
+        </span><span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
+        hasher.update(vrf_proof.serialize());
+        <span class="kw">let </span>direct_hash_output = hasher.finalize().to_vec();
+        <span class="macro">assert_eq!</span>(direct_hash_output, vrf_output);
+
+        <span class="comment">// now test for bad message. User can choose to ignore the output if they really
+        // want to.
+        </span><span class="kw">let </span>(is_correct, <span class="kw">_</span>) = vrf
+            .verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, bad_message)
+            .unwrap();
+        <span class="macro">assert!</span>(!is_correct);
+    }
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>test_bls_vrf() {
-        <span class="kw">let </span>message = [<span class="number">0u8</span>; <span class="number">32</span>];
-        <span class="kw">let </span>message_bad = [<span class="number">1u8</span>; <span class="number">32</span>];
-        sign_and_verify::&lt;BLSVRFScheme, Sha256&gt;(<span class="kw-2">&amp;</span>message);
-        failed_verification::&lt;BLSVRFScheme, Sha256&gt;(<span class="kw-2">&amp;</span>message, <span class="kw-2">&amp;</span>message_bad);
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+            <span class="kw">let </span>message = rng.gen::&lt;[u8; <span class="number">32</span>]&gt;().to_vec();
+            <span class="comment">// bad message is truncated
+            </span><span class="kw">let </span>message_bad = message.clone()[..<span class="number">31</span>].to_vec();
+            <span class="kw">let </span><span class="kw-2">mut </span>blsvrf256 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA256);
+
+            sign_and_verify::&lt;Sha256&gt;(<span class="kw-2">&amp;mut </span>blsvrf256, <span class="kw-2">&amp;</span>message, <span class="kw-2">&amp;</span>message_bad);
+
+            <span class="kw">let </span><span class="kw-2">mut </span>blsvrf512 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA512);
+            sign_and_verify::&lt;Sha512&gt;(<span class="kw-2">&amp;mut </span>blsvrf512, <span class="kw-2">&amp;</span>message, <span class="kw-2">&amp;</span>message_bad);
+        }
     }
 }
 </code></pre></div>

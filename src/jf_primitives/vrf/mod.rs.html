@@ -81,23 +81,6 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-<span id="88">88</span>
-<span id="89">89</span>
-<span id="90">90</span>
-<span id="91">91</span>
-<span id="92">92</span>
-<span id="93">93</span>
-<span id="94">94</span>
-<span id="95">95</span>
-<span id="96">96</span>
-<span id="97">97</span>
-<span id="98">98</span>
-<span id="99">99</span>
-<span id="100">100</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for verifiable random functions.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
@@ -106,10 +89,7 @@
 <span class="kw">pub mod </span>ecvrf;
 
 <span class="doccomment">/// A trait for VRF proof, evaluation and verification.
-</span><span class="kw">pub trait </span>Vrf&lt;VrfHasher&gt; {
-    <span class="doccomment">/// ciphersuite identifier
-    </span><span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
-
+</span><span class="kw">pub trait </span>Vrf {
     <span class="doccomment">/// Public parameters
     </span><span class="kw">type </span>PublicParameter;
 
@@ -135,17 +115,20 @@
     //   `S::param_gen::&lt;StdRng&gt;(None)`
     // wheere `StdRng` is redundent.
     </span><span class="kw">fn </span>param_gen&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>R&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::PublicParameter, PrimitivesError&gt;;
 
     <span class="doccomment">/// Creates a pair of VRF public and private keys.
     </span><span class="kw">fn </span>key_gen&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         prng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::SecretKey, <span class="self">Self</span>::PublicKey), PrimitivesError&gt;;
 
     <span class="doccomment">/// Creates the VRF proof associated with a VRF secret key.
     </span><span class="kw">fn </span>prove&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         secret_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::SecretKey,
         input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
@@ -153,50 +136,33 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Proof, PrimitivesError&gt;;
 
     <span class="doccomment">/// Computes the VRF output associated with a VRF proof.
-    </span><span class="kw">fn </span>evaluate(
+    </span><span class="kw">fn </span>proof_to_hash(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt;;
 
+    <span class="doccomment">/// Computes the VRF output given a public input and a VRF secret key.
+    </span><span class="kw">fn </span>evaluate&lt;R: CryptoRng + RngCore&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        secret_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::SecretKey,
+        input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
+        prng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt; {
+        <span class="kw">let </span>proof = <span class="self">self</span>.prove(pp, secret_key, input, prng)<span class="question-mark">?</span>;
+        <span class="self">self</span>.proof_to_hash(pp, <span class="kw-2">&amp;</span>proof)
+    }
+
     <span class="doccomment">/// Verifies a VRF proof.
+    </span><span class="attribute">#[must_use = <span class="string">&quot;Output must be used&quot;</span>]
     </span><span class="kw">fn </span>verify(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
         public_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicKey,
         input: <span class="kw-2">&amp;</span><span class="self">Self</span>::Input,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PrimitivesError&gt;;
-}
-
-<span class="attribute">#[cfg(test)]
-</span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span>ark_std::{rand::prelude::StdRng, test_rng};
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sign_and_verify&lt;V: Vrf&lt;H&gt;, H&gt;(message: <span class="kw-2">&amp;</span>V::Input) {
-        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
-        <span class="kw">let </span>parameters = V::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
-        <span class="kw">let </span>(sk, pk) = V::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
-        <span class="kw">let </span>vrf_proof = V::prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
-        <span class="kw">let </span>_vrf_output = V::evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
-        <span class="macro">assert!</span>(V::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, message).unwrap());
-
-        <span class="kw">let </span>parameters = V::param_gen::&lt;StdRng&gt;(<span class="prelude-val">None</span>).unwrap();
-        <span class="kw">let </span>(sk, pk) = V::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
-        <span class="kw">let </span>vrf_proof = V::prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
-        <span class="kw">let </span>_vrf_output = V::evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
-
-        <span class="macro">assert!</span>(V::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, message).unwrap());
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>failed_verification&lt;V: Vrf&lt;H&gt;, H&gt;(message: <span class="kw-2">&amp;</span>V::Input, bad_message: <span class="kw-2">&amp;</span>V::Input) {
-        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
-        <span class="kw">let </span>parameters = V::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
-        <span class="kw">let </span>(sk, pk) = V::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
-        <span class="kw">let </span>vrf_proof = V::prove(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
-        <span class="kw">let </span>_vrf_output = V::evaluate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof).unwrap();
-
-        <span class="macro">assert!</span>(!V::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>vrf_proof, <span class="kw-2">&amp;</span>pk, bad_message).unwrap());
-    }
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(bool, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Output&gt;), PrimitivesError&gt;;
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
