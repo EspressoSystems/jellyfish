@@ -6,11 +6,8 @@
 
 //! Various serialization functions.
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{marker::PhantomData, string::String, vec::Vec};
-use displaydoc::Display;
+use ark_std::vec::Vec;
 use serde::{Deserialize, Serialize};
-use tagged_base64::{TaggedBase64, Tb64Error};
 
 /// A helper for converting CanonicalSerde bytes to standard Serde bytes.
 /// use this struct as intermediate target instead of directly deriving
@@ -44,196 +41,6 @@ macro_rules! deserialize_canonical_bytes {
     };
 }
 
-/// Trait for types whose serialization is not human-readable.
-///
-/// Such types have a human-readable tag which is used to identify tagged base
-/// 64 blobs representing a serialization of that type.
-///
-/// Rather than implement this trait manually, it is recommended to use the
-/// [macro@tagged_blob] macro to specify a tag for your type. That macro also
-/// derives appropriate serde implementations for serializing as an opaque blob.
-pub trait Tagged {
-    fn tag() -> String;
-}
-
-/// Helper type for serializing tagged blobs.
-///
-/// A type which can only be serialized using ark_serialize (for example,
-/// cryptographic primitives) can derive serde implementations using `serde(from
-/// = "TaggedBlob<T>", into = "TaggedBlob<T>")`. The serde implementations for
-/// TaggedBlob generate either a packed bytes encoding, if the serialization
-/// format is binary, or a tagged base 64 encoding, if the serialization format
-/// is human-readable.
-///
-/// Types which are serialized using TaggedBlob can then be embedded as fields
-/// in structs which derive serde implementations, and those structs can then be
-/// serialized using an efficient binary encoding or a browser-friendly,
-/// human-readable encoding like JSON.
-///
-/// Rather than manually tag types with `serde(from = "TaggedBlob<T>", into =
-/// "TaggedBlob<T>")`, it is recommended to use the [macro@tagged_blob] macro,
-/// which will automatically add the appropriate serde attributes as well as the
-/// necessary [Tagged] and [From] implementations to allow `serde(from)` to
-/// work.
-#[derive(Deserialize, Serialize)]
-#[serde(transparent)]
-pub struct TaggedBlob<T: Tagged> {
-    #[serde(with = "tagged_blob")]
-    inner: (CanonicalBytes, PhantomData<T>),
-}
-
-impl<T: Tagged> TaggedBlob<T> {
-    pub fn bytes(&self) -> &CanonicalBytes {
-        &self.inner.0
-    }
-
-    pub fn tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
-        TaggedBase64::new(T::tag().as_str(), &self.inner.0 .0)
-    }
-}
-
-impl<T: Tagged + CanonicalSerialize + CanonicalDeserialize> From<T> for TaggedBlob<T> {
-    fn from(v: T) -> Self {
-        Self {
-            inner: (CanonicalBytes::from(v), Default::default()),
-        }
-    }
-}
-
-impl<T: Tagged + CanonicalSerialize + CanonicalDeserialize> From<&T> for TaggedBlob<T> {
-    fn from(v: &T) -> Self {
-        let mut bytes = Vec::new();
-        v.serialize(&mut bytes)
-            .expect("fail to serialize to canonical bytes");
-        Self {
-            inner: (CanonicalBytes(bytes), Default::default()),
-        }
-    }
-}
-
-#[derive(Debug, Display)]
-pub enum TaggedBlobError {
-    /// TaggedBase64 parsing failure
-    Base64Error { source: Tb64Error },
-    /// CanonicalSerialize failure
-    DeserializationError {
-        source: ark_serialize::SerializationError,
-    },
-}
-
-impl<T: Tagged> ark_std::str::FromStr for TaggedBlob<T> {
-    type Err = TaggedBlobError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let tb64 =
-            TaggedBase64::parse(s).map_err(|source| TaggedBlobError::Base64Error { source })?;
-        if tb64.tag() == T::tag() {
-            Ok(Self {
-                inner: (CanonicalBytes(tb64.value()), Default::default()),
-            })
-        } else {
-            Err(TaggedBlobError::Base64Error {
-                source: Tb64Error::InvalidTag,
-            })
-        }
-    }
-}
-
-pub mod tagged_blob {
-    use super::*;
-    use ark_std::format;
-    use serde::{
-        de::{Deserializer, Error as DeError},
-        ser::{Error as SerError, Serializer},
-    };
-
-    pub fn serialize_with_tag<S: Serializer>(
-        tag: &str,
-        bytes: &CanonicalBytes,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error> {
-        if serializer.is_human_readable() {
-            let string = tagged_base64::to_string(
-                &TaggedBase64::new(tag, &bytes.0)
-                    .map_err(|err| S::Error::custom(format!("{}", err)))?,
-            );
-            Serialize::serialize(&string, serializer)
-        } else {
-            Serialize::serialize(&bytes.0, serializer)
-        }
-    }
-
-    pub fn serialize<S: Serializer, T: Tagged>(
-        v: &(CanonicalBytes, PhantomData<T>),
-        serializer: S,
-    ) -> Result<S::Ok, S::Error> {
-        serialize_with_tag(T::tag().as_str(), &v.0, serializer)
-    }
-
-    pub fn deserialize_with_tag<'de, D: Deserializer<'de>>(
-        tag: &str,
-        deserializer: D,
-    ) -> Result<CanonicalBytes, D::Error> {
-        let bytes = if deserializer.is_human_readable() {
-            let string = <String as Deserialize>::deserialize(deserializer)?;
-            let tb64 =
-                TaggedBase64::parse(&string).map_err(|err| D::Error::custom(format!("{}", err)))?;
-            if tb64.tag() == tag {
-                tb64.value()
-            } else {
-                return Err(D::Error::custom(format!(
-                    "tag mismatch: expected {}, but got {}",
-                    tag,
-                    tb64.tag()
-                )));
-            }
-        } else {
-            <Vec<u8> as Deserialize>::deserialize(deserializer)?
-        };
-        Ok(CanonicalBytes(bytes))
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>, T: Tagged>(
-        deserializer: D,
-    ) -> Result<(CanonicalBytes, PhantomData<T>), D::Error> {
-        let bytes = deserialize_with_tag(T::tag().as_str(), deserializer)?;
-        Ok((bytes, Default::default()))
-    }
-
-    #[cfg(test)]
-    mod test {
-        use crate as jf_utils;
-        use ark_serialize::*;
-        use jf_utils::tagged_blob;
-        use std::vec::Vec;
-
-        #[tagged_blob("A")]
-        #[derive(Debug, Clone, PartialEq, Eq, CanonicalDeserialize, CanonicalSerialize)]
-        pub struct A(Vec<u8>);
-
-        #[test]
-        fn test_tagged_blob_static_str() {
-            let a = A(Vec::new());
-            let str = serde_json::to_string(&a).unwrap();
-            assert_eq!(str, r#""A~AAAAAAAAAABr""#);
-        }
-
-        mod tags {
-            pub const B: &str = "B";
-        }
-        #[tagged_blob(tags::B)]
-        #[derive(Debug, Clone, PartialEq, Eq, CanonicalDeserialize, CanonicalSerialize)]
-        pub struct B(Vec<u8>);
-
-        #[test]
-        fn test_tagged_blob_const_str() {
-            let b = B(Vec::new());
-            let str = serde_json::to_string(&b).unwrap();
-            assert_eq!(str, r#""B~AAAAAAAAAADg""#);
-        }
-    }
-}
-
 /// Serializers for finite field elements.
 ///
 /// Field elements are typically foreign types that we cannot apply the
@@ -242,11 +49,13 @@ pub mod tagged_blob {
 /// definition.
 pub mod field_elem {
     use super::*;
+    use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::format;
     use serde::{
         de::{Deserializer, Error as DeError},
         ser::{Error as SerError, Serializer},
     };
+    use tagged_base64::TaggedBase64;
 
     pub fn serialize<S: Serializer, T: CanonicalSerialize>(
         elem: &T,
@@ -254,19 +63,23 @@ pub mod field_elem {
     ) -> Result<S::Ok, S::Error> {
         let mut bytes = Vec::new();
         T::serialize(elem, &mut bytes).map_err(|err| S::Error::custom(format!("{}", err)))?;
-        tagged_blob::serialize_with_tag("FIELD", &CanonicalBytes(bytes), serializer)
+        Serialize::serialize(&TaggedBase64::new("FIELD", &bytes).unwrap(), serializer)
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>, T: CanonicalDeserialize>(
         deserializer: D,
     ) -> Result<T, D::Error> {
-        let bytes = tagged_blob::deserialize_with_tag("FIELD", deserializer)?;
-        T::deserialize(&*bytes.0).map_err(|err| D::Error::custom(format!("{}", err)))
+        let tb64 = <TaggedBase64 as Deserialize>::deserialize(deserializer)?;
+        if tb64.tag() == "FIELD" {
+            T::deserialize(tb64.as_ref()).map_err(|err| D::Error::custom(format!("{}", err)))
+        } else {
+            Err(D::Error::custom(format!(
+                "incorrect tag (expected FIELD, got {})",
+                tb64.tag()
+            )))
+        }
     }
 }
-
-extern crate jf_utils_derive;
-pub use jf_utils_derive::*;
 
 #[macro_export]
 macro_rules! test_serde_default {

@@ -28,8 +28,10 @@ use ark_std::{
     string::ToString,
     vec,
 };
+use core::convert::TryInto;
 use espresso_systems_common::jellyfish::tag;
-use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
+use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
+use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// Schnorr signature scheme.
@@ -125,7 +127,7 @@ impl<F: PrimeField> SignKey<F> {
 
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
-#[tagged_blob(tag::SCHNORRVERKEY)]
+#[tagged(tag::SCHNORRVERKEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Parameters"),
@@ -194,7 +196,7 @@ impl<P: Parameters> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
-#[tagged_blob(tag::SIGNKEYPAIR)]
+#[tagged(tag::SIGNKEYPAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Parameters"),
@@ -215,7 +217,7 @@ where
 // =====================================================
 
 /// The signature of Schnorr signature scheme
-#[tagged_blob(tag::SIG)]
+#[tagged(tag::SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Parameters"),

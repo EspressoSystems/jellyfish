@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - main
-      - cap-rollup
   schedule:
     - cron: "0 0 * * 1"
   workflow_dispatch:

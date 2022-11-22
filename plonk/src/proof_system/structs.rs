@@ -41,7 +41,8 @@ use jf_relation::{
     },
     PlonkCircuit,
 };
-use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
+use jf_utils::{field_switching, fq_to_fr, fr_to_fq};
+use tagged_base64::tagged;
 
 /// Universal StructuredReferenceString
 pub type UniversalSrs<E> = UnivariateUniversalParams<E>;
@@ -51,7 +52,7 @@ pub type CommitKey<E> = UnivariateProverParam<<E as PairingEngine>::G1Affine>;
 pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
-#[tagged_blob(tag::PROOF)]
+#[tagged(tag::PROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
 pub struct Proof<E: PairingEngine> {
@@ -226,7 +227,7 @@ pub struct PlookupProof<E: PairingEngine> {
 }
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
-#[tagged_blob(tag::BATCHPROOF)]
+#[tagged(tag::BATCHPROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
 pub struct BatchProof<E: PairingEngine> {

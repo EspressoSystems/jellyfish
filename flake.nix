@@ -16,6 +16,7 @@
 
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
   inputs.pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+  inputs.pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = { self, nixpkgs, flake-utils, flake-compat, rust-overlay, pre-commit-hooks, ... }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -57,15 +58,6 @@
                 description = "Ensure Cargo.toml are sorted";
                 entry = "cargo sort -w";
                 pass_filenames = false;
-              };
-              license-header-c-style = {
-                enable = true;
-                description =
-                  "Ensure files with c-style comments have license header";
-                entry = ''
-                  insert_license --license-filepath .license-header  --comment-style "//"'';
-                types_or = [ "rust" ];
-                pass_filenames = true;
               };
             };
           };

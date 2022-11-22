@@ -7,7 +7,8 @@
 //! Circuit implementation of various crypto primitives.
 pub mod commitment;
 pub mod elgamal;
-pub mod merkle_tree;
+// TODO(Chengyu): implement merkle_tree gadgets
+// pub mod merkle_tree;
 pub mod prf;
 pub mod rescue;
 pub mod signature;
