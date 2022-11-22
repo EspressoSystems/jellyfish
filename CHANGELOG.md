@@ -18,8 +18,17 @@
             - Primitive gadgets, including `commitment`, `el gamal` etc. remains in `jf-primitives/circuit`.
             - Circuit for rescue hash function is now in `jf-primitives/circuit/rescue`.
     - `par-utils` is moved to `jf-utils`.
-- Introduct new `PolynomialCommitmentScheme` trait and basic implementations
-    - Now `PlonkKzgSnark` use our own KZG10 implementation
+- Introduct new `PolynomialCommitmentScheme` trait and basic implementations.
+    - Now `PlonkKzgSnark` use our own KZG10 implementation.
+- Merkle tree is refactored (#135)
+    - Introduce new traits which define the functionalities.
+        - `MerkleTreeScheme` is the abstraction of a static array accumulator,
+        - `AppendableMerkleTreeScheme` is the abstraction of an appendable vector accumulator.
+        - `UniversalMerkleTreeScheme` is the abstraction of a key-value map accumulator, which also supports non-membership query/proof.
+        - `ForgetableMerkleTreeScheme` allows you to forget/remember some leafs from the memory.
+    - Implementation of new generic merkle tree: `MerkleTree` and `UniversalMerkleTree`
+        - A default rate-3 rescue merkle tree implementation is provided in `prelude` module.
+        - Other example instantiation can be found in `example` module.
 
 ## v0.1.2
 
