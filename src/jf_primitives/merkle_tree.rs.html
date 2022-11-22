@@ -2295,6 +2295,10 @@
 <span id="2295">2295</span>
 <span id="2296">2296</span>
 <span id="2297">2297</span>
+<span id="2298">2298</span>
+<span id="2299">2299</span>
+<span id="2300">2300</span>
+<span id="2301">2301</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2328,10 +2332,14 @@
     vec,
     vec::Vec,
 };
-<span class="kw">use </span>core::{convert::TryFrom, fmt::Debug};
+<span class="kw">use </span>core::{
+    convert::{TryFrom, TryInto},
+    fmt::Debug,
+};
 <span class="kw">use </span>espresso_systems_common::jellyfish::tag;
-<span class="kw">use </span>jf_utils::tagged_blob;
+<span class="kw">use </span>jf_utils::field_elem;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>tagged_base64::tagged;
 
 <span class="attribute">#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Deserialize, Serialize)]
 </span><span class="doccomment">/// Enum for identifying a position of a node (left, middle or right).
@@ -2489,7 +2497,7 @@
 }
 
 <span class="doccomment">/// Represents the value for a node in the merkle tree.
-</span><span class="attribute">#[tagged_blob(tag::NODE)]
+</span><span class="attribute">#[tagged(tag::NODE)]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]
@@ -2634,7 +2642,7 @@
     Leaf {
         value: NodeValue&lt;F&gt;,
         uid: u64,
-        <span class="attribute">#[serde(with = <span class="string">&quot;jf_utils::field_elem&quot;</span>)]
+        <span class="attribute">#[serde(with = <span class="string">&quot;field_elem&quot;</span>)]
         </span>elem: F,
     },
 }
@@ -3117,7 +3125,7 @@
 }
 
 <span class="doccomment">/// Data struct for a merkle leaf.
-</span><span class="attribute">#[tagged_blob(tag::LEAF)]
+</span><span class="attribute">#[tagged(tag::LEAF)]
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, Default, CanonicalSerialize, CanonicalDeserialize, Copy,
 )]

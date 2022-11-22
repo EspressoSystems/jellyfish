@@ -606,6 +606,8 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -636,8 +638,10 @@
     string::ToString,
     vec,
 };
+<span class="kw">use </span>core::convert::TryInto;
 <span class="kw">use </span>espresso_systems_common::jellyfish::tag;
-<span class="kw">use </span>jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
+<span class="kw">use </span>jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
+<span class="kw">use </span>tagged_base64::tagged;
 <span class="kw">use </span>zeroize::Zeroize;
 
 <span class="doccomment">/// Schnorr signature scheme.
@@ -733,7 +737,7 @@
 
 </span><span class="doccomment">/// Signature public verification key
 </span><span class="comment">// derive zeroize here so that keypair can be zeroized
-</span><span class="attribute">#[tagged_blob(tag::SCHNORRVERKEY)]
+</span><span class="attribute">#[tagged(tag::SCHNORRVERKEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
@@ -802,7 +806,7 @@
 
 </span><span class="doccomment">/// Signature secret key pair used to sign messages
 </span><span class="comment">// make sure sk can be zeroized
-</span><span class="attribute">#[tagged_blob(tag::SIGNKEYPAIR)]
+</span><span class="attribute">#[tagged(tag::SIGNKEYPAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
@@ -823,7 +827,7 @@
 // =====================================================
 
 </span><span class="doccomment">/// The signature of Schnorr signature scheme
-</span><span class="attribute">#[tagged_blob(tag::SIG)]
+</span><span class="attribute">#[tagged(tag::SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),

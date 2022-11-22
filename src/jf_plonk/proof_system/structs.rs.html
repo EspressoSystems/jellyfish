@@ -947,6 +947,7 @@
 <span id="947">947</span>
 <span id="948">948</span>
 <span id="949">949</span>
+<span id="950">950</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -990,7 +991,8 @@
     },
     PlonkCircuit,
 };
-<span class="kw">use </span>jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
+<span class="kw">use </span>jf_utils::{field_switching, fq_to_fr, fr_to_fq};
+<span class="kw">use </span>tagged_base64::tagged;
 
 <span class="doccomment">/// Universal StructuredReferenceString
 </span><span class="kw">pub type </span>UniversalSrs&lt;E&gt; = UnivariateUniversalParams&lt;E&gt;;
@@ -1000,7 +1002,7 @@
 </span><span class="kw">pub type </span>OpenKey&lt;E&gt; = UnivariateVerifierParam&lt;E&gt;;
 
 <span class="doccomment">/// A Plonk SNARK proof.
-</span><span class="attribute">#[tagged_blob(tag::PROOF)]
+</span><span class="attribute">#[tagged(tag::PROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = <span class="string">&quot;E:PairingEngine&quot;</span>))]
 </span><span class="kw">pub struct </span>Proof&lt;E: PairingEngine&gt; {
@@ -1175,7 +1177,7 @@
 }
 
 <span class="doccomment">/// An aggregated SNARK proof that batchly proving multiple instances.
-</span><span class="attribute">#[tagged_blob(tag::BATCHPROOF)]
+</span><span class="attribute">#[tagged(tag::BATCHPROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = <span class="string">&quot;E:PairingEngine&quot;</span>))]
 </span><span class="kw">pub struct </span>BatchProof&lt;E: PairingEngine&gt; {
