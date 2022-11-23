@@ -13,14 +13,16 @@ use ark_bls12_381::{Bls12_381, Fr as Fr381};
 use ark_bn254::{Bn254, Fr as Fr254};
 use ark_bw6_761::{Fr as Fr761, BW6_761};
 use ark_ff::PrimeField;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use jf_plonk::{
     errors::PlonkError,
     proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
     PlonkType,
 };
+use jf_primitives::pcs::prelude::UnivariateUniversalParams;
 use jf_relation::{Circuit, PlonkCircuit};
-use std::time::Instant;
+use std::{fs::File, io, time::Instant};
 
 const NUM_REPETITIONS: usize = 10;
 const NUM_GATES_LARGE: usize = 32768;
@@ -50,14 +52,31 @@ macro_rules! plonk_prove_bench {
         let rng = &mut ark_std::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
-        let max_degree = $num_gates + 2;
-        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
-
+        let max_degree = (1 << 20) + 2;
+        let srs = {
+            match read_srs() {
+                Ok(p) => p,
+                Err(_e) => {
+                    let srs =
+                        PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+                    write_srs(&srs);
+                    srs
+                },
+            }
+        };
         let (pk, _) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
         let start = Instant::now();
 
-        for _ in 0..NUM_REPETITIONS {
+        let repetition = if $num_gates < (1 << 10) {
+            5
+        } else if $num_gates < (1 << 20) {
+            2
+        } else {
+            1
+        };
+
+        for _ in 0..repetition {
             let _ = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(
                 rng, &cs, &pk, None,
             )
@@ -65,23 +84,39 @@ macro_rules! plonk_prove_bench {
         }
 
         println!(
-            "proving time for {}, {}: {} ns/gate",
+            "proving time for {}, {}, {} gates: {} us",
             stringify!($bench_curve),
             stringify!($bench_plonk_type),
-            start.elapsed().as_nanos() / NUM_REPETITIONS as u128 / $num_gates as u128
+            $num_gates,
+            start.elapsed().as_nanos() / repetition as u128 / 1000u128,
         );
     };
 }
 
+fn read_srs() -> Result<UnivariateUniversalParams<Bls12_381>, io::Error> {
+    let mut f = File::open("srs.params")?;
+    Ok(UnivariateUniversalParams::<Bls12_381>::deserialize_unchecked(&mut f).unwrap())
+}
+
+fn write_srs(pcs_srs: &UnivariateUniversalParams<Bls12_381>) {
+    let mut f = File::create("srs.params").unwrap();
+    pcs_srs.serialize_uncompressed(&mut f).unwrap();
+}
+
 fn bench_prove() {
-    plonk_prove_bench!(Bls12_381, Fr381, PlonkType::TurboPlonk, NUM_GATES_LARGE);
-    plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk, NUM_GATES_LARGE);
-    plonk_prove_bench!(Bn254, Fr254, PlonkType::TurboPlonk, NUM_GATES_LARGE);
-    plonk_prove_bench!(BW6_761, Fr761, PlonkType::TurboPlonk, NUM_GATES_SMALL);
-    plonk_prove_bench!(Bls12_381, Fr381, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    plonk_prove_bench!(Bls12_377, Fr377, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    plonk_prove_bench!(Bn254, Fr254, PlonkType::UltraPlonk, NUM_GATES_LARGE);
-    plonk_prove_bench!(BW6_761, Fr761, PlonkType::UltraPlonk, NUM_GATES_SMALL);
+    for nv in 8..21 {
+        let num_gates = 1 << nv;
+        plonk_prove_bench!(Bls12_381, Fr381, PlonkType::TurboPlonk, num_gates);
+    }
+    // plonk_prove_bench!(Bls12_377, Fr377, PlonkType::TurboPlonk,
+    // NUM_GATES_LARGE); plonk_prove_bench!(Bn254, Fr254,
+    // PlonkType::TurboPlonk, NUM_GATES_LARGE); plonk_prove_bench!(BW6_761,
+    // Fr761, PlonkType::TurboPlonk, NUM_GATES_SMALL); plonk_prove_bench!
+    // (Bls12_381, Fr381, PlonkType::UltraPlonk, NUM_GATES_LARGE);
+    // plonk_prove_bench!(Bls12_377, Fr377, PlonkType::UltraPlonk,
+    // NUM_GATES_LARGE); plonk_prove_bench!(Bn254, Fr254,
+    // PlonkType::UltraPlonk, NUM_GATES_LARGE); plonk_prove_bench!(BW6_761,
+    // Fr761, PlonkType::UltraPlonk, NUM_GATES_SMALL);
 }
 
 macro_rules! plonk_verify_bench {
@@ -180,6 +215,6 @@ fn bench_batch_verify() {
 
 fn main() {
     bench_prove();
-    bench_verify();
-    bench_batch_verify();
+    // bench_verify();
+    // bench_batch_verify();
 }
