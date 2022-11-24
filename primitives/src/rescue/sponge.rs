@@ -22,7 +22,7 @@ pub type RescueSpongeCRHF<F> = RescueSponge<F, 3>;
 /// PRF
 pub type RescueSpongePRF<F> = RescueSponge<F, 4>;
 
-impl<F: RescueParameter, const C: usize> RescueSponge<F, C> {
+impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
     /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
     /// input and number of output elements
@@ -55,7 +55,7 @@ impl<F: RescueParameter, const C: usize> RescueSponge<F, C> {
     }
 }
 
-impl<F: RescueParameter, const C: usize> RescueSponge<F, C> {
+impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
     /// variable length input and number of output elements
     pub fn full_state_keyed_sponge_with_padding(
@@ -93,7 +93,7 @@ impl<F: RescueParameter, const C: usize> RescueSponge<F, C> {
     }
 }
 
-impl<F: RescueParameter, const C: usize> SpongeExt for RescueSponge<F, C> {
+impl<F: RescueParameter, const CHUNK_SIZE: usize> SpongeExt for RescueSponge<F, CHUNK_SIZE> {
     type State = RescueVector<F>;
 
     fn from_state(state: Self::State, _permutation: &Self::Parameters) -> Self {
@@ -105,7 +105,9 @@ impl<F: RescueParameter, const C: usize> SpongeExt for RescueSponge<F, C> {
     }
 }
 
-impl<T: RescueParameter + PrimeField, const C: usize> CryptographicSponge for RescueSponge<T, C> {
+impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSponge
+    for RescueSponge<T, CHUNK_SIZE>
+{
     /// Parameters used by the sponge.
     type Parameters = Permutation<T>;
 
@@ -117,22 +119,19 @@ impl<T: RescueParameter + PrimeField, const C: usize> CryptographicSponge for Re
     }
 
     /// Absorb an input into the sponge.
+    /// This function will absorb the entire input, in chunks of `CHUNK_SIZE`,
+    /// even if the input lenght is not a multiple of `CHUNK_SIZE`.
     fn absorb(&mut self, input: &impl Absorb) {
         let permutation = Permutation::default();
 
-        // let mut input_field_elements = input.to_sponge_field_elements_as_vec();
         let input_field_elements = input.to_sponge_field_elements_as_vec();
-        // Pad input as follows: append a One, then pad with 0 until length is multiple
-        // of RATE
-        // input_field_elements.push(T::one());
-        // pad_with_zeros(&mut input_field_elements, RATE);
 
+        // Absorb input.
         input_field_elements
-            .chunks_exact(C)
+            .chunks(CHUNK_SIZE)
             .into_iter()
             .for_each(|chunk| {
-                let block = RescueVector::pad_smaller_chunk(chunk);
-                self.state.add_assign(&block);
+                self.state.add_assign_elems(chunk, CHUNK_SIZE);
                 self.state = permutation.eval(&self.state)
             });
     }
@@ -167,7 +166,7 @@ impl<T: RescueParameter + PrimeField, const C: usize> CryptographicSponge for Re
         self.state = permutation.eval(&self.state);
 
         // modulus is 2^extracted_bits_per_elem
-        let modulus: BigUint = T::from(2u64).pow(&[extracted_bits_per_elem as u64]).into();
+        let modulus: BigUint = T::from(2u64).pow([extracted_bits_per_elem as u64]).into();
 
         while remaining > extracted_bits_per_elem {
             let e_int: BigUint = extracted[elem_ctr].into();
@@ -207,7 +206,7 @@ impl<T: RescueParameter + PrimeField, const C: usize> CryptographicSponge for Re
         sizes: &[FieldElementSize],
     ) -> Vec<F> {
         if T::size_in_bits() == F::size_in_bits() {
-            RescueSponge::<T, C>::squeeze_native_field_elements_with_sizes(self, sizes)
+            RescueSponge::<T, CHUNK_SIZE>::squeeze_native_field_elements_with_sizes(self, sizes)
                 .iter()
                 .map(|x| field_switching(x))
                 .collect::<Vec<F>>()
@@ -242,7 +241,9 @@ impl<T: RescueParameter + PrimeField, const C: usize> CryptographicSponge for Re
 
 /// The interface for field-based cryptographic sponge.
 /// `CF` is the native field used by the cryptographic sponge implementation.
-impl<T: RescueParameter, const C: usize> FieldBasedCryptographicSponge<T> for RescueSponge<T, C> {
+impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<T>
+    for RescueSponge<T, CHUNK_SIZE>
+{
     /// Squeeze `num_elements` field elements from the sponge.
     fn squeeze_native_field_elements(&mut self, num_elements: usize) -> Vec<T> {
         // SQUEEZE PHASE

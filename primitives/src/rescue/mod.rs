@@ -163,8 +163,7 @@ impl<F: PrimeField> RescueVector<F> {
         aux
     }
 
-    fn add_assign_elems(&mut self, elems: &[F]) {
-        assert_eq!(elems.len(), STATE_SIZE);
+    fn add_assign_elems(&mut self, elems: &[F], _expected_size: usize) {
         self.vec
             .iter_mut()
             .zip(elems.iter())
@@ -490,61 +489,6 @@ impl<F: RescueParameter> Permutation<F> {
     }
 }
 
-impl<F: RescueParameter> Permutation<F> {
-    /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
-    /// variable length input and number of output elements
-    pub fn full_state_keyed_sponge_with_padding(
-        &self,
-        key: &F,
-        input: &[F],
-        num_outputs: usize,
-    ) -> Vec<F> {
-        let mut padded_input = input.to_vec();
-        padded_input.push(F::one());
-        pad_with_zeros(&mut padded_input, STATE_SIZE);
-        self.full_state_keyed_sponge_no_padding(key, padded_input.as_slice(), num_outputs)
-            .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
-    }
-
-    /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
-    /// variable length input and number of output elements. Return error if
-    /// input is not multiple of STATE_SIZE = 4
-    pub fn full_state_keyed_sponge_no_padding(
-        &self,
-        key: &F,
-        input: &[F],
-        num_outputs: usize,
-    ) -> Result<Vec<F>, RescueError> {
-        if input.len() % STATE_SIZE != 0 {
-            return Err(RescueError::ParameterError(
-                "Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE."
-                    .to_string(),
-            ));
-        }
-        // ABSORB PHASE
-        let mut state = RescueVector::zero();
-        state.vec[STATE_SIZE - 1] = *key;
-        input.chunks_exact(STATE_SIZE).for_each(|chunk| {
-            state.add_assign_elems(chunk);
-            state = self.eval(&state);
-        });
-        // SQUEEZE PHASE
-        let mut result = vec![];
-        let mut remaining = num_outputs;
-        // extract current rate before calling PRP again
-        loop {
-            let extract = remaining.min(RATE);
-            result.extend_from_slice(&state.vec[0..extract]);
-            remaining -= extract;
-            if remaining == 0 {
-                break;
-            }
-            state = self.eval(&state)
-        }
-        Ok(result)
-    }
-}
-
 #[cfg(test)]
 mod test_prp {
     use crate::rescue::{RescueVector, PRP};
@@ -754,7 +698,10 @@ mod test_prp {
 
 #[cfg(test)]
 mod test_permutation {
-    use crate::rescue::{Permutation, RescueParameter, RescueVector, PRP};
+    use crate::rescue::{
+        sponge::{RescueSpongeCRHF, RescueSpongePRF},
+        Permutation, RescueParameter, RescueVector, PRP,
+    };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as Fr377;
     use ark_ed_on_bls12_381::Fq as Fr381;
@@ -884,7 +831,7 @@ mod test_permutation {
 
     fn test_sponge_helper<F: RescueParameter>() {
         let rescue_prp = PRP::default();
-        let rescue_permutation = Permutation::from(rescue_prp.clone());
+        // let rescue_permutation = Permutation::from(rescue_prp.clone());
         let mut prng = ark_std::test_rng();
         let e0 = F::rand(&mut prng);
         let e1 = F::rand(&mut prng);
@@ -895,7 +842,7 @@ mod test_permutation {
 
         let input = [e0, e1, e2, e3, e4, e5];
 
-        let output = rescue_permutation.sponge_no_padding(&input, 1).unwrap()[0];
+        let output = RescueSpongeCRHF::<F>::sponge_no_padding(&input, 1).unwrap()[0];
 
         let zero = RescueVector::zero();
         let mut state = RescueVector {
@@ -916,50 +863,46 @@ mod test_permutation {
     }
 
     fn test_rescue_hash_on_0_vec_254() {
-        let rescue = Permutation::default();
         let input = [Fr254::zero(); 3];
         let expected = vec![
             Fr254::from_le_bytes_mod_order(&OUTPUT254[0]),
             Fr254::from_le_bytes_mod_order(&OUTPUT254[1]),
             Fr254::from_le_bytes_mod_order(&OUTPUT254[2]),
         ];
-        let real_output = rescue.sponge_no_padding(&input, 3).unwrap();
+        let real_output = RescueSpongeCRHF::sponge_no_padding(&input, 3).unwrap();
         assert_eq!(real_output, expected);
     }
 
     fn test_rescue_hash_on_0_vec_377() {
-        let rescue = Permutation::default();
         let input = [Fr377::zero(); 3];
         let expected = vec![
             Fr377::from_le_bytes_mod_order(&OUTPUT377[0]),
             Fr377::from_le_bytes_mod_order(&OUTPUT377[1]),
             Fr377::from_le_bytes_mod_order(&OUTPUT377[2]),
         ];
-        let real_output = rescue.sponge_no_padding(&input, 3).unwrap();
+        let real_output = RescueSpongeCRHF::sponge_no_padding(&input, 3).unwrap();
         assert_eq!(real_output, expected);
     }
 
     fn test_rescue_hash_on_0_vec_381() {
-        let rescue = Permutation::default();
         let input = [Fr381::zero(); 3];
         let expected = vec![
             Fr381::from_le_bytes_mod_order(&OUTPUT381[0]),
             Fr381::from_le_bytes_mod_order(&OUTPUT381[1]),
             Fr381::from_le_bytes_mod_order(&OUTPUT381[2]),
         ];
-        let real_output = rescue.sponge_no_padding(&input, 3).unwrap();
+        let real_output = RescueSpongeCRHF::sponge_no_padding(&input, 3).unwrap();
         assert_eq!(real_output, expected);
     }
 
     fn test_rescue_hash_on_0_vec_761() {
-        let rescue = Permutation::default();
         let input = [Fq377::zero(); 3];
         let expected = vec![
             Fq377::from_le_bytes_mod_order(&OUTPUT761[0]),
             Fq377::from_le_bytes_mod_order(&OUTPUT761[1]),
             Fq377::from_le_bytes_mod_order(&OUTPUT761[2]),
         ];
-        let real_output = rescue.sponge_no_padding(&input, 3).unwrap();
+        let real_output = RescueSpongeCRHF::sponge_no_padding(&input, 3).unwrap();
         assert_eq!(real_output, expected);
     }
 
@@ -971,31 +914,30 @@ mod test_permutation {
         test_fsks_no_padding_errors_helper::<Fq377>();
     }
     fn test_fsks_no_padding_errors_helper<F: RescueParameter>() {
-        let rescue = Permutation::default();
         let key = F::rand(&mut ark_std::test_rng());
         let input = vec![F::from(9u64); 4];
-        assert!(rescue
-            .full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1)
-            .is_ok());
+        assert!(
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+        );
         let input = vec![F::from(9u64); 12];
-        assert!(rescue
-            .full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1)
-            .is_ok());
+        assert!(
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+        );
 
         // test should panic because number of inputs is not multiple of 3
         let input = vec![F::from(9u64); 10];
-        assert!(rescue
-            .full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1)
-            .is_err());
+        assert!(
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+        );
         let input = vec![F::from(9u64)];
-        assert!(rescue
-            .full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1)
-            .is_err());
+        assert!(
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+        );
 
         let input = vec![];
-        assert!(rescue
-            .full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1)
-            .is_ok());
+        assert!(
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+        );
     }
 
     #[test]
@@ -1006,83 +948,92 @@ mod test_permutation {
         test_variable_output_sponge_and_fsks_helper::<Fq377>();
     }
     fn test_variable_output_sponge_and_fsks_helper<F: RescueParameter>() {
-        let rescue = Permutation::default();
         let input = [F::zero(), F::one(), F::zero()];
-        assert_eq!(rescue.sponge_with_padding(&input, 0).len(), 0);
-        assert_eq!(rescue.sponge_with_padding(&input, 1).len(), 1);
-        assert_eq!(rescue.sponge_with_padding(&input, 2).len(), 2);
-        assert_eq!(rescue.sponge_with_padding(&input, 3).len(), 3);
-        assert_eq!(rescue.sponge_with_padding(&input, 10).len(), 10);
+        assert_eq!(RescueSpongeCRHF::sponge_with_padding(&input, 0).len(), 0);
+        assert_eq!(RescueSpongeCRHF::sponge_with_padding(&input, 1).len(), 1);
+        assert_eq!(RescueSpongeCRHF::sponge_with_padding(&input, 2).len(), 2);
+        assert_eq!(RescueSpongeCRHF::sponge_with_padding(&input, 3).len(), 3);
+        assert_eq!(RescueSpongeCRHF::sponge_with_padding(&input, 10).len(), 10);
 
-        assert_eq!(rescue.sponge_no_padding(&input, 0).unwrap().len(), 0);
-        assert_eq!(rescue.sponge_no_padding(&input, 1).unwrap().len(), 1);
-        assert_eq!(rescue.sponge_no_padding(&input, 2).unwrap().len(), 2);
-        assert_eq!(rescue.sponge_no_padding(&input, 3).unwrap().len(), 3);
-        assert_eq!(rescue.sponge_no_padding(&input, 10).unwrap().len(), 10);
+        assert_eq!(
+            RescueSpongeCRHF::sponge_no_padding(&input, 0)
+                .unwrap()
+                .len(),
+            0
+        );
+        assert_eq!(
+            RescueSpongeCRHF::sponge_no_padding(&input, 1)
+                .unwrap()
+                .len(),
+            1
+        );
+        assert_eq!(
+            RescueSpongeCRHF::sponge_no_padding(&input, 2)
+                .unwrap()
+                .len(),
+            2
+        );
+        assert_eq!(
+            RescueSpongeCRHF::sponge_no_padding(&input, 3)
+                .unwrap()
+                .len(),
+            3
+        );
+        assert_eq!(
+            RescueSpongeCRHF::sponge_no_padding(&input, 10)
+                .unwrap()
+                .len(),
+            10
+        );
 
         let key = F::rand(&mut ark_std::test_rng());
         let input = [F::zero(), F::one(), F::zero(), F::zero()];
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_with_padding(&key, &input, 0)
-                .len(),
+            RescueSpongePRF::full_state_keyed_sponge_with_padding(&key, &input, 0).len(),
             0
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_with_padding(&key, &input, 1)
-                .len(),
+            RescueSpongePRF::full_state_keyed_sponge_with_padding(&key, &input, 1).len(),
             1
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_with_padding(&key, &input, 2)
-                .len(),
+            RescueSpongePRF::full_state_keyed_sponge_with_padding(&key, &input, 2).len(),
             2
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_with_padding(&key, &input, 4)
-                .len(),
+            RescueSpongePRF::full_state_keyed_sponge_with_padding(&key, &input, 4).len(),
             4
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_with_padding(&key, &input, 10)
-                .len(),
+            RescueSpongePRF::full_state_keyed_sponge_with_padding(&key, &input, 10).len(),
             10
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_no_padding(&key, &input, 0)
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, &input, 0)
                 .unwrap()
                 .len(),
             0
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_no_padding(&key, &input, 1)
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, &input, 1)
                 .unwrap()
                 .len(),
             1
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_no_padding(&key, &input, 2)
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, &input, 2)
                 .unwrap()
                 .len(),
             2
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_no_padding(&key, &input, 4)
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, &input, 4)
                 .unwrap()
                 .len(),
             4
         );
         assert_eq!(
-            rescue
-                .full_state_keyed_sponge_no_padding(&key, &input, 10)
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, &input, 10)
                 .unwrap()
                 .len(),
             10

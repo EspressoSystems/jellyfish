@@ -652,6 +652,7 @@ mod tests {
 
     use super::{RescueGadget, RescueHelperGadget, RescueStateVar};
     use crate::rescue::{
+        sponge::{RescueSpongeCRHF, RescueSpongePRF},
         Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
     };
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -971,8 +972,7 @@ mod tests {
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        let rescue_perm = Permutation::default();
-        let expected_sponge = rescue_perm.sponge_no_padding(&data, 1).unwrap()[0];
+        let expected_sponge = RescueSpongeCRHF::sponge_no_padding(&data, 1).unwrap()[0];
         let sponge_var = circuit
             .rescue_sponge_no_padding(data_vars.as_slice(), 1)
             .unwrap()[0];
@@ -1022,17 +1022,14 @@ mod tests {
                 .rescue_sponge_no_padding(&input_var, output_len)
                 .unwrap();
 
-            let rescue_hash = Permutation::default();
-
             // Check consistency between inputs
             for i in 0..rate {
                 assert_eq!(input_vec[i], circuit.witness(input_var[i]).unwrap());
             }
 
             // Check consistency between outputs
-            let expected_hash = rescue_hash
-                .sponge_no_padding(&input_vec, output_len)
-                .unwrap();
+            let expected_hash =
+                RescueSpongeCRHF::sponge_no_padding(&input_vec, output_len).unwrap();
 
             for (e, f) in out_var.iter().zip(expected_hash.iter()) {
                 assert_eq!(*f, circuit.witness(*e).unwrap());
@@ -1087,15 +1084,13 @@ mod tests {
                     .rescue_sponge_with_padding(&input_var, output_len)
                     .unwrap();
 
-                let rescue_hash = Permutation::default();
-
                 // Check consistency between inputs
                 for i in 0..input_len {
                     assert_eq!(input_vec[i], circuit.witness(input_var[i]).unwrap());
                 }
 
                 // Check consistency between outputs
-                let expected_hash = rescue_hash.sponge_with_padding(&input_vec, output_len);
+                let expected_hash = RescueSpongeCRHF::sponge_with_padding(&input_vec, output_len);
 
                 for (&e, &f) in expected_hash.iter().zip(out_var.iter()) {
                     assert_eq!(e, circuit.witness(f).unwrap());
@@ -1131,10 +1126,8 @@ mod tests {
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        let perm = Permutation::default();
-        let expected_fsks_output = perm
-            .full_state_keyed_sponge_no_padding(&key, &data, 1)
-            .unwrap();
+        let expected_fsks_output =
+            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();
 
         let fsks_var = circuit
             .rescue_full_state_keyed_sponge_no_padding(key_var, &data_vars)
