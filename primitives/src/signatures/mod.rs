@@ -21,13 +21,13 @@ pub trait SignatureScheme {
     type SigningKey: Clone + Send + Sync;
 
     /// Verification key
-    type VerificationKey: Clone + Send + Sync;
+    type VerificationKey: Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
 
     /// Public Parameter
     type PublicParameter;
 
     /// Signature
-    type Signature: Clone;
+    type Signature: Clone + for<'a> Deserialize<'a> + Serialize;
 
     /// A message is &\[MessageUnit\]
     type MessageUnit;

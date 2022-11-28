@@ -3,21 +3,30 @@
 use super::SignatureScheme;
 use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError};
 
-use ark_serialize::CanonicalSerialize;
-use ark_serialize::SerializationError;
-use ark_std::fmt::Write;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
 use ark_std::{
+    convert::TryInto,
     format,
     rand::{CryptoRng, RngCore},
 };
 
-use blst::{min_sig::*, BLST_ERROR};
+use blst::BLST_ERROR;
+use espresso_systems_common::jellyfish::tag;
+use tagged_base64::tagged;
 
-pub use blst::min_sig::{PublicKey as BLSVerKey, SecretKey, Signature as BLSSignature};
-use serde::{Deserialize, Serialize, Serializer};
+pub use blst::min_sig::{PublicKey, SecretKey, Signature};
 
-#[derive(Debug, Clone, CanonicalSerialize)]
-pub struct BLSSignKey(pub SecretKey);
+/// Size in bytes of a secret key in our BLS signature scheme.
+pub const BLS_SIG_KEY_SIZE: usize = 32;
+/// Size in bytes of a signature in our BLS signature scheme.
+pub const BLS_SIG_SIGNATURE_SIZE: usize = 96;
+/// Size in bytes of a verification key in our BLS signature scheme.
+pub const BLS_SIG_VERKEY_SIZE: usize = 192;
+
+/// Newtype wrapper for a BLS Signing Key.
+#[tagged(tag::BLSSIGNINGKEY)]
+#[derive(Clone, Debug)]
+pub struct BLSSignKey(SecretKey);
 
 impl core::ops::Deref for BLSSignKey {
     type Target = SecretKey;
@@ -27,18 +36,104 @@ impl core::ops::Deref for BLSSignKey {
     }
 }
 
-impl Serialize for BLSSignKey {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let out = &self.0.serialize();
-        serializer.serialize_newtype_struct("SecretKey", out)
+impl CanonicalSerialize for BLSSignKey {
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_KEY_SIZE
+    }
+
+    fn serialize<W: ark_serialize::Write>(&self, writer: W) -> Result<(), SerializationError> {
+        let bytes = &self.0.serialize();
+        CanonicalSerialize::serialize(bytes.as_ref(), writer)
     }
 }
 
-impl<'de> Deserialize<'de> for BLSSignKey {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Deserialize::deserialize(deserializer)
+impl CanonicalDeserialize for BLSSignKey {
+    fn deserialize<R: ark_serialize::Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_KEY_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut key = [0u8; BLS_SIG_KEY_SIZE];
+        reader.read_exact(&mut key)?;
+        Ok(Self(SecretKey::deserialize(&key).unwrap()))
     }
 }
+
+/// Newtype wrapper for a BLS Signature.
+#[tagged(tag::BLSSIG)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BLSSignature(Signature);
+
+impl core::ops::Deref for BLSSignature {
+    type Target = Signature;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl CanonicalSerialize for BLSSignature {
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_SIGNATURE_SIZE
+    }
+
+    fn serialize<W: ark_serialize::Write>(&self, writer: W) -> Result<(), SerializationError> {
+        let bytes = &self.0.serialize();
+        CanonicalSerialize::serialize(bytes.as_ref(), writer)
+    }
+}
+
+impl CanonicalDeserialize for BLSSignature {
+    fn deserialize<R: ark_serialize::Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_SIGNATURE_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut sig = [0u8; BLS_SIG_SIGNATURE_SIZE];
+        reader.read_exact(&mut sig)?;
+        Ok(Self(Signature::deserialize(&sig).unwrap()))
+    }
+}
+
+/// Newtype wrapper for a BLS Verification Key.
+#[tagged(tag::BLSVERKEY)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BLSVerKey(PublicKey);
+
+impl core::ops::Deref for BLSVerKey {
+    type Target = PublicKey;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl CanonicalSerialize for BLSVerKey {
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_VERKEY_SIZE
+    }
+
+    fn serialize<W: ark_serialize::Write>(&self, writer: W) -> Result<(), SerializationError> {
+        let bytes = &self.0.serialize();
+        CanonicalSerialize::serialize(bytes.as_ref(), writer)
+    }
+}
+
+impl CanonicalDeserialize for BLSVerKey {
+    fn deserialize<R: ark_serialize::Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_VERKEY_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut key = [0u8; BLS_SIG_VERKEY_SIZE];
+        reader.read_exact(&mut key)?;
+        Ok(Self(PublicKey::deserialize(&key).unwrap()))
+    }
+}
+
 /// BLS signature scheme. Imports blst library.
 pub struct BLSSignatureScheme;
 
@@ -80,7 +175,7 @@ impl SignatureScheme for BLSSignatureScheme {
             Err(e) => return Err(PrimitivesError::InternalError(format!("{:?}", e))),
         };
         let vk = sk.sk_to_pk();
-        Ok((BLSSignKey(sk), vk))
+        Ok((BLSSignKey(sk), BLSVerKey(vk)))
     }
 
     /// Sign a message
@@ -90,7 +185,11 @@ impl SignatureScheme for BLSSignatureScheme {
         msg: M,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
-        Ok(sk.sign(msg.as_ref(), Self::CS_ID.as_bytes(), &[]))
+        Ok(BLSSignature(sk.sign(
+            msg.as_ref(),
+            Self::CS_ID.as_bytes(),
+            &[],
+        )))
     }
 
     /// Verify a signature.
@@ -109,7 +208,7 @@ impl SignatureScheme for BLSSignatureScheme {
 
 #[cfg(test)]
 mod test {
-    use ark_std::test_rng;
+    use ark_std::{test_rng, vec::Vec};
 
     use super::*;
     use crate::signatures::tests::{failed_verification, sign_and_verify};
@@ -123,9 +222,27 @@ mod test {
     }
 
     #[test]
-    fn test_serialize() {
+    fn test_bls_sig_serde() {
         let rng = &mut test_rng();
         let parameters = BLSSignatureScheme::param_gen(Some(rng)).unwrap();
-        let (sk, pk) = BLSSignatureScheme::key_gen(&parameters, rng).unwrap();
+        let (sk, vk) = BLSSignatureScheme::key_gen(&parameters, rng).unwrap();
+
+        // serde for Verification Key
+        let mut keypair_bytes = Vec::new();
+        vk.serialize(&mut keypair_bytes).unwrap();
+        let keypair_de = BLSVerKey::deserialize(&keypair_bytes[..]).unwrap();
+        assert_eq!(vk, keypair_de);
+        // wrong byte length
+        assert!(BLSVerKey::deserialize(&keypair_bytes[1..]).is_err());
+
+        // serde for Signature
+        let message = "this is a test message";
+        let sig = BLSSignatureScheme::sign(&parameters, &sk, message.as_bytes(), rng).unwrap();
+        let mut sig_bytes = Vec::new();
+        sig.serialize(&mut sig_bytes).unwrap();
+        let sig_de = BLSSignature::deserialize(&sig_bytes[..]).unwrap();
+        assert_eq!(sig, sig_de);
+        // wrong byte length
+        assert!(BLSSignature::deserialize(&sig_bytes[1..]).is_err());
     }
 }
