@@ -7,6 +7,7 @@ pub mod bls;
 pub mod schnorr;
 pub use bls::BLSSignatureScheme;
 pub use schnorr::SchnorrSignatureScheme;
+use serde::{Deserialize, Serialize};
 
 /// Trait definition for a signature scheme.
 // A signature scheme is associated with a hash function H that is
@@ -17,16 +18,16 @@ pub trait SignatureScheme {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey;
+    type SigningKey: Clone + Send + Sync;
 
     /// Verification key
-    type VerificationKey;
+    type VerificationKey: Clone + Send + Sync;
 
     /// Public Parameter
     type PublicParameter;
 
     /// Signature
-    type Signature;
+    type Signature: Clone;
 
     /// A message is &\[MessageUnit\]
     type MessageUnit;

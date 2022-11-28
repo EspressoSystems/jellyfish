@@ -3,6 +3,9 @@
 use super::SignatureScheme;
 use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError};
 
+use ark_serialize::CanonicalSerialize;
+use ark_serialize::SerializationError;
+use ark_std::fmt::Write;
 use ark_std::{
     format,
     rand::{CryptoRng, RngCore},
@@ -10,10 +13,32 @@ use ark_std::{
 
 use blst::{min_sig::*, BLST_ERROR};
 
-pub use blst::min_sig::{
-    PublicKey as BLSVerKey, SecretKey as BLSSignKey, Signature as BLSSignature,
-};
+pub use blst::min_sig::{PublicKey as BLSVerKey, SecretKey, Signature as BLSSignature};
+use serde::{Deserialize, Serialize, Serializer};
 
+#[derive(Debug, Clone, CanonicalSerialize)]
+pub struct BLSSignKey(pub SecretKey);
+
+impl core::ops::Deref for BLSSignKey {
+    type Target = SecretKey;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Serialize for BLSSignKey {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let out = &self.0.serialize();
+        serializer.serialize_newtype_struct("SecretKey", out)
+    }
+}
+
+impl<'de> Deserialize<'de> for BLSSignKey {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Deserialize::deserialize(deserializer)
+    }
+}
 /// BLS signature scheme. Imports blst library.
 pub struct BLSSignatureScheme;
 
@@ -55,7 +80,7 @@ impl SignatureScheme for BLSSignatureScheme {
             Err(e) => return Err(PrimitivesError::InternalError(format!("{:?}", e))),
         };
         let vk = sk.sk_to_pk();
-        Ok((sk, vk))
+        Ok((BLSSignKey(sk), vk))
     }
 
     /// Sign a message
@@ -84,6 +109,8 @@ impl SignatureScheme for BLSSignatureScheme {
 
 #[cfg(test)]
 mod test {
+    use ark_std::test_rng;
+
     use super::*;
     use crate::signatures::tests::{failed_verification, sign_and_verify};
 
@@ -93,5 +120,12 @@ mod test {
         let message_bad = "this is a wrong message";
         sign_and_verify::<BLSSignatureScheme>(message.as_ref());
         failed_verification::<BLSSignatureScheme>(message.as_ref(), message_bad.as_ref());
+    }
+
+    #[test]
+    fn test_serialize() {
+        let rng = &mut test_rng();
+        let parameters = BLSSignatureScheme::param_gen(Some(rng)).unwrap();
+        let (sk, pk) = BLSSignatureScheme::key_gen(&parameters, rng).unwrap();
     }
 }
