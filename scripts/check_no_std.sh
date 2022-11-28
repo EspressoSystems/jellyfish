@@ -2,7 +2,6 @@
 
 set -x
 
-cargo-nono check --no-default-features --package jf-utils-derive
 cargo-nono check --no-default-features --package jf-utils
 cargo-nono check --no-default-features --package jf-rescue
 cargo-nono check --no-default-features --package jf-primitives
