@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - release-*
   pull_request:
     branches:
       - main
+      - release-*
   schedule:
     - cron: '0 0 * * 1'
   workflow_dispatch:
