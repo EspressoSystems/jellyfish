@@ -7,8 +7,6 @@
 //! Rescue hash related gates and gadgets. Including both native and non-native
 //! fields.
 
-#![allow(missing_docs)]
-
 mod native;
 mod non_native;
 
@@ -20,9 +18,14 @@ pub use non_native::RescueNonNativeStateVar;
 
 use crate::rescue::{RescueMatrix, RescueVector, PRP};
 
+/// Generic ResuceStateVar. Both RescueStateVar and RescueNonNativeStateVar
+/// should implement it.
 pub trait RescueStateVarGen<T, F> {
+    /// The native field.
     type Native;
+    /// Non-native field.
     type NonNative;
+    /// How variable is represented in this Rescue(NonNative)StateVar.
     type Var;
 }
 
