@@ -18,9 +18,17 @@ use jf_relation::{
 };
 use jf_utils::compute_len_to_next_multiple;
 
+use super::{RescueGadget, RescueStateVarGen};
+
 #[derive(Clone, Debug)]
 /// Array of variables representing a Rescue state (4 field elements).
 pub struct RescueStateVar(pub(crate) [Variable; STATE_SIZE]);
+
+impl<F> RescueStateVarGen<F, F> for RescueStateVar {
+    type Native = F;
+    type NonNative = F;
+    type Var = Variable;
+}
 
 impl From<[Variable; STATE_SIZE]> for RescueStateVar {
     fn from(arr: [Variable; STATE_SIZE]) -> Self {
@@ -97,95 +105,7 @@ impl<F: PrimeField> Gate<F> for Power5NonLinearGate<F> {
     }
 }
 
-/// Trait for rescue circuit over native field.
-pub trait RescueGadget<F: RescueParameter> {
-    /// Given an input state st_0 and an output state st_1, ensure that st_1 =
-    /// rescue_permutation(st_0)  where rescue_permutation is the instance
-    /// of the Rescue permutation defined by its respective constants
-    /// * `input_var` - variables corresponding to the input state
-    /// * `returns` - variables corresponding to the output state
-    fn rescue_permutation(
-        &mut self,
-        input_var: RescueStateVar,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Rescue based Pseudo Random Permutation (PRP)
-    /// * `key_var` - rescue state variable corresponding to the cipher key
-    /// * `input_var` - rescue state variable corresponding to the plaintext
-    /// * `returns` - state variable corresponding to the cipher text
-    fn prp(
-        &mut self,
-        key_var: &RescueStateVar,
-        input_var: &RescueStateVar,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables, `data_vars.len()` should be a
-    ///   positive integer that is a multiple of the sponge rate (i.e. 3)
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    fn rescue_sponge_no_padding(
-        &mut self,
-        data_vars: &[Variable],
-        num_output: usize,
-    ) -> Result<Vec<Variable>, CircuitError>;
-
-    /// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables,
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    fn rescue_sponge_with_padding(
-        &mut self,
-        data_vars: &[Variable],
-        num_output: usize,
-    ) -> Result<Vec<Variable>, CircuitError>;
-
-    /// Full-State-Keyed-Sponge with a single output
-    /// * `key` - key variable
-    /// * `input` - input variables,
-    /// * `returns` a variable that refers to the output
-    fn rescue_full_state_keyed_sponge_no_padding(
-        &mut self,
-        key: Variable,
-        data_vars: &[Variable],
-    ) -> Result<Variable, CircuitError>;
-
-    /// Return the round keys variables for the Rescue block cipher
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_var` - state variable representing the cipher key
-    /// * `returns` - state variables corresponding to the scheduled keys
-    fn key_schedule(
-        &mut self,
-        mds_states: &RescueMatrix<F>,
-        key_var: &RescueStateVar,
-        prp_instance: &PRP<F>,
-    ) -> Result<Vec<RescueStateVar>, CircuitError>;
-
-    /// Create a variable representing a rescue state
-    /// * `state` - Rescue state
-    /// * `returns` - state variables corresponding to the state
-    fn create_rescue_state_variable(
-        &mut self,
-        state: &RescueVector<F>,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Return the variable corresponding to the output of the of the Rescue
-    /// PRP where the rounds keys have already been computed "dynamically"
-    /// * `input_var` - variable corresponding to the plain text
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_vars` - variables corresponding to the scheduled keys
-    /// * `returns` -
-    fn prp_with_round_keys(
-        &mut self,
-        input_var: &RescueStateVar,
-        mds: &RescueMatrix<F>,
-        keys_vars: &[RescueStateVar],
-    ) -> Result<RescueStateVar, CircuitError>;
-}
-
-impl<F> RescueGadget<F> for PlonkCircuit<F>
+impl<F> RescueGadget<RescueStateVar, F, F> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
@@ -211,8 +131,15 @@ where
     ) -> Result<RescueStateVar, CircuitError> {
         let prp_instance = PRP::<F>::default();
         let mds_states = prp_instance.mds_matrix_ref();
-        let keys_vars = self.key_schedule(mds_states, key_var, &prp_instance)?;
-        self.prp_with_round_keys(input_var, mds_states, &keys_vars)
+        let keys_vars = RescueGadget::<RescueStateVar, F, F>::key_schedule(
+            self,
+            mds_states,
+            key_var,
+            &prp_instance,
+        )?;
+        RescueGadget::<RescueStateVar, F, F>::prp_with_round_keys(
+            self, input_var, mds_states, &keys_vars,
+        )
     }
 
     fn rescue_sponge_no_padding(
@@ -229,14 +156,14 @@ where
         // ABSORB PHASE
         let mut state_var =
             RescueStateVar::from([data_vars[0], data_vars[1], data_vars[2], zero_var]);
-        state_var = self.rescue_permutation(state_var)?;
+        state_var = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state_var)?;
 
         for block in data_vars[rate..].chunks_exact(rate) {
             state_var = self.add_state(
                 &state_var,
                 &RescueStateVar::from([block[0], block[1], block[2], zero_var]),
             )?;
-            state_var = self.rescue_permutation(state_var)?;
+            state_var = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state_var)?;
         }
 
         // SQUEEZE PHASE
@@ -250,7 +177,7 @@ where
             if remaining == 0 {
                 break;
             }
-            state_var = self.rescue_permutation(state_var)?;
+            state_var = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state_var)?;
         }
 
         Ok(result)
@@ -275,7 +202,7 @@ where
         ]
         .concat();
 
-        self.rescue_sponge_no_padding(&data_vars, num_output)
+        RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(self, &data_vars, num_output)
     }
 
     fn rescue_full_state_keyed_sponge_no_padding(
@@ -296,7 +223,7 @@ where
         for chunk in chunks {
             let chunk_var = RescueStateVar::from([chunk[0], chunk[1], chunk[2], chunk[3]]);
             state = self.add_state(&state, &chunk_var)?;
-            state = self.rescue_permutation(state)?;
+            state = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state)?;
         }
         // squeeze phase, but only a single output, can return directly from state
         Ok(state.0[0])
@@ -371,7 +298,7 @@ where
     }
 }
 
-pub(crate) trait RescueHelperGadget<F: PrimeField>: Circuit<F> {
+pub(crate) trait PermutationGadget<F: PrimeField>: Circuit<F> {
     fn check_var_bound_rescue_state(
         &self,
         rescue_state: &RescueStateVar,
@@ -463,7 +390,7 @@ pub(crate) trait RescueHelperGadget<F: PrimeField>: Circuit<F> {
     }
 }
 
-impl<F> RescueHelperGadget<F> for PlonkCircuit<F>
+impl<F> PermutationGadget<F> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
@@ -650,7 +577,7 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{RescueGadget, RescueHelperGadget, RescueStateVar};
+    use super::{PermutationGadget, RescueGadget, RescueStateVar};
     use crate::rescue::{
         sponge::{RescueCRHF, RescuePRF},
         Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,

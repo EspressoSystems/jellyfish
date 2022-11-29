@@ -245,7 +245,7 @@ where
     }
 }
 
-pub(crate) trait RescueNonNativeHelperGadget<F: PrimeField>: Circuit<F> {
+pub(crate) trait PermutationNonNativeGadget<F: PrimeField>: Circuit<F> {
     fn check_var_bound_rescue_state(
         &self,
         rescue_state: &RescueNonNativeStateVar<F>,
@@ -387,7 +387,7 @@ pub(crate) trait RescueNonNativeHelperGadget<F: PrimeField>: Circuit<F> {
     }
 }
 
-impl<F> RescueNonNativeHelperGadget<F> for PlonkCircuit<F>
+impl<F> PermutationNonNativeGadget<F> for PlonkCircuit<F>
 where
     F: PrimeField,
 {
@@ -734,7 +734,7 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
+    use super::{RescueNonNativeGadget, PermutationNonNativeGadget, RescueNonNativeStateVar};
     use crate::rescue::{
         sponge::{RescueCRHF, RescuePRF},
         Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
