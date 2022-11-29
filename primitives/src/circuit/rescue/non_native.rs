@@ -84,6 +84,35 @@ pub trait RescueNonNativeGadget<F: PrimeField> {
         key: FpElemVar<F>,
         data_vars: &[FpElemVar<F>],
     ) -> Result<FpElemVar<F>, CircuitError>;
+
+    fn create_rescue_state_variable<T: RescueParameter>(
+        &mut self,
+        state: &RescueVector<T>,
+    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+
+    /// Return the round keys variables for the Rescue block cipher
+    /// * `mds_states` - Rescue MDS matrix
+    /// * `key_var` - state variable representing the cipher key
+    /// * `returns` - state variables corresponding to the scheduled keys
+    fn key_schedule<T: RescueParameter>(
+        &mut self,
+        mds_states: &RescueMatrix<T>,
+        key_var: &RescueNonNativeStateVar<F>,
+        prp_instance: &PRP<T>,
+    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError>;
+
+    /// Return the variable corresponding to the output of the of the Rescue
+    /// PRP where the rounds keys have already been computed "dynamically"
+    /// * `input_var` - variable corresponding to the plain text
+    /// * `mds_states` - Rescue MDS matrix
+    /// * `key_vars` - variables corresponding to the scheduled keys
+    /// * `returns` -
+    fn prp_with_round_keys<T: RescueParameter>(
+        &mut self,
+        input_var: &RescueNonNativeStateVar<F>,
+        mds: &RescueMatrix<T>,
+        keys_vars: &[RescueNonNativeStateVar<F>],
+    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
 }
 
 impl<F> RescueNonNativeGadget<F> for PlonkCircuit<F>
@@ -243,6 +272,94 @@ where
         // squeeze phase, but only a single output, can return directly from state
         Ok(state.state[0])
     }
+
+    fn create_rescue_state_variable<T: RescueParameter>(
+        &mut self,
+        state: &RescueVector<T>,
+    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
+        // parameter m
+        let m = (T::size_in_bits() / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
+
+        // move the modulus to the right field
+        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t = FpElem::new(&t_modulus, m, None)?;
+
+        // move rescue state to the plonk field
+        let state_f: Vec<F> = state
+            .elems()
+            .iter()
+            .map(|x| field_switching::<T, F>(x))
+            .collect();
+
+        // create vars for states
+        let mut state_split_var = [FpElemVar::<F>::default(); STATE_SIZE];
+        for (var, f) in state_split_var.iter_mut().zip(state_f.iter()) {
+            *var = FpElemVar::new_from_field_element(self, f, m, Some(t.two_power_m()))?;
+        }
+
+        Ok(RescueNonNativeStateVar {
+            state: state_split_var,
+            modulus: t,
+        })
+    }
+
+    fn key_schedule<T: RescueParameter>(
+        &mut self,
+        mds: &RescueMatrix<T>,
+        key_var: &RescueNonNativeStateVar<F>,
+        prp_instance: &PRP<T>,
+    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError> {
+        let mut aux = *prp_instance.init_vec_ref();
+        let key_injection_vec = prp_instance.key_injection_vec_ref();
+
+        let mut key_state_var = self.add_constant_state(key_var, &aux)?;
+        let mut result = vec![key_state_var.clone()];
+
+        for (r, key_injection_item) in key_injection_vec.iter().enumerate() {
+            aux.linear(mds, key_injection_item);
+            if r % 2 == 0 {
+                key_state_var = self.pow_alpha_inv_state::<T>(&key_state_var)?;
+                key_state_var = self.affine_transform(&key_state_var, mds, key_injection_item)?;
+            } else {
+                key_state_var =
+                    self.non_linear_transform(&key_state_var, mds, key_injection_item)?;
+            }
+            result.push(key_state_var.clone());
+        }
+
+        Ok(result)
+    }
+
+    /// Return the variable corresponding to the output of the of the Rescue
+    /// PRP where the rounds keys have already been computed "dynamically"
+    /// * `input_var` - variable corresponding to the plain text
+    /// * `mds_states` - Rescue MDS matrix
+    /// * `key_vars` - variables corresponding to the scheduled keys
+    /// * `returns` -
+    fn prp_with_round_keys<T: RescueParameter>(
+        &mut self,
+        input_var: &RescueNonNativeStateVar<F>,
+        mds: &RescueMatrix<T>,
+        keys_vars: &[RescueNonNativeStateVar<F>],
+    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
+        if (keys_vars.len() != 2 * ROUNDS + 1) || (mds.len() != STATE_SIZE) {
+            return Err(CircuitError::ParameterError("data_vars".to_string()));
+        }
+
+        let zero_state = RescueVector::from(&[T::zero(); STATE_SIZE]);
+        let mut state_var = self.add_state(input_var, &keys_vars[0])?;
+        for (r, key_var) in keys_vars.iter().skip(1).enumerate() {
+            if r % 2 == 0 {
+                state_var = self.pow_alpha_inv_state::<T>(&state_var)?;
+                state_var = self.affine_transform(&state_var, mds, &zero_state)?;
+            } else {
+                state_var = self.non_linear_transform(&state_var, mds, &zero_state)?;
+            }
+
+            state_var = self.add_state(&state_var, key_var)?;
+        }
+        Ok(state_var)
+    }
 }
 
 pub(crate) trait PermutationNonNativeGadget<F: PrimeField>: Circuit<F> {
@@ -250,11 +367,6 @@ pub(crate) trait PermutationNonNativeGadget<F: PrimeField>: Circuit<F> {
         &self,
         rescue_state: &RescueNonNativeStateVar<F>,
     ) -> Result<(), CircuitError>;
-
-    fn create_rescue_state_variable<T: RescueParameter>(
-        &mut self,
-        state: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
 
     fn add_constant_state<T: RescueParameter>(
         &mut self,
@@ -314,48 +426,6 @@ pub(crate) trait PermutationNonNativeGadget<F: PrimeField>: Circuit<F> {
         &mut self,
         input_var: FpElemVar<F>,
     ) -> Result<FpElemVar<F>, CircuitError>;
-
-    /// Return the round keys variables for the Rescue block cipher
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_var` - state variable representing the cipher key
-    /// * `returns` - state variables corresponding to the scheduled keys
-    fn key_schedule<T: RescueParameter>(
-        &mut self,
-        mds_states: &RescueMatrix<T>,
-        key_var: &RescueNonNativeStateVar<F>,
-        prp_instance: &PRP<T>,
-    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError>;
-
-    /// Return the variable corresponding to the output of the of the Rescue
-    /// PRP where the rounds keys have already been computed "dynamically"
-    /// * `input_var` - variable corresponding to the plain text
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_vars` - variables corresponding to the scheduled keys
-    /// * `returns` -
-    fn prp_with_round_keys<T: RescueParameter>(
-        &mut self,
-        input_var: &RescueNonNativeStateVar<F>,
-        mds: &RescueMatrix<T>,
-        keys_vars: &[RescueNonNativeStateVar<F>],
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
-        if (keys_vars.len() != 2 * ROUNDS + 1) || (mds.len() != STATE_SIZE) {
-            return Err(CircuitError::ParameterError("data_vars".to_string()));
-        }
-
-        let zero_state = RescueVector::from(&[T::zero(); STATE_SIZE]);
-        let mut state_var = self.add_state(input_var, &keys_vars[0])?;
-        for (r, key_var) in keys_vars.iter().skip(1).enumerate() {
-            if r % 2 == 0 {
-                state_var = self.pow_alpha_inv_state::<T>(&state_var)?;
-                state_var = self.affine_transform(&state_var, mds, &zero_state)?;
-            } else {
-                state_var = self.non_linear_transform(&state_var, mds, &zero_state)?;
-            }
-
-            state_var = self.add_state(&state_var, key_var)?;
-        }
-        Ok(state_var)
-    }
 
     /// Given an input state st_0 and an output state st_1, ensure that st_1 is
     /// obtained by applying the rescue permutation with a specific  list of
@@ -643,36 +713,6 @@ where
         }
     }
 
-    fn create_rescue_state_variable<T: RescueParameter>(
-        &mut self,
-        state: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
-        // parameter m
-        let m = (T::size_in_bits() / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
-
-        // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
-        let t = FpElem::new(&t_modulus, m, None)?;
-
-        // move rescue state to the plonk field
-        let state_f: Vec<F> = state
-            .elems()
-            .iter()
-            .map(|x| field_switching::<T, F>(x))
-            .collect();
-
-        // create vars for states
-        let mut state_split_var = [FpElemVar::<F>::default(); STATE_SIZE];
-        for (var, f) in state_split_var.iter_mut().zip(state_f.iter()) {
-            *var = FpElemVar::new_from_field_element(self, f, m, Some(t.two_power_m()))?;
-        }
-
-        Ok(RescueNonNativeStateVar {
-            state: state_split_var,
-            modulus: t,
-        })
-    }
-
     fn add_state(
         &mut self,
         left_state_var: &RescueNonNativeStateVar<F>,
@@ -702,39 +742,12 @@ where
             modulus,
         })
     }
-
-    fn key_schedule<T: RescueParameter>(
-        &mut self,
-        mds: &RescueMatrix<T>,
-        key_var: &RescueNonNativeStateVar<F>,
-        prp_instance: &PRP<T>,
-    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError> {
-        let mut aux = *prp_instance.init_vec_ref();
-        let key_injection_vec = prp_instance.key_injection_vec_ref();
-
-        let mut key_state_var = self.add_constant_state(key_var, &aux)?;
-        let mut result = vec![key_state_var.clone()];
-
-        for (r, key_injection_item) in key_injection_vec.iter().enumerate() {
-            aux.linear(mds, key_injection_item);
-            if r % 2 == 0 {
-                key_state_var = self.pow_alpha_inv_state::<T>(&key_state_var)?;
-                key_state_var = self.affine_transform(&key_state_var, mds, key_injection_item)?;
-            } else {
-                key_state_var =
-                    self.non_linear_transform(&key_state_var, mds, key_injection_item)?;
-            }
-            result.push(key_state_var.clone());
-        }
-
-        Ok(result)
-    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::{RescueNonNativeGadget, PermutationNonNativeGadget, RescueNonNativeStateVar};
+    use super::{PermutationNonNativeGadget, RescueNonNativeGadget, RescueNonNativeStateVar};
     use crate::rescue::{
         sponge::{RescueCRHF, RescuePRF},
         Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
