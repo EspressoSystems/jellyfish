@@ -14,6 +14,8 @@ use crate::{
 use ark_std::vec;
 use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
+use super::rescue::RescueStateVar;
+
 /// Circuit implementation of the commitment scheme.
 pub trait CommitmentGadget {
     // Commitment scheme
@@ -34,7 +36,7 @@ where
         let mut msg = vec![blinding];
         msg.extend_from_slice(input);
         pad_with(&mut msg, CRHF_RATE, self.zero());
-        Ok(self.rescue_sponge_no_padding(&msg, 1)?[0])
+        Ok(RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(self, &msg, 1)?[0])
     }
 }
 

@@ -15,7 +15,7 @@ mod non_native;
 use ark_std::vec::Vec;
 use jf_relation::errors::CircuitError;
 pub use native::RescueStateVar;
-pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};
+pub use non_native::RescueNonNativeStateVar;
 
 use crate::rescue::{RescueMatrix, RescueVector, PRP};
 

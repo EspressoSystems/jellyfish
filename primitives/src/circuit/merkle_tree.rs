@@ -25,6 +25,8 @@ type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
 type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
 use typenum::U3;
 
+use super::rescue::RescueStateVar;
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 struct MerkleNodeBooleanEncoding<F: PrimeField + RescueParameter> {
     sibling1: NodeVal<F>,
@@ -206,7 +208,11 @@ where
         let zero_var = self.zero();
 
         // leaf label = H(0, uid, arc)
-        let mut cur_label = self.rescue_sponge_no_padding(&[zero_var, elem.uid, elem.elem], 1)?[0];
+        let mut cur_label = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+            self,
+            &[zero_var, elem.uid, elem.elem],
+            1,
+        )?[0];
         for cur_node in path_vars.nodes.iter() {
             let input_labels = self.permute(
                 cur_label,
@@ -217,7 +223,11 @@ where
             )?;
             // check that the left child's label is non-zero
             self.non_zero_gate(input_labels[0])?;
-            cur_label = self.rescue_sponge_no_padding(&input_labels, 1)?[0];
+            cur_label = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+                self,
+                &input_labels,
+                1,
+            )?[0];
         }
         Ok(cur_label)
     }

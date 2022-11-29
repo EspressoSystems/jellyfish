@@ -137,9 +137,7 @@ where
             key_var,
             &prp_instance,
         )?;
-        RescueGadget::<RescueStateVar, F, F>::prp_with_round_keys(
-            self, input_var, mds_states, &keys_vars,
-        )
+        self.prp_with_round_keys(input_var, mds_states, &keys_vars)
     }
 
     fn rescue_sponge_no_padding(
@@ -163,7 +161,7 @@ where
                 &state_var,
                 &RescueStateVar::from([block[0], block[1], block[2], zero_var]),
             )?;
-            state_var = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state_var)?;
+            state_var = self.rescue_permutation(state_var)?;
         }
 
         // SQUEEZE PHASE
@@ -177,7 +175,7 @@ where
             if remaining == 0 {
                 break;
             }
-            state_var = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state_var)?;
+            state_var = self.rescue_permutation(state_var)?;
         }
 
         Ok(result)
@@ -195,7 +193,7 @@ where
         let rate = STATE_SIZE - 1;
         let data_len = compute_len_to_next_multiple(data_vars.len() + 1, rate);
 
-        let data_vars = [
+        let data_vars: Vec<Variable> = [
             data_vars,
             &[self.one()],
             vec![zero_var; data_len - data_vars.len() - 1].as_ref(),
@@ -900,9 +898,12 @@ mod tests {
             .collect_vec();
 
         let expected_sponge = RescueCRHF::sponge_no_padding(&data, 1).unwrap()[0];
-        let sponge_var = circuit
-            .rescue_sponge_no_padding(data_vars.as_slice(), 1)
-            .unwrap()[0];
+        let sponge_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+            &mut circuit,
+            data_vars.as_slice(),
+            1,
+        )
+        .unwrap()[0];
 
         assert_eq!(expected_sponge, circuit.witness(sponge_var).unwrap());
 
@@ -921,9 +922,14 @@ mod tests {
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        assert!(circuit
-            .rescue_sponge_no_padding(data_vars.as_slice(), 1)
-            .is_err());
+        assert!(
+            RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+                &mut circuit,
+                data_vars.as_slice(),
+                1
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -945,9 +951,12 @@ mod tests {
         ];
 
         for output_len in 1..10 {
-            let out_var = circuit
-                .rescue_sponge_no_padding(&input_var, output_len)
-                .unwrap();
+            let out_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+                &mut circuit,
+                &input_var,
+                output_len,
+            )
+            .unwrap();
 
             // Check consistency between inputs
             for i in 0..rate {
@@ -986,7 +995,14 @@ mod tests {
             circuit.create_variable(input_vec[2]).unwrap(),
             circuit.create_variable(input_vec[3]).unwrap(),
         ];
-        assert!(circuit.rescue_sponge_no_padding(&input_var, 1).is_err());
+        assert!(
+            RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+                &mut circuit,
+                &input_var,
+                1
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -1006,9 +1022,12 @@ mod tests {
                     .map(|x| circuit.create_variable(*x).unwrap())
                     .collect();
 
-                let out_var = circuit
-                    .rescue_sponge_with_padding(&input_var, output_len)
-                    .unwrap();
+                let out_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_with_padding(
+                    &mut circuit,
+                    &input_var,
+                    output_len,
+                )
+                .unwrap();
 
                 // Check consistency between inputs
                 for i in 0..input_len {
@@ -1055,8 +1074,12 @@ mod tests {
         let expected_fsks_output =
             RescuePRF::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();
 
-        let fsks_var = circuit
-            .rescue_full_state_keyed_sponge_no_padding(key_var, &data_vars)
+        let fsks_var =
+            RescueGadget::<RescueStateVar, F, F>::rescue_full_state_keyed_sponge_no_padding(
+                &mut circuit,
+                key_var,
+                &data_vars,
+            )
             .unwrap();
 
         // Check prf output consistency
@@ -1070,8 +1093,13 @@ mod tests {
         // make data_vars of bad length
         let mut data_vars = data_vars;
         data_vars.push(circuit.zero());
-        assert!(circuit
-            .rescue_full_state_keyed_sponge_no_padding(key_var, &data_vars)
-            .is_err());
+        assert!(
+            RescueGadget::<RescueStateVar, F, F>::rescue_full_state_keyed_sponge_no_padding(
+                &mut circuit,
+                key_var,
+                &data_vars
+            )
+            .is_err()
+        );
     }
 }

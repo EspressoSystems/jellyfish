@@ -13,6 +13,8 @@ use crate::{
 };
 use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
+use super::rescue::RescueStateVar;
+
 /// Circuit implementation of a PRF.
 pub trait PrfGadget {
     /// PRF many to one
@@ -32,7 +34,9 @@ where
 
         let mut input_vec = input.to_vec();
         pad_with(&mut input_vec, STATE_SIZE, self.zero());
-        self.rescue_full_state_keyed_sponge_no_padding(key, &input_vec)
+        RescueGadget::<RescueStateVar, F, F>::rescue_full_state_keyed_sponge_no_padding(
+            self, key, &input_vec,
+        )
     }
 }
 
