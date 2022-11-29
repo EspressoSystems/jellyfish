@@ -586,7 +586,7 @@ where
                 modulus: input_var.modulus,
             };
             for i in 0..STATE_SIZE {
-                let power_eleventh_t = input_val_fields_elems_t[i].pow(&[T::A]);
+                let power_eleventh_t = input_val_fields_elems_t[i].pow([T::A]);
                 let power_eleventh_f = field_switching::<T, F>(&power_eleventh_t);
                 let power_eleventh_fp_elem_var = FpElemVar::new_from_field_element(
                     self,

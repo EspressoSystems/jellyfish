@@ -222,7 +222,7 @@ mod test {
 
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
-        let y_t = x_t.pow(&[11]);
+        let y_t = x_t.pow([11]);
         let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
 
@@ -266,7 +266,7 @@ mod test {
 
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
-        let y_t = x_t.pow(&[5]);
+        let y_t = x_t.pow([5]);
         let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
 
@@ -310,7 +310,7 @@ mod test {
 
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
-        let y_t = x_t.pow(&[11]);
+        let y_t = x_t.pow([11]);
         let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
 

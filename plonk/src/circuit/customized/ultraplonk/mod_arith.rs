@@ -20,7 +20,7 @@ macro_rules! to_big_int {
     };
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Copy)]
 /// A field element represented by:
 /// p = p.0 + 2^m * p.1.
 /// The struct is useful in modular multiplication
@@ -51,7 +51,7 @@ where
         }
         let two_power_m = match two_power_m {
             Some(p) => p,
-            None => F::from(2u8).pow(&[m as u64]),
+            None => F::from(2u8).pow([m as u64]),
         };
         let (p1, p0) = div_rem(p, &two_power_m);
         Ok(Self {
@@ -162,7 +162,7 @@ impl<F: PrimeField> FpElemVar<F> {
             m,
             two_power_m: match two_power_m {
                 Some(p) => p,
-                None => F::from(2u8).pow(&[m as u64]),
+                None => F::from(2u8).pow([m as u64]),
             },
         })
     }
@@ -203,7 +203,7 @@ impl<F: PrimeField> FpElemVar<F> {
             m,
             two_power_m: match two_power_m {
                 Some(p) => p,
-                None => F::from(2u8).pow(&[m as u64]),
+                None => F::from(2u8).pow([m as u64]),
             },
         }
     }
@@ -215,7 +215,7 @@ impl<F: PrimeField> FpElemVar<F> {
             m,
             two_power_m: match two_power_m {
                 Some(p) => p,
-                None => F::from(2u8).pow(&[m as u64]),
+                None => F::from(2u8).pow([m as u64]),
             },
         }
     }
@@ -926,7 +926,7 @@ mod test {
 
         // case 1: m = len(|F|) / 2
         let m = F::size_in_bits() / 2;
-        let two_power_m = F::from(2u8).pow(&[m as u64]);
+        let two_power_m = F::from(2u8).pow([m as u64]);
         let fp_elem = FpElem::new(&p, m, Some(two_power_m))?;
         assert!(fp_elem.p.0 < two_power_m, "p0 larger than 2^m");
         assert!(fp_elem.p.1 < two_power_m, "p1 larger than 2^m");
@@ -1018,7 +1018,7 @@ mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // larger modulus: l_p = 10, p = 2^{160}
-        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow(&[10u64]);
+        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow([10u64]);
         let mut rng = test_rng();
         let vars: Vec<Variable> = (0..12)
             .map(|_| {
@@ -1092,7 +1092,7 @@ mod test {
         test_mod_mul_helper::<Fq377>()
     }
     fn test_mod_mul_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow(&[10u64]);
+        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow([10u64]);
         let m = 80;
         let p_split = FpElem::new(&p, m, None)?;
         let mut rng = test_rng();
@@ -1205,7 +1205,7 @@ mod test {
         test_mod_mul_constant_helper::<Fq377>()
     }
     fn test_mod_mul_constant_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow(&[10u64]);
+        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow([10u64]);
         let m = 80;
         let p_split = FpElem::new(&p, m, None)?;
         let mut rng = test_rng();
@@ -1301,7 +1301,7 @@ mod test {
         test_mod_add_helper::<Fq377>()
     }
     fn test_mod_add_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow(&[10u64]);
+        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow([10u64]);
         let m = 80;
         let p_split = FpElem::new(&p, m, None)?;
         let mut rng = test_rng();
@@ -1413,7 +1413,7 @@ mod test {
         test_mod_add_constant_helper::<Fq377>()
     }
     fn test_mod_add_constant_helper<F: PrimeField>() -> Result<(), PlonkError> {
-        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow(&[10u64]);
+        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow([10u64]);
         let m = 80;
         let p_split = FpElem::new(&p, m, None)?;
         let mut rng = test_rng();

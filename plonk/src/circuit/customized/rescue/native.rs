@@ -600,7 +600,7 @@ where
             // generate the `power 11 vector` and its wires
             let mut input_power_11_vars = RescueStateVar([Variable::default(); STATE_SIZE]);
             for (e, f) in input_var.0.iter().zip(input_power_11_vars.0.iter_mut()) {
-                let val = self.witness(*e)?.pow(&[11]);
+                let val = self.witness(*e)?.pow([11]);
                 let var = self.create_variable(val)?;
                 self.power_11_gate(*e, var)?;
                 *f = var;
@@ -618,7 +618,7 @@ where
         self.check_var_bound(input_var)?;
         let input_val = self.witness(input_var)?;
 
-        let output_val = input_val.pow(&F::A_INV);
+        let output_val = input_val.pow(F::A_INV);
         let output_var = self.create_variable(output_val)?;
         if F::A == 5 {
             let wire_vars = &[output_var, 0, 0, 0, input_var];
@@ -765,7 +765,7 @@ mod tests {
         let out_var = circuit.pow_alpha_inv_state(&input_var).unwrap();
 
         let out_value: Vec<F> = (0..STATE_SIZE)
-            .map(|i| state.elems()[i].pow(&F::A_INV))
+            .map(|i| state.elems()[i].pow(F::A_INV))
             .collect();
 
         check_state(
