@@ -18,7 +18,7 @@ use jf_relation::{
 };
 use jf_utils::compute_len_to_next_multiple;
 
-use super::{RescueGadget, RescueStateVarGen};
+use super::{PermutationGadget, RescueGadget, RescueStateVarGen};
 
 #[derive(Clone, Debug)]
 /// Array of variables representing a Rescue state (4 field elements).
@@ -296,99 +296,7 @@ where
     }
 }
 
-pub(crate) trait PermutationGadget<F: PrimeField>: Circuit<F> {
-    fn check_var_bound_rescue_state(
-        &self,
-        rescue_state: &RescueStateVar,
-    ) -> Result<(), CircuitError>;
-
-    fn add_constant_state(
-        &mut self,
-        input_var: &RescueStateVar,
-        constant: &RescueVector<F>,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    fn add_state(
-        &mut self,
-        left_state_var: &RescueStateVar,
-        right_state_var: &RescueStateVar,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Given a state st_0=(x_1,...,x_w) and st_1=(y_1,...,y_w),
-    /// add the constraints that ensure we have y_i=x_i ^{1/5} for i in
-    /// [1,...,w]
-    /// * `input_var` - rescue state variables st_0
-    /// * `returns` - rescue state variables st_1
-    fn pow_alpha_inv_state(
-        &mut self,
-        input_var: &RescueStateVar,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Given an input state st_0 and an output state st_1, ensure that st_1 = M
-    /// st_0 + C where M is a Rescue matrix and c is a constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    fn affine_transform(
-        &mut self,
-        input_var: &RescueStateVar,
-        matrix: &RescueMatrix<F>,
-        constant: &RescueVector<F>,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Given an input state st_0=(x_1,...,x_w) and an output state
-    /// st_1=(y_1,...,y_m) y_i = \sum_{j=1}^w M_{i,j}x_j^alpha+c_i for all i in
-    /// [1,..,w] where M is a Rescue matrix and c=(c_1,...,c_w) is a
-    /// constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    fn non_linear_transform(
-        &mut self,
-        input_var: &RescueStateVar,
-        matrix: &RescueMatrix<F>,
-        constant: &RescueVector<F>,
-    ) -> Result<RescueStateVar, CircuitError>;
-
-    /// Define a constraint such that y = x^(1/alpha).
-    /// It is implemented by setting q_{H1} y^alpha = q_O x
-    /// * `input_var`  - variable id corresponding to x in the equation above
-    /// * `returns` - the variable id corresponding to y
-    fn pow_alpha_inv(&mut self, input_var: Variable) -> Result<Variable, CircuitError>;
-
-    /// Given an input state st_0 and an output state st_1, ensure that st_1 is
-    /// obtained by applying the rescue permutation with a specific  list of
-    /// round keys (i.e. the keys are constants) and a matrix
-    /// * `input_var` - variables corresponding to the input state
-    /// * `mds` - Rescue matrix
-    /// * `round_keys` - list of round keys
-    /// * `returns` - variables corresponding to the output state
-    fn permutation_with_const_round_keys(
-        &mut self,
-        input_var: RescueStateVar,
-        mds: &RescueMatrix<F>,
-        round_keys: &[RescueVector<F>],
-    ) -> Result<RescueStateVar, CircuitError> {
-        if (round_keys.len() != 2 * ROUNDS + 1) || (mds.len() != STATE_SIZE) {
-            return Err(CircuitError::ParameterError("data_vars".to_string()));
-        }
-
-        let mut state_var = self.add_constant_state(&input_var, &round_keys[0])?;
-        for (r, key) in round_keys.iter().skip(1).enumerate() {
-            if r % 2 == 0 {
-                state_var = self.pow_alpha_inv_state(&state_var)?;
-                state_var = self.affine_transform(&state_var, mds, key)?;
-            } else {
-                state_var = self.non_linear_transform(&state_var, mds, key)?;
-            }
-        }
-        Ok(state_var)
-    }
-}
-
-impl<F> PermutationGadget<F> for PlonkCircuit<F>
+impl<F> PermutationGadget<RescueStateVar, F, F> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
@@ -430,7 +338,7 @@ where
         let vars: Result<Vec<Variable>, CircuitError> = input_var
             .0
             .iter()
-            .map(|var| self.pow_alpha_inv(*var))
+            .map(|var| PermutationGadget::<RescueStateVar, F, F>::pow_alpha_inv(self, *var))
             .collect();
         let vars = vars?;
         Ok(RescueStateVar::from([vars[0], vars[1], vars[2], vars[3]]))
@@ -569,6 +477,28 @@ where
             *res1 = self.add(left_var, right_var)?;
         }
         Ok(res)
+    }
+
+    fn permutation_with_const_round_keys(
+        &mut self,
+        input_var: RescueStateVar,
+        mds: &RescueMatrix<F>,
+        round_keys: &[RescueVector<F>],
+    ) -> Result<RescueStateVar, CircuitError> {
+        if (round_keys.len() != 2 * ROUNDS + 1) || (mds.len() != STATE_SIZE) {
+            return Err(CircuitError::ParameterError("data_vars".to_string()));
+        }
+
+        let mut state_var = self.add_constant_state(&input_var, &round_keys[0])?;
+        for (r, key) in round_keys.iter().skip(1).enumerate() {
+            if r % 2 == 0 {
+                state_var = self.pow_alpha_inv_state(&state_var)?;
+                state_var = self.affine_transform(&state_var, mds, key)?;
+            } else {
+                state_var = self.non_linear_transform(&state_var, mds, key)?;
+            }
+        }
+        Ok(state_var)
     }
 }
 

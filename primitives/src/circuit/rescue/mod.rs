@@ -12,8 +12,9 @@
 mod native;
 mod non_native;
 
+use ark_ff::PrimeField;
 use ark_std::vec::Vec;
-use jf_relation::errors::CircuitError;
+use jf_relation::{errors::CircuitError, Circuit};
 pub use native::RescueStateVar;
 pub use non_native::RescueNonNativeStateVar;
 
@@ -106,5 +107,76 @@ where
         input_var: &R,
         mds: &RescueMatrix<R::Native>,
         keys_vars: &[R],
+    ) -> Result<R, CircuitError>;
+}
+
+pub(crate) trait PermutationGadget<R, T, F>: Circuit<F>
+where
+    R: RescueStateVarGen<T, F>,
+    F: PrimeField,
+{
+    fn check_var_bound_rescue_state(&self, rescue_state: &R) -> Result<(), CircuitError>;
+
+    fn add_constant_state(
+        &mut self,
+        input_var: &R,
+        constant: &RescueVector<R::Native>,
+    ) -> Result<R, CircuitError>;
+
+    fn add_state(&mut self, left_state_var: &R, right_state_var: &R) -> Result<R, CircuitError>;
+
+    /// Given a state st_0=(x_1,...,x_w) and st_1=(y_1,...,y_w),
+    /// add the constraints that ensure we have y_i=x_i ^{1/5} for i in
+    /// [1,...,w]
+    /// * `input_var` - rescue state variables st_0
+    /// * `returns` - rescue state variables st_1
+    fn pow_alpha_inv_state(&mut self, input_var: &R) -> Result<R, CircuitError>;
+
+    /// Given an input state st_0 and an output state st_1, ensure that st_1 = M
+    /// st_0 + C where M is a Rescue matrix and c is a constant vector
+    /// * `input_var` - variables corresponding to the input state
+    /// * `matrix` - matrix M in the description above
+    /// * `constant` - constant c in the description above
+    /// * `returns` - variables corresponding to the output state
+    fn affine_transform(
+        &mut self,
+        input_var: &R,
+        matrix: &RescueMatrix<R::Native>,
+        constant: &RescueVector<R::Native>,
+    ) -> Result<R, CircuitError>;
+
+    /// Given an input state st_0=(x_1,...,x_w) and an output state
+    /// st_1=(y_1,...,y_m) y_i = \sum_{j=1}^w M_{i,j}x_j^alpha+c_i for all i in
+    /// [1,..,w] where M is a Rescue matrix and c=(c_1,...,c_w) is a
+    /// constant vector
+    /// * `input_var` - variables corresponding to the input state
+    /// * `matrix` - matrix M in the description above
+    /// * `constant` - constant c in the description above
+    /// * `returns` - variables corresponding to the output state
+    fn non_linear_transform(
+        &mut self,
+        input_var: &R,
+        matrix: &RescueMatrix<R::Native>,
+        constant: &RescueVector<R::Native>,
+    ) -> Result<R, CircuitError>;
+
+    /// Define a constraint such that y = x^(1/alpha).
+    /// It is implemented by setting q_{H1} y^alpha = q_O x
+    /// * `input_var`  - variable id corresponding to x in the equation above
+    /// * `returns` - the variable id corresponding to y
+    fn pow_alpha_inv(&mut self, input_var: R::Var) -> Result<R::Var, CircuitError>;
+
+    /// Given an input state st_0 and an output state st_1, ensure that st_1 is
+    /// obtained by applying the rescue permutation with a specific  list of
+    /// round keys (i.e. the keys are constants) and a matrix
+    /// * `input_var` - variables corresponding to the input state
+    /// * `mds` - Rescue matrix
+    /// * `round_keys` - list of round keys
+    /// * `returns` - variables corresponding to the output state
+    fn permutation_with_const_round_keys(
+        &mut self,
+        input_var: R,
+        mds: &RescueMatrix<R::Native>,
+        round_keys: &[RescueVector<R::Native>],
     ) -> Result<R, CircuitError>;
 }
