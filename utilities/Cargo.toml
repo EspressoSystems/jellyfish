@@ -7,29 +7,26 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
+anyhow = { version = "^1.0", default-features = false }
+ark-ec = { version = "0.3.0", default-features = false, features = ["parallel"] }
+ark-ff = { version = "0.3.0", default-features = false, features = ["asm", "parallel"] }
+ark-serialize = { version = "0.3.0", default-features = false }
+ark-std = { version = "0.3.0", default-features = false }
+digest = { version = "0.10.1", default-features = false }
 jf-utils-derive = { path = "../utilities_derive" }
+serde = { version = "1.0", features = ["derive"] }
+sha2 = { version = "0.10.1", default-features = false }
+snafu = { version = "0.7", features = ["backtraces"] }
 tagged-base64 = { git = "https://github.com/EspressoSystems/tagged-base64", tag = "0.2.0" }
 
-ark-std = { version = "0.3.0", default-features = false }
-ark-ff = { version = "0.3.0", default-features = false, features = ["asm", "parallel"] }
-ark-ec = { version = "0.3.0", default-features = false, features = ["parallel"] }
-ark-serialize = { version = "0.3.0", default-features = false }
-
-serde = { version = "1.0", features = ["derive"] }
-anyhow = { version = "^1.0", default-features = false }
-snafu = { version = "0.7", features = ["backtraces"] }
-
-sha2 = { version = "0.10.1", default-features = false }
-digest = { version = "0.10.1", default-features = false }
-
 [dev-dependencies]
-ark-ed-on-bn254 = { version = "0.3.0", default-features = false }
+ark-bls12-377 =  { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
+ark-bn254 = { version = "0.3.0", default-features = false, features = ["curve"] }
 ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ed-on-bls12-381 = { version = "0.3.0", default-features = false }
 ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", default-features = false, rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-bn254 = { version = "0.3.0", default-features = false, features = ["curve"] }
-ark-bls12-377 =  { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-bls12-381 = { version = "0.3.0", default-features = false, features = ["curve"] }
+ark-ed-on-bn254 = { version = "0.3.0", default-features = false }
 ark-serialize = { version = "0.3.0", default-features = false, features = ["derive"] }
 serde_json = "1.0"
 
