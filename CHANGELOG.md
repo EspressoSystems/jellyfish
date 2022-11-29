@@ -2,6 +2,10 @@
 
 ## Pending
 
+## v0.1.3
+
+- Update crypto_box requirement from 0.7.1 to 0.8.1
+
 ## v0.1.2
 
 ### Improvements
