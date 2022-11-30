@@ -19,7 +19,7 @@ use super::{errors::RescueError, Permutation, RescueParameter, RescueVector, RAT
 #[derive(Clone, Default)]
 /// A rescue hash function consists of a permutation function and
 /// an internal state.
-pub struct RescueSponge<F: RescueParameter, const ABSORB_RATE: usize> {
+pub struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
     pub(crate) state: RescueVector<F>,
 }
 
