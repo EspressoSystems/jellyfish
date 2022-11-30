@@ -55,7 +55,9 @@ impl CanonicalDeserialize for BLSSignKey {
 
         let mut key = [0u8; BLS_SIG_KEY_SIZE];
         reader.read_exact(&mut key)?;
-        Ok(Self(SecretKey::deserialize(&key).unwrap()))
+        SecretKey::deserialize(&key)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
     }
 }
 
@@ -92,7 +94,9 @@ impl CanonicalDeserialize for BLSSignature {
 
         let mut sig = [0u8; BLS_SIG_SIGNATURE_SIZE];
         reader.read_exact(&mut sig)?;
-        Ok(Self(Signature::deserialize(&sig).unwrap()))
+        Signature::deserialize(&sig)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
     }
 }
 
@@ -129,7 +133,9 @@ impl CanonicalDeserialize for BLSVerKey {
 
         let mut key = [0u8; BLS_SIG_VERKEY_SIZE];
         reader.read_exact(&mut key)?;
-        Ok(Self(PublicKey::deserialize(&key).unwrap()))
+        PublicKey::deserialize(&key)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
     }
 }
 
