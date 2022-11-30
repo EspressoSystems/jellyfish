@@ -97,7 +97,7 @@ where
 // Signing key
 // =====================================================
 #[derive(
-    Clone, Hash, Default, Zeroize, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
+    Clone, Hash, Default, Zeroize, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
 /// Signing key for Schnorr signature.
 pub struct SignKey<F: PrimeField>(pub(crate) F);

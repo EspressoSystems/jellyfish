@@ -1,8 +1,8 @@
 [workspace]
 members = [
   "plonk",
-  "rescue",
   "primitives",
+  "rescue",
   "utilities",
   "utilities_derive",
 ]

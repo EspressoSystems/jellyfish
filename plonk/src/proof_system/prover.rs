@@ -326,7 +326,7 @@ impl<E: PairingEngine> Prover<E> {
         zeta: E::Fr,
         quot_polys: &[DensePolynomial<E::Fr>],
     ) -> Result<DensePolynomial<E::Fr>, PlonkError> {
-        let vanish_eval = zeta.pow(&[domain_size as u64]) - E::Fr::one();
+        let vanish_eval = zeta.pow([domain_size as u64]) - E::Fr::one();
         let zeta_to_n_plus_2 = (vanish_eval + E::Fr::one()) * zeta * zeta;
         let mut r_quot = quot_polys.first().ok_or(PlonkError::IndexError)?.clone();
         let mut coeff = E::Fr::one();
@@ -705,10 +705,10 @@ impl<E: PairingEngine> Prover<E> {
             + q_mul[0] * w[0] * w[1]
             + q_mul[1] * w[2] * w[3]
             + q_ecc * w[0] * w[1] * w[2] * w[3] * w[4]
-            + q_hash[0] * w[0].pow(&[5])
-            + q_hash[1] * w[1].pow(&[5])
-            + q_hash[2] * w[2].pow(&[5])
-            + q_hash[3] * w[3].pow(&[5])
+            + q_hash[0] * w[0].pow([5])
+            + q_hash[1] * w[1].pow([5])
+            + q_hash[2] * w[2].pow([5])
+            + q_hash[3] * w[3].pow([5])
             - q_o * w[4]
     }
 
@@ -944,10 +944,10 @@ impl<E: PairingEngine> Prover<E> {
             + Self::mul_poly(&q_lc[3], &w_evals[3])
             + Self::mul_poly(&q_mul[0], &(w_evals[0] * w_evals[1]))
             + Self::mul_poly(&q_mul[1], &(w_evals[2] * w_evals[3]))
-            + Self::mul_poly(&q_hash[0], &w_evals[0].pow(&[5]))
-            + Self::mul_poly(&q_hash[1], &w_evals[1].pow(&[5]))
-            + Self::mul_poly(&q_hash[2], &w_evals[2].pow(&[5]))
-            + Self::mul_poly(&q_hash[3], &w_evals[3].pow(&[5]))
+            + Self::mul_poly(&q_hash[0], &w_evals[0].pow([5]))
+            + Self::mul_poly(&q_hash[1], &w_evals[1].pow([5]))
+            + Self::mul_poly(&q_hash[2], &w_evals[2].pow([5]))
+            + Self::mul_poly(&q_hash[3], &w_evals[3].pow([5]))
             + Self::mul_poly(
                 q_ecc,
                 &(w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4]),
@@ -963,7 +963,7 @@ impl<E: PairingEngine> Prover<E> {
         poly_evals: &ProofEvaluations<E::Fr>,
         prod_perm_poly: &DensePolynomial<E::Fr>,
     ) -> DensePolynomial<E::Fr> {
-        let dividend = challenges.zeta.pow(&[pk.domain_size() as u64]) - E::Fr::one();
+        let dividend = challenges.zeta.pow([pk.domain_size() as u64]) - E::Fr::one();
         let divisor = E::Fr::from(pk.domain_size() as u32) * (challenges.zeta - E::Fr::one());
         let lagrange_1_eval = dividend / divisor;
 
@@ -1010,7 +1010,7 @@ impl<E: PairingEngine> Prover<E> {
         let alpha_6 = alpha_4 * alpha_2;
         let n = pk.domain_size();
         let one = E::Fr::one();
-        let vanish_eval = challenges.zeta.pow(&[n as u64]) - one;
+        let vanish_eval = challenges.zeta.pow([n as u64]) - one;
 
         // compute lagrange_1 and lagrange_n
         let divisor = E::Fr::from(n as u32) * (challenges.zeta - one);
