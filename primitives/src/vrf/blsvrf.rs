@@ -101,7 +101,7 @@ impl Vrf for BLSVRFScheme {
         _pp: &Self::PublicParameter,
         proof: &Self::Proof,
     ) -> Result<Self::Output, PrimitivesError> {
-        let proof_serialized = proof.serialize();
+        let proof_serialized = proof.0.serialize();
         let mut hasher = (*self.hasher).box_clone();
         hasher.update(&proof_serialized);
         let output = hasher.finalize();
@@ -151,7 +151,7 @@ mod test {
 
         // check the VRF output vs. hashing the proof directly
         let mut hasher = H::new();
-        hasher.update(vrf_proof.serialize());
+        hasher.update(vrf_proof.0.serialize());
         let direct_hash_output = hasher.finalize().to_vec();
         assert_eq!(direct_hash_output, vrf_output);
 
