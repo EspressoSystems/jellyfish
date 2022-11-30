@@ -7,7 +7,7 @@
 //! This module implements a pseudo random function that is derived from
 //! the rescue hash function.
 
-use core::marker::PhantomData;
+use ark_std::marker::PhantomData;
 
 use crate::{
     errors::PrimitivesError,

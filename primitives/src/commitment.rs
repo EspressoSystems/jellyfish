@@ -6,7 +6,7 @@
 
 //! Implements a rescue hash based commitment scheme.
 
-use core::marker::PhantomData;
+use ark_std::marker::PhantomData;
 
 use crate::{
     errors::PrimitivesError,
