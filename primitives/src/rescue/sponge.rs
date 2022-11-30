@@ -6,13 +6,12 @@
 
 //! This file contains the APIs wrappers for ark-sponge
 
-use ark_ff::{BigInteger, PrimeField};
+use ark_ff::PrimeField;
 use ark_sponge::{
     Absorb, CryptographicSponge, FieldBasedCryptographicSponge, FieldElementSize, SpongeExt,
 };
 use ark_std::{string::ToString, vec, vec::Vec};
 use jf_utils::{field_switching, pad_with_zeros};
-use num_bigint::BigUint;
 
 use super::{errors::RescueError, Permutation, RescueParameter, RescueVector, RATE, STATE_SIZE};
 
@@ -161,58 +160,13 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
     }
 
     /// Squeeze `num_bytes` bytes from the sponge.
-    fn squeeze_bytes(&mut self, num_bytes: usize) -> Vec<u8> {
-        self.squeeze_bits(num_bytes)
-            .chunks(8)
-            .map(bools_to_u8)
-            .collect()
+    fn squeeze_bytes(&mut self, _num_bytes: usize) -> Vec<u8> {
+        unimplemented!()
     }
 
     /// Squeeze `num_bits` bits from the sponge.
-    fn squeeze_bits(&mut self, num_bits: usize) -> Vec<bool> {
-        // we extract k number of field elements;
-        // each field elements will produce a maximum
-        // ```
-        // T::size_in_bits() - 129
-        // ```
-        // number of bits that is computational uniform.
-        #[cfg(debug_assertions)]
-        assert!(T::size_in_bits() > 129);
-
-        let permutation = Permutation::default();
-        let mut result = Vec::new();
-        let mut remaining = num_bits;
-
-        // we extract 3 elements with a hash call
-        let extracted_bits_per_elem = T::size_in_bits() - 129;
-        let mut elem_ctr = 0;
-        let mut extracted = self.state.vec;
-        self.state = permutation.eval(&self.state);
-
-        // modulus is 2^extracted_bits_per_elem
-        let modulus: BigUint = T::from(2u64).pow([extracted_bits_per_elem as u64]).into();
-
-        while remaining > extracted_bits_per_elem {
-            let e_int: BigUint = extracted[elem_ctr].into();
-            elem_ctr += 1;
-            if elem_ctr == 3 {
-                extracted = self.state.vec;
-                self.state = permutation.eval(&self.state);
-                elem_ctr = 0;
-            }
-
-            let extracted_bit = e_int % &modulus;
-            result.extend_from_slice(
-                &T::from(extracted_bit).into_repr().to_bits_le()[0..extracted_bits_per_elem],
-            );
-            remaining -= extracted_bits_per_elem;
-        }
-
-        let e_int: BigUint = extracted[elem_ctr].into();
-        let extracted_bit = e_int % &modulus;
-        result.extend_from_slice(&T::from(extracted_bit).into_repr().to_bits_le()[0..remaining]);
-
-        result
+    fn squeeze_bits(&mut self, _num_bits: usize) -> Vec<bool> {
+        unimplemented!()
     }
 
     /// Squeeze `sizes.len()` field elements from the sponge, where the `i`-th
@@ -305,18 +259,6 @@ impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<
             unimplemented!()
         }
     }
-}
-
-#[inline]
-fn bools_to_u8(input: &[bool]) -> u8 {
-    let mut res = 0;
-    for &e in input {
-        res <<= 1;
-        if e {
-            res += 1
-        }
-    }
-    res
 }
 
 #[cfg(test)]
