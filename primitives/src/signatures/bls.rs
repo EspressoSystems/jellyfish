@@ -20,10 +20,11 @@ use espresso_systems_common::jellyfish::tag;
 use tagged_base64::tagged;
 
 pub use blst::min_sig::{PublicKey, SecretKey, Signature};
+use zeroize::Zeroize;
 
 /// Newtype wrapper for a BLS Signing Key.
 #[tagged(tag::BLSSIGNINGKEY)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Zeroize)]
 pub struct BLSSignKey(SecretKey);
 
 impl core::ops::Deref for BLSSignKey {
