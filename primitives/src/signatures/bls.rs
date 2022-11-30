@@ -1,7 +1,12 @@
 //! BLS Signature Scheme
 
 use super::SignatureScheme;
-use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError};
+use crate::{
+    constants::{
+        BLS_SIG_KEY_SIZE, BLS_SIG_SIGNATURE_SIZE, BLS_SIG_VERKEY_SIZE, CS_ID_BLS_SIG_NAIVE,
+    },
+    errors::PrimitivesError,
+};
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
 use ark_std::{
@@ -15,13 +20,6 @@ use espresso_systems_common::jellyfish::tag;
 use tagged_base64::tagged;
 
 pub use blst::min_sig::{PublicKey, SecretKey, Signature};
-
-/// Size in bytes of a secret key in our BLS signature scheme.
-pub const BLS_SIG_KEY_SIZE: usize = 32;
-/// Size in bytes of a signature in our BLS signature scheme.
-pub const BLS_SIG_SIGNATURE_SIZE: usize = 96;
-/// Size in bytes of a verification key in our BLS signature scheme.
-pub const BLS_SIG_VERKEY_SIZE: usize = 192;
 
 /// Newtype wrapper for a BLS Signing Key.
 #[tagged(tag::BLSSIGNINGKEY)]
