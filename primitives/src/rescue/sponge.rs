@@ -35,6 +35,10 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     pub fn sponge_with_padding(input: &[F], num_outputs: usize) -> Vec<F> {
         // Pad input as follows: append a One, then pad with 0 until length is multiple
         // of RATE
+        assert_eq!(
+            CHUNK_SIZE, RATE,
+            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescueSpongePRF instead?"
+        );
         let mut padded = input.to_vec();
         padded.push(F::one());
         pad_with_zeros(&mut padded, RATE);
@@ -46,6 +50,10 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
     /// RATE and variable output length
     pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
+        assert_eq!(
+            CHUNK_SIZE, RATE,
+            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescueSpongePRF instead?"
+        );
         if input.len() % RATE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."
@@ -69,6 +77,9 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
         input: &[F],
         num_outputs: usize,
     ) -> Vec<F> {
+        assert_eq!(
+            CHUNK_SIZE, STATE_SIZE,
+            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueSpongeCRHF instead?");
         let mut padded_input = input.to_vec();
         padded_input.push(F::one());
         pad_with_zeros(&mut padded_input, STATE_SIZE);
@@ -84,6 +95,9 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
         input: &[F],
         num_outputs: usize,
     ) -> Result<Vec<F>, RescueError> {
+        assert_eq!(
+            CHUNK_SIZE, STATE_SIZE,
+            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueSpongeCRHF instead?");
         if input.len() % STATE_SIZE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE."
