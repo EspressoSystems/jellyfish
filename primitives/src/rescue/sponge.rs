@@ -20,6 +20,7 @@ use super::{errors::RescueError, Permutation, RescueParameter, RescueVector, RAT
 /// an internal state.
 struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
     pub(crate) state: RescueVector<F>,
+    pub(crate) permutation: Permutation<F>,
 }
 
 /// CRHF
@@ -119,8 +120,11 @@ impl<F: RescueParameter> RescuePRF<F> {
 impl<F: RescueParameter, const CHUNK_SIZE: usize> SpongeExt for RescueSponge<F, CHUNK_SIZE> {
     type State = RescueVector<F>;
 
-    fn from_state(state: Self::State, _permutation: &Self::Parameters) -> Self {
-        Self { state }
+    fn from_state(state: Self::State, permutation: &Self::Parameters) -> Self {
+        Self {
+            state,
+            permutation: permutation.clone(),
+        }
     }
 
     fn into_state(self) -> Self::State {
@@ -135,9 +139,10 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
     type Parameters = Permutation<T>;
 
     /// Initialize a new instance of the sponge.
-    fn new(_permutation: &Self::Parameters) -> Self {
+    fn new(permutation: &Self::Parameters) -> Self {
         Self {
             state: RescueVector::default(),
+            permutation: permutation.clone(),
         }
     }
 
@@ -145,8 +150,6 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
     /// This function will absorb the entire input, in chunks of `CHUNK_SIZE`,
     /// even if the input lenght is not a multiple of `CHUNK_SIZE`.
     fn absorb(&mut self, input: &impl Absorb) {
-        let permutation = Permutation::default();
-
         let input_field_elements = input.to_sponge_field_elements_as_vec();
 
         // Absorb input.
@@ -155,7 +158,7 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
             .into_iter()
             .for_each(|chunk| {
                 self.state.add_assign_elems(chunk);
-                self.state = permutation.eval(&self.state)
+                self.state = self.permutation.eval(&self.state)
             });
     }
 
@@ -224,7 +227,6 @@ impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<
     /// Squeeze `num_elements` field elements from the sponge.
     fn squeeze_native_field_elements(&mut self, num_elements: usize) -> Vec<T> {
         // SQUEEZE PHASE
-        let permutation = Permutation::default();
         let mut result = vec![];
         let mut remaining = num_elements;
         // extract current rate before calling PRP again
@@ -235,7 +237,7 @@ impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<
             if remaining == 0 {
                 break;
             }
-            self.state = permutation.eval(&self.state)
+            self.state = self.permutation.eval(&self.state)
         }
         result
     }
