@@ -831,7 +831,6 @@ mod test_permutation {
 
     fn test_sponge_helper<F: RescueParameter>() {
         let rescue_prp = PRP::default();
-        // let rescue_permutation = Permutation::from(rescue_prp.clone());
         let mut prng = ark_std::test_rng();
         let e0 = F::rand(&mut prng);
         let e1 = F::rand(&mut prng);
