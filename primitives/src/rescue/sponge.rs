@@ -211,8 +211,7 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
                 .map(|x| field_switching(x))
                 .collect::<Vec<F>>()
         } else {
-            // currently we do not support hashing into a non-native field
-            unimplemented!()
+            unimplemented!("currently we do not support hashing into a non-native field");
         }
     }
 
