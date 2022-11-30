@@ -229,7 +229,7 @@ impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<
         let mut remaining = num_elements;
         // extract current rate before calling PRP again
         loop {
-            let extract = remaining.min(RATE);
+            let extract = remaining.min(CHUNK_SIZE);
             result.extend_from_slice(&self.state.vec[0..extract]);
             remaining -= extract;
             if remaining == 0 {
