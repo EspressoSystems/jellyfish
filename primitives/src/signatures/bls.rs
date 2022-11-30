@@ -27,6 +27,14 @@ use zeroize::Zeroize;
 #[derive(Clone, Debug, Zeroize)]
 pub struct BLSSignKey(SecretKey);
 
+impl core::ops::Deref for BLSSignKey {
+    type Target = SecretKey;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl CanonicalSerialize for BLSSignKey {
     fn serialized_size(&self) -> usize {
         BLS_SIG_KEY_SIZE
@@ -64,7 +72,15 @@ impl Eq for BLSSignKey {}
 /// Newtype wrapper for a BLS Signature.
 #[tagged(tag::BLS_SIG)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BLSSignature(pub(crate) Signature);
+pub struct BLSSignature(Signature);
+
+impl core::ops::Deref for BLSSignature {
+    type Target = Signature;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl CanonicalSerialize for BLSSignature {
     fn serialized_size(&self) -> usize {
@@ -96,6 +112,14 @@ impl CanonicalDeserialize for BLSSignature {
 #[tagged(tag::BLS_VER_KEY)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BLSVerKey(PublicKey);
+
+impl core::ops::Deref for BLSVerKey {
+    type Target = PublicKey;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl CanonicalSerialize for BLSVerKey {
     fn serialized_size(&self) -> usize {
@@ -174,7 +198,7 @@ impl SignatureScheme for BLSSignatureScheme {
         msg: M,
         _prng: &mut R,
     ) -> Result<Self::Signature, PrimitivesError> {
-        Ok(BLSSignature(sk.0.sign(
+        Ok(BLSSignature(sk.sign(
             msg.as_ref(),
             Self::CS_ID.as_bytes(),
             &[],
@@ -188,14 +212,7 @@ impl SignatureScheme for BLSSignatureScheme {
         msg: M,
         sig: &Self::Signature,
     ) -> Result<(), PrimitivesError> {
-        match sig.0.verify(
-            false,
-            msg.as_ref(),
-            Self::CS_ID.as_bytes(),
-            &[],
-            &vk.0,
-            true,
-        ) {
+        match sig.verify(false, msg.as_ref(), Self::CS_ID.as_bytes(), &[], vk, true) {
             BLST_ERROR::BLST_SUCCESS => Ok(()),
             e => Err(PrimitivesError::VerificationError(format!("{:?}", e))),
         }
