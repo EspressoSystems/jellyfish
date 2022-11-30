@@ -24,9 +24,9 @@ pub struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
 }
 
 /// CRHF
-pub type RescueSpongeCRHF<F> = RescueSponge<F, 3>;
+pub type RescueSpongeCRHF<F> = RescueSponge<F, RATE>;
 /// PRF
-pub type RescueSpongePRF<F> = RescueSponge<F, 4>;
+pub type RescueSpongePRF<F> = RescueSponge<F, STATE_SIZE>;
 
 impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
