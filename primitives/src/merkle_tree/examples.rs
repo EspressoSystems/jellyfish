@@ -8,7 +8,7 @@
 //! E.g. Sparse merkle tree with BigUInt index.
 
 use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm, Element, Index};
-use crate::rescue::{sponge::RescueSpongeCRHF, RescueParameter};
+use crate::rescue::{sponge::RescueCRH, RescueParameter};
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use sha3::{Digest, Sha3_256};
@@ -21,12 +21,12 @@ pub struct Interval<F: Field>(pub F, pub F);
 
 impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> {
     fn digest(data: &[F]) -> F {
-        RescueSpongeCRHF::<F>::sponge_no_padding(data, 1).unwrap()[0]
+        RescueCRH::<F>::sponge_no_padding(data, 1).unwrap()[0]
     }
 
     fn digest_leaf(pos: &u64, elem: &Interval<F>) -> F {
         let data = [F::from(*pos), elem.0, elem.1];
-        RescueSpongeCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0]
+        RescueCRH::<F>::sponge_no_padding(&data, 1).unwrap()[0]
     }
 }
 

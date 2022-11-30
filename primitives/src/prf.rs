@@ -11,7 +11,7 @@ use ark_std::marker::PhantomData;
 
 use crate::{
     errors::PrimitivesError,
-    rescue::{sponge::RescueSpongePRF, RescueParameter, STATE_SIZE},
+    rescue::{sponge::RescuePRF, RescueParameter, STATE_SIZE},
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;
@@ -86,10 +86,9 @@ impl<F: RescueParameter> PRF<F> {
         // Ok to pad with 0's since input length is fixed for the PRF instance
         let mut padded = input.to_owned();
         pad_with_zeros(&mut padded, STATE_SIZE);
-        RescueSpongePRF::full_state_keyed_sponge_no_padding(&key.0, &padded, self.output_len)
-            .map_err(|_| {
-                PrimitivesError::InternalError("Bug in PRF: bad padding for input".to_string())
-            })
+        RescuePRF::full_state_keyed_sponge_no_padding(&key.0, &padded, self.output_len).map_err(
+            |_| PrimitivesError::InternalError("Bug in PRF: bad padding for input".to_string()),
+        )
     }
 }
 

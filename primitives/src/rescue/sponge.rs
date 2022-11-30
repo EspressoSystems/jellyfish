@@ -24,9 +24,9 @@ pub struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
 }
 
 /// CRHF
-pub type RescueSpongeCRHF<F> = RescueSponge<F, RATE>;
+pub type RescueCRH<F> = RescueSponge<F, RATE>;
 /// PRF
-pub type RescueSpongePRF<F> = RescueSponge<F, STATE_SIZE>;
+pub type RescuePRF<F> = RescueSponge<F, STATE_SIZE>;
 
 impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
@@ -37,7 +37,7 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
         // of RATE
         assert_eq!(
             CHUNK_SIZE, RATE,
-            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescueSpongePRF instead?"
+            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescuePRF instead?"
         );
         let mut padded = input.to_vec();
         padded.push(F::one());
@@ -52,7 +52,7 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
         assert_eq!(
             CHUNK_SIZE, RATE,
-            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescueSpongePRF instead?"
+            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescuePRF instead?"
         );
         if input.len() % RATE != 0 {
             return Err(RescueError::ParameterError(
@@ -79,7 +79,8 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     ) -> Vec<F> {
         assert_eq!(
             CHUNK_SIZE, STATE_SIZE,
-            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueSpongeCRHF instead?");
+            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueCRH instead?"
+        );
         let mut padded_input = input.to_vec();
         padded_input.push(F::one());
         pad_with_zeros(&mut padded_input, STATE_SIZE);
@@ -97,7 +98,8 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     ) -> Result<Vec<F>, RescueError> {
         assert_eq!(
             CHUNK_SIZE, STATE_SIZE,
-            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueSpongeCRHF instead?");
+            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueCRH instead?"
+        );
         if input.len() % STATE_SIZE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE."
@@ -331,8 +333,8 @@ mod test {
         assert_ne!(bytes1, bytes2);
 
         let sponge_param = Permutation::default();
-        let mut sponge1 = RescueSpongeCRHF::<F>::new(&sponge_param);
-        let mut sponge2 = RescueSpongeCRHF::<F>::new(&sponge_param);
+        let mut sponge1 = RescueCRH::<F>::new(&sponge_param);
+        let mut sponge2 = RescueCRH::<F>::new(&sponge_param);
 
         sponge1.absorb(&a);
         sponge2.absorb(&b);
@@ -393,7 +395,7 @@ mod test {
         let mut rng = test_rng();
         let sponge_param = Permutation::default();
         let elem = Fr::rand(&mut rng);
-        let mut sponge1 = RescueSpongeCRHF::<Fr>::new(&sponge_param);
+        let mut sponge1 = RescueCRH::<Fr>::new(&sponge_param);
         sponge1.absorb(&elem);
         let mut sponge2 = sponge1.clone();
 
@@ -407,11 +409,11 @@ mod test {
     #[test]
     fn test_macros() {
         let sponge_param = Permutation::default();
-        let mut sponge1 = RescueSpongeCRHF::<Fr>::new(&sponge_param);
+        let mut sponge1 = RescueCRH::<Fr>::new(&sponge_param);
         sponge1.absorb(&vec![1u8, 2, 3, 4, 5, 6]);
         sponge1.absorb(&Fr::from(114514u128));
 
-        let mut sponge2 = RescueSpongeCRHF::<Fr>::new(&sponge_param);
+        let mut sponge2 = RescueCRH::<Fr>::new(&sponge_param);
         absorb!(&mut sponge2, vec![1u8, 2, 3, 4, 5, 6], Fr::from(114514u128));
 
         let expected = sponge1.squeeze_native_field_elements(3);

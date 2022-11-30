@@ -736,7 +736,7 @@ mod tests {
 
     use super::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
     use crate::rescue::{
-        sponge::{RescueSpongeCRHF, RescueSpongePRF},
+        sponge::{RescueCRH, RescuePRF},
         Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
     };
     use ark_bls12_377::Fq as Fq377;
@@ -1072,7 +1072,7 @@ mod tests {
             .collect();
 
         // sponge no padding with output length 1
-        let expected_sponge = RescueSpongeCRHF::sponge_no_padding(&data_t, 1).unwrap()[0];
+        let expected_sponge = RescueCRH::sponge_no_padding(&data_t, 1).unwrap()[0];
         let sponge_var = circuit
             .rescue_sponge_no_padding::<T>(data_vars.as_slice(), 1)
             .unwrap()[0];
@@ -1091,7 +1091,7 @@ mod tests {
 
         // general sponge no padding
         for output_len in 1..max_output_len {
-            let expected_sponge = RescueSpongeCRHF::sponge_no_padding(&data_t, output_len).unwrap();
+            let expected_sponge = RescueCRH::sponge_no_padding(&data_t, output_len).unwrap();
             let sponge_var = circuit
                 .rescue_sponge_no_padding::<T>(data_vars.as_slice(), output_len)
                 .unwrap();
@@ -1152,7 +1152,7 @@ mod tests {
                 .map(|x| FpElemVar::new_from_field_element(&mut circuit, x, m, None).unwrap())
                 .collect();
 
-            let expected_sponge = RescueSpongeCRHF::sponge_with_padding(&data_t, 1);
+            let expected_sponge = RescueCRH::sponge_with_padding(&data_t, 1);
 
             // sponge with padding
             let sponge_var = circuit
@@ -1173,7 +1173,7 @@ mod tests {
 
             // sponge full with padding
             for output_len in 1..max_output_len {
-                let expected_sponge = RescueSpongeCRHF::sponge_with_padding(&data_t, output_len);
+                let expected_sponge = RescueCRH::sponge_with_padding(&data_t, output_len);
 
                 let sponge_var = circuit
                     .rescue_sponge_with_padding::<T>(data_vars.as_slice(), output_len)
@@ -1269,7 +1269,7 @@ mod tests {
             .collect();
 
         let expected_fsks_output =
-            RescueSpongePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
+            RescuePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
         let fsks_var = circuit
             .rescue_full_state_keyed_sponge_no_padding::<T>(key_var, &data_vars)

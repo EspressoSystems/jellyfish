@@ -10,7 +10,7 @@ use ark_std::marker::PhantomData;
 
 use crate::{
     errors::PrimitivesError,
-    rescue::{sponge::RescueSpongeCRHF, RescueParameter, RATE},
+    rescue::{sponge::RescueCRH, RescueParameter, RATE},
 };
 use ark_std::{format, string::String, vec};
 use jf_utils::pad_with_zeros;
@@ -47,7 +47,7 @@ impl<F: RescueParameter> Commitment<F> {
         msg.extend_from_slice(input);
         // Ok to pad with 0's since input length is fixed for the commitment instance
         pad_with_zeros(&mut msg, RATE);
-        let result_vec = RescueSpongeCRHF::sponge_no_padding(msg.as_slice(), 1)?;
+        let result_vec = RescueCRH::sponge_no_padding(msg.as_slice(), 1)?;
         Ok(result_vec[0])
     }
     /// Verifies `commitment` against `input` and `blind`.
