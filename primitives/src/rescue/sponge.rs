@@ -19,26 +19,36 @@ use super::{errors::RescueError, Permutation, RescueParameter, RescueVector, RAT
 #[derive(Clone, Default)]
 /// A rescue hash function consists of a permutation function and
 /// an internal state.
-pub struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
+struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
     pub(crate) state: RescueVector<F>,
 }
 
 /// CRHF
-pub type RescueCRH<F> = RescueSponge<F, RATE>;
-/// PRF
-pub type RescuePRF<F> = RescueSponge<F, STATE_SIZE>;
+pub struct RescueCRH<F: RescueParameter> {
+    sponge: RescueSponge<F, RATE>,
+}
 
-impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
+/// PRF
+pub struct RescuePRF<F: RescueParameter> {
+    sponge: RescueSponge<F, STATE_SIZE>,
+}
+
+impl<F: RescueParameter> RescueCRH<F> {
+    /// Create a new RescueCRH instance.
+    pub fn new(sponge_parameters: &Permutation<F>) -> Self {
+        Self {
+            sponge: RescueSponge::<F, RATE>::new(sponge_parameters),
+        }
+    }
+}
+
+impl<F: RescueParameter> RescueCRH<F> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
     /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
     /// input and number of output elements
     pub fn sponge_with_padding(input: &[F], num_outputs: usize) -> Vec<F> {
         // Pad input as follows: append a One, then pad with 0 until length is multiple
         // of RATE
-        assert_eq!(
-            CHUNK_SIZE, RATE,
-            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescuePRF instead?"
-        );
         let mut padded = input.to_vec();
         padded.push(F::one());
         pad_with_zeros(&mut padded, RATE);
@@ -50,10 +60,6 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
     /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
     /// RATE and variable output length
     pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
-        assert_eq!(
-            CHUNK_SIZE, RATE,
-            "CHUNK_SIZE must be equal to RATE. Perhaps you meant to use a RescuePRF instead?"
-        );
         if input.len() % RATE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."
@@ -61,15 +67,17 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
             ));
         }
         // ABSORB PHASE
-        let mut r = Self::from_state(RescueVector::zero(), &Permutation::default());
-        r.absorb(&input);
+        let mut r = Self {
+            sponge: RescueSponge::from_state(RescueVector::zero(), &Permutation::default()),
+        };
+        r.sponge.absorb(&input);
 
         // SQUEEZE PHASE
-        Ok(r.squeeze_native_field_elements(num_output))
+        Ok(r.sponge.squeeze_native_field_elements(num_output))
     }
 }
 
-impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
+impl<F: RescueParameter> RescuePRF<F> {
     /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
     /// variable length input and number of output elements
     pub fn full_state_keyed_sponge_with_padding(
@@ -77,10 +85,6 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
         input: &[F],
         num_outputs: usize,
     ) -> Vec<F> {
-        assert_eq!(
-            CHUNK_SIZE, STATE_SIZE,
-            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueCRH instead?"
-        );
         let mut padded_input = input.to_vec();
         padded_input.push(F::one());
         pad_with_zeros(&mut padded_input, STATE_SIZE);
@@ -96,10 +100,6 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
         input: &[F],
         num_outputs: usize,
     ) -> Result<Vec<F>, RescueError> {
-        assert_eq!(
-            CHUNK_SIZE, STATE_SIZE,
-            "CHUNK_SIZE must be equal to STATE_SIZE. Perhaps you meant to use a RescueCRH instead?"
-        );
         if input.len() % STATE_SIZE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE."
@@ -109,9 +109,11 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> RescueSponge<F, CHUNK_SIZE> {
         // ABSORB PHASE
         let mut state = RescueVector::zero();
         state.vec[STATE_SIZE - 1] = *key;
-        let mut r = Self::from_state(state, &Permutation::default());
-        r.absorb(&input);
-        Ok(r.squeeze_native_field_elements(num_outputs))
+        let mut r = Self {
+            sponge: RescueSponge::from_state(state, &Permutation::default()),
+        };
+        r.sponge.absorb(&input);
+        Ok(r.sponge.squeeze_native_field_elements(num_outputs))
     }
 }
 
@@ -333,8 +335,8 @@ mod test {
         assert_ne!(bytes1, bytes2);
 
         let sponge_param = Permutation::default();
-        let mut sponge1 = RescueCRH::<F>::new(&sponge_param);
-        let mut sponge2 = RescueCRH::<F>::new(&sponge_param);
+        let mut sponge1 = RescueSponge::<F, 3>::new(&sponge_param);
+        let mut sponge2 = RescueSponge::<F, 3>::new(&sponge_param);
 
         sponge1.absorb(&a);
         sponge2.absorb(&b);
@@ -395,7 +397,7 @@ mod test {
         let mut rng = test_rng();
         let sponge_param = Permutation::default();
         let elem = Fr::rand(&mut rng);
-        let mut sponge1 = RescueCRH::<Fr>::new(&sponge_param);
+        let mut sponge1 = RescueSponge::<Fr, 3>::new(&sponge_param);
         sponge1.absorb(&elem);
         let mut sponge2 = sponge1.clone();
 
@@ -409,11 +411,11 @@ mod test {
     #[test]
     fn test_macros() {
         let sponge_param = Permutation::default();
-        let mut sponge1 = RescueCRH::<Fr>::new(&sponge_param);
+        let mut sponge1 = RescueSponge::<Fr, 3>::new(&sponge_param);
         sponge1.absorb(&vec![1u8, 2, 3, 4, 5, 6]);
         sponge1.absorb(&Fr::from(114514u128));
 
-        let mut sponge2 = RescueCRH::<Fr>::new(&sponge_param);
+        let mut sponge2 = RescueSponge::<Fr, 3>::new(&sponge_param);
         absorb!(&mut sponge2, vec![1u8, 2, 3, 4, 5, 6], Fr::from(114514u128));
 
         let expected = sponge1.squeeze_native_field_elements(3);
