@@ -163,7 +163,7 @@ impl<F: PrimeField> RescueVector<F> {
         aux
     }
 
-    fn add_assign_elems(&mut self, elems: &[F], _expected_size: usize) {
+    fn add_assign_elems(&mut self, elems: &[F]) {
         self.vec
             .iter_mut()
             .zip(elems.iter())

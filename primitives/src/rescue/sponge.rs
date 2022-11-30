@@ -137,7 +137,7 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
             .chunks(CHUNK_SIZE)
             .into_iter()
             .for_each(|chunk| {
-                self.state.add_assign_elems(chunk, CHUNK_SIZE);
+                self.state.add_assign_elems(chunk);
                 self.state = permutation.eval(&self.state)
             });
     }
