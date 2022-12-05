@@ -155,12 +155,12 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
 
     /// Squeeze `num_bytes` bytes from the sponge.
     fn squeeze_bytes(&mut self, _num_bytes: usize) -> Vec<u8> {
-        unimplemented!()
+        unimplemented!("Currently we only support squeezing native field elements!")
     }
 
     /// Squeeze `num_bits` bits from the sponge.
     fn squeeze_bits(&mut self, _num_bits: usize) -> Vec<bool> {
-        unimplemented!()
+        unimplemented!("Currently we only support squeezing native field elements!")
     }
 
     /// Squeeze `sizes.len()` field elements from the sponge, where the `i`-th
@@ -183,7 +183,7 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
                 .map(|x| field_switching(x))
                 .collect::<Vec<F>>()
         } else {
-            unimplemented!("currently we do not support hashing into a non-native field");
+            unimplemented!("Currently we only support squeezing native field elements!")
         }
     }
 
@@ -249,7 +249,7 @@ impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<
         } else {
             // we do not currently want to output field elements other than T.
             // This will be fixed once `squeeze_bytes` interfaces is fixed.
-            unimplemented!()
+            unimplemented!("Currently we only support squeezing native field elements!")
         }
     }
 }
