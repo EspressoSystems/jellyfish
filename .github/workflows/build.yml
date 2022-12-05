@@ -59,9 +59,7 @@ jobs:
           token: ${{ github.token }}
 
       - name: Run cargo-udeps
-        uses: aig787/cargo-udeps-action@v1
-        with:
-          args: '--all-targets'
+        run: cargo +nightly udeps --all-targets
 
       - name: Check Bench
         run: cargo bench --no-run
