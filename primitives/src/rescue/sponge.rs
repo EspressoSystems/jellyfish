@@ -36,9 +36,9 @@ pub struct RescuePRF<F: RescueParameter> {
 }
 
 impl<F: RescueParameter> RescueCRHF<F> {
-    /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
-    /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
-    /// input and number of output elements
+    /// Sponge hashing based on rescue permutation for RATE 3. It allows
+    /// unrestricted variable length input and returns a vector of
+    /// `num_outputs` elements.
     pub fn sponge_with_padding(input: &[F], num_outputs: usize) -> Vec<F> {
         // Pad input as follows: append a One, then pad with 0 until length is multiple
         // of RATE
@@ -49,9 +49,9 @@ impl<F: RescueParameter> RescueCRHF<F> {
             .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
     }
 
-    /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
-    /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
-    /// RATE and variable output length
+    /// Sponge hashing based on rescue permutation for RATE 3 and CAPACITY 1. It
+    /// allows inputs with length that is a multiple of `CRHF_RATE` and
+    /// returns a vector of `num_outputs` elements.
     pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
         if input.len() % CRHF_RATE != 0 {
             return Err(RescueError::ParameterError(
@@ -71,8 +71,9 @@ impl<F: RescueParameter> RescueCRHF<F> {
 }
 
 impl<F: RescueParameter> RescuePRF<F> {
-    /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
-    /// variable length input and number of output elements
+    /// Pseudorandom function based on rescue permutation for RATE 4. It allows
+    /// unrestricted variable length input and returns a vector of
+    /// `num_outputs` elements.
     pub fn full_state_keyed_sponge_with_padding(
         key: &F,
         input: &[F],
@@ -85,9 +86,9 @@ impl<F: RescueParameter> RescuePRF<F> {
             .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
     }
 
-    /// Pseudorandom function for Bls12_381 scalar field. It allows unrestricted
-    /// variable length input and number of output elements. Return error if
-    /// input is not multiple of STATE_SIZE = 4
+    /// Pseudorandom function based on rescue permutation for RATE 4. It allows
+    /// inputs with length that is a multiple of `STATE_SIZE` and returns a
+    /// vector of `num_outputs` elements.
     pub fn full_state_keyed_sponge_no_padding(
         key: &F,
         input: &[F],
@@ -106,11 +107,13 @@ impl<F: RescueParameter> RescuePRF<F> {
             sponge: RescueSponge::from_state(state, &Permutation::default()),
         };
         r.sponge.absorb(&input);
+
+        // SQUEEZE PHASE
         Ok(r.sponge.squeeze_native_field_elements(num_outputs))
     }
 }
 
-impl<F: RescueParameter, const CHUNK_SIZE: usize> SpongeExt for RescueSponge<F, CHUNK_SIZE> {
+impl<F: RescueParameter, const RATE: usize> SpongeExt for RescueSponge<F, RATE> {
     type State = RescueVector<F>;
 
     fn from_state(state: Self::State, permutation: &Self::Parameters) -> Self {
@@ -213,7 +216,7 @@ impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
 }
 
 /// The interface for field-based cryptographic sponge.
-/// `CF` is the native field used by the cryptographic sponge implementation.
+/// `T` is the native field used by the cryptographic sponge implementation.
 impl<T: RescueParameter, const RATE: usize> FieldBasedCryptographicSponge<T>
     for RescueSponge<T, RATE>
 {
