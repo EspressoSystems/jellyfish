@@ -1217,8 +1217,6 @@ mod tests {
             .rescue_sponge_no_padding::<T>(&input_var, 1)
             .unwrap()[0];
 
-        let rescue_hash = Permutation::<T>::default();
-
         // Check consistency between inputs
         for i in 0..rate {
             assert_eq!(input_vec_f[i], input_var[i].witness(&circuit).unwrap());
@@ -1226,7 +1224,8 @@ mod tests {
 
         // Check consistency between outputs
         let expected_hash =
-            rescue_hash.hash_3_to_1(&[input_vec_t[0], input_vec_t[1], input_vec_t[2]]);
+            RescueCRHF::sponge_no_padding(&[input_vec_t[0], input_vec_t[1], input_vec_t[2]], 1)
+                .unwrap()[0];
         assert_eq!(
             field_switching::<T, F>(&expected_hash),
             out_var.witness(&circuit).unwrap()

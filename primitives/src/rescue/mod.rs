@@ -25,9 +25,7 @@ pub mod sponge;
 
 use ark_ff::{PrimeField, Zero};
 use ark_sponge::Absorb;
-use ark_std::{string::ToString, vec, vec::Vec};
-use errors::RescueError;
-use jf_utils::pad_with_zeros;
+use ark_std::{vec, vec::Vec};
 
 /// The state size of rescue hash.
 pub const STATE_SIZE: usize = 4;
@@ -134,15 +132,6 @@ impl<F: PrimeField> RescueVector<F> {
                 F::from_le_bytes_mod_order(e3),
             ],
         }
-    }
-
-    fn pad_smaller_chunk(input: &[F]) -> RescueVector<F> {
-        assert!(input.len() < 4);
-        let mut vec = Self::zero().vec;
-        for (i, elem) in input.iter().enumerate() {
-            vec[i] = *elem;
-        }
-        RescueVector { vec }
     }
 
     fn pow(&mut self, exp: &[u64]) {
@@ -427,65 +416,6 @@ impl<F: RescueParameter> Permutation<F> {
     pub fn eval(&self, input: &RescueVector<F>) -> RescueVector<F> {
         self.rescue_prp
             .prp_with_round_keys(self.round_keys.as_slice(), input)
-    }
-}
-
-// Implement Sponge Hashing
-impl<F: RescueParameter> Permutation<F> {
-    /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
-    /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
-    /// input and number of output elements
-    pub fn sponge_with_padding(&self, input: &[F], num_output: usize) -> Vec<F> {
-        // Pad input as follows: append a One, then pad with 0 until length is multiple
-        // of RATE
-        let mut padded = input.to_vec();
-        padded.push(F::one());
-        pad_with_zeros(&mut padded, RATE);
-        self.sponge_no_padding(padded.as_slice(), num_output)
-            .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
-    }
-
-    /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
-    /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
-    /// RATE and variable output length
-    pub fn sponge_no_padding(&self, input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
-        if input.len() % RATE != 0 {
-            return Err(RescueError::ParameterError(
-                "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."
-                    .to_string(),
-            ));
-        }
-        // ABSORB PHASE
-        let mut state = RescueVector::zero();
-        input.chunks_exact(RATE).into_iter().for_each(|chunk| {
-            let block = RescueVector::pad_smaller_chunk(chunk);
-            state.add_assign(&block);
-            state = self.eval(&state)
-        });
-
-        // SQUEEZE PHASE
-        let mut result = vec![];
-        let mut remaining = num_output;
-        // extract current rate before calling PRP again
-        loop {
-            let extract = remaining.min(RATE);
-            result.extend_from_slice(&state.vec[0..extract]);
-            remaining -= extract;
-            if remaining == 0 {
-                break;
-            }
-            state = self.eval(&state)
-        }
-        Ok(result)
-    }
-
-    /// Compute the 3-to-1 rescue based hash function
-    /// * `input` - input of size RATE
-    /// * `returns` - hash value (single field element)
-    pub fn hash_3_to_1(&self, input: &[F; RATE]) -> F {
-        let input = [input[0], input[1], input[2], F::zero()];
-        let res_vec = self.eval(&RescueVector::from(&input));
-        res_vec.elems()[0]
     }
 }
 
@@ -848,7 +778,7 @@ mod test_permutation {
             vec: [input[0], input[1], input[2], F::zero()],
         };
         state = rescue_prp.prp(&zero, &state);
-        state.add_assign(&RescueVector::pad_smaller_chunk(&input[3..6]));
+        state.add_assign_elems(&input[3..6]);
         state = rescue_prp.prp(&zero, &state);
         assert_eq!(output, state.vec[0]);
     }
