@@ -652,7 +652,7 @@ mod tests {
 
     use super::{RescueGadget, RescueHelperGadget, RescueStateVar};
     use crate::rescue::{
-        sponge::{RescueCRH, RescuePRF},
+        sponge::{RescueCRHF, RescuePRF},
         Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
     };
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -972,7 +972,7 @@ mod tests {
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        let expected_sponge = RescueCRH::sponge_no_padding(&data, 1).unwrap()[0];
+        let expected_sponge = RescueCRHF::sponge_no_padding(&data, 1).unwrap()[0];
         let sponge_var = circuit
             .rescue_sponge_no_padding(data_vars.as_slice(), 1)
             .unwrap()[0];
@@ -1028,7 +1028,7 @@ mod tests {
             }
 
             // Check consistency between outputs
-            let expected_hash = RescueCRH::sponge_no_padding(&input_vec, output_len).unwrap();
+            let expected_hash = RescueCRHF::sponge_no_padding(&input_vec, output_len).unwrap();
 
             for (e, f) in out_var.iter().zip(expected_hash.iter()) {
                 assert_eq!(*f, circuit.witness(*e).unwrap());
@@ -1089,7 +1089,7 @@ mod tests {
                 }
 
                 // Check consistency between outputs
-                let expected_hash = RescueCRH::sponge_with_padding(&input_vec, output_len);
+                let expected_hash = RescueCRHF::sponge_with_padding(&input_vec, output_len);
 
                 for (&e, &f) in expected_hash.iter().zip(out_var.iter()) {
                     assert_eq!(e, circuit.witness(f).unwrap());

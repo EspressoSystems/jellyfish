@@ -24,7 +24,7 @@ struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
 }
 
 /// CRHF
-pub struct RescueCRH<F: RescueParameter> {
+pub struct RescueCRHF<F: RescueParameter> {
     sponge: RescueSponge<F, RATE>,
 }
 
@@ -33,7 +33,7 @@ pub struct RescuePRF<F: RescueParameter> {
     sponge: RescueSponge<F, STATE_SIZE>,
 }
 
-impl<F: RescueParameter> RescueCRH<F> {
+impl<F: RescueParameter> RescueCRHF<F> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
     /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
     /// input and number of output elements
