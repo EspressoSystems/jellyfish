@@ -13,19 +13,21 @@ use ark_sponge::{
 use ark_std::{string::ToString, vec, vec::Vec};
 use jf_utils::{field_switching, pad_with_zeros};
 
-use super::{errors::RescueError, Permutation, RescueParameter, RescueVector, RATE, STATE_SIZE};
+use super::{
+    errors::RescueError, Permutation, RescueParameter, RescueVector, CRHF_RATE, STATE_SIZE,
+};
 
 #[derive(Clone, Default)]
 /// A rescue hash function consists of a permutation function and
 /// an internal state.
-struct RescueSponge<F: RescueParameter, const CHUNK_SIZE: usize> {
+struct RescueSponge<F: RescueParameter, const RATE: usize> {
     pub(crate) state: RescueVector<F>,
     pub(crate) permutation: Permutation<F>,
 }
 
 /// CRHF
 pub struct RescueCRHF<F: RescueParameter> {
-    sponge: RescueSponge<F, RATE>,
+    sponge: RescueSponge<F, CRHF_RATE>,
 }
 
 /// PRF
@@ -42,7 +44,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
         // of RATE
         let mut padded = input.to_vec();
         padded.push(F::one());
-        pad_with_zeros(&mut padded, RATE);
+        pad_with_zeros(&mut padded, CRHF_RATE);
         Self::sponge_no_padding(padded.as_slice(), num_outputs)
             .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
     }
@@ -51,7 +53,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
     /// for RATE 3 and CAPACITY 1. It allows input length multiple of the
     /// RATE and variable output length
     pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
-        if input.len() % RATE != 0 {
+        if input.len() % CRHF_RATE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."
                     .to_string(),
@@ -123,8 +125,8 @@ impl<F: RescueParameter, const CHUNK_SIZE: usize> SpongeExt for RescueSponge<F, 
     }
 }
 
-impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSponge
-    for RescueSponge<T, CHUNK_SIZE>
+impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
+    for RescueSponge<T, RATE>
 {
     /// Parameters used by the sponge.
     type Parameters = Permutation<T>;
@@ -138,14 +140,14 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
     }
 
     /// Absorb an input into the sponge.
-    /// This function will absorb the entire input, in chunks of `CHUNK_SIZE`,
-    /// even if the input lenght is not a multiple of `CHUNK_SIZE`.
+    /// This function will absorb the entire input, in chunks of `RATE`,
+    /// even if the input lenght is not a multiple of `RATE`.
     fn absorb(&mut self, input: &impl Absorb) {
         let input_field_elements = input.to_sponge_field_elements_as_vec();
 
         // Absorb input.
         input_field_elements
-            .chunks(CHUNK_SIZE)
+            .chunks(RATE)
             .into_iter()
             .for_each(|chunk| {
                 self.state.add_assign_elems(chunk);
@@ -178,7 +180,7 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
         sizes: &[FieldElementSize],
     ) -> Vec<F> {
         if T::size_in_bits() == F::size_in_bits() {
-            RescueSponge::<T, CHUNK_SIZE>::squeeze_native_field_elements_with_sizes(self, sizes)
+            RescueSponge::<T, RATE>::squeeze_native_field_elements_with_sizes(self, sizes)
                 .iter()
                 .map(|x| field_switching(x))
                 .collect::<Vec<F>>()
@@ -212,8 +214,8 @@ impl<T: RescueParameter + PrimeField, const CHUNK_SIZE: usize> CryptographicSpon
 
 /// The interface for field-based cryptographic sponge.
 /// `CF` is the native field used by the cryptographic sponge implementation.
-impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<T>
-    for RescueSponge<T, CHUNK_SIZE>
+impl<T: RescueParameter, const RATE: usize> FieldBasedCryptographicSponge<T>
+    for RescueSponge<T, RATE>
 {
     /// Squeeze `num_elements` field elements from the sponge.
     fn squeeze_native_field_elements(&mut self, num_elements: usize) -> Vec<T> {
@@ -222,7 +224,7 @@ impl<T: RescueParameter, const CHUNK_SIZE: usize> FieldBasedCryptographicSponge<
         let mut remaining = num_elements;
         // extract current rate before calling PRP again
         loop {
-            let extract = remaining.min(CHUNK_SIZE);
+            let extract = remaining.min(RATE);
             result.extend_from_slice(&self.state.vec[0..extract]);
             remaining -= extract;
             if remaining == 0 {

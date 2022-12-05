@@ -653,7 +653,7 @@ mod tests {
     use super::{RescueGadget, RescueHelperGadget, RescueStateVar};
     use crate::rescue::{
         sponge::{RescueCRHF, RescuePRF},
-        Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
+        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -966,7 +966,7 @@ mod tests {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
 
         let mut prng = ark_std::test_rng();
-        let data = (0..2 * RATE).map(|_| F::rand(&mut prng)).collect_vec();
+        let data = (0..2 * CRHF_RATE).map(|_| F::rand(&mut prng)).collect_vec();
         let data_vars = data
             .iter()
             .map(|&x| circuit.create_variable(x).unwrap())
@@ -987,7 +987,7 @@ mod tests {
         // If the data length is not a multiple of RATE==3 then an error is triggered
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
-        let size = 2 * RATE + 1; // Non multiple of RATE
+        let size = 2 * CRHF_RATE + 1; // Non multiple of RATE
         let data = (0..size).map(|_| F::rand(&mut prng)).collect_vec();
         let data_vars = data
             .iter()

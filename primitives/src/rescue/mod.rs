@@ -29,8 +29,8 @@ use ark_std::{vec, vec::Vec};
 
 /// The state size of rescue hash.
 pub const STATE_SIZE: usize = 4;
-/// The rate of rescue hash.
-pub const RATE: usize = 3;
+/// The rate of the sponge used in RescueCRHF.
+pub const CRHF_RATE: usize = 3;
 
 /// The # of rounds of rescue hash.
 // In the paper, to derive ROUND:

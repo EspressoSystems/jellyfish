@@ -737,7 +737,7 @@ mod tests {
     use super::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
     use crate::rescue::{
         sponge::{RescueCRHF, RescuePRF},
-        Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
+        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -1064,7 +1064,7 @@ mod tests {
         let mut prng = ark_std::test_rng();
 
         // setup the inputs
-        let data_t: Vec<T> = (0..2 * RATE).map(|_| T::rand(&mut prng)).collect_vec();
+        let data_t: Vec<T> = (0..2 * CRHF_RATE).map(|_| T::rand(&mut prng)).collect_vec();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
             .iter()
@@ -1110,7 +1110,7 @@ mod tests {
         // If the data length is not a multiple of RATE==3 then an error is triggered
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        let size = 2 * RATE + 1; // Non multiple of RATE
+        let size = 2 * CRHF_RATE + 1; // Non multiple of RATE
         let data_t = (0..size).map(|_| T::rand(&mut prng)).collect_vec();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
