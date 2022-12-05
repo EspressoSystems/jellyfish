@@ -34,15 +34,6 @@ pub struct RescuePRF<F: RescueParameter> {
 }
 
 impl<F: RescueParameter> RescueCRH<F> {
-    /// Create a new RescueCRH instance.
-    pub fn new(sponge_parameters: &Permutation<F>) -> Self {
-        Self {
-            sponge: RescueSponge::<F, RATE>::new(sponge_parameters),
-        }
-    }
-}
-
-impl<F: RescueParameter> RescueCRH<F> {
     /// Sponge hashing based on rescue permutation for Bls12_381 scalar field
     /// for RATE 3 and CAPACITY 1. It allows unrestricted variable length
     /// input and number of output elements
