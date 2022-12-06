@@ -24,6 +24,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true # just temporarily for cargo-udeps
+          default: false
+          components: rustfmt
+
+      - name: Run cargo-udeps
+        uses: aig787/cargo-udeps-action@v1
+        with:
+          args: '--all-targets'
+
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -32,15 +46,6 @@ jobs:
           override: true
           default: true
           components: rustfmt, clippy
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: false
-          default: false
-          components: rustfmt
 
       - uses: Swatinem/rust-cache@v2
         name: Enable Rust Caching
