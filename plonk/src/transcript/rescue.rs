@@ -13,7 +13,6 @@ use crate::{
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
 };
-// use ark_poly_commit::kzg10::Commitment;
 use ark_std::vec::Vec;
 use jf_primitives::{
     pcs::prelude::Commitment,
