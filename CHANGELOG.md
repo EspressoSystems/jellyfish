@@ -38,6 +38,10 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#144](https://github.com/EspressoSystems/jellyfish/pull/144) (`jf-primitives`) Updated append-only merkle tree gadget with the latest MT API
 - [#119](https://github.com/EspressoSystems/jellyfish/pull/119) (all) Updated dependencies
   - Upgraded `criterion` from `0.3.1` to `0.4.0`
+- [#146](https://github.com/EspressoSystems/jellyfish/pull/146) (`jf-primitives`) Refactored Rescue sponge API:
+    - Remove all `.*sponge.*` methods from `Permutation`.
+    - Introduce `RescueCRHF` which takes over `sponge_with_padding` and `sponge_no_padding` from `Permutation`.
+    - Introduce `RescuePRF` which takes over `full_state_keyed_sponge_with_padding` and `full_state_keyed_sponge_no_padding` from `Permutation`.
 
 ### Fixed
 
