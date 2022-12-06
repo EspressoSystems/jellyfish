@@ -59,6 +59,14 @@
                 entry = "cargo sort -w";
                 pass_filenames = false;
               };
+              cargo-udeps = {
+                enable = true;
+                description = "Ensure no unused dependencies";
+                entry = "env CARGO='${nightlyToolchain}/bin/cargo' " +
+                        "RUSTC='${nightlyToolchain}/bin/rustc' " +
+                        "cargo-udeps udeps";
+                pass_filenames = false;
+              };
             };
           };
         };
@@ -72,6 +80,7 @@
             stableToolchain
             nightlyToolchain
             cargo-sort
+            cargo-udeps
 
           ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
@@ -81,6 +90,7 @@
 
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
+            # alias cargo-udeps="CARGO='${nightlyToolchain}/bin/cargo' RUSTC='${nightlyToolchain}/bin/rustc' cargo-udeps"
           ''
           # install pre-commit hooks
           + self.check.${system}.pre-commit-check.shellHook;
