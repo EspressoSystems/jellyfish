@@ -44,9 +44,11 @@ macro_rules! deserialize_canonical_bytes {
 /// Serializers for finite field elements.
 ///
 /// Field elements are typically foreign types that we cannot apply the
-/// [macro@tagged_blob] macro to. Instead, use `#[serde(with = "field_elem")]`
+/// [tagged] macro to. Instead, use `#[serde(with = "field_elem")]`
 /// at the point where the field element is used inside a struct or enum
 /// definition.
+///
+/// [tagged]: tagged_base64::tagged
 pub mod field_elem {
     use super::*;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
