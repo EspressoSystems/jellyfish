@@ -78,15 +78,19 @@ use crate::{
 };
 use ark_serialize::*;
 use ark_std::{
+    convert::TryInto,
     format,
     ops::{Deref, DerefMut},
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
 use blst::{min_sig::*, BLST_ERROR};
+use espresso_systems_common::jellyfish::tag;
+use tagged_base64::tagged;
 use zeroize::{Zeroize, Zeroizing};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Copy)]
+#[tagged(tag::BLS_VER_KEY)]
 /// A BLS Public Key (Verification Key).
 pub struct BLSVerKey(PublicKey);
 
@@ -152,6 +156,7 @@ impl CanonicalDeserialize for BLSVerKey {
 
 #[derive(Clone, Debug, Default, Zeroize)]
 #[zeroize(drop)]
+#[tagged(tag::BLS_SIGNING_KEY)]
 /// A BLS Secret Key (Signing Key).
 pub struct BLSSignKey(SecretKey);
 
@@ -194,8 +199,9 @@ impl CanonicalDeserialize for BLSSignKey {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Copy)]
 /// A BLS Signature.
+#[derive(Clone, Debug, PartialEq, Eq, Copy)]
+#[tagged(tag::BLS_SIG)]
 pub struct BLSSignature(Signature);
 
 impl Deref for BLSSignature {
