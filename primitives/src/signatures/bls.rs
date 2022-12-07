@@ -53,6 +53,14 @@ impl CanonicalDeserialize for BLSSignKey {
     }
 }
 
+impl PartialEq for BLSSignKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.serialize() == other.0.serialize()
+    }
+}
+
+impl Eq for BLSSignKey {}
+
 /// Newtype wrapper for a BLS Signature.
 #[tagged(tag::BLS_SIG)]
 #[derive(Clone, Debug, PartialEq, Eq)]

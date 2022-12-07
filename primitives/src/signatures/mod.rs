@@ -19,16 +19,38 @@ pub trait SignatureScheme {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey: Debug + Clone + Send + Sync + Zeroize + for<'a> Deserialize<'a> + Serialize;
+    type SigningKey: Debug
+        + Clone
+        + Send
+        + Sync
+        + Zeroize
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// Verification key
-    type VerificationKey: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
+    type VerificationKey: Debug
+        + Clone
+        + Send
+        + Sync
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// Public Parameter
     type PublicParameter;
 
     /// Signature
-    type Signature: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
+    type Signature: Debug
+        + Clone
+        + Send
+        + Sync
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// A message is &\[MessageUnit\]
     type MessageUnit: Debug + Clone + Send + Sync;
