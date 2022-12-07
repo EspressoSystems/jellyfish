@@ -23,7 +23,7 @@ pub use blst::min_sig::{PublicKey, SecretKey, Signature};
 use zeroize::Zeroize;
 
 /// Newtype wrapper for a BLS Signing Key.
-#[tagged(tag::BLSSIGNINGKEY)]
+#[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(Clone, Debug, Zeroize)]
 pub struct BLSSignKey(SecretKey);
 
@@ -54,7 +54,7 @@ impl CanonicalDeserialize for BLSSignKey {
 }
 
 /// Newtype wrapper for a BLS Signature.
-#[tagged(tag::BLSSIG)]
+#[tagged(tag::BLS_SIG)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BLSSignature(pub(crate) Signature);
 
@@ -85,7 +85,7 @@ impl CanonicalDeserialize for BLSSignature {
 }
 
 /// Newtype wrapper for a BLS Verification Key.
-#[tagged(tag::BLSVERKEY)]
+#[tagged(tag::BLS_VER_KEY)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BLSVerKey(PublicKey);
 
