@@ -9,9 +9,9 @@
 use ark_std::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-/// A helper for converting CanonicalSerde bytes to standard Serde bytes.
-/// use this struct as intermediate target instead of directly deriving
-/// serde::Serialize/Deserialize to avoid implementation of Visitors.
+/// A helper for converting ark_serialize::CanonicalSerialize bytes to standard
+/// Serde bytes. Use this struct as intermediate target instead of directly
+/// deriving serde::Serialize/Deserialize to avoid implementation of Visitors.
 #[derive(Serialize, Deserialize)]
 pub struct CanonicalBytes(pub Vec<u8>);
 
