@@ -9,5 +9,6 @@
 /// ciphersuite identifier for schnorr signature
 pub const CS_ID_SCHNORR: &str = "SCHNORR_WITH_RESCUE_HASH_v01";
 
-/// ciphersuite identifier for BLS signature
-pub const CS_ID_BLS_SIG_NAIVE: &str = "BLS_SIG_WITH_NAIVE_HtG_v01";
+/// ciphersuite identifier for BLS signature, see:
+/// https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-ciphersuite-format
+pub const CS_ID_BLS_MIN_SIG: &str = "BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_";

@@ -69,7 +69,7 @@
 //! [zeroize]: https://github.com/RustCrypto/utils/tree/master/zeroize
 
 use super::SignatureScheme;
-use crate::{constants::CS_ID_BLS_SIG_NAIVE, errors::PrimitivesError};
+use crate::{constants::CS_ID_BLS_MIN_SIG, errors::PrimitivesError};
 use ark_std::{
     format,
     ops::{Deref, DerefMut},
@@ -86,7 +86,7 @@ use zeroize::Zeroizing;
 pub struct BLSSignatureScheme;
 
 impl SignatureScheme for BLSSignatureScheme {
-    const CS_ID: &'static str = CS_ID_BLS_SIG_NAIVE;
+    const CS_ID: &'static str = CS_ID_BLS_MIN_SIG;
 
     /// Public parameter
     type PublicParameter = ();
