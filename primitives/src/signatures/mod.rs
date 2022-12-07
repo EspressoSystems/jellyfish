@@ -6,10 +6,10 @@ use ark_std::rand::{CryptoRng, RngCore};
 pub mod bls;
 pub mod schnorr;
 pub use bls::BLSSignatureScheme;
+use core::fmt::Debug;
 pub use schnorr::SchnorrSignatureScheme;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
-
 /// Trait definition for a signature scheme.
 // A signature scheme is associated with a hash function H that is
 // to be used for challenge generation.
@@ -19,19 +19,19 @@ pub trait SignatureScheme {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey: Clone + Send + Sync + Zeroize + for<'a> Deserialize<'a> + Serialize;
+    type SigningKey: Debug + Clone + Send + Sync + Zeroize + for<'a> Deserialize<'a> + Serialize;
 
     /// Verification key
-    type VerificationKey: Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
+    type VerificationKey: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
 
     /// Public Parameter
     type PublicParameter;
 
     /// Signature
-    type Signature: Clone + for<'a> Deserialize<'a> + Serialize;
+    type Signature: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
 
     /// A message is &\[MessageUnit\]
-    type MessageUnit;
+    type MessageUnit: Debug + Clone + Send + Sync;
 
     /// generate public parameters from RNG.
     /// If the RNG is not presented, use the default group generator.
