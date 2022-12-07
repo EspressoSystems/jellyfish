@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["BLSSignKey","Secret Key"],["BLSSignature",""],["BLSSignatureScheme","BLS signature scheme. Imports blst library."],["BLSVerKey",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["BLSSignKey","Newtype wrapper for a BLS Signing Key."],["BLSSignature","Newtype wrapper for a BLS Signature."],["BLSSignatureScheme","BLS signature scheme. Imports blst library."],["BLSVerKey","Newtype wrapper for a BLS Verification Key."],["PublicKey",""],["SecretKey","Secret Key"],["Signature",""]]};

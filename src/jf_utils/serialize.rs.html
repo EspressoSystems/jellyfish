@@ -104,9 +104,9 @@
 </span><span class="kw">use </span>ark_std::vec::Vec;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="doccomment">/// A helper for converting CanonicalSerde bytes to standard Serde bytes.
-/// use this struct as intermediate target instead of directly deriving
-/// serde::Serialize/Deserialize to avoid implementation of Visitors.
+<span class="doccomment">/// A helper for converting ark_serialize::CanonicalSerialize bytes to standard
+/// Serde bytes. Use this struct as intermediate target instead of directly
+/// deriving serde::Serialize/Deserialize to avoid implementation of Visitors.
 </span><span class="attribute">#[derive(Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>CanonicalBytes(<span class="kw">pub </span>Vec&lt;u8&gt;);
 

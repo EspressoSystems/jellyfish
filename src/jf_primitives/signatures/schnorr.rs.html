@@ -608,6 +608,7 @@
 <span id="608">608</span>
 <span id="609">609</span>
 <span id="610">610</span>
+<span id="611">611</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -712,7 +713,8 @@
 <span class="comment">// =====================================================
 // Signing key
 // =====================================================
-</span><span class="attribute">#[derive(
+</span><span class="attribute">#[tagged(tag::SCHNORR_SIGNING_KEY)]
+#[derive(
     Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
 </span><span class="doccomment">/// Signing key for Schnorr signature.
@@ -737,7 +739,7 @@
 
 </span><span class="doccomment">/// Signature public verification key
 </span><span class="comment">// derive zeroize here so that keypair can be zeroized
-</span><span class="attribute">#[tagged(tag::SCHNORRVERKEY)]
+</span><span class="attribute">#[tagged(tag::SCHNORR_VER_KEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
@@ -806,7 +808,7 @@
 
 </span><span class="doccomment">/// Signature secret key pair used to sign messages
 </span><span class="comment">// make sure sk can be zeroized
-</span><span class="attribute">#[tagged(tag::SIGNKEYPAIR)]
+</span><span class="attribute">#[tagged(tag::SCHNORR_KEY_PAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
@@ -827,7 +829,7 @@
 // =====================================================
 
 </span><span class="doccomment">/// The signature of Schnorr signature scheme
-</span><span class="attribute">#[tagged(tag::SIG)]
+</span><span class="attribute">#[tagged(tag::SCHNORR_SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
