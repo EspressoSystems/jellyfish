@@ -19,7 +19,7 @@ pub trait SignatureScheme {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey: Clone + Send + Sync + Zeroize;
+    type SigningKey: Clone + Send + Sync + Zeroize + for<'a> Deserialize<'a> + Serialize;
 
     /// Verification key
     type VerificationKey: Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize;
