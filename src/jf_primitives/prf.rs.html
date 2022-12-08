@@ -137,9 +137,11 @@
 </span><span class="doccomment">//! This module implements a pseudo random function that is derived from
 //! the rescue hash function.
 
-</span><span class="kw">use crate</span>::{
+</span><span class="kw">use </span>ark_std::marker::PhantomData;
+
+<span class="kw">use crate</span>::{
     errors::PrimitivesError,
-    rescue::{Permutation, RescueParameter, STATE_SIZE},
+    rescue::{sponge::RescuePRF, RescueParameter, STATE_SIZE},
 };
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
@@ -154,7 +156,7 @@
     </span><span class="kw">pub </span>input_len: usize,
     <span class="doccomment">/// Length of the output.
     </span><span class="kw">pub </span>output_len: usize,
-    permutation: Permutation&lt;F&gt;,
+    phantom_f: PhantomData&lt;F&gt;,
 }
 
 <span class="attribute">#[derive(
@@ -191,7 +193,7 @@
         PRF {
             input_len,
             output_len,
-            permutation: Default::default(),
+            phantom_f: PhantomData,
         }
     }
 
@@ -214,11 +216,9 @@
         <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the PRF instance
         </span><span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_owned();
         pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, STATE_SIZE);
-        <span class="self">self</span>.permutation
-            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key.<span class="number">0</span>, <span class="kw-2">&amp;</span>padded, <span class="self">self</span>.output_len)
-            .map_err(|<span class="kw">_</span>| {
-                PrimitivesError::InternalError(<span class="string">&quot;Bug in PRF: bad padding for input&quot;</span>.to_string())
-            })
+        RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key.<span class="number">0</span>, <span class="kw-2">&amp;</span>padded, <span class="self">self</span>.output_len).map_err(
+            |<span class="kw">_</span>| PrimitivesError::InternalError(<span class="string">&quot;Bug in PRF: bad padding for input&quot;</span>.to_string()),
+        )
     }
 }
 

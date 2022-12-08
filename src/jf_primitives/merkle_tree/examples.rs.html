@@ -82,8 +82,6 @@
 <span id="82">82</span>
 <span id="83">83</span>
 <span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -94,7 +92,7 @@
 //! E.g. Sparse merkle tree with BigUInt index.
 
 </span><span class="kw">use super</span>::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm, Element, Index};
-<span class="kw">use </span><span class="kw">crate</span>::rescue::{Permutation, RescueParameter};
+<span class="kw">use </span><span class="kw">crate</span>::rescue::{sponge::RescueCRHF, RescueParameter};
 <span class="kw">use </span>ark_ff::Field;
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 <span class="kw">use </span>sha3::{Digest, Sha3_256};
@@ -107,14 +105,12 @@
 
 </span><span class="kw">impl</span>&lt;F: RescueParameter&gt; DigestAlgorithm&lt;Interval&lt;F&gt;, u64, F&gt; <span class="kw">for </span>RescueHash&lt;F&gt; {
     <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[F]) -&gt; F {
-        <span class="kw">let </span>perm = Permutation::default();
-        perm.sponge_no_padding(data, <span class="number">1</span>).unwrap()[<span class="number">0</span>]
+        RescueCRHF::&lt;F&gt;::sponge_no_padding(data, <span class="number">1</span>).unwrap()[<span class="number">0</span>]
     }
 
     <span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>u64, elem: <span class="kw-2">&amp;</span>Interval&lt;F&gt;) -&gt; F {
         <span class="kw">let </span>data = [F::from(<span class="kw-2">*</span>pos), elem.<span class="number">0</span>, elem.<span class="number">1</span>];
-        <span class="kw">let </span>perm = Permutation::default();
-        perm.sponge_no_padding(<span class="kw-2">&amp;</span>data, <span class="number">1</span>).unwrap()[<span class="number">0</span>]
+        RescueCRHF::&lt;F&gt;::sponge_no_padding(<span class="kw-2">&amp;</span>data, <span class="number">1</span>).unwrap()[<span class="number">0</span>]
     }
 }
 

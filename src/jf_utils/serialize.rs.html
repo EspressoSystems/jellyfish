@@ -93,6 +93,8 @@
 <span id="93">93</span>
 <span id="94">94</span>
 <span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -139,9 +141,11 @@
 <span class="doccomment">/// Serializers for finite field elements.
 ///
 /// Field elements are typically foreign types that we cannot apply the
-/// [macro@tagged_blob] macro to. Instead, use `#[serde(with = &quot;field_elem&quot;)]`
+/// [tagged] macro to. Instead, use `#[serde(with = &quot;field_elem&quot;)]`
 /// at the point where the field element is used inside a struct or enum
 /// definition.
+///
+/// [tagged]: tagged_base64::tagged
 </span><span class="kw">pub mod </span>field_elem {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};

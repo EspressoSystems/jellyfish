@@ -606,9 +606,6 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -622,7 +619,7 @@
 <span class="kw">use crate</span>::{
     constants::CS_ID_SCHNORR,
     errors::PrimitivesError,
-    rescue::{Permutation, RescueParameter},
+    rescue::{sponge::RescueCRHF, RescueParameter},
     utils::curve_cofactor,
 };
 <span class="kw">use </span>ark_ec::{
@@ -905,15 +902,14 @@
     <span class="doccomment">/// Signature function
     </span><span class="attribute">#[allow(non_snake_case)]
     </span><span class="kw">pub fn </span>sign&lt;B: AsRef&lt;[u8]&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>[F], csid: B) -&gt; Signature&lt;P&gt; {
-        <span class="kw">let </span>hash = Permutation::default();
         <span class="comment">// Do we want to remove the instance description?
         </span><span class="kw">let </span>instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         <span class="kw">let </span><span class="kw-2">mut </span>msg_input = <span class="macro">vec!</span>[instance_description, fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.sk.<span class="number">0</span>)];
         msg_input.extend(msg.iter());
 
-        <span class="kw">let </span>r = fq_to_fr::&lt;F, P&gt;(<span class="kw-2">&amp;</span>hash.sponge_with_padding(<span class="kw-2">&amp;</span>msg_input, <span class="number">1</span>)[<span class="number">0</span>]);
+        <span class="kw">let </span>r = fq_to_fr::&lt;F, P&gt;(<span class="kw-2">&amp;</span>RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>msg_input, <span class="number">1</span>)[<span class="number">0</span>]);
         <span class="kw">let </span>R = Group::mul(<span class="kw-2">&amp;</span>GroupProjective::&lt;P&gt;::prime_subgroup_generator(), <span class="kw-2">&amp;</span>r);
-        <span class="kw">let </span>c = <span class="self">self</span>.vk.challenge(<span class="kw-2">&amp;</span>hash, <span class="kw-2">&amp;</span>R, msg, csid);
+        <span class="kw">let </span>c = <span class="self">self</span>.vk.challenge(<span class="kw-2">&amp;</span>R, msg, csid);
         <span class="kw">let </span>s = c * <span class="self">self</span>.sk.<span class="number">0 </span>+ r;
 
         Signature { s, R }
@@ -978,8 +974,7 @@
         }
 
         <span class="comment">// restrictive cofactorless verification
-        </span><span class="kw">let </span>hash = Permutation::&lt;F&gt;::default();
-        <span class="kw">let </span>c = <span class="self">self</span>.challenge(<span class="kw-2">&amp;</span>hash, <span class="kw-2">&amp;</span>sig.R, msg, csid);
+        </span><span class="kw">let </span>c = <span class="self">self</span>.challenge(<span class="kw-2">&amp;</span>sig.R, msg, csid);
 
         <span class="kw">let </span>base = GroupProjective::&lt;P&gt;::prime_subgroup_generator();
         <span class="kw">let </span>x = Group::mul(<span class="kw-2">&amp;</span>base, <span class="kw-2">&amp;</span>sig.s);
@@ -1005,7 +1000,6 @@
     </span><span class="attribute">#[allow(non_snake_case)]
     </span><span class="kw">fn </span>challenge&lt;B: AsRef&lt;[u8]&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hash: <span class="kw-2">&amp;</span>Permutation&lt;F&gt;,
         R: <span class="kw-2">&amp;</span>GroupProjective&lt;P&gt;,
         msg: <span class="kw-2">&amp;</span>[F],
         csid: B,
@@ -1025,7 +1019,7 @@
             ]
         };
         challenge_input.extend(msg);
-        <span class="kw">let </span>challenge_fq = hash.sponge_with_padding(<span class="kw-2">&amp;</span>challenge_input, <span class="number">1</span>)[<span class="number">0</span>];
+        <span class="kw">let </span>challenge_fq = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>challenge_input, <span class="number">1</span>)[<span class="number">0</span>];
 
         <span class="comment">// this masking will drop the last byte, and the resulting
         // challenge will be 248 bits

@@ -45,6 +45,21 @@
 <span id="45">45</span>
 <span id="46">46</span>
 <span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -55,7 +70,11 @@
 
 </span><span class="kw">use </span><span class="kw">crate</span>::rescue::errors::RescueError;
 <span class="kw">use </span>ark_serialize::SerializationError;
-<span class="kw">use </span>ark_std::string::String;
+<span class="kw">use </span>ark_std::{
+    format,
+    string::{String, ToString},
+};
+<span class="kw">use </span>blst::BLST_ERROR;
 <span class="kw">use </span>displaydoc::Display;
 
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the primitives.
@@ -90,7 +109,18 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl </span>std::error::Error <span class="kw">for </span>PrimitivesError {}
+<span class="kw">impl </span>From&lt;BLST_ERROR&gt; <span class="kw">for </span>PrimitivesError {
+    <span class="kw">fn </span>from(e: BLST_ERROR) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>e {
+            BLST_ERROR::BLST_SUCCESS =&gt; {
+                <span class="self">Self</span>::InternalError(<span class="string">&quot;Expecting an error, but got a sucess.&quot;</span>.to_string())
+            },
+            BLST_ERROR::BLST_VERIFY_FAIL =&gt; <span class="self">Self</span>::VerificationError(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, e)),
+            <span class="kw">_ </span>=&gt; <span class="self">Self</span>::ParameterError(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, e)),
+        }
+    }
+}
+
+<span class="kw">impl </span>ark_std::error::Error <span class="kw">for </span>PrimitivesError {}
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

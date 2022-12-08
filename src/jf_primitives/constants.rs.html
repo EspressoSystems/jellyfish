@@ -18,6 +18,11 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -29,14 +34,19 @@
 /// ciphersuite identifier for schnorr signature
 </span><span class="kw">pub const </span>CS_ID_SCHNORR: <span class="kw-2">&amp;</span>str = <span class="string">&quot;SCHNORR_WITH_RESCUE_HASH_v01&quot;</span>;
 
-<span class="doccomment">/// ciphersuite identifier for BLS signature
-</span><span class="kw">pub const </span>CS_ID_BLS_SIG_NAIVE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;BLS_SIG_WITH_NAIVE_HtG_v01&quot;</span>;
+<span class="doccomment">/// ciphersuite identifier for BLS signature, see:
+/// &lt;https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-ciphersuite-format&gt;
+</span><span class="kw">pub const </span>CS_ID_BLS_MIN_SIG: <span class="kw-2">&amp;</span>str = <span class="string">&quot;BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_&quot;</span>;
 
 <span class="doccomment">/// Size in bytes of a secret key in our BLS signature scheme.
-</span><span class="kw">pub const </span>BLS_SIG_KEY_SIZE: usize = <span class="number">32</span>;
+</span><span class="kw">pub const </span>BLS_SIG_SK_SIZE: usize = <span class="number">32</span>;
 <span class="doccomment">/// Size in bytes of a signature in our BLS signature scheme.
 </span><span class="kw">pub const </span>BLS_SIG_SIGNATURE_SIZE: usize = <span class="number">96</span>;
+<span class="doccomment">/// Size in bytes of a compressed signature in our BLS signature scheme.
+</span><span class="kw">pub const </span>BLS_SIG_COMPRESSED_SIGNATURE_SIZE: usize = <span class="number">48</span>;
 <span class="doccomment">/// Size in bytes of a verification key in our BLS signature scheme.
-</span><span class="kw">pub const </span>BLS_SIG_VERKEY_SIZE: usize = <span class="number">192</span>;
+</span><span class="kw">pub const </span>BLS_SIG_PK_SIZE: usize = <span class="number">192</span>;
+<span class="doccomment">/// Size in bytes of a compressed verification key in our BLS signature scheme.
+</span><span class="kw">pub const </span>BLS_SIG_COMPRESSED_PK_SIZE: usize = <span class="number">96</span>;
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

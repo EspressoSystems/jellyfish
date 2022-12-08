@@ -102,7 +102,7 @@
 
 </span><span class="kw">use crate</span>::{
     circuit::rescue::RescueGadget,
-    rescue::{RescueParameter, RATE},
+    rescue::{RescueParameter, CRHF_RATE},
     utils::pad_with,
 };
 <span class="kw">use </span>ark_std::vec;
@@ -127,7 +127,7 @@
     <span class="kw">fn </span>commit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[Variable], blinding: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="macro">vec!</span>[blinding];
         msg.extend_from_slice(input);
-        pad_with(<span class="kw-2">&amp;mut </span>msg, RATE, <span class="self">self</span>.zero());
+        pad_with(<span class="kw-2">&amp;mut </span>msg, CRHF_RATE, <span class="self">self</span>.zero());
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>msg, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>])
     }
 }

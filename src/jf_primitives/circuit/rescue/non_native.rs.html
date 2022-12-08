@@ -1298,12 +1298,6 @@
 <span id="1298">1298</span>
 <span id="1299">1299</span>
 <span id="1300">1300</span>
-<span id="1301">1301</span>
-<span id="1302">1302</span>
-<span id="1303">1303</span>
-<span id="1304">1304</span>
-<span id="1305">1305</span>
-<span id="1306">1306</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2042,7 +2036,8 @@
 
     <span class="kw">use super</span>::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
     <span class="kw">use </span><span class="kw">crate</span>::rescue::{
-        Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
+        sponge::{RescueCRHF, RescuePRF},
+        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
@@ -2369,7 +2364,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
 
         <span class="comment">// setup the inputs
-        </span><span class="kw">let </span>data_t: Vec&lt;T&gt; = (<span class="number">0</span>..<span class="number">2 </span>* RATE).map(|<span class="kw">_</span>| T::rand(<span class="kw-2">&amp;mut </span>prng)).collect_vec();
+        </span><span class="kw">let </span>data_t: Vec&lt;T&gt; = (<span class="number">0</span>..<span class="number">2 </span>* CRHF_RATE).map(|<span class="kw">_</span>| T::rand(<span class="kw-2">&amp;mut </span>prng)).collect_vec();
         <span class="kw">let </span>data_f: Vec&lt;F&gt; = data_t.iter().map(|x| field_switching(x)).collect();
         <span class="kw">let </span>data_vars: Vec&lt;FpElemVar&lt;F&gt;&gt; = data_f
             .iter()
@@ -2377,8 +2372,7 @@
             .collect();
 
         <span class="comment">// sponge no padding with output length 1
-        </span><span class="kw">let </span>rescue_perm = Permutation::&lt;T&gt;::default();
-        <span class="kw">let </span>expected_sponge = rescue_perm.sponge_no_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap()[<span class="number">0</span>];
+        </span><span class="kw">let </span>expected_sponge = RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap()[<span class="number">0</span>];
         <span class="kw">let </span>sponge_var = circuit
             .rescue_sponge_no_padding::&lt;T&gt;(data_vars.as_slice(), <span class="number">1</span>)
             .unwrap()[<span class="number">0</span>];
@@ -2397,8 +2391,7 @@
 
         <span class="comment">// general sponge no padding
         </span><span class="kw">for </span>output_len <span class="kw">in </span><span class="number">1</span>..max_output_len {
-            <span class="kw">let </span>rescue_perm = Permutation::&lt;T&gt;::default();
-            <span class="kw">let </span>expected_sponge = rescue_perm.sponge_no_padding(<span class="kw-2">&amp;</span>data_t, output_len).unwrap();
+            <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>data_t, output_len).unwrap();
             <span class="kw">let </span>sponge_var = circuit
                 .rescue_sponge_no_padding::&lt;T&gt;(data_vars.as_slice(), output_len)
                 .unwrap();
@@ -2417,7 +2410,7 @@
         <span class="comment">// If the data length is not a multiple of RATE==3 then an error is triggered
         </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        <span class="kw">let </span>size = <span class="number">2 </span>* RATE + <span class="number">1</span>; <span class="comment">// Non multiple of RATE
+        <span class="kw">let </span>size = <span class="number">2 </span>* CRHF_RATE + <span class="number">1</span>; <span class="comment">// Non multiple of RATE
         </span><span class="kw">let </span>data_t = (<span class="number">0</span>..size).map(|<span class="kw">_</span>| T::rand(<span class="kw-2">&amp;mut </span>prng)).collect_vec();
         <span class="kw">let </span>data_f: Vec&lt;F&gt; = data_t.iter().map(|x| field_switching(x)).collect();
         <span class="kw">let </span>data_vars: Vec&lt;FpElemVar&lt;F&gt;&gt; = data_f
@@ -2459,8 +2452,7 @@
                 .map(|x| FpElemVar::new_from_field_element(<span class="kw-2">&amp;mut </span>circuit, x, m, <span class="prelude-val">None</span>).unwrap())
                 .collect();
 
-            <span class="kw">let </span>rescue_perm = Permutation::&lt;T&gt;::default();
-            <span class="kw">let </span>expected_sponge = rescue_perm.sponge_with_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>);
+            <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>);
 
             <span class="comment">// sponge with padding
             </span><span class="kw">let </span>sponge_var = circuit
@@ -2481,8 +2473,7 @@
 
             <span class="comment">// sponge full with padding
             </span><span class="kw">for </span>output_len <span class="kw">in </span><span class="number">1</span>..max_output_len {
-                <span class="kw">let </span>rescue_perm = Permutation::&lt;T&gt;::default();
-                <span class="kw">let </span>expected_sponge = rescue_perm.sponge_with_padding(<span class="kw-2">&amp;</span>data_t, output_len);
+                <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>data_t, output_len);
 
                 <span class="kw">let </span>sponge_var = circuit
                     .rescue_sponge_with_padding::&lt;T&gt;(data_vars.as_slice(), output_len)
@@ -2526,8 +2517,6 @@
             .rescue_sponge_no_padding::&lt;T&gt;(<span class="kw-2">&amp;</span>input_var, <span class="number">1</span>)
             .unwrap()[<span class="number">0</span>];
 
-        <span class="kw">let </span>rescue_hash = Permutation::&lt;T&gt;::default();
-
         <span class="comment">// Check consistency between inputs
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..rate {
             <span class="macro">assert_eq!</span>(input_vec_f[i], input_var[i].witness(<span class="kw-2">&amp;</span>circuit).unwrap());
@@ -2535,7 +2524,8 @@
 
         <span class="comment">// Check consistency between outputs
         </span><span class="kw">let </span>expected_hash =
-            rescue_hash.hash_3_to_1(<span class="kw-2">&amp;</span>[input_vec_t[<span class="number">0</span>], input_vec_t[<span class="number">1</span>], input_vec_t[<span class="number">2</span>]]);
+            RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>[input_vec_t[<span class="number">0</span>], input_vec_t[<span class="number">1</span>], input_vec_t[<span class="number">2</span>]], <span class="number">1</span>)
+                .unwrap()[<span class="number">0</span>];
         <span class="macro">assert_eq!</span>(
             field_switching::&lt;T, F&gt;(<span class="kw-2">&amp;</span>expected_hash),
             out_var.witness(<span class="kw-2">&amp;</span>circuit).unwrap()
@@ -2577,10 +2567,8 @@
             })
             .collect();
 
-        <span class="kw">let </span>perm = Permutation::&lt;T&gt;::default();
-        <span class="kw">let </span>expected_fsks_output = perm
-            .full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key_t, <span class="kw-2">&amp;</span>data_t, <span class="number">1</span>)
-            .unwrap();
+        <span class="kw">let </span>expected_fsks_output =
+            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key_t, <span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap();
 
         <span class="kw">let </span>fsks_var = circuit
             .rescue_full_state_keyed_sponge_no_padding::&lt;T&gt;(key_var, <span class="kw-2">&amp;</span>data_vars)

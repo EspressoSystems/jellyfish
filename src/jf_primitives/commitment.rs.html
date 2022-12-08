@@ -115,6 +115,8 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -123,9 +125,11 @@
 
 </span><span class="doccomment">//! Implements a rescue hash based commitment scheme.
 
-</span><span class="kw">use crate</span>::{
+</span><span class="kw">use </span>ark_std::marker::PhantomData;
+
+<span class="kw">use crate</span>::{
     errors::PrimitivesError,
-    rescue::{Permutation, RescueParameter, RATE},
+    rescue::{sponge::RescueCRHF, RescueParameter, CRHF_RATE},
 };
 <span class="kw">use </span>ark_std::{format, string::String, vec};
 <span class="kw">use </span>jf_utils::pad_with_zeros;
@@ -133,8 +137,8 @@
 <span class="attribute">#[derive(Default)]
 </span><span class="doccomment">/// Commitment instance for user defined input size (in scalar elements)
 </span><span class="kw">pub struct </span>Commitment&lt;F: RescueParameter&gt; {
-    hash: Permutation&lt;F&gt;,
     input_len: usize,
+    phantom_f: PhantomData&lt;F&gt;,
 }
 
 <span class="kw">impl</span>&lt;F: RescueParameter&gt; Commitment&lt;F&gt; {
@@ -142,8 +146,8 @@
     </span><span class="kw">pub fn </span>new(input_len: usize) -&gt; Commitment&lt;F&gt; {
         <span class="macro">assert!</span>(input_len &gt; <span class="number">0</span>, <span class="string">&quot;input_len must be positive&quot;</span>);
         Commitment {
-            hash: Permutation::default(),
             input_len,
+            phantom_f: PhantomData,
         }
     }
     <span class="doccomment">/// Commits to `input` slice using blinding `blind`. Return
@@ -161,8 +165,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="macro">vec!</span>[<span class="kw-2">*</span>blind];
         msg.extend_from_slice(input);
         <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the commitment instance
-        </span>pad_with_zeros(<span class="kw-2">&amp;mut </span>msg, RATE);
-        <span class="kw">let </span>result_vec = <span class="self">self</span>.hash.sponge_no_padding(msg.as_slice(), <span class="number">1</span>)<span class="question-mark">?</span>;
+        </span>pad_with_zeros(<span class="kw-2">&amp;mut </span>msg, CRHF_RATE);
+        <span class="kw">let </span>result_vec = RescueCRHF::sponge_no_padding(msg.as_slice(), <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(result_vec[<span class="number">0</span>])
     }
     <span class="doccomment">/// Verifies `commitment` against `input` and `blind`.
