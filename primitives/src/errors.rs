@@ -8,7 +8,11 @@
 
 use crate::rescue::errors::RescueError;
 use ark_serialize::SerializationError;
-use ark_std::string::String;
+use ark_std::{
+    format,
+    string::{String, ToString},
+};
+use blst::BLST_ERROR;
 use displaydoc::Display;
 
 /// A `enum` specifying the possible failure modes of the primitives.
@@ -43,5 +47,16 @@ impl From<SerializationError> for PrimitivesError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for PrimitivesError {}
+impl From<BLST_ERROR> for PrimitivesError {
+    fn from(e: BLST_ERROR) -> Self {
+        match e {
+            BLST_ERROR::BLST_SUCCESS => {
+                Self::InternalError("Expecting an error, but got a sucess.".to_string())
+            },
+            BLST_ERROR::BLST_VERIFY_FAIL => Self::VerificationError(format!("{:?}", e)),
+            _ => Self::ParameterError(format!("{:?}", e)),
+        }
+    }
+}
+
+impl ark_std::error::Error for PrimitivesError {}
