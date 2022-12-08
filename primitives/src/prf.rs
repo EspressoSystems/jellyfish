@@ -7,9 +7,11 @@
 //! This module implements a pseudo random function that is derived from
 //! the rescue hash function.
 
+use ark_std::marker::PhantomData;
+
 use crate::{
     errors::PrimitivesError,
-    rescue::{Permutation, RescueParameter, STATE_SIZE},
+    rescue::{sponge::RescuePRF, RescueParameter, STATE_SIZE},
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;
@@ -24,7 +26,7 @@ pub struct PRF<F: RescueParameter> {
     pub input_len: usize,
     /// Length of the output.
     pub output_len: usize,
-    permutation: Permutation<F>,
+    phantom_f: PhantomData<F>,
 }
 
 #[derive(
@@ -61,7 +63,7 @@ impl<F: RescueParameter> PRF<F> {
         PRF {
             input_len,
             output_len,
-            permutation: Default::default(),
+            phantom_f: PhantomData,
         }
     }
 
@@ -84,11 +86,9 @@ impl<F: RescueParameter> PRF<F> {
         // Ok to pad with 0's since input length is fixed for the PRF instance
         let mut padded = input.to_owned();
         pad_with_zeros(&mut padded, STATE_SIZE);
-        self.permutation
-            .full_state_keyed_sponge_no_padding(&key.0, &padded, self.output_len)
-            .map_err(|_| {
-                PrimitivesError::InternalError("Bug in PRF: bad padding for input".to_string())
-            })
+        RescuePRF::full_state_keyed_sponge_no_padding(&key.0, &padded, self.output_len).map_err(
+            |_| PrimitivesError::InternalError("Bug in PRF: bad padding for input".to_string()),
+        )
     }
 }
 
