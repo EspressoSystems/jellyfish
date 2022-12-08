@@ -20,7 +20,7 @@ derivative = { version = "2", features = ["use_core"] }
 displaydoc = { version = "0.2.3", default-features = false }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
-espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", branch = "main" }
+espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
 hashbrown = "0.12.3"
 itertools = { version = "0.10.1", default-features = false }
 jf-primitives = { path = "../primitives", default-features = false }
