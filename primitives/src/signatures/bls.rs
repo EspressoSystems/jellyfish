@@ -20,8 +20,9 @@
 //!
 //! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
 //!
-//! // make sure the PRNG passed in is securely seeded, we RECOMMEND using `OsRng`
-//! // from `rand_core` or `getrandom` crate.
+//! // make sure the PRNG passed has good and trusted entropy.
+//! // you could use `OsRng` from `rand_core` or `getrandom` crate,
+//! // or a `SeedableRng` like `ChaChaRng` with seed generated from good randomness source.
 //! let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut OsRng)?;
 //!
 //! let msg = "The quick brown fox jumps over the lazy dog";
