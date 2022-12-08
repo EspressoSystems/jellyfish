@@ -1,61 +1,128 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
+
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
 //! BLS Signature Scheme
+//!
+//! Conforming to [IRTF draft][irtf], wrapping [`blst` crate][blst] under the
+//! hood.
+//!
+//! [irtf]: https://datatracker.ietf.org/doc/pdf/draft-irtf-cfrg-bls-signature-05
+//! [blst]: https://github.com/supranational/blst
+//!
+//! # Examples
+//!
+//! ```
+//! use rand_core::{RngCore, OsRng};
+//! use jf_primitives::signatures::{SignatureScheme, bls::BLSSignatureScheme};
+//!
+//! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
+//!
+//! // make sure the PRNG passed has good and trusted entropy.
+//! // you could use `OsRng` from `rand_core` or `getrandom` crate,
+//! // or a `SeedableRng` like `ChaChaRng` with seed generated from good randomness source.
+//! let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut OsRng)?;
+//!
+//! let msg = "The quick brown fox jumps over the lazy dog";
+//! let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, &mut OsRng)?;
+//! assert!(BLSSignatureScheme::verify(&pp, &pk, &msg, &sig).is_ok());
+//!
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! ## Generating independent keys from the same IKM
+//!
+//! In case you want to keep the IKM for multiple key pairs, and potentially
+//! reconstruct them later on from IKM.
+//!
+//! ```
+//! use rand_core::{RngCore, OsRng};
+//! use sha2::{Sha256, Digest};
+//! use jf_primitives::signatures::{SignatureScheme, bls::BLSSignatureScheme};
+//!
+//! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
+//!
+//! // NOTE: in practice, please use [`zeroize`][zeroize] to wipe sensitive
+//! // key materials out of memory.
+//! let mut ikm = [0u8; 32]; // should be at least 32 bytes
+//! OsRng.fill_bytes(&mut ikm);
+//!
+//! let mut hasher = Sha256::new();
+//! hasher.update(b"MY-BLS-SIG-KEYGEN-SALT-DOM-SEP");
+//! let salt = hasher.finalize();
+//!
+//! let (sk1, pk1) = BLSSignatureScheme::key_gen_v5(&ikm, &salt, b"banking".as_ref())?;
+//! let (sk2, pk2) = BLSSignatureScheme::key_gen_v5(&ikm, &salt, b"legal".as_ref())?;
+//!
+//! let msg = "I authorize transfering 10 dollars to Alice";
+//! let sig = BLSSignatureScheme::sign(&pp, &sk1, &msg, &mut OsRng)?;
+//! assert!(BLSSignatureScheme::verify(&pp, &pk1, &msg, &sig).is_ok());
+//!
+//! let msg = "I agree to the Terms and Conditions.";
+//! let sig = BLSSignatureScheme::sign(&pp, &sk2, &msg, &mut OsRng)?;
+//! assert!(BLSSignatureScheme::verify(&pp, &pk2, &msg, &sig).is_ok());
+//!
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! [zeroize]: https://github.com/RustCrypto/utils/tree/master/zeroize
 
 use super::SignatureScheme;
 use crate::{
     constants::{
-        BLS_SIG_KEY_SIZE, BLS_SIG_SIGNATURE_SIZE, BLS_SIG_VERKEY_SIZE, CS_ID_BLS_SIG_NAIVE,
+        BLS_SIG_COMPRESSED_PK_SIZE, BLS_SIG_COMPRESSED_SIGNATURE_SIZE, BLS_SIG_PK_SIZE,
+        BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE, CS_ID_BLS_MIN_SIG,
     },
     errors::PrimitivesError,
 };
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
+use ark_serialize::*;
 use ark_std::{
     convert::TryInto,
     format,
+    ops::{Deref, DerefMut},
     rand::{CryptoRng, RngCore},
 };
-
-use blst::BLST_ERROR;
+use blst::{min_sig::*, BLST_ERROR};
 use espresso_systems_common::jellyfish::tag;
 use tagged_base64::tagged;
+use zeroize::{Zeroize, Zeroizing};
 
-pub use blst::min_sig::{PublicKey, SecretKey, Signature};
-use zeroize::Zeroize;
-
-/// Newtype wrapper for a BLS Signing Key.
 #[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(Clone, Debug, Zeroize)]
+#[zeroize(drop)]
+/// A BLS Secret Key (Signing Key).
 pub struct BLSSignKey(SecretKey);
 
-impl core::ops::Deref for BLSSignKey {
+impl Deref for BLSSignKey {
     type Target = SecretKey;
-
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl CanonicalSerialize for BLSSignKey {
-    fn serialized_size(&self) -> usize {
-        BLS_SIG_KEY_SIZE
+    fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&self.to_bytes()[..], writer)
     }
 
-    fn serialize<W: ark_serialize::Write>(&self, writer: W) -> Result<(), SerializationError> {
-        let bytes = &self.0.serialize();
-        CanonicalSerialize::serialize(bytes.as_ref(), writer)
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_SK_SIZE
     }
 }
 
 impl CanonicalDeserialize for BLSSignKey {
-    fn deserialize<R: ark_serialize::Read>(mut reader: R) -> Result<Self, SerializationError> {
+    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
         let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
-        if len != BLS_SIG_KEY_SIZE {
+        if len != BLS_SIG_SK_SIZE {
             return Err(SerializationError::InvalidData);
         }
 
-        let mut key = [0u8; BLS_SIG_KEY_SIZE];
-        reader.read_exact(&mut key)?;
-        SecretKey::deserialize(&key)
+        let mut sk_bytes = [0u8; BLS_SIG_SK_SIZE];
+        reader.read_exact(&mut sk_bytes)?;
+        SecretKey::deserialize(&sk_bytes)
             .map(Self)
             .map_err(|_| SerializationError::InvalidData)
     }
@@ -69,89 +136,155 @@ impl PartialEq for BLSSignKey {
 
 impl Eq for BLSSignKey {}
 
-/// Newtype wrapper for a BLS Signature.
-#[tagged(tag::BLS_SIG)]
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BLSSignature(Signature);
-
-impl core::ops::Deref for BLSSignature {
-    type Target = Signature;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl CanonicalSerialize for BLSSignature {
-    fn serialized_size(&self) -> usize {
-        BLS_SIG_SIGNATURE_SIZE
-    }
-
-    fn serialize<W: ark_serialize::Write>(&self, writer: W) -> Result<(), SerializationError> {
-        let bytes = &self.0.serialize();
-        CanonicalSerialize::serialize(bytes.as_ref(), writer)
-    }
-}
-
-impl CanonicalDeserialize for BLSSignature {
-    fn deserialize<R: ark_serialize::Read>(mut reader: R) -> Result<Self, SerializationError> {
-        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
-        if len != BLS_SIG_SIGNATURE_SIZE {
-            return Err(SerializationError::InvalidData);
-        }
-
-        let mut sig = [0u8; BLS_SIG_SIGNATURE_SIZE];
-        reader.read_exact(&mut sig)?;
-        Signature::deserialize(&sig)
-            .map(Self)
-            .map_err(|_| SerializationError::InvalidData)
-    }
-}
-
-/// Newtype wrapper for a BLS Verification Key.
 #[tagged(tag::BLS_VER_KEY)]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Copy)]
+/// A BLS Public Key (Verification Key).
 pub struct BLSVerKey(PublicKey);
 
-impl core::ops::Deref for BLSVerKey {
+impl Deref for BLSVerKey {
     type Target = PublicKey;
-
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl CanonicalSerialize for BLSVerKey {
-    fn serialized_size(&self) -> usize {
-        BLS_SIG_VERKEY_SIZE
+    fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&self.compress()[..], writer)
     }
 
-    fn serialize<W: ark_serialize::Write>(&self, writer: W) -> Result<(), SerializationError> {
-        let bytes = &self.0.serialize();
-        CanonicalSerialize::serialize(bytes.as_ref(), writer)
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_COMPRESSED_PK_SIZE
+    }
+
+    fn serialize_uncompressed<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&PublicKey::serialize(self)[..], writer)
+    }
+
+    fn uncompressed_size(&self) -> usize {
+        BLS_SIG_PK_SIZE
     }
 }
 
+// TODO: (alex) update these with combinations of compressed and checked
+// when upgrading to use arkwork 0.4.0
 impl CanonicalDeserialize for BLSVerKey {
-    fn deserialize<R: ark_serialize::Read>(mut reader: R) -> Result<Self, SerializationError> {
+    // compressed + validity checked
+    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
         let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
-        if len != BLS_SIG_VERKEY_SIZE {
+        if len != BLS_SIG_COMPRESSED_PK_SIZE {
             return Err(SerializationError::InvalidData);
         }
 
-        let mut key = [0u8; BLS_SIG_VERKEY_SIZE];
-        reader.read_exact(&mut key)?;
-        PublicKey::deserialize(&key)
+        let mut pk_bytes = [0u8; BLS_SIG_COMPRESSED_PK_SIZE];
+        reader.read_exact(&mut pk_bytes)?;
+
+        let pk = PublicKey::uncompress(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
+        PublicKey::validate(&pk).map_err(|_| SerializationError::InvalidData)?;
+
+        Ok(Self(pk))
+    }
+
+    // uncompressed + validity checked
+    fn deserialize_uncompressed<R: Read>(reader: R) -> Result<Self, SerializationError> {
+        let pk: Self = CanonicalDeserialize::deserialize_unchecked(reader)?;
+        PublicKey::validate(&pk).map_err(|_| SerializationError::InvalidData)?;
+
+        Ok(pk)
+    }
+
+    // uncompressed + validity unchekced
+    fn deserialize_unchecked<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_PK_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut pk_bytes = [0u8; BLS_SIG_PK_SIZE];
+        reader.read_exact(&mut pk_bytes)?;
+        PublicKey::deserialize(&pk_bytes)
             .map(Self)
             .map_err(|_| SerializationError::InvalidData)
     }
 }
 
-/// BLS signature scheme. Imports blst library.
+/// A BLS Signature.
+#[derive(Clone, Debug, PartialEq, Eq, Copy)]
+#[tagged(tag::BLS_SIG)]
+pub struct BLSSignature(Signature);
+
+impl Deref for BLSSignature {
+    type Target = Signature;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl CanonicalSerialize for BLSSignature {
+    fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&self.compress()[..], writer)
+    }
+
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_COMPRESSED_SIGNATURE_SIZE
+    }
+
+    fn serialize_uncompressed<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&Signature::serialize(self)[..], writer)
+    }
+
+    fn uncompressed_size(&self) -> usize {
+        BLS_SIG_SIGNATURE_SIZE
+    }
+}
+
+// TODO: (alex) update these with combinations of compressed and checked
+// when upgrading to use arkwork 0.4.0
+impl CanonicalDeserialize for BLSSignature {
+    // compressed + validity checked
+    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_COMPRESSED_SIGNATURE_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut sig_bytes = [0u8; BLS_SIG_COMPRESSED_SIGNATURE_SIZE];
+        reader.read_exact(&mut sig_bytes)?;
+
+        let sig = Signature::uncompress(&sig_bytes).map_err(|_| SerializationError::InvalidData)?;
+        Signature::validate(&sig, true).map_err(|_| SerializationError::InvalidData)?;
+
+        Ok(Self(sig))
+    }
+
+    // uncompressed + validity checked
+    fn deserialize_uncompressed<R: Read>(reader: R) -> Result<Self, SerializationError> {
+        let sig: Self = CanonicalDeserialize::deserialize_unchecked(reader)?;
+        Signature::validate(&sig, true).map_err(|_| SerializationError::InvalidData)?;
+        Ok(sig)
+    }
+
+    // uncompressed + validity unchekced
+    fn deserialize_unchecked<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_SIGNATURE_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut sig_bytes = [0u8; BLS_SIG_SIGNATURE_SIZE];
+        reader.read_exact(&mut sig_bytes)?;
+        Signature::deserialize(&sig_bytes)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
+    }
+}
+
+/// BLS signature scheme. Wrapping around structs from the `blst` crate.
+/// See [module-level documentation](self) for example usage.
 pub struct BLSSignatureScheme;
 
 impl SignatureScheme for BLSSignatureScheme {
-    const CS_ID: &'static str = CS_ID_BLS_SIG_NAIVE;
+    const CS_ID: &'static str = CS_ID_BLS_MIN_SIG;
 
     /// Public parameter
     type PublicParameter = ();
@@ -176,17 +309,16 @@ impl SignatureScheme for BLSSignatureScheme {
         Ok(())
     }
 
-    /// Sample a pair of keys.
+    /// Generate a BLS key pair.
+    /// Make sure the `prng` passed in are properly seeded with trusted entropy.
     fn key_gen<R: CryptoRng + RngCore>(
         _pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        let mut ikm = [0u8; 32];
-        prng.fill_bytes(&mut ikm);
-        let sk = match SecretKey::key_gen(&ikm, &[]) {
-            Ok(sk) => sk,
-            Err(e) => return Err(PrimitivesError::InternalError(format!("{:?}", e))),
-        };
+        let mut ikm = Zeroizing::new([0u8; 32]);
+        prng.fill_bytes(ikm.deref_mut());
+
+        let sk = SecretKey::key_gen(ikm.deref(), &[])?;
         let vk = sk.sk_to_pk();
         Ok((BLSSignKey(sk), BLSVerKey(vk)))
     }
@@ -219,12 +351,43 @@ impl SignatureScheme for BLSSignatureScheme {
     }
 }
 
+impl BLSSignatureScheme {
+    /// Alternative deterministic key_gen compatible with [IRTF draft v5][v5].
+    ///
+    /// - Secret byte string `ikm` MUST be infeasible to guess, ideally
+    ///   generated by a trusted source of randomness. `ikm` MUST be at least 32
+    ///   bytes long, but it MAY be longer.
+    /// - `salt` should either be empty or an unstructured byte string. It is
+    ///   RECOMMENDED to fix a uniformly random byte string of length 32. See
+    ///   details [here][salt].
+    /// - `key_info` is optional, it MAY be used to derived multiple independent
+    ///   keys from the same `ikm`. By default, `key_info` is the empty string.
+    ///
+    /// [v5]: https://datatracker.ietf.org/doc/pdf/draft-irtf-cfrg-bls-signature-05
+    /// [salt]: https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-choosing-a-salt-value-for-k
+    pub fn key_gen_v5(
+        ikm: &[u8],
+        salt: &[u8],
+        key_info: &[u8],
+    ) -> Result<
+        (
+            <Self as SignatureScheme>::SigningKey,
+            <Self as SignatureScheme>::VerificationKey,
+        ),
+        PrimitivesError,
+    > {
+        let sk = SecretKey::key_gen_v5(ikm, salt, key_info)?;
+        let vk = sk.sk_to_pk();
+
+        Ok((BLSSignKey(sk), BLSVerKey(vk)))
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use ark_std::{test_rng, vec::Vec};
-
     use super::*;
     use crate::signatures::tests::{failed_verification, sign_and_verify};
+    use ark_std::{fmt::Debug, rand::rngs::StdRng, vec};
 
     #[test]
     fn test_bls_sig() {
@@ -235,27 +398,36 @@ mod test {
     }
 
     #[test]
-    fn test_bls_sig_serde() {
-        let rng = &mut test_rng();
-        let parameters = BLSSignatureScheme::param_gen(Some(rng)).unwrap();
-        let (sk, vk) = BLSSignatureScheme::key_gen(&parameters, rng).unwrap();
+    fn test_canonical_serde() {
+        let mut rng = ark_std::test_rng();
+        let pp = BLSSignatureScheme::param_gen::<StdRng>(None).unwrap();
+        let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut rng).unwrap();
+        let msg = "The quick brown fox jumps over the lazy dog";
+        let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, &mut rng).unwrap();
 
-        // serde for Verification Key
-        let mut keypair_bytes = Vec::new();
-        vk.serialize(&mut keypair_bytes).unwrap();
-        let keypair_de = BLSVerKey::deserialize(&keypair_bytes[..]).unwrap();
-        assert_eq!(vk, keypair_de);
-        // wrong byte length
-        assert!(BLSVerKey::deserialize(&keypair_bytes[1..]).is_err());
+        test_canonical_serde_helper(sk);
+        test_canonical_serde_helper(pk);
+        test_canonical_serde_helper(sig);
+    }
 
-        // serde for Signature
-        let message = "this is a test message";
-        let sig = BLSSignatureScheme::sign(&parameters, &sk, message.as_bytes(), rng).unwrap();
-        let mut sig_bytes = Vec::new();
-        sig.serialize(&mut sig_bytes).unwrap();
-        let sig_de = BLSSignature::deserialize(&sig_bytes[..]).unwrap();
-        assert_eq!(sig, sig_de);
-        // wrong byte length
-        assert!(BLSSignature::deserialize(&sig_bytes[1..]).is_err());
+    // TODO: (alex) update this after upgrading to arkwork 0.4.0
+    fn test_canonical_serde_helper<T>(data: T)
+    where
+        T: CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq,
+    {
+        let mut bytes = vec![];
+        CanonicalSerialize::serialize(&data, &mut bytes).unwrap();
+        let de: T = CanonicalDeserialize::deserialize(&bytes[..]).unwrap();
+        assert_eq!(data, de);
+
+        bytes = vec![];
+        CanonicalSerialize::serialize_uncompressed(&data, &mut bytes).unwrap();
+        let de: T = CanonicalDeserialize::deserialize_uncompressed(&bytes[..]).unwrap();
+        assert_eq!(data, de);
+
+        bytes = vec![];
+        CanonicalSerialize::serialize_unchecked(&data, &mut bytes).unwrap();
+        let de: T = CanonicalDeserialize::deserialize_unchecked(&bytes[..]).unwrap();
+        assert_eq!(data, de);
     }
 }
