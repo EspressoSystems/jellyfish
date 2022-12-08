@@ -102,6 +102,7 @@ where
 // =====================================================
 // Signing key
 // =====================================================
+#[tagged(tag::SCHNORR_SIGNING_KEY)]
 #[derive(
     Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]

@@ -76,6 +76,7 @@ use crate::{
     },
     errors::PrimitivesError,
 };
+
 use ark_serialize::*;
 use ark_std::{
     convert::TryInto,
@@ -89,74 +90,9 @@ use espresso_systems_common::jellyfish::tag;
 use tagged_base64::tagged;
 use zeroize::{Zeroize, Zeroizing};
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Copy)]
-#[tagged(tag::BLS_VER_KEY)]
-/// A BLS Public Key (Verification Key).
-pub struct BLSVerKey(PublicKey);
-
-impl Deref for BLSVerKey {
-    type Target = PublicKey;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl CanonicalSerialize for BLSVerKey {
-    fn serialize<W: Write>(&self, mut w: W) -> Result<(), SerializationError> {
-        Ok(w.write_all(&self.compress())?)
-    }
-
-    fn serialized_size(&self) -> usize {
-        BLS_SIG_COMPRESSED_PK_SIZE
-    }
-
-    fn serialize_uncompressed<W: Write>(&self, mut w: W) -> Result<(), SerializationError> {
-        Ok(w.write_all(&PublicKey::serialize(self))?)
-    }
-
-    fn uncompressed_size(&self) -> usize {
-        BLS_SIG_PK_SIZE
-    }
-}
-
-// TODO: (alex) update these with combinations of compressed and checked
-// when upgrading to use arkwork 0.4.0
-impl CanonicalDeserialize for BLSVerKey {
-    // compressed + validity checked
-    fn deserialize<R: Read>(mut r: R) -> Result<Self, SerializationError> {
-        let mut pk_bytes = [0u8; BLS_SIG_COMPRESSED_PK_SIZE];
-        r.read_exact(&mut pk_bytes)?;
-
-        let pk = PublicKey::uncompress(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
-        PublicKey::validate(&pk).map_err(|_| SerializationError::InvalidData)?;
-
-        Ok(Self(pk))
-    }
-
-    // uncompressed + validity checked
-    fn deserialize_uncompressed<R: Read>(mut r: R) -> Result<Self, SerializationError> {
-        let mut pk_bytes = [0u8; BLS_SIG_PK_SIZE];
-        r.read_exact(&mut pk_bytes)?;
-
-        let pk = PublicKey::deserialize(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
-        PublicKey::validate(&pk).map_err(|_| SerializationError::InvalidData)?;
-
-        Ok(Self(pk))
-    }
-
-    // uncompressed + validity unchekced
-    fn deserialize_unchecked<R: Read>(mut r: R) -> Result<Self, SerializationError> {
-        let mut pk_bytes = [0u8; BLS_SIG_PK_SIZE];
-        r.read_exact(&mut pk_bytes)?;
-        let pk = PublicKey::deserialize(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
-
-        Ok(Self(pk))
-    }
-}
-
+#[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(Clone, Debug, Default, Zeroize)]
 #[zeroize(drop)]
-#[tagged(tag::BLS_SIGNING_KEY)]
 /// A BLS Secret Key (Signing Key).
 pub struct BLSSignKey(SecretKey);
 
@@ -164,6 +100,31 @@ impl Deref for BLSSignKey {
     type Target = SecretKey;
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl CanonicalSerialize for BLSSignKey {
+    fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&self.to_bytes()[..], writer)
+    }
+
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_SK_SIZE
+    }
+}
+
+impl CanonicalDeserialize for BLSSignKey {
+    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_SK_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut sk_bytes = [0u8; BLS_SIG_SK_SIZE];
+        reader.read_exact(&mut sk_bytes)?;
+        SecretKey::from_bytes(&sk_bytes)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
     }
 }
 
@@ -180,22 +141,85 @@ impl PartialEq for BLSSignKey {
     }
 }
 
-impl CanonicalSerialize for BLSSignKey {
-    fn serialize<W: Write>(&self, mut w: W) -> Result<(), SerializationError> {
-        Ok(w.write_all(&self.to_bytes())?)
-    }
+impl Eq for BLSSignKey {}
 
-    fn serialized_size(&self) -> usize {
-        BLS_SIG_SK_SIZE
+#[tagged(tag::BLS_VER_KEY)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Copy)]
+/// A BLS Public Key (Verification Key).
+pub struct BLSVerKey(PublicKey);
+
+impl Deref for BLSVerKey {
+    type Target = PublicKey;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
-impl CanonicalDeserialize for BLSSignKey {
-    fn deserialize<R: Read>(mut r: R) -> Result<Self, SerializationError> {
-        let mut sk_bytes = [0u8; BLS_SIG_SK_SIZE];
-        r.read_exact(&mut sk_bytes)?;
-        let sk = SecretKey::from_bytes(&sk_bytes).map_err(|_| SerializationError::InvalidData)?;
-        Ok(Self(sk))
+impl CanonicalSerialize for BLSVerKey {
+    fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&self.compress()[..], writer)
+    }
+
+    fn serialized_size(&self) -> usize {
+        BLS_SIG_COMPRESSED_PK_SIZE
+    }
+
+    fn serialize_uncompressed<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&PublicKey::serialize(self)[..], writer)
+    }
+
+    fn uncompressed_size(&self) -> usize {
+        BLS_SIG_PK_SIZE
+    }
+}
+
+// TODO: (alex) update these with combinations of compressed and checked
+// when upgrading to use arkwork 0.4.0
+impl CanonicalDeserialize for BLSVerKey {
+    // compressed + validity checked
+    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_COMPRESSED_PK_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut pk_bytes = [0u8; BLS_SIG_COMPRESSED_PK_SIZE];
+        reader.read_exact(&mut pk_bytes)?;
+
+        let pk = PublicKey::uncompress(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
+        PublicKey::validate(&pk).map_err(|_| SerializationError::InvalidData)?;
+
+        Ok(Self(pk))
+    }
+
+    // uncompressed + validity checked
+    fn deserialize_uncompressed<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_PK_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut pk_bytes = [0u8; BLS_SIG_PK_SIZE];
+        reader.read_exact(&mut pk_bytes)?;
+
+        let pk = PublicKey::deserialize(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
+        PublicKey::validate(&pk).map_err(|_| SerializationError::InvalidData)?;
+
+        Ok(Self(pk))
+    }
+
+    // uncompressed + validity unchekced
+    fn deserialize_unchecked<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_PK_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
+        let mut pk_bytes = [0u8; BLS_SIG_PK_SIZE];
+        reader.read_exact(&mut pk_bytes)?;
+        PublicKey::deserialize(&pk_bytes)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
     }
 }
 
@@ -212,16 +236,16 @@ impl Deref for BLSSignature {
 }
 
 impl CanonicalSerialize for BLSSignature {
-    fn serialize<W: Write>(&self, mut w: W) -> Result<(), SerializationError> {
-        Ok(w.write_all(&self.compress())?)
+    fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&self.compress()[..], writer)
     }
 
     fn serialized_size(&self) -> usize {
         BLS_SIG_COMPRESSED_SIGNATURE_SIZE
     }
 
-    fn serialize_uncompressed<W: Write>(&self, mut w: W) -> Result<(), SerializationError> {
-        Ok(w.write_all(&Signature::serialize(self))?)
+    fn serialize_uncompressed<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        CanonicalSerialize::serialize(&Signature::serialize(self)[..], writer)
     }
 
     fn uncompressed_size(&self) -> usize {
@@ -233,9 +257,14 @@ impl CanonicalSerialize for BLSSignature {
 // when upgrading to use arkwork 0.4.0
 impl CanonicalDeserialize for BLSSignature {
     // compressed + validity checked
-    fn deserialize<R: Read>(mut r: R) -> Result<Self, SerializationError> {
+    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_COMPRESSED_SIGNATURE_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
         let mut sig_bytes = [0u8; BLS_SIG_COMPRESSED_SIGNATURE_SIZE];
-        r.read_exact(&mut sig_bytes)?;
+        reader.read_exact(&mut sig_bytes)?;
 
         let sig = Signature::uncompress(&sig_bytes).map_err(|_| SerializationError::InvalidData)?;
         Signature::validate(&sig, true).map_err(|_| SerializationError::InvalidData)?;
@@ -244,9 +273,14 @@ impl CanonicalDeserialize for BLSSignature {
     }
 
     // uncompressed + validity checked
-    fn deserialize_uncompressed<R: Read>(mut r: R) -> Result<Self, SerializationError> {
+    fn deserialize_uncompressed<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_SIGNATURE_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
+
         let mut sig_bytes = [0u8; BLS_SIG_SIGNATURE_SIZE];
-        r.read_exact(&mut sig_bytes)?;
+        reader.read_exact(&mut sig_bytes)?;
 
         let sig =
             Signature::deserialize(&sig_bytes).map_err(|_| SerializationError::InvalidData)?;
@@ -256,13 +290,17 @@ impl CanonicalDeserialize for BLSSignature {
     }
 
     // uncompressed + validity unchekced
-    fn deserialize_unchecked<R: Read>(mut r: R) -> Result<Self, SerializationError> {
-        let mut sig_bytes = [0u8; BLS_SIG_SIGNATURE_SIZE];
-        r.read_exact(&mut sig_bytes)?;
-        let sig =
-            Signature::deserialize(&sig_bytes).map_err(|_| SerializationError::InvalidData)?;
+    fn deserialize_unchecked<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize(&mut reader)?;
+        if len != BLS_SIG_SIGNATURE_SIZE {
+            return Err(SerializationError::InvalidData);
+        }
 
-        Ok(Self(sig))
+        let mut sig_bytes = [0u8; BLS_SIG_SIGNATURE_SIZE];
+        reader.read_exact(&mut sig_bytes)?;
+        Signature::deserialize(&sig_bytes)
+            .map(Self)
+            .map_err(|_| SerializationError::InvalidData)
     }
 }
 
@@ -307,7 +345,6 @@ impl SignatureScheme for BLSSignatureScheme {
 
         let sk = SecretKey::key_gen(ikm.deref(), &[])?;
         let vk = sk.sk_to_pk();
-
         Ok((BLSSignKey(sk), BLSVerKey(vk)))
     }
 
