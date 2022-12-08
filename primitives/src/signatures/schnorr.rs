@@ -102,6 +102,7 @@ where
 // =====================================================
 // Signing key
 // =====================================================
+#[tagged(tag::SCHNORR_SIGNING_KEY)]
 #[derive(
     Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
@@ -127,7 +128,7 @@ impl<F: PrimeField> SignKey<F> {
 
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
-#[tagged(tag::SCHNORRVERKEY)]
+#[tagged(tag::SCHNORR_VER_KEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Parameters"),
@@ -196,7 +197,7 @@ impl<P: Parameters> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
-#[tagged(tag::SIGNKEYPAIR)]
+#[tagged(tag::SCHNORR_KEY_PAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Parameters"),
@@ -217,7 +218,7 @@ where
 // =====================================================
 
 /// The signature of Schnorr signature scheme
-#[tagged(tag::SIG)]
+#[tagged(tag::SCHNORR_SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Parameters"),
