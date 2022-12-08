@@ -17,7 +17,7 @@ use ark_ec::{
 use ark_std::vec::Vec;
 use jf_primitives::{
     pcs::prelude::Commitment,
-    rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE},
+    rescue::{sponge::RescueCRHF, RescueParameter, STATE_SIZE},
 };
 use jf_relation::gadgets::ecc::{Point, SWToTEConParam};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
@@ -176,10 +176,8 @@ where
         // 2. challenge = state[0] in Fr
         // 3. transcript = Vec::new()
 
-        let hasher = RescueHash::default();
-
         let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
-        let tmp = hasher.sponge_with_padding(&input, STATE_SIZE);
+        let tmp = RescueCRHF::sponge_with_padding(&input, STATE_SIZE);
         let challenge = fq_to_fr_with_mask::<F, E::Fr>(&tmp[0]);
         self.state.copy_from_slice(&tmp);
         self.transcript = Vec::new();

@@ -736,7 +736,8 @@ mod tests {
 
     use super::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
     use crate::rescue::{
-        Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
+        sponge::{RescueCRHF, RescuePRF},
+        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -1063,7 +1064,7 @@ mod tests {
         let mut prng = ark_std::test_rng();
 
         // setup the inputs
-        let data_t: Vec<T> = (0..2 * RATE).map(|_| T::rand(&mut prng)).collect_vec();
+        let data_t: Vec<T> = (0..2 * CRHF_RATE).map(|_| T::rand(&mut prng)).collect_vec();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
             .iter()
@@ -1071,8 +1072,7 @@ mod tests {
             .collect();
 
         // sponge no padding with output length 1
-        let rescue_perm = Permutation::<T>::default();
-        let expected_sponge = rescue_perm.sponge_no_padding(&data_t, 1).unwrap()[0];
+        let expected_sponge = RescueCRHF::sponge_no_padding(&data_t, 1).unwrap()[0];
         let sponge_var = circuit
             .rescue_sponge_no_padding::<T>(data_vars.as_slice(), 1)
             .unwrap()[0];
@@ -1091,8 +1091,7 @@ mod tests {
 
         // general sponge no padding
         for output_len in 1..max_output_len {
-            let rescue_perm = Permutation::<T>::default();
-            let expected_sponge = rescue_perm.sponge_no_padding(&data_t, output_len).unwrap();
+            let expected_sponge = RescueCRHF::sponge_no_padding(&data_t, output_len).unwrap();
             let sponge_var = circuit
                 .rescue_sponge_no_padding::<T>(data_vars.as_slice(), output_len)
                 .unwrap();
@@ -1111,7 +1110,7 @@ mod tests {
         // If the data length is not a multiple of RATE==3 then an error is triggered
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        let size = 2 * RATE + 1; // Non multiple of RATE
+        let size = 2 * CRHF_RATE + 1; // Non multiple of RATE
         let data_t = (0..size).map(|_| T::rand(&mut prng)).collect_vec();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
@@ -1153,8 +1152,7 @@ mod tests {
                 .map(|x| FpElemVar::new_from_field_element(&mut circuit, x, m, None).unwrap())
                 .collect();
 
-            let rescue_perm = Permutation::<T>::default();
-            let expected_sponge = rescue_perm.sponge_with_padding(&data_t, 1);
+            let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, 1);
 
             // sponge with padding
             let sponge_var = circuit
@@ -1175,8 +1173,7 @@ mod tests {
 
             // sponge full with padding
             for output_len in 1..max_output_len {
-                let rescue_perm = Permutation::<T>::default();
-                let expected_sponge = rescue_perm.sponge_with_padding(&data_t, output_len);
+                let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, output_len);
 
                 let sponge_var = circuit
                     .rescue_sponge_with_padding::<T>(data_vars.as_slice(), output_len)
@@ -1220,8 +1217,6 @@ mod tests {
             .rescue_sponge_no_padding::<T>(&input_var, 1)
             .unwrap()[0];
 
-        let rescue_hash = Permutation::<T>::default();
-
         // Check consistency between inputs
         for i in 0..rate {
             assert_eq!(input_vec_f[i], input_var[i].witness(&circuit).unwrap());
@@ -1229,7 +1224,8 @@ mod tests {
 
         // Check consistency between outputs
         let expected_hash =
-            rescue_hash.hash_3_to_1(&[input_vec_t[0], input_vec_t[1], input_vec_t[2]]);
+            RescueCRHF::sponge_no_padding(&[input_vec_t[0], input_vec_t[1], input_vec_t[2]], 1)
+                .unwrap()[0];
         assert_eq!(
             field_switching::<T, F>(&expected_hash),
             out_var.witness(&circuit).unwrap()
@@ -1271,10 +1267,8 @@ mod tests {
             })
             .collect();
 
-        let perm = Permutation::<T>::default();
-        let expected_fsks_output = perm
-            .full_state_keyed_sponge_no_padding(&key_t, &data_t, 1)
-            .unwrap();
+        let expected_fsks_output =
+            RescuePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
         let fsks_var = circuit
             .rescue_full_state_keyed_sponge_no_padding::<T>(key_var, &data_vars)

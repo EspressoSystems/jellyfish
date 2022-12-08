@@ -652,7 +652,8 @@ mod tests {
 
     use super::{RescueGadget, RescueHelperGadget, RescueStateVar};
     use crate::rescue::{
-        Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, RATE, STATE_SIZE,
+        sponge::{RescueCRHF, RescuePRF},
+        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -965,14 +966,13 @@ mod tests {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
 
         let mut prng = ark_std::test_rng();
-        let data = (0..2 * RATE).map(|_| F::rand(&mut prng)).collect_vec();
+        let data = (0..2 * CRHF_RATE).map(|_| F::rand(&mut prng)).collect_vec();
         let data_vars = data
             .iter()
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        let rescue_perm = Permutation::default();
-        let expected_sponge = rescue_perm.sponge_no_padding(&data, 1).unwrap()[0];
+        let expected_sponge = RescueCRHF::sponge_no_padding(&data, 1).unwrap()[0];
         let sponge_var = circuit
             .rescue_sponge_no_padding(data_vars.as_slice(), 1)
             .unwrap()[0];
@@ -987,7 +987,7 @@ mod tests {
         // If the data length is not a multiple of RATE==3 then an error is triggered
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
-        let size = 2 * RATE + 1; // Non multiple of RATE
+        let size = 2 * CRHF_RATE + 1; // Non multiple of RATE
         let data = (0..size).map(|_| F::rand(&mut prng)).collect_vec();
         let data_vars = data
             .iter()
@@ -1022,17 +1022,13 @@ mod tests {
                 .rescue_sponge_no_padding(&input_var, output_len)
                 .unwrap();
 
-            let rescue_hash = Permutation::default();
-
             // Check consistency between inputs
             for i in 0..rate {
                 assert_eq!(input_vec[i], circuit.witness(input_var[i]).unwrap());
             }
 
             // Check consistency between outputs
-            let expected_hash = rescue_hash
-                .sponge_no_padding(&input_vec, output_len)
-                .unwrap();
+            let expected_hash = RescueCRHF::sponge_no_padding(&input_vec, output_len).unwrap();
 
             for (e, f) in out_var.iter().zip(expected_hash.iter()) {
                 assert_eq!(*f, circuit.witness(*e).unwrap());
@@ -1087,15 +1083,13 @@ mod tests {
                     .rescue_sponge_with_padding(&input_var, output_len)
                     .unwrap();
 
-                let rescue_hash = Permutation::default();
-
                 // Check consistency between inputs
                 for i in 0..input_len {
                     assert_eq!(input_vec[i], circuit.witness(input_var[i]).unwrap());
                 }
 
                 // Check consistency between outputs
-                let expected_hash = rescue_hash.sponge_with_padding(&input_vec, output_len);
+                let expected_hash = RescueCRHF::sponge_with_padding(&input_vec, output_len);
 
                 for (&e, &f) in expected_hash.iter().zip(out_var.iter()) {
                     assert_eq!(e, circuit.witness(f).unwrap());
@@ -1131,10 +1125,8 @@ mod tests {
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        let perm = Permutation::default();
-        let expected_fsks_output = perm
-            .full_state_keyed_sponge_no_padding(&key, &data, 1)
-            .unwrap();
+        let expected_fsks_output =
+            RescuePRF::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();
 
         let fsks_var = circuit
             .rescue_full_state_keyed_sponge_no_padding(key_var, &data_vars)

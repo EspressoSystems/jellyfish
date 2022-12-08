@@ -11,7 +11,7 @@ use super::SignatureScheme;
 use crate::{
     constants::CS_ID_SCHNORR,
     errors::PrimitivesError,
-    rescue::{Permutation, RescueParameter},
+    rescue::{sponge::RescueCRHF, RescueParameter},
     utils::curve_cofactor,
 };
 use ark_ec::{
@@ -294,15 +294,14 @@ where
     /// Signature function
     #[allow(non_snake_case)]
     pub fn sign<B: AsRef<[u8]>>(&self, msg: &[F], csid: B) -> Signature<P> {
-        let hash = Permutation::default();
         // Do we want to remove the instance description?
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut msg_input = vec![instance_description, fr_to_fq::<F, P>(&self.sk.0)];
         msg_input.extend(msg.iter());
 
-        let r = fq_to_fr::<F, P>(&hash.sponge_with_padding(&msg_input, 1)[0]);
+        let r = fq_to_fr::<F, P>(&RescueCRHF::sponge_with_padding(&msg_input, 1)[0]);
         let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
-        let c = self.vk.challenge(&hash, &R, msg, csid);
+        let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
         Signature { s, R }
@@ -367,8 +366,7 @@ where
         }
 
         // restrictive cofactorless verification
-        let hash = Permutation::<F>::default();
-        let c = self.challenge(&hash, &sig.R, msg, csid);
+        let c = self.challenge(&sig.R, msg, csid);
 
         let base = GroupProjective::<P>::prime_subgroup_generator();
         let x = Group::mul(&base, &sig.s);
@@ -394,7 +392,6 @@ where
     #[allow(non_snake_case)]
     fn challenge<B: AsRef<[u8]>>(
         &self,
-        hash: &Permutation<F>,
         R: &GroupProjective<P>,
         msg: &[F],
         csid: B,
@@ -414,7 +411,7 @@ where
             ]
         };
         challenge_input.extend(msg);
-        let challenge_fq = hash.sponge_with_padding(&challenge_input, 1)[0];
+        let challenge_fq = RescueCRHF::sponge_with_padding(&challenge_input, 1)[0];
 
         // this masking will drop the last byte, and the resulting
         // challenge will be 248 bits

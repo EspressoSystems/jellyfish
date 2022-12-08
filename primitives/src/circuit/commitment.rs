@@ -8,7 +8,7 @@
 
 use crate::{
     circuit::rescue::RescueGadget,
-    rescue::{RescueParameter, RATE},
+    rescue::{RescueParameter, CRHF_RATE},
     utils::pad_with,
 };
 use ark_std::vec;
@@ -33,7 +33,7 @@ where
     fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, CircuitError> {
         let mut msg = vec![blinding];
         msg.extend_from_slice(input);
-        pad_with(&mut msg, RATE, self.zero());
+        pad_with(&mut msg, CRHF_RATE, self.zero());
         Ok(self.rescue_sponge_no_padding(&msg, 1)?[0])
     }
 }
