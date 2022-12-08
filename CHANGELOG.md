@@ -42,6 +42,9 @@ and follow [semantic versioning](https://semver.org/) for our releases.
     - Remove all `.*sponge.*` methods from `Permutation`.
     - Introduce `RescueCRHF` which takes over `sponge_with_padding` and `sponge_no_padding` from `Permutation`.
     - Introduce `RescuePRF` which takes over `full_state_keyed_sponge_with_padding` and `full_state_keyed_sponge_no_padding` from `Permutation`.
+- [#148](https://github.com/EspressoSystems/jellyfish/pull/148), [#156](https://github.com/EspressoSystems/jellyfish/pull/156) (`jf-primitives`) Refactored BLS Signature implementation
+  - #148 Added trait bounds on associated types of `trait SignatureScheme`
+  - #156 Improved BLS correctness and API compliance with IRTF standard with better doc
 
 ### Fixed
 
