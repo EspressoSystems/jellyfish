@@ -11,7 +11,7 @@ use ark_sponge::{
     Absorb, CryptographicSponge, FieldBasedCryptographicSponge, FieldElementSize, SpongeExt,
 };
 use ark_std::{string::ToString, vec, vec::Vec};
-use jf_utils::{field_switching, pad_with_zeros};
+use jf_utils::pad_with_zeros;
 
 use super::{
     errors::RescueError, Permutation, RescueParameter, RescueVector, CRHF_RATE, STATE_SIZE,
@@ -158,49 +158,31 @@ impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
             });
     }
 
-    /// Squeeze `num_bytes` bytes from the sponge.
+    /// WARNING! This trait method is unimplemented and should not be used.
+    /// Only use the `CryptographicSponge` for squeezing native field elements.
     fn squeeze_bytes(&mut self, _num_bytes: usize) -> Vec<u8> {
         unimplemented!("Currently we only support squeezing native field elements!")
     }
 
-    /// Squeeze `num_bits` bits from the sponge.
+    /// WARNING! This trait method is unimplemented and should not be used.
+    /// Only use the `CryptographicSponge` for squeezing native field elements.
     fn squeeze_bits(&mut self, _num_bits: usize) -> Vec<bool> {
         unimplemented!("Currently we only support squeezing native field elements!")
     }
 
-    /// Squeeze `sizes.len()` field elements from the sponge, where the `i`-th
-    /// element of the output has size `sizes[i]`.
-    ///
-    /// If the implementation is field-based, to squeeze native field elements,
-    /// call `self.squeeze_native_field_elements` instead.
-    ///
-    /// TODO: Support general Field.
-    ///
-    /// Note that when `FieldElementSize` is `FULL`, the output is not strictly
-    /// uniform. Output space is uniform in \[0, 2^{F::MODULUS_BITS - 1}\]
+    /// WARNING! This trait method is unimplemented and should not be used.
+    /// Use `squeeze_native_field_elements` instead.
     fn squeeze_field_elements_with_sizes<F: PrimeField>(
         &mut self,
-        sizes: &[FieldElementSize],
+        _sizes: &[FieldElementSize],
     ) -> Vec<F> {
-        if T::size_in_bits() == F::size_in_bits() {
-            RescueSponge::<T, RATE>::squeeze_native_field_elements_with_sizes(self, sizes)
-                .iter()
-                .map(|x| field_switching(x))
-                .collect::<Vec<F>>()
-        } else {
-            unimplemented!("Currently we only support squeezing native field elements!")
-        }
+        unimplemented!("Currently we only support squeezing native field elements!")
     }
 
-    /// Squeeze `num_elements` nonnative field elements from the sponge.
-    ///
-    /// Because of rust limitation, for field-based implementation, using this
-    /// method to squeeze native field elements will have runtime casting
-    /// cost. For better efficiency, use `squeeze_native_field_elements`.
-    fn squeeze_field_elements<F: PrimeField>(&mut self, num_elements: usize) -> Vec<F> {
-        self.squeeze_field_elements_with_sizes::<F>(
-            vec![FieldElementSize::Full; num_elements].as_slice(),
-        )
+    /// WARNING! This trait method is unimplemented and should not be used.
+    /// Use `squeeze_native_field_elements` instead.
+    fn squeeze_field_elements<F: PrimeField>(&mut self, _num_elements: usize) -> Vec<F> {
+        unimplemented!("Currently we only support squeezing native field elements!")
     }
 
     /// Creates a new sponge with applied domain separation.
@@ -238,24 +220,10 @@ impl<T: RescueParameter, const RATE: usize> FieldBasedCryptographicSponge<T>
         result
     }
 
-    /// Squeeze `sizes.len()` field elements from the sponge, where the `i`-th
-    /// element of the output has size `sizes[i]`.
-    fn squeeze_native_field_elements_with_sizes(&mut self, sizes: &[FieldElementSize]) -> Vec<T> {
-        let mut all_full_sizes = true;
-        for size in sizes {
-            if *size != FieldElementSize::Full {
-                all_full_sizes = false;
-                break;
-            }
-        }
-
-        if all_full_sizes {
-            self.squeeze_native_field_elements(sizes.len())
-        } else {
-            // we do not currently want to output field elements other than T.
-            // This will be fixed once `squeeze_bytes` interfaces is fixed.
-            unimplemented!("Currently we only support squeezing native field elements!")
-        }
+    /// WARNING! This trait method is unimplemented and should not be used.
+    /// Use `squeeze_native_field_elements` instead.
+    fn squeeze_native_field_elements_with_sizes(&mut self, _sizes: &[FieldElementSize]) -> Vec<T> {
+        unimplemented!("Currently we only support squeezing native field elements!")
     }
 }
 
@@ -330,22 +298,6 @@ mod test {
         ];
 
         assert_different_encodings::<Fr, _>(&lst1, &lst2);
-    }
-
-    #[test]
-    fn test_squeeze_cast_native() {
-        let mut rng = test_rng();
-        let sponge_param = Permutation::default();
-        let elem = Fr::rand(&mut rng);
-        let mut sponge1 = RescueSponge::<Fr, 3>::new(&sponge_param);
-        sponge1.absorb(&elem);
-        let mut sponge2 = sponge1.clone();
-
-        // those two should return same result
-        let squeezed1 = sponge1.squeeze_native_field_elements(5);
-        let squeezed2 = sponge2.squeeze_field_elements::<Fr>(5);
-
-        assert_eq!(squeezed1, squeezed2);
     }
 
     #[test]
