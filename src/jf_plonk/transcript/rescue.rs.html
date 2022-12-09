@@ -185,7 +185,6 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
-<span id="188">188</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -201,8 +200,7 @@
 <span class="kw">use </span>ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters <span class="kw">as </span>SWParam,
 };
-<span class="comment">// use ark_poly_commit::kzg10::Commitment;
-</span><span class="kw">use </span>ark_std::vec::Vec;
+<span class="kw">use </span>ark_std::vec::Vec;
 <span class="kw">use </span>jf_primitives::{
     pcs::prelude::Commitment,
     rescue::{sponge::RescueCRHF, RescueParameter, STATE_SIZE},
