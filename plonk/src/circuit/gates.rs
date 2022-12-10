@@ -13,7 +13,7 @@ use downcast_rs::Downcast;
 use crate::constants::{GATE_WIDTH, N_MUL_SELECTORS};
 
 /// Describes a gate with getter for all selectors configuration
-pub trait Gate<F: Field>: Downcast + GateClone<F> {
+pub trait Gate<F: Field>: Downcast + GateClone<F> + Send {
     /// Get the name of a gate.
     fn name(&self) -> &'static str;
     /// Selectors for linear combination.

@@ -59,6 +59,7 @@ where
     /// arithmetization, by default it is a domain with size 1 (only with
     /// element 0).
     eval_domain: Radix2EvaluationDomain<F>,
+    var_offset: usize,
 }
 
 impl<F: FftField> Default for PlonkCircuit<F> {
@@ -73,6 +74,7 @@ impl<F: FftField> PlonkCircuit<F> {
         let zero = F::zero();
         let one = F::one();
         let mut circuit = Self {
+            var_offset: 0,
             num_vars: 2,
             witness: vec![zero, one],
             gates: vec![],
@@ -89,6 +91,38 @@ impl<F: FftField> PlonkCircuit<F> {
         circuit.constant_gate(0, zero).unwrap(); // safe unwrap
         circuit.constant_gate(1, one).unwrap(); // safe unwrap
         circuit
+    }
+
+    pub fn new_partial(offset: usize) -> Self {
+        Self {
+            var_offset: offset,
+            num_vars: 0,
+            witness: vec![],
+            gates: vec![],
+            // size is `num_wire_types`
+            wire_variables: [vec![], vec![], vec![], vec![], vec![], vec![]],
+            pub_input_gate_ids: vec![],
+
+            wire_permutation: vec![],
+            extended_id_permutation: vec![],
+            num_wire_types: GATE_WIDTH + 1,
+            eval_domain: Radix2EvaluationDomain::new(1).unwrap(),
+        }
+    }
+
+    pub fn merge(&mut self, parts: Vec<Self>) {
+        for part in parts {
+            self.num_vars += part.num_vars;
+            self.witness.extend_from_slice(&part.witness);
+            self.gates.extend_from_slice(&part.gates);
+            for (wire_variables, part_wire_variables) in self
+                .wire_variables
+                .iter_mut()
+                .zip(part.wire_variables.iter())
+            {
+                wire_variables.extend_from_slice(part_wire_variables);
+            }
+        }
     }
 
     /// Insert a general (algebraic) gate
@@ -121,7 +155,7 @@ impl<F: FftField> PlonkCircuit<F> {
     /// * `returns` - Error if the variable is out of bound (i.e. >= number of
     ///   variables)
     pub fn check_var_bound(&self, var: Variable) -> Result<(), PlonkError> {
-        if var >= self.num_vars {
+        if var >= self.num_vars + self.var_offset {
             return Err(VarIndexOutOfBound(var, self.num_vars).into());
         }
         Ok(())
@@ -142,6 +176,7 @@ impl<F: FftField> PlonkCircuit<F> {
     /// Change the value of a variable. Only used for testing.
     // TODO: make this function test only.
     pub fn witness_mut(&mut self, idx: Variable) -> &mut F {
+        assert_eq!(self.var_offset, 0);
         &mut self.witness[idx]
     }
 }
@@ -204,7 +239,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
         self.witness.push(val);
         self.num_vars += 1;
         // the index is from `0` to `num_vars - 1`
-        Ok(self.num_vars - 1)
+        Ok(self.num_vars - 1 + self.var_offset)
     }
 
     fn create_public_variable(&mut self, val: F) -> Result<Variable, PlonkError> {
@@ -235,7 +270,11 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
 
     fn witness(&self, idx: Variable) -> Result<F, PlonkError> {
         self.check_var_bound(idx)?;
-        Ok(self.witness[idx])
+        match idx {
+            0 => return Ok(F::zero()),
+            1 => return Ok(F::one()),
+            _ => Ok(self.witness[idx - self.var_offset]),
+        }
     }
 
     fn constant_gate(&mut self, var: Variable, constant: F) -> Result<(), PlonkError> {
@@ -393,9 +432,9 @@ impl<F: FftField> PlonkCircuit<F> {
     fn check_gate(&self, gate_id: Variable, pub_input: &F) -> Result<(), PlonkError> {
         // Compute wire values
 
-        let w_vals: Vec<F> = (0..GATE_WIDTH + 1)
-            .map(|i| self.witness[self.wire_variables[i][gate_id]])
-            .collect();
+        let w_vals = (0..GATE_WIDTH + 1)
+            .map(|i| self.witness(self.wire_variables[i][gate_id]))
+            .collect::<Result<Vec<_>, _>>()?;
         // Compute selector values.
         let q_lc: [F; GATE_WIDTH] = self.gates[gate_id].q_lc();
         let q_mul: [F; N_MUL_SELECTORS] = self.gates[gate_id].q_mul();
@@ -441,6 +480,7 @@ impl<F: FftField> PlonkCircuit<F> {
     // The circuit is guaranteed to be padded before calling the method.
     #[inline]
     fn compute_wire_permutation(&mut self) {
+        assert_eq!(self.var_offset, 0);
         assert!(self.is_finalized());
         let n = self.eval_domain.size();
         let m = self.num_vars();
@@ -484,6 +524,9 @@ impl<F: FftField> PlonkCircuit<F> {
     // status is different from the expected status.
     #[inline]
     fn check_finalize_flag(&self, expect_finalized: bool) -> Result<(), PlonkError> {
+        if expect_finalized {
+            assert_eq!(self.var_offset, 0);
+        }
         if !self.is_finalized() && expect_finalized {
             return Err(UnfinalizedCircuit.into());
         }
