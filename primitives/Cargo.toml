@@ -25,7 +25,7 @@ crypto_box = "0.8.1"
 derivative = { version = "2", features = ["use_core"] }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { version = "0.2.3", default-features = false }
-espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
+espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.1" }
 generic-array = { version = "^0.14", default-features = false }
 itertools = { version = "0.10.1", default-features = false, features = [ "use_alloc" ] }
 jf-relation = { path = "../relation", default-features = false }
