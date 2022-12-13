@@ -49,7 +49,7 @@ pub trait MerkleTreeGadget<F: RescueParameter> {
     ) -> Result<MerklePathVar, CircuitError>;
 
     /// Allocate a variable for the merkle root.
-    fn create_root_variable(&mut self, root: F) -> Result<Variable, CircuitError>;
+    fn create_root_variable(&mut self, root: NodeVal<F>) -> Result<Variable, CircuitError>;
 
     /// Given a leaf element and its merkle proof,
     /// return `BoolVar` indicating the correctness of its membership proof
