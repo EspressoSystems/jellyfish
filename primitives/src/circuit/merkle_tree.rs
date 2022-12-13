@@ -16,7 +16,6 @@ use crate::{
     },
     rescue::RescueParameter,
 };
-use ark_ec::TEModelParameters as Parameters;
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
@@ -87,49 +86,28 @@ impl<F: PrimeField + RescueParameter> From<&MembershipProof<F>>
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Circuit variable for a Merkle node.
-pub struct MerkleNodeVar {
+struct MerkleNodeVar {
     pub sibling1: Variable,
     pub sibling2: Variable,
     pub is_left_child: BoolVar,
     pub is_right_child: BoolVar,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Circuit variable for a Merkle authentication path.
 pub struct MerklePathVar {
-    pub nodes: Vec<MerkleNodeVar>,
+    nodes: Vec<MerkleNodeVar>,
 }
 
 /// Circuit variable for an accumulated element.
-pub struct CommittedElemVar {
+#[derive(Debug, Clone)]
+pub struct LeafVar {
     pub uid: Variable,
     pub elem: Variable,
 }
 
-/// Circuit variable for a membership proof.
-#[derive(Debug)]
-pub struct MembershipProofVar {
-    pub uid: Variable,
-    pub merkle_path: MerklePathVar,
-}
-
-impl MembershipProofVar {
-    pub fn new<F, P>(
-        circuit: &mut PlonkCircuit<F>,
-        acc_member_witness: &MembershipProof<F>,
-    ) -> Result<Self, CircuitError>
-    where
-        F: RescueParameter,
-        P: Parameters<BaseField = F>,
-    {
-        Ok(Self {
-            uid: circuit.create_variable(F::from(acc_member_witness.pos as u64))?,
-            merkle_path: circuit.add_merkle_path_variable(acc_member_witness)?,
-        })
-    }
-}
 trait MerkleTreeHelperGadget<F: PrimeField + RescueParameter> {
     /// Produces an ordered list of variables based on the relative position of
     /// a node and its siblings.
@@ -157,18 +135,6 @@ trait MerkleTreeHelperGadget<F: PrimeField + RescueParameter> {
         &mut self,
         merkle_path: &MembershipProofBooleanEncoding<F>,
     ) -> Result<MerklePathVar, CircuitError>;
-}
-
-/// Circuit implementation of a Merkle tree.
-pub trait MerkleTreeGadget<F: PrimeField + RescueParameter> {
-    /// Wrapper around Circuit.constrain_merkle_path. Adds and checks the
-    /// variables related to the Merkle path.
-    /// * `merkle_path` - list of node of an authentication path
-    /// * `returns` - list of variables corresponding to the authentication path
-    fn add_merkle_path_variable(
-        &mut self,
-        merkle_proof: &MembershipProof<F>,
-    ) -> Result<MerklePathVar, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
@@ -179,16 +145,56 @@ pub trait MerkleTreeGadget<F: PrimeField + RescueParameter> {
     ///   tree.
     fn compute_merkle_root(
         &mut self,
-        elem: CommittedElemVar,
+        elem: LeafVar,
         path_vars: &MerklePathVar,
     ) -> Result<Variable, CircuitError>;
+}
+
+/// Gadgets for rescue-based merkle tree
+pub trait MerkleTreeGadget<F: PrimeField + RescueParameter> {
+    /// Allocate a variable for the leaf element.
+    fn create_leaf_variable(&mut self, pos: F, elem: F) -> Result<LeafVar, CircuitError>;
+    /// Allocate a variable for the membership proof.
+
+    fn create_membership_proof_variable(
+        &mut self,
+        membership_proof: &MembershipProof<F>,
+    ) -> Result<MerklePathVar, CircuitError>;
+
+    fn create_root_variable(&mut self, root: F) -> Result<Variable, CircuitError>;
+
+    /// given a leaf element `elem` at index `pos` and its merkle proof,
+    /// return `BoolVar` indicating the correctness of its membership proof
+    fn is_member(
+        &mut self,
+        elem: LeafVar,
+        merkle_proof: MerklePathVar,
+        merkle_root: Variable,
+    ) -> Result<BoolVar, CircuitError>;
+
+    /// Enforce correct `merkle_proof` for the `elem` against
+    /// `expected_merkle_root`.
+    fn enforce_merkle_proof(
+        &mut self,
+        elem: LeafVar,
+        merkle_proof: MerklePathVar,
+        expected_merkle_root: Variable,
+    ) -> Result<(), CircuitError>;
 }
 
 impl<F> MerkleTreeGadget<F> for PlonkCircuit<F>
 where
     F: PrimeField + RescueParameter,
 {
-    fn add_merkle_path_variable(
+    fn create_leaf_variable(&mut self, pos: F, elem: F) -> Result<LeafVar, CircuitError> {
+        let committed_elem = LeafVar {
+            uid: self.create_variable(pos)?,
+            elem: self.create_variable(elem)?,
+        };
+        Ok(committed_elem)
+    }
+
+    fn create_membership_proof_variable(
         &mut self,
         merkle_proof: &MembershipProof<F>,
     ) -> Result<MerklePathVar, CircuitError> {
@@ -198,28 +204,30 @@ where
         self.constrain_merkle_path(&merkle_path)
     }
 
-    fn compute_merkle_root(
-        &mut self,
-        elem: CommittedElemVar,
-        path_vars: &MerklePathVar,
-    ) -> Result<Variable, CircuitError> {
-        let zero_var = self.zero();
+    fn create_root_variable(&mut self, root: NodeVal<F>) -> Result<Variable, CircuitError> {
+        self.create_variable(root)
+    }
 
-        // leaf label = H(0, uid, arc)
-        let mut cur_label = self.rescue_sponge_no_padding(&[zero_var, elem.uid, elem.elem], 1)?[0];
-        for cur_node in path_vars.nodes.iter() {
-            let input_labels = self.permute(
-                cur_label,
-                cur_node.sibling1,
-                cur_node.sibling2,
-                cur_node.is_left_child,
-                cur_node.is_right_child,
-            )?;
-            // check that the left child's label is non-zero
-            self.non_zero_gate(input_labels[0])?;
-            cur_label = self.rescue_sponge_no_padding(&input_labels, 1)?[0];
-        }
-        Ok(cur_label)
+    fn is_member(
+        &mut self,
+        elem: LeafVar,
+        merkle_proof: MerklePathVar,
+        merkle_root: Variable,
+    ) -> Result<BoolVar, CircuitError> {
+        let root_var = self.compute_merkle_root(elem, &merkle_proof)?;
+        self.is_equal(root_var, merkle_root)
+    }
+
+    fn enforce_merkle_proof(
+        &mut self,
+        elem: LeafVar,
+        merkle_proof: MerklePathVar,
+        expected_merkle_root: Variable,
+    ) -> Result<(), CircuitError> {
+        let bool_val = self
+            .is_member(elem, merkle_proof, expected_merkle_root)
+            .unwrap();
+        self.enforce_true(bool_val.into())
     }
 }
 
@@ -277,14 +285,38 @@ where
 
         Ok(MerklePathVar { nodes })
     }
+
+    fn compute_merkle_root(
+        &mut self,
+        elem: LeafVar,
+        path_vars: &MerklePathVar,
+    ) -> Result<Variable, CircuitError> {
+        let zero_var = self.zero();
+
+        // leaf label = H(0, uid, arc)
+        let mut cur_label = self.rescue_sponge_no_padding(&[zero_var, elem.uid, elem.elem], 1)?[0];
+        for cur_node in path_vars.nodes.iter() {
+            let input_labels = self.permute(
+                cur_label,
+                cur_node.sibling1,
+                cur_node.sibling2,
+                cur_node.is_left_child,
+                cur_node.is_right_child,
+            )?;
+            // check that the left child's label is non-zero
+            self.non_zero_gate(input_labels[0])?;
+            cur_label = self.rescue_sponge_no_padding(&input_labels, 1)?[0];
+        }
+        Ok(cur_label)
+    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            CommittedElemVar, MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding,
-            MerkleTreeGadget, MerkleTreeHelperGadget,
+            MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeGadget,
+            MerkleTreeHelperGadget,
         },
         merkle_tree::{
             internal::MerkleNode,
@@ -458,60 +490,49 @@ mod test {
     }
 
     #[test]
-    fn test_merkle_root() {
-        test_merkle_root_helper::<FqEd254>();
-        test_merkle_root_helper::<FqEd377>();
-        test_merkle_root_helper::<FqEd381>();
-        test_merkle_root_helper::<FqEd381b>();
-        test_merkle_root_helper::<Fq377>();
+    fn test_mt_gadget() {
+        test_mt_gadget_helper::<FqEd254>();
+        test_mt_gadget_helper::<FqEd377>();
+        test_mt_gadget_helper::<FqEd381>();
+        test_mt_gadget_helper::<FqEd381b>();
+        test_mt_gadget_helper::<Fq377>();
     }
-    fn test_merkle_root_helper<F: RescueParameter>() {
+
+    fn test_mt_gadget_helper<F: RescueParameter>() {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
-        //// Happy path
+        // Happy path
 
-        // 2, because the leaf is inserted in position 2 (see gen_merkle_path_for_test)
+        // A leaf we care about is inserted in position 2
         let uid_u64 = 2u64;
         let uid = F::from(uid_u64);
-        let comm = F::from(310_u64);
+        let elem = F::from(310_u64);
 
-        let uid_var = circuit.create_variable(uid).unwrap();
-        let comm_var = circuit.create_variable(comm).unwrap();
-
-        let elem = CommittedElemVar {
-            uid: uid_var,
-            elem: comm_var,
-        };
-        let elements = vec![F::from(1_u64), F::from(2_u64), comm];
+        // native computation with a MT
+        let elements = vec![F::from(1_u64), F::from(2_u64), elem];
         let mt = RescueMerkleTree::<F>::from_elems(1, elements).unwrap();
         let expected_root = mt.commitment().digest();
-        let (_elem, proof) = mt.lookup(uid_u64).expect_ok().unwrap();
+        let (retrieved_elem, proof) = mt.lookup(uid_u64).expect_ok().unwrap();
+        assert_eq!(retrieved_elem, elem);
 
-        let path_vars = circuit.add_merkle_path_variable(&proof).unwrap();
+        // Circuit computation with a MT
+        let leaf_var = circuit.create_leaf_variable(uid, elem).unwrap();
+        let path_vars = circuit.create_membership_proof_variable(&proof).unwrap();
+        let root_var = circuit.create_root_variable(expected_root).unwrap();
 
-        let root_var = circuit.compute_merkle_root(elem, &path_vars).unwrap();
+        circuit
+            .enforce_merkle_proof(leaf_var, path_vars, root_var)
+            .unwrap();
 
-        // Check Merkle root correctness
-        let actual_root = circuit.witness(root_var).unwrap();
-        assert_eq!(actual_root, expected_root);
-
-        // Check constraints
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(root_var) = F::zero();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
-        //// Bad path:
-        //// The circuit cannot be satisfied if an internal node has a left child with
-        //// zero value.
+        // Bad path:
+        // The circuit cannot be satisfied if an internal node has a left child with
+        // zero value.
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-
-        let uid_var = circuit.create_variable(uid).unwrap();
-        let comm_var = circuit.create_variable(comm).unwrap();
-
-        let elem = CommittedElemVar {
-            uid: uid_var,
-            elem: comm_var,
-        };
+        let leaf_var = circuit.create_leaf_variable(uid, elem).unwrap();
 
         let mut bad_proof = proof.clone();
 
@@ -522,11 +543,14 @@ mod test {
                 elem: F::one(),
             });
         }
-        let path_vars = circuit.add_merkle_path_variable(&bad_proof).unwrap();
+        let path_vars = circuit
+            .create_membership_proof_variable(&bad_proof)
+            .unwrap();
+        let root_var = circuit.create_root_variable(expected_root).unwrap();
 
-        // new root witness is not correct
-        let root_var = circuit.compute_merkle_root(elem, &path_vars).unwrap();
-        assert_ne!(circuit.witness(root_var).unwrap(), expected_root);
+        circuit
+            .enforce_merkle_proof(leaf_var.clone(), path_vars.clone(), root_var)
+            .unwrap();
 
         // Circuit does not verify because a left node value is 0
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
