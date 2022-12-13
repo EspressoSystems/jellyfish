@@ -21,6 +21,7 @@ use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable
 
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
 type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
+type Element<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Element;
 use typenum::U3;
 
 #[derive(Debug, Clone)]
@@ -39,7 +40,7 @@ pub struct LeafVar {
 /// Gadgets for rescue-based merkle tree
 pub trait MerkleTreeGadget<F: RescueParameter> {
     /// Allocate a variable for the leaf element.
-    fn create_leaf_variable(&mut self, pos: F, elem: F) -> Result<LeafVar, CircuitError>;
+    fn create_leaf_variable(&mut self, pos: F, elem: Element<F>) -> Result<LeafVar, CircuitError>;
 
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
@@ -70,7 +71,7 @@ pub trait MerkleTreeGadget<F: RescueParameter> {
 }
 
 impl<F: RescueParameter> MerkleTreeGadget<F> for PlonkCircuit<F> {
-    fn create_leaf_variable(&mut self, pos: F, elem: F) -> Result<LeafVar, CircuitError> {
+    fn create_leaf_variable(&mut self, pos: F, elem: Element<F>) -> Result<LeafVar, CircuitError> {
         let committed_elem = LeafVar {
             uid: self.create_variable(pos)?,
             elem: self.create_variable(elem)?,
