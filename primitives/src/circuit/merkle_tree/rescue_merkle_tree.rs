@@ -4,11 +4,6 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-#![allow(missing_docs)]
-
-//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated
-//! with a Rescue hash function.
-
 use crate::{
     circuit::rescue::RescueGadget,
     merkle_tree::{
@@ -24,53 +19,19 @@ type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipP
 type Element<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Element;
 use typenum::U3;
 
-#[derive(Debug, Clone)]
-/// Circuit variable for a Merkle authentication path.
-pub struct MerklePathVar {
-    nodes: Vec<MerkleNodeVar>,
+use super::{LeafVar, MerklePathVar, MerkleTreeGadget, MerkleTreeSchemeVar};
+
+#[derive(Clone)]
+pub struct RescueMerkleTreeVar;
+
+impl MerkleTreeSchemeVar for RescueMerkleTreeVar {
+    type MerkleNodeVar = MerkleNodeVar;
 }
 
-/// Circuit variable for an accumulated element.
-#[derive(Debug, Clone)]
-pub struct LeafVar {
-    pub uid: Variable,
-    pub elem: Variable,
-}
-
-/// Gadgets for rescue-based merkle tree
-pub trait MerkleTreeGadget<F: RescueParameter> {
-    /// Allocate a variable for the leaf element.
-    fn create_leaf_variable(&mut self, pos: F, elem: Element<F>) -> Result<LeafVar, CircuitError>;
-
-    /// Allocate a variable for the membership proof.
-    fn create_membership_proof_variable(
-        &mut self,
-        membership_proof: &MembershipProof<F>,
-    ) -> Result<MerklePathVar, CircuitError>;
-
-    /// Allocate a variable for the merkle root.
-    fn create_root_variable(&mut self, root: NodeVal<F>) -> Result<Variable, CircuitError>;
-
-    /// Given a leaf element and its merkle proof,
-    /// return `BoolVar` indicating the correctness of its membership proof
-    fn is_member(
-        &mut self,
-        elem: LeafVar,
-        merkle_proof: MerklePathVar,
-        merkle_root: Variable,
-    ) -> Result<BoolVar, CircuitError>;
-
-    /// Enforce correct `merkle_proof` for the `elem` against
-    /// `expected_merkle_root`.
-    fn enforce_merkle_proof(
-        &mut self,
-        elem: LeafVar,
-        merkle_proof: MerklePathVar,
-        expected_merkle_root: Variable,
-    ) -> Result<(), CircuitError>;
-}
-
-impl<F: RescueParameter> MerkleTreeGadget<F> for PlonkCircuit<F> {
+impl<F> MerkleTreeGadget<F, RescueMerkleTree<F>, RescueMerkleTreeVar> for PlonkCircuit<F>
+where
+    F: RescueParameter,
+{
     fn create_leaf_variable(&mut self, pos: F, elem: Element<F>) -> Result<LeafVar, CircuitError> {
         let committed_elem = LeafVar {
             uid: self.create_variable(pos)?,
@@ -82,7 +43,7 @@ impl<F: RescueParameter> MerkleTreeGadget<F> for PlonkCircuit<F> {
     fn create_membership_proof_variable(
         &mut self,
         merkle_proof: &MembershipProof<F>,
-    ) -> Result<MerklePathVar, CircuitError> {
+    ) -> Result<MerklePathVar<RescueMerkleTreeVar>, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
         let merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
 
@@ -96,7 +57,7 @@ impl<F: RescueParameter> MerkleTreeGadget<F> for PlonkCircuit<F> {
     fn is_member(
         &mut self,
         elem: LeafVar,
-        merkle_proof: MerklePathVar,
+        merkle_proof: MerklePathVar<RescueMerkleTreeVar>,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError> {
         let root_var = self.compute_merkle_root(elem, &merkle_proof)?;
@@ -106,7 +67,7 @@ impl<F: RescueParameter> MerkleTreeGadget<F> for PlonkCircuit<F> {
     fn enforce_merkle_proof(
         &mut self,
         elem: LeafVar,
-        merkle_proof: MerklePathVar,
+        merkle_proof: MerklePathVar<RescueMerkleTreeVar>,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError> {
         let bool_val = self
@@ -178,7 +139,7 @@ impl<F: RescueParameter> From<&MembershipProof<F>> for MembershipProofBooleanEnc
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle node.
-struct MerkleNodeVar {
+pub struct MerkleNodeVar {
     pub sibling1: Variable,
     pub sibling2: Variable,
     pub is_left_child: BoolVar,
@@ -211,7 +172,7 @@ trait MerkleTreeHelperGadget<F: RescueParameter> {
     fn constrain_merkle_path(
         &mut self,
         merkle_path: &MembershipProofBooleanEncoding<F>,
-    ) -> Result<MerklePathVar, CircuitError>;
+    ) -> Result<MerklePathVar<RescueMerkleTreeVar>, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
@@ -223,7 +184,7 @@ trait MerkleTreeHelperGadget<F: RescueParameter> {
     fn compute_merkle_root(
         &mut self,
         elem: LeafVar,
-        path_vars: &MerklePathVar,
+        path_vars: &MerklePathVar<RescueMerkleTreeVar>,
     ) -> Result<Variable, CircuitError>;
 }
 
@@ -250,7 +211,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     fn constrain_merkle_path(
         &mut self,
         merkle_path: &MembershipProofBooleanEncoding<F>,
-    ) -> Result<MerklePathVar, CircuitError> {
+    ) -> Result<MerklePathVar<RescueMerkleTreeVar>, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
             .nodes
@@ -282,7 +243,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     fn compute_merkle_root(
         &mut self,
         elem: LeafVar,
-        path_vars: &MerklePathVar,
+        path_vars: &MerklePathVar<RescueMerkleTreeVar>,
     ) -> Result<Variable, CircuitError> {
         let zero_var = self.zero();
 
@@ -308,8 +269,10 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeGadget,
-            MerkleTreeHelperGadget,
+            rescue_merkle_tree::{
+                MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeHelperGadget,
+            },
+            MerkleTreeGadget,
         },
         merkle_tree::{
             internal::MerkleNode,
