@@ -4,8 +4,6 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-#![allow(missing_docs)]
-
 //! Trait definitions for a Merkle tree gadget.
 
 use crate::merkle_tree::MerkleTreeScheme;
@@ -14,10 +12,12 @@ use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
 
-/// Circuit variable for an accumulated element.
+/// Circuit variable for a leaf element.
 #[derive(Debug, Clone)]
 pub struct LeafVar {
+    /// Position of the leaf element in the MT. Serves as UID.
     pub uid: Variable,
+    /// The value of the leaf element.
     pub elem: Variable,
 }
 
@@ -51,9 +51,9 @@ where
     F: PrimeField,
     M: MerkleTreeScheme,
 {
-    // Type to represent the merkle path of the concrete instantiation.
-    // It is MT-specific, since arity will affect the exact definition of the Merkle
-    // path.
+    /// Type to represent the merkle path of the concrete instantiation.
+    /// It is MT-specific, since arity will affect the exact definition of the
+    /// Merkle path.
     type MerklePathVar;
 
     /// Allocate a variable for the leaf element.
