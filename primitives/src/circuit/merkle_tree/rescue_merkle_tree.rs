@@ -4,6 +4,9 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated
+//! with a Rescue hash function.
+
 use crate::{
     circuit::rescue::RescueGadget,
     merkle_tree::{
@@ -19,19 +22,20 @@ type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipP
 type Element<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Element;
 use typenum::U3;
 
-use super::{LeafVar, MerklePathVar, MerkleTreeGadget, MerkleTreeSchemeVar};
+use super::{LeafVar, MerkleTreeGadget};
 
-#[derive(Clone)]
-pub struct RescueMerkleTreeVar;
-
-impl MerkleTreeSchemeVar for RescueMerkleTreeVar {
-    type MerkleNodeVar = MerkleNodeVar;
+#[derive(Debug, Clone)]
+/// Circuit variable for a Merkle authentication path.
+pub struct MerklePathVar {
+    nodes: Vec<Rescue3AryNodeVar>,
 }
 
-impl<F> MerkleTreeGadget<F, RescueMerkleTree<F>, RescueMerkleTreeVar> for PlonkCircuit<F>
+impl<F> MerkleTreeGadget<F, RescueMerkleTree<F>> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
+    type MerklePathVar = MerklePathVar;
+
     fn create_leaf_variable(&mut self, pos: F, elem: Element<F>) -> Result<LeafVar, CircuitError> {
         let committed_elem = LeafVar {
             uid: self.create_variable(pos)?,
@@ -43,7 +47,7 @@ where
     fn create_membership_proof_variable(
         &mut self,
         merkle_proof: &MembershipProof<F>,
-    ) -> Result<MerklePathVar<RescueMerkleTreeVar>, CircuitError> {
+    ) -> Result<MerklePathVar, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
         let merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
 
@@ -57,7 +61,7 @@ where
     fn is_member(
         &mut self,
         elem: LeafVar,
-        merkle_proof: MerklePathVar<RescueMerkleTreeVar>,
+        merkle_proof: MerklePathVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError> {
         let root_var = self.compute_merkle_root(elem, &merkle_proof)?;
@@ -67,7 +71,7 @@ where
     fn enforce_merkle_proof(
         &mut self,
         elem: LeafVar,
-        merkle_proof: MerklePathVar<RescueMerkleTreeVar>,
+        merkle_proof: MerklePathVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError> {
         let bool_val = self
@@ -139,7 +143,7 @@ impl<F: RescueParameter> From<&MembershipProof<F>> for MembershipProofBooleanEnc
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle node.
-pub struct MerkleNodeVar {
+pub struct Rescue3AryNodeVar {
     pub sibling1: Variable,
     pub sibling2: Variable,
     pub is_left_child: BoolVar,
@@ -172,7 +176,7 @@ trait MerkleTreeHelperGadget<F: RescueParameter> {
     fn constrain_merkle_path(
         &mut self,
         merkle_path: &MembershipProofBooleanEncoding<F>,
-    ) -> Result<MerklePathVar<RescueMerkleTreeVar>, CircuitError>;
+    ) -> Result<MerklePathVar, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
@@ -184,7 +188,7 @@ trait MerkleTreeHelperGadget<F: RescueParameter> {
     fn compute_merkle_root(
         &mut self,
         elem: LeafVar,
-        path_vars: &MerklePathVar<RescueMerkleTreeVar>,
+        path_vars: &MerklePathVar,
     ) -> Result<Variable, CircuitError>;
 }
 
@@ -211,21 +215,21 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     fn constrain_merkle_path(
         &mut self,
         merkle_path: &MembershipProofBooleanEncoding<F>,
-    ) -> Result<MerklePathVar<RescueMerkleTreeVar>, CircuitError> {
+    ) -> Result<MerklePathVar, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
             .nodes
             .clone()
             .into_iter()
-            .map(|node| -> Result<MerkleNodeVar, CircuitError> {
-                Ok(MerkleNodeVar {
+            .map(|node| -> Result<Rescue3AryNodeVar, CircuitError> {
+                Ok(Rescue3AryNodeVar {
                     sibling1: self.create_variable(node.sibling1)?,
                     sibling2: self.create_variable(node.sibling2)?,
                     is_left_child: self.create_boolean_variable(node.is_left_child)?,
                     is_right_child: self.create_boolean_variable(node.is_right_child)?,
                 })
             })
-            .collect::<Result<Vec<MerkleNodeVar>, CircuitError>>()?;
+            .collect::<Result<Vec<Rescue3AryNodeVar>, CircuitError>>()?;
 
         // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
         // boolean
@@ -243,7 +247,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     fn compute_merkle_root(
         &mut self,
         elem: LeafVar,
-        path_vars: &MerklePathVar<RescueMerkleTreeVar>,
+        path_vars: &MerklePathVar,
     ) -> Result<Variable, CircuitError> {
         let zero_var = self.zero();
 

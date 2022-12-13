@@ -6,21 +6,13 @@
 
 #![allow(missing_docs)]
 
-//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated
-//! with a Rescue hash function.
+//! Trait definitions for a Merkle tree gadget.
 
 use crate::merkle_tree::MerkleTreeScheme;
 use ark_ff::PrimeField;
-use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
-
-#[derive(Debug, Clone)]
-/// Circuit variable for a Merkle authentication path.
-pub struct MerklePathVar<MV: MerkleTreeSchemeVar> {
-    nodes: Vec<MV::MerkleNodeVar>,
-}
 
 /// Circuit variable for an accumulated element.
 #[derive(Debug, Clone)]
@@ -29,17 +21,17 @@ pub struct LeafVar {
     pub elem: Variable,
 }
 
-pub trait MerkleTreeSchemeVar {
-    type MerkleNodeVar;
-}
-
 /// Gadgets for rescue-based merkle tree
-pub trait MerkleTreeGadget<F, M, MV>
+pub trait MerkleTreeGadget<F, M>
 where
     F: PrimeField,
     M: MerkleTreeScheme,
-    MV: MerkleTreeSchemeVar,
 {
+    // Type to represent the merkle path of the concrete instantiation.
+    // It is MT-specific, since arity will affect the exact definition of the Merkle
+    // path.
+    type MerklePathVar;
+
     /// Allocate a variable for the leaf element.
     fn create_leaf_variable(&mut self, pos: F, elem: M::Element) -> Result<LeafVar, CircuitError>;
 
@@ -47,7 +39,7 @@ where
     fn create_membership_proof_variable(
         &mut self,
         membership_proof: &M::MembershipProof,
-    ) -> Result<MerklePathVar<MV>, CircuitError>;
+    ) -> Result<Self::MerklePathVar, CircuitError>;
 
     /// Allocate a variable for the merkle root.
     fn create_root_variable(&mut self, root: M::NodeValue) -> Result<Variable, CircuitError>;
@@ -57,7 +49,7 @@ where
     fn is_member(
         &mut self,
         elem: LeafVar,
-        merkle_proof: MerklePathVar<MV>,
+        merkle_proof: Self::MerklePathVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
@@ -66,7 +58,7 @@ where
     fn enforce_merkle_proof(
         &mut self,
         elem: LeafVar,
-        merkle_proof: MerklePathVar<MV>,
+        merkle_proof: Self::MerklePathVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }
