@@ -25,7 +25,8 @@ use typenum::U3;
 use super::{LeafVar, MerkleTreeGadget};
 
 #[derive(Debug, Clone)]
-/// Circuit variable for a Merkle authentication path.
+/// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
+/// Merkle tree.
 pub struct MerklePathVar {
     nodes: Vec<Rescue3AryNodeVar>,
 }
