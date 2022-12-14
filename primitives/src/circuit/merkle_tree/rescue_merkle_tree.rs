@@ -20,6 +20,7 @@ use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
 type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
 type Element<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Element;
+type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 use typenum::U3;
 
 use super::{LeafVar, MerkleTreeGadget};
@@ -31,15 +32,19 @@ pub struct MerklePathVar {
     nodes: Vec<Rescue3AryNodeVar>,
 }
 
-impl<F> MerkleTreeGadget<F, RescueMerkleTree<F>> for PlonkCircuit<F>
+impl<F> MerkleTreeGadget<RescueMerkleTree<F>> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
     type MerklePathVar = MerklePathVar;
 
-    fn create_leaf_variable(&mut self, pos: F, elem: Element<F>) -> Result<LeafVar, CircuitError> {
+    fn create_leaf_variable(
+        &mut self,
+        pos: Index<F>,
+        elem: Element<F>,
+    ) -> Result<LeafVar, CircuitError> {
         let committed_elem = LeafVar {
-            uid: self.create_variable(pos)?,
+            uid: self.create_variable(pos.into())?,
             elem: self.create_variable(elem)?,
         };
         Ok(committed_elem)
@@ -466,7 +471,6 @@ mod test {
 
         // A leaf we care about is inserted in position 2
         let uid_u64 = 2u64;
-        let uid = F::from(uid_u64);
         let elem = F::from(310_u64);
 
         // native computation with a MT
@@ -477,7 +481,7 @@ mod test {
         assert_eq!(retrieved_elem, elem);
 
         // Circuit computation with a MT
-        let leaf_var = circuit.create_leaf_variable(uid, elem).unwrap();
+        let leaf_var = circuit.create_leaf_variable(uid_u64, elem).unwrap();
         let path_vars = circuit.create_membership_proof_variable(&proof).unwrap();
         let root_var = circuit.create_root_variable(expected_root).unwrap();
 
@@ -493,7 +497,7 @@ mod test {
         // The circuit cannot be satisfied if an internal node has a left child with
         // zero value.
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let leaf_var = circuit.create_leaf_variable(uid, elem).unwrap();
+        let leaf_var = circuit.create_leaf_variable(uid_u64, elem).unwrap();
 
         let mut bad_proof = proof.clone();
 

@@ -7,7 +7,6 @@
 //! Trait definitions for a Merkle tree gadget.
 
 use crate::merkle_tree::MerkleTreeScheme;
-use ark_ff::PrimeField;
 use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
@@ -46,9 +45,8 @@ pub struct LeafVar {
 /// circuit.enforce_merkle_proof(leaf_var, path_vars, root_var).unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 /// ```
-pub trait MerkleTreeGadget<F, M>
+pub trait MerkleTreeGadget<M>
 where
-    F: PrimeField,
     M: MerkleTreeScheme,
 {
     /// Type to represent the merkle path of the concrete instantiation.
@@ -57,7 +55,11 @@ where
     type MerklePathVar;
 
     /// Allocate a variable for the leaf element.
-    fn create_leaf_variable(&mut self, pos: F, elem: M::Element) -> Result<LeafVar, CircuitError>;
+    fn create_leaf_variable(
+        &mut self,
+        pos: M::Index,
+        elem: M::Element,
+    ) -> Result<LeafVar, CircuitError>;
 
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
