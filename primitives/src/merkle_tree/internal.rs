@@ -16,24 +16,32 @@ use ark_std::{
     vec::Vec,
 };
 use itertools::Itertools;
+use jf_utils::field_elem;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use tagged_base64::tagged;
 use typenum::Unsigned;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
+                 I: CanonicalSerialize + CanonicalDeserialize,")]
 pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
     Empty,
     Branch {
+        #[serde(with = "field_elem")]
         value: T,
         children: Vec<Box<MerkleNode<E, I, T>>>,
     },
     Leaf {
+        #[serde(with = "field_elem")]
         value: T,
+        #[serde(with = "field_elem")]
         pos: I,
+        #[serde(with = "field_elem")]
         elem: E,
     },
     ForgettenSubtree {
+        #[serde(with = "field_elem")]
         value: T,
     },
 }
@@ -100,6 +108,8 @@ impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
+             I: CanonicalSerialize + CanonicalDeserialize,")]
 pub struct MerkleProof<E, I, T, Arity>
 where
     E: Element,
@@ -108,6 +118,7 @@ where
     Arity: Unsigned,
 {
     /// Proof of inclusion for element at index `pos`
+    #[serde(with = "field_elem")]
     pub pos: I,
     /// Nodes of proof path, from root to leaf
     pub proof: Vec<MerkleNode<E, I, T>>,

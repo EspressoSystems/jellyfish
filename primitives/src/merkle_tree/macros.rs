@@ -12,6 +12,10 @@ macro_rules! impl_merkle_tree_scheme {
     ($name: ident) => {
         /// A standard append only Merkle tree implementation
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+        #[serde(
+            bound = "E: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,
+                     I: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,"
+        )]
         pub struct $name<E, H, I, Arity, T>
         where
             E: Element,
