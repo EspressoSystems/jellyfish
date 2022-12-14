@@ -11,15 +11,6 @@ use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
 
-/// Circuit variable for a leaf element.
-#[derive(Debug, Clone)]
-pub struct LeafVar {
-    /// Position of the leaf element in the MT. Serves as UID.
-    pub uid: Variable,
-    /// The value of the leaf element.
-    pub elem: Variable,
-}
-
 /// Gadget for a Merkle tree
 ///
 /// # Examples
@@ -49,8 +40,11 @@ pub trait MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
 {
-    /// Type to represent the merkle path of the concrete instantiation.
-    /// It is MT-specific, since arity will affect the exact definition of the
+    /// Type to represent the leaf element of the concrete MT instantiation.
+    type LeafVar;
+
+    /// Type to represent the merkle path of the concrete MT instantiation.
+    /// It is MT-specific, e.g arity will affect the exact definition of the
     /// Merkle path.
     type MerklePathVar;
 
@@ -59,7 +53,7 @@ where
         &mut self,
         pos: M::Index,
         elem: M::Element,
-    ) -> Result<LeafVar, CircuitError>;
+    ) -> Result<Self::LeafVar, CircuitError>;
 
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
@@ -74,7 +68,7 @@ where
     /// return `BoolVar` indicating the correctness of its membership proof
     fn is_member(
         &mut self,
-        elem: LeafVar,
+        elem: Self::LeafVar,
         merkle_proof: Self::MerklePathVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError>;
@@ -83,7 +77,7 @@ where
     /// `expected_merkle_root`.
     fn enforce_merkle_proof(
         &mut self,
-        elem: LeafVar,
+        elem: Self::LeafVar,
         merkle_proof: Self::MerklePathVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
