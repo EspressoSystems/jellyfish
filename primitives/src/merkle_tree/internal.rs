@@ -134,6 +134,17 @@ where
             _phantom_arity: PhantomData,
         }
     }
+
+    pub fn index(&self) -> &I {
+        &self.pos
+    }
+
+    pub fn elem(&self) -> Option<&E> {
+        match self.proof.last() {
+            Some(MerkleNode::Leaf { elem, .. }) => Some(elem),
+            _ => None,
+        }
+    }
 }
 
 #[allow(clippy::type_complexity)]
