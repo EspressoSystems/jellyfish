@@ -22,7 +22,7 @@ use jf_relation::{
 };
 use jf_utils::{compute_len_to_next_multiple, field_switching};
 
-use super::{PermutationGadget, RescueGadget, RescueStateVarGen};
+use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 
 /// Array of variables representing a Rescue state (4 field elements), and also
 /// the modulus of the non-native evaluating field.
@@ -32,7 +32,7 @@ pub struct RescueNonNativeStateVar<F: PrimeField> {
     pub(crate) modulus: FpElem<F>,
 }
 
-impl<T, F: PrimeField> RescueStateVarGen<T, F> for RescueNonNativeStateVar<F> {
+impl<T, F: PrimeField> SpongeStateVar<T, F> for RescueNonNativeStateVar<F> {
     type Native = T;
     type NonNative = F;
     type Var = FpElemVar<F>;

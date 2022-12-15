@@ -18,14 +18,14 @@ use jf_relation::{
 };
 use jf_utils::compute_len_to_next_multiple;
 
-use super::{PermutationGadget, RescueGadget, RescueStateVarGen};
+use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 
 #[derive(Clone, Debug)]
 /// Array of variables representing a Rescue state (4 field elements).
 pub struct RescueStateVar(pub(crate) [Variable; STATE_SIZE]);
 
 /// For the native field, there is only really one field `F`.
-impl<F> RescueStateVarGen<F, F> for RescueStateVar {
+impl<F> SpongeStateVar<F, F> for RescueStateVar {
     type Native = F;
     type NonNative = F;
     type Var = Variable;

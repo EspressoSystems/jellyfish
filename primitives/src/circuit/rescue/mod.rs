@@ -18,9 +18,8 @@ pub use non_native::RescueNonNativeStateVar;
 
 use crate::rescue::{RescueMatrix, RescueVector, PRP};
 
-/// Generic ResuceStateVar. Both RescueStateVar and RescueNonNativeStateVar
-/// should implement it.
-pub trait RescueStateVarGen<T, F> {
+/// Variable to represent the state of the sponge.
+pub trait SpongeStateVar<T, F> {
     /// The native field.
     type Native;
     /// Non-native field.
@@ -32,7 +31,7 @@ pub trait RescueStateVarGen<T, F> {
 /// Trait for rescue circuit over native field.
 pub trait RescueGadget<R, T, F>
 where
-    R: RescueStateVarGen<T, F>,
+    R: SpongeStateVar<T, F>,
 {
     /// Given an input state st_0 and an output state st_1, ensure that st_1 =
     /// rescue_permutation(st_0)  where rescue_permutation is the instance
@@ -115,7 +114,7 @@ where
 
 pub(crate) trait PermutationGadget<R, T, F>: Circuit<F>
 where
-    R: RescueStateVarGen<T, F>,
+    R: SpongeStateVar<T, F>,
     F: PrimeField,
 {
     fn check_var_bound_rescue_state(&self, rescue_state: &R) -> Result<(), CircuitError>;
