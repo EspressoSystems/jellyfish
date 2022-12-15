@@ -16,7 +16,7 @@ use ark_std::{
     vec::Vec,
 };
 use itertools::Itertools;
-use jf_utils::field_elem;
+use jf_utils::canonical;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use tagged_base64::tagged;
@@ -28,20 +28,20 @@ use typenum::Unsigned;
 pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
     Empty,
     Branch {
-        #[serde(with = "field_elem")]
+        #[serde(with = "canonical")]
         value: T,
         children: Vec<Box<MerkleNode<E, I, T>>>,
     },
     Leaf {
-        #[serde(with = "field_elem")]
+        #[serde(with = "canonical")]
         value: T,
-        #[serde(with = "field_elem")]
+        #[serde(with = "canonical")]
         pos: I,
-        #[serde(with = "field_elem")]
+        #[serde(with = "canonical")]
         elem: E,
     },
     ForgettenSubtree {
-        #[serde(with = "field_elem")]
+        #[serde(with = "canonical")]
         value: T,
     },
 }
@@ -118,7 +118,7 @@ where
     Arity: Unsigned,
 {
     /// Proof of inclusion for element at index `pos`
-    #[serde(with = "field_elem")]
+    #[serde(with = "canonical")]
     pub pos: I,
     /// Nodes of proof path, from root to leaf
     pub proof: Vec<MerkleNode<E, I, T>>,

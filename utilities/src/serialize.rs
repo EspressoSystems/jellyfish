@@ -41,15 +41,16 @@ macro_rules! deserialize_canonical_bytes {
     };
 }
 
-/// Serializers for finite field elements.
+/// Serializers for elements that are Ark-Works serializable but not serde
+/// serializable.
 ///
-/// Field elements are typically foreign types that we cannot apply the
-/// [tagged] macro to. Instead, use `#[serde(with = "field_elem")]`
-/// at the point where the field element is used inside a struct or enum
-/// definition.
+/// Many cryptographic objects (e.g. finite field elements) are foreign types
+/// that we cannot apply [tagged] or `#[derive(Deserialize, Serialize)]` to.
+/// Instead, use `#[serde(with = "canonical")]` at the point where the object is
+/// used inside a struct or enum definition.
 ///
 /// [tagged]: tagged_base64::tagged
-pub mod field_elem {
+pub mod canonical {
     use super::*;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::format;
