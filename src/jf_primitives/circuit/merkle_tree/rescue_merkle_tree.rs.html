@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/merkle_tree/rescue_merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rescue_merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../jf_primitives/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -531,14 +531,11 @@
 <span id="531">531</span>
 <span id="532">532</span>
 <span id="533">533</span>
-<span id="534">534</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
-
-</span><span class="attribute">#![allow(missing_docs)]
 
 </span><span class="doccomment">//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated
 //! with a Rescue hash function.
@@ -550,24 +547,98 @@
     },
     rescue::RescueParameter,
 };
-<span class="kw">use </span>ark_ec::TEModelParameters <span class="kw">as </span>Parameters;
-<span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_std::vec::Vec;
 <span class="kw">use </span>jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 <span class="kw">type </span>NodeVal&lt;F&gt; = &lt;RescueMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::NodeValue;
 <span class="kw">type </span>MembershipProof&lt;F&gt; = &lt;RescueMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::MembershipProof;
+<span class="kw">type </span>Element&lt;F&gt; = &lt;RescueMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::Element;
+<span class="kw">type </span>Index&lt;F&gt; = &lt;RescueMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::Index;
 <span class="kw">use </span>typenum::U3;
 
+<span class="kw">use </span><span class="kw">super</span>::MerkleTreeGadget;
+
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="doccomment">/// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
+/// Merkle tree.
+</span><span class="kw">pub struct </span>Rescue3AryMerklePathVar {
+    nodes: Vec&lt;Rescue3AryNodeVar&gt;,
+}
+
+<span class="doccomment">/// Circuit variable for a leaf element.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>StandardLeafVar {
+    <span class="doccomment">/// Position of the leaf element in the MT. Serves as UID.
+    </span><span class="kw">pub </span>uid: Variable,
+    <span class="doccomment">/// The value of the leaf element.
+    </span><span class="kw">pub </span>elem: Variable,
+}
+
+<span class="kw">impl</span>&lt;F&gt; MerkleTreeGadget&lt;RescueMerkleTree&lt;F&gt;&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+{
+    <span class="kw">type </span>LeafVar = StandardLeafVar;
+    <span class="kw">type </span>MerklePathVar = Rescue3AryMerklePathVar;
+
+    <span class="kw">fn </span>create_leaf_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pos: Index&lt;F&gt;,
+        elem: Element&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;StandardLeafVar, CircuitError&gt; {
+        <span class="kw">let </span>committed_elem = StandardLeafVar {
+            uid: <span class="self">self</span>.create_variable(pos.into())<span class="question-mark">?</span>,
+            elem: <span class="self">self</span>.create_variable(elem)<span class="question-mark">?</span>,
+        };
+        <span class="prelude-val">Ok</span>(committed_elem)
+    }
+
+    <span class="kw">fn </span>create_membership_proof_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        merkle_proof: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Rescue3AryMerklePathVar, CircuitError&gt; {
+        <span class="comment">// Encode Merkle path nodes positions with boolean variables
+        </span><span class="kw">let </span>merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
+
+        <span class="self">self</span>.constrain_merkle_path(<span class="kw-2">&amp;</span>merkle_path)
+    }
+
+    <span class="kw">fn </span>create_root_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, root: NodeVal&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="self">self</span>.create_variable(root)
+    }
+
+    <span class="kw">fn </span>is_member(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        elem: StandardLeafVar,
+        merkle_proof: Rescue3AryMerklePathVar,
+        merkle_root: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="kw">let </span>root_var = <span class="self">self</span>.compute_merkle_root(elem, <span class="kw-2">&amp;</span>merkle_proof)<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_equal(root_var, merkle_root)
+    }
+
+    <span class="kw">fn </span>enforce_merkle_proof(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        elem: StandardLeafVar,
+        merkle_proof: Rescue3AryMerklePathVar,
+        expected_merkle_root: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span>bool_val = <span class="self">self
+            </span>.is_member(elem, merkle_proof, expected_merkle_root)
+            .unwrap();
+        <span class="self">self</span>.enforce_true(bool_val.into())
+    }
+}
+
 <span class="attribute">#[derive(PartialEq, Eq, Clone, Debug)]
-</span><span class="kw">struct </span>MerkleNodeBooleanEncoding&lt;F: PrimeField + RescueParameter&gt; {
+</span><span class="kw">struct </span>MerkleNodeBooleanEncoding&lt;F: RescueParameter&gt; {
     sibling1: NodeVal&lt;F&gt;,
     sibling2: NodeVal&lt;F&gt;,
     is_left_child: bool,
     is_right_child: bool,
 }
 
-<span class="kw">impl</span>&lt;F: PrimeField + RescueParameter&gt; MerkleNodeBooleanEncoding&lt;F&gt; {
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; MerkleNodeBooleanEncoding&lt;F&gt; {
     <span class="kw">fn </span>new(
         sibling1: NodeVal&lt;F&gt;,
         sibling2: NodeVal&lt;F&gt;,
@@ -584,11 +655,11 @@
 }
 
 <span class="attribute">#[derive(PartialEq, Eq, Clone, Debug)]
-</span><span class="kw">struct </span>MembershipProofBooleanEncoding&lt;F: PrimeField + RescueParameter&gt; {
+</span><span class="kw">struct </span>MembershipProofBooleanEncoding&lt;F: RescueParameter&gt; {
     <span class="kw">pub </span>nodes: Vec&lt;MerkleNodeBooleanEncoding&lt;F&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;F: PrimeField + RescueParameter&gt; MembershipProofBooleanEncoding&lt;F&gt; {
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; MembershipProofBooleanEncoding&lt;F&gt; {
     <span class="kw">fn </span>new(nodes: <span class="kw-2">&amp;</span>[MerkleNodeBooleanEncoding&lt;F&gt;]) -&gt; <span class="self">Self </span>{
         MembershipProofBooleanEncoding {
             nodes: nodes.to_vec(),
@@ -596,9 +667,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;F: PrimeField + RescueParameter&gt; From&lt;<span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;&gt;
-    <span class="kw">for </span>MembershipProofBooleanEncoding&lt;F&gt;
-{
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; From&lt;<span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;&gt; <span class="kw">for </span>MembershipProofBooleanEncoding&lt;F&gt; {
     <span class="kw">fn </span>from(proof: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>path =
             &lt;u64 <span class="kw">as </span>ToTraversalPath&lt;U3&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span>proof.pos, proof.tree_height() - <span class="number">1</span>);
@@ -621,50 +690,16 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attribute">#[derive(Debug, Clone)]
 </span><span class="doccomment">/// Circuit variable for a Merkle node.
-</span><span class="kw">pub struct </span>MerkleNodeVar {
+</span><span class="kw">pub struct </span>Rescue3AryNodeVar {
     <span class="kw">pub </span>sibling1: Variable,
     <span class="kw">pub </span>sibling2: Variable,
     <span class="kw">pub </span>is_left_child: BoolVar,
     <span class="kw">pub </span>is_right_child: BoolVar,
 }
 
-<span class="attribute">#[derive(Debug)]
-</span><span class="doccomment">/// Circuit variable for a Merkle authentication path.
-</span><span class="kw">pub struct </span>MerklePathVar {
-    <span class="kw">pub </span>nodes: Vec&lt;MerkleNodeVar&gt;,
-}
-
-<span class="doccomment">/// Circuit variable for an accumulated element.
-</span><span class="kw">pub struct </span>CommittedElemVar {
-    <span class="kw">pub </span>uid: Variable,
-    <span class="kw">pub </span>elem: Variable,
-}
-
-<span class="doccomment">/// Circuit variable for a membership proof.
-</span><span class="attribute">#[derive(Debug)]
-</span><span class="kw">pub struct </span>MembershipProofVar {
-    <span class="kw">pub </span>uid: Variable,
-    <span class="kw">pub </span>merkle_path: MerklePathVar,
-}
-
-<span class="kw">impl </span>MembershipProofVar {
-    <span class="kw">pub fn </span>new&lt;F, P&gt;(
-        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
-        acc_member_witness: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CircuitError&gt;
-    <span class="kw">where
-        </span>F: RescueParameter,
-        P: Parameters&lt;BaseField = F&gt;,
-    {
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            uid: circuit.create_variable(F::from(acc_member_witness.pos <span class="kw">as </span>u64))<span class="question-mark">?</span>,
-            merkle_path: circuit.add_merkle_path_variable(acc_member_witness)<span class="question-mark">?</span>,
-        })
-    }
-}
-<span class="kw">trait </span>MerkleTreeHelperGadget&lt;F: PrimeField + RescueParameter&gt; {
+<span class="kw">trait </span>MerkleTreeHelperGadget&lt;F: RescueParameter&gt; {
     <span class="doccomment">/// Produces an ordered list of variables based on the relative position of
     /// a node and its siblings.
     /// * `node` - node to be inserted in the final list.
@@ -690,19 +725,7 @@
     </span><span class="kw">fn </span>constrain_merkle_path(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         merkle_path: <span class="kw-2">&amp;</span>MembershipProofBooleanEncoding&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVar, CircuitError&gt;;
-}
-
-<span class="doccomment">/// Circuit implementation of a Merkle tree.
-</span><span class="kw">pub trait </span>MerkleTreeGadget&lt;F: PrimeField + RescueParameter&gt; {
-    <span class="doccomment">/// Wrapper around Circuit.constrain_merkle_path. Adds and checks the
-    /// variables related to the Merkle path.
-    /// * `merkle_path` - list of node of an authentication path
-    /// * `returns` - list of variables corresponding to the authentication path
-    </span><span class="kw">fn </span>add_merkle_path_variable(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        merkle_proof: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVar, CircuitError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Rescue3AryMerklePathVar, CircuitError&gt;;
 
     <span class="doccomment">/// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
@@ -713,54 +736,12 @@
     ///   tree.
     </span><span class="kw">fn </span>compute_merkle_root(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        elem: CommittedElemVar,
-        path_vars: <span class="kw-2">&amp;</span>MerklePathVar,
+        elem: StandardLeafVar,
+        path_vars: <span class="kw-2">&amp;</span>Rescue3AryMerklePathVar,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
 }
 
-<span class="kw">impl</span>&lt;F&gt; MerkleTreeGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
-<span class="kw">where
-    </span>F: PrimeField + RescueParameter,
-{
-    <span class="kw">fn </span>add_merkle_path_variable(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        merkle_proof: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVar, CircuitError&gt; {
-        <span class="comment">// Encode Merkle path nodes positions with boolean variables
-        </span><span class="kw">let </span>merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
-
-        <span class="self">self</span>.constrain_merkle_path(<span class="kw-2">&amp;</span>merkle_path)
-    }
-
-    <span class="kw">fn </span>compute_merkle_root(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        elem: CommittedElemVar,
-        path_vars: <span class="kw-2">&amp;</span>MerklePathVar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
-        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
-
-        <span class="comment">// leaf label = H(0, uid, arc)
-        </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>[zero_var, elem.uid, elem.elem], <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
-        <span class="kw">for </span>cur_node <span class="kw">in </span>path_vars.nodes.iter() {
-            <span class="kw">let </span>input_labels = <span class="self">self</span>.permute(
-                cur_label,
-                cur_node.sibling1,
-                cur_node.sibling2,
-                cur_node.is_left_child,
-                cur_node.is_right_child,
-            )<span class="question-mark">?</span>;
-            <span class="comment">// check that the left child&#39;s label is non-zero
-            </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
-            cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
-        }
-        <span class="prelude-val">Ok</span>(cur_label)
-    }
-}
-
-<span class="kw">impl</span>&lt;F&gt; MerkleTreeHelperGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
-<span class="kw">where
-    </span>F: PrimeField + RescueParameter,
-{
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; MerkleTreeHelperGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt; {
     <span class="kw">fn </span>permute(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         node: Variable,
@@ -783,21 +764,21 @@
     <span class="kw">fn </span>constrain_merkle_path(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         merkle_path: <span class="kw-2">&amp;</span>MembershipProofBooleanEncoding&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;MerklePathVar, CircuitError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Rescue3AryMerklePathVar, CircuitError&gt; {
         <span class="comment">// Setup node variables
         </span><span class="kw">let </span>nodes = merkle_path
             .nodes
             .clone()
             .into_iter()
-            .map(|node| -&gt; <span class="prelude-ty">Result</span>&lt;MerkleNodeVar, CircuitError&gt; {
-                <span class="prelude-val">Ok</span>(MerkleNodeVar {
+            .map(|node| -&gt; <span class="prelude-ty">Result</span>&lt;Rescue3AryNodeVar, CircuitError&gt; {
+                <span class="prelude-val">Ok</span>(Rescue3AryNodeVar {
                     sibling1: <span class="self">self</span>.create_variable(node.sibling1)<span class="question-mark">?</span>,
                     sibling2: <span class="self">self</span>.create_variable(node.sibling2)<span class="question-mark">?</span>,
                     is_left_child: <span class="self">self</span>.create_boolean_variable(node.is_left_child)<span class="question-mark">?</span>,
                     is_right_child: <span class="self">self</span>.create_boolean_variable(node.is_right_child)<span class="question-mark">?</span>,
                 })
             })
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;MerkleNodeVar&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Rescue3AryNodeVar&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="comment">// `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
         // boolean
@@ -809,7 +790,31 @@
             <span class="self">self</span>.enforce_bool(left_plus_right)<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(MerklePathVar { nodes })
+        <span class="prelude-val">Ok</span>(Rescue3AryMerklePathVar { nodes })
+    }
+
+    <span class="kw">fn </span>compute_merkle_root(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        elem: StandardLeafVar,
+        path_vars: <span class="kw-2">&amp;</span>Rescue3AryMerklePathVar,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
+
+        <span class="comment">// leaf label = H(0, uid, arc)
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>[zero_var, elem.uid, elem.elem], <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+        <span class="kw">for </span>cur_node <span class="kw">in </span>path_vars.nodes.iter() {
+            <span class="kw">let </span>input_labels = <span class="self">self</span>.permute(
+                cur_label,
+                cur_node.sibling1,
+                cur_node.sibling2,
+                cur_node.is_left_child,
+                cur_node.is_right_child,
+            )<span class="question-mark">?</span>;
+            <span class="comment">// check that the left child&#39;s label is non-zero
+            </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
+            cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+        }
+        <span class="prelude-val">Ok</span>(cur_label)
     }
 }
 
@@ -817,8 +822,10 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use crate</span>::{
         circuit::merkle_tree::{
-            CommittedElemVar, MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding,
-            MerkleTreeGadget, MerkleTreeHelperGadget,
+            rescue_merkle_tree::{
+                MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeHelperGadget,
+            },
+            MerkleTreeGadget,
         },
         merkle_tree::{
             internal::MerkleNode,
@@ -832,7 +839,7 @@
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
     <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::Fq <span class="kw">as </span>FqEd381b;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
-    <span class="kw">use </span>ark_ff::{PrimeField, UniformRand};
+    <span class="kw">use </span>ark_ff::UniformRand;
     <span class="kw">use </span>ark_std::{boxed::Box, test_rng, vec, vec::Vec};
     <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit, Variable};
 
@@ -844,8 +851,8 @@
         test_constrain_merkle_path_helper::&lt;FqEd381b&gt;();
         test_constrain_merkle_path_helper::&lt;Fq377&gt;();
     }
-    <span class="kw">fn </span>test_constrain_merkle_path_helper&lt;F: PrimeField + RescueParameter&gt;() {
-        <span class="kw">fn </span>check_merkle_path&lt;F: PrimeField + RescueParameter&gt;(
+    <span class="kw">fn </span>test_constrain_merkle_path_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">fn </span>check_merkle_path&lt;F: RescueParameter&gt;(
             is_left_child: bool,
             is_right_child: bool,
             accept: bool,
@@ -883,8 +890,8 @@
         test_permute_helper::&lt;Fq377&gt;();
     }
 
-    <span class="kw">fn </span>test_permute_helper&lt;F: PrimeField + RescueParameter&gt;() {
-        <span class="kw">fn </span>check_permute&lt;F: PrimeField + RescueParameter&gt;(
+    <span class="kw">fn </span>test_permute_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">fn </span>check_permute&lt;F: RescueParameter&gt;(
             circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
             is_left: bool,
             is_right: bool,
@@ -922,7 +929,7 @@
             <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
         }
 
-        <span class="kw">fn </span>gen_permutation_circuit_and_vars&lt;F: PrimeField + RescueParameter&gt;(
+        <span class="kw">fn </span>gen_permutation_circuit_and_vars&lt;F: RescueParameter&gt;(
         ) -&gt; (PlonkCircuit&lt;F&gt;, Variable, Variable, Variable) {
             <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
             <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
@@ -992,60 +999,48 @@
     }
 
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_merkle_root() {
-        test_merkle_root_helper::&lt;FqEd254&gt;();
-        test_merkle_root_helper::&lt;FqEd377&gt;();
-        test_merkle_root_helper::&lt;FqEd381&gt;();
-        test_merkle_root_helper::&lt;FqEd381b&gt;();
-        test_merkle_root_helper::&lt;Fq377&gt;();
+    </span><span class="kw">fn </span>test_mt_gadget() {
+        test_mt_gadget_helper::&lt;FqEd254&gt;();
+        test_mt_gadget_helper::&lt;FqEd377&gt;();
+        test_mt_gadget_helper::&lt;FqEd381&gt;();
+        test_mt_gadget_helper::&lt;FqEd381b&gt;();
+        test_mt_gadget_helper::&lt;Fq377&gt;();
     }
-    <span class="kw">fn </span>test_merkle_root_helper&lt;F: RescueParameter&gt;() {
+
+    <span class="kw">fn </span>test_mt_gadget_helper&lt;F: RescueParameter&gt;() {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
 
-        <span class="comment">//// Happy path
+        <span class="comment">// Happy path
 
-        // 2, because the leaf is inserted in position 2 (see gen_merkle_path_for_test)
+        // A leaf we care about is inserted in position 2
         </span><span class="kw">let </span>uid_u64 = <span class="number">2u64</span>;
-        <span class="kw">let </span>uid = F::from(uid_u64);
-        <span class="kw">let </span>comm = F::from(<span class="number">310_u64</span>);
+        <span class="kw">let </span>elem = F::from(<span class="number">310_u64</span>);
 
-        <span class="kw">let </span>uid_var = circuit.create_variable(uid).unwrap();
-        <span class="kw">let </span>comm_var = circuit.create_variable(comm).unwrap();
-
-        <span class="kw">let </span>elem = CommittedElemVar {
-            uid: uid_var,
-            elem: comm_var,
-        };
-        <span class="kw">let </span>elements = <span class="macro">vec!</span>[F::from(<span class="number">1_u64</span>), F::from(<span class="number">2_u64</span>), comm];
+        <span class="comment">// native computation with a MT
+        </span><span class="kw">let </span>elements = <span class="macro">vec!</span>[F::from(<span class="number">1_u64</span>), F::from(<span class="number">2_u64</span>), elem];
         <span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, elements).unwrap();
         <span class="kw">let </span>expected_root = mt.commitment().digest();
-        <span class="kw">let </span>(_elem, proof) = mt.lookup(uid_u64).expect_ok().unwrap();
+        <span class="kw">let </span>(retrieved_elem, proof) = mt.lookup(uid_u64).expect_ok().unwrap();
+        <span class="macro">assert_eq!</span>(retrieved_elem, elem);
 
-        <span class="kw">let </span>path_vars = circuit.add_merkle_path_variable(<span class="kw-2">&amp;</span>proof).unwrap();
+        <span class="comment">// Circuit computation with a MT
+        </span><span class="kw">let </span>leaf_var = circuit.create_leaf_variable(uid_u64, elem).unwrap();
+        <span class="kw">let </span>path_vars = circuit.create_membership_proof_variable(<span class="kw-2">&amp;</span>proof).unwrap();
+        <span class="kw">let </span>root_var = circuit.create_root_variable(expected_root).unwrap();
 
-        <span class="kw">let </span>root_var = circuit.compute_merkle_root(elem, <span class="kw-2">&amp;</span>path_vars).unwrap();
+        circuit
+            .enforce_merkle_proof(leaf_var, path_vars, root_var)
+            .unwrap();
 
-        <span class="comment">// Check Merkle root correctness
-        </span><span class="kw">let </span>actual_root = circuit.witness(root_var).unwrap();
-        <span class="macro">assert_eq!</span>(actual_root, expected_root);
-
-        <span class="comment">// Check constraints
-        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
         <span class="kw-2">*</span>circuit.witness_mut(root_var) = F::zero();
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
-        <span class="comment">//// Bad path:
-        //// The circuit cannot be satisfied if an internal node has a left child with
-        //// zero value.
+        <span class="comment">// Bad path:
+        // The circuit cannot be satisfied if an internal node has a left child with
+        // zero value.
         </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
-
-        <span class="kw">let </span>uid_var = circuit.create_variable(uid).unwrap();
-        <span class="kw">let </span>comm_var = circuit.create_variable(comm).unwrap();
-
-        <span class="kw">let </span>elem = CommittedElemVar {
-            uid: uid_var,
-            elem: comm_var,
-        };
+        <span class="kw">let </span>leaf_var = circuit.create_leaf_variable(uid_u64, elem).unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>bad_proof = proof.clone();
 
@@ -1056,15 +1051,18 @@
                 elem: F::one(),
             });
         }
-        <span class="kw">let </span>path_vars = circuit.add_merkle_path_variable(<span class="kw-2">&amp;</span>bad_proof).unwrap();
+        <span class="kw">let </span>path_vars = circuit
+            .create_membership_proof_variable(<span class="kw-2">&amp;</span>bad_proof)
+            .unwrap();
+        <span class="kw">let </span>root_var = circuit.create_root_variable(expected_root).unwrap();
 
-        <span class="comment">// new root witness is not correct
-        </span><span class="kw">let </span>root_var = circuit.compute_merkle_root(elem, <span class="kw-2">&amp;</span>path_vars).unwrap();
-        <span class="macro">assert_ne!</span>(circuit.witness(root_var).unwrap(), expected_root);
+        circuit
+            .enforce_merkle_proof(leaf_var.clone(), path_vars.clone(), root_var)
+            .unwrap();
 
         <span class="comment">// Circuit does not verify because a left node value is 0
         </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
