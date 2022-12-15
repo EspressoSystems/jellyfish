@@ -48,6 +48,12 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#150](https://github.com/EspressoSystems/jellyfish/pull/150) (`jf-primitives`) Refactor `RescueGadget`
     - Introduce `SpongeStateVar` to abstract over `RescueStateVar` and `RescueNonNativeStateVar` structs.
     - Unify `RescueGadget` and `RescueNonNativeGadget` traits into `RescueGadget`.
+- [#158](https://github.com/EspressoSystems/jellyfish/pull/158) (`jf-primitives`) Refactored `MerkleTreeGadget` API:
+    - Generic only over `MerkleTreeScheme`.
+    - New methods for allocating variables: `create_leaf_variable`, `create_membership_proof_variable`, `create_root_variable`.
+    - New methods for enforcing constraints: `is_member` and `enforce_merkle_proof`.
+    - Move the remaining methods to the internals of circuit implementation for `RescueMerkleTree`.
+    - Implement `MerkleTreeGadget` for `RescueMerkleTree`.
 
 ### Fixed
 
