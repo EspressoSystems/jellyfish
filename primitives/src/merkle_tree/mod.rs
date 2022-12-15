@@ -133,6 +133,9 @@ impl_to_traversal_path_primitives!(u32);
 impl_to_traversal_path_primitives!(u64);
 impl_to_traversal_path_biguint!(u128);
 impl_to_traversal_path_biguint!(BigUint);
+impl_to_traversal_path_biguint!(ark_ed_on_bn254::Fq);
+impl_to_traversal_path_biguint!(ark_ed_on_bls12_377::Fq);
+impl_to_traversal_path_biguint!(ark_ed_on_bls12_381::Fq);
 
 /// Trait for a succint merkle tree commitment
 pub trait MerkleCommitment<T: NodeValue>:
