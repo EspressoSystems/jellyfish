@@ -8,7 +8,7 @@
 //! with a Rescue hash function.
 
 use crate::{
-    circuit::rescue::{RescueGadget, RescueStateVar},
+    circuit::rescue::RescueNativeGadget,
     merkle_tree::{
         internal::MerkleNode, prelude::RescueMerkleTree, MerkleTreeScheme, ToTraversalPath,
     },
@@ -268,7 +268,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
         let zero_var = self.zero();
 
         // leaf label = H(0, uid, arc)
-        let mut cur_label = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+        let mut cur_label = RescueNativeGadget::<F>::rescue_sponge_no_padding(
             self,
             &[zero_var, elem.uid, elem.elem],
             1,
@@ -283,11 +283,8 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
             )?;
             // check that the left child's label is non-zero
             self.non_zero_gate(input_labels[0])?;
-            cur_label = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
-                self,
-                &input_labels,
-                1,
-            )?[0];
+            cur_label =
+                RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
         }
         Ok(cur_label)
     }

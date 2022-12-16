@@ -208,7 +208,7 @@ where
 
         // step 1. state: [F: STATE_SIZE] = hash(state|transcript)
         let input_var = [self.state_var.as_ref(), self.transcript_var.as_ref()].concat();
-        let res_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_with_padding(
+        let res_var = RescueNativeGadget::<F>::rescue_sponge_with_padding(
             circuit, &input_var, STATE_SIZE,
         )
         .unwrap();

@@ -135,12 +135,8 @@ where
     ) -> Result<RescueStateVar, CircuitError> {
         let prp_instance = PRP::<F>::default();
         let mds_states = prp_instance.mds_matrix_ref();
-        let keys_vars = RescueGadget::<RescueStateVar, F, F>::key_schedule(
-            self,
-            mds_states,
-            key_var,
-            &prp_instance,
-        )?;
+        let keys_vars =
+            RescueNativeGadget::<F>::key_schedule(self, mds_states, key_var, &prp_instance)?;
         self.prp_with_round_keys(input_var, mds_states, &keys_vars)
     }
 
@@ -158,7 +154,7 @@ where
         // ABSORB PHASE
         let mut state_var =
             RescueStateVar::from([data_vars[0], data_vars[1], data_vars[2], zero_var]);
-        state_var = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state_var)?;
+        state_var = RescueNativeGadget::<F>::rescue_permutation(self, state_var)?;
 
         for block in data_vars[rate..].chunks_exact(rate) {
             state_var = self.add_state(
@@ -204,7 +200,7 @@ where
         ]
         .concat();
 
-        RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(self, &data_vars, num_output)
+        RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &data_vars, num_output)
     }
 
     fn rescue_full_state_keyed_sponge_no_padding(
@@ -225,7 +221,7 @@ where
         for chunk in chunks {
             let chunk_var = RescueStateVar::from([chunk[0], chunk[1], chunk[2], chunk[3]]);
             state = self.add_state(&state, &chunk_var)?;
-            state = RescueGadget::<RescueStateVar, F, F>::rescue_permutation(self, state)?;
+            state = RescueNativeGadget::<F>::rescue_permutation(self, state)?;
         }
         // squeeze phase, but only a single output, can return directly from state
         Ok(state.0[0])
@@ -510,9 +506,12 @@ where
 mod tests {
 
     use super::{PermutationGadget, RescueGadget, RescueStateVar};
-    use crate::rescue::{
-        sponge::{RescueCRHF, RescuePRF},
-        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+    use crate::{
+        circuit::rescue::RescueNativeGadget,
+        rescue::{
+            sponge::{RescueCRHF, RescuePRF},
+            Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+        },
     };
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -832,7 +831,7 @@ mod tests {
             .collect_vec();
 
         let expected_sponge = RescueCRHF::sponge_no_padding(&data, 1).unwrap()[0];
-        let sponge_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+        let sponge_var = RescueNativeGadget::<F>::rescue_sponge_no_padding(
             &mut circuit,
             data_vars.as_slice(),
             1,
@@ -856,14 +855,12 @@ mod tests {
             .map(|&x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        assert!(
-            RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
-                &mut circuit,
-                data_vars.as_slice(),
-                1
-            )
-            .is_err()
-        );
+        assert!(RescueNativeGadget::<F>::rescue_sponge_no_padding(
+            &mut circuit,
+            data_vars.as_slice(),
+            1
+        )
+        .is_err());
     }
 
     #[test]
@@ -885,7 +882,7 @@ mod tests {
         ];
 
         for output_len in 1..10 {
-            let out_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
+            let out_var = RescueNativeGadget::<F>::rescue_sponge_no_padding(
                 &mut circuit,
                 &input_var,
                 output_len,
@@ -930,12 +927,7 @@ mod tests {
             circuit.create_variable(input_vec[3]).unwrap(),
         ];
         assert!(
-            RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(
-                &mut circuit,
-                &input_var,
-                1
-            )
-            .is_err()
+            RescueNativeGadget::<F>::rescue_sponge_no_padding(&mut circuit, &input_var, 1).is_err()
         );
     }
 
@@ -956,7 +948,7 @@ mod tests {
                     .map(|x| circuit.create_variable(*x).unwrap())
                     .collect();
 
-                let out_var = RescueGadget::<RescueStateVar, F, F>::rescue_sponge_with_padding(
+                let out_var = RescueNativeGadget::<F>::rescue_sponge_with_padding(
                     &mut circuit,
                     &input_var,
                     output_len,
@@ -1008,13 +1000,12 @@ mod tests {
         let expected_fsks_output =
             RescuePRF::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();
 
-        let fsks_var =
-            RescueGadget::<RescueStateVar, F, F>::rescue_full_state_keyed_sponge_no_padding(
-                &mut circuit,
-                key_var,
-                &data_vars,
-            )
-            .unwrap();
+        let fsks_var = RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(
+            &mut circuit,
+            key_var,
+            &data_vars,
+        )
+        .unwrap();
 
         // Check prf output consistency
         assert_eq!(expected_fsks_output[0], circuit.witness(fsks_var).unwrap());
@@ -1028,7 +1019,7 @@ mod tests {
         let mut data_vars = data_vars;
         data_vars.push(circuit.zero());
         assert!(
-            RescueGadget::<RescueStateVar, F, F>::rescue_full_state_keyed_sponge_no_padding(
+            RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(
                 &mut circuit,
                 key_var,
                 &data_vars

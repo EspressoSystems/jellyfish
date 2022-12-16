@@ -96,9 +96,7 @@ where
         ]
         .concat();
 
-        RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_no_padding(
-            self, &data_vars, num_output,
-        )
+        RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(self, &data_vars, num_output)
     }
 
     fn rescue_sponge_no_padding(
@@ -129,8 +127,7 @@ where
             state: [data_vars[0], data_vars[1], data_vars[2], zero_var],
             modulus,
         };
-        state_var =
-            RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_permutation(self, state_var)?;
+        state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
 
         for block in data_vars[rate..].chunks_exact(rate) {
             state_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
@@ -141,9 +138,7 @@ where
                     modulus,
                 },
             )?;
-            state_var = RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_permutation(
-                self, state_var,
-            )?;
+            state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
         }
         // SQUEEZE PHASE
         let mut result = vec![];
@@ -156,9 +151,7 @@ where
             if remaining == 0 {
                 break;
             }
-            state_var = RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_permutation(
-                self, state_var,
-            )?;
+            state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
         }
 
         Ok(result)
@@ -204,8 +197,7 @@ where
             state = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
                 self, &state, &chunk_var,
             )?;
-            state =
-                RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_permutation(self, state)?;
+            state = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state)?;
         }
         // squeeze phase, but only a single output, can return directly from state
         Ok(state.state[0])
@@ -640,7 +632,7 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{PermutationGadget, RescueNonNativeStateVar};
+    use super::{PermutationGadget, RescueNonNativeGadget, RescueNonNativeStateVar};
     use crate::{
         circuit::rescue::RescueGadget,
         rescue::{
@@ -843,11 +835,8 @@ mod tests {
         let perm = Permutation::<T>::default();
         let state_out = perm.eval(&state_in);
 
-        let out_var = RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_permutation(
-            &mut circuit,
-            state_in_var,
-        )
-        .unwrap();
+        let out_var =
+            RescueNonNativeGadget::<T, F>::rescue_permutation(&mut circuit, state_in_var).unwrap();
 
         check_state(&circuit, &out_var, &state_out);
 
@@ -944,12 +933,8 @@ mod tests {
         ]);
         let key_var = circuit.create_rescue_state_variable(&key_vec).unwrap();
         let input_var = circuit.create_rescue_state_variable(&input_vec).unwrap();
-        let out_var = RescueGadget::<RescueNonNativeStateVar<F>, T, F>::prp(
-            &mut circuit,
-            &key_var,
-            &input_var,
-        )
-        .unwrap();
+        let out_var =
+            RescueNonNativeGadget::<T, F>::prp(&mut circuit, &key_var, &input_var).unwrap();
 
         let out_val = prp.prp(&key_vec, &input_vec);
 
@@ -1000,13 +985,12 @@ mod tests {
 
         // sponge no padding with output length 1
         let expected_sponge = RescueCRHF::sponge_no_padding(&data_t, 1).unwrap()[0];
-        let sponge_var =
-            RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_no_padding(
-                &mut circuit,
-                data_vars.as_slice(),
-                1,
-            )
-            .unwrap()[0];
+        let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(
+            &mut circuit,
+            data_vars.as_slice(),
+            1,
+        )
+        .unwrap()[0];
 
         assert_eq!(
             field_switching::<T, F>(&expected_sponge),
@@ -1023,13 +1007,12 @@ mod tests {
         // general sponge no padding
         for output_len in 1..max_output_len {
             let expected_sponge = RescueCRHF::sponge_no_padding(&data_t, output_len).unwrap();
-            let sponge_var =
-                RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_no_padding(
-                    &mut circuit,
-                    data_vars.as_slice(),
-                    output_len,
-                )
-                .unwrap();
+            let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(
+                &mut circuit,
+                data_vars.as_slice(),
+                output_len,
+            )
+            .unwrap();
             for (e, f) in expected_sponge.iter().zip(sponge_var.iter()) {
                 assert_eq!(field_switching::<T, F>(e), f.witness(&circuit).unwrap());
             }
@@ -1053,14 +1036,12 @@ mod tests {
             .map(|x| FpElemVar::new_from_field_element(&mut circuit, x, m, None).unwrap())
             .collect();
 
-        assert!(
-            RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_no_padding(
-                &mut circuit,
-                data_vars.as_slice(),
-                1
-            )
-            .is_err()
-        );
+        assert!(RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(
+            &mut circuit,
+            data_vars.as_slice(),
+            1
+        )
+        .is_err());
     }
 
     #[test]
@@ -1095,13 +1076,12 @@ mod tests {
             let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, 1);
 
             // sponge with padding
-            let sponge_var =
-                RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_with_padding(
-                    &mut circuit,
-                    data_vars.as_slice(),
-                    1,
-                )
-                .unwrap()[0];
+            let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_with_padding(
+                &mut circuit,
+                data_vars.as_slice(),
+                1,
+            )
+            .unwrap()[0];
 
             assert_eq!(
                 field_switching::<T, F>(&expected_sponge[0]),
@@ -1119,13 +1099,12 @@ mod tests {
             for output_len in 1..max_output_len {
                 let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, output_len);
 
-                let sponge_var =
-                    RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_with_padding(
-                        &mut circuit,
-                        data_vars.as_slice(),
-                        output_len,
-                    )
-                    .unwrap();
+                let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_with_padding(
+                    &mut circuit,
+                    data_vars.as_slice(),
+                    output_len,
+                )
+                .unwrap();
 
                 for (e, f) in expected_sponge.iter().zip(sponge_var.iter()) {
                     assert_eq!(field_switching::<T, F>(e), f.witness(&circuit).unwrap());
@@ -1161,12 +1140,9 @@ mod tests {
             FpElemVar::new_from_field_element(&mut circuit, &input_vec_f[1], m, None).unwrap(),
             FpElemVar::new_from_field_element(&mut circuit, &input_vec_f[2], m, None).unwrap(),
         ];
-        let out_var = RescueGadget::<RescueNonNativeStateVar<F>, T, F>::rescue_sponge_no_padding(
-            &mut circuit,
-            &input_var,
-            1,
-        )
-        .unwrap()[0];
+        let out_var =
+            RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(&mut circuit, &input_var, 1)
+                .unwrap()[0];
 
         // Check consistency between inputs
         for i in 0..rate {
@@ -1221,9 +1197,12 @@ mod tests {
         let expected_fsks_output =
             RescuePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
-        let fsks_var = RescueGadget::<RescueNonNativeStateVar<F>, T, F>::
-            rescue_full_state_keyed_sponge_no_padding(&mut circuit, key_var, &data_vars)
-            .unwrap();
+        let fsks_var = RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+            &mut circuit,
+            key_var,
+            &data_vars,
+        )
+        .unwrap();
 
         // Check prf output consistency
         assert_eq!(
@@ -1244,8 +1223,13 @@ mod tests {
             Some(key_var.two_power_m()),
         );
         data_vars.push(zero_var);
-        assert!(RescueGadget::<RescueNonNativeStateVar<F>, T, F>::
-            rescue_full_state_keyed_sponge_no_padding(&mut circuit, key_var, &data_vars)
-            .is_err());
+        assert!(
+            RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+                &mut circuit,
+                key_var,
+                &data_vars
+            )
+            .is_err()
+        );
     }
 }

@@ -7,14 +7,13 @@
 //! Circuit implementation of the commitment scheme.
 
 use crate::{
-    circuit::rescue::RescueGadget,
     rescue::{RescueParameter, CRHF_RATE},
     utils::pad_with,
 };
 use ark_std::vec;
 use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
-use super::rescue::RescueStateVar;
+use super::rescue::RescueNativeGadget;
 
 /// Circuit implementation of the commitment scheme.
 pub trait CommitmentGadget {
@@ -36,7 +35,7 @@ where
         let mut msg = vec![blinding];
         msg.extend_from_slice(input);
         pad_with(&mut msg, CRHF_RATE, self.zero());
-        Ok(RescueGadget::<RescueStateVar, F, F>::rescue_sponge_no_padding(self, &msg, 1)?[0])
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &msg, 1)?[0])
     }
 }
 

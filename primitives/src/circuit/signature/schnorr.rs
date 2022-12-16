@@ -7,7 +7,7 @@
 //! Circuit implementation of a Schnorr signature scheme.
 
 use crate::{
-    circuit::rescue::{RescueGadget, RescueStateVar},
+    circuit::rescue::RescueNativeGadget,
     constants::CS_ID_SCHNORR,
     rescue::RescueParameter,
     signatures::schnorr::{Signature, VerKey},
@@ -186,8 +186,7 @@ where
         chal_input.extend(msg);
 
         let challenge =
-            RescueGadget::<RescueStateVar, F, F>::rescue_sponge_with_padding(self, &chal_input, 1)?
-                [0];
+            RescueNativeGadget::<F>::rescue_sponge_with_padding(self, &chal_input, 1)?[0];
         let c_bits = self.unpack(challenge, field_bit_len::<F>() as usize)?;
         Ok(c_bits[..challenge_bit_len::<F>()].to_vec())
     }
