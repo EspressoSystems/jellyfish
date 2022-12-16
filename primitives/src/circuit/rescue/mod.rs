@@ -13,8 +13,8 @@ mod non_native;
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, Circuit};
-pub use native::RescueStateVar;
-pub use non_native::RescueNonNativeStateVar;
+pub use native::{RescueNativeGadget, RescueStateVar};
+pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};
 
 use crate::rescue::{RescueMatrix, RescueVector, PRP};
 

@@ -32,6 +32,9 @@ pub struct RescueNonNativeStateVar<F: PrimeField> {
     pub(crate) modulus: FpElem<F>,
 }
 
+/// Type wrapper for the RescueGadget over the non-native field.
+pub type RescueNonNativeGadget<T, F> = dyn RescueGadget<RescueNonNativeStateVar<F>, T, F>;
+
 impl<T, F: PrimeField> SpongeStateVar<T, F> for RescueNonNativeStateVar<F> {
     type Native = T;
     type NonNative = F;

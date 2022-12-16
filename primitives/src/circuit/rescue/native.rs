@@ -24,6 +24,9 @@ use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 /// Array of variables representing a Rescue state (4 field elements).
 pub struct RescueStateVar(pub(crate) [Variable; STATE_SIZE]);
 
+/// Type wrapper for the RescueGadget over the native field.
+pub type RescueNativeGadget<F> = dyn RescueGadget<RescueStateVar, F, F>;
+
 /// For the native field, there is only really one field `F`.
 impl<F> SpongeStateVar<F, F> for RescueStateVar {
     type Native = F;
