@@ -22,6 +22,7 @@ use num_bigint::BigUint;
 use typenum::U3;
 
 /// Wrapper for rescue hash function
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RescueHash<F: RescueParameter> {
     phantom_f: PhantomData<F>,
 }
@@ -51,5 +52,16 @@ impl<F: RescueParameter> DigestAlgorithm<F, BigUint, F> for RescueHash<F> {
     }
 }
 
-/// Example instantiation of a SparseMerkleTree indexed by BigUInt
-pub type RescueSparseMerkleTree<E, F> = UniversalMerkleTree<E, RescueHash<F>, BigUint, U3, F>;
+impl<F: RescueParameter> DigestAlgorithm<F, F, F> for RescueHash<F> {
+    fn digest(data: &[F]) -> F {
+        RescueCRHF::<F>::sponge_no_padding(data, 1).unwrap()[0]
+    }
+
+    fn digest_leaf(pos: &F, elem: &F) -> F {
+        let data = [F::zero(), *pos, *elem];
+        RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0]
+    }
+}
+
+/// Example instantiation of a SparseMerkleTree indexed by I
+pub type RescueSparseMerkleTree<I, E, F> = UniversalMerkleTree<E, RescueHash<F>, I, U3, F>;

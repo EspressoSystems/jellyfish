@@ -210,4 +210,30 @@ mod mt_tests {
         assert!(mt.remember(0, elem, &proof).is_ok());
         assert!(mt.lookup(0).expect_ok().is_ok());
     }
+
+    #[test]
+    fn test_mt_serde() {
+        test_mt_serde_helper::<Fq254>();
+        test_mt_serde_helper::<Fq377>();
+        test_mt_serde_helper::<Fq381>();
+    }
+
+    fn test_mt_serde_helper<F: RescueParameter>() {
+        let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let proof = mt.lookup(0).expect_ok().unwrap().1;
+        let node = &proof.proof[0];
+
+        assert_eq!(
+            mt,
+            bincode::deserialize(&bincode::serialize(&mt).unwrap()).unwrap()
+        );
+        assert_eq!(
+            proof,
+            bincode::deserialize(&bincode::serialize(&proof).unwrap()).unwrap()
+        );
+        assert_eq!(
+            *node,
+            bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
+        );
+    }
 }
