@@ -187,7 +187,7 @@ where
 
         let challenge =
             RescueNativeGadget::<F>::rescue_sponge_with_padding(self, &chal_input, 1)?[0];
-        let c_bits = self.unpack(challenge, field_bit_len::<F>() as usize)?;
+        let c_bits = self.unpack(challenge, field_bit_len::<F>())?;
         Ok(c_bits[..challenge_bit_len::<F>()].to_vec())
     }
 }
