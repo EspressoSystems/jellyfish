@@ -45,6 +45,9 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#148](https://github.com/EspressoSystems/jellyfish/pull/148), [#156](https://github.com/EspressoSystems/jellyfish/pull/156) (`jf-primitives`) Refactored BLS Signature implementation
   - #148 Added trait bounds on associated types of `trait SignatureScheme`
   - #156 Improved BLS correctness and API compliance with IRTF standard with better doc
+- [#150](https://github.com/EspressoSystems/jellyfish/pull/150) (`jf-primitives`) Refactor `RescueGadget`
+    - Introduce `SpongeStateVar` to abstract over `RescueStateVar` and `RescueNonNativeStateVar` structs.
+    - Unify `RescueGadget` and `RescueNonNativeGadget` traits into `RescueGadget`.
 - [#158](https://github.com/EspressoSystems/jellyfish/pull/158) (`jf-primitives`) Refactored `MerkleTreeGadget` API:
     - Generic only over `MerkleTreeScheme`.
     - New methods for allocating variables: `create_leaf_variable`, `create_membership_proof_variable`, `create_root_variable`.

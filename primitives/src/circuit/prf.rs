@@ -7,11 +7,12 @@
 //! Circuit implementation of a PRF.
 
 use crate::{
-    circuit::rescue::RescueGadget,
     rescue::{RescueParameter, STATE_SIZE},
     utils::pad_with,
 };
 use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+
+use super::rescue::RescueNativeGadget;
 
 /// Circuit implementation of a PRF.
 pub trait PrfGadget {
@@ -32,7 +33,7 @@ where
 
         let mut input_vec = input.to_vec();
         pad_with(&mut input_vec, STATE_SIZE, self.zero());
-        self.rescue_full_state_keyed_sponge_no_padding(key, &input_vec)
+        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(self, key, &input_vec)
     }
 }
 

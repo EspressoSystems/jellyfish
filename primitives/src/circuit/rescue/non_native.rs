@@ -22,6 +22,8 @@ use jf_relation::{
 };
 use jf_utils::{compute_len_to_next_multiple, field_switching};
 
+use super::{PermutationGadget, RescueGadget, SpongeStateVar};
+
 /// Array of variables representing a Rescue state (4 field elements), and also
 /// the modulus of the non-native evaluating field.
 #[derive(Clone, Debug)]
@@ -30,67 +32,21 @@ pub struct RescueNonNativeStateVar<F: PrimeField> {
     pub(crate) modulus: FpElem<F>,
 }
 
-/// Trait for rescue circuit over non-native field.
-pub trait RescueNonNativeGadget<F: PrimeField> {
-    /// Given an input state st_0 and an output state st_1, ensure that st_1 =
-    /// rescue_permutation(st_0)  where rescue_permutation is the instance
-    /// of the Rescue permutation defined by its respective constants
-    /// * `input_var` - variables corresponding to the input state
-    /// * `returns` - variables corresponding to the output state
-    fn rescue_permutation<T: RescueParameter>(
-        &mut self,
-        input_var: RescueNonNativeStateVar<F>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+/// Type wrapper for the RescueGadget over the non-native field.
+pub type RescueNonNativeGadget<T, F> = dyn RescueGadget<RescueNonNativeStateVar<F>, T, F>;
 
-    /// Rescue based Pseudo Random Permutation (PRP)
-    /// * `key_var` - rescue state variable corresponding to the cipher key
-    /// * `input_var` - rescue state variable corresponding to the plaintext
-    /// * `returns` - state variable corresponding to the cipher text
-    fn prp<T: RescueParameter>(
-        &mut self,
-        key_var: &RescueNonNativeStateVar<F>,
-        input_var: &RescueNonNativeStateVar<F>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
-
-    /// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables, `data_vars.len()` should be a
-    ///   positive integer that is a multiple of the sponge rate (i.e. 3)
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    fn rescue_sponge_no_padding<T: RescueParameter>(
-        &mut self,
-        data_vars: &[FpElemVar<F>],
-        num_output: usize,
-    ) -> Result<Vec<FpElemVar<F>>, CircuitError>;
-
-    /// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables,
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    fn rescue_sponge_with_padding<T: RescueParameter>(
-        &mut self,
-        data_vars: &[FpElemVar<F>],
-        num_output: usize,
-    ) -> Result<Vec<FpElemVar<F>>, CircuitError>;
-
-    /// Full-State-Keyed-Sponge with a single output
-    /// * `key` - key variable
-    /// * `input` - input variables,
-    /// * `returns` a variable that refers to the output
-    fn rescue_full_state_keyed_sponge_no_padding<T: RescueParameter>(
-        &mut self,
-        key: FpElemVar<F>,
-        data_vars: &[FpElemVar<F>],
-    ) -> Result<FpElemVar<F>, CircuitError>;
+impl<T, F: PrimeField> SpongeStateVar<T, F> for RescueNonNativeStateVar<F> {
+    type Native = T;
+    type NonNative = F;
+    type Var = FpElemVar<F>;
 }
 
-impl<F> RescueNonNativeGadget<F> for PlonkCircuit<F>
+impl<T, F> RescueGadget<RescueNonNativeStateVar<F>, T, F> for PlonkCircuit<F>
 where
     F: PrimeField,
+    T: RescueParameter,
 {
-    fn rescue_permutation<T: RescueParameter>(
+    fn rescue_permutation(
         &mut self,
         input_var: RescueNonNativeStateVar<F>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
@@ -105,7 +61,7 @@ where
         self.permutation_with_const_round_keys(input_var, mds_matrix, keys.as_slice())
     }
 
-    fn prp<T: RescueParameter>(
+    fn prp(
         &mut self,
         key_var: &RescueNonNativeStateVar<F>,
         input_var: &RescueNonNativeStateVar<F>,
@@ -116,7 +72,7 @@ where
         self.prp_with_round_keys(input_var, mds_states, &keys_vars)
     }
 
-    fn rescue_sponge_with_padding<T: RescueParameter>(
+    fn rescue_sponge_with_padding(
         &mut self,
         data_vars: &[FpElemVar<F>],
         num_output: usize,
@@ -140,10 +96,10 @@ where
         ]
         .concat();
 
-        self.rescue_sponge_no_padding::<T>(&data_vars, num_output)
+        RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(self, &data_vars, num_output)
     }
 
-    fn rescue_sponge_no_padding<T: RescueParameter>(
+    fn rescue_sponge_no_padding(
         &mut self,
         data_vars: &[FpElemVar<F>],
         num_output: usize,
@@ -171,17 +127,18 @@ where
             state: [data_vars[0], data_vars[1], data_vars[2], zero_var],
             modulus,
         };
-        state_var = self.rescue_permutation::<T>(state_var)?;
+        state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
 
         for block in data_vars[rate..].chunks_exact(rate) {
-            state_var = self.add_state(
+            state_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
+                self,
                 &state_var,
                 &RescueNonNativeStateVar {
                     state: [block[0], block[1], block[2], zero_var],
                     modulus,
                 },
             )?;
-            state_var = self.rescue_permutation::<T>(state_var)?;
+            state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
         }
         // SQUEEZE PHASE
         let mut result = vec![];
@@ -194,13 +151,13 @@ where
             if remaining == 0 {
                 break;
             }
-            state_var = self.rescue_permutation::<T>(state_var)?;
+            state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
         }
 
         Ok(result)
     }
 
-    fn rescue_full_state_keyed_sponge_no_padding<T: RescueParameter>(
+    fn rescue_full_state_keyed_sponge_no_padding(
         &mut self,
         key: FpElemVar<F>,
         data_vars: &[FpElemVar<F>],
@@ -237,94 +194,75 @@ where
                 state: [chunk[0], chunk[1], chunk[2], chunk[3]],
                 modulus,
             };
-            state = self.add_state(&state, &chunk_var)?;
-            state = self.rescue_permutation::<T>(state)?;
+            state = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
+                self, &state, &chunk_var,
+            )?;
+            state = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state)?;
         }
         // squeeze phase, but only a single output, can return directly from state
         Ok(state.state[0])
     }
-}
 
-pub(crate) trait RescueNonNativeHelperGadget<F: PrimeField>: Circuit<F> {
-    fn check_var_bound_rescue_state(
-        &self,
-        rescue_state: &RescueNonNativeStateVar<F>,
-    ) -> Result<(), CircuitError>;
-
-    fn create_rescue_state_variable<T: RescueParameter>(
+    fn create_rescue_state_variable(
         &mut self,
         state: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
+        // parameter m
+        let m = (T::size_in_bits() / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
 
-    fn add_constant_state<T: RescueParameter>(
-        &mut self,
-        input_var: &RescueNonNativeStateVar<F>,
-        constant: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+        // move the modulus to the right field
+        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t = FpElem::new(&t_modulus, m, None)?;
 
-    fn add_state(
-        &mut self,
-        left_state_var: &RescueNonNativeStateVar<F>,
-        right_state_var: &RescueNonNativeStateVar<F>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+        // move rescue state to the plonk field
+        let state_f: Vec<F> = state
+            .elems()
+            .iter()
+            .map(|x| field_switching::<T, F>(x))
+            .collect();
 
-    /// Given a state st_0=(x_1,...,x_w) and st_1=(y_1,...,y_w),
-    /// add the constraints that ensure we have y_i=x_i ^{1/11} for i in
-    /// [1,...,w]
-    /// * `input_var` - rescue state variables st_0
-    /// * `returns` - rescue state variables st_1
-    fn pow_alpha_inv_state<T: RescueParameter>(
-        &mut self,
-        input_var: &RescueNonNativeStateVar<F>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+        // create vars for states
+        let mut state_split_var = [FpElemVar::<F>::default(); STATE_SIZE];
+        for (var, f) in state_split_var.iter_mut().zip(state_f.iter()) {
+            *var = FpElemVar::new_from_field_element(self, f, m, Some(t.two_power_m()))?;
+        }
 
-    /// Given an input state st_0 and an output state st_1, ensure that st_1 = M
-    /// st_0 + C where M is a Rescue matrix and c is a constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    fn affine_transform<T: RescueParameter>(
-        &mut self,
-        input_var: &RescueNonNativeStateVar<F>,
-        matrix: &RescueMatrix<T>,
-        constant: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
+        Ok(RescueNonNativeStateVar {
+            state: state_split_var,
+            modulus: t,
+        })
+    }
 
-    /// Given an input state st_0=(x_1,...,x_w) and an output state
-    /// st_1=(y_1,...,y_m) y_i = \sum_{j=1}^w M_{i,j}x_j^alpha+c_i for all i in
-    /// [1,..,w] where M is a Rescue matrix and c=(c_1,...,c_w) is a
-    /// constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    fn non_linear_transform<T: RescueParameter>(
+    fn key_schedule(
         &mut self,
-        input_var: &RescueNonNativeStateVar<F>,
-        matrix: &RescueMatrix<T>,
-        constant: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError>;
-
-    /// Define a constraint such that y = x^(1/alpha).
-    /// It is implemented by setting q_{H1} y^alpha = q_O x
-    /// * `input_var`  - variable id corresponding to x in the equation above
-    /// * `returns` - the variable id corresponding to y
-    fn pow_alpha_inv<T: RescueParameter>(
-        &mut self,
-        input_var: FpElemVar<F>,
-    ) -> Result<FpElemVar<F>, CircuitError>;
-
-    /// Return the round keys variables for the Rescue block cipher
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_var` - state variable representing the cipher key
-    /// * `returns` - state variables corresponding to the scheduled keys
-    fn key_schedule<T: RescueParameter>(
-        &mut self,
-        mds_states: &RescueMatrix<T>,
+        mds: &RescueMatrix<T>,
         key_var: &RescueNonNativeStateVar<F>,
         prp_instance: &PRP<T>,
-    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError>;
+    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError> {
+        let mut aux = *prp_instance.init_vec_ref();
+        let key_injection_vec = prp_instance.key_injection_vec_ref();
+
+        let mut key_state_var = self.add_constant_state(key_var, &aux)?;
+        let mut result = vec![key_state_var.clone()];
+
+        for (r, key_injection_item) in key_injection_vec.iter().enumerate() {
+            aux.linear(mds, key_injection_item);
+            if r % 2 == 0 {
+                key_state_var =
+                    PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::pow_alpha_inv_state(
+                        self,
+                        &key_state_var,
+                    )?;
+                key_state_var = self.affine_transform(&key_state_var, mds, key_injection_item)?;
+            } else {
+                key_state_var =
+                    self.non_linear_transform(&key_state_var, mds, key_injection_item)?;
+            }
+            result.push(key_state_var.clone());
+        }
+
+        Ok(result)
+    }
 
     /// Return the variable corresponding to the output of the of the Rescue
     /// PRP where the rounds keys have already been computed "dynamically"
@@ -332,7 +270,7 @@ pub(crate) trait RescueNonNativeHelperGadget<F: PrimeField>: Circuit<F> {
     /// * `mds_states` - Rescue MDS matrix
     /// * `key_vars` - variables corresponding to the scheduled keys
     /// * `returns` -
-    fn prp_with_round_keys<T: RescueParameter>(
+    fn prp_with_round_keys(
         &mut self,
         input_var: &RescueNonNativeStateVar<F>,
         mds: &RescueMatrix<T>,
@@ -343,53 +281,34 @@ pub(crate) trait RescueNonNativeHelperGadget<F: PrimeField>: Circuit<F> {
         }
 
         let zero_state = RescueVector::from(&[T::zero(); STATE_SIZE]);
-        let mut state_var = self.add_state(input_var, &keys_vars[0])?;
+        let mut state_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
+            self,
+            input_var,
+            &keys_vars[0],
+        )?;
         for (r, key_var) in keys_vars.iter().skip(1).enumerate() {
             if r % 2 == 0 {
-                state_var = self.pow_alpha_inv_state::<T>(&state_var)?;
+                state_var =
+                    PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::pow_alpha_inv_state(
+                        self, &state_var,
+                    )?;
                 state_var = self.affine_transform(&state_var, mds, &zero_state)?;
             } else {
                 state_var = self.non_linear_transform(&state_var, mds, &zero_state)?;
             }
 
-            state_var = self.add_state(&state_var, key_var)?;
-        }
-        Ok(state_var)
-    }
-
-    /// Given an input state st_0 and an output state st_1, ensure that st_1 is
-    /// obtained by applying the rescue permutation with a specific  list of
-    /// round keys (i.e. the keys are constants) and a matrix
-    /// * `input_var` - variables corresponding to the input state
-    /// * `mds` - Rescue matrix
-    /// * `round_keys` - list of round keys
-    /// * `returns` - variables corresponding to the output state
-    fn permutation_with_const_round_keys<T: RescueParameter>(
-        &mut self,
-        input_var: RescueNonNativeStateVar<F>,
-        mds: &RescueMatrix<T>,
-        round_keys: &[RescueVector<T>],
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
-        if (round_keys.len() != 2 * ROUNDS + 1) || (mds.len() != STATE_SIZE) {
-            return Err(CircuitError::ParameterError("data_vars".to_string()));
-        }
-
-        let mut state_var = self.add_constant_state(&input_var, &round_keys[0])?;
-        for (r, key) in round_keys.iter().skip(1).enumerate() {
-            if r % 2 == 0 {
-                state_var = self.pow_alpha_inv_state::<T>(&state_var)?;
-                state_var = self.affine_transform(&state_var, mds, key)?;
-            } else {
-                state_var = self.non_linear_transform(&state_var, mds, key)?;
-            }
+            state_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
+                self, &state_var, key_var,
+            )?;
         }
         Ok(state_var)
     }
 }
 
-impl<F> RescueNonNativeHelperGadget<F> for PlonkCircuit<F>
+impl<T, F> PermutationGadget<RescueNonNativeStateVar<F>, T, F> for PlonkCircuit<F>
 where
     F: PrimeField,
+    T: RescueParameter,
 {
     fn check_var_bound_rescue_state(
         &self,
@@ -403,13 +322,15 @@ where
         Ok(())
     }
 
-    fn add_constant_state<T: RescueParameter>(
+    fn add_constant_state(
         &mut self,
         input_var: &RescueNonNativeStateVar<F>,
         constant: &RescueVector<T>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
         // Check bounds for every variable
-        self.check_var_bound_rescue_state(input_var)?;
+        PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::check_var_bound_rescue_state(
+            self, input_var,
+        )?;
 
         // move constant to the plonk field
         let constant_f: Vec<F> = constant
@@ -444,16 +365,18 @@ where
         })
     }
 
-    fn pow_alpha_inv_state<T: RescueParameter>(
+    fn pow_alpha_inv_state(
         &mut self,
         input_var: &RescueNonNativeStateVar<F>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
         // Check bounds for every variable
-        self.check_var_bound_rescue_state(input_var)?;
+        PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::check_var_bound_rescue_state(
+            self, input_var,
+        )?;
 
         let mut state = [FpElemVar::default(); STATE_SIZE];
         for (e, f) in state.iter_mut().zip(input_var.state.iter()) {
-            *e = self.pow_alpha_inv::<T>(*f)?;
+            *e = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::pow_alpha_inv(self, *f)?;
         }
 
         Ok(RescueNonNativeStateVar {
@@ -462,14 +385,16 @@ where
         })
     }
 
-    fn affine_transform<T: RescueParameter>(
+    fn affine_transform(
         &mut self,
         input_var: &RescueNonNativeStateVar<F>,
         matrix: &RescueMatrix<T>,
         constant: &RescueVector<T>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
         // Check bounds for every variable
-        self.check_var_bound_rescue_state(input_var)?;
+        PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::check_var_bound_rescue_state(
+            self, input_var,
+        )?;
 
         let m = input_var.state[0].param_m();
 
@@ -548,7 +473,7 @@ where
         })
     }
 
-    fn non_linear_transform<T: RescueParameter>(
+    fn non_linear_transform(
         &mut self,
         input_var: &RescueNonNativeStateVar<F>,
         matrix: &RescueMatrix<T>,
@@ -557,7 +482,9 @@ where
         let m = input_var.modulus.param_m();
 
         // Check bounds for every variable
-        self.check_var_bound_rescue_state(input_var)?;
+        PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::check_var_bound_rescue_state(
+            self, input_var,
+        )?;
 
         // 1 prepare the input vector
         let input_fp_elem_var = input_var.state;
@@ -607,10 +534,7 @@ where
         }
     }
 
-    fn pow_alpha_inv<T: RescueParameter>(
-        &mut self,
-        input_var: FpElemVar<F>,
-    ) -> Result<FpElemVar<F>, CircuitError> {
+    fn pow_alpha_inv(&mut self, input_var: FpElemVar<F>) -> Result<FpElemVar<F>, CircuitError> {
         self.check_var_bound(input_var.components().0)?;
         self.check_var_bound(input_var.components().1)?;
 
@@ -643,43 +567,19 @@ where
         }
     }
 
-    fn create_rescue_state_variable<T: RescueParameter>(
-        &mut self,
-        state: &RescueVector<T>,
-    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
-        // parameter m
-        let m = (T::size_in_bits() / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
-
-        // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
-        let t = FpElem::new(&t_modulus, m, None)?;
-
-        // move rescue state to the plonk field
-        let state_f: Vec<F> = state
-            .elems()
-            .iter()
-            .map(|x| field_switching::<T, F>(x))
-            .collect();
-
-        // create vars for states
-        let mut state_split_var = [FpElemVar::<F>::default(); STATE_SIZE];
-        for (var, f) in state_split_var.iter_mut().zip(state_f.iter()) {
-            *var = FpElemVar::new_from_field_element(self, f, m, Some(t.two_power_m()))?;
-        }
-
-        Ok(RescueNonNativeStateVar {
-            state: state_split_var,
-            modulus: t,
-        })
-    }
-
     fn add_state(
         &mut self,
         left_state_var: &RescueNonNativeStateVar<F>,
         right_state_var: &RescueNonNativeStateVar<F>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
-        self.check_var_bound_rescue_state(left_state_var)?;
-        self.check_var_bound_rescue_state(right_state_var)?;
+        PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::check_var_bound_rescue_state(
+            self,
+            left_state_var,
+        )?;
+        PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::check_var_bound_rescue_state(
+            self,
+            right_state_var,
+        )?;
 
         if left_state_var.modulus != right_state_var.modulus {
             return Err(CircuitError::ParameterError(
@@ -703,41 +603,42 @@ where
         })
     }
 
-    fn key_schedule<T: RescueParameter>(
+    fn permutation_with_const_round_keys(
         &mut self,
+        input_var: RescueNonNativeStateVar<F>,
         mds: &RescueMatrix<T>,
-        key_var: &RescueNonNativeStateVar<F>,
-        prp_instance: &PRP<T>,
-    ) -> Result<Vec<RescueNonNativeStateVar<F>>, CircuitError> {
-        let mut aux = *prp_instance.init_vec_ref();
-        let key_injection_vec = prp_instance.key_injection_vec_ref();
-
-        let mut key_state_var = self.add_constant_state(key_var, &aux)?;
-        let mut result = vec![key_state_var.clone()];
-
-        for (r, key_injection_item) in key_injection_vec.iter().enumerate() {
-            aux.linear(mds, key_injection_item);
-            if r % 2 == 0 {
-                key_state_var = self.pow_alpha_inv_state::<T>(&key_state_var)?;
-                key_state_var = self.affine_transform(&key_state_var, mds, key_injection_item)?;
-            } else {
-                key_state_var =
-                    self.non_linear_transform(&key_state_var, mds, key_injection_item)?;
-            }
-            result.push(key_state_var.clone());
+        round_keys: &[RescueVector<T>],
+    ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
+        if (round_keys.len() != 2 * ROUNDS + 1) || (mds.len() != STATE_SIZE) {
+            return Err(CircuitError::ParameterError("data_vars".to_string()));
         }
 
-        Ok(result)
+        let mut state_var = self.add_constant_state(&input_var, &round_keys[0])?;
+        for (r, key) in round_keys.iter().skip(1).enumerate() {
+            if r % 2 == 0 {
+                state_var =
+                    PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::pow_alpha_inv_state(
+                        self, &state_var,
+                    )?;
+                state_var = self.affine_transform(&state_var, mds, key)?;
+            } else {
+                state_var = self.non_linear_transform(&state_var, mds, key)?;
+            }
+        }
+        Ok(state_var)
     }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
-    use crate::rescue::{
-        sponge::{RescueCRHF, RescuePRF},
-        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+    use super::{PermutationGadget, RescueNonNativeGadget, RescueNonNativeStateVar};
+    use crate::{
+        circuit::rescue::RescueGadget,
+        rescue::{
+            sponge::{RescueCRHF, RescuePRF},
+            Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+        },
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -853,7 +754,11 @@ mod tests {
             RescueVector::from(&[T::from(12u32), T::from(2u32), T::from(8u32), T::from(9u32)]);
 
         let input_var = circuit.create_rescue_state_variable(&state).unwrap();
-        let out_var = circuit.pow_alpha_inv_state::<T>(&input_var).unwrap();
+        let out_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::pow_alpha_inv_state(
+            &mut circuit,
+            &input_var,
+        )
+        .unwrap();
 
         let out_value: Vec<T> = (0..STATE_SIZE)
             .map(|i| state.elems()[i].pow(T::A_INV))
@@ -930,7 +835,8 @@ mod tests {
         let perm = Permutation::<T>::default();
         let state_out = perm.eval(&state_in);
 
-        let out_var = circuit.rescue_permutation::<T>(state_in_var).unwrap();
+        let out_var =
+            RescueNonNativeGadget::<T, F>::rescue_permutation(&mut circuit, state_in_var).unwrap();
 
         check_state(&circuit, &out_var, &state_out);
 
@@ -961,7 +867,12 @@ mod tests {
 
         let input1_var = circuit.create_rescue_state_variable(&state1).unwrap();
         let input2_var = circuit.create_rescue_state_variable(&state2).unwrap();
-        let out_var = circuit.add_state(&input1_var, &input2_var).unwrap();
+        let out_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
+            &mut circuit,
+            &input1_var,
+            &input2_var,
+        )
+        .unwrap();
 
         let out_value: Vec<T> = (0..STATE_SIZE)
             .map(|i| state1.elems()[i] + state2.elems()[i])
@@ -1022,7 +933,8 @@ mod tests {
         ]);
         let key_var = circuit.create_rescue_state_variable(&key_vec).unwrap();
         let input_var = circuit.create_rescue_state_variable(&input_vec).unwrap();
-        let out_var = circuit.prp::<T>(&key_var, &input_var).unwrap();
+        let out_var =
+            RescueNonNativeGadget::<T, F>::prp(&mut circuit, &key_var, &input_var).unwrap();
 
         let out_val = prp.prp(&key_vec, &input_vec);
 
@@ -1073,9 +985,12 @@ mod tests {
 
         // sponge no padding with output length 1
         let expected_sponge = RescueCRHF::sponge_no_padding(&data_t, 1).unwrap()[0];
-        let sponge_var = circuit
-            .rescue_sponge_no_padding::<T>(data_vars.as_slice(), 1)
-            .unwrap()[0];
+        let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(
+            &mut circuit,
+            data_vars.as_slice(),
+            1,
+        )
+        .unwrap()[0];
 
         assert_eq!(
             field_switching::<T, F>(&expected_sponge),
@@ -1092,9 +1007,12 @@ mod tests {
         // general sponge no padding
         for output_len in 1..max_output_len {
             let expected_sponge = RescueCRHF::sponge_no_padding(&data_t, output_len).unwrap();
-            let sponge_var = circuit
-                .rescue_sponge_no_padding::<T>(data_vars.as_slice(), output_len)
-                .unwrap();
+            let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(
+                &mut circuit,
+                data_vars.as_slice(),
+                output_len,
+            )
+            .unwrap();
             for (e, f) in expected_sponge.iter().zip(sponge_var.iter()) {
                 assert_eq!(field_switching::<T, F>(e), f.witness(&circuit).unwrap());
             }
@@ -1118,9 +1036,12 @@ mod tests {
             .map(|x| FpElemVar::new_from_field_element(&mut circuit, x, m, None).unwrap())
             .collect();
 
-        assert!(circuit
-            .rescue_sponge_no_padding::<T>(data_vars.as_slice(), 1)
-            .is_err());
+        assert!(RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(
+            &mut circuit,
+            data_vars.as_slice(),
+            1
+        )
+        .is_err());
     }
 
     #[test]
@@ -1155,9 +1076,12 @@ mod tests {
             let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, 1);
 
             // sponge with padding
-            let sponge_var = circuit
-                .rescue_sponge_with_padding::<T>(data_vars.as_slice(), 1)
-                .unwrap()[0];
+            let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_with_padding(
+                &mut circuit,
+                data_vars.as_slice(),
+                1,
+            )
+            .unwrap()[0];
 
             assert_eq!(
                 field_switching::<T, F>(&expected_sponge[0]),
@@ -1175,9 +1099,12 @@ mod tests {
             for output_len in 1..max_output_len {
                 let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, output_len);
 
-                let sponge_var = circuit
-                    .rescue_sponge_with_padding::<T>(data_vars.as_slice(), output_len)
-                    .unwrap();
+                let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_with_padding(
+                    &mut circuit,
+                    data_vars.as_slice(),
+                    output_len,
+                )
+                .unwrap();
 
                 for (e, f) in expected_sponge.iter().zip(sponge_var.iter()) {
                     assert_eq!(field_switching::<T, F>(e), f.witness(&circuit).unwrap());
@@ -1213,9 +1140,9 @@ mod tests {
             FpElemVar::new_from_field_element(&mut circuit, &input_vec_f[1], m, None).unwrap(),
             FpElemVar::new_from_field_element(&mut circuit, &input_vec_f[2], m, None).unwrap(),
         ];
-        let out_var = circuit
-            .rescue_sponge_no_padding::<T>(&input_var, 1)
-            .unwrap()[0];
+        let out_var =
+            RescueNonNativeGadget::<T, F>::rescue_sponge_no_padding(&mut circuit, &input_var, 1)
+                .unwrap()[0];
 
         // Check consistency between inputs
         for i in 0..rate {
@@ -1270,9 +1197,12 @@ mod tests {
         let expected_fsks_output =
             RescuePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
-        let fsks_var = circuit
-            .rescue_full_state_keyed_sponge_no_padding::<T>(key_var, &data_vars)
-            .unwrap();
+        let fsks_var = RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+            &mut circuit,
+            key_var,
+            &data_vars,
+        )
+        .unwrap();
 
         // Check prf output consistency
         assert_eq!(
@@ -1293,8 +1223,13 @@ mod tests {
             Some(key_var.two_power_m()),
         );
         data_vars.push(zero_var);
-        assert!(circuit
-            .rescue_full_state_keyed_sponge_no_padding::<T>(key_var, &data_vars)
-            .is_err());
+        assert!(
+            RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+                &mut circuit,
+                key_var,
+                &data_vars
+            )
+            .is_err()
+        );
     }
 }

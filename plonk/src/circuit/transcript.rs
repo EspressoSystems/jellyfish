@@ -12,7 +12,7 @@ use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
 use jf_primitives::{
-    circuit::rescue::RescueGadget,
+    circuit::rescue::RescueNativeGadget,
     rescue::{RescueParameter, STATE_SIZE},
 };
 use jf_relation::{
@@ -208,9 +208,9 @@ where
 
         // step 1. state: [F: STATE_SIZE] = hash(state|transcript)
         let input_var = [self.state_var.as_ref(), self.transcript_var.as_ref()].concat();
-        let res_var = circuit
-            .rescue_sponge_with_padding(&input_var, STATE_SIZE)
-            .unwrap();
+        let res_var =
+            RescueNativeGadget::<F>::rescue_sponge_with_padding(circuit, &input_var, STATE_SIZE)
+                .unwrap();
         let out_var = res_var[0];
 
         // step 2. challenge = state[0] in Fr
