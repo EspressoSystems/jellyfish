@@ -531,6 +531,11 @@
 <span id="531">531</span>
 <span id="532">532</span>
 <span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -541,7 +546,7 @@
 //! with a Rescue hash function.
 
 </span><span class="kw">use crate</span>::{
-    circuit::rescue::RescueGadget,
+    circuit::rescue::RescueNativeGadget,
     merkle_tree::{
         internal::MerkleNode, prelude::RescueMerkleTree, MerkleTreeScheme, ToTraversalPath,
     },
@@ -801,7 +806,11 @@
         <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
 
         <span class="comment">// leaf label = H(0, uid, arc)
-        </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>[zero_var, elem.uid, elem.elem], <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label = RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(
+            <span class="self">self</span>,
+            <span class="kw-2">&amp;</span>[zero_var, elem.uid, elem.elem],
+            <span class="number">1</span>,
+        )<span class="question-mark">?</span>[<span class="number">0</span>];
         <span class="kw">for </span>cur_node <span class="kw">in </span>path_vars.nodes.iter() {
             <span class="kw">let </span>input_labels = <span class="self">self</span>.permute(
                 cur_label,
@@ -812,7 +821,8 @@
             )<span class="question-mark">?</span>;
             <span class="comment">// check that the left child&#39;s label is non-zero
             </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
-            cur_label = <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+            cur_label =
+                RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
         }
         <span class="prelude-val">Ok</span>(cur_label)
     }

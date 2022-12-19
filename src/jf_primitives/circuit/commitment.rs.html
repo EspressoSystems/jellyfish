@@ -92,6 +92,7 @@
 <span id="92">92</span>
 <span id="93">93</span>
 <span id="94">94</span>
+<span id="95">95</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -101,12 +102,13 @@
 </span><span class="doccomment">//! Circuit implementation of the commitment scheme.
 
 </span><span class="kw">use crate</span>::{
-    circuit::rescue::RescueGadget,
     rescue::{RescueParameter, CRHF_RATE},
     utils::pad_with,
 };
 <span class="kw">use </span>ark_std::vec;
 <span class="kw">use </span>jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+
+<span class="kw">use </span><span class="kw">super</span>::rescue::RescueNativeGadget;
 
 <span class="doccomment">/// Circuit implementation of the commitment scheme.
 </span><span class="kw">pub trait </span>CommitmentGadget {
@@ -128,7 +130,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="macro">vec!</span>[blinding];
         msg.extend_from_slice(input);
         pad_with(<span class="kw-2">&amp;mut </span>msg, CRHF_RATE, <span class="self">self</span>.zero());
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>msg, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>])
+        <span class="prelude-val">Ok</span>(RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>msg, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>])
     }
 }
 

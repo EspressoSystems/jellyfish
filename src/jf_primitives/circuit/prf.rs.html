@@ -90,6 +90,7 @@
 <span id="90">90</span>
 <span id="91">91</span>
 <span id="92">92</span>
+<span id="93">93</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -99,11 +100,12 @@
 </span><span class="doccomment">//! Circuit implementation of a PRF.
 
 </span><span class="kw">use crate</span>::{
-    circuit::rescue::RescueGadget,
     rescue::{RescueParameter, STATE_SIZE},
     utils::pad_with,
 };
 <span class="kw">use </span>jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+
+<span class="kw">use </span><span class="kw">super</span>::rescue::RescueNativeGadget;
 
 <span class="doccomment">/// Circuit implementation of a PRF.
 </span><span class="kw">pub trait </span>PrfGadget {
@@ -124,7 +126,7 @@
 
         </span><span class="kw">let </span><span class="kw-2">mut </span>input_vec = input.to_vec();
         pad_with(<span class="kw-2">&amp;mut </span>input_vec, STATE_SIZE, <span class="self">self</span>.zero());
-        <span class="self">self</span>.rescue_full_state_keyed_sponge_no_padding(key, <span class="kw-2">&amp;</span>input_vec)
+        RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_no_padding(<span class="self">self</span>, key, <span class="kw-2">&amp;</span>input_vec)
     }
 }
 

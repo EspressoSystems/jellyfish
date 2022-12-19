@@ -1028,126 +1028,6 @@
 <span id="1028">1028</span>
 <span id="1029">1029</span>
 <span id="1030">1030</span>
-<span id="1031">1031</span>
-<span id="1032">1032</span>
-<span id="1033">1033</span>
-<span id="1034">1034</span>
-<span id="1035">1035</span>
-<span id="1036">1036</span>
-<span id="1037">1037</span>
-<span id="1038">1038</span>
-<span id="1039">1039</span>
-<span id="1040">1040</span>
-<span id="1041">1041</span>
-<span id="1042">1042</span>
-<span id="1043">1043</span>
-<span id="1044">1044</span>
-<span id="1045">1045</span>
-<span id="1046">1046</span>
-<span id="1047">1047</span>
-<span id="1048">1048</span>
-<span id="1049">1049</span>
-<span id="1050">1050</span>
-<span id="1051">1051</span>
-<span id="1052">1052</span>
-<span id="1053">1053</span>
-<span id="1054">1054</span>
-<span id="1055">1055</span>
-<span id="1056">1056</span>
-<span id="1057">1057</span>
-<span id="1058">1058</span>
-<span id="1059">1059</span>
-<span id="1060">1060</span>
-<span id="1061">1061</span>
-<span id="1062">1062</span>
-<span id="1063">1063</span>
-<span id="1064">1064</span>
-<span id="1065">1065</span>
-<span id="1066">1066</span>
-<span id="1067">1067</span>
-<span id="1068">1068</span>
-<span id="1069">1069</span>
-<span id="1070">1070</span>
-<span id="1071">1071</span>
-<span id="1072">1072</span>
-<span id="1073">1073</span>
-<span id="1074">1074</span>
-<span id="1075">1075</span>
-<span id="1076">1076</span>
-<span id="1077">1077</span>
-<span id="1078">1078</span>
-<span id="1079">1079</span>
-<span id="1080">1080</span>
-<span id="1081">1081</span>
-<span id="1082">1082</span>
-<span id="1083">1083</span>
-<span id="1084">1084</span>
-<span id="1085">1085</span>
-<span id="1086">1086</span>
-<span id="1087">1087</span>
-<span id="1088">1088</span>
-<span id="1089">1089</span>
-<span id="1090">1090</span>
-<span id="1091">1091</span>
-<span id="1092">1092</span>
-<span id="1093">1093</span>
-<span id="1094">1094</span>
-<span id="1095">1095</span>
-<span id="1096">1096</span>
-<span id="1097">1097</span>
-<span id="1098">1098</span>
-<span id="1099">1099</span>
-<span id="1100">1100</span>
-<span id="1101">1101</span>
-<span id="1102">1102</span>
-<span id="1103">1103</span>
-<span id="1104">1104</span>
-<span id="1105">1105</span>
-<span id="1106">1106</span>
-<span id="1107">1107</span>
-<span id="1108">1108</span>
-<span id="1109">1109</span>
-<span id="1110">1110</span>
-<span id="1111">1111</span>
-<span id="1112">1112</span>
-<span id="1113">1113</span>
-<span id="1114">1114</span>
-<span id="1115">1115</span>
-<span id="1116">1116</span>
-<span id="1117">1117</span>
-<span id="1118">1118</span>
-<span id="1119">1119</span>
-<span id="1120">1120</span>
-<span id="1121">1121</span>
-<span id="1122">1122</span>
-<span id="1123">1123</span>
-<span id="1124">1124</span>
-<span id="1125">1125</span>
-<span id="1126">1126</span>
-<span id="1127">1127</span>
-<span id="1128">1128</span>
-<span id="1129">1129</span>
-<span id="1130">1130</span>
-<span id="1131">1131</span>
-<span id="1132">1132</span>
-<span id="1133">1133</span>
-<span id="1134">1134</span>
-<span id="1135">1135</span>
-<span id="1136">1136</span>
-<span id="1137">1137</span>
-<span id="1138">1138</span>
-<span id="1139">1139</span>
-<span id="1140">1140</span>
-<span id="1141">1141</span>
-<span id="1142">1142</span>
-<span id="1143">1143</span>
-<span id="1144">1144</span>
-<span id="1145">1145</span>
-<span id="1146">1146</span>
-<span id="1147">1147</span>
-<span id="1148">1148</span>
-<span id="1149">1149</span>
-<span id="1150">1150</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1168,9 +1048,21 @@
 };
 <span class="kw">use </span>jf_utils::compute_len_to_next_multiple;
 
+<span class="kw">use super</span>::{PermutationGadget, RescueGadget, SpongeStateVar};
+
 <span class="attribute">#[derive(Clone, Debug)]
 </span><span class="doccomment">/// Array of variables representing a Rescue state (4 field elements).
 </span><span class="kw">pub struct </span>RescueStateVar(<span class="kw">pub</span>(<span class="kw">crate</span>) [Variable; STATE_SIZE]);
+
+<span class="doccomment">/// Type wrapper for the RescueGadget over the native field.
+</span><span class="kw">pub type </span>RescueNativeGadget&lt;F&gt; = <span class="kw">dyn </span>RescueGadget&lt;RescueStateVar, F, F&gt;;
+
+<span class="doccomment">/// For the native field, there is only really one field `F`.
+</span><span class="kw">impl</span>&lt;F&gt; SpongeStateVar&lt;F, F&gt; <span class="kw">for </span>RescueStateVar {
+    <span class="kw">type </span>Native = F;
+    <span class="kw">type </span>NonNative = F;
+    <span class="kw">type </span>Var = Variable;
+}
 
 <span class="kw">impl </span>From&lt;[Variable; STATE_SIZE]&gt; <span class="kw">for </span>RescueStateVar {
     <span class="kw">fn </span>from(arr: [Variable; STATE_SIZE]) -&gt; <span class="self">Self </span>{
@@ -1247,95 +1139,7 @@
     }
 }
 
-<span class="doccomment">/// Trait for rescue circuit over native field.
-</span><span class="kw">pub trait </span>RescueGadget&lt;F: RescueParameter&gt; {
-    <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 =
-    /// rescue_permutation(st_0)  where rescue_permutation is the instance
-    /// of the Rescue permutation defined by its respective constants
-    /// * `input_var` - variables corresponding to the input state
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>rescue_permutation(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: RescueStateVar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Rescue based Pseudo Random Permutation (PRP)
-    /// * `key_var` - rescue state variable corresponding to the cipher key
-    /// * `input_var` - rescue state variable corresponding to the plaintext
-    /// * `returns` - state variable corresponding to the cipher text
-    </span><span class="kw">fn </span>prp(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        key_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        input_var: <span class="kw-2">&amp;</span>RescueStateVar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables, `data_vars.len()` should be a
-    ///   positive integer that is a multiple of the sponge rate (i.e. 3)
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    </span><span class="kw">fn </span>rescue_sponge_no_padding(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        data_vars: <span class="kw-2">&amp;</span>[Variable],
-        num_output: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Variable&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables,
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    </span><span class="kw">fn </span>rescue_sponge_with_padding(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        data_vars: <span class="kw-2">&amp;</span>[Variable],
-        num_output: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Variable&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Full-State-Keyed-Sponge with a single output
-    /// * `key` - key variable
-    /// * `input` - input variables,
-    /// * `returns` a variable that refers to the output
-    </span><span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        key: Variable,
-        data_vars: <span class="kw-2">&amp;</span>[Variable],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
-
-    <span class="doccomment">/// Return the round keys variables for the Rescue block cipher
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_var` - state variable representing the cipher key
-    /// * `returns` - state variables corresponding to the scheduled keys
-    </span><span class="kw">fn </span>key_schedule(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        mds_states: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;,
-        key_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        prp_instance: <span class="kw-2">&amp;</span>PRP&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RescueStateVar&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Create a variable representing a rescue state
-    /// * `state` - Rescue state
-    /// * `returns` - state variables corresponding to the state
-    </span><span class="kw">fn </span>create_rescue_state_variable(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        state: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Return the variable corresponding to the output of the of the Rescue
-    /// PRP where the rounds keys have already been computed &quot;dynamically&quot;
-    /// * `input_var` - variable corresponding to the plain text
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_vars` - variables corresponding to the scheduled keys
-    /// * `returns` -
-    </span><span class="kw">fn </span>prp_with_round_keys(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;,
-        keys_vars: <span class="kw-2">&amp;</span>[RescueStateVar],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-}
-
-<span class="kw">impl</span>&lt;F&gt; RescueGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">impl</span>&lt;F&gt; RescueGadget&lt;RescueStateVar, F, F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: RescueParameter,
 {
@@ -1361,7 +1165,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt; {
         <span class="kw">let </span>prp_instance = PRP::&lt;F&gt;::default();
         <span class="kw">let </span>mds_states = prp_instance.mds_matrix_ref();
-        <span class="kw">let </span>keys_vars = <span class="self">self</span>.key_schedule(mds_states, key_var, <span class="kw-2">&amp;</span>prp_instance)<span class="question-mark">?</span>;
+        <span class="kw">let </span>keys_vars =
+            RescueNativeGadget::&lt;F&gt;::key_schedule(<span class="self">self</span>, mds_states, key_var, <span class="kw-2">&amp;</span>prp_instance)<span class="question-mark">?</span>;
         <span class="self">self</span>.prp_with_round_keys(input_var, mds_states, <span class="kw-2">&amp;</span>keys_vars)
     }
 
@@ -1379,7 +1184,7 @@
         <span class="comment">// ABSORB PHASE
         </span><span class="kw">let </span><span class="kw-2">mut </span>state_var =
             RescueStateVar::from([data_vars[<span class="number">0</span>], data_vars[<span class="number">1</span>], data_vars[<span class="number">2</span>], zero_var]);
-        state_var = <span class="self">self</span>.rescue_permutation(state_var)<span class="question-mark">?</span>;
+        state_var = RescueNativeGadget::&lt;F&gt;::rescue_permutation(<span class="self">self</span>, state_var)<span class="question-mark">?</span>;
 
         <span class="kw">for </span>block <span class="kw">in </span>data_vars[rate..].chunks_exact(rate) {
             state_var = <span class="self">self</span>.add_state(
@@ -1418,14 +1223,14 @@
         <span class="kw">let </span>rate = STATE_SIZE - <span class="number">1</span>;
         <span class="kw">let </span>data_len = compute_len_to_next_multiple(data_vars.len() + <span class="number">1</span>, rate);
 
-        <span class="kw">let </span>data_vars = [
+        <span class="kw">let </span>data_vars: Vec&lt;Variable&gt; = [
             data_vars,
             <span class="kw-2">&amp;</span>[<span class="self">self</span>.one()],
             <span class="macro">vec!</span>[zero_var; data_len - data_vars.len() - <span class="number">1</span>].as_ref(),
         ]
         .concat();
 
-        <span class="self">self</span>.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>data_vars, num_output)
+        RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>data_vars, num_output)
     }
 
     <span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding(
@@ -1446,7 +1251,7 @@
         <span class="kw">for </span>chunk <span class="kw">in </span>chunks {
             <span class="kw">let </span>chunk_var = RescueStateVar::from([chunk[<span class="number">0</span>], chunk[<span class="number">1</span>], chunk[<span class="number">2</span>], chunk[<span class="number">3</span>]]);
             state = <span class="self">self</span>.add_state(<span class="kw-2">&amp;</span>state, <span class="kw-2">&amp;</span>chunk_var)<span class="question-mark">?</span>;
-            state = <span class="self">self</span>.rescue_permutation(state)<span class="question-mark">?</span>;
+            state = RescueNativeGadget::&lt;F&gt;::rescue_permutation(<span class="self">self</span>, state)<span class="question-mark">?</span>;
         }
         <span class="comment">// squeeze phase, but only a single output, can return directly from state
         </span><span class="prelude-val">Ok</span>(state.<span class="number">0</span>[<span class="number">0</span>])
@@ -1521,99 +1326,7 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>RescueHelperGadget&lt;F: PrimeField&gt;: Circuit&lt;F&gt; {
-    <span class="kw">fn </span>check_var_bound_rescue_state(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        rescue_state: <span class="kw-2">&amp;</span>RescueStateVar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;;
-
-    <span class="kw">fn </span>add_constant_state(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        constant: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="kw">fn </span>add_state(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        left_state_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        right_state_var: <span class="kw-2">&amp;</span>RescueStateVar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Given a state st_0=(x_1,...,x_w) and st_1=(y_1,...,y_w),
-    /// add the constraints that ensure we have y_i=x_i ^{1/5} for i in
-    /// [1,...,w]
-    /// * `input_var` - rescue state variables st_0
-    /// * `returns` - rescue state variables st_1
-    </span><span class="kw">fn </span>pow_alpha_inv_state(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueStateVar,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 = M
-    /// st_0 + C where M is a Rescue matrix and c is a constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>affine_transform(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;,
-        constant: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Given an input state st_0=(x_1,...,x_w) and an output state
-    /// st_1=(y_1,...,y_m) y_i = \sum_{j=1}^w M_{i,j}x_j^alpha+c_i for all i in
-    /// [1,..,w] where M is a Rescue matrix and c=(c_1,...,c_w) is a
-    /// constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>non_linear_transform(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueStateVar,
-        matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;,
-        constant: <span class="kw-2">&amp;</span>RescueVector&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt;;
-
-    <span class="doccomment">/// Define a constraint such that y = x^(1/alpha).
-    /// It is implemented by setting q_{H1} y^alpha = q_O x
-    /// * `input_var`  - variable id corresponding to x in the equation above
-    /// * `returns` - the variable id corresponding to y
-    </span><span class="kw">fn </span>pow_alpha_inv(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input_var: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
-
-    <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 is
-    /// obtained by applying the rescue permutation with a specific  list of
-    /// round keys (i.e. the keys are constants) and a matrix
-    /// * `input_var` - variables corresponding to the input state
-    /// * `mds` - Rescue matrix
-    /// * `round_keys` - list of round keys
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>permutation_with_const_round_keys(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: RescueStateVar,
-        mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;,
-        round_keys: <span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt; {
-        <span class="kw">if </span>(round_keys.len() != <span class="number">2 </span>* ROUNDS + <span class="number">1</span>) || (mds.len() != STATE_SIZE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="string">&quot;data_vars&quot;</span>.to_string()));
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>state_var = <span class="self">self</span>.add_constant_state(<span class="kw-2">&amp;</span>input_var, <span class="kw-2">&amp;</span>round_keys[<span class="number">0</span>])<span class="question-mark">?</span>;
-        <span class="kw">for </span>(r, key) <span class="kw">in </span>round_keys.iter().skip(<span class="number">1</span>).enumerate() {
-            <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
-                state_var = <span class="self">self</span>.pow_alpha_inv_state(<span class="kw-2">&amp;</span>state_var)<span class="question-mark">?</span>;
-                state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
-            } <span class="kw">else </span>{
-                state_var = <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
-            }
-        }
-        <span class="prelude-val">Ok</span>(state_var)
-    }
-}
-
-<span class="kw">impl</span>&lt;F&gt; RescueHelperGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">impl</span>&lt;F&gt; PermutationGadget&lt;RescueStateVar, F, F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: RescueParameter,
 {
@@ -1655,7 +1368,7 @@
         <span class="kw">let </span>vars: <span class="prelude-ty">Result</span>&lt;Vec&lt;Variable&gt;, CircuitError&gt; = input_var
             .<span class="number">0
             </span>.iter()
-            .map(|var| <span class="self">self</span>.pow_alpha_inv(<span class="kw-2">*</span>var))
+            .map(|var| PermutationGadget::&lt;RescueStateVar, F, F&gt;::pow_alpha_inv(<span class="self">self</span>, <span class="kw-2">*</span>var))
             .collect();
         <span class="kw">let </span>vars = vars<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(RescueStateVar::from([vars[<span class="number">0</span>], vars[<span class="number">1</span>], vars[<span class="number">2</span>], vars[<span class="number">3</span>]]))
@@ -1795,15 +1508,40 @@
         }
         <span class="prelude-val">Ok</span>(res)
     }
+
+    <span class="kw">fn </span>permutation_with_const_round_keys(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        input_var: RescueStateVar,
+        mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;F&gt;,
+        round_keys: <span class="kw-2">&amp;</span>[RescueVector&lt;F&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueStateVar, CircuitError&gt; {
+        <span class="kw">if </span>(round_keys.len() != <span class="number">2 </span>* ROUNDS + <span class="number">1</span>) || (mds.len() != STATE_SIZE) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="string">&quot;data_vars&quot;</span>.to_string()));
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>state_var = <span class="self">self</span>.add_constant_state(<span class="kw-2">&amp;</span>input_var, <span class="kw-2">&amp;</span>round_keys[<span class="number">0</span>])<span class="question-mark">?</span>;
+        <span class="kw">for </span>(r, key) <span class="kw">in </span>round_keys.iter().skip(<span class="number">1</span>).enumerate() {
+            <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
+                state_var = <span class="self">self</span>.pow_alpha_inv_state(<span class="kw-2">&amp;</span>state_var)<span class="question-mark">?</span>;
+                state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                state_var = <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="prelude-val">Ok</span>(state_var)
+    }
 }
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
 
-    <span class="kw">use super</span>::{RescueGadget, RescueHelperGadget, RescueStateVar};
-    <span class="kw">use </span><span class="kw">crate</span>::rescue::{
-        sponge::{RescueCRHF, RescuePRF},
-        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+    <span class="kw">use super</span>::{PermutationGadget, RescueGadget, RescueStateVar};
+    <span class="kw">use crate</span>::{
+        circuit::rescue::RescueNativeGadget,
+        rescue::{
+            sponge::{RescueCRHF, RescuePRF},
+            Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+        },
     };
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
@@ -2123,9 +1861,12 @@
             .collect_vec();
 
         <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>data, <span class="number">1</span>).unwrap()[<span class="number">0</span>];
-        <span class="kw">let </span>sponge_var = circuit
-            .rescue_sponge_no_padding(data_vars.as_slice(), <span class="number">1</span>)
-            .unwrap()[<span class="number">0</span>];
+        <span class="kw">let </span>sponge_var = RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(
+            <span class="kw-2">&amp;mut </span>circuit,
+            data_vars.as_slice(),
+            <span class="number">1</span>,
+        )
+        .unwrap()[<span class="number">0</span>];
 
         <span class="macro">assert_eq!</span>(expected_sponge, circuit.witness(sponge_var).unwrap());
 
@@ -2144,9 +1885,12 @@
             .map(|<span class="kw-2">&amp;</span>x| circuit.create_variable(x).unwrap())
             .collect_vec();
 
-        <span class="macro">assert!</span>(circuit
-            .rescue_sponge_no_padding(data_vars.as_slice(), <span class="number">1</span>)
-            .is_err());
+        <span class="macro">assert!</span>(RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(
+            <span class="kw-2">&amp;mut </span>circuit,
+            data_vars.as_slice(),
+            <span class="number">1
+        </span>)
+        .is_err());
     }
 
     <span class="attribute">#[test]
@@ -2168,9 +1912,12 @@
         ];
 
         <span class="kw">for </span>output_len <span class="kw">in </span><span class="number">1</span>..<span class="number">10 </span>{
-            <span class="kw">let </span>out_var = circuit
-                .rescue_sponge_no_padding(<span class="kw-2">&amp;</span>input_var, output_len)
-                .unwrap();
+            <span class="kw">let </span>out_var = RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(
+                <span class="kw-2">&amp;mut </span>circuit,
+                <span class="kw-2">&amp;</span>input_var,
+                output_len,
+            )
+            .unwrap();
 
             <span class="comment">// Check consistency between inputs
             </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..rate {
@@ -2209,7 +1956,9 @@
             circuit.create_variable(input_vec[<span class="number">2</span>]).unwrap(),
             circuit.create_variable(input_vec[<span class="number">3</span>]).unwrap(),
         ];
-        <span class="macro">assert!</span>(circuit.rescue_sponge_no_padding(<span class="kw-2">&amp;</span>input_var, <span class="number">1</span>).is_err());
+        <span class="macro">assert!</span>(
+            RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>input_var, <span class="number">1</span>).is_err()
+        );
     }
 
     <span class="attribute">#[test]
@@ -2229,9 +1978,12 @@
                     .map(|x| circuit.create_variable(<span class="kw-2">*</span>x).unwrap())
                     .collect();
 
-                <span class="kw">let </span>out_var = circuit
-                    .rescue_sponge_with_padding(<span class="kw-2">&amp;</span>input_var, output_len)
-                    .unwrap();
+                <span class="kw">let </span>out_var = RescueNativeGadget::&lt;F&gt;::rescue_sponge_with_padding(
+                    <span class="kw-2">&amp;mut </span>circuit,
+                    <span class="kw-2">&amp;</span>input_var,
+                    output_len,
+                )
+                .unwrap();
 
                 <span class="comment">// Check consistency between inputs
                 </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..input_len {
@@ -2278,9 +2030,12 @@
         <span class="kw">let </span>expected_fsks_output =
             RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>data, <span class="number">1</span>).unwrap();
 
-        <span class="kw">let </span>fsks_var = circuit
-            .rescue_full_state_keyed_sponge_no_padding(key_var, <span class="kw-2">&amp;</span>data_vars)
-            .unwrap();
+        <span class="kw">let </span>fsks_var = RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_no_padding(
+            <span class="kw-2">&amp;mut </span>circuit,
+            key_var,
+            <span class="kw-2">&amp;</span>data_vars,
+        )
+        .unwrap();
 
         <span class="comment">// Check prf output consistency
         </span><span class="macro">assert_eq!</span>(expected_fsks_output[<span class="number">0</span>], circuit.witness(fsks_var).unwrap());
@@ -2293,9 +2048,14 @@
         <span class="comment">// make data_vars of bad length
         </span><span class="kw">let </span><span class="kw-2">mut </span>data_vars = data_vars;
         data_vars.push(circuit.zero());
-        <span class="macro">assert!</span>(circuit
-            .rescue_full_state_keyed_sponge_no_padding(key_var, <span class="kw-2">&amp;</span>data_vars)
-            .is_err());
+        <span class="macro">assert!</span>(
+            RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_no_padding(
+                <span class="kw-2">&amp;mut </span>circuit,
+                key_var,
+                <span class="kw-2">&amp;</span>data_vars
+            )
+            .is_err()
+        );
     }
 }
 </code></pre></div>

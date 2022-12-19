@@ -1233,71 +1233,6 @@
 <span id="1233">1233</span>
 <span id="1234">1234</span>
 <span id="1235">1235</span>
-<span id="1236">1236</span>
-<span id="1237">1237</span>
-<span id="1238">1238</span>
-<span id="1239">1239</span>
-<span id="1240">1240</span>
-<span id="1241">1241</span>
-<span id="1242">1242</span>
-<span id="1243">1243</span>
-<span id="1244">1244</span>
-<span id="1245">1245</span>
-<span id="1246">1246</span>
-<span id="1247">1247</span>
-<span id="1248">1248</span>
-<span id="1249">1249</span>
-<span id="1250">1250</span>
-<span id="1251">1251</span>
-<span id="1252">1252</span>
-<span id="1253">1253</span>
-<span id="1254">1254</span>
-<span id="1255">1255</span>
-<span id="1256">1256</span>
-<span id="1257">1257</span>
-<span id="1258">1258</span>
-<span id="1259">1259</span>
-<span id="1260">1260</span>
-<span id="1261">1261</span>
-<span id="1262">1262</span>
-<span id="1263">1263</span>
-<span id="1264">1264</span>
-<span id="1265">1265</span>
-<span id="1266">1266</span>
-<span id="1267">1267</span>
-<span id="1268">1268</span>
-<span id="1269">1269</span>
-<span id="1270">1270</span>
-<span id="1271">1271</span>
-<span id="1272">1272</span>
-<span id="1273">1273</span>
-<span id="1274">1274</span>
-<span id="1275">1275</span>
-<span id="1276">1276</span>
-<span id="1277">1277</span>
-<span id="1278">1278</span>
-<span id="1279">1279</span>
-<span id="1280">1280</span>
-<span id="1281">1281</span>
-<span id="1282">1282</span>
-<span id="1283">1283</span>
-<span id="1284">1284</span>
-<span id="1285">1285</span>
-<span id="1286">1286</span>
-<span id="1287">1287</span>
-<span id="1288">1288</span>
-<span id="1289">1289</span>
-<span id="1290">1290</span>
-<span id="1291">1291</span>
-<span id="1292">1292</span>
-<span id="1293">1293</span>
-<span id="1294">1294</span>
-<span id="1295">1295</span>
-<span id="1296">1296</span>
-<span id="1297">1297</span>
-<span id="1298">1298</span>
-<span id="1299">1299</span>
-<span id="1300">1300</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1322,6 +1257,8 @@
 };
 <span class="kw">use </span>jf_utils::{compute_len_to_next_multiple, field_switching};
 
+<span class="kw">use super</span>::{PermutationGadget, RescueGadget, SpongeStateVar};
+
 <span class="doccomment">/// Array of variables representing a Rescue state (4 field elements), and also
 /// the modulus of the non-native evaluating field.
 </span><span class="attribute">#[derive(Clone, Debug)]
@@ -1330,67 +1267,21 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) modulus: FpElem&lt;F&gt;,
 }
 
-<span class="doccomment">/// Trait for rescue circuit over non-native field.
-</span><span class="kw">pub trait </span>RescueNonNativeGadget&lt;F: PrimeField&gt; {
-    <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 =
-    /// rescue_permutation(st_0)  where rescue_permutation is the instance
-    /// of the Rescue permutation defined by its respective constants
-    /// * `input_var` - variables corresponding to the input state
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>rescue_permutation&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: RescueNonNativeStateVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
+<span class="doccomment">/// Type wrapper for the RescueGadget over the non-native field.
+</span><span class="kw">pub type </span>RescueNonNativeGadget&lt;T, F&gt; = <span class="kw">dyn </span>RescueGadget&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;;
 
-    <span class="doccomment">/// Rescue based Pseudo Random Permutation (PRP)
-    /// * `key_var` - rescue state variable corresponding to the cipher key
-    /// * `input_var` - rescue state variable corresponding to the plaintext
-    /// * `returns` - state variable corresponding to the cipher text
-    </span><span class="kw">fn </span>prp&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        key_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-        input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables, `data_vars.len()` should be a
-    ///   positive integer that is a multiple of the sponge rate (i.e. 3)
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    </span><span class="kw">fn </span>rescue_sponge_no_padding&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
-        num_output: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;FpElemVar&lt;F&gt;&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Sponge-based hashes from Rescue permutations
-    /// * `data_vars` - sponge input variables,
-    /// * `num_output` - number of output variables
-    /// * `returns` - a vector of variables that refers to the sponge hash
-    ///   output
-    </span><span class="kw">fn </span>rescue_sponge_with_padding&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
-        num_output: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;FpElemVar&lt;F&gt;&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Full-State-Keyed-Sponge with a single output
-    /// * `key` - key variable
-    /// * `input` - input variables,
-    /// * `returns` a variable that refers to the output
-    </span><span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        key: FpElemVar&lt;F&gt;,
-        data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;;
+<span class="kw">impl</span>&lt;T, F: PrimeField&gt; SpongeStateVar&lt;T, F&gt; <span class="kw">for </span>RescueNonNativeStateVar&lt;F&gt; {
+    <span class="kw">type </span>Native = T;
+    <span class="kw">type </span>NonNative = F;
+    <span class="kw">type </span>Var = FpElemVar&lt;F&gt;;
 }
 
-<span class="kw">impl</span>&lt;F&gt; RescueNonNativeGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">impl</span>&lt;T, F&gt; RescueGadget&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
+    T: RescueParameter,
 {
-    <span class="kw">fn </span>rescue_permutation&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>rescue_permutation(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input_var: RescueNonNativeStateVar&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
@@ -1405,7 +1296,7 @@
         <span class="self">self</span>.permutation_with_const_round_keys(input_var, mds_matrix, keys.as_slice())
     }
 
-    <span class="kw">fn </span>prp&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>prp(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
@@ -1416,7 +1307,7 @@
         <span class="self">self</span>.prp_with_round_keys(input_var, mds_states, <span class="kw-2">&amp;</span>keys_vars)
     }
 
-    <span class="kw">fn </span>rescue_sponge_with_padding&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>rescue_sponge_with_padding(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
         num_output: usize,
@@ -1440,10 +1331,10 @@
         ]
         .concat();
 
-        <span class="self">self</span>.rescue_sponge_no_padding::&lt;T&gt;(<span class="kw-2">&amp;</span>data_vars, num_output)
+        RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>data_vars, num_output)
     }
 
-    <span class="kw">fn </span>rescue_sponge_no_padding&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>rescue_sponge_no_padding(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
         num_output: usize,
@@ -1471,17 +1362,18 @@
             state: [data_vars[<span class="number">0</span>], data_vars[<span class="number">1</span>], data_vars[<span class="number">2</span>], zero_var],
             modulus,
         };
-        state_var = <span class="self">self</span>.rescue_permutation::&lt;T&gt;(state_var)<span class="question-mark">?</span>;
+        state_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_permutation(<span class="self">self</span>, state_var)<span class="question-mark">?</span>;
 
         <span class="kw">for </span>block <span class="kw">in </span>data_vars[rate..].chunks_exact(rate) {
-            state_var = <span class="self">self</span>.add_state(
+            state_var = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::add_state(
+                <span class="self">self</span>,
                 <span class="kw-2">&amp;</span>state_var,
                 <span class="kw-2">&amp;</span>RescueNonNativeStateVar {
                     state: [block[<span class="number">0</span>], block[<span class="number">1</span>], block[<span class="number">2</span>], zero_var],
                     modulus,
                 },
             )<span class="question-mark">?</span>;
-            state_var = <span class="self">self</span>.rescue_permutation::&lt;T&gt;(state_var)<span class="question-mark">?</span>;
+            state_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_permutation(<span class="self">self</span>, state_var)<span class="question-mark">?</span>;
         }
         <span class="comment">// SQUEEZE PHASE
         </span><span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[];
@@ -1494,13 +1386,13 @@
             <span class="kw">if </span>remaining == <span class="number">0 </span>{
                 <span class="kw">break</span>;
             }
-            state_var = <span class="self">self</span>.rescue_permutation::&lt;T&gt;(state_var)<span class="question-mark">?</span>;
+            state_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_permutation(<span class="self">self</span>, state_var)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(result)
     }
 
-    <span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key: FpElemVar&lt;F&gt;,
         data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
@@ -1537,94 +1429,75 @@
                 state: [chunk[<span class="number">0</span>], chunk[<span class="number">1</span>], chunk[<span class="number">2</span>], chunk[<span class="number">3</span>]],
                 modulus,
             };
-            state = <span class="self">self</span>.add_state(<span class="kw-2">&amp;</span>state, <span class="kw-2">&amp;</span>chunk_var)<span class="question-mark">?</span>;
-            state = <span class="self">self</span>.rescue_permutation::&lt;T&gt;(state)<span class="question-mark">?</span>;
+            state = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::add_state(
+                <span class="self">self</span>, <span class="kw-2">&amp;</span>state, <span class="kw-2">&amp;</span>chunk_var,
+            )<span class="question-mark">?</span>;
+            state = RescueNonNativeGadget::&lt;T, F&gt;::rescue_permutation(<span class="self">self</span>, state)<span class="question-mark">?</span>;
         }
         <span class="comment">// squeeze phase, but only a single output, can return directly from state
         </span><span class="prelude-val">Ok</span>(state.state[<span class="number">0</span>])
     }
-}
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>RescueNonNativeHelperGadget&lt;F: PrimeField&gt;: Circuit&lt;F&gt; {
-    <span class="kw">fn </span>check_var_bound_rescue_state(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        rescue_state: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;;
-
-    <span class="kw">fn </span>create_rescue_state_variable&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>create_rescue_state_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         state: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
+        <span class="comment">// parameter m
+        </span><span class="kw">let </span>m = (T::size_in_bits() / <span class="number">2 </span>/ <span class="self">self</span>.range_bit_len()<span class="question-mark">? </span>+ <span class="number">1</span>) * <span class="self">self</span>.range_bit_len()<span class="question-mark">?</span>;
 
-    <span class="kw">fn </span>add_constant_state&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-        constant: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
+        <span class="comment">// move the modulus to the right field
+        </span><span class="kw">let </span>t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        <span class="kw">let </span>t = FpElem::new(<span class="kw-2">&amp;</span>t_modulus, m, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">fn </span>add_state(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        left_state_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-        right_state_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
+        <span class="comment">// move rescue state to the plonk field
+        </span><span class="kw">let </span>state_f: Vec&lt;F&gt; = state
+            .elems()
+            .iter()
+            .map(|x| field_switching::&lt;T, F&gt;(x))
+            .collect();
 
-    <span class="doccomment">/// Given a state st_0=(x_1,...,x_w) and st_1=(y_1,...,y_w),
-    /// add the constraints that ensure we have y_i=x_i ^{1/11} for i in
-    /// [1,...,w]
-    /// * `input_var` - rescue state variables st_0
-    /// * `returns` - rescue state variables st_1
-    </span><span class="kw">fn </span>pow_alpha_inv_state&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
+        <span class="comment">// create vars for states
+        </span><span class="kw">let </span><span class="kw-2">mut </span>state_split_var = [FpElemVar::&lt;F&gt;::default(); STATE_SIZE];
+        <span class="kw">for </span>(var, f) <span class="kw">in </span>state_split_var.iter_mut().zip(state_f.iter()) {
+            <span class="kw-2">*</span>var = FpElemVar::new_from_field_element(<span class="self">self</span>, f, m, <span class="prelude-val">Some</span>(t.two_power_m()))<span class="question-mark">?</span>;
+        }
 
-    <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 = M
-    /// st_0 + C where M is a Rescue matrix and c is a constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>affine_transform&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-        matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
-        constant: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
+        <span class="prelude-val">Ok</span>(RescueNonNativeStateVar {
+            state: state_split_var,
+            modulus: t,
+        })
+    }
 
-    <span class="doccomment">/// Given an input state st_0=(x_1,...,x_w) and an output state
-    /// st_1=(y_1,...,y_m) y_i = \sum_{j=1}^w M_{i,j}x_j^alpha+c_i for all i in
-    /// [1,..,w] where M is a Rescue matrix and c=(c_1,...,c_w) is a
-    /// constant vector
-    /// * `input_var` - variables corresponding to the input state
-    /// * `matrix` - matrix M in the description above
-    /// * `constant` - constant c in the description above
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>non_linear_transform&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>key_schedule(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-        matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
-        constant: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Define a constraint such that y = x^(1/alpha).
-    /// It is implemented by setting q_{H1} y^alpha = q_O x
-    /// * `input_var`  - variable id corresponding to x in the equation above
-    /// * `returns` - the variable id corresponding to y
-    </span><span class="kw">fn </span>pow_alpha_inv&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: FpElemVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;;
-
-    <span class="doccomment">/// Return the round keys variables for the Rescue block cipher
-    /// * `mds_states` - Rescue MDS matrix
-    /// * `key_var` - state variable representing the cipher key
-    /// * `returns` - state variables corresponding to the scheduled keys
-    </span><span class="kw">fn </span>key_schedule&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        mds_states: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
+        mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
         key_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         prp_instance: <span class="kw-2">&amp;</span>PRP&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RescueNonNativeStateVar&lt;F&gt;&gt;, CircuitError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RescueNonNativeStateVar&lt;F&gt;&gt;, CircuitError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = <span class="kw-2">*</span>prp_instance.init_vec_ref();
+        <span class="kw">let </span>key_injection_vec = prp_instance.key_injection_vec_ref();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>key_state_var = <span class="self">self</span>.add_constant_state(key_var, <span class="kw-2">&amp;</span>aux)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[key_state_var.clone()];
+
+        <span class="kw">for </span>(r, key_injection_item) <span class="kw">in </span>key_injection_vec.iter().enumerate() {
+            aux.linear(mds, key_injection_item);
+            <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
+                key_state_var =
+                    PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::pow_alpha_inv_state(
+                        <span class="self">self</span>,
+                        <span class="kw-2">&amp;</span>key_state_var,
+                    )<span class="question-mark">?</span>;
+                key_state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>key_state_var, mds, key_injection_item)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                key_state_var =
+                    <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>key_state_var, mds, key_injection_item)<span class="question-mark">?</span>;
+            }
+            result.push(key_state_var.clone());
+        }
+
+        <span class="prelude-val">Ok</span>(result)
+    }
 
     <span class="doccomment">/// Return the variable corresponding to the output of the of the Rescue
     /// PRP where the rounds keys have already been computed &quot;dynamically&quot;
@@ -1632,7 +1505,7 @@
     /// * `mds_states` - Rescue MDS matrix
     /// * `key_vars` - variables corresponding to the scheduled keys
     /// * `returns` -
-    </span><span class="kw">fn </span>prp_with_round_keys&lt;T: RescueParameter&gt;(
+    </span><span class="kw">fn </span>prp_with_round_keys(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
@@ -1643,53 +1516,34 @@
         }
 
         <span class="kw">let </span>zero_state = RescueVector::from(<span class="kw-2">&amp;</span>[T::zero(); STATE_SIZE]);
-        <span class="kw">let </span><span class="kw-2">mut </span>state_var = <span class="self">self</span>.add_state(input_var, <span class="kw-2">&amp;</span>keys_vars[<span class="number">0</span>])<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>state_var = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::add_state(
+            <span class="self">self</span>,
+            input_var,
+            <span class="kw-2">&amp;</span>keys_vars[<span class="number">0</span>],
+        )<span class="question-mark">?</span>;
         <span class="kw">for </span>(r, key_var) <span class="kw">in </span>keys_vars.iter().skip(<span class="number">1</span>).enumerate() {
             <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
-                state_var = <span class="self">self</span>.pow_alpha_inv_state::&lt;T&gt;(<span class="kw-2">&amp;</span>state_var)<span class="question-mark">?</span>;
+                state_var =
+                    PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::pow_alpha_inv_state(
+                        <span class="self">self</span>, <span class="kw-2">&amp;</span>state_var,
+                    )<span class="question-mark">?</span>;
                 state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>state_var, mds, <span class="kw-2">&amp;</span>zero_state)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
                 state_var = <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>state_var, mds, <span class="kw-2">&amp;</span>zero_state)<span class="question-mark">?</span>;
             }
 
-            state_var = <span class="self">self</span>.add_state(<span class="kw-2">&amp;</span>state_var, key_var)<span class="question-mark">?</span>;
-        }
-        <span class="prelude-val">Ok</span>(state_var)
-    }
-
-    <span class="doccomment">/// Given an input state st_0 and an output state st_1, ensure that st_1 is
-    /// obtained by applying the rescue permutation with a specific  list of
-    /// round keys (i.e. the keys are constants) and a matrix
-    /// * `input_var` - variables corresponding to the input state
-    /// * `mds` - Rescue matrix
-    /// * `round_keys` - list of round keys
-    /// * `returns` - variables corresponding to the output state
-    </span><span class="kw">fn </span>permutation_with_const_round_keys&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: RescueNonNativeStateVar&lt;F&gt;,
-        mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
-        round_keys: <span class="kw-2">&amp;</span>[RescueVector&lt;T&gt;],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
-        <span class="kw">if </span>(round_keys.len() != <span class="number">2 </span>* ROUNDS + <span class="number">1</span>) || (mds.len() != STATE_SIZE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="string">&quot;data_vars&quot;</span>.to_string()));
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>state_var = <span class="self">self</span>.add_constant_state(<span class="kw-2">&amp;</span>input_var, <span class="kw-2">&amp;</span>round_keys[<span class="number">0</span>])<span class="question-mark">?</span>;
-        <span class="kw">for </span>(r, key) <span class="kw">in </span>round_keys.iter().skip(<span class="number">1</span>).enumerate() {
-            <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
-                state_var = <span class="self">self</span>.pow_alpha_inv_state::&lt;T&gt;(<span class="kw-2">&amp;</span>state_var)<span class="question-mark">?</span>;
-                state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
-            } <span class="kw">else </span>{
-                state_var = <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
-            }
+            state_var = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::add_state(
+                <span class="self">self</span>, <span class="kw-2">&amp;</span>state_var, key_var,
+            )<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(state_var)
     }
 }
 
-<span class="kw">impl</span>&lt;F&gt; RescueNonNativeHelperGadget&lt;F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">impl</span>&lt;T, F&gt; PermutationGadget&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
+    T: RescueParameter,
 {
     <span class="kw">fn </span>check_var_bound_rescue_state(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1703,13 +1557,15 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>add_constant_state&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>add_constant_state(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         constant: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
         <span class="comment">// Check bounds for every variable
-        </span><span class="self">self</span>.check_var_bound_rescue_state(input_var)<span class="question-mark">?</span>;
+        </span>PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::check_var_bound_rescue_state(
+            <span class="self">self</span>, input_var,
+        )<span class="question-mark">?</span>;
 
         <span class="comment">// move constant to the plonk field
         </span><span class="kw">let </span>constant_f: Vec&lt;F&gt; = constant
@@ -1744,16 +1600,18 @@
         })
     }
 
-    <span class="kw">fn </span>pow_alpha_inv_state&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>pow_alpha_inv_state(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
         <span class="comment">// Check bounds for every variable
-        </span><span class="self">self</span>.check_var_bound_rescue_state(input_var)<span class="question-mark">?</span>;
+        </span>PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::check_var_bound_rescue_state(
+            <span class="self">self</span>, input_var,
+        )<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = [FpElemVar::default(); STATE_SIZE];
         <span class="kw">for </span>(e, f) <span class="kw">in </span>state.iter_mut().zip(input_var.state.iter()) {
-            <span class="kw-2">*</span>e = <span class="self">self</span>.pow_alpha_inv::&lt;T&gt;(<span class="kw-2">*</span>f)<span class="question-mark">?</span>;
+            <span class="kw-2">*</span>e = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::pow_alpha_inv(<span class="self">self</span>, <span class="kw-2">*</span>f)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(RescueNonNativeStateVar {
@@ -1762,14 +1620,16 @@
         })
     }
 
-    <span class="kw">fn </span>affine_transform&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>affine_transform(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
         constant: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
         <span class="comment">// Check bounds for every variable
-        </span><span class="self">self</span>.check_var_bound_rescue_state(input_var)<span class="question-mark">?</span>;
+        </span>PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::check_var_bound_rescue_state(
+            <span class="self">self</span>, input_var,
+        )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>m = input_var.state[<span class="number">0</span>].param_m();
 
@@ -1848,7 +1708,7 @@
         })
     }
 
-    <span class="kw">fn </span>non_linear_transform&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>non_linear_transform(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         matrix: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
@@ -1857,7 +1717,9 @@
         <span class="kw">let </span>m = input_var.modulus.param_m();
 
         <span class="comment">// Check bounds for every variable
-        </span><span class="self">self</span>.check_var_bound_rescue_state(input_var)<span class="question-mark">?</span>;
+        </span>PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::check_var_bound_rescue_state(
+            <span class="self">self</span>, input_var,
+        )<span class="question-mark">?</span>;
 
         <span class="comment">// 1 prepare the input vector
         </span><span class="kw">let </span>input_fp_elem_var = input_var.state;
@@ -1907,10 +1769,7 @@
         }
     }
 
-    <span class="kw">fn </span>pow_alpha_inv&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        input_var: FpElemVar&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
+    <span class="kw">fn </span>pow_alpha_inv(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input_var: FpElemVar&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
         <span class="self">self</span>.check_var_bound(input_var.components().<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.check_var_bound(input_var.components().<span class="number">1</span>)<span class="question-mark">?</span>;
 
@@ -1943,43 +1802,19 @@
         }
     }
 
-    <span class="kw">fn </span>create_rescue_state_variable&lt;T: RescueParameter&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        state: <span class="kw-2">&amp;</span>RescueVector&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
-        <span class="comment">// parameter m
-        </span><span class="kw">let </span>m = (T::size_in_bits() / <span class="number">2 </span>/ <span class="self">self</span>.range_bit_len()<span class="question-mark">? </span>+ <span class="number">1</span>) * <span class="self">self</span>.range_bit_len()<span class="question-mark">?</span>;
-
-        <span class="comment">// move the modulus to the right field
-        </span><span class="kw">let </span>t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
-        <span class="kw">let </span>t = FpElem::new(<span class="kw-2">&amp;</span>t_modulus, m, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-
-        <span class="comment">// move rescue state to the plonk field
-        </span><span class="kw">let </span>state_f: Vec&lt;F&gt; = state
-            .elems()
-            .iter()
-            .map(|x| field_switching::&lt;T, F&gt;(x))
-            .collect();
-
-        <span class="comment">// create vars for states
-        </span><span class="kw">let </span><span class="kw-2">mut </span>state_split_var = [FpElemVar::&lt;F&gt;::default(); STATE_SIZE];
-        <span class="kw">for </span>(var, f) <span class="kw">in </span>state_split_var.iter_mut().zip(state_f.iter()) {
-            <span class="kw-2">*</span>var = FpElemVar::new_from_field_element(<span class="self">self</span>, f, m, <span class="prelude-val">Some</span>(t.two_power_m()))<span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(RescueNonNativeStateVar {
-            state: state_split_var,
-            modulus: t,
-        })
-    }
-
     <span class="kw">fn </span>add_state(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         left_state_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
         right_state_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
-        <span class="self">self</span>.check_var_bound_rescue_state(left_state_var)<span class="question-mark">?</span>;
-        <span class="self">self</span>.check_var_bound_rescue_state(right_state_var)<span class="question-mark">?</span>;
+        PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::check_var_bound_rescue_state(
+            <span class="self">self</span>,
+            left_state_var,
+        )<span class="question-mark">?</span>;
+        PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::check_var_bound_rescue_state(
+            <span class="self">self</span>,
+            right_state_var,
+        )<span class="question-mark">?</span>;
 
         <span class="kw">if </span>left_state_var.modulus != right_state_var.modulus {
             <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(
@@ -2003,41 +1838,42 @@
         })
     }
 
-    <span class="kw">fn </span>key_schedule&lt;T: RescueParameter&gt;(
+    <span class="kw">fn </span>permutation_with_const_round_keys(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        input_var: RescueNonNativeStateVar&lt;F&gt;,
         mds: <span class="kw-2">&amp;</span>RescueMatrix&lt;T&gt;,
-        key_var: <span class="kw-2">&amp;</span>RescueNonNativeStateVar&lt;F&gt;,
-        prp_instance: <span class="kw-2">&amp;</span>PRP&lt;T&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RescueNonNativeStateVar&lt;F&gt;&gt;, CircuitError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>aux = <span class="kw-2">*</span>prp_instance.init_vec_ref();
-        <span class="kw">let </span>key_injection_vec = prp_instance.key_injection_vec_ref();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>key_state_var = <span class="self">self</span>.add_constant_state(key_var, <span class="kw-2">&amp;</span>aux)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[key_state_var.clone()];
-
-        <span class="kw">for </span>(r, key_injection_item) <span class="kw">in </span>key_injection_vec.iter().enumerate() {
-            aux.linear(mds, key_injection_item);
-            <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
-                key_state_var = <span class="self">self</span>.pow_alpha_inv_state::&lt;T&gt;(<span class="kw-2">&amp;</span>key_state_var)<span class="question-mark">?</span>;
-                key_state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>key_state_var, mds, key_injection_item)<span class="question-mark">?</span>;
-            } <span class="kw">else </span>{
-                key_state_var =
-                    <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>key_state_var, mds, key_injection_item)<span class="question-mark">?</span>;
-            }
-            result.push(key_state_var.clone());
+        round_keys: <span class="kw-2">&amp;</span>[RescueVector&lt;T&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;RescueNonNativeStateVar&lt;F&gt;, CircuitError&gt; {
+        <span class="kw">if </span>(round_keys.len() != <span class="number">2 </span>* ROUNDS + <span class="number">1</span>) || (mds.len() != STATE_SIZE) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(<span class="string">&quot;data_vars&quot;</span>.to_string()));
         }
 
-        <span class="prelude-val">Ok</span>(result)
+        <span class="kw">let </span><span class="kw-2">mut </span>state_var = <span class="self">self</span>.add_constant_state(<span class="kw-2">&amp;</span>input_var, <span class="kw-2">&amp;</span>round_keys[<span class="number">0</span>])<span class="question-mark">?</span>;
+        <span class="kw">for </span>(r, key) <span class="kw">in </span>round_keys.iter().skip(<span class="number">1</span>).enumerate() {
+            <span class="kw">if </span>r % <span class="number">2 </span>== <span class="number">0 </span>{
+                state_var =
+                    PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::pow_alpha_inv_state(
+                        <span class="self">self</span>, <span class="kw-2">&amp;</span>state_var,
+                    )<span class="question-mark">?</span>;
+                state_var = <span class="self">self</span>.affine_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                state_var = <span class="self">self</span>.non_linear_transform(<span class="kw-2">&amp;</span>state_var, mds, key)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="prelude-val">Ok</span>(state_var)
     }
 }
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
 
-    <span class="kw">use super</span>::{RescueNonNativeGadget, RescueNonNativeHelperGadget, RescueNonNativeStateVar};
-    <span class="kw">use </span><span class="kw">crate</span>::rescue::{
-        sponge::{RescueCRHF, RescuePRF},
-        Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+    <span class="kw">use super</span>::{PermutationGadget, RescueNonNativeGadget, RescueNonNativeStateVar};
+    <span class="kw">use crate</span>::{
+        circuit::rescue::RescueGadget,
+        rescue::{
+            sponge::{RescueCRHF, RescuePRF},
+            Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
+        },
     };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
@@ -2153,7 +1989,11 @@
             RescueVector::from(<span class="kw-2">&amp;</span>[T::from(<span class="number">12u32</span>), T::from(<span class="number">2u32</span>), T::from(<span class="number">8u32</span>), T::from(<span class="number">9u32</span>)]);
 
         <span class="kw">let </span>input_var = circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>state).unwrap();
-        <span class="kw">let </span>out_var = circuit.pow_alpha_inv_state::&lt;T&gt;(<span class="kw-2">&amp;</span>input_var).unwrap();
+        <span class="kw">let </span>out_var = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::pow_alpha_inv_state(
+            <span class="kw-2">&amp;mut </span>circuit,
+            <span class="kw-2">&amp;</span>input_var,
+        )
+        .unwrap();
 
         <span class="kw">let </span>out_value: Vec&lt;T&gt; = (<span class="number">0</span>..STATE_SIZE)
             .map(|i| state.elems()[i].pow(T::A_INV))
@@ -2230,7 +2070,8 @@
         <span class="kw">let </span>perm = Permutation::&lt;T&gt;::default();
         <span class="kw">let </span>state_out = perm.eval(<span class="kw-2">&amp;</span>state_in);
 
-        <span class="kw">let </span>out_var = circuit.rescue_permutation::&lt;T&gt;(state_in_var).unwrap();
+        <span class="kw">let </span>out_var =
+            RescueNonNativeGadget::&lt;T, F&gt;::rescue_permutation(<span class="kw-2">&amp;mut </span>circuit, state_in_var).unwrap();
 
         check_state(<span class="kw-2">&amp;</span>circuit, <span class="kw-2">&amp;</span>out_var, <span class="kw-2">&amp;</span>state_out);
 
@@ -2261,7 +2102,12 @@
 
         <span class="kw">let </span>input1_var = circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>state1).unwrap();
         <span class="kw">let </span>input2_var = circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>state2).unwrap();
-        <span class="kw">let </span>out_var = circuit.add_state(<span class="kw-2">&amp;</span>input1_var, <span class="kw-2">&amp;</span>input2_var).unwrap();
+        <span class="kw">let </span>out_var = PermutationGadget::&lt;RescueNonNativeStateVar&lt;F&gt;, T, F&gt;::add_state(
+            <span class="kw-2">&amp;mut </span>circuit,
+            <span class="kw-2">&amp;</span>input1_var,
+            <span class="kw-2">&amp;</span>input2_var,
+        )
+        .unwrap();
 
         <span class="kw">let </span>out_value: Vec&lt;T&gt; = (<span class="number">0</span>..STATE_SIZE)
             .map(|i| state1.elems()[i] + state2.elems()[i])
@@ -2322,7 +2168,8 @@
         ]);
         <span class="kw">let </span>key_var = circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>key_vec).unwrap();
         <span class="kw">let </span>input_var = circuit.create_rescue_state_variable(<span class="kw-2">&amp;</span>input_vec).unwrap();
-        <span class="kw">let </span>out_var = circuit.prp::&lt;T&gt;(<span class="kw-2">&amp;</span>key_var, <span class="kw-2">&amp;</span>input_var).unwrap();
+        <span class="kw">let </span>out_var =
+            RescueNonNativeGadget::&lt;T, F&gt;::prp(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>key_var, <span class="kw-2">&amp;</span>input_var).unwrap();
 
         <span class="kw">let </span>out_val = prp.prp(<span class="kw-2">&amp;</span>key_vec, <span class="kw-2">&amp;</span>input_vec);
 
@@ -2373,9 +2220,12 @@
 
         <span class="comment">// sponge no padding with output length 1
         </span><span class="kw">let </span>expected_sponge = RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap()[<span class="number">0</span>];
-        <span class="kw">let </span>sponge_var = circuit
-            .rescue_sponge_no_padding::&lt;T&gt;(data_vars.as_slice(), <span class="number">1</span>)
-            .unwrap()[<span class="number">0</span>];
+        <span class="kw">let </span>sponge_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_no_padding(
+            <span class="kw-2">&amp;mut </span>circuit,
+            data_vars.as_slice(),
+            <span class="number">1</span>,
+        )
+        .unwrap()[<span class="number">0</span>];
 
         <span class="macro">assert_eq!</span>(
             field_switching::&lt;T, F&gt;(<span class="kw-2">&amp;</span>expected_sponge),
@@ -2392,9 +2242,12 @@
         <span class="comment">// general sponge no padding
         </span><span class="kw">for </span>output_len <span class="kw">in </span><span class="number">1</span>..max_output_len {
             <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>data_t, output_len).unwrap();
-            <span class="kw">let </span>sponge_var = circuit
-                .rescue_sponge_no_padding::&lt;T&gt;(data_vars.as_slice(), output_len)
-                .unwrap();
+            <span class="kw">let </span>sponge_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_no_padding(
+                <span class="kw-2">&amp;mut </span>circuit,
+                data_vars.as_slice(),
+                output_len,
+            )
+            .unwrap();
             <span class="kw">for </span>(e, f) <span class="kw">in </span>expected_sponge.iter().zip(sponge_var.iter()) {
                 <span class="macro">assert_eq!</span>(field_switching::&lt;T, F&gt;(e), f.witness(<span class="kw-2">&amp;</span>circuit).unwrap());
             }
@@ -2418,9 +2271,12 @@
             .map(|x| FpElemVar::new_from_field_element(<span class="kw-2">&amp;mut </span>circuit, x, m, <span class="prelude-val">None</span>).unwrap())
             .collect();
 
-        <span class="macro">assert!</span>(circuit
-            .rescue_sponge_no_padding::&lt;T&gt;(data_vars.as_slice(), <span class="number">1</span>)
-            .is_err());
+        <span class="macro">assert!</span>(RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_no_padding(
+            <span class="kw-2">&amp;mut </span>circuit,
+            data_vars.as_slice(),
+            <span class="number">1
+        </span>)
+        .is_err());
     }
 
     <span class="attribute">#[test]
@@ -2455,9 +2311,12 @@
             <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>);
 
             <span class="comment">// sponge with padding
-            </span><span class="kw">let </span>sponge_var = circuit
-                .rescue_sponge_with_padding::&lt;T&gt;(data_vars.as_slice(), <span class="number">1</span>)
-                .unwrap()[<span class="number">0</span>];
+            </span><span class="kw">let </span>sponge_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_with_padding(
+                <span class="kw-2">&amp;mut </span>circuit,
+                data_vars.as_slice(),
+                <span class="number">1</span>,
+            )
+            .unwrap()[<span class="number">0</span>];
 
             <span class="macro">assert_eq!</span>(
                 field_switching::&lt;T, F&gt;(<span class="kw-2">&amp;</span>expected_sponge[<span class="number">0</span>]),
@@ -2475,9 +2334,12 @@
             </span><span class="kw">for </span>output_len <span class="kw">in </span><span class="number">1</span>..max_output_len {
                 <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>data_t, output_len);
 
-                <span class="kw">let </span>sponge_var = circuit
-                    .rescue_sponge_with_padding::&lt;T&gt;(data_vars.as_slice(), output_len)
-                    .unwrap();
+                <span class="kw">let </span>sponge_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_with_padding(
+                    <span class="kw-2">&amp;mut </span>circuit,
+                    data_vars.as_slice(),
+                    output_len,
+                )
+                .unwrap();
 
                 <span class="kw">for </span>(e, f) <span class="kw">in </span>expected_sponge.iter().zip(sponge_var.iter()) {
                     <span class="macro">assert_eq!</span>(field_switching::&lt;T, F&gt;(e), f.witness(<span class="kw-2">&amp;</span>circuit).unwrap());
@@ -2513,9 +2375,9 @@
             FpElemVar::new_from_field_element(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>input_vec_f[<span class="number">1</span>], m, <span class="prelude-val">None</span>).unwrap(),
             FpElemVar::new_from_field_element(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>input_vec_f[<span class="number">2</span>], m, <span class="prelude-val">None</span>).unwrap(),
         ];
-        <span class="kw">let </span>out_var = circuit
-            .rescue_sponge_no_padding::&lt;T&gt;(<span class="kw-2">&amp;</span>input_var, <span class="number">1</span>)
-            .unwrap()[<span class="number">0</span>];
+        <span class="kw">let </span>out_var =
+            RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_no_padding(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>input_var, <span class="number">1</span>)
+                .unwrap()[<span class="number">0</span>];
 
         <span class="comment">// Check consistency between inputs
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..rate {
@@ -2570,9 +2432,12 @@
         <span class="kw">let </span>expected_fsks_output =
             RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key_t, <span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap();
 
-        <span class="kw">let </span>fsks_var = circuit
-            .rescue_full_state_keyed_sponge_no_padding::&lt;T&gt;(key_var, <span class="kw-2">&amp;</span>data_vars)
-            .unwrap();
+        <span class="kw">let </span>fsks_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_full_state_keyed_sponge_no_padding(
+            <span class="kw-2">&amp;mut </span>circuit,
+            key_var,
+            <span class="kw-2">&amp;</span>data_vars,
+        )
+        .unwrap();
 
         <span class="comment">// Check prf output consistency
         </span><span class="macro">assert_eq!</span>(
@@ -2593,9 +2458,14 @@
             <span class="prelude-val">Some</span>(key_var.two_power_m()),
         );
         data_vars.push(zero_var);
-        <span class="macro">assert!</span>(circuit
-            .rescue_full_state_keyed_sponge_no_padding::&lt;T&gt;(key_var, <span class="kw-2">&amp;</span>data_vars)
-            .is_err());
+        <span class="macro">assert!</span>(
+            RescueNonNativeGadget::&lt;T, F&gt;::rescue_full_state_keyed_sponge_no_padding(
+                <span class="kw-2">&amp;mut </span>circuit,
+                key_var,
+                <span class="kw-2">&amp;</span>data_vars
+            )
+            .is_err()
+        );
     }
 }
 </code></pre></div>

@@ -314,6 +314,7 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
+<span id="317">317</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -323,7 +324,7 @@
 </span><span class="doccomment">//! Circuit implementation of a Schnorr signature scheme.
 
 </span><span class="kw">use crate</span>::{
-    circuit::rescue::RescueGadget,
+    circuit::rescue::RescueNativeGadget,
     constants::CS_ID_SCHNORR,
     rescue::RescueParameter,
     signatures::schnorr::{Signature, VerKey},
@@ -501,7 +502,8 @@
         ];
         chal_input.extend(msg);
 
-        <span class="kw">let </span>challenge = <span class="self">self</span>.rescue_sponge_with_padding(<span class="kw-2">&amp;</span>chal_input, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+        <span class="kw">let </span>challenge =
+            RescueNativeGadget::&lt;F&gt;::rescue_sponge_with_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>chal_input, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
         <span class="kw">let </span>c_bits = <span class="self">self</span>.unpack(challenge, field_bit_len::&lt;F&gt;())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(c_bits[..challenge_bit_len::&lt;F&gt;()].to_vec())
     }
