@@ -10,11 +10,14 @@ use crate::{
     merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme},
     rescue::RescueParameter,
 };
+use ark_ff::PrimeField;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 mod rescue_merkle_tree;
 mod sparse_merkle_tree;
 use ark_std::vec::Vec;
+
+use super::rescue::RescueNativeGadget;
 
 /// Gadget for a Merkle tree
 ///
@@ -57,14 +60,18 @@ use ark_std::vec::Vec;
 /// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 /// ```
-pub trait MerkleTreeGadget<M>
+pub trait MerkleTreeGadget<M, F>
 where
     M: MerkleTreeScheme,
+    F: PrimeField,
 {
     /// Type to represent the merkle proof of the concrete MT instantiation.
     /// It is MT-specific, e.g arity will affect the exact definition of the
     /// underlying Merkle path.
     type MembershipProofVar;
+
+    /// Gadget for the digest algorithm.
+    type DigestGadget: DigestAlgorithmGadget<F>;
 
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
@@ -146,9 +153,10 @@ where
 /// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 /// ```
-pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
+pub trait UniversalMerkleTreeGadget<M, F>: MerkleTreeGadget<M, F>
 where
     M: UniversalMerkleTreeScheme,
+    F: PrimeField,
 {
     /// Type to represent the merkle non-membership proof of the concrete MT
     /// instantiation. It is MT-specific, e.g arity will affect the exact
@@ -239,4 +247,37 @@ pub struct Merkle3AryNonMembershipProofVar {
 pub struct Merkle3AryMembershipProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,
     elem_var: Variable,
+}
+/// Circuit counterpart to DigestAlgorithm
+pub trait DigestAlgorithmGadget<F>
+where
+    F: PrimeField,
+{
+    /// Digest a list of variables
+    fn digest(circuit: &mut PlonkCircuit<F>, data: &[Variable]) -> Result<Variable, CircuitError>;
+
+    /// Digest an indexed element
+    fn digest_leaf(
+        circuit: &mut PlonkCircuit<F>,
+        pos: usize,
+        elem: Variable,
+    ) -> Result<Variable, CircuitError>;
+}
+
+/// Digest gadget using for the Rescue hash function.
+pub struct RescueDigestGadget {}
+
+impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
+    fn digest(circuit: &mut PlonkCircuit<F>, data: &[Variable]) -> Result<Variable, CircuitError> {
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, data, 1)?[0])
+    }
+
+    fn digest_leaf(
+        circuit: &mut PlonkCircuit<F>,
+        pos: usize,
+        elem: Variable,
+    ) -> Result<Variable, CircuitError> {
+        let zero = circuit.zero();
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &[zero, pos, elem], 1)?[0])
+    }
 }
