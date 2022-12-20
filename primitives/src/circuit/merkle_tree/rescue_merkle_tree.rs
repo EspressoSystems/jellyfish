@@ -490,22 +490,20 @@ mod test {
         // Happy path
 
         // A leaf we care about is inserted in position 2
-        let uid_u64 = 2u64;
+        let uid = 2u64;
         let elem = F::from(310_u64);
 
         // native computation with a MT
         let elements = vec![F::from(1_u64), F::from(2_u64), elem];
         let mt = RescueMerkleTree::<F>::from_elems(1, elements).unwrap();
         let expected_root = mt.commitment().digest();
-        let (retrieved_elem, proof) = mt.lookup(uid_u64).expect_ok().unwrap();
+        let (retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
         assert_eq!(retrieved_elem, elem);
 
         // Circuit computation with a MT
         let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
             RescueMerkleTree<F>,
-        >>::create_leaf_variable(
-            &mut circuit, uid_u64, elem
-        )
+        >>::create_leaf_variable(&mut circuit, uid, elem)
         .unwrap();
         let path_vars: Rescue3AryMerklePathVar = <PlonkCircuit<F> as MerkleTreeGadget<
             RescueMerkleTree<F>,
@@ -538,9 +536,7 @@ mod test {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
             RescueMerkleTree<F>,
-        >>::create_leaf_variable(
-            &mut circuit, uid_u64, elem
-        )
+        >>::create_leaf_variable(&mut circuit, uid, elem)
         .unwrap();
 
         let mut bad_proof = proof.clone();
