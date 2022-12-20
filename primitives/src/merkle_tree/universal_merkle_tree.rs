@@ -125,7 +125,7 @@ mod mt_tests {
     }
 
     fn test_universal_mt_builder_helper<F: RescueParameter>() {
-        let mt = RescueSparseMerkleTree::<BigUint, F, F>::from_kv_set(
+        let mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(
             1,
             &[(BigUint::from(1u64), F::from(1u64))],
         )
@@ -136,7 +136,7 @@ mod mt_tests {
         hashmap.insert(BigUint::from(1u64), F::from(2u64));
         hashmap.insert(BigUint::from(2u64), F::from(2u64));
         hashmap.insert(BigUint::from(1u64), F::from(3u64));
-        let mt = RescueSparseMerkleTree::<BigUint, F, F>::from_kv_set(10, &hashmap).unwrap();
+        let mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(10, &hashmap).unwrap();
         assert_eq!(mt.num_leaves(), hashmap.len() as u64);
     }
 
@@ -152,7 +152,7 @@ mod mt_tests {
         hashmap.insert(BigUint::from(1u64), F::from(2u64));
         hashmap.insert(BigUint::from(2u64), F::from(2u64));
         hashmap.insert(BigUint::from(1u64), F::from(3u64));
-        let mt = RescueSparseMerkleTree::<BigUint, F, F>::from_kv_set(10, &hashmap).unwrap();
+        let mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(10, &hashmap).unwrap();
         assert_eq!(mt.num_leaves(), hashmap.len() as u64);
 
         let mut proof = mt
@@ -181,7 +181,7 @@ mod mt_tests {
         let mut hashmap = HashMap::new();
         hashmap.insert(F::from(1u64), F::from(2u64));
         hashmap.insert(F::from(10u64), F::from(3u64));
-        let mt = RescueSparseMerkleTree::<F, F, F>::from_kv_set(3, &hashmap).unwrap();
+        let mt = RescueSparseMerkleTree::<F, F>::from_kv_set(3, &hashmap).unwrap();
         let mem_proof = mt.lookup(F::from(10u64)).expect_ok().unwrap().1;
         let node = &mem_proof.proof[0];
         let non_mem_proof = match mt.lookup(F::from(9u64)) {

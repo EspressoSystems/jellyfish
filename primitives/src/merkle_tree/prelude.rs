@@ -64,4 +64,4 @@ impl<F: RescueParameter> DigestAlgorithm<F, F, F> for RescueHash<F> {
 }
 
 /// Example instantiation of a SparseMerkleTree indexed by I
-pub type RescueSparseMerkleTree<I, E, F> = UniversalMerkleTree<E, RescueHash<F>, I, U3, F>;
+pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, U3, F>;
