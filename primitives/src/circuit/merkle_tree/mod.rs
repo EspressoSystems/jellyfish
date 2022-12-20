@@ -10,6 +10,7 @@ use crate::merkle_tree::MerkleTreeScheme;
 use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
+mod sparse_merkle_tree;
 
 /// Gadget for a Merkle tree
 ///
