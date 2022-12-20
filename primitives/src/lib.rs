@@ -20,6 +20,7 @@ pub mod aead;
 pub mod circuit;
 pub mod commitment;
 pub mod constants;
+pub mod crhf;
 pub mod elgamal;
 pub mod errors;
 pub mod hash_to_group;

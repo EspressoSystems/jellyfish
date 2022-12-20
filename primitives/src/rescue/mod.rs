@@ -30,7 +30,7 @@ use ark_std::{vec, vec::Vec};
 /// The state size of rescue hash.
 pub const STATE_SIZE: usize = 4;
 /// The rate of the sponge used in RescueCRHF.
-pub const CRHF_RATE: usize = 3;
+pub(crate) const CRHF_RATE: usize = 3;
 
 /// The # of rounds of rescue hash.
 // In the paper, to derive ROUND:
@@ -201,7 +201,7 @@ impl<F: Copy> From<&[F; STATE_SIZE]> for RescueVector<F> {
 }
 
 /// A matrix that consists of `STATE_SIZE` number of rescue vectors.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RescueMatrix<F> {
     matrix: [RescueVector<F>; STATE_SIZE],
 }
@@ -248,7 +248,7 @@ impl<F: PrimeField> RescueMatrix<F> {
 // input to 3 and output to 1
 //
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[allow(clippy::upper_case_acronyms)]
 /// Rescue pseudo-random permutation (PRP) instance
 pub struct PRP<F> {
@@ -371,7 +371,7 @@ impl<F: RescueParameter> PRP<F> {
 
 /// Instance of a unkeyed cryptographic permutation to be used for instantiation
 /// hashing, pseudo-random function, and other cryptographic primitives
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Permutation<F> {
     rescue_prp: PRP<F>,
     round_keys: Vec<RescueVector<F>>,

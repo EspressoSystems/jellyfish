@@ -17,7 +17,7 @@ use super::{
     errors::RescueError, Permutation, RescueParameter, RescueVector, CRHF_RATE, STATE_SIZE,
 };
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 /// A rescue hash function consists of a permutation function and
 /// an internal state.
 struct RescueSponge<F: RescueParameter, const RATE: usize> {
@@ -26,7 +26,8 @@ struct RescueSponge<F: RescueParameter, const RATE: usize> {
 }
 
 /// CRHF
-pub struct RescueCRHF<F: RescueParameter> {
+#[derive(Debug, Clone)]
+pub(crate) struct RescueCRHF<F: RescueParameter> {
     sponge: RescueSponge<F, CRHF_RATE>,
 }
 
