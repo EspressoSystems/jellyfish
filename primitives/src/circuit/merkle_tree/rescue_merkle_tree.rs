@@ -90,9 +90,13 @@ where
         merkle_proof: Rescue3AryMerklePathVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError> {
-        let bool_val = self
-            .is_member(elem, merkle_proof, expected_merkle_root)
-            .unwrap();
+        let bool_val = <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::is_member(
+            self,
+            elem,
+            merkle_proof,
+            expected_merkle_root,
+        )
+        .unwrap();
         self.enforce_true(bool_val.into())
     }
 }
@@ -296,6 +300,7 @@ mod test {
         circuit::merkle_tree::{
             rescue_merkle_tree::{
                 MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeHelperGadget,
+                Rescue3AryMerklePathVar, StandardLeafVar,
             },
             MerkleTreeGadget,
         },
@@ -496,13 +501,32 @@ mod test {
         assert_eq!(retrieved_elem, elem);
 
         // Circuit computation with a MT
-        let leaf_var = circuit.create_leaf_variable(uid_u64, elem).unwrap();
-        let path_vars = circuit.create_membership_proof_variable(&proof).unwrap();
-        let root_var = circuit.create_root_variable(expected_root).unwrap();
-
-        circuit
-            .enforce_merkle_proof(leaf_var, path_vars, root_var)
+        let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            RescueMerkleTree<F>,
+        >>::create_leaf_variable(
+            &mut circuit, uid_u64, elem
+        )
+        .unwrap();
+        let path_vars: Rescue3AryMerklePathVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            RescueMerkleTree<F>,
+        >>::create_membership_proof_variable(
+            &mut circuit, &proof
+        )
+        .unwrap();
+        let root_var =
+            <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::create_root_variable(
+                &mut circuit,
+                expected_root,
+            )
             .unwrap();
+
+        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_merkle_proof(
+            &mut circuit,
+            leaf_var,
+            path_vars,
+            root_var,
+        )
+        .unwrap();
 
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
         *circuit.witness_mut(root_var) = F::zero();
@@ -512,7 +536,12 @@ mod test {
         // The circuit cannot be satisfied if an internal node has a left child with
         // zero value.
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let leaf_var = circuit.create_leaf_variable(uid_u64, elem).unwrap();
+        let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            RescueMerkleTree<F>,
+        >>::create_leaf_variable(
+            &mut circuit, uid_u64, elem
+        )
+        .unwrap();
 
         let mut bad_proof = proof.clone();
 
@@ -523,14 +552,26 @@ mod test {
                 elem: F::one(),
             });
         }
-        let path_vars = circuit
-            .create_membership_proof_variable(&bad_proof)
+        let path_vars: Rescue3AryMerklePathVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            RescueMerkleTree<F>,
+        >>::create_membership_proof_variable(
+            &mut circuit, &bad_proof
+        )
+        .unwrap();
+        let root_var =
+            <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::create_root_variable(
+                &mut circuit,
+                expected_root,
+            )
             .unwrap();
-        let root_var = circuit.create_root_variable(expected_root).unwrap();
 
-        circuit
-            .enforce_merkle_proof(leaf_var.clone(), path_vars.clone(), root_var)
-            .unwrap();
+        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_merkle_proof(
+            &mut circuit,
+            leaf_var.clone(),
+            path_vars.clone(),
+            root_var,
+        )
+        .unwrap();
 
         // Circuit does not verify because a left node value is 0
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
