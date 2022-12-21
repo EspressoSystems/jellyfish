@@ -11,6 +11,7 @@ use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
 mod sparse_merkle_tree;
+use ark_std::vec::Vec;
 
 /// Gadget for a Merkle tree
 ///
@@ -84,7 +85,7 @@ where
     ) -> Result<(), CircuitError>;
 }
 
-/// Gadget for sparse merkle tree and key-value map tree
+/// Gadget for the sparse merkle tree
 pub trait SparseMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
@@ -107,6 +108,55 @@ where
     ) -> Result<(), CircuitError>;
 }
 
+pub(crate) trait MerkleTreeHelperGadget<M>
+where
+    M: MerkleTreeScheme,
+{
+    type MembershipProofBooleanEncoding;
+    type MembershipProofVar;
+    /// Produces an ordered list of variables based on the relative position of
+    /// a node and its siblings.
+    /// * `node` - node to be inserted in the final list.
+    /// * `sibling1` - first sibling
+    /// * `sibling2` - second sibling
+    /// * `node_is_left` - variable that is true if node is the leftmost one.
+    /// * `node_is_right` -  variable that is true if node is the rightmost one.
+    /// * `returns` - list of variables corresponding to the node and its
+    ///   siblings in the correct order.
+    fn permute(
+        &mut self,
+        node: Variable,
+        sib1: Variable,
+        sib2: Variable,
+        node_is_left: BoolVar,
+        node_is_right: BoolVar,
+    ) -> Result<[Variable; 3], CircuitError>;
+
+    /// Ensure that the position of each node of the path is correctly encoded
+    /// Used for testing purposes.
+    /// * `merkle_path` - list of node of an authentication path
+    /// * `pos` - position of the missing leaf
+    /// * `returns` - list of variables corresponding to the authentication path
+    fn constrain_membership_proof(
+        &mut self,
+        merkle_path: &Self::MembershipProofBooleanEncoding,
+        pos: M::Index,
+    ) -> Result<Self::MembershipProofVar, CircuitError>;
+
+    /// Computes the merkle root based on some element placed at a leaf and a
+    /// merkle path.
+    /// * `elem` - variables corresponding to the uid and the element value
+    ///   (e.g.: record commitment).
+    /// * `path_vars` - variables corresponding to the Merkle path.
+    /// * `return` - variable corresponding to the root value of the Merkle
+    ///   tree.
+    fn compute_merkle_root(
+        &mut self,
+        elem: StandardLeafVar,
+        path_vars: &Self::MembershipProofVar,
+    ) -> Result<Variable, CircuitError>;
+}
+
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle node.
 pub struct Rescue3AryNodeVar {
@@ -127,4 +177,33 @@ pub struct StandardLeafVar {
     pub uid: Variable,
     /// The value of the leaf element.
     pub elem: Variable,
+}
+
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub(crate) struct MerkleNodeBooleanEncoding<M: MerkleTreeScheme> {
+    sibling1: M::NodeValue,
+    sibling2: M::NodeValue,
+    is_left_child: bool,
+    is_right_child: bool,
+}
+
+impl<M: MerkleTreeScheme> MerkleNodeBooleanEncoding<M> {
+    fn new(
+        sibling1: M::NodeValue,
+        sibling2: M::NodeValue,
+        is_left_child: bool,
+        is_right_child: bool,
+    ) -> Self {
+        MerkleNodeBooleanEncoding {
+            sibling1,
+            sibling2,
+            is_left_child,
+            is_right_child,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub(crate) struct MembershipProofBooleanEncoding<M: MerkleTreeScheme> {
+    pub(crate) nodes: Vec<MerkleNodeBooleanEncoding<M>>,
 }

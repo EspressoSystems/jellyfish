@@ -23,13 +23,24 @@ type Element<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Element;
 type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 use typenum::U3;
 
-use super::{MerkleTreeGadget, Rescue3AryNodeVar, StandardLeafVar};
+use super::{
+    MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeGadget,
+    MerkleTreeHelperGadget, Rescue3AryNodeVar, StandardLeafVar,
+};
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
 /// Merkle tree.
 pub struct Rescue3AryMerklePathVar {
     nodes: Vec<Rescue3AryNodeVar>,
+}
+
+impl<F: RescueParameter> MembershipProofBooleanEncoding<RescueMerkleTree<F>> {
+    fn new(nodes: &[MerkleNodeBooleanEncoding<RescueMerkleTree<F>>]) -> Self {
+        MembershipProofBooleanEncoding {
+            nodes: nodes.to_vec(),
+        }
+    }
 }
 
 impl<F> MerkleTreeGadget<RescueMerkleTree<F>> for PlonkCircuit<F>
@@ -58,7 +69,11 @@ where
         // Encode Merkle path nodes positions with boolean variables
         let merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
 
-        self.constrain_merkle_path(&merkle_path)
+        <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_membership_proof(
+            self,
+            &merkle_path,
+            merkle_proof.pos,
+        )
     }
 
     fn create_root_variable(&mut self, root: NodeVal<F>) -> Result<Variable, CircuitError> {
@@ -71,7 +86,12 @@ where
         merkle_proof: Rescue3AryMerklePathVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        let root_var = self.compute_merkle_root(elem, &merkle_proof)?;
+        let root_var =
+            <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::compute_merkle_root(
+                self,
+                elem,
+                &merkle_proof,
+            )?;
         self.is_equal(root_var, merkle_root)
     }
 
@@ -92,49 +112,14 @@ where
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
-struct MerkleNodeBooleanEncoding<F: RescueParameter> {
-    sibling1: NodeVal<F>,
-    sibling2: NodeVal<F>,
-    is_left_child: bool,
-    is_right_child: bool,
-}
-
-impl<F: RescueParameter> MerkleNodeBooleanEncoding<F> {
-    fn new(
-        sibling1: NodeVal<F>,
-        sibling2: NodeVal<F>,
-        is_left_child: bool,
-        is_right_child: bool,
-    ) -> Self {
-        MerkleNodeBooleanEncoding {
-            sibling1,
-            sibling2,
-            is_left_child,
-            is_right_child,
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Clone, Debug)]
-struct MembershipProofBooleanEncoding<F: RescueParameter> {
-    pub nodes: Vec<MerkleNodeBooleanEncoding<F>>,
-}
-
-impl<F: RescueParameter> MembershipProofBooleanEncoding<F> {
-    fn new(nodes: &[MerkleNodeBooleanEncoding<F>]) -> Self {
-        MembershipProofBooleanEncoding {
-            nodes: nodes.to_vec(),
-        }
-    }
-}
-
-impl<F: RescueParameter> From<&MembershipProof<F>> for MembershipProofBooleanEncoding<F> {
+impl<F: RescueParameter> From<&MembershipProof<F>>
+    for MembershipProofBooleanEncoding<RescueMerkleTree<F>>
+{
     fn from(proof: &MembershipProof<F>) -> Self {
         let path =
             <u64 as ToTraversalPath<U3>>::to_traversal_path(&proof.pos, proof.tree_height() - 1);
 
-        let nodes: Vec<MerkleNodeBooleanEncoding<F>> = path
+        let nodes: Vec<MerkleNodeBooleanEncoding<RescueMerkleTree<F>>> = path
             .iter()
             .zip(proof.proof.iter().skip(1))
             .filter_map(|(branch, node)| match node {
@@ -152,49 +137,11 @@ impl<F: RescueParameter> From<&MembershipProof<F>> for MembershipProofBooleanEnc
     }
 }
 
-trait MerkleTreeHelperGadget<F: RescueParameter> {
-    /// Produces an ordered list of variables based on the relative position of
-    /// a node and its siblings.
-    /// * `node` - node to be inserted in the final list.
-    /// * `sibling1` - first sibling
-    /// * `sibling2` - second sibling
-    /// * `node_is_left` - variable that is true if node is the leftmost one.
-    /// * `node_is_right` -  variable that is true if node is the rightmost one.
-    /// * `returns` - list of variables corresponding to the node and its
-    ///   siblings in the correct order.
-    fn permute(
-        &mut self,
-        node: Variable,
-        sib1: Variable,
-        sib2: Variable,
-        node_is_left: BoolVar,
-        node_is_right: BoolVar,
-    ) -> Result<[Variable; 3], CircuitError>;
+impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCircuit<F> {
+    type MembershipProofBooleanEncoding = MembershipProofBooleanEncoding<RescueMerkleTree<F>>;
 
-    /// Ensure that the position of each node of the path is correctly encoded
-    /// Used for testing purposes.
-    /// * `merkle_path` - list of node of an authentication path
-    /// * `returns` - list of variables corresponding to the authentication path
-    fn constrain_merkle_path(
-        &mut self,
-        merkle_path: &MembershipProofBooleanEncoding<F>,
-    ) -> Result<Rescue3AryMerklePathVar, CircuitError>;
+    type MembershipProofVar = Rescue3AryMerklePathVar;
 
-    /// Computes the merkle root based on some element placed at a leaf and a
-    /// merkle path.
-    /// * `elem` - variables corresponding to the uid and the element value
-    ///   (e.g.: record commitment).
-    /// * `path_vars` - variables corresponding to the Merkle path.
-    /// * `return` - variable corresponding to the root value of the Merkle
-    ///   tree.
-    fn compute_merkle_root(
-        &mut self,
-        elem: StandardLeafVar,
-        path_vars: &Rescue3AryMerklePathVar,
-    ) -> Result<Variable, CircuitError>;
-}
-
-impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     fn permute(
         &mut self,
         node: Variable,
@@ -214,9 +161,10 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
         Ok([left_node, mid_node, right_node])
     }
 
-    fn constrain_merkle_path(
+    fn constrain_membership_proof(
         &mut self,
-        merkle_path: &MembershipProofBooleanEncoding<F>,
+        merkle_path: &MembershipProofBooleanEncoding<RescueMerkleTree<F>>,
+        _pos: u64,
     ) -> Result<Rescue3AryMerklePathVar, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
@@ -260,13 +208,15 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<F> for PlonkCircuit<F> {
             1,
         )?[0];
         for cur_node in path_vars.nodes.iter() {
-            let input_labels = self.permute(
-                cur_label,
-                cur_node.sibling1,
-                cur_node.sibling2,
-                cur_node.is_left_child,
-                cur_node.is_right_child,
-            )?;
+            let input_labels =
+                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::permute(
+                    self,
+                    cur_label,
+                    cur_node.sibling1,
+                    cur_node.sibling2,
+                    cur_node.is_left_child,
+                    cur_node.is_right_child,
+                )?;
             // check that the left child's label is non-zero
             self.non_zero_gate(input_labels[0])?;
             cur_label =
@@ -321,7 +271,7 @@ mod test {
             let one = F::one();
             let node = MerkleNodeBooleanEncoding::new(one, zero, is_left_child, is_right_child);
             let path = MembershipProofBooleanEncoding::new(&[node]);
-            let _ = circuit.constrain_merkle_path(&path);
+            let _ = <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_membership_proof(&mut circuit, &path, 0);
             if accept {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             } else {
@@ -366,8 +316,15 @@ mod test {
             let sib1 = input_vars[1];
             let sib2 = input_vars[2];
 
-            let out_vars = circuit
-                .permute(node, sib1, sib2, node_is_left, node_is_right)
+            let out_vars =
+                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::permute(
+                    circuit,
+                    node,
+                    sib1,
+                    sib2,
+                    node_is_left,
+                    node_is_right,
+                )
                 .unwrap();
 
             let output: Vec<F> = out_vars[..]
@@ -443,7 +400,7 @@ mod test {
             let (_elem, proof) = mt.lookup(i).expect_ok().unwrap();
             assert_eq!(proof.tree_height(), 2);
 
-            let expected_bool_node = MerkleNodeBooleanEncoding::<FqEd254> {
+            let expected_bool_node = MerkleNodeBooleanEncoding::<RescueMerkleTree<FqEd254>> {
                 sibling1: RescueHash::digest_leaf(&0, &elements[0].clone()),
                 sibling2: RescueHash::digest_leaf(&1, &elements[1].clone()),
                 is_left_child: left,
