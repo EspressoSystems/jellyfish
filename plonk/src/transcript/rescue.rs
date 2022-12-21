@@ -177,7 +177,7 @@ where
         // 3. transcript = Vec::new()
 
         let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
-        let tmp: [F; STATE_SIZE] = VariableLengthRescueCRHF::evaluate(&(), &input)?;
+        let tmp: [F; STATE_SIZE] = VariableLengthRescueCRHF::evaluate(&input)?;
         let challenge = fq_to_fr_with_mask::<F, E::Fr>(&tmp[0]);
         self.state.copy_from_slice(&tmp);
         self.transcript = Vec::new();
