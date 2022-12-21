@@ -76,7 +76,7 @@ where
 
     /// Enforce correct `merkle_proof` for the `elem` against
     /// `expected_merkle_root`.
-    fn enforce_merkle_proof(
+    fn enforce_membership_proof(
         &mut self,
         elem: Self::LeafVar,
         merkle_proof: Self::MerklePathVar,

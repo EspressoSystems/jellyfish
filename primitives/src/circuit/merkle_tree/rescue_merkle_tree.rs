@@ -84,7 +84,7 @@ where
         self.is_equal(root_var, merkle_root)
     }
 
-    fn enforce_merkle_proof(
+    fn enforce_membership_proof(
         &mut self,
         elem: StandardLeafVar,
         merkle_proof: Rescue3AryMerklePathVar,
@@ -518,7 +518,7 @@ mod test {
             )
             .unwrap();
 
-        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_merkle_proof(
+        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_membership_proof(
             &mut circuit,
             leaf_var,
             path_vars,
@@ -561,7 +561,7 @@ mod test {
             )
             .unwrap();
 
-        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_merkle_proof(
+        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_membership_proof(
             &mut circuit,
             leaf_var.clone(),
             path_vars.clone(),
