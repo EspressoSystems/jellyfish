@@ -106,3 +106,25 @@ where
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }
+
+#[derive(Debug, Clone)]
+/// Circuit variable for a Merkle node.
+pub struct Rescue3AryNodeVar {
+    /// First sibling of the node.
+    pub sibling1: Variable,
+    /// Second sibling of the node.
+    pub sibling2: Variable,
+    /// Boolean variable indicating whether the node is a left child.
+    pub is_left_child: BoolVar,
+    /// Boolean variable indicating whether the node is a right child.
+    pub is_right_child: BoolVar,
+}
+
+/// Circuit variable for a leaf element.
+#[derive(Debug, Clone)]
+pub struct StandardLeafVar {
+    /// Position of the leaf element in the MT. Serves as UID.
+    pub uid: Variable,
+    /// The value of the leaf element.
+    pub elem: Variable,
+}

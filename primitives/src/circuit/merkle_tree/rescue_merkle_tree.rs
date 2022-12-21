@@ -23,22 +23,13 @@ type Element<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Element;
 type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 use typenum::U3;
 
-use super::MerkleTreeGadget;
+use super::{MerkleTreeGadget, Rescue3AryNodeVar, StandardLeafVar};
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
 /// Merkle tree.
 pub struct Rescue3AryMerklePathVar {
     nodes: Vec<Rescue3AryNodeVar>,
-}
-
-/// Circuit variable for a leaf element.
-#[derive(Debug, Clone)]
-pub struct StandardLeafVar {
-    /// Position of the leaf element in the MT. Serves as UID.
-    pub uid: Variable,
-    /// The value of the leaf element.
-    pub elem: Variable,
 }
 
 impl<F> MerkleTreeGadget<RescueMerkleTree<F>> for PlonkCircuit<F>
@@ -159,15 +150,6 @@ impl<F: RescueParameter> From<&MembershipProof<F>> for MembershipProofBooleanEnc
 
         Self::new(&nodes)
     }
-}
-
-#[derive(Debug, Clone)]
-/// Circuit variable for a Merkle node.
-pub struct Rescue3AryNodeVar {
-    pub sibling1: Variable,
-    pub sibling2: Variable,
-    pub is_left_child: BoolVar,
-    pub is_right_child: BoolVar,
 }
 
 trait MerkleTreeHelperGadget<F: RescueParameter> {
