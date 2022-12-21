@@ -83,3 +83,26 @@ where
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }
+
+/// Gadget for sparse merkle tree and key-value map tree
+pub trait SparseMerkleTreeGadget<M>: MerkleTreeGadget<M>
+where
+    M: MerkleTreeScheme,
+{
+    /// checking non-membership proof
+    fn is_non_member(
+        &mut self,
+        elem: Self::LeafVar,
+        merkle_proof: Self::MerklePathVar,
+        merkle_root: Variable,
+    ) -> Result<BoolVar, CircuitError>;
+
+    /// Enforce correct `merkle_proof` for the empty leaf `elem` against
+    /// `expected_merkle_root`.
+    fn enforce_non_membership_proof(
+        &mut self,
+        empty_elem: Self::LeafVar,
+        merkle_proof: Self::MerklePathVar,
+        expected_merkle_root: Variable,
+    ) -> Result<(), CircuitError>;
+}

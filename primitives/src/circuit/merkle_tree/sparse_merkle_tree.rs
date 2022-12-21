@@ -26,7 +26,7 @@ type Index<F> = <SparseMerkleTree<F> as MerkleTreeScheme>::Index;
 use num_bigint::BigUint;
 use typenum::U3;
 
-use super::MerkleTreeGadget;
+use super::{MerkleTreeGadget, SparseMerkleTreeGadget};
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
@@ -42,6 +42,33 @@ pub struct StandardLeafVar {
     pub uid: Variable,
     /// The value of the leaf element.
     pub elem: Variable,
+}
+
+impl<F> SparseMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
+where
+    F: RescueParameter,
+{
+    fn is_non_member(
+        &mut self,
+        elem: Self::LeafVar,
+        merkle_proof: Self::MerklePathVar,
+        merkle_root: Variable,
+    ) -> Result<BoolVar, CircuitError> {
+        let root_var = self.compute_merkle_root(elem, &merkle_proof)?;
+        self.is_equal(root_var, merkle_root)
+    }
+
+    fn enforce_non_membership_proof(
+        &mut self,
+        elem: Self::LeafVar,
+        merkle_proof: Self::MerklePathVar,
+        expected_merkle_root: Variable,
+    ) -> Result<(), CircuitError> {
+        let bool_val = self
+            .is_non_member(elem, merkle_proof, expected_merkle_root)
+            .unwrap();
+        self.enforce_true(bool_val.into())
+    }
 }
 
 impl<F> MerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
@@ -173,6 +200,20 @@ pub struct Rescue3AryNodeVar {
     pub sibling2: Variable,
     pub is_left_child: BoolVar,
     pub is_right_child: BoolVar,
+}
+
+trait SparseRescueMerkleTree<F: RescueParameter> {
+    /// Computes the merkle root based on some element placed at a leaf and a
+    /// merkle path.
+    /// * `elem` - variables corresponding to the uid and the element value
+    ///   (e.g.: record commitment).
+    /// * `path_vars` - variables corresponding to the Merkle path.
+    /// * `return` - variable corresponding to the root value of the Merkle
+    ///   tree.
+    fn compute_merkle_root_for_empty(
+        &mut self,
+        path_vars: &Rescue3AryMerklePathVar,
+    ) -> Result<Variable, CircuitError>;
 }
 
 trait MerkleTreeHelperGadget<F: RescueParameter> {
@@ -312,7 +353,7 @@ mod test {
         merkle_tree::{
             internal::MerkleNode,
             prelude::{RescueHash, RescueSparseMerkleTree},
-            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme,
+            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -323,6 +364,7 @@ mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::{boxed::Box, test_rng, vec, vec::Vec};
+    use hashbrown::HashMap;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
     use num_bigint::BigUint;
 
@@ -484,15 +526,16 @@ mod test {
     }
 
     #[test]
-    fn test_mt_gadget() {
-        test_mt_gadget_helper::<FqEd254>();
-        test_mt_gadget_helper::<FqEd377>();
-        test_mt_gadget_helper::<FqEd381>();
-        test_mt_gadget_helper::<FqEd381b>();
-        test_mt_gadget_helper::<Fq377>();
+    fn test_sparse_mt_gadget() {
+        test_membership_helper::<FqEd254>();
+        test_non_membership_helper::<FqEd254>();
+        test_membership_helper::<FqEd377>();
+        test_membership_helper::<FqEd381>();
+        test_membership_helper::<FqEd381b>();
+        test_membership_helper::<Fq377>();
     }
 
-    fn test_mt_gadget_helper<F: RescueParameter>() {
+    fn test_membership_helper<F: RescueParameter>() {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
         // Happy path
@@ -507,6 +550,103 @@ mod test {
         let expected_root = mt.commitment().digest();
         let (retrieved_elem, proof) = mt.lookup(&uid).expect_ok().unwrap();
         assert_eq!(retrieved_elem, elem);
+
+        // Circuit computation with a MT
+        let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            SparseMerkleTree<F>,
+        >>::create_leaf_variable(
+            &mut circuit, uid.clone(), elem
+        )
+        .unwrap();
+        let path_vars: Rescue3AryMerklePathVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            SparseMerkleTree<F>,
+        >>::create_membership_proof_variable(
+            &mut circuit, &proof
+        )
+        .unwrap();
+        let root_var =
+            <PlonkCircuit<F> as MerkleTreeGadget<SparseMerkleTree<F>>>::create_root_variable(
+                &mut circuit,
+                expected_root,
+            )
+            .unwrap();
+
+        <PlonkCircuit<F> as MerkleTreeGadget<SparseMerkleTree<F>>>::enforce_membership_proof(
+            &mut circuit,
+            leaf_var,
+            path_vars,
+            root_var,
+        )
+        .unwrap();
+
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        *circuit.witness_mut(root_var) = F::zero();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        // Bad path:
+        // The circuit cannot be satisfied if an internal node has a left child with
+        // zero value.
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            SparseMerkleTree<F>,
+        >>::create_leaf_variable(
+            &mut circuit, uid.clone(), elem
+        )
+        .unwrap();
+
+        let mut bad_proof = proof.clone();
+
+        if let MerkleNode::Branch { value: _, children } = &mut bad_proof.proof[1] {
+            children[0] = Box::new(MerkleNode::Leaf {
+                value: F::zero(),
+                pos: BigUint::from(0u64),
+                elem: F::one(),
+            });
+        }
+        let path_vars: Rescue3AryMerklePathVar = <PlonkCircuit<F> as MerkleTreeGadget<
+            SparseMerkleTree<F>,
+        >>::create_membership_proof_variable(
+            &mut circuit, &bad_proof
+        )
+        .unwrap();
+        let root_var =
+            <PlonkCircuit<F> as MerkleTreeGadget<SparseMerkleTree<F>>>::create_root_variable(
+                &mut circuit,
+                expected_root,
+            )
+            .unwrap();
+
+        <PlonkCircuit<F> as MerkleTreeGadget<SparseMerkleTree<F>>>::enforce_membership_proof(
+            &mut circuit,
+            leaf_var.clone(),
+            path_vars.clone(),
+            root_var,
+        )
+        .unwrap();
+
+        // Circuit does not verify because a left node value is 0
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+    }
+
+    fn test_non_membership_helper<F: RescueParameter>() {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+
+        // Happy path
+
+        // A leaf we care about is inserted in position 2
+        let uid = BigUint::from(3u64);
+        let elem = F::from(310_u64);
+
+        // native computation with a MT
+        let mut hashmap = HashMap::new();
+        hashmap.insert(BigUint::from(1u64), F::from(2u64));
+        hashmap.insert(BigUint::from(2u64), F::from(2u64));
+        hashmap.insert(BigUint::from(1u64), F::from(3u64));
+        let mt = SparseMerkleTree::<F>::from_kv_set(2, &hashmap).unwrap();
+        let expected_root = mt.commitment().digest();
+
+        // proof of non-membership
+        let proof = mt.universal_lookup(&uid).expect_not_found().unwrap();
 
         // Circuit computation with a MT
         let leaf_var: StandardLeafVar = <PlonkCircuit<F> as MerkleTreeGadget<
