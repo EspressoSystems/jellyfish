@@ -29,6 +29,12 @@ pub trait CRHF {
 
     /// evaluate inputs and return hash output
     fn evaluate<T: Borrow<Self::Input>>(input: T) -> Result<Self::Output, PrimitivesError>;
+
+    /// same as [`evaluate`] with caller assurance that `input` won't cause any
+    /// error, mostly for internal use, invoke with caution!
+    fn evaluate_safe<T: Borrow<Self::Input>>(input: T) -> Self::Output {
+        Self::evaluate(input).expect("Should NOT panic")
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -45,12 +51,17 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const OUTPUT_LEN: usize> CRHF
 {
     type Input = [F; INPUT_LEN];
     type Output = [F; OUTPUT_LEN];
+
+    /// ## Padding
+    /// if `input` length is not a multiple of `CRHF_RATE`, then it will be
+    /// padded. By default, we use "zero padding"-style where as many "0" as
+    /// required are added.
     fn evaluate<T: Borrow<Self::Input>>(input: T) -> Result<Self::Output, PrimitivesError> {
         let mut output = [F::zero(); OUTPUT_LEN];
 
         let res = match INPUT_LEN % CRHF_RATE {
             0 => RescueCRHF::<F>::sponge_no_padding(input.borrow(), OUTPUT_LEN)?,
-            _ => RescueCRHF::<F>::sponge_with_padding(input.borrow(), OUTPUT_LEN),
+            _ => RescueCRHF::<F>::sponge_with_zero_padding(input.borrow(), OUTPUT_LEN),
         };
         if res.len() != OUTPUT_LEN {
             return Err(PrimitivesError::InternalError(
@@ -71,9 +82,14 @@ impl<F: RescueParameter, const OUTPUT_LEN: usize> CRHF for VariableLengthRescueC
     type Input = Vec<F>;
     type Output = [F; OUTPUT_LEN];
 
+    /// ## Padding
+    /// if `input` length is not a multiple of `CRHF_RATE`, then it will be
+    /// padded. By default, we use "bit padding"-style where "1" is always
+    /// appended, then as many "0" as required are added for the overall
+    /// length to be a multiple of `CRHF_RATE`.
     fn evaluate<T: Borrow<Self::Input>>(input: T) -> Result<Self::Output, PrimitivesError> {
         let mut output = [F::zero(); OUTPUT_LEN];
-        let res = RescueCRHF::<F>::sponge_with_padding(input.borrow(), OUTPUT_LEN);
+        let res = RescueCRHF::<F>::sponge_with_bit_padding(input.borrow(), OUTPUT_LEN);
         if res.len() != OUTPUT_LEN {
             return Err(PrimitivesError::InternalError(
                 "Unexpected rescue sponge return length".to_string(),

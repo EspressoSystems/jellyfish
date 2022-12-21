@@ -868,11 +868,11 @@ mod test_permutation {
     }
     fn test_variable_output_sponge_and_fsks_helper<F: RescueParameter>() {
         let input = [F::zero(), F::one(), F::zero()];
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 0).len(), 0);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 1).len(), 1);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 2).len(), 2);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 3).len(), 3);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 10).len(), 10);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 0).len(), 0);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 1).len(), 1);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 2).len(), 2);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 3).len(), 3);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 10).len(), 10);
 
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 0).unwrap().len(), 0);
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 1).unwrap().len(), 1);
