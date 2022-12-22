@@ -29,12 +29,6 @@ pub trait CRHF {
 
     /// evaluate inputs and return hash output
     fn evaluate<T: Borrow<Self::Input>>(input: T) -> Result<Self::Output, PrimitivesError>;
-
-    /// same as [`Self::evaluate`] with caller assurance that `input` won't
-    /// cause any error, mostly for internal use, invoke with caution!
-    fn evaluate_safe<T: Borrow<Self::Input>>(input: T) -> Self::Output {
-        Self::evaluate(input).expect("Should NOT panic")
-    }
 }
 
 #[derive(Debug, Clone)]
