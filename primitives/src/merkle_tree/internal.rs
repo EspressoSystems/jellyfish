@@ -668,15 +668,7 @@ where
                                     data[*branch] = val;
                                     Ok(H::digest(&data))
                                 },
-                                MerkleNode::Empty => {
-                                    if init == T::default() {
-                                        Ok(init)
-                                    } else {
-                                        Err(PrimitivesError::ParameterError(
-                                            "In valid proof".to_string(),
-                                        ))
-                                    }
-                                },
+                                MerkleNode::Empty => Ok(init),
                                 _ => Err(PrimitivesError::ParameterError(
                                     "Incompatible proof for this merkle tree".to_string(),
                                 )),
