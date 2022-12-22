@@ -331,7 +331,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
     /// Constrain a point to be on certain curve, namely its coordinates satisfy
     /// the curve equation, which is curve-dependent. Currently we only support
-    /// checks of a GroupAffine::<P> over a base field which is the bls12-381
+    /// checks of a `GroupAffine::<P>` over a base field which is the bls12-381
     /// scalar field
     ///
     /// Returns error if input variables are invalid
@@ -390,7 +390,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Obtain a variable to the point addition result of `point_a` + `point_b`
     /// where "+" is the group operation over an elliptic curve.
-    /// Currently only supports GroupAffine::<P> addition.
+    /// Currently only supports `GroupAffine::<P>` addition.
     ///
     /// Returns error if inputs are invalid
     pub fn ecc_add<P: Parameters<BaseField = F>>(
@@ -415,7 +415,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     /// Obtain the fixed-based scalar multiplication result of `scalar` * `Base`
-    /// Currently only supports GroupAffine::<P> scalar multiplication.
+    /// Currently only supports `GroupAffine::<P>` scalar multiplication.
     pub fn fixed_base_scalar_mul<P: Parameters<BaseField = F>>(
         &mut self,
         scalar: Variable,
@@ -463,7 +463,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Obtain a variable of the result of a variable base scalar
     /// multiplication. both `scalar` and `base` are variables.
-    /// Currently only supports GroupAffine::<P>.
+    /// Currently only supports `GroupAffine::<P>`.
     /// If the parameter is bandersnatch, we will use GLV multiplication.
     pub fn variable_base_scalar_mul<P: Parameters<BaseField = F>>(
         &mut self,
@@ -490,7 +490,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Obtain a variable of the result of a variable base scalar
     /// multiplication. Both `scalar_bits_le` and `base` are variables,
     /// where `scalar_bits_le` is the little-endian form of the scalar.
-    /// Currently only supports GroupAffine::<P>.
+    /// Currently only supports `GroupAffine::<P>`.
     pub fn variable_base_binary_scalar_mul<P: Parameters<BaseField = F>>(
         &mut self,
         scalar_bits_le: &[BoolVar],

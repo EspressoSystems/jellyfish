@@ -54,6 +54,9 @@ and follow [semantic versioning](https://semver.org/) for our releases.
     - New methods for enforcing constraints: `is_member` and `enforce_merkle_proof`.
     - Move the remaining methods to the internals of circuit implementation for `RescueMerkleTree`.
     - Implement `MerkleTreeGadget` for `RescueMerkleTree`.
+- [#169](https://github.com/EspressoSystems/jellyfish/pull/158) (`jf-primitives`) Stabilize API effort
+    - Introduced `trait CRHF` and moved current implementations under `struct FixedLengthRescueCRHF, VariableLengthRescueCRHF`.
+    - Introduced `trait CommitmentScheme` and moved current implementations under `struct FixedLengthRescueCommitment`.
 
 ### Fixed
 
@@ -72,6 +75,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#105](https://github.com/EspressoSystems/jellyfish/pull/105) (all) Trait bound relaxation
 - [#108](https://github.com/EspressoSystems/jellyfish/pull/108) (`jf-utils`) Allowed more general input to `deserialize_canonical_bytes!()`
 - [#113](https://github.com/EspressoSystems/jellyfish/pull/113) (`jf-plonk`) Corrected error type for `PlonkVerifier` gadgets
+- [#162](https://github.com/EspressoSystems/jellyfish/pull/162) (`jf-utils`) Renamed `#serde(with="field_elem")` to `#serde(with="canonical")`
 
 ### Removed
 

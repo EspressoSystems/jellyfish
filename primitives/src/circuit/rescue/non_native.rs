@@ -1073,7 +1073,7 @@ mod tests {
                 .map(|x| FpElemVar::new_from_field_element(&mut circuit, x, m, None).unwrap())
                 .collect();
 
-            let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, 1);
+            let expected_sponge = RescueCRHF::sponge_with_bit_padding(&data_t, 1);
 
             // sponge with padding
             let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_with_padding(
@@ -1097,7 +1097,7 @@ mod tests {
 
             // sponge full with padding
             for output_len in 1..max_output_len {
-                let expected_sponge = RescueCRHF::sponge_with_padding(&data_t, output_len);
+                let expected_sponge = RescueCRHF::sponge_with_bit_padding(&data_t, output_len);
 
                 let sponge_var = RescueNonNativeGadget::<T, F>::rescue_sponge_with_padding(
                     &mut circuit,
