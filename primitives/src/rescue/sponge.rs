@@ -17,7 +17,7 @@ use super::{
     errors::RescueError, Permutation, RescueParameter, RescueVector, CRHF_RATE, STATE_SIZE,
 };
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 /// A rescue hash function consists of a permutation function and
 /// an internal state.
 struct RescueSponge<F: RescueParameter, const RATE: usize> {
@@ -26,7 +26,8 @@ struct RescueSponge<F: RescueParameter, const RATE: usize> {
 }
 
 /// CRHF
-pub struct RescueCRHF<F: RescueParameter> {
+#[derive(Debug, Clone)]
+pub(crate) struct RescueCRHF<F: RescueParameter> {
     sponge: RescueSponge<F, CRHF_RATE>,
 }
 
@@ -39,11 +40,27 @@ impl<F: RescueParameter> RescueCRHF<F> {
     /// Sponge hashing based on rescue permutation for RATE 3. It allows
     /// unrestricted variable length input and returns a vector of
     /// `num_outputs` elements.
-    pub fn sponge_with_padding(input: &[F], num_outputs: usize) -> Vec<F> {
-        // Pad input as follows: append a One, then pad with 0 until length is multiple
-        // of RATE
+    ///
+    /// we use ["bit padding"-style][padding] where "1" is always appended, then
+    /// as many "0" as required are added for the overall length to be a
+    /// multiple of RATE
+    ///
+    /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Bit_padding
+    pub(crate) fn sponge_with_bit_padding(input: &[F], num_outputs: usize) -> Vec<F> {
         let mut padded = input.to_vec();
         padded.push(F::one());
+        pad_with_zeros(&mut padded, CRHF_RATE);
+        Self::sponge_no_padding(padded.as_slice(), num_outputs)
+            .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
+    }
+
+    /// Similar to [`RescueCRHF::sponge_with_bit_padding`] except we use ["zero
+    /// padding"][padding] where as many "0" as required are added for the
+    /// overall length to be a multiple of RATE.
+    ///
+    /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding
+    pub(crate) fn sponge_with_zero_padding(input: &[F], num_outputs: usize) -> Vec<F> {
+        let mut padded = input.to_vec();
         pad_with_zeros(&mut padded, CRHF_RATE);
         Self::sponge_no_padding(padded.as_slice(), num_outputs)
             .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
@@ -52,7 +69,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
     /// Sponge hashing based on rescue permutation for RATE 3 and CAPACITY 1. It
     /// allows inputs with length that is a multiple of `CRHF_RATE` and
     /// returns a vector of `num_outputs` elements.
-    pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
+    pub(crate) fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
         if input.len() % CRHF_RATE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."

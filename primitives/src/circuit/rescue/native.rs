@@ -961,7 +961,7 @@ mod tests {
                 }
 
                 // Check consistency between outputs
-                let expected_hash = RescueCRHF::sponge_with_padding(&input_vec, output_len);
+                let expected_hash = RescueCRHF::sponge_with_bit_padding(&input_vec, output_len);
 
                 for (&e, &f) in expected_hash.iter().zip(out_var.iter()) {
                     assert_eq!(e, circuit.witness(f).unwrap());
