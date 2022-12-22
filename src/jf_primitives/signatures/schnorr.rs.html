@@ -606,6 +606,8 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -618,8 +620,9 @@
 </span><span class="kw">use </span><span class="kw">super</span>::SignatureScheme;
 <span class="kw">use crate</span>::{
     constants::CS_ID_SCHNORR,
+    crhf::{VariableLengthRescueCRHF, CRHF},
     errors::PrimitivesError,
-    rescue::{sponge::RescueCRHF, RescueParameter},
+    rescue::RescueParameter,
     utils::curve_cofactor,
 };
 <span class="kw">use </span>ark_ec::{
@@ -907,8 +910,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>msg_input = <span class="macro">vec!</span>[instance_description, fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.sk.<span class="number">0</span>)];
         msg_input.extend(msg.iter());
 
-        <span class="kw">let </span>r = fq_to_fr::&lt;F, P&gt;(<span class="kw-2">&amp;</span>RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>msg_input, <span class="number">1</span>)[<span class="number">0</span>]);
-        <span class="kw">let </span>R = Group::mul(<span class="kw-2">&amp;</span>GroupProjective::&lt;P&gt;::prime_subgroup_generator(), <span class="kw-2">&amp;</span>r);
+        <span class="kw">let </span>r =
+            fq_to_fr::&lt;F, P&gt;(<span class="kw-2">&amp;</span>VariableLengthRescueCRHF::&lt;F, <span class="number">1</span>&gt;::evaluate(<span class="kw-2">&amp;</span>msg_input).unwrap()[<span class="number">0</span>]); <span class="comment">// safe unwrap
+        </span><span class="kw">let </span>R = Group::mul(<span class="kw-2">&amp;</span>GroupProjective::&lt;P&gt;::prime_subgroup_generator(), <span class="kw-2">&amp;</span>r);
         <span class="kw">let </span>c = <span class="self">self</span>.vk.challenge(<span class="kw-2">&amp;</span>R, msg, csid);
         <span class="kw">let </span>s = c * <span class="self">self</span>.sk.<span class="number">0 </span>+ r;
 
@@ -1019,9 +1023,9 @@
             ]
         };
         challenge_input.extend(msg);
-        <span class="kw">let </span>challenge_fq = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>challenge_input, <span class="number">1</span>)[<span class="number">0</span>];
+        <span class="kw">let </span>challenge_fq = VariableLengthRescueCRHF::&lt;F, <span class="number">1</span>&gt;::evaluate(challenge_input).unwrap()[<span class="number">0</span>]; <span class="comment">// safe unwrap
 
-        <span class="comment">// this masking will drop the last byte, and the resulting
+        // this masking will drop the last byte, and the resulting
         // challenge will be 248 bits
         </span>fq_to_fr_with_mask(<span class="kw-2">&amp;</span>challenge_fq)
     }

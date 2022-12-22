@@ -333,6 +333,23 @@
 <span id="333">333</span>
 <span id="334">334</span>
 <span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -352,7 +369,7 @@
     errors::RescueError, Permutation, RescueParameter, RescueVector, CRHF_RATE, STATE_SIZE,
 };
 
-<span class="attribute">#[derive(Clone, Default)]
+<span class="attribute">#[derive(Clone, Default, Debug)]
 </span><span class="doccomment">/// A rescue hash function consists of a permutation function and
 /// an internal state.
 </span><span class="kw">struct </span>RescueSponge&lt;F: RescueParameter, <span class="kw">const </span>RATE: usize&gt; {
@@ -361,7 +378,8 @@
 }
 
 <span class="doccomment">/// CRHF
-</span><span class="kw">pub struct </span>RescueCRHF&lt;F: RescueParameter&gt; {
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RescueCRHF&lt;F: RescueParameter&gt; {
     sponge: RescueSponge&lt;F, CRHF_RATE&gt;,
 }
 
@@ -374,11 +392,27 @@
     <span class="doccomment">/// Sponge hashing based on rescue permutation for RATE 3. It allows
     /// unrestricted variable length input and returns a vector of
     /// `num_outputs` elements.
-    </span><span class="kw">pub fn </span>sponge_with_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
-        <span class="comment">// Pad input as follows: append a One, then pad with 0 until length is multiple
-        // of RATE
-        </span><span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
+    ///
+    /// we use [&quot;bit padding&quot;-style][padding] where &quot;1&quot; is always appended, then
+    /// as many &quot;0&quot; as required are added for the overall length to be a
+    /// multiple of RATE
+    ///
+    /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Bit_padding
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sponge_with_bit_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
         padded.push(F::one());
+        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, CRHF_RATE);
+        <span class="self">Self</span>::sponge_no_padding(padded.as_slice(), num_outputs)
+            .expect(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
+    }
+
+    <span class="doccomment">/// Similar to [`RescueCRHF::sponge_with_bit_padding`] except we use [&quot;zero
+    /// padding&quot;][padding] where as many &quot;0&quot; as required are added for the
+    /// overall length to be a multiple of RATE.
+    ///
+    /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sponge_with_zero_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
         pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, CRHF_RATE);
         <span class="self">Self</span>::sponge_no_padding(padded.as_slice(), num_outputs)
             .expect(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
@@ -387,7 +421,7 @@
     <span class="doccomment">/// Sponge hashing based on rescue permutation for RATE 3 and CAPACITY 1. It
     /// allows inputs with length that is a multiple of `CRHF_RATE` and
     /// returns a vector of `num_outputs` elements.
-    </span><span class="kw">pub fn </span>sponge_no_padding(input: <span class="kw-2">&amp;</span>[F], num_output: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sponge_no_padding(input: <span class="kw-2">&amp;</span>[F], num_output: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
         <span class="kw">if </span>input.len() % CRHF_RATE != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(RescueError::ParameterError(
                 <span class="string">&quot;Rescue sponge Error : input to sponge hashing function is not multiple of RATE.&quot;

@@ -185,6 +185,7 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
+<span id="188">188</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -202,8 +203,9 @@
 };
 <span class="kw">use </span>ark_std::vec::Vec;
 <span class="kw">use </span>jf_primitives::{
+    crhf::{VariableLengthRescueCRHF, CRHF},
     pcs::prelude::Commitment,
-    rescue::{sponge::RescueCRHF, RescueParameter, STATE_SIZE},
+    rescue::{RescueParameter, STATE_SIZE},
 };
 <span class="kw">use </span>jf_relation::gadgets::ecc::{Point, SWToTEConParam};
 <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
@@ -356,14 +358,14 @@
     /// efficiency.
     </span><span class="kw">fn </span>get_and_append_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine,
+        </span>E: PairingEngine&lt;Fq = F&gt;,
     {
         <span class="comment">// 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr
         // 3. transcript = Vec::new()
 
         </span><span class="kw">let </span>input = [<span class="self">self</span>.state.as_ref(), <span class="self">self</span>.transcript.as_ref()].concat();
-        <span class="kw">let </span>tmp = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input, STATE_SIZE);
+        <span class="kw">let </span>tmp: [F; STATE_SIZE] = VariableLengthRescueCRHF::evaluate(<span class="kw-2">&amp;</span>input)<span class="question-mark">?</span>;
         <span class="kw">let </span>challenge = fq_to_fr_with_mask::&lt;F, E::Fr&gt;(<span class="kw-2">&amp;</span>tmp[<span class="number">0</span>]);
         <span class="self">self</span>.state.copy_from_slice(<span class="kw-2">&amp;</span>tmp);
         <span class="self">self</span>.transcript = Vec::new();

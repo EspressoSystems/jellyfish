@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RescueCRHF","CRHF"],["RescuePRF","PRF"]]};
+window.SIDEBAR_ITEMS = {"struct":[["RescuePRF","PRF"]]};

@@ -1137,7 +1137,7 @@
 }
 
 <span class="doccomment">/// A matrix that consists of `STATE_SIZE` number of rescue vectors.
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attribute">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>RescueMatrix&lt;F&gt; {
     matrix: [RescueVector&lt;F&gt;; STATE_SIZE],
 }
@@ -1184,7 +1184,7 @@
 // input to 3 and output to 1
 //
 
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attribute">#[derive(Debug, Clone)]
 #[allow(clippy::upper_case_acronyms)]
 </span><span class="doccomment">/// Rescue pseudo-random permutation (PRP) instance
 </span><span class="kw">pub struct </span>PRP&lt;F&gt; {
@@ -1307,7 +1307,7 @@
 
 <span class="doccomment">/// Instance of a unkeyed cryptographic permutation to be used for instantiation
 /// hashing, pseudo-random function, and other cryptographic primitives
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attribute">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Permutation&lt;F&gt; {
     rescue_prp: PRP&lt;F&gt;,
     round_keys: Vec&lt;RescueVector&lt;F&gt;&gt;,
@@ -1804,11 +1804,11 @@
     }
     <span class="kw">fn </span>test_variable_output_sponge_and_fsks_helper&lt;F: RescueParameter&gt;() {
         <span class="kw">let </span>input = [F::zero(), F::one(), F::zero()];
-        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">0</span>).len(), <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">1</span>).len(), <span class="number">1</span>);
-        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">2</span>).len(), <span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).len(), <span class="number">3</span>);
-        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input, <span class="number">10</span>).len(), <span class="number">10</span>);
+        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>input, <span class="number">0</span>).len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>input, <span class="number">1</span>).len(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>input, <span class="number">2</span>).len(), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).len(), <span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>input, <span class="number">10</span>).len(), <span class="number">10</span>);
 
         <span class="macro">assert_eq!</span>(RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">0</span>).unwrap().len(), <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">1</span>).unwrap().len(), <span class="number">1</span>);

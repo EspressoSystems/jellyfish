@@ -418,7 +418,7 @@
     /// and then append it to the transcript.
     </span><span class="kw">fn </span>get_and_append_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine;
+        </span>E: PairingEngine&lt;Fq = F&gt;;
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_plonk" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

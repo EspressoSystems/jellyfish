@@ -23,7 +23,7 @@
 </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = mt.lookup(<span class="number">2</span>).expect_ok().unwrap();
 
 <span class="comment">// Circuit computation with a MT
-</span><span class="kw">let </span>leaf_var = circuit.create_leaf_variable(Fq::from(<span class="number">2_u64</span>), Fq::from(<span class="number">100_u64</span>)).unwrap();
+</span><span class="kw">let </span>leaf_var = circuit.create_leaf_variable(<span class="number">2_u64</span>, Fq::from(<span class="number">100_u64</span>)).unwrap();
 <span class="kw">let </span>path_vars = circuit.create_membership_proof_variable(<span class="kw-2">&amp;</span>proof).unwrap();
 <span class="kw">let </span>root_var = circuit.create_root_variable(expected_root).unwrap();
 circuit.enforce_merkle_proof(leaf_var, path_vars, root_var).unwrap();

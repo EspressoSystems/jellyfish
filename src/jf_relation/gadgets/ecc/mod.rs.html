@@ -1627,7 +1627,7 @@
     }
     <span class="doccomment">/// Constrain a point to be on certain curve, namely its coordinates satisfy
     /// the curve equation, which is curve-dependent. Currently we only support
-    /// checks of a GroupAffine::&lt;P&gt; over a base field which is the bls12-381
+    /// checks of a `GroupAffine::&lt;P&gt;` over a base field which is the bls12-381
     /// scalar field
     ///
     /// Returns error if input variables are invalid
@@ -1686,7 +1686,7 @@
 
     <span class="doccomment">/// Obtain a variable to the point addition result of `point_a` + `point_b`
     /// where &quot;+&quot; is the group operation over an elliptic curve.
-    /// Currently only supports GroupAffine::&lt;P&gt; addition.
+    /// Currently only supports `GroupAffine::&lt;P&gt;` addition.
     ///
     /// Returns error if inputs are invalid
     </span><span class="kw">pub fn </span>ecc_add&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
@@ -1711,7 +1711,7 @@
     }
 
     <span class="doccomment">/// Obtain the fixed-based scalar multiplication result of `scalar` * `Base`
-    /// Currently only supports GroupAffine::&lt;P&gt; scalar multiplication.
+    /// Currently only supports `GroupAffine::&lt;P&gt;` scalar multiplication.
     </span><span class="kw">pub fn </span>fixed_base_scalar_mul&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scalar: Variable,
@@ -1759,7 +1759,7 @@
 
     <span class="doccomment">/// Obtain a variable of the result of a variable base scalar
     /// multiplication. both `scalar` and `base` are variables.
-    /// Currently only supports GroupAffine::&lt;P&gt;.
+    /// Currently only supports `GroupAffine::&lt;P&gt;`.
     /// If the parameter is bandersnatch, we will use GLV multiplication.
     </span><span class="kw">pub fn </span>variable_base_scalar_mul&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -1786,7 +1786,7 @@
     <span class="doccomment">/// Obtain a variable of the result of a variable base scalar
     /// multiplication. Both `scalar_bits_le` and `base` are variables,
     /// where `scalar_bits_le` is the little-endian form of the scalar.
-    /// Currently only supports GroupAffine::&lt;P&gt;.
+    /// Currently only supports `GroupAffine::&lt;P&gt;`.
     </span><span class="kw">pub fn </span>variable_base_binary_scalar_mul&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scalar_bits_le: <span class="kw-2">&amp;</span>[BoolVar],

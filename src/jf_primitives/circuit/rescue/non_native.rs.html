@@ -2308,7 +2308,7 @@
                 .map(|x| FpElemVar::new_from_field_element(<span class="kw-2">&amp;mut </span>circuit, x, m, <span class="prelude-val">None</span>).unwrap())
                 .collect();
 
-            <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>);
+            <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>data_t, <span class="number">1</span>);
 
             <span class="comment">// sponge with padding
             </span><span class="kw">let </span>sponge_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_with_padding(
@@ -2332,7 +2332,7 @@
 
             <span class="comment">// sponge full with padding
             </span><span class="kw">for </span>output_len <span class="kw">in </span><span class="number">1</span>..max_output_len {
-                <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>data_t, output_len);
+                <span class="kw">let </span>expected_sponge = RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>data_t, output_len);
 
                 <span class="kw">let </span>sponge_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_sponge_with_padding(
                     <span class="kw-2">&amp;mut </span>circuit,

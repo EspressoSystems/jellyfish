@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Commitment","Commitment instance for user defined input size (in scalar elements)"]]};
+window.SIDEBAR_ITEMS = {"struct":[["FixedLengthRescueCommitment","Rescue-based Commitment instance for fixed-length input"]],"trait":[["CommitmentScheme","A trait for cryptographic commitment scheme"]]};

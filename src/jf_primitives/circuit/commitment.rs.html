@@ -93,6 +93,18 @@
 <span id="93">93</span>
 <span id="94">94</span>
 <span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -136,7 +148,10 @@
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use crate</span>::{circuit::commitment::CommitmentGadget, commitment::Commitment};
+    <span class="kw">use crate</span>::{
+        circuit::commitment::CommitmentGadget,
+        commitment::{CommitmentScheme, FixedLengthRescueCommitment},
+    };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
@@ -147,23 +162,32 @@
     <span class="kw">use </span>itertools::Itertools;
     <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit, Variable};
 
+    <span class="kw">const </span>TEST_INPUT_LEN: usize = <span class="number">10</span>;
+    <span class="kw">const </span>TEST_INPUT_LEN_PLUS_ONE: usize = <span class="number">10 </span>+ <span class="number">1</span>;
+
     <span class="macro">macro_rules! </span>test_commit_circuit {
         (<span class="macro-nonterminal">$base_field</span>:tt) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;<span class="macro-nonterminal">$base_field</span>&gt; = PlonkCircuit::new_turbo_plonk();
             <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
+
             <span class="kw">let </span>blinding = <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng);
             <span class="kw">let </span>blinding_var = circuit.create_variable(blinding).unwrap();
-            <span class="kw">let </span>input_len = <span class="number">10</span>;
-            <span class="kw">let </span>data: Vec&lt;<span class="macro-nonterminal">$base_field</span>&gt; = (<span class="number">0</span>..input_len)
-                .map(|<span class="kw">_</span>| <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng))
-                .collect_vec();
+
+            <span class="kw">let </span><span class="kw-2">mut </span>data = [<span class="macro-nonterminal">$base_field::from</span>(<span class="number">0u64</span>); TEST_INPUT_LEN];
+            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..TEST_INPUT_LEN {
+                data[i] = <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng);
+            }
             <span class="kw">let </span>data_vars: Vec&lt;Variable&gt; = data
                 .iter()
                 .map(|<span class="kw-2">&amp;</span>x| circuit.create_variable(x).unwrap())
                 .collect_vec();
 
-            <span class="kw">let </span>commitment_instance = Commitment::new(input_len);
-            <span class="kw">let </span>expected_commitment = commitment_instance.commit(<span class="kw-2">&amp;</span>data, <span class="kw-2">&amp;</span>blinding).unwrap();
+            <span class="kw">let </span>expected_commitment = FixedLengthRescueCommitment::&lt;
+                <span class="macro-nonterminal">$base_field</span>,
+                TEST_INPUT_LEN,
+                TEST_INPUT_LEN_PLUS_ONE,
+            &gt;::commit(<span class="kw-2">&amp;</span>data, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>blinding))
+            .unwrap();
 
             <span class="kw">let </span>commitment_var = circuit.commit(<span class="kw-2">&amp;</span>data_vars, blinding_var).unwrap();
 

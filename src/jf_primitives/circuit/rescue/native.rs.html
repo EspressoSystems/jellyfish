@@ -1991,7 +1991,7 @@
                 }
 
                 <span class="comment">// Check consistency between outputs
-                </span><span class="kw">let </span>expected_hash = RescueCRHF::sponge_with_padding(<span class="kw-2">&amp;</span>input_vec, output_len);
+                </span><span class="kw">let </span>expected_hash = RescueCRHF::sponge_with_bit_padding(<span class="kw-2">&amp;</span>input_vec, output_len);
 
                 <span class="kw">for </span>(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>f) <span class="kw">in </span>expected_hash.iter().zip(out_var.iter()) {
                     <span class="macro">assert_eq!</span>(e, circuit.witness(f).unwrap());

@@ -117,6 +117,48 @@
 <span id="117">117</span>
 <span id="118">118</span>
 <span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -128,53 +170,83 @@
 </span><span class="kw">use </span>ark_std::marker::PhantomData;
 
 <span class="kw">use crate</span>::{
+    crhf::{FixedLengthRescueCRHF, CRHF},
     errors::PrimitivesError,
-    rescue::{sponge::RescueCRHF, RescueParameter, CRHF_RATE},
+    rescue::RescueParameter,
 };
-<span class="kw">use </span>ark_std::{format, string::String, vec};
-<span class="kw">use </span>jf_utils::pad_with_zeros;
+<span class="kw">use </span>ark_std::{
+    borrow::Borrow,
+    fmt::Debug,
+    hash::Hash,
+    string::{String, ToString},
+    UniformRand,
+};
 
-<span class="attribute">#[derive(Default)]
-</span><span class="doccomment">/// Commitment instance for user defined input size (in scalar elements)
-</span><span class="kw">pub struct </span>Commitment&lt;F: RescueParameter&gt; {
-    input_len: usize,
-    phantom_f: PhantomData&lt;F&gt;,
+<span class="doccomment">/// A trait for cryptographic commitment scheme
+</span><span class="kw">pub trait </span>CommitmentScheme {
+    <span class="doccomment">/// Input to the commitment
+    </span><span class="kw">type </span>Input;
+    <span class="doccomment">/// The type of output commitment value
+    </span><span class="kw">type </span>Output: Clone + Debug + PartialEq + Eq + Hash;
+    <span class="doccomment">/// The type of the hiding/blinding factor
+    </span><span class="kw">type </span>Randomness: Clone + Debug + PartialEq + Eq + UniformRand;
+
+    <span class="doccomment">/// Commit algorithm that takes `input` and blinding randomness `r`
+    /// (optional for hiding commitment schemes), outputs a commitment.
+    </span><span class="kw">fn </span>commit&lt;T: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        input: T,
+        r: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Randomness&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt;;
+
+    <span class="doccomment">/// Verify algorithm that output `Ok` if accepted, or `Err` if rejected.
+    </span><span class="kw">fn </span>verify&lt;T: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        input: T,
+        r: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Randomness&gt;,
+        comm: <span class="kw-2">&amp;</span><span class="self">Self</span>::Output,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt;;
 }
 
-<span class="kw">impl</span>&lt;F: RescueParameter&gt; Commitment&lt;F&gt; {
-    <span class="doccomment">/// Create a new commitment instance for inputs of length `input_len`
-    </span><span class="kw">pub fn </span>new(input_len: usize) -&gt; Commitment&lt;F&gt; {
-        <span class="macro">assert!</span>(input_len &gt; <span class="number">0</span>, <span class="string">&quot;input_len must be positive&quot;</span>);
-        Commitment {
-            input_len,
-            phantom_f: PhantomData,
-        }
+<span class="attribute">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+</span><span class="doccomment">/// Rescue-based Commitment instance for fixed-length input
+///
+/// ## Note
+/// the current ugly existence of `INPUT_LEN_PLUS_ONE` is due to unstable
+/// feature of using const generic in expression (namely can&#39;t use `INPUT_LEN +
+/// 1` in code).
+</span><span class="comment">// FIXME: (alex) when `feature(generic_const_exprs)` is stable, we should remove
+// the third generic param. See more: https://github.com/rust-lang/rust/issues/76560
+</span><span class="kw">pub struct </span>FixedLengthRescueCommitment&lt;
+    F: RescueParameter,
+    <span class="kw">const </span>INPUT_LEN: usize,
+    <span class="kw">const </span>INPUT_LEN_PLUS_ONE: usize,
+&gt;(PhantomData&lt;F&gt;);
+
+<span class="kw">impl</span>&lt;F: RescueParameter, <span class="kw">const </span>INPUT_LEN: usize, <span class="kw">const </span>INPUT_LEN_PLUS_ONE: usize&gt; CommitmentScheme
+    <span class="kw">for </span>FixedLengthRescueCommitment&lt;F, INPUT_LEN, INPUT_LEN_PLUS_ONE&gt;
+{
+    <span class="kw">type </span>Input = [F; INPUT_LEN];
+    <span class="kw">type </span>Output = F;
+    <span class="kw">type </span>Randomness = F;
+
+    <span class="kw">fn </span>commit&lt;T: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        input: T,
+        r: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Randomness&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>msg = [F::zero(); INPUT_LEN_PLUS_ONE];
+        msg[<span class="number">0</span>] = <span class="kw-2">*</span>r.ok_or_else(|| {
+            PrimitivesError::ParameterError(<span class="string">&quot;Expecting a blinding factor&quot;</span>.to_string())
+        })<span class="question-mark">?</span>;
+        msg[<span class="number">1</span>..INPUT_LEN_PLUS_ONE].copy_from_slice(<span class="kw-2">&amp;</span>input.borrow()[..(INPUT_LEN)]);
+
+        <span class="prelude-val">Ok</span>(FixedLengthRescueCRHF::&lt;F, INPUT_LEN_PLUS_ONE, <span class="number">1</span>&gt;::evaluate(<span class="kw-2">&amp;</span>msg)<span class="question-mark">?</span>[<span class="number">0</span>])
     }
-    <span class="doccomment">/// Commits to `input` slice using blinding `blind`. Return
-    /// Err(PrimitivesError::ParameterError) if input.len() !=
-    /// self.input_len
-    </span><span class="kw">pub fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F], blind: <span class="kw-2">&amp;</span>F) -&gt; <span class="prelude-ty">Result</span>&lt;F, PrimitivesError&gt; {
-        <span class="kw">if </span>input.len() != <span class="self">self</span>.input_len {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;Commitment error: expected input length ({}). It must match \
-                instance&#39;s message length ({})&quot;</span>,
-                <span class="self">self</span>.input_len,
-                input.len(),
-            )));
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="macro">vec!</span>[<span class="kw-2">*</span>blind];
-        msg.extend_from_slice(input);
-        <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the commitment instance
-        </span>pad_with_zeros(<span class="kw-2">&amp;mut </span>msg, CRHF_RATE);
-        <span class="kw">let </span>result_vec = RescueCRHF::sponge_no_padding(msg.as_slice(), <span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(result_vec[<span class="number">0</span>])
-    }
-    <span class="doccomment">/// Verifies `commitment` against `input` and `blind`.
-    /// Returns Ok(()) on success. Otherwise, returns
-    /// PrimitivesError::ParameterError if input.len() != self.input_len,
-    /// and PrimitivesError::VerificationError if commitment is not valid.
-    </span><span class="kw">pub fn </span>verify(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[F], blind: <span class="kw-2">&amp;</span>F, commitment: <span class="kw-2">&amp;</span>F) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.commit(input, blind)<span class="question-mark">? </span>== <span class="kw-2">*</span>commitment {
+
+    <span class="kw">fn </span>verify&lt;T: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        input: T,
+        r: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Randomness&gt;,
+        comm: <span class="kw-2">&amp;</span><span class="self">Self</span>::Output,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
+        <span class="kw">if </span>&lt;<span class="self">Self </span><span class="kw">as </span>CommitmentScheme&gt;::commit(input, r)<span class="question-mark">? </span>== <span class="kw-2">*</span>comm {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(PrimitivesError::VerificationError(String::from(
@@ -186,44 +258,56 @@
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use </span><span class="kw">crate</span>::commitment::Commitment;
+    <span class="kw">use crate</span>::{
+        commitment::{CommitmentScheme, FixedLengthRescueCommitment},
+        rescue::{sponge::RescueCRHF, CRHF_RATE},
+    };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
     <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::Fq <span class="kw">as </span>FqEd381b;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
     <span class="kw">use </span>ark_ff::UniformRand;
-    <span class="kw">use </span>core::ops::Add;
+    <span class="kw">use </span>ark_std::vec;
 
     <span class="macro">macro_rules! </span>test_commit {
         (<span class="macro-nonterminal">$tr</span>:tt) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
-            <span class="kw">let </span>commitment = Commitment::new(<span class="number">3</span>);
 
             <span class="kw">let </span>input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">3u64</span>)];
             <span class="kw">let </span>blind = <span class="macro-nonterminal">$tr::rand</span>(<span class="kw-2">&amp;mut </span>prng);
-            <span class="kw">let </span>c = commitment.commit(<span class="kw-2">&amp;</span>input, <span class="kw-2">&amp;</span>blind).unwrap();
-            <span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>input, <span class="kw-2">&amp;</span>blind, <span class="kw-2">&amp;</span>c).is_ok());
-            <span class="comment">// smaller input size
-            </span><span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>input[<span class="number">0</span>..<span class="number">2</span>], <span class="kw-2">&amp;</span>blind, <span class="kw-2">&amp;</span>c).is_err());
-            <span class="comment">// bad blinding factor
-            </span><span class="kw">let </span>bad_blind = blind.add(<span class="macro-nonterminal">$tr::from</span>(<span class="number">1u8</span>));
-            <span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>input, <span class="kw-2">&amp;</span>bad_blind, <span class="kw-2">&amp;</span>c).is_err());
-            <span class="comment">// bad input
-            </span><span class="kw">let </span>bad_input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">3u64</span>)];
-            <span class="macro">assert!</span>(commitment.verify(<span class="kw-2">&amp;</span>bad_input, <span class="kw-2">&amp;</span>blind, <span class="kw-2">&amp;</span>c).is_err());
+
+            <span class="kw">let </span>c = FixedLengthRescueCommitment::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">3</span>, <span class="number">4</span>&gt;::commit(<span class="kw-2">&amp;</span>input, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>blind)).unwrap();
+            <span class="macro">assert!</span>(
+                FixedLengthRescueCommitment::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">3</span>, <span class="number">4</span>&gt;::verify(<span class="kw-2">&amp;</span>input, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>blind), <span class="kw-2">&amp;</span>c).is_ok()
+            );
+            <span class="comment">// test for correctness
+            </span><span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="macro">vec!</span>[blind];
+            msg.extend_from_slice(<span class="kw-2">&amp;</span>input);
+            <span class="kw">if </span>(input.len() + <span class="number">1</span>) % CRHF_RATE == <span class="number">0 </span>{
+                <span class="macro">assert_eq!</span>(c, RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>msg, <span class="number">1</span>).unwrap()[<span class="number">0</span>])
+            } <span class="kw">else </span>{
+                <span class="macro">assert_eq!</span>(c, RescueCRHF::sponge_with_zero_padding(<span class="kw-2">&amp;</span>msg, <span class="number">1</span>)[<span class="number">0</span>])
+            }
 
             <span class="comment">// smaller input size
-            </span><span class="kw">let </span>bad_size_input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>)];
-            <span class="macro">assert!</span>(commitment.commit(<span class="kw-2">&amp;</span>bad_size_input, <span class="kw-2">&amp;</span>blind).is_err());
-            <span class="comment">// greater input size
-            </span><span class="kw">let </span>bad_size_input = [
-                <span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>),
-                <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>),
-                <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>),
-                <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>),
-            ];
-            <span class="macro">assert!</span>(commitment.commit(<span class="kw-2">&amp;</span>bad_size_input, <span class="kw-2">&amp;</span>blind).is_err());
+            </span><span class="kw">let </span>bad_input = [input[<span class="number">0</span>], input[<span class="number">1</span>]];
+            <span class="macro">assert!</span>(
+                FixedLengthRescueCommitment::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">2</span>, <span class="number">3</span>&gt;::verify(<span class="kw-2">&amp;</span>bad_input, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>blind), <span class="kw-2">&amp;</span>c)
+                    .is_err()
+            );
+            <span class="comment">// bad blinding factor
+            </span><span class="kw">let </span>bad_blind = blind + <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u8</span>);
+            <span class="macro">assert!</span>(
+                FixedLengthRescueCommitment::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">3</span>, <span class="number">4</span>&gt;::verify(<span class="kw-2">&amp;</span>input, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>bad_blind), <span class="kw-2">&amp;</span>c)
+                    .is_err()
+            );
+            <span class="comment">// bad input
+            </span><span class="kw">let </span>bad_input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">2u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">1u64</span>), <span class="macro-nonterminal">$tr::from</span>(<span class="number">3u64</span>)];
+            <span class="macro">assert!</span>(
+                FixedLengthRescueCommitment::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">3</span>, <span class="number">4</span>&gt;::verify(<span class="kw-2">&amp;</span>bad_input, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>blind), <span class="kw-2">&amp;</span>c)
+                    .is_err()
+            );
         };
     }
 

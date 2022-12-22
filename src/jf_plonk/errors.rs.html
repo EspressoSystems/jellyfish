@@ -143,7 +143,7 @@
     <span class="doccomment">/// Plonk proof verification failed due to wrong proof
     </span>WrongProof,
     <span class="doccomment">/// Rescue Error
-    </span>RescueError(jf_primitives::rescue::errors::RescueError),
+    </span>PrimitiveError(jf_primitives::errors::PrimitivesError),
     <span class="doccomment">/// Invalid parameters
     </span>InvalidParameters(String),
     <span class="doccomment">/// Non-native field overflow
@@ -174,9 +174,9 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;jf_primitives::rescue::errors::RescueError&gt; <span class="kw">for </span>PlonkError {
-    <span class="kw">fn </span>from(e: jf_primitives::rescue::errors::RescueError) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::RescueError(e)
+<span class="kw">impl </span>From&lt;jf_primitives::errors::PrimitivesError&gt; <span class="kw">for </span>PlonkError {
+    <span class="kw">fn </span>from(e: jf_primitives::errors::PrimitivesError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::PrimitiveError(e)
     }
 }
 
