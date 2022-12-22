@@ -685,14 +685,6 @@
 <span id="685">685</span>
 <span id="686">686</span>
 <span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
-<span id="693">693</span>
-<span id="694">694</span>
-<span id="695">695</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1363,15 +1355,7 @@
                                     data[<span class="kw-2">*</span>branch] = val;
                                     <span class="prelude-val">Ok</span>(H::digest(<span class="kw-2">&amp;</span>data))
                                 },
-                                MerkleNode::Empty =&gt; {
-                                    <span class="kw">if </span>init == T::default() {
-                                        <span class="prelude-val">Ok</span>(init)
-                                    } <span class="kw">else </span>{
-                                        <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                                            <span class="string">&quot;In valid proof&quot;</span>.to_string(),
-                                        ))
-                                    }
-                                },
+                                MerkleNode::Empty =&gt; <span class="prelude-val">Ok</span>(init),
                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
                                     <span class="string">&quot;Incompatible proof for this merkle tree&quot;</span>.to_string(),
                                 )),
