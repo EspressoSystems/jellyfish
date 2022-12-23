@@ -106,8 +106,7 @@ where
             elem,
             merkle_proof,
             expected_merkle_root,
-        )
-        .unwrap();
+        )?;
         self.enforce_true(bool_val.into())
     }
 }

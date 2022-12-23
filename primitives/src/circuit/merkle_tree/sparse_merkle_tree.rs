@@ -69,9 +69,7 @@ where
         merkle_proof: Self::MerklePathVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError> {
-        let bool_val = self
-            .is_non_member(elem, merkle_proof, expected_merkle_root)
-            .unwrap();
+        let bool_val = self.is_non_member(elem, merkle_proof, expected_merkle_root)?;
         self.enforce_true(bool_val.into())
     }
 }
@@ -139,8 +137,7 @@ where
             elem,
             merkle_proof,
             expected_merkle_root,
-        )
-        .unwrap();
+        )?;
         self.enforce_true(bool_val.into())
     }
 }
