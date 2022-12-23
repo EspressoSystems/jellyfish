@@ -22,7 +22,7 @@ use ark_std::{
 /// Trait for Pseudo-random Functions
 pub trait PRF {
     // TODO: (alex) add `CanonicalDeserialize` to `Input`, `CanonicalSerialize` to
-    // `Output`, both to `Seed`, when we move to arkwork 0.2.0
+    // `Output`, both to `Seed`, when we move to arkworks 0.4.0
     /// Input to the PRF
     type Input: Clone;
     /// Output of the PRF
