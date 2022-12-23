@@ -274,7 +274,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
     ) -> Result<Variable, CircuitError> {
         let zero_var = self.zero();
 
-        // leaf label = H(0, uid, arc)
+        // leaf label = H(0, uid, elem)
         let mut cur_label = RescueNativeGadget::<F>::rescue_sponge_no_padding(
             self,
             &[zero_var, elem.uid, elem.elem],
