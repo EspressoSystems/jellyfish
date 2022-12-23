@@ -32,10 +32,32 @@ use ark_std::vec::Vec;
 /// let (_, proof) = mt.lookup(2).expect_ok().unwrap();
 ///
 /// // Circuit computation with a MT
-/// let leaf_var = circuit.create_leaf_variable(2_u64, Fq::from(100_u64)).unwrap();
-/// let path_vars = circuit.create_membership_proof_variable(&proof).unwrap();
-/// let root_var = circuit.create_root_variable(expected_root).unwrap();
-/// circuit.enforce_merkle_proof(leaf_var, path_vars, root_var).unwrap();
+/// let leaf_var =
+///     <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::create_leaf_variable(
+///         &mut circuit,
+///         2_u64,
+///         Fq::from(100_u64)
+///     )
+///     .unwrap();
+/// let path_vars =
+///     <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::create_membership_proof_variable(
+///         &mut circuit,
+///         &proof
+///     )
+///     .unwrap();
+/// let root_var =
+///     <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::create_root_variable(
+///         &mut circuit,
+///         expected_root
+///     )
+///     .unwrap();
+/// <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::enforce_membership_proof(
+///     &mut circuit,
+///     leaf_var,
+///     path_vars,
+///     root_var
+/// )
+/// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 /// ```
 pub trait MerkleTreeGadget<M>
@@ -85,7 +107,60 @@ where
     ) -> Result<(), CircuitError>;
 }
 
-/// Gadget for the sparse merkle tree
+/// Gadget for the universal Merkle tree
+///
+/// # Examples
+///
+/// ```
+/// use ark_bls12_377::Fq;
+/// use jf_primitives::circuit::merkle_tree::{MerkleTreeGadget, UniversalMerkleTreeGadget};
+/// use jf_relation::{Circuit, PlonkCircuit};
+/// use jf_primitives::merkle_tree::{MerkleTreeScheme, MerkleCommitment, UniversalMerkleTreeScheme,
+///     prelude::RescueSparseMerkleTree};
+/// use hashbrown::HashMap;
+/// use num_bigint::BigUint;
+///
+/// type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;
+/// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
+/// // Create a 3-ary universal MT, instantiated with a Rescue-based hash, of height 2.
+/// let mut hashmap = HashMap::new();
+/// hashmap.insert(BigUint::from(1u64), Fq::from(2u64));
+/// hashmap.insert(BigUint::from(2u64), Fq::from(2u64));
+/// hashmap.insert(BigUint::from(1u64), Fq::from(3u64));
+/// let mt = SparseMerkleTree::<Fq>::from_kv_set(2, &hashmap).unwrap();
+/// let expected_root = mt.commitment().digest();
+/// // Get a proof for the element in position 2
+/// let proof = mt.universal_lookup(&BigUint::from(3u64)).expect_not_found().unwrap();
+///
+/// // Circuit computation with a MT
+/// let non_leaf_var =
+///     <PlonkCircuit<Fq> as MerkleTreeGadget<SparseMerkleTree<Fq>>>::create_leaf_variable(
+///         &mut circuit,
+///         BigUint::from(3u64),
+///         Fq::from(100_u64)
+///     )
+///     .unwrap();
+/// let path_vars =
+///     <PlonkCircuit<Fq> as MerkleTreeGadget<SparseMerkleTree<Fq>>>::create_membership_proof_variable(
+///         &mut circuit,
+///         &proof
+///     )
+///     .unwrap();
+/// let root_var =
+///     <PlonkCircuit<Fq> as MerkleTreeGadget<SparseMerkleTree<Fq>>>::create_root_variable(
+///         &mut circuit,
+///         expected_root
+///     )
+///     .unwrap();
+/// <PlonkCircuit<Fq> as UniversalMerkleTreeGadget<SparseMerkleTree<Fq>>>::enforce_non_membership_proof(
+///     &mut circuit,
+///     non_leaf_var,
+///     path_vars,
+///     root_var
+/// )
+/// .unwrap();
+/// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+/// ```
 pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
