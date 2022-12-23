@@ -86,7 +86,7 @@ where
 }
 
 /// Gadget for the sparse merkle tree
-pub trait SparseMerkleTreeGadget<M>: MerkleTreeGadget<M>
+pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
 {

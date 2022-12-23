@@ -28,7 +28,7 @@ use typenum::U3;
 
 use super::{
     LeafVar, MembershipProofBooleanEncoding, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
-    MerkleNodeBooleanEncoding, MerkleTreeGadget, MerkleTreeHelperGadget, SparseMerkleTreeGadget,
+    MerkleNodeBooleanEncoding, MerkleTreeGadget, MerkleTreeHelperGadget, UniversalMerkleTreeGadget,
 };
 
 impl<F: RescueParameter> MembershipProofBooleanEncoding<SparseMerkleTree<F>> {
@@ -39,7 +39,7 @@ impl<F: RescueParameter> MembershipProofBooleanEncoding<SparseMerkleTree<F>> {
     }
 }
 
-impl<F> SparseMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
+impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
@@ -296,7 +296,7 @@ mod test {
                 LeafVar, MembershipProofBooleanEncoding, Merkle3AryMembershipProofVar,
                 MerkleNodeBooleanEncoding, MerkleTreeHelperGadget,
             },
-            MerkleTreeGadget, SparseMerkleTreeGadget,
+            MerkleTreeGadget, UniversalMerkleTreeGadget,
         },
         merkle_tree::{
             internal::MerkleNode,
@@ -628,7 +628,7 @@ mod test {
             )
             .unwrap();
 
-        <PlonkCircuit<F> as SparseMerkleTreeGadget<SparseMerkleTree<F>>>::enforce_non_membership_proof(
+        <PlonkCircuit<F> as UniversalMerkleTreeGadget<SparseMerkleTree<F>>>::enforce_non_membership_proof(
             &mut circuit,
             non_leaf_var,
             path_vars,
@@ -666,7 +666,7 @@ mod test {
             )
             .unwrap();
 
-        <PlonkCircuit<F> as SparseMerkleTreeGadget<SparseMerkleTree<F>>>::enforce_non_membership_proof(
+        <PlonkCircuit<F> as UniversalMerkleTreeGadget<SparseMerkleTree<F>>>::enforce_non_membership_proof(
             &mut circuit,
             leaf_var.clone(),
             path_vars.clone(),
