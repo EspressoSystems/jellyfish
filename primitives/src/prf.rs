@@ -9,7 +9,7 @@
 
 use crate::{
     errors::PrimitivesError,
-    rescue::{sponge::RescuePRF as InnerRescuePRF, RescueParameter},
+    rescue::{sponge::RescuePRFCore, RescueParameter},
 };
 use ark_std::{
     borrow::Borrow,
@@ -68,7 +68,7 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const OUTPUT_LEN: usize> PRF
         input: I,
     ) -> Result<Self::Output, PrimitivesError> {
         let mut output = [F::zero(); OUTPUT_LEN];
-        output.clone_from_slice(&InnerRescuePRF::full_state_keyed_sponge_with_zero_padding(
+        output.clone_from_slice(&RescuePRFCore::full_state_keyed_sponge_with_zero_padding(
             seed.borrow(),
             input.borrow(),
             OUTPUT_LEN,
@@ -80,7 +80,7 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const OUTPUT_LEN: usize> PRF
 mod tests {
     use crate::{
         prf::{RescuePRF, PRF},
-        rescue::sponge::RescuePRF as InnerRescuePRF,
+        rescue::sponge::RescuePRFCore,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -99,7 +99,7 @@ mod tests {
                 RescuePRF::<$tr, 1, 15>::evaluate(&seed, &input)
                     .unwrap()
                     .to_vec(),
-                InnerRescuePRF::full_state_keyed_sponge_with_zero_padding(&seed, &input, 15)
+                RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&seed, &input, 15)
                     .unwrap()
             );
         };

@@ -665,7 +665,7 @@ mod tests {
     use crate::{
         circuit::rescue::RescueGadget,
         rescue::{
-            sponge::{RescueCRHF, RescuePRF},
+            sponge::{RescueCRHF, RescuePRFCore},
             Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
         },
     };
@@ -1224,7 +1224,7 @@ mod tests {
             .collect();
 
         let expected_fsks_output =
-            RescuePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
         let fsks_var = RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
             &mut circuit,

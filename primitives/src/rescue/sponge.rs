@@ -32,7 +32,8 @@ pub(crate) struct RescueCRHF<F: RescueParameter> {
 }
 
 /// PRF
-pub(crate) struct RescuePRF<F: RescueParameter> {
+#[derive(Debug, Clone)]
+pub(crate) struct RescuePRFCore<F: RescueParameter> {
     sponge: RescueSponge<F, STATE_SIZE>,
 }
 
@@ -87,25 +88,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
     }
 }
 
-impl<F: RescueParameter> RescuePRF<F> {
-    #[allow(dead_code)]
-    /// Pseudorandom function based on rescue permutation for RATE 4. It allows
-    /// unrestricted variable length input and returns a vector of
-    /// `num_outputs` elements.
-    ///
-    /// ## Padding
-    /// Same as that in [`RescueCRHF::sponge_with_bit_padding`].
-    pub(crate) fn full_state_keyed_sponge_with_bit_padding(
-        key: &F,
-        input: &[F],
-        num_outputs: usize,
-    ) -> Result<Vec<F>, RescueError> {
-        let mut padded_input = input.to_vec();
-        padded_input.push(F::one());
-        pad_with_zeros(&mut padded_input, STATE_SIZE);
-        Self::full_state_keyed_sponge_no_padding(key, padded_input.as_slice(), num_outputs)
-    }
-
+impl<F: RescueParameter> RescuePRFCore<F> {
     /// Similar to [`Self::full_state_keyed_sponge_with_bit_padding`] except the
     /// padding scheme are all "0" until the length of padded input is a
     /// multiple of `STATE_SIZE`
