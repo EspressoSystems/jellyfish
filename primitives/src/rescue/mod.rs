@@ -883,23 +883,33 @@ mod test_permutation {
         let key = F::rand(&mut ark_std::test_rng());
         let input = [F::zero(), F::one(), F::zero(), F::zero()];
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 0).len(),
+            RescuePRF::full_state_keyed_sponge_with_bit_padding(&key, &input, 0)
+                .unwrap()
+                .len(),
             0
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 1).len(),
+            RescuePRF::full_state_keyed_sponge_with_bit_padding(&key, &input, 1)
+                .unwrap()
+                .len(),
             1
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 2).len(),
+            RescuePRF::full_state_keyed_sponge_with_bit_padding(&key, &input, 2)
+                .unwrap()
+                .len(),
             2
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 4).len(),
+            RescuePRF::full_state_keyed_sponge_with_bit_padding(&key, &input, 4)
+                .unwrap()
+                .len(),
             4
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 10).len(),
+            RescuePRF::full_state_keyed_sponge_with_bit_padding(&key, &input, 10)
+                .unwrap()
+                .len(),
             10
         );
         assert_eq!(
