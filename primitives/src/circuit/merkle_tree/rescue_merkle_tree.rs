@@ -24,13 +24,13 @@ type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 use typenum::U3;
 
 use super::{
-    LeafVar, MembershipProofBooleanEncoding, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
-    MerkleNodeBooleanEncoding, MerkleTreeGadget, MerkleTreeHelperGadget,
+    LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeRepr, Merkle3AryNodeVar, MerklePathRepr,
+    MerkleTreeGadget, MerkleTreeHelperGadget,
 };
 
-impl<F: RescueParameter> MembershipProofBooleanEncoding<RescueMerkleTree<F>> {
-    fn new(nodes: &[MerkleNodeBooleanEncoding<RescueMerkleTree<F>>]) -> Self {
-        MembershipProofBooleanEncoding {
+impl<F: RescueParameter> MerklePathRepr<RescueMerkleTree<F>> {
+    fn new(nodes: &[Merkle3AryNodeRepr<RescueMerkleTree<F>>]) -> Self {
+        MerklePathRepr {
             nodes: nodes.to_vec(),
         }
     }
@@ -41,7 +41,7 @@ where
     F: RescueParameter,
 {
     type LeafVar = LeafVar;
-    type MerklePathVar = Merkle3AryMembershipProofVar;
+    type MerkleProofVar = Merkle3AryMembershipProofVar;
 
     fn create_leaf_variable(
         &mut self,
@@ -60,7 +60,7 @@ where
         merkle_proof: &MembershipProof<F>,
     ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
-        let merkle_path = MembershipProofBooleanEncoding::from(merkle_proof);
+        let merkle_path = MerklePathRepr::from(merkle_proof);
 
         <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_membership_proof(
             self,
@@ -104,18 +104,16 @@ where
     }
 }
 
-impl<F: RescueParameter> From<&MembershipProof<F>>
-    for MembershipProofBooleanEncoding<RescueMerkleTree<F>>
-{
+impl<F: RescueParameter> From<&MembershipProof<F>> for MerklePathRepr<RescueMerkleTree<F>> {
     fn from(proof: &MembershipProof<F>) -> Self {
         let path =
             <u64 as ToTraversalPath<U3>>::to_traversal_path(&proof.pos, proof.tree_height() - 1);
 
-        let nodes: Vec<MerkleNodeBooleanEncoding<RescueMerkleTree<F>>> = path
+        let nodes: Vec<Merkle3AryNodeRepr<RescueMerkleTree<F>>> = path
             .iter()
             .zip(proof.proof.iter().skip(1))
             .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => Some(MerkleNodeBooleanEncoding::new(
+                MerkleNode::Branch { value: _, children } => Some(Merkle3AryNodeRepr::new(
                     children[0].value(),
                     children[1].value(),
                     branch == &0,
@@ -130,7 +128,7 @@ impl<F: RescueParameter> From<&MembershipProof<F>>
 }
 
 impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCircuit<F> {
-    type MembershipProofBooleanEncoding = MembershipProofBooleanEncoding<RescueMerkleTree<F>>;
+    type MerklePathEncoding = MerklePathRepr<RescueMerkleTree<F>>;
 
     type MembershipProofVar = Merkle3AryMembershipProofVar;
 
@@ -155,7 +153,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
 
     fn constrain_membership_proof(
         &mut self,
-        merkle_path: &MembershipProofBooleanEncoding<RescueMerkleTree<F>>,
+        merkle_path: &MerklePathRepr<RescueMerkleTree<F>>,
         _pos: u64,
     ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
         // Setup node variables
@@ -227,8 +225,8 @@ mod test {
     use crate::{
         circuit::merkle_tree::{
             rescue_merkle_tree::{
-                LeafVar, MembershipProofBooleanEncoding, Merkle3AryMembershipProofVar,
-                MerkleNodeBooleanEncoding, MerkleTreeHelperGadget,
+                LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeRepr, MerklePathRepr,
+                MerkleTreeHelperGadget,
             },
             MerkleTreeGadget,
         },
@@ -265,8 +263,8 @@ mod test {
             let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
             let zero = F::zero();
             let one = F::one();
-            let node = MerkleNodeBooleanEncoding::new(one, zero, is_left_child, is_right_child);
-            let path = MembershipProofBooleanEncoding::new(&[node]);
+            let node = Merkle3AryNodeRepr::new(one, zero, is_left_child, is_right_child);
+            let path = MerklePathRepr::new(&[node]);
             let _ = <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_membership_proof(&mut circuit, &path, 0);
             if accept {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -396,15 +394,15 @@ mod test {
             let (_elem, proof) = mt.lookup(i).expect_ok().unwrap();
             assert_eq!(proof.tree_height(), 2);
 
-            let expected_bool_node = MerkleNodeBooleanEncoding::<RescueMerkleTree<FqEd254>> {
+            let expected_bool_node = Merkle3AryNodeRepr::<RescueMerkleTree<FqEd254>> {
                 sibling1: RescueHash::digest_leaf(&0, &elements[0].clone()),
                 sibling2: RescueHash::digest_leaf(&1, &elements[1].clone()),
                 is_left_child: left,
                 is_right_child: right,
             };
 
-            let expected_bool_path = MembershipProofBooleanEncoding::new(&[expected_bool_node]);
-            let bool_path = MembershipProofBooleanEncoding::from(&proof);
+            let expected_bool_path = MerklePathRepr::new(&[expected_bool_node]);
+            let bool_path = MerklePathRepr::from(&proof);
 
             assert_eq!(bool_path, expected_bool_path);
         }

@@ -70,7 +70,7 @@ where
     /// Type to represent the merkle path of the concrete MT instantiation.
     /// It is MT-specific, e.g arity will affect the exact definition of the
     /// Merkle path.
-    type MerklePathVar;
+    type MerkleProofVar;
 
     /// Allocate a variable for the leaf element.
     fn create_leaf_variable(
@@ -83,7 +83,7 @@ where
     fn create_membership_proof_variable(
         &mut self,
         membership_proof: &M::MembershipProof,
-    ) -> Result<Self::MerklePathVar, CircuitError>;
+    ) -> Result<Self::MerkleProofVar, CircuitError>;
 
     /// Allocate a variable for the merkle root.
     fn create_root_variable(&mut self, root: M::NodeValue) -> Result<Variable, CircuitError>;
@@ -93,7 +93,7 @@ where
     fn is_member(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerklePathVar,
+        merkle_proof: Self::MerkleProofVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
@@ -102,7 +102,7 @@ where
     fn enforce_membership_proof(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerklePathVar,
+        merkle_proof: Self::MerkleProofVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }
@@ -169,7 +169,7 @@ where
     fn is_non_member(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerklePathVar,
+        merkle_proof: Self::MerkleProofVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
@@ -178,7 +178,7 @@ where
     fn enforce_non_membership_proof(
         &mut self,
         empty_elem: Self::LeafVar,
-        merkle_proof: Self::MerklePathVar,
+        merkle_proof: Self::MerkleProofVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }
@@ -187,7 +187,7 @@ pub(crate) trait MerkleTreeHelperGadget<M>
 where
     M: MerkleTreeScheme,
 {
-    type MembershipProofBooleanEncoding;
+    type MerklePathEncoding;
     type MembershipProofVar;
     /// Produces an ordered list of variables based on the relative position of
     /// a node and its siblings.
@@ -214,7 +214,7 @@ where
     /// * `returns` - list of variables corresponding to the authentication path
     fn constrain_membership_proof(
         &mut self,
-        merkle_path: &Self::MembershipProofBooleanEncoding,
+        merkle_path: &Self::MerklePathEncoding,
         pos: M::Index,
     ) -> Result<Self::MembershipProofVar, CircuitError>;
 
@@ -233,7 +233,7 @@ where
 }
 
 #[derive(Debug, Clone)]
-/// Circuit variable for a Merkle node.
+/// Circuit variable for a node in the Merkle path.
 pub struct Merkle3AryNodeVar {
     /// First sibling of the node.
     pub sibling1: Variable,
@@ -254,22 +254,28 @@ pub struct LeafVar {
     pub elem: Variable,
 }
 
+/// Intermediate representation for a node in the Merkle path, used for
+/// constructing `Merkle3AryNodeVar`. For constraining the membership proof to
+/// be correct, we need to encode each node in the merkle path s.t. it contains
+/// the following information:
+/// * the two siblings of the node,
+/// * whether the node is a left child, right child, or in the middle.
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub(crate) struct MerkleNodeBooleanEncoding<M: MerkleTreeScheme> {
+pub(crate) struct Merkle3AryNodeRepr<M: MerkleTreeScheme> {
     sibling1: M::NodeValue,
     sibling2: M::NodeValue,
     is_left_child: bool,
     is_right_child: bool,
 }
 
-impl<M: MerkleTreeScheme> MerkleNodeBooleanEncoding<M> {
+impl<M: MerkleTreeScheme> Merkle3AryNodeRepr<M> {
     fn new(
         sibling1: M::NodeValue,
         sibling2: M::NodeValue,
         is_left_child: bool,
         is_right_child: bool,
     ) -> Self {
-        MerkleNodeBooleanEncoding {
+        Merkle3AryNodeRepr {
             sibling1,
             sibling2,
             is_left_child,
@@ -278,14 +284,18 @@ impl<M: MerkleTreeScheme> MerkleNodeBooleanEncoding<M> {
     }
 }
 
+/// Intermediate encoding for Merkle path, used for constructing
+/// `Merkle3AryMembershipProofVar`. Constains a list of nodes in its path.
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub(crate) struct MembershipProofBooleanEncoding<M: MerkleTreeScheme> {
-    pub(crate) nodes: Vec<MerkleNodeBooleanEncoding<M>>,
+pub(crate) struct MerklePathRepr<M: MerkleTreeScheme> {
+    pub(crate) nodes: Vec<Merkle3AryNodeRepr<M>>,
 }
 
+/// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
+/// Constains:
+/// * a list of node variables in the path,
+/// * a variable correseponsing to the position of the leaf element.
 #[derive(Debug, Clone)]
-/// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
-/// Merkle tree.
 pub struct Merkle3AryMembershipProofVar {
     nodes: Vec<Merkle3AryNodeVar>,
     pos: Variable,
