@@ -152,7 +152,7 @@ where
     ///   tree.
     fn compute_merkle_root(
         &mut self,
-        elem: StandardLeafVar,
+        elem: LeafVar,
         path_vars: &Self::MembershipProofVar,
     ) -> Result<Variable, CircuitError>;
 }
@@ -172,7 +172,7 @@ pub struct Rescue3AryNodeVar {
 
 /// Circuit variable for a leaf element.
 #[derive(Debug, Clone)]
-pub struct StandardLeafVar {
+pub struct LeafVar {
     /// Position of the leaf element in the MT. Serves as UID.
     pub uid: Variable,
     /// The value of the leaf element.
