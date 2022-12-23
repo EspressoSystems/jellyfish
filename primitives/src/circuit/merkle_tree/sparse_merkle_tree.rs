@@ -241,8 +241,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
         // Setup node variables
         let nodes = merkle_path
             .nodes
-            .clone()
-            .into_iter()
+            .iter()
             .map(|node| -> Result<Merkle3AryNodeVar, CircuitError> {
                 Ok(Merkle3AryNodeVar {
                     sibling1: self.create_variable(node.sibling1)?,
