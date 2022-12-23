@@ -6,16 +6,13 @@
 
 //! Circuit implementation of a PRF.
 
-use crate::{
-    rescue::{RescueParameter, STATE_SIZE},
-    utils::pad_with,
-};
-use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+use crate::rescue::RescueParameter;
+use jf_relation::{errors::CircuitError, PlonkCircuit, Variable};
 
 use super::rescue::RescueNativeGadget;
 
 /// Circuit implementation of a PRF.
-pub trait PrfGadget {
+pub trait PRFGadget {
     /// PRF many to one
     /// * `key` - key variable
     /// * `input` - input variables,
@@ -23,23 +20,18 @@ pub trait PrfGadget {
     fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError>;
 }
 
-impl<F> PrfGadget for PlonkCircuit<F>
+impl<F> PRFGadget for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
     fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError> {
-        // pad input: it is ok to pad with zeroes, PRF instance is bound to a specific
-        // input length
-
-        let mut input_vec = input.to_vec();
-        pad_with(&mut input_vec, STATE_SIZE, self.zero());
-        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(self, key, &input_vec)
+        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_with_zero_padding(self, key, input)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::PrfGadget;
+    use super::PRFGadget;
     use crate::prf::{RescuePRF, PRF};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
