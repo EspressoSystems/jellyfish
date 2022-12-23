@@ -207,3 +207,11 @@ impl<M: MerkleTreeScheme> MerkleNodeBooleanEncoding<M> {
 pub(crate) struct MembershipProofBooleanEncoding<M: MerkleTreeScheme> {
     pub(crate) nodes: Vec<MerkleNodeBooleanEncoding<M>>,
 }
+
+#[derive(Debug, Clone)]
+/// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
+/// Merkle tree.
+pub struct Merkle3AryMembershipProofVar {
+    nodes: Vec<Merkle3AryNodeVar>,
+    pos: Variable,
+}
