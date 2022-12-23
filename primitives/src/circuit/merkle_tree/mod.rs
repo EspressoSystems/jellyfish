@@ -159,7 +159,7 @@ where
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle node.
-pub struct Rescue3AryNodeVar {
+pub struct Merkle3AryNodeVar {
     /// First sibling of the node.
     pub sibling1: Variable,
     /// Second sibling of the node.

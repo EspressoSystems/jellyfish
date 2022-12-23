@@ -24,15 +24,15 @@ type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 use typenum::U3;
 
 use super::{
-    LeafVar, MembershipProofBooleanEncoding, MerkleNodeBooleanEncoding, MerkleTreeGadget,
-    MerkleTreeHelperGadget, Rescue3AryNodeVar,
+    LeafVar, MembershipProofBooleanEncoding, Merkle3AryNodeVar, MerkleNodeBooleanEncoding,
+    MerkleTreeGadget, MerkleTreeHelperGadget,
 };
 
 #[derive(Debug, Clone)]
 /// Circuit variable for a Merkle authentication path for a Rescue-based, 3-ary
 /// Merkle tree.
 pub struct Rescue3AryMerklePathVar {
-    nodes: Vec<Rescue3AryNodeVar>,
+    nodes: Vec<Merkle3AryNodeVar>,
 }
 
 impl<F: RescueParameter> MembershipProofBooleanEncoding<RescueMerkleTree<F>> {
@@ -171,15 +171,15 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
             .nodes
             .clone()
             .into_iter()
-            .map(|node| -> Result<Rescue3AryNodeVar, CircuitError> {
-                Ok(Rescue3AryNodeVar {
+            .map(|node| -> Result<Merkle3AryNodeVar, CircuitError> {
+                Ok(Merkle3AryNodeVar {
                     sibling1: self.create_variable(node.sibling1)?,
                     sibling2: self.create_variable(node.sibling2)?,
                     is_left_child: self.create_boolean_variable(node.is_left_child)?,
                     is_right_child: self.create_boolean_variable(node.is_right_child)?,
                 })
             })
-            .collect::<Result<Vec<Rescue3AryNodeVar>, CircuitError>>()?;
+            .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
 
         // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
         // boolean
