@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RescuePRF","PRF"]]};
+window.SIDEBAR_ITEMS = {};

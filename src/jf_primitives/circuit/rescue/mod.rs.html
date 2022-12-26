@@ -182,6 +182,14 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -258,6 +266,14 @@
     /// * `input` - input variables,
     /// * `returns` a variable that refers to the output
     </span><span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key: R::Var,
+        data_vars: <span class="kw-2">&amp;</span>[R::Var],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;R::Var, CircuitError&gt;;
+
+    <span class="doccomment">/// Similar to [`Self::rescue_full_state_keyed_sponge_no_padding`] except
+    /// `data_var` are padded with &quot;zero_var&quot;
+    </span><span class="kw">fn </span>rescue_full_state_keyed_sponge_with_zero_padding(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key: R::Var,
         data_vars: <span class="kw-2">&amp;</span>[R::Var],

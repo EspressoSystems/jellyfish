@@ -1233,6 +1233,35 @@
 <span id="1233">1233</span>
 <span id="1234">1234</span>
 <span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1392,14 +1421,43 @@
         <span class="prelude-val">Ok</span>(result)
     }
 
+    <span class="kw">fn </span>rescue_full_state_keyed_sponge_with_zero_padding(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key: FpElemVar&lt;F&gt;,
+        data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
+        <span class="kw">if </span>data_vars.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;empty data vars&quot;</span>.to_string()));
+        }
+
+        <span class="kw">let </span>zero_var = {
+            <span class="kw">let </span>m = data_vars[<span class="number">0</span>].param_m();
+            <span class="kw">let </span>two_power_m = data_vars[<span class="number">0</span>].two_power_m();
+            FpElemVar::&lt;F&gt;::zero(<span class="self">self</span>, m, <span class="prelude-val">Some</span>(two_power_m))
+        };
+        <span class="kw">let </span>data_vars = [
+            data_vars,
+            <span class="macro">vec!</span>[
+                zero_var;
+                compute_len_to_next_multiple(data_vars.len(), STATE_SIZE) - data_vars.len()
+            ]
+            .as_ref(),
+        ]
+        .concat();
+
+        RescueNonNativeGadget::&lt;T, F&gt;::rescue_full_state_keyed_sponge_no_padding(
+            <span class="self">self</span>, key, <span class="kw-2">&amp;</span>data_vars,
+        )
+    }
+
     <span class="kw">fn </span>rescue_full_state_keyed_sponge_no_padding(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key: FpElemVar&lt;F&gt;,
         data_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt; {
-        <span class="kw">if </span>data_vars.len() % STATE_SIZE != <span class="number">0 </span>{
+        <span class="kw">if </span>data_vars.len() % STATE_SIZE != <span class="number">0 </span>|| data_vars.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;Bad input length for FSKS circuit: {:}, it must be multiple of STATE_SIZE&quot;</span>,
+                <span class="string">&quot;Bad input length for FSKS circuit: {:}, it must be positive multiple of STATE_SIZE&quot;</span>,
                 data_vars.len()
             )));
         }
@@ -1871,7 +1929,7 @@
     <span class="kw">use crate</span>::{
         circuit::rescue::RescueGadget,
         rescue::{
-            sponge::{RescueCRHF, RescuePRF},
+            sponge::{RescueCRHF, RescuePRFCore},
             Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
         },
     };
@@ -2430,7 +2488,7 @@
             .collect();
 
         <span class="kw">let </span>expected_fsks_output =
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key_t, <span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap();
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key_t, <span class="kw-2">&amp;</span>data_t, <span class="number">1</span>).unwrap();
 
         <span class="kw">let </span>fsks_var = RescueNonNativeGadget::&lt;T, F&gt;::rescue_full_state_keyed_sponge_no_padding(
             <span class="kw-2">&amp;mut </span>circuit,

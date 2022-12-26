@@ -81,16 +81,6 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-<span id="88">88</span>
-<span id="89">89</span>
-<span id="90">90</span>
-<span id="91">91</span>
-<span id="92">92</span>
-<span id="93">93</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -99,16 +89,13 @@
 
 </span><span class="doccomment">//! Circuit implementation of a PRF.
 
-</span><span class="kw">use crate</span>::{
-    rescue::{RescueParameter, STATE_SIZE},
-    utils::pad_with,
-};
-<span class="kw">use </span>jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+</span><span class="kw">use </span><span class="kw">crate</span>::rescue::RescueParameter;
+<span class="kw">use </span>jf_relation::{errors::CircuitError, PlonkCircuit, Variable};
 
 <span class="kw">use </span><span class="kw">super</span>::rescue::RescueNativeGadget;
 
 <span class="doccomment">/// Circuit implementation of a PRF.
-</span><span class="kw">pub trait </span>PrfGadget {
+</span><span class="kw">pub trait </span>PRFGadget {
     <span class="doccomment">/// PRF many to one
     /// * `key` - key variable
     /// * `input` - input variables,
@@ -116,24 +103,19 @@
     </span><span class="kw">fn </span>eval_prf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: Variable, input: <span class="kw-2">&amp;</span>[Variable]) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
 }
 
-<span class="kw">impl</span>&lt;F&gt; PrfGadget <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">impl</span>&lt;F&gt; PRFGadget <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: RescueParameter,
 {
     <span class="kw">fn </span>eval_prf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: Variable, input: <span class="kw-2">&amp;</span>[Variable]) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
-        <span class="comment">// pad input: it is ok to pad with zeroes, PRF instance is bound to a specific
-        // input length
-
-        </span><span class="kw">let </span><span class="kw-2">mut </span>input_vec = input.to_vec();
-        pad_with(<span class="kw-2">&amp;mut </span>input_vec, STATE_SIZE, <span class="self">self</span>.zero());
-        RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_no_padding(<span class="self">self</span>, key, <span class="kw-2">&amp;</span>input_vec)
+        RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_with_zero_padding(<span class="self">self</span>, key, input)
     }
 }
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span><span class="kw">super</span>::PrfGadget;
-    <span class="kw">use </span><span class="kw">crate</span>::prf::{PrfKey, PRF};
+    <span class="kw">use </span><span class="kw">super</span>::PRFGadget;
+    <span class="kw">use </span><span class="kw">crate</span>::prf::{RescuePRF, PRF};
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
@@ -141,7 +123,6 @@
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
     <span class="kw">use </span>ark_ff::UniformRand;
     <span class="kw">use </span>ark_std::vec::Vec;
-    <span class="kw">use </span>itertools::Itertools;
     <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit, Variable};
 
     <span class="macro">macro_rules! </span>test_prf_circuit {
@@ -149,20 +130,19 @@
             <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;<span class="macro-nonterminal">$base_field</span>&gt; = PlonkCircuit::new_turbo_plonk();
             <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
             <span class="kw">let </span>rand_scalar = <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng);
-            <span class="kw">let </span>key = PrfKey::from(rand_scalar);
             <span class="kw">let </span>key_var = circuit.create_variable(rand_scalar).unwrap();
             <span class="kw">let </span>input_len = <span class="number">10</span>;
-            <span class="kw">let </span>data: Vec&lt;<span class="macro-nonterminal">$base_field</span>&gt; = (<span class="number">0</span>..input_len)
-                .map(|<span class="kw">_</span>| <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng))
-                .collect_vec();
+            <span class="kw">let </span><span class="kw-2">mut </span>data = [<span class="macro-nonterminal">$base_field::from</span>(<span class="number">0u8</span>); <span class="number">10</span>];
+            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..input_len {
+                data[i] = <span class="macro-nonterminal">$base_field::rand</span>(<span class="kw-2">&amp;mut </span>prng);
+            }
             <span class="kw">let </span>data_vars: Vec&lt;Variable&gt; = data
                 .iter()
                 .map(|<span class="kw-2">&amp;</span>x| circuit.create_variable(x).unwrap())
-                .collect_vec();
+                .collect();
 
-            <span class="kw">let </span>prf = PRF::new(input_len, <span class="number">1</span>);
-            <span class="kw">let </span>expected_prf_output = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>data).unwrap();
-
+            <span class="kw">let </span>expected_prf_output =
+                RescuePRF::&lt;<span class="macro-nonterminal">$base_field</span>, <span class="number">10</span>, <span class="number">1</span>&gt;::evaluate(<span class="kw-2">&amp;</span>rand_scalar, <span class="kw-2">&amp;</span>data).unwrap();
             <span class="kw">let </span>prf_var = circuit.eval_prf(key_var, <span class="kw-2">&amp;</span>data_vars).unwrap();
 
             <span class="comment">// Check prf output consistency

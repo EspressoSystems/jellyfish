@@ -113,21 +113,6 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
-<span id="129">129</span>
-<span id="130">130</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -137,116 +122,101 @@
 </span><span class="doccomment">//! This module implements a pseudo random function that is derived from
 //! the rescue hash function.
 
-</span><span class="kw">use </span>ark_std::marker::PhantomData;
-
-<span class="kw">use crate</span>::{
+</span><span class="kw">use crate</span>::{
     errors::PrimitivesError,
-    rescue::{sponge::RescuePRF, RescueParameter, STATE_SIZE},
+    rescue::{sponge::RescuePRFCore, RescueParameter},
 };
-<span class="kw">use </span>ark_ff::PrimeField;
-<span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
-<span class="kw">use </span>ark_std::{borrow::ToOwned, format, string::ToString, vec::Vec};
-<span class="kw">use </span>jf_utils::pad_with_zeros;
-<span class="kw">use </span>zeroize::Zeroize;
+<span class="kw">use </span>ark_std::{
+    borrow::Borrow,
+    fmt::Debug,
+    marker::PhantomData,
+    rand::{CryptoRng, RngCore},
+    UniformRand,
+};
 
-<span class="attribute">#[allow(clippy::upper_case_acronyms)]
-</span><span class="doccomment">/// Pseudo-random function (PRF) instance for user defined input and output size
-</span><span class="kw">pub struct </span>PRF&lt;F: RescueParameter&gt; {
-    <span class="doccomment">/// Length of the input.
-    </span><span class="kw">pub </span>input_len: usize,
-    <span class="doccomment">/// Length of the output.
-    </span><span class="kw">pub </span>output_len: usize,
-    phantom_f: PhantomData&lt;F&gt;,
-}
+<span class="doccomment">/// Trait for Pseudo-random Functions
+</span><span class="kw">pub trait </span>PRF {
+    <span class="comment">// TODO: (alex) add `CanonicalDeserialize` to `Input`, `CanonicalSerialize` to
+    // `Output`, both to `Seed`, when we move to arkworks 0.4.0
+    </span><span class="doccomment">/// Input to the PRF
+    </span><span class="kw">type </span>Input: Clone;
+    <span class="doccomment">/// Output of the PRF
+    </span><span class="kw">type </span>Output: Clone + Debug + PartialEq + Eq;
+    <span class="doccomment">/// The random seed/key that index a specific function from the PRF
+    /// ensembles
+    </span><span class="kw">type </span>Seed: Clone + Debug + Default + UniformRand;
 
-<span class="attribute">#[derive(
-    Clone, Default, Debug, PartialEq, Eq, Hash, Zeroize, CanonicalSerialize, CanonicalDeserialize,
-)]
-</span><span class="doccomment">/// Key data-type of Pseudo-random function consisting on a single scalar
-/// element.
-</span><span class="kw">pub struct </span>PrfKey&lt;F: PrimeField&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) F);
+    <span class="doccomment">/// Compute PRF output with a user-provided randomly generated `seed`
+    </span><span class="kw">fn </span>evaluate&lt;S: Borrow&lt;<span class="self">Self</span>::Seed&gt;, I: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        seed: S,
+        input: I,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt;;
 
-<span class="kw">impl</span>&lt;F: PrimeField&gt; Drop <span class="kw">for </span>PrfKey&lt;F&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.zeroize();
+    <span class="doccomment">/// same as [`Self::evaluate`] except that we generate a fresh random seed
+    /// for the evaluation
+    </span><span class="kw">fn </span>evaluate_with_rand_seed&lt;R: RngCore + CryptoRng, T: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        rng: <span class="kw-2">&amp;mut </span>R,
+        input: T,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Seed, <span class="self">Self</span>::Output), PrimitivesError&gt; {
+        <span class="kw">let </span>seed = <span class="self">Self</span>::Seed::rand(rng);
+        <span class="kw">let </span>output = <span class="self">Self</span>::evaluate(<span class="kw-2">&amp;</span>seed, input)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((seed, output))
     }
 }
 
-<span class="kw">impl</span>&lt;F: PrimeField&gt; From&lt;F&gt; <span class="kw">for </span>PrfKey&lt;F&gt; {
-    <span class="kw">fn </span>from(key: F) -&gt; <span class="self">Self </span>{
-        PrfKey(key)
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="doccomment">/// A rescue-based PRF that leverages on Full State Keyed (FSK) sponge
+/// construction
+</span><span class="kw">pub struct </span>RescuePRF&lt;F: RescueParameter, <span class="kw">const </span>INPUT_LEN: usize, <span class="kw">const </span>OUTPUT_LEN: usize&gt;(
+    PhantomData&lt;F&gt;,
+);
+
+<span class="kw">impl</span>&lt;F: RescueParameter, <span class="kw">const </span>INPUT_LEN: usize, <span class="kw">const </span>OUTPUT_LEN: usize&gt; PRF
+    <span class="kw">for </span>RescuePRF&lt;F, INPUT_LEN, OUTPUT_LEN&gt;
+{
+    <span class="kw">type </span>Input = [F; INPUT_LEN];
+    <span class="kw">type </span>Output = [F; OUTPUT_LEN];
+    <span class="kw">type </span>Seed = F;
+
+    <span class="kw">fn </span>evaluate&lt;S: Borrow&lt;<span class="self">Self</span>::Seed&gt;, I: Borrow&lt;<span class="self">Self</span>::Input&gt;&gt;(
+        seed: S,
+        input: I,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PrimitivesError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>output = [F::zero(); OUTPUT_LEN];
+        output.clone_from_slice(<span class="kw-2">&amp;</span>RescuePRFCore::full_state_keyed_sponge_with_zero_padding(
+            seed.borrow(),
+            input.borrow(),
+            OUTPUT_LEN,
+        )<span class="question-mark">?</span>);
+        <span class="prelude-val">Ok</span>(output)
     }
 }
-
-<span class="kw">impl</span>&lt;F: PrimeField&gt; PrfKey&lt;F&gt; {
-    <span class="doccomment">/// return the internal field value
-    </span><span class="kw">pub fn </span>internal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
-        <span class="self">self</span>.<span class="number">0
-    </span>}
-}
-
-<span class="kw">impl</span>&lt;F: RescueParameter&gt; PRF&lt;F&gt; {
-    <span class="doccomment">/// Pseudo-random function instance constructor
-    /// `input_len`: number of input scalars for the function
-    /// `output_len`: number of scalar outputs for the function
-    </span><span class="kw">pub fn </span>new(input_len: usize, output_len: usize) -&gt; PRF&lt;F&gt; {
-        PRF {
-            input_len,
-            output_len,
-            phantom_f: PhantomData,
-        }
-    }
-
-    <span class="doccomment">/// Key generation for Pseudo-random function
-    </span><span class="kw">pub fn </span>key_gen&lt;R: ark_std::rand::RngCore&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, rng: <span class="kw-2">&amp;mut </span>R) -&gt; PrfKey&lt;F&gt; {
-        PrfKey::from(F::rand(rng))
-    }
-
-    <span class="doccomment">/// Compute output of pseudo-random function for a given key and input
-    /// Return Err(PrimitivesError::ParameterError) if input length does not
-    /// match instance defined input length
-    </span><span class="kw">pub fn </span>eval(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>PrfKey&lt;F&gt;, input: <span class="kw-2">&amp;</span>[F]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PrimitivesError&gt; {
-        <span class="kw">if </span>input.len() != <span class="self">self</span>.input_len {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;PRF Error: input length ({}) does not match instance ({})&quot;</span>,
-                input.len(),
-                <span class="self">self</span>.input_len
-            )));
-        }
-        <span class="comment">// Ok to pad with 0&#39;s since input length is fixed for the PRF instance
-        </span><span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_owned();
-        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, STATE_SIZE);
-        RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key.<span class="number">0</span>, <span class="kw-2">&amp;</span>padded, <span class="self">self</span>.output_len).map_err(
-            |<span class="kw">_</span>| PrimitivesError::InternalError(<span class="string">&quot;Bug in PRF: bad padding for input&quot;</span>.to_string()),
-        )
-    }
-}
-
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span><span class="kw">crate</span>::prf::PRF;
+    <span class="kw">use crate</span>::{
+        prf::{RescuePRF, PRF},
+        rescue::sponge::RescuePRFCore,
+    };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
-    <span class="kw">use </span>ark_ff::One;
-    <span class="kw">use </span>ark_std::vec;
+    <span class="kw">use </span>ark_std::UniformRand;
     <span class="macro">macro_rules! </span>test_prf {
         (<span class="macro-nonterminal">$tr</span>:tt) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>prng = ark_std::test_rng();
-            <span class="kw">let </span>prf = PRF::new(<span class="number">1</span>, <span class="number">15</span>);
-            <span class="kw">let </span>key = prf.key_gen(<span class="kw-2">&amp;mut </span>prng);
-            <span class="kw">let </span>input = <span class="macro">vec!</span>[<span class="macro-nonterminal">$tr::one</span>()];
-            <span class="kw">let </span>out = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
-            <span class="macro">assert!</span>(out.is_ok());
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+            <span class="kw">let </span>seed = <span class="macro-nonterminal">$tr::rand</span>(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>input = [<span class="macro-nonterminal">$tr::from</span>(<span class="number">1u8</span>)];
 
-            <span class="kw">let </span>input = <span class="macro">vec!</span>[];
-            <span class="kw">let </span>out = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
-            <span class="macro">assert!</span>(out.is_err());
-
-            <span class="kw">let </span>input = <span class="macro">vec!</span>[<span class="macro-nonterminal">$tr::one</span>(); <span class="number">2</span>];
-            <span class="kw">let </span>out = prf.eval(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
-            <span class="macro">assert!</span>(out.is_err());
+            <span class="macro">assert!</span>(RescuePRF::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">1</span>, <span class="number">15</span>&gt;::evaluate(<span class="kw-2">&amp;</span>seed, <span class="kw-2">&amp;</span>input).is_ok());
+            <span class="comment">// check correctness
+            </span><span class="macro">assert_eq!</span>(
+                RescuePRF::&lt;<span class="macro-nonterminal">$tr</span>, <span class="number">1</span>, <span class="number">15</span>&gt;::evaluate(<span class="kw-2">&amp;</span>seed, <span class="kw-2">&amp;</span>input)
+                    .unwrap()
+                    .to_vec(),
+                RescuePRFCore::full_state_keyed_sponge_with_zero_padding(<span class="kw-2">&amp;</span>seed, <span class="kw-2">&amp;</span>input, <span class="number">15</span>)
+                    .unwrap()
+            );
         };
     }
 

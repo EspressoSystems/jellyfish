@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["PRF","Pseudo-random function (PRF) instance for user defined input and output size"],["PrfKey","Key data-type of Pseudo-random function consisting on a single scalar element."]]};
+window.SIDEBAR_ITEMS = {"struct":[["RescuePRF","A rescue-based PRF that leverages on Full State Keyed (FSK) sponge construction"]],"trait":[["PRF","Trait for Pseudo-random Functions"]]};

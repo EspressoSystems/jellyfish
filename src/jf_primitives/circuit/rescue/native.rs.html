@@ -1028,6 +1028,29 @@
 <span id="1028">1028</span>
 <span id="1029">1029</span>
 <span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1255,6 +1278,29 @@
         }
         <span class="comment">// squeeze phase, but only a single output, can return directly from state
         </span><span class="prelude-val">Ok</span>(state.<span class="number">0</span>[<span class="number">0</span>])
+    }
+
+    <span class="kw">fn </span>rescue_full_state_keyed_sponge_with_zero_padding(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key: Variable,
+        data_vars: <span class="kw-2">&amp;</span>[Variable],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="kw">if </span>data_vars.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;empty data vars&quot;</span>.to_string()));
+        }
+
+        <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
+        <span class="kw">let </span>data_vars = [
+            data_vars,
+            <span class="macro">vec!</span>[
+                zero_var;
+                compute_len_to_next_multiple(data_vars.len(), STATE_SIZE) - data_vars.len()
+            ]
+            .as_ref(),
+        ]
+        .concat();
+
+        RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_no_padding(<span class="self">self</span>, key, <span class="kw-2">&amp;</span>data_vars)
     }
 
     <span class="kw">fn </span>key_schedule(
@@ -1539,7 +1585,7 @@
     <span class="kw">use crate</span>::{
         circuit::rescue::RescueNativeGadget,
         rescue::{
-            sponge::{RescueCRHF, RescuePRF},
+            sponge::{RescueCRHF, RescuePRFCore},
             Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
         },
     };
@@ -2028,7 +2074,7 @@
             .collect_vec();
 
         <span class="kw">let </span>expected_fsks_output =
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>data, <span class="number">1</span>).unwrap();
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>data, <span class="number">1</span>).unwrap();
 
         <span class="kw">let </span>fsks_var = RescueNativeGadget::&lt;F&gt;::rescue_full_state_keyed_sponge_no_padding(
             <span class="kw-2">&amp;mut </span>circuit,

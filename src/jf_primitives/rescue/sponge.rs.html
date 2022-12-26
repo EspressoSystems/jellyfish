@@ -349,7 +349,6 @@
 <span id="349">349</span>
 <span id="350">350</span>
 <span id="351">351</span>
-<span id="352">352</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -384,7 +383,8 @@
 }
 
 <span class="doccomment">/// PRF
-</span><span class="kw">pub struct </span>RescuePRF&lt;F: RescueParameter&gt; {
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RescuePRFCore&lt;F: RescueParameter&gt; {
     sponge: RescueSponge&lt;F, STATE_SIZE&gt;,
 }
 
@@ -439,26 +439,24 @@
     }
 }
 
-<span class="kw">impl</span>&lt;F: RescueParameter&gt; RescuePRF&lt;F&gt; {
-    <span class="doccomment">/// Pseudorandom function based on rescue permutation for RATE 4. It allows
-    /// unrestricted variable length input and returns a vector of
-    /// `num_outputs` elements.
-    </span><span class="kw">pub fn </span>full_state_keyed_sponge_with_padding(
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; RescuePRFCore&lt;F&gt; {
+    <span class="doccomment">/// Similar to [`Self::full_state_keyed_sponge_with_bit_padding`] except the
+    /// padding scheme are all &quot;0&quot; until the length of padded input is a
+    /// multiple of `STATE_SIZE`
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>full_state_keyed_sponge_with_zero_padding(
         key: <span class="kw-2">&amp;</span>F,
         input: <span class="kw-2">&amp;</span>[F],
         num_outputs: usize,
-    ) -&gt; Vec&lt;F&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>padded_input = input.to_vec();
-        padded_input.push(F::one());
-        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded_input, STATE_SIZE);
-        <span class="self">Self</span>::full_state_keyed_sponge_no_padding(key, padded_input.as_slice(), num_outputs)
-            .expect(<span class="string">&quot;Bug in JF Primitives : bad padding of input for FSKS construction&quot;</span>)
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
+        pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, STATE_SIZE);
+        <span class="self">Self</span>::full_state_keyed_sponge_no_padding(key, padded.as_slice(), num_outputs)
     }
 
     <span class="doccomment">/// Pseudorandom function based on rescue permutation for RATE 4. It allows
     /// inputs with length that is a multiple of `STATE_SIZE` and returns a
     /// vector of `num_outputs` elements.
-    </span><span class="kw">pub fn </span>full_state_keyed_sponge_no_padding(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>full_state_keyed_sponge_no_padding(
         key: <span class="kw-2">&amp;</span>F,
         input: <span class="kw-2">&amp;</span>[F],
         num_outputs: usize,

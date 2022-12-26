@@ -934,6 +934,26 @@
 <span id="934">934</span>
 <span id="935">935</span>
 <span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1565,7 +1585,7 @@
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test_permutation {
     <span class="kw">use </span><span class="kw">crate</span>::rescue::{
-        sponge::{RescueCRHF, RescuePRF},
+        sponge::{RescueCRHF, RescuePRFCore},
         Permutation, RescueParameter, RescueVector, PRP,
     };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
@@ -1781,18 +1801,28 @@
     <span class="kw">fn </span>test_fsks_no_padding_errors_helper&lt;F: RescueParameter&gt;() {
         <span class="kw">let </span>key = F::rand(<span class="kw-2">&amp;mut </span>ark_std::test_rng());
         <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">4</span>];
-        <span class="macro">assert!</span>(RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_ok());
+        <span class="macro">assert!</span>(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_ok()
+        );
         <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">12</span>];
-        <span class="macro">assert!</span>(RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_ok());
+        <span class="macro">assert!</span>(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_ok()
+        );
 
         <span class="comment">// test should panic because number of inputs is not multiple of 3
         </span><span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>); <span class="number">10</span>];
-        <span class="macro">assert!</span>(RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_err());
+        <span class="macro">assert!</span>(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_err()
+        );
         <span class="kw">let </span>input = <span class="macro">vec!</span>[F::from(<span class="number">9u64</span>)];
-        <span class="macro">assert!</span>(RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_err());
+        <span class="macro">assert!</span>(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_err()
+        );
 
         <span class="kw">let </span>input = <span class="macro">vec!</span>[];
-        <span class="macro">assert!</span>(RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_ok());
+        <span class="macro">assert!</span>(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, input.as_slice(), <span class="number">1</span>).is_ok()
+        );
     }
 
     <span class="attribute">#[test]
@@ -1819,51 +1849,61 @@
         <span class="kw">let </span>key = F::rand(<span class="kw-2">&amp;mut </span>ark_std::test_rng());
         <span class="kw">let </span>input = [F::zero(), F::one(), F::zero(), F::zero()];
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">0</span>).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">0</span>)
+                .unwrap()
+                .len(),
             <span class="number">0
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">1</span>).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">1</span>)
+                .unwrap()
+                .len(),
             <span class="number">1
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">2</span>).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">2</span>)
+                .unwrap()
+                .len(),
             <span class="number">2
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">4</span>).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">4</span>)
+                .unwrap()
+                .len(),
             <span class="number">4
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_with_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">10</span>).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">10</span>)
+                .unwrap()
+                .len(),
             <span class="number">10
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">0</span>)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">0</span>)
                 .unwrap()
                 .len(),
             <span class="number">0
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">1</span>)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">1</span>)
                 .unwrap()
                 .len(),
             <span class="number">1
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">2</span>)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">2</span>)
                 .unwrap()
                 .len(),
             <span class="number">2
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">4</span>)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">4</span>)
                 .unwrap()
                 .len(),
             <span class="number">4
         </span>);
         <span class="macro">assert_eq!</span>(
-            RescuePRF::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">10</span>)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input, <span class="number">10</span>)
                 .unwrap()
                 .len(),
             <span class="number">10
