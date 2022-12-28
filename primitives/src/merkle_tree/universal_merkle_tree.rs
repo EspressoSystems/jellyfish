@@ -105,7 +105,8 @@ where
 mod mt_tests {
     use crate::{
         merkle_tree::{
-            prelude::RescueSparseMerkleTree, LookupResult, MerkleTreeScheme, ToTraversalPath,
+            prelude::{RescueHash, RescueSparseMerkleTree},
+            DigestAlgorithm, Index, LookupResult, MerkleTreeScheme, ToTraversalPath,
             UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
@@ -171,6 +172,36 @@ mod mt_tests {
     }
 
     #[test]
+    fn test_update_and_lookup() {
+        test_update_and_lookup_helper::<BigUint, Fq254>();
+        test_update_and_lookup_helper::<BigUint, Fq377>();
+        test_update_and_lookup_helper::<BigUint, Fq381>();
+
+        test_update_and_lookup_helper::<Fq254, Fq254>();
+        test_update_and_lookup_helper::<Fq377, Fq377>();
+        test_update_and_lookup_helper::<Fq381, Fq381>();
+    }
+
+    fn test_update_and_lookup_helper<I, F>()
+    where
+        I: Index + ToTraversalPath<U3> + From<u64>,
+        F: RescueParameter,
+        RescueHash<F>: DigestAlgorithm<F, I, F>,
+    {
+        let mut mt =
+            RescueSparseMerkleTree::<I, F, F>::from_kv_set(10, HashMap::<I, F>::new()).unwrap();
+        for i in 0..2 {
+            mt.update(I::from(i as u64), F::from(i as u64));
+        }
+        for i in 0..2 {
+            let (val, proof) = mt.universal_lookup(I::from(i as u64)).expect_ok().unwrap();
+            assert_eq!(val, F::from(i as u64));
+            assert_eq!(*proof.elem().unwrap(), val);
+            assert!(mt.verify(I::from(i as u64), &proof).unwrap());
+        }
+    }
+
+    #[test]
     fn test_universal_mt_serde() {
         test_universal_mt_serde_helper::<Fq254>();
         test_universal_mt_serde_helper::<Fq377>();
@@ -184,7 +215,7 @@ mod mt_tests {
         let mt = RescueSparseMerkleTree::<F, F, F>::from_kv_set(3, &hashmap).unwrap();
         let mem_proof = mt.lookup(F::from(10u64)).expect_ok().unwrap().1;
         let node = &mem_proof.proof[0];
-        let non_mem_proof = match mt.lookup(F::from(9u64)) {
+        let non_mem_proof = match mt.universal_lookup(F::from(9u64)) {
             LookupResult::NotFound(proof) => proof,
             res => panic!("expected NotFound, got {:?}", res),
         };
