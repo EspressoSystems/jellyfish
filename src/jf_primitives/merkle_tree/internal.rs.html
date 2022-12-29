@@ -685,6 +685,17 @@
 <span id="685">685</span>
 <span id="686">686</span>
 <span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -838,7 +849,7 @@
     }
 
     <span class="kw">pub fn </span>elem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>E&gt; {
-        <span class="kw">match </span><span class="self">self</span>.proof.last() {
+        <span class="kw">match </span><span class="self">self</span>.proof.first() {
             <span class="prelude-val">Some</span>(MerkleNode::Leaf { elem, .. }) =&gt; <span class="prelude-val">Some</span>(elem),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
@@ -1154,13 +1165,24 @@
                 <span class="kw-2">*</span>value = H::digest_leaf(pos, elem);
                 LookupResult::Ok(ret, ())
             },
-            MerkleNode::Branch { value: <span class="kw">_</span>, children } =&gt; (<span class="kw-2">*</span>children[traversal_path[height - <span class="number">1</span>]])
-                .update_internal::&lt;H, Arity&gt;(
-                height - <span class="number">1</span>,
-                pos,
-                traversal_path,
-                elem,
-            ),
+            MerkleNode::Branch { value, children } =&gt; {
+                <span class="kw">let </span>res = (<span class="kw-2">*</span>children[traversal_path[height - <span class="number">1</span>]]).update_internal::&lt;H, Arity&gt;(
+                    height - <span class="number">1</span>,
+                    pos,
+                    traversal_path,
+                    elem,
+                );
+                <span class="comment">// If the branch containing the update was not in memory, the update failed and
+                // nothing was changed, so we can short-circuit without recomputing this node&#39;s
+                // value.
+                </span><span class="kw">if </span>res == LookupResult::NotInMemory {
+                    <span class="kw">return </span>res;
+                }
+                <span class="comment">// Otherwise, an entry has been updated and the value of one of our children has
+                // changed, so we must recompute our own value.
+                </span><span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children);
+                res
+            },
             MerkleNode::Empty =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="kw">if </span>height == <span class="number">0 </span>{
                     MerkleNode::Leaf {

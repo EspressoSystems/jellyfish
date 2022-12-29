@@ -207,6 +207,37 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -314,7 +345,8 @@
 </span><span class="kw">mod </span>mt_tests {
     <span class="kw">use crate</span>::{
         merkle_tree::{
-            prelude::RescueSparseMerkleTree, LookupResult, MerkleTreeScheme, ToTraversalPath,
+            prelude::{RescueHash, RescueSparseMerkleTree},
+            DigestAlgorithm, Index, LookupResult, MerkleTreeScheme, ToTraversalPath,
             UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
@@ -380,6 +412,36 @@
     }
 
     <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_update_and_lookup() {
+        test_update_and_lookup_helper::&lt;BigUint, Fq254&gt;();
+        test_update_and_lookup_helper::&lt;BigUint, Fq377&gt;();
+        test_update_and_lookup_helper::&lt;BigUint, Fq381&gt;();
+
+        test_update_and_lookup_helper::&lt;Fq254, Fq254&gt;();
+        test_update_and_lookup_helper::&lt;Fq377, Fq377&gt;();
+        test_update_and_lookup_helper::&lt;Fq381, Fq381&gt;();
+    }
+
+    <span class="kw">fn </span>test_update_and_lookup_helper&lt;I, F&gt;()
+    <span class="kw">where
+        </span>I: Index + ToTraversalPath&lt;U3&gt; + From&lt;u64&gt;,
+        F: RescueParameter,
+        RescueHash&lt;F&gt;: DigestAlgorithm&lt;F, I, F&gt;,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>mt =
+            RescueSparseMerkleTree::&lt;I, F, F&gt;::from_kv_set(<span class="number">10</span>, HashMap::&lt;I, F&gt;::new()).unwrap();
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
+            mt.update(I::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64));
+        }
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
+            <span class="kw">let </span>(val, proof) = mt.universal_lookup(I::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
+            <span class="macro">assert_eq!</span>(val, F::from(i <span class="kw">as </span>u64));
+            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>proof.elem().unwrap(), val);
+            <span class="macro">assert!</span>(mt.verify(I::from(i <span class="kw">as </span>u64), <span class="kw-2">&amp;</span>proof).unwrap());
+        }
+    }
+
+    <span class="attribute">#[test]
     </span><span class="kw">fn </span>test_universal_mt_serde() {
         test_universal_mt_serde_helper::&lt;Fq254&gt;();
         test_universal_mt_serde_helper::&lt;Fq377&gt;();
@@ -393,7 +455,7 @@
         <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;F, F, F&gt;::from_kv_set(<span class="number">3</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
         <span class="kw">let </span>mem_proof = mt.lookup(F::from(<span class="number">10u64</span>)).expect_ok().unwrap().<span class="number">1</span>;
         <span class="kw">let </span>node = <span class="kw-2">&amp;</span>mem_proof.proof[<span class="number">0</span>];
-        <span class="kw">let </span>non_mem_proof = <span class="kw">match </span>mt.lookup(F::from(<span class="number">9u64</span>)) {
+        <span class="kw">let </span>non_mem_proof = <span class="kw">match </span>mt.universal_lookup(F::from(<span class="number">9u64</span>)) {
             LookupResult::NotFound(proof) =&gt; proof,
             res =&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected NotFound, got {:?}&quot;</span>, res),
         };
