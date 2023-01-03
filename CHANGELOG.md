@@ -69,6 +69,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#85](https://github.com/EspressoSystems/jellyfish/pull/85), [#87](https://github.com/EspressoSystems/jellyfish/pull/87) (all) Added `no_std` compliance
 - [#116](https://github.com/EspressoSystems/jellyfish/pull/116) (`jf-primitives`) Introduced new `PolynomialCommitmentScheme` trait
 - [#117](https://github.com/EspressoSystems/jellyfish/pull/117) (`jf-relation`) Added gadgets for comparison with constant values
+- [#176](https://github.com/EspressoSystems/jellyfish/pull/176) (`jf-primitives`) Added implementation for light weight merkle tree -- an append-only merkle tree who only keeps its frontier.
 
 ### Changed
 
