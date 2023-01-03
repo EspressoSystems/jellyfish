@@ -227,6 +227,29 @@ where
         Ok(state.0[0])
     }
 
+    fn rescue_full_state_keyed_sponge_with_zero_padding(
+        &mut self,
+        key: Variable,
+        data_vars: &[Variable],
+    ) -> Result<Variable, CircuitError> {
+        if data_vars.is_empty() {
+            return Err(ParameterError("empty data vars".to_string()));
+        }
+
+        let zero_var = self.zero();
+        let data_vars = [
+            data_vars,
+            vec![
+                zero_var;
+                compute_len_to_next_multiple(data_vars.len(), STATE_SIZE) - data_vars.len()
+            ]
+            .as_ref(),
+        ]
+        .concat();
+
+        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(self, key, &data_vars)
+    }
+
     fn key_schedule(
         &mut self,
         mds: &RescueMatrix<F>,
@@ -509,7 +532,7 @@ mod tests {
     use crate::{
         circuit::rescue::RescueNativeGadget,
         rescue::{
-            sponge::{RescueCRHF, RescuePRF},
+            sponge::{RescueCRHF, RescuePRFCore},
             Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
         },
     };
@@ -998,7 +1021,7 @@ mod tests {
             .collect_vec();
 
         let expected_fsks_output =
-            RescuePRF::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();
 
         let fsks_var = RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(
             &mut circuit,

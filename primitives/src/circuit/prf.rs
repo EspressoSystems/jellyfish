@@ -6,16 +6,13 @@
 
 //! Circuit implementation of a PRF.
 
-use crate::{
-    rescue::{RescueParameter, STATE_SIZE},
-    utils::pad_with,
-};
-use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+use crate::rescue::RescueParameter;
+use jf_relation::{errors::CircuitError, PlonkCircuit, Variable};
 
 use super::rescue::RescueNativeGadget;
 
 /// Circuit implementation of a PRF.
-pub trait PrfGadget {
+pub trait PRFGadget {
     /// PRF many to one
     /// * `key` - key variable
     /// * `input` - input variables,
@@ -23,24 +20,19 @@ pub trait PrfGadget {
     fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError>;
 }
 
-impl<F> PrfGadget for PlonkCircuit<F>
+impl<F> PRFGadget for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
     fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError> {
-        // pad input: it is ok to pad with zeroes, PRF instance is bound to a specific
-        // input length
-
-        let mut input_vec = input.to_vec();
-        pad_with(&mut input_vec, STATE_SIZE, self.zero());
-        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_no_padding(self, key, &input_vec)
+        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_with_zero_padding(self, key, input)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::PrfGadget;
-    use crate::prf::{PrfKey, PRF};
+    use super::PRFGadget;
+    use crate::prf::{RescuePRF, PRF};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -48,7 +40,6 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
-    use itertools::Itertools;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     macro_rules! test_prf_circuit {
@@ -56,20 +47,19 @@ mod tests {
             let mut circuit: PlonkCircuit<$base_field> = PlonkCircuit::new_turbo_plonk();
             let mut prng = ark_std::test_rng();
             let rand_scalar = $base_field::rand(&mut prng);
-            let key = PrfKey::from(rand_scalar);
             let key_var = circuit.create_variable(rand_scalar).unwrap();
             let input_len = 10;
-            let data: Vec<$base_field> = (0..input_len)
-                .map(|_| $base_field::rand(&mut prng))
-                .collect_vec();
+            let mut data = [$base_field::from(0u8); 10];
+            for i in 0..input_len {
+                data[i] = $base_field::rand(&mut prng);
+            }
             let data_vars: Vec<Variable> = data
                 .iter()
                 .map(|&x| circuit.create_variable(x).unwrap())
-                .collect_vec();
+                .collect();
 
-            let prf = PRF::new(input_len, 1);
-            let expected_prf_output = prf.eval(&key, &data).unwrap();
-
+            let expected_prf_output =
+                RescuePRF::<$base_field, 10, 1>::evaluate(&rand_scalar, &data).unwrap();
             let prf_var = circuit.eval_prf(key_var, &data_vars).unwrap();
 
             // Check prf output consistency

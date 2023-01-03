@@ -157,14 +157,43 @@ where
         Ok(result)
     }
 
+    fn rescue_full_state_keyed_sponge_with_zero_padding(
+        &mut self,
+        key: FpElemVar<F>,
+        data_vars: &[FpElemVar<F>],
+    ) -> Result<FpElemVar<F>, CircuitError> {
+        if data_vars.is_empty() {
+            return Err(ParameterError("empty data vars".to_string()));
+        }
+
+        let zero_var = {
+            let m = data_vars[0].param_m();
+            let two_power_m = data_vars[0].two_power_m();
+            FpElemVar::<F>::zero(self, m, Some(two_power_m))
+        };
+        let data_vars = [
+            data_vars,
+            vec![
+                zero_var;
+                compute_len_to_next_multiple(data_vars.len(), STATE_SIZE) - data_vars.len()
+            ]
+            .as_ref(),
+        ]
+        .concat();
+
+        RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+            self, key, &data_vars,
+        )
+    }
+
     fn rescue_full_state_keyed_sponge_no_padding(
         &mut self,
         key: FpElemVar<F>,
         data_vars: &[FpElemVar<F>],
     ) -> Result<FpElemVar<F>, CircuitError> {
-        if data_vars.len() % STATE_SIZE != 0 {
+        if data_vars.len() % STATE_SIZE != 0 || data_vars.is_empty() {
             return Err(ParameterError(format!(
-                "Bad input length for FSKS circuit: {:}, it must be multiple of STATE_SIZE",
+                "Bad input length for FSKS circuit: {:}, it must be positive multiple of STATE_SIZE",
                 data_vars.len()
             )));
         }
@@ -636,7 +665,7 @@ mod tests {
     use crate::{
         circuit::rescue::RescueGadget,
         rescue::{
-            sponge::{RescueCRHF, RescuePRF},
+            sponge::{RescueCRHF, RescuePRFCore},
             Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
         },
     };
@@ -1195,7 +1224,7 @@ mod tests {
             .collect();
 
         let expected_fsks_output =
-            RescuePRF::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
         let fsks_var = RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
             &mut circuit,

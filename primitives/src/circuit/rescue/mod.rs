@@ -79,6 +79,14 @@ where
         data_vars: &[R::Var],
     ) -> Result<R::Var, CircuitError>;
 
+    /// Similar to [`Self::rescue_full_state_keyed_sponge_no_padding`] except
+    /// `data_var` are padded with "zero_var"
+    fn rescue_full_state_keyed_sponge_with_zero_padding(
+        &mut self,
+        key: R::Var,
+        data_vars: &[R::Var],
+    ) -> Result<R::Var, CircuitError>;
+
     /// Return the round keys variables for the Rescue block cipher
     /// * `mds_states` - Rescue MDS matrix
     /// * `key_var` - state variable representing the cipher key
