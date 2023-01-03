@@ -15,8 +15,9 @@ use ark_ec::{
 };
 use ark_std::vec::Vec;
 use jf_primitives::{
+    crhf::{VariableLengthRescueCRHF, CRHF},
     pcs::prelude::Commitment,
-    rescue::{sponge::RescueCRHF, RescueParameter, STATE_SIZE},
+    rescue::{RescueParameter, STATE_SIZE},
 };
 use jf_relation::gadgets::ecc::{Point, SWToTEConParam};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
@@ -169,14 +170,14 @@ where
     /// efficiency.
     fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
-        E: PairingEngine,
+        E: PairingEngine<Fq = F>,
     {
         // 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr
         // 3. transcript = Vec::new()
 
         let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
-        let tmp = RescueCRHF::sponge_with_padding(&input, STATE_SIZE);
+        let tmp: [F; STATE_SIZE] = VariableLengthRescueCRHF::evaluate(&input)?;
         let challenge = fq_to_fr_with_mask::<F, E::Fr>(&tmp[0]);
         self.state.copy_from_slice(&tmp);
         self.transcript = Vec::new();

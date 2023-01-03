@@ -201,7 +201,7 @@ impl<F: Copy> From<&[F; STATE_SIZE]> for RescueVector<F> {
 }
 
 /// A matrix that consists of `STATE_SIZE` number of rescue vectors.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RescueMatrix<F> {
     matrix: [RescueVector<F>; STATE_SIZE],
 }
@@ -248,7 +248,7 @@ impl<F: PrimeField> RescueMatrix<F> {
 // input to 3 and output to 1
 //
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[allow(clippy::upper_case_acronyms)]
 /// Rescue pseudo-random permutation (PRP) instance
 pub struct PRP<F> {
@@ -371,7 +371,7 @@ impl<F: RescueParameter> PRP<F> {
 
 /// Instance of a unkeyed cryptographic permutation to be used for instantiation
 /// hashing, pseudo-random function, and other cryptographic primitives
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Permutation<F> {
     rescue_prp: PRP<F>,
     round_keys: Vec<RescueVector<F>>,
@@ -629,7 +629,7 @@ mod test_prp {
 #[cfg(test)]
 mod test_permutation {
     use crate::rescue::{
-        sponge::{RescueCRHF, RescuePRF},
+        sponge::{RescueCRHF, RescuePRFCore},
         Permutation, RescueParameter, RescueVector, PRP,
     };
     use ark_bls12_377::Fq as Fq377;
@@ -845,18 +845,28 @@ mod test_permutation {
     fn test_fsks_no_padding_errors_helper<F: RescueParameter>() {
         let key = F::rand(&mut ark_std::test_rng());
         let input = vec![F::from(9u64); 4];
-        assert!(RescuePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok());
+        assert!(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+        );
         let input = vec![F::from(9u64); 12];
-        assert!(RescuePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok());
+        assert!(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+        );
 
         // test should panic because number of inputs is not multiple of 3
         let input = vec![F::from(9u64); 10];
-        assert!(RescuePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err());
+        assert!(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+        );
         let input = vec![F::from(9u64)];
-        assert!(RescuePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err());
+        assert!(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+        );
 
         let input = vec![];
-        assert!(RescuePRF::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok());
+        assert!(
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+        );
     }
 
     #[test]
@@ -868,11 +878,11 @@ mod test_permutation {
     }
     fn test_variable_output_sponge_and_fsks_helper<F: RescueParameter>() {
         let input = [F::zero(), F::one(), F::zero()];
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 0).len(), 0);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 1).len(), 1);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 2).len(), 2);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 3).len(), 3);
-        assert_eq!(RescueCRHF::sponge_with_padding(&input, 10).len(), 10);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 0).len(), 0);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 1).len(), 1);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 2).len(), 2);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 3).len(), 3);
+        assert_eq!(RescueCRHF::sponge_with_bit_padding(&input, 10).len(), 10);
 
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 0).unwrap().len(), 0);
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 1).unwrap().len(), 1);
@@ -883,51 +893,61 @@ mod test_permutation {
         let key = F::rand(&mut ark_std::test_rng());
         let input = [F::zero(), F::one(), F::zero(), F::zero()];
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 0).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 0)
+                .unwrap()
+                .len(),
             0
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 1).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 1)
+                .unwrap()
+                .len(),
             1
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 2).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 2)
+                .unwrap()
+                .len(),
             2
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 4).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 4)
+                .unwrap()
+                .len(),
             4
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_with_padding(&key, &input, 10).len(),
+            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 10)
+                .unwrap()
+                .len(),
             10
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_no_padding(&key, &input, 0)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 0)
                 .unwrap()
                 .len(),
             0
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_no_padding(&key, &input, 1)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 1)
                 .unwrap()
                 .len(),
             1
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_no_padding(&key, &input, 2)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 2)
                 .unwrap()
                 .len(),
             2
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_no_padding(&key, &input, 4)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 4)
                 .unwrap()
                 .len(),
             4
         );
         assert_eq!(
-            RescuePRF::full_state_keyed_sponge_no_padding(&key, &input, 10)
+            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 10)
                 .unwrap()
                 .len(),
             10

@@ -151,7 +151,7 @@ where
     }
 
     pub fn elem(&self) -> Option<&E> {
-        match self.proof.last() {
+        match self.proof.first() {
             Some(MerkleNode::Leaf { elem, .. }) => Some(elem),
             _ => None,
         }
@@ -467,13 +467,24 @@ where
                 *value = H::digest_leaf(pos, elem);
                 LookupResult::Ok(ret, ())
             },
-            MerkleNode::Branch { value: _, children } => (*children[traversal_path[height - 1]])
-                .update_internal::<H, Arity>(
-                height - 1,
-                pos,
-                traversal_path,
-                elem,
-            ),
+            MerkleNode::Branch { value, children } => {
+                let res = (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
+                    height - 1,
+                    pos,
+                    traversal_path,
+                    elem,
+                );
+                // If the branch containing the update was not in memory, the update failed and
+                // nothing was changed, so we can short-circuit without recomputing this node's
+                // value.
+                if res == LookupResult::NotInMemory {
+                    return res;
+                }
+                // Otherwise, an entry has been updated and the value of one of our children has
+                // changed, so we must recompute our own value.
+                *value = digest_branch::<E, H, I, T>(children);
+                res
+            },
             MerkleNode::Empty => {
                 *self = if height == 0 {
                     MerkleNode::Leaf {
@@ -668,15 +679,7 @@ where
                                     data[*branch] = val;
                                     Ok(H::digest(&data))
                                 },
-                                MerkleNode::Empty => {
-                                    if init == T::default() {
-                                        Ok(init)
-                                    } else {
-                                        Err(PrimitivesError::ParameterError(
-                                            "In valid proof".to_string(),
-                                        ))
-                                    }
-                                },
+                                MerkleNode::Empty => Ok(init),
                                 _ => Err(PrimitivesError::ParameterError(
                                     "Incompatible proof for this merkle tree".to_string(),
                                 )),

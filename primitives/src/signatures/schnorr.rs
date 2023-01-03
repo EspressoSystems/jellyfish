@@ -10,8 +10,9 @@
 use super::SignatureScheme;
 use crate::{
     constants::CS_ID_SCHNORR,
+    crhf::{VariableLengthRescueCRHF, CRHF},
     errors::PrimitivesError,
-    rescue::{sponge::RescueCRHF, RescueParameter},
+    rescue::RescueParameter,
     utils::curve_cofactor,
 };
 use ark_ec::{
@@ -299,7 +300,8 @@ where
         let mut msg_input = vec![instance_description, fr_to_fq::<F, P>(&self.sk.0)];
         msg_input.extend(msg.iter());
 
-        let r = fq_to_fr::<F, P>(&RescueCRHF::sponge_with_padding(&msg_input, 1)[0]);
+        let r =
+            fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
         let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
@@ -411,7 +413,7 @@ where
             ]
         };
         challenge_input.extend(msg);
-        let challenge_fq = RescueCRHF::sponge_with_padding(&challenge_input, 1)[0];
+        let challenge_fq = VariableLengthRescueCRHF::<F, 1>::evaluate(challenge_input).unwrap()[0]; // safe unwrap
 
         // this masking will drop the last byte, and the resulting
         // challenge will be 248 bits
