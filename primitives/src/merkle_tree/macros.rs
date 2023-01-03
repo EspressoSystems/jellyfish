@@ -9,7 +9,7 @@
 /// Macro for generating a standard merkle tree implementation
 #[macro_export]
 macro_rules! impl_merkle_tree_scheme {
-    ($name: ident) => {
+    ($name: ident, $builder: ident) => {
         /// A standard append only Merkle tree implementation
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(
@@ -54,7 +54,7 @@ macro_rules! impl_merkle_tree_scheme {
                 height: usize,
                 elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
             ) -> Result<Self, PrimitivesError> {
-                let (root, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, elems)?;
+                let (root, num_leaves) = $builder::<E, H, I, Arity, T>(height, elems)?;
                 Ok($name {
                     root,
                     height,

@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 // A standard Universal Merkle tree implementation
-impl_merkle_tree_scheme!(UniversalMerkleTree);
+impl_merkle_tree_scheme!(UniversalMerkleTree, build_tree_internal);
 impl_forgetable_merkle_tree_scheme!(UniversalMerkleTree);
 
 impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
