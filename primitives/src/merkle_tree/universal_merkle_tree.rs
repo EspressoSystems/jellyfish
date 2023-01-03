@@ -185,19 +185,19 @@ mod mt_tests {
     fn test_update_and_lookup_helper<I, F>()
     where
         I: Index + ToTraversalPath<U3> + From<u64>,
-        F: RescueParameter,
+        F: RescueParameter + ToTraversalPath<U3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
         let mut mt =
-            RescueSparseMerkleTree::<I, F, F>::from_kv_set(10, HashMap::<I, F>::new()).unwrap();
+            RescueSparseMerkleTree::<F, F>::from_kv_set(10, HashMap::<F, F>::new()).unwrap();
         for i in 0..2 {
-            mt.update(I::from(i as u64), F::from(i as u64));
+            mt.update(F::from(i as u64), F::from(i as u64));
         }
         for i in 0..2 {
-            let (val, proof) = mt.universal_lookup(I::from(i as u64)).expect_ok().unwrap();
+            let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();
             assert_eq!(val, F::from(i as u64));
             assert_eq!(*proof.elem().unwrap(), val);
-            assert!(mt.verify(I::from(i as u64), &proof).unwrap());
+            assert!(mt.verify(F::from(i as u64), &proof).unwrap());
         }
     }
 
