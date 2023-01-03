@@ -121,6 +121,8 @@ mod mt_tests {
                 .unwrap();
         let mut mock_mt =
             RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        assert!(mt.lookup(0).expect_not_in_memory().is_ok());
+        assert!(mt.lookup(1).expect_ok().is_ok());
         assert!(mt.extend(&[F::from(3u64), F::from(1u64)]).is_ok());
         assert!(mock_mt.extend(&[F::from(3u64), F::from(1u64)]).is_ok());
         assert!(mt.lookup(0).expect_not_in_memory().is_ok());
