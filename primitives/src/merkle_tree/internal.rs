@@ -245,9 +245,11 @@ where
 {
     let leaves: Vec<_> = elems.into_iter().collect();
     let num_leaves = leaves.len() as u64;
-    let capacity = BigUint::from(Arity::to_u64()).pow(height as u32);
+    let capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or(
+        PrimitivesError::ParameterError("Merkle tree size too large.".to_string()),
+    )?;
 
-    if BigUint::from(num_leaves) > capacity {
+    if num_leaves > capacity {
         Err(PrimitivesError::ParameterError(
             "Too many data for merkle tree".to_string(),
         ))
@@ -388,6 +390,7 @@ where
         }
     }
 
+    /// Re-insert a forgotten leave to the Merkle tree if the proof is valid.
     pub(crate) fn remember_internal<H, Arity>(
         &mut self,
         height: usize,
@@ -471,6 +474,9 @@ where
         }
     }
 
+    /// Query the given index at the current Merkle node. Return the element
+    /// with a membership proof if presence, otherwise return a non-membership
+    /// proof.
     #[allow(clippy::type_complexity)]
     pub(crate) fn lookup_internal(
         &self,
@@ -533,6 +539,7 @@ where
         }
     }
 
+    /// Update the element at the given index.
     pub(crate) fn update_internal<H, Arity>(
         &mut self,
         height: usize,
@@ -600,6 +607,7 @@ where
         }
     }
 
+    /// Batch insertion for the given Merkle node.
     pub(crate) fn extend_internal<H, Arity>(
         &mut self,
         height: usize,
@@ -688,6 +696,8 @@ where
         }
     }
 
+    /// Similar to [`extend_internal`], but this function will automatically
+    /// forget every leave except for the Merkle tree frontier.
     pub(crate) fn extend_and_forget_internal<H, Arity>(
         &mut self,
         height: usize,
@@ -796,6 +806,8 @@ where
     T: NodeValue,
     Arity: Unsigned,
 {
+    /// Verify a membership proof by comparing the computed root value to the
+    /// expected one.
     pub(crate) fn verify_membership_proof<H>(
         &self,
         expected_root: &T,
@@ -843,6 +855,8 @@ where
         }
     }
 
+    /// Verify a non membership proof by comparing the computed root value
+    /// to the expected one.
     pub(crate) fn verify_non_membership_proof<H>(
         &self,
         expected_root: &T,
