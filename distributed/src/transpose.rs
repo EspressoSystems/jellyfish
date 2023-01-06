@@ -413,6 +413,7 @@ fn transpose_recursive<T: Copy>(
 pub fn ip_transpose<T: Copy>(src: &mut [T], w: &mut [T], rows: usize, cols: usize) {
     assert!(src.len() == rows * cols, "{} != {}", src.len(), rows * cols);
     let iw = w.len();
+    assert!(rows * cols > iw);
     if rows >= cols {
         row_transpose(src, cols, rows, w, iw);
     } else {

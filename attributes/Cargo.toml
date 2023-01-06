@@ -1,0 +1,12 @@
+[package]
+name = "fn-timer"
+version = "0.0.0"
+edition = "2018"
+
+[dependencies]
+syn = { version = "1.0.105", features = ["fold"] }
+quote = "1.0"
+proc-macro2 = "1.0.40"
+
+[lib]
+proc-macro = true

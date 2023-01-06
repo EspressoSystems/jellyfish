@@ -1,19 +1,6 @@
 #include "./mont_t.cuh"
 #include "./jacobian_t.hpp"
 
-#define DEVICE __device__
-#define GLOBAL
-#define KERNEL extern "C" __global__
-#define LOCAL __shared__
-
-#define GET_GLOBAL_ID() blockIdx.x * blockDim.x + threadIdx.x
-#define GET_GROUP_ID() blockIdx.x
-#define GET_LOCAL_ID() threadIdx.x
-#define GET_LOCAL_SIZE() blockDim.x
-#define BARRIER_LOCAL() __syncthreads()
-
-typedef unsigned char uchar;
-
 #define TO_CUDA_T(limb64) (uint32_t)(limb64), (uint32_t)(limb64 >> 32)
 static __device__ __constant__ const uint32_t BLS12_381_P[12] = {
     TO_CUDA_T(0xb9feffffffffaaab), TO_CUDA_T(0x1eabfffeb153ffff),
@@ -47,7 +34,7 @@ typedef jacobian_t<fp_t> point_t;
 typedef point_t::affine_t affine_t;
 
 // Reverse the given bits. It's used by the FFT kernel.
-DEVICE uint bitreverse(uint n, uint bits) {
+__device__ uint bitreverse(uint n, uint bits) {
   uint r = 0;
   for(int i = 0; i < bits; i++) {
     r = (r << 1) | (n & 1);
@@ -56,18 +43,19 @@ DEVICE uint bitreverse(uint n, uint bits) {
   return r;
 }
 
-extern LOCAL uchar cuda_shared[];
+extern __shared__ unsigned char cuda_shared[];
 
 #define Fr_LIMBS 8
 #define Fr_LIMB_BITS 32
 
 #define Fr_BITS (Fr_LIMBS * Fr_LIMB_BITS)
 
-DEVICE bool get_bit(fr_t l, uint i) {
+__device__ bool get_bit(const fr_t& l, uint i) {
   return (l[Fr_LIMBS - 1 - i / Fr_LIMB_BITS] >> (Fr_LIMB_BITS - 1 - (i % Fr_LIMB_BITS))) & 1;
 }
 
-DEVICE uint get_bits(fr_t l, uint skip, uint window) {
+__device__ uint get_bits(fr_t l, uint skip, uint window) {
+  l.from();
   uint ret = 0;
   for(uint i = 0; i < window; i++) {
     ret <<= 1;
@@ -76,7 +64,7 @@ DEVICE uint get_bits(fr_t l, uint skip, uint window) {
   return ret;
 }
 
-KERNEL void multiexp(
+extern "C" __global__ void multiexp(
     const affine_t *bases,
     point_t *buckets,
     point_t *results,
@@ -87,7 +75,7 @@ KERNEL void multiexp(
     uint window_size)
 {
   // We have `num_windows` * `num_groups` threads per multiexp.
-  const uint gid = GET_GLOBAL_ID();
+  const uint gid = blockIdx.x * blockDim.x + threadIdx.x;
   if(gid >= num_windows * num_groups) return;
 
   // We have (2^window_size - 1) buckets.
@@ -128,7 +116,7 @@ KERNEL void multiexp(
   results[gid] = res;
 }
 
-DEVICE fr_t pow_lookup(GLOBAL fr_t *bases, uint exponent) {
+__device__ fr_t pow_lookup(fr_t *bases, uint exponent) {
   fr_t res = fr_t::one();
   uint i = 0;
   while(exponent > 0) {
@@ -140,7 +128,7 @@ DEVICE fr_t pow_lookup(GLOBAL fr_t *bases, uint exponent) {
   return res;
 }
 
-DEVICE fr_t pow(fr_t base, uint exponent) {
+__device__ fr_t pow(fr_t base, uint exponent) {
   fr_t res = fr_t::one();
   while(exponent > 0) {
     if (exponent & 1)
@@ -151,11 +139,11 @@ DEVICE fr_t pow(fr_t base, uint exponent) {
   return res;
 }
 
-KERNEL void radix_fft(GLOBAL fr_t* x, // Source buffer
-                      GLOBAL fr_t* y, // Destination buffer
-                      GLOBAL fr_t* pq, // Precalculated twiddle factors
-                      GLOBAL fr_t* omegas, // [omega, omega^2, omega^4, ...]
-                      LOCAL fr_t* u_arg, // Local buffer to store intermediary values
+extern "C" __global__ void radix_fft(fr_t* x, // Source buffer
+                      fr_t* y, // Destination buffer
+                      fr_t* pq, // Precalculated twiddle factors
+                      fr_t* omegas, // [omega, omega^2, omega^4, ...]
+                      __shared__ fr_t* u_arg, // Local buffer to store intermediary values
                       uint n, // Number of elements
                       uint lgp, // Log2 of `p` (Read more in the link above)
                       uint deg, // 1=>radix2, 2=>radix4, 3=>radix8, ...
@@ -166,9 +154,8 @@ KERNEL void radix_fft(GLOBAL fr_t* x, // Source buffer
   // There can only be a single dynamic shared memory item, hence cast it to the type we need.
   fr_t* u = (fr_t*)cuda_shared;
 
-  uint lid = GET_LOCAL_ID();
-  uint lsize = GET_LOCAL_SIZE();
-  uint index = GET_GROUP_ID();
+  uint lid = threadIdx.x;
+  uint index = blockIdx.x;
   uint t = n >> deg;
   uint p = 1 << lgp;
   uint k = index & (p - 1);
@@ -176,39 +163,179 @@ KERNEL void radix_fft(GLOBAL fr_t* x, // Source buffer
   x += index;
   y += ((index - k) << deg) + k;
 
-  uint count = 1 << deg; // 2^deg
-  uint counth = count >> 1; // Half of count
-
-  uint counts = count / lsize * lid;
-  uint counte = counts + count / lsize;
+  uint gap = 1 << (deg - 1);
 
   // Compute powers of twiddle
   const fr_t twiddle = pow_lookup(omegas, (n >> lgp >> deg) * k);
-  fr_t tmp = pow(twiddle, counts);
-  for(uint i = counts; i < counte; i++) {
-    u[i] = tmp * x[i*t];
-    tmp = tmp * twiddle;
-  }
-  BARRIER_LOCAL();
+  fr_t tmp = pow(twiddle, 2 * lid);
+
+  u[2 * lid] = tmp * x[2 * lid * t];
+  u[2 * lid + 1] = tmp * twiddle * x[(2 * lid + 1) * t];
+
+  __syncthreads();
 
   const uint pqshift = max_deg - deg;
-  for(uint rnd = 0; rnd < deg; rnd++) {
-    const uint bit = counth >> rnd;
-    for(uint i = counts >> 1; i < counte >> 1; i++) {
-      const uint di = i & (bit - 1);
-      const uint i0 = (i << 1) - di;
-      const uint i1 = i0 + bit;
-      tmp = u[i0];
-      u[i0] = u[i0] + u[i1];
-      u[i1] = tmp - u[i1];
-      if(di != 0) u[i1] = pq[di << rnd << pqshift] * u[i1];
+  for (uint rnd = 0; rnd < deg; rnd++) {
+    const uint bit = gap >> rnd;
+    const uint di = lid & (bit - 1);
+    const uint i0 = (lid << 1) - di;
+    const uint i1 = i0 + bit;
+    tmp = u[i0];
+    u[i0] = u[i0] + u[i1];
+    u[i1] = tmp - u[i1];
+    if(di != 0) u[i1] = pq[di << rnd << pqshift] * u[i1];
+
+    __syncthreads();
+  }
+
+  y[lid*p] = u[bitreverse(lid, deg)];
+  y[(lid+gap)*p] = u[bitreverse(lid + gap, deg)];
+}
+
+extern "C" __global__ void batch_radix_fft(fr_t* x, // Source buffer
+                      fr_t* y, // Destination buffer
+                      fr_t* pq, // Precalculated twiddle factors
+                      fr_t* omegas, // [omega, omega^2, omega^4, ...]
+                      __shared__ fr_t* u_arg, // Local buffer to store intermediary values
+                      uint m,
+                      uint n, // Number of elements
+                      uint lgp, // Log2 of `p` (Read more in the link above)
+                      uint deg, // 1=>radix2, 2=>radix4, 3=>radix8, ...
+                      uint max_deg) // Maximum degree supported, according to `pq` and `omegas`
+{
+// CUDA doesn't support local buffers ("shared memory" in CUDA lingo) as function arguments,
+// ignore that argument and use the globally defined extern memory instead.
+  // There can only be a single dynamic shared memory item, hence cast it to the type we need.
+  fr_t* u = (fr_t*)cuda_shared;
+
+  uint lid = threadIdx.x;
+  uint index = blockIdx.x;
+  uint t = n >> deg;
+  uint p = 1 << lgp;
+  uint k = index & (p - 1);
+
+  uint count = 1 << deg; // 2^deg
+  uint counth = count >> 1; // Half of count
+
+  uint counts = 2 * lid;
+  uint counte = counts + 2;
+
+  const uint pqshift = max_deg - deg;
+  // Compute powers of twiddle
+  const fr_t twiddle = pow_lookup(omegas, (n >> lgp >> deg) * k);
+  fr_t base = pow(twiddle, counts);
+
+  for (uint j = 0; j < m; j++) {
+    fr_t tmp = base;
+    for (uint i = counts; i < counte; i++) {
+      u[i] = tmp * x[index + i * t + j * n];
+      tmp = tmp * twiddle;
+    }
+    __syncthreads();
+
+    for (uint rnd = 0; rnd < deg; rnd++) {
+      const uint bit = counth >> rnd;
+      for (uint i = counts >> 1; i < counte >> 1; i++) {
+        const uint di = i & (bit - 1);
+        const uint i0 = (i << 1) - di;
+        const uint i1 = i0 + bit;
+        tmp = u[i0] - u[i1];
+        u[i0] = u[i0] + u[i1];
+        u[i1] = tmp * pq[di << rnd << pqshift];
+      }
+
+      __syncthreads();
     }
 
-    BARRIER_LOCAL();
+    for (uint i = counts >> 1; i < counte >> 1; i++) {
+      y[((index - k) << deg) + k + i*p + j * n] = u[bitreverse(i, deg)];
+      y[((index - k) << deg) + k + (i+counth)*p + j * n] = u[bitreverse(i + counth, deg)];
+    }
+  }
+}
+
+extern "C" __global__ void butterfly_io_update(fr_t* x, fr_t* y, fr_t* omegas, uint num_chunks, uint offset)
+{
+  const uint i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  fr_t neg = x[i] - y[i];
+  x[i] += y[i];
+  y[i] = neg;
+  y[i] *= pow_lookup(omegas, (i + offset) * num_chunks);
+}
+
+extern "C" __global__ void butterfly_oi_update(fr_t* x, fr_t* y, fr_t* omegas, uint num_chunks, uint offset)
+{
+  const uint i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  y[i] *= pow_lookup(omegas, (i + offset) * num_chunks);
+  fr_t neg = x[i] - y[i];
+  x[i] += y[i];
+  y[i] = neg;
+}
+
+extern "C" __global__ void butterfly_io_finalize(fr_t* x, uint len, fr_t* omegas, uint gap, __shared__ fr_t* u_arg)
+{
+  fr_t* u = (fr_t*)cuda_shared;
+
+  uint num_chunks = len / (gap * 2);
+  uint a = gap / blockDim.x;
+  const uint id = blockIdx.x / a * gap * 2 + (blockIdx.x & (a - 1)) + threadIdx.x * a;
+
+  uint gap_u = blockDim.x;
+
+  u[threadIdx.x] = x[id];
+  u[threadIdx.x + gap_u] = x[id + gap];
+
+  __syncthreads();
+
+  for (uint t = 1; t <= blockDim.x; t *= 2) {
+    const uint j = threadIdx.x & (gap_u - 1);
+    const uint i = threadIdx.x * 2 - j;
+
+    fr_t neg = u[i] - u[i + gap_u];
+    u[i] += u[i + gap_u];
+    u[i + gap_u] = neg * pow_lookup(omegas, ((id & ((gap / t) - 1))) * num_chunks);
+
+    __syncthreads();
+
+    gap_u /= 2;
+    num_chunks *= 2;
   }
 
-  for(uint i = counts >> 1; i < counte >> 1; i++) {
-    y[i*p] = u[bitreverse(i, deg)];
-    y[(i+counth)*p] = u[bitreverse(i + counth, deg)];
+  x[id] = u[threadIdx.x];
+  x[id + gap] = u[threadIdx.x + blockDim.x];
+}
+
+extern "C" __global__ void butterfly_oi_finalize(fr_t* x, uint len, fr_t* omegas, uint gap, __shared__ fr_t* u_arg)
+{
+  fr_t* u = (fr_t*)cuda_shared;
+
+  uint num_chunks = len / (gap * 2);
+  const uint id = blockIdx.x / gap * gap * blockDim.x * 2 + (blockIdx.x & (gap - 1)) + threadIdx.x * gap * 2;
+
+  uint gap_u = 1;
+
+  u[threadIdx.x * 2] = x[id];
+  u[threadIdx.x * 2 + gap_u] = x[id + gap];
+
+  __syncthreads();
+
+  for (uint t = 1; t <= blockDim.x; t *= 2) {
+    const uint j = threadIdx.x & (gap_u - 1);
+    const uint i = threadIdx.x * 2 - j;
+
+    u[i + gap_u] *= pow_lookup(omegas, (((id - j * gap) & ((gap * t) - 1))) * num_chunks);
+    fr_t neg = u[i] - u[i + gap_u];
+    u[i] += u[i + gap_u];
+    u[i + gap_u] = neg;
+
+    __syncthreads();
+
+    gap_u *= 2;
+    num_chunks /= 2;
   }
+
+  x[id] = u[threadIdx.x * 2];
+  x[id + gap] = u[threadIdx.x * 2 + 1];
 }

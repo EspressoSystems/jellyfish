@@ -1,53 +1,67 @@
 @0x9663f4dd604afa35;
 
-struct MsmWorkload {
-    start @0 : UInt64;
-    end @1 : UInt64;
+struct Chunk {
+    data @0: Data;
+    hash @1: UInt64;
 }
 
-struct FftWorkload {
-    rowStart @0 : UInt64;
-    rowEnd @1 : UInt64;
-    colStart @2 : UInt64;
-    colEnd @3 : UInt64;
-}
+interface PlonkWorker {
+    keyGenPrepare                   @0 ();
+    keyGenSetCk                     @1 (data: Data, hash: UInt64);
 
-interface PlonkSlave {
-    init @0 (bases :List(Data), domainSize :UInt64, quotDomainSize :UInt64);
-    varMsm @1 (workload: MsmWorkload, scalars :List(Data)) -> (result: Data);
+    keyGenCommit                    @2 (seed: Data) -> (c_q: Data, c_s: Data);
 
-    fftInit @2 (id: UInt64, workloads: List(FftWorkload), is_quot: Bool, is_inv: Bool, is_coset: Bool);
-    fft1 @3 (id: UInt64, i: UInt64, v: List(Data));
-    fft2Prepare @4 (id: UInt64);
-    fft2 @5 (id: UInt64) -> (v: List(Data));
+    proveInit                       @3 ();
 
-    round1 @6 (w: List(Data)) -> (c: Data);
+    proveRound1                     @4 () -> (c: Data);
 
-    round3Step1AH @7 (q_a: List(Data), q_h: List(Data)) -> (v: List(Data));
-    round3Step1O @8 (q_o: List(Data)) -> (v: List(Data));
-    round3Step2Init @9 ();
-    round3Step2MRetrieve @10 (q_m: List(Data)) -> (v: List(Data));
-    round3Step2ERetrieve @11 (q_e: List(Data)) -> (v: List(Data));
-    round3Step3 @12 (beta: Data, gamma: Data, k: Data) -> (v: List(Data));
-    round3Step4 @13 (sigma: List(Data)) -> (v: List(Data));
-    round3Step5 @14 (t: List(Data)) -> (c: Data);
+    proveRound2Compute              @5 (beta: Data, gamma: Data);
+    proveRound2Exchange             @6 ();
+    proveRound2Commit               @7 () -> (c: Data);
+    placeholder7                    @8 ();
+    placeholder8                    @9 ();
 
-    round4 @15 (zeta: Data) -> (v1: Data, v2: Data);
+    proveRound3Prepare                          @10 (alpha: Data);
+    proveRound3ComputeTPart1Type1               @11 ();
+    proveRound3ExchangeTPart1Type1              @12 ();
+    proveRound3ExchangeW1                       @13 ();
+    proveRound3ComputeAndExchangeW3             @14 ();
+    proveRound3ComputeAndExchangeTPart1Type3    @15 ();
+    proveRound3ComputeAndExchangeTPart2         @16 ();
+    proveRound3ComputeAndExchangeTPart1Type2    @17 ();
+    proveRound3ComputeAndExchangeTPart3         @18 ();
+    proveRound3Commit                           @19 () -> (c: Data);
 
-    round5Step1 @16 () -> (v1: List(Data), v2: Data, v3: Data);
-    round5Step2Init @17 ();
-    round5Step2MRetrieve @18 () -> (v: Data);
-    round5Step2ERetrieve @19 () -> (v: Data);
-    # round5Step2MRetrieve @18 () -> (v: List(Data));
-    # round5Step2ERetrieve @19 () -> (v: List(Data));
-    round5Step3 @20 (v: Data) -> (v: List(Data));
-}
+    proveRound4EvaluateW                        @20 (zeta: Data) -> (w: Data);
+    proveRound4EvaluateSigmaOrZ                 @21 () -> (sigma_or_z: Data);
 
-interface PlonkPeer {
-    fftExchange @0 (id: UInt64, from: UInt64, v: List(Data));
+    placeholder15                   @22 ();
+    placeholder16                   @23 ();
+    placeholder17                   @24 ();
+    placeholder18                   @25 ();
+    placeholder19                   @26 ();
+    placeholder20                   @27 ();
+    placeholder21                   @28 ();
+    placeholder22                   @29 ();
 
-    round3Step2MExchange @1 (w: List(Data));
-    round3Step2EExchange @2 (w: List(Data));
-    round5Step2MExchange @3 (w: Data);
-    round5Step2EExchange @4 (w: Data);
+    proveRound5Prepare              @30 (v: Data, s1: Data, s2: Data);
+    proveRound5Exchange             @31 ();
+    proveRound5Commit               @32 () -> (c_t: Data, c_z: Data);
+
+    placeholder23                   @33 ();
+    placeholder24                   @34 ();
+    placeholder25                   @35 ();
+    placeholder26                   @36 ();
+    placeholder27                   @37 ();
+    placeholder28                   @38 ();
+    proveRound2UpdateZ              @39 (z: List(Chunk));
+
+    proveRound3UpdateW1Product      @40 (w1: List(Chunk));
+    proveRound3UpdateW3Product      @41 (w3: List(Chunk));
+    proveRound3UpdateT              @42 (offset: UInt64, t: Chunk);
+    proveRound3GetW1Product         @43 (start: UInt64, end: UInt64) -> (w1: Chunk);
+    proveRound3GetW2Product         @44 (start: UInt64, end: UInt64) -> (w2: Chunk);
+    proveRound3GetW3Product         @45 (start: UInt64, end: UInt64) -> (w3: Chunk);
+
+    proveRound5Update              @46 (w: Data, t: List(Chunk));
 }
