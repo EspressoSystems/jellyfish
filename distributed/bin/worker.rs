@@ -1,14 +1,11 @@
-use jf_distributed::worker::run_worker;
+use jf_distributed::worker::Worker;
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+pub async fn main() {
     let args = std::env::args().collect::<Vec<_>>();
-    if args.len() != 2 {
-        println!("usage: {} <me>", args[0]);
-        return Ok(());
-    }
+    assert_eq!(args.len(), 2, "Usage: {} <me>", args[0]);
 
-    let me = args[1].parse()?;
+    let me = args[1].parse().unwrap();
 
-    run_worker(me).await
+    Worker::new(me).start().await.unwrap();
 }

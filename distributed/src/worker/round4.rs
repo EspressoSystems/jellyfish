@@ -28,27 +28,25 @@ fn evaluate(v: &[Fr], point: &Fr) -> Fr {
     v.par_chunks(num_elem_per_thread)
         .enumerate()
         .map(|(i, chunk)| {
-            let mut thread_result =
-                chunk.iter().rfold(Fr::zero(), move |result, coeff| result * point + coeff);
-            thread_result *= point.pow(&[(i * num_elem_per_thread) as u64]);
-            thread_result
+            chunk.iter().rfold(Fr::zero(), move |result, coeff| result * point + coeff)
+                * point.pow(&[(i * num_elem_per_thread) as u64])
         })
         .sum()
 }
 
 impl PlonkImplInner {
     #[fn_timer]
-    pub fn evaluate_w(&self, zeta: &Fr) -> Fr {
-        evaluate(&self.w.load().unwrap(), zeta)
+    pub fn evaluate_w(&self) -> Fr {
+        evaluate(&self.w.mmap().unwrap(), &self.zeta)
     }
 
     #[fn_timer]
-    pub fn evaluate_sigma(&self, zeta: &Fr) -> Fr {
-        evaluate(&self.sigma.load().unwrap(), zeta)
+    pub fn evaluate_sigma(&self) -> Fr {
+        evaluate(&self.sigma.mmap().unwrap(), &self.zeta)
     }
 
     #[fn_timer]
-    pub fn evaluate_z(&self, zeta: &Fr) -> Fr {
-        evaluate(&self.z, &(self.domain1.generator() * zeta))
+    pub fn evaluate_z(&self, z: &[Fr]) -> Fr {
+        evaluate(z, &(self.domain1.generator() * self.zeta))
     }
 }

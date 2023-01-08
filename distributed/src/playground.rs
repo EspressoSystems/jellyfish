@@ -65,18 +65,29 @@ fn coset_ifft(domain: &Radix2EvaluationDomain<Fr>, coeffs: &Vec<Fr>) -> Vec<Fr> 
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        fs::{File, OpenOptions},
+        io::BufWriter,
+        time::Instant,
+    };
+
     use ark_ff::UniformRand;
     use ark_poly::{univariate::DensePolynomial, UVPolynomial};
     use ark_serialize::Write;
     use rand::thread_rng;
-    use rayon::prelude::{IntoParallelRefMutIterator, IndexedParallelIterator, ParallelIterator, IntoParallelRefIterator};
+    use rayon::prelude::{
+        IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator,
+        ParallelIterator,
+    };
 
     use super::*;
-
-    use std::{time::Instant, fs::{OpenOptions, File}, io::BufWriter};
-
-    use crate::{transpose::{oop_transpose, ip_transpose}, utils::{MutMmap, serialize, Mmap}, playground3::{fft_helper_in_place, ifft_helper_in_place}, gpu::{Domain, FFTDomain}};
-
+    use crate::{
+        gpu::{Domain, FFTDomain},
+        mmap::{Mmap, MutMmap},
+        playground3::{fft_helper_in_place, ifft_helper_in_place},
+        transpose::{ip_transpose, oop_transpose},
+        utils::CastSlice,
+    };
 
     #[test]
     fn test() {
@@ -592,10 +603,10 @@ mod tests {
     fn test_mul() {
         let rng = &mut thread_rng();
         let n = 1u64 << 31;
-        
+
         let w = {
             let w = (0..n).map(|_| Fr::rand(rng)).collect::<Vec<_>>();
-            BufWriter::new(File::create("tmp").unwrap()).write_all(serialize(&w)).unwrap();
+            BufWriter::new(File::create("tmp").unwrap()).write_all(w.cast()).unwrap();
             unsafe { Mmap::<Fr>::map(&File::open("tmp").unwrap()).unwrap() }
         };
         let mut u = {

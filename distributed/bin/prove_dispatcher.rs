@@ -1,54 +1,35 @@
-use std::{
-    fs::{create_dir_all, File},
-    io::BufReader,
-};
+use std::{fs::File, time::Instant};
 
-use ark_serialize::{CanonicalDeserialize, Read};
+use ark_serialize::CanonicalDeserialize;
 use futures::future::join_all;
 use jf_distributed::{
-    config::NetworkConfig,
-    dispatcher::{connect, Plonk, BIN_PATH},
-    utils::deserialize, constants::NUM_WIRE_TYPES,
+    config::{DATA_DIR, WORKERS},
+    dispatcher::Plonk,
+    storage::SliceStorage,
 };
 use jf_plonk::{
     prelude::VerifyingKey,
     proof_system::{PlonkKzgSnark, Snark},
     transcript::StandardTranscript,
 };
+use stubborn_io::StubbornTcpStream;
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    create_dir_all(BIN_PATH)?;
-    let network: NetworkConfig =
-        serde_json::from_reader(File::open("config/network.json")?).unwrap();
-    assert_eq!(network.workers.len(), NUM_WIRE_TYPES);
+    let vk = VerifyingKey::deserialize_unchecked(File::open(DATA_DIR.join("dispatcher/vk.bin"))?)?;
+    let public_inputs = SliceStorage::new(DATA_DIR.join("dispatcher/circuit.inputs.bin")).load()?;
 
-    let vk = VerifyingKey::deserialize_unchecked(File::open(format!("{}/vk.bin", BIN_PATH))?)?;
-    let mut public_inputs = vec![];
-    BufReader::new(File::open(format!("{}/circuit.inputs", BIN_PATH))?)
-        .read_to_end(&mut public_inputs)?;
-    let public_inputs = deserialize(&public_inputs);
-
-    tokio::task::LocalSet::new()
-        .run_until(async {
-            let workers = join_all(
-                network.workers.iter().map(|addr| async move { connect(addr).await.unwrap() }),
-            )
-            .await;
-            join_all(
-                workers.iter().map(|worker| async move {
-                    worker.prove_init_request().send().promise.await.unwrap()
-                }),
-            )
-            .await;
-            for _ in 0..10 {
-                let proof = Plonk::prove_async(&workers, public_inputs, &vk).await.unwrap();
-                assert!(
-                    PlonkKzgSnark::verify::<StandardTranscript>(&vk, public_inputs, &proof).is_ok()
-                );
-            }
-        })
-        .await;
-
+    let mut workers = join_all(WORKERS.iter().map(|worker| async move {
+        let stream = StubbornTcpStream::connect(worker).await.unwrap();
+        stream.set_nodelay(true).unwrap();
+        stream
+    }))
+    .await;
+    for _ in 0..10 {
+        let now = Instant::now();
+        let proof = Plonk::prove_async(&mut workers, &public_inputs, &vk).await.unwrap();
+        println!("prove: {:?}", now.elapsed());
+        assert!(PlonkKzgSnark::verify::<StandardTranscript>(&vk, &public_inputs, &proof).is_ok());
+    }
     Ok(())
 }

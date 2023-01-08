@@ -1,58 +1,46 @@
 use std::{
     cmp::max,
-    error::Error,
-    fs::{create_dir_all, File},
+    mem::{size_of, transmute},
+    net::SocketAddr,
 };
 
 use ark_bls12_381::{Bls12_381, Fq, Fr, G1Affine, G1Projective, G2Projective};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_ff::{BigInteger, Field, One, PrimeField, UniformRand, Zero};
+use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_poly_commit::kzg10::{Commitment, UniversalParams, VerifierKey};
-use ark_std::{end_timer, format, rand::RngCore, start_timer, time::Instant};
-use capnp::message::ReaderOptions;
-use capnp_rpc::{rpc_twoparty_capnp, twoparty, RpcSystem};
+use ark_std::{end_timer, format, rand::RngCore, start_timer};
 use fn_timer::fn_timer;
-use futures::{future::join_all, AsyncReadExt};
+use futures::future::join_all;
 use jf_plonk::{
     prelude::{PlonkError, Proof, ProofEvaluations, VerifyingKey},
     transcript::{PlonkTranscript, StandardTranscript},
 };
 use rayon::{
-    prelude::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator},
+    prelude::{
+        IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator,
+        IntoParallelRefMutIterator, ParallelIterator,
+    },
     slice::ParallelSlice,
+};
+use stubborn_io::StubbornTcpStream;
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    join,
 };
 
 use crate::{
-    config::NetworkConfig,
-    constants::{CAPNP_CHUNK_SIZE, NUM_WIRE_TYPES},
-    gpu::Domain,
-    playground2::Indexer,
-    plonk_capnp::plonk_worker,
-    send_chunks_until_ok, timer,
-    utils::{deserialize, serialize},
+    circuit::coset_representatives,
+    config::{CHUNK_SIZE, DATA_DIR, NUM_WIRE_TYPES, WORKERS},
+    gpu::{Domain, FFTDomain},
+    polynomial::VecPolynomial,
+    storage::SliceStorage,
+    timer,
+    utils::CastSlice,
+    worker::{Method, PlonkImplInner, Status},
 };
 
-pub async fn connect<A: tokio::net::ToSocketAddrs>(
-    addr: A,
-) -> Result<plonk_worker::Client, Box<dyn Error>> {
-    let stream = tokio::net::TcpStream::connect(addr).await?;
-    stream.set_nodelay(true)?;
-    let (reader, writer) = tokio_util::compat::TokioAsyncReadCompatExt::compat(stream).split();
-    let rpc_network = Box::new(twoparty::VatNetwork::new(
-        reader,
-        writer,
-        rpc_twoparty_capnp::Side::Client,
-        ReaderOptions { traversal_limit_in_words: Some(usize::MAX), nesting_limit: 64 },
-    ));
-    let mut rpc_system = RpcSystem::new(rpc_network, None);
-    let client = rpc_system.bootstrap(rpc_twoparty_capnp::Side::Server);
-    tokio::task::spawn_local(rpc_system);
-    Ok(client)
-}
-
 pub struct Plonk {}
-
-pub const BIN_PATH: &str = "./data/dispatcher";
 
 impl Plonk {
     #[fn_timer]
@@ -92,7 +80,7 @@ impl Plonk {
 
     #[fn_timer]
     pub async fn key_gen_async(
-        workers: &[plonk_worker::Client],
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
         seed: [u8; 32],
         mut srs: UniversalParams<Bls12_381>,
         num_inputs: usize,
@@ -102,33 +90,56 @@ impl Plonk {
 
         let g = srs.powers_of_g[0];
 
-        join_all(workers.iter().map(|worker| async move {
-            worker.key_gen_prepare_request().send().promise.await.unwrap();
+        join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::KeyGenPrepare as u8).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
         }))
         .await;
 
-        for chunk in serialize(&srs.powers_of_g).chunks(CAPNP_CHUNK_SIZE) {
-            join_all(workers.iter().map(|worker| async move {
-                send_chunks_until_ok!({
-                    let mut request = worker.key_gen_set_ck_request();
-                    request.get().set_data(chunk);
-                    request.get().set_hash(xxhash_rust::xxh3::xxh3_64(chunk));
-                    request
-                });
+        for chunk in srs.powers_of_g.cast::<u8>().chunks(CHUNK_SIZE) {
+            join_all(workers.iter_mut().map(|worker| async move {
+                loop {
+                    worker.write_u8(Method::KeyGenSetCk as u8).await.unwrap();
+                    worker.write_u64_le(xxhash_rust::xxh3::xxh3_64(chunk)).await.unwrap();
+                    worker.write_u64_le(chunk.len() as u64).await.unwrap();
+                    worker.write_all(&chunk).await.unwrap();
+                    worker.flush().await.unwrap();
+
+                    match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                        Status::Ok => break,
+                        Status::HashMismatch => continue,
+                    }
+                }
             }))
             .await;
         }
         srs.powers_of_g.clear();
         srs.powers_of_g.shrink_to_fit();
-        let c = join_all(workers.iter().map(|worker| async move {
-            let mut request = worker.key_gen_commit_request();
-            request.get().set_seed(serialize(&seed));
-            let reply = request.send().promise.await.unwrap();
-            let c_q: Vec<G1Projective> =
-                deserialize(reply.get().unwrap().get_c_q().unwrap()).to_vec();
-            let c_s: G1Projective = deserialize(reply.get().unwrap().get_c_s().unwrap())[0];
+        let c = join_all(workers.iter_mut().enumerate().map(|(i, worker)| async move {
+            worker.write_u8(Method::KeyGenCommit as u8).await.unwrap();
+            worker.write_all(&seed).await.unwrap();
+            worker.flush().await.unwrap();
 
-            (c_q, c_s)
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {
+                    let mut c_s = [0u8; size_of::<G1Projective>()];
+                    worker.read_exact(&mut c_s).await.unwrap();
+                    let c_s = c_s.cast::<G1Projective>()[0];
+                    let mut c_q = match i {
+                        0 | 2 => vec![G1Projective::zero(); 2],
+                        1 | 3 | 4 => vec![G1Projective::zero(); 3],
+                        _ => unreachable!(),
+                    };
+                    worker.read_exact(c_q.cast_mut()).await.unwrap();
+                    (c_q, c_s)
+                }
+                _ => panic!(),
+            }
         }))
         .await;
         let selector_comms = vec![
@@ -144,7 +155,7 @@ impl Plonk {
             num_inputs,
             sigma_comms,
             selector_comms,
-            k: Indexer::coset_representatives(NUM_WIRE_TYPES, domain_size),
+            k: coset_representatives(NUM_WIRE_TYPES, domain_size),
             open_key: VerifierKey {
                 g,
                 gamma_g: Default::default(),
@@ -158,22 +169,386 @@ impl Plonk {
 
     #[fn_timer]
     async fn prove_round1<T: PlonkTranscript<Fq>>(
-        workers: &[plonk_worker::Client],
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
         transcript: &mut T,
     ) -> Result<Vec<Commitment<Bls12_381>>, PlonkError> {
-        let wires_poly_comms = join_all(workers.iter().map(|worker| async move {
-            let reply = worker.prove_round1_request().send().promise.await.unwrap();
-            let r = reply.get().unwrap().get_c().unwrap();
+        let wires_poly_comms = join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveRound1 as u8).await.unwrap();
+            worker.flush().await.unwrap();
 
-            Commitment::<Bls12_381>(deserialize::<G1Projective>(r)[0].into())
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {
+                    let mut c = [0u8; size_of::<G1Projective>()];
+                    worker.read_exact(&mut c).await.unwrap();
+                    let c = c.cast::<G1Projective>()[0];
+                    Commitment(c.into())
+                }
+                _ => panic!(),
+            }
         }))
         .await;
         transcript.append_commitments(b"witness_poly_comms", &wires_poly_comms)?;
         Ok(wires_poly_comms)
     }
 
+    #[fn_timer]
+    async fn prove_round2<T: PlonkTranscript<Fq>>(
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
+        transcript: &mut T,
+    ) -> Result<(Fr, Fr, Commitment<Bls12_381>), PlonkError> {
+        let beta = transcript.get_and_append_challenge::<Bls12_381>(b"beta")?;
+        let gamma = transcript.get_and_append_challenge::<Bls12_381>(b"gamma")?;
+        join_all(workers.iter_mut().enumerate().map(|(_i, worker)| async move {
+            worker.write_u8(Method::ProveRound2Compute as u8).await.unwrap();
+            worker.write_all([beta, gamma].cast()).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+        join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 0 || *i == 2).map(
+            |(_, worker)| async move {
+                worker.write_u8(Method::ProveRound2Exchange as u8).await.unwrap();
+                worker.flush().await.unwrap();
+
+                match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                    Status::Ok => {}
+                    _ => panic!(),
+                }
+            },
+        ))
+        .await;
+        let prod_perm_poly_comm = {
+            workers[4].write_u8(Method::ProveRound2Commit as u8).await.unwrap();
+            workers[4].flush().await.unwrap();
+
+            match unsafe { transmute(workers[4].read_u8().await.unwrap()) } {
+                Status::Ok => {
+                    let mut c = [0u8; size_of::<G1Projective>()];
+                    workers[4].read_exact(&mut c).await.unwrap();
+                    let c = c.cast::<G1Projective>()[0];
+                    Commitment(c.into())
+                }
+                _ => panic!(),
+            }
+        };
+        transcript.append_commitment(b"perm_poly_comms", &prod_perm_poly_comm)?;
+        Ok((beta, gamma, prod_perm_poly_comm))
+    }
+
+    #[fn_timer]
+    async fn prove_round3<T: PlonkTranscript<Fq>>(
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
+        transcript: &mut T,
+        domain: Domain,
+    ) -> Result<(Fr, Vec<Commitment<Bls12_381>>), PlonkError> {
+        let alpha = transcript.get_and_append_challenge::<Bls12_381>(b"alpha")?;
+
+        join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveRound3Prepare as u8).await.unwrap();
+            worker.write_all([alpha].cast()).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+
+        join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveRound3ComputeTPart1Type1 as u8).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+
+        join_all(workers.iter_mut().take(NUM_WIRE_TYPES - 1).map(|worker| async move {
+            worker.write_u8(Method::ProveRound3ExchangeTPart1Type1 as u8).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+
+        join!(
+            async {
+                join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 0 || *i == 2).map(
+                    |(_, worker)| async move {
+                        worker.write_u8(Method::ProveRound3ExchangeW1 as u8).await.unwrap();
+                        worker.flush().await.unwrap();
+
+                        match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                            Status::Ok => {}
+                            _ => panic!(),
+                        }
+                    },
+                ))
+                .await;
+
+                workers[4]
+                    .write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type3 as u8)
+                    .await
+                    .unwrap();
+                workers[4].flush().await.unwrap();
+
+                match unsafe { transmute(workers[4].read_u8().await.unwrap()) } {
+                    Status::Ok => {}
+                    _ => panic!(),
+                }
+
+                workers[4]
+                    .write_u8(Method::ProveRound3ComputeAndExchangeTPart2 as u8)
+                    .await
+                    .unwrap();
+                workers[4].flush().await.unwrap();
+
+                match unsafe { transmute(workers[4].read_u8().await.unwrap()) } {
+                    Status::Ok => {}
+                    _ => panic!(),
+                }
+
+                join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 1 || *i == 3).map(
+                    |(_, worker)| async move {
+                        worker
+                            .write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type2 as u8)
+                            .await
+                            .unwrap();
+                        worker.flush().await.unwrap();
+
+                        match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                            Status::Ok => {}
+                            _ => panic!(),
+                        }
+                    },
+                ))
+                .await;
+            },
+            async {
+                let mut peers = join_all(WORKERS.iter().map(|worker| async move {
+                    let stream = StubbornTcpStream::connect(worker).await.unwrap();
+                    stream.set_nodelay(true).unwrap();
+                    stream
+                }))
+                .await;
+
+                let n = domain.size();
+                let quot_domain = Domain::new(n * 8);
+
+                join_all(peers.iter_mut().map(|peer| async move {
+                    peer.write_u8(Method::ProveRound3ComputeW3 as u8).await.unwrap();
+                    peer.flush().await.unwrap();
+
+                    match unsafe { transmute(peer.read_u8().await.unwrap()) } {
+                        Status::Ok => {}
+                        _ => panic!(),
+                    }
+                }))
+                .await;
+                let mut w = vec![];
+                for (i, peer) in peers.iter_mut().enumerate().rev() {
+                    let mut w3 = PlonkImplInner::receive_poly_until_ok(
+                        peer,
+                        Method::ProveRound3GetW3,
+                        n + 2,
+                    )
+                    .await
+                    .unwrap();
+                    w.push(timer!(format!("FFT on (w{0} + β * σ{0} + γ)", i), {
+                        quot_domain.fft_io(&mut w3);
+                        SliceStorage::new(DATA_DIR.join(format!("dispatcher/quot_evals_{i}.bin")))
+                            .store_and_mmap(&w3)
+                            .unwrap()
+                    }));
+                }
+
+                let mut z = PlonkImplInner::receive_poly_until_ok(
+                    &mut peers[4],
+                    Method::ProveRound3GetZ,
+                    n + 3,
+                )
+                .await
+                .unwrap();
+                let mut u = timer!("FFT on -α * z'", {
+                    Radix2EvaluationDomain::distribute_powers_and_mul_by_const(
+                        &mut z,
+                        domain.generator(),
+                        -alpha,
+                    );
+                    quot_domain.fft_io(&mut z);
+                    z
+                });
+                timer!("Compute evals of -α * z' * Π(wi + β * σi + γ) ", {
+                    u.par_iter_mut()
+                        .zip_eq(w[0].par_iter())
+                        .zip_eq(w[1].par_iter())
+                        .zip_eq(w[2].par_iter())
+                        .zip_eq(w[3].par_iter())
+                        .zip_eq(w[4].par_iter())
+                        .for_each(|(((((u, w0), w1), w2), w3), w4)| {
+                            *u *= w0;
+                            *u *= w1;
+                            *u *= w2;
+                            *u *= w3;
+                            *u *= w4;
+                        });
+                });
+                timer!("IFFT on u", {
+                    quot_domain.ifft_oi(&mut u);
+                });
+
+                u.div_by_vanishing_poly(n);
+
+                assert!(u.len() <= 6 * n + 8, "{} {}", u.len(), 6 * n + 8);
+                PlonkImplInner::share_t(&mut peers, &u[n..], n + 2).await.unwrap();
+            }
+        );
+
+        // join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 0 || *i == 2).map(
+        //     |(_, worker)| async move {
+        //         worker.write_u8(Method::ProveRound3ComputeAndExchangeW3 as u8).await.unwrap();
+        //         worker.flush().await.unwrap();
+
+        //         match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+        //             Status::Ok => {}
+        //             _ => panic!(),
+        //         }
+        //     },
+        // ))
+        // .await;
+
+        // {
+        //     workers[4].write_u8(Method::ProveRound3ComputeAndExchangeTPart3 as u8).await?;
+        //     workers[4].flush().await?;
+
+        //     match unsafe { transmute(workers[4].read_u8().await?) } {
+        //         Status::Ok => {}
+        //         _ => panic!(),
+        //     }
+        // }
+
+        let split_quot_poly_comms = join_all(workers.iter_mut().rev().map(|worker| async move {
+            worker.write_u8(Method::ProveRound3Commit as u8).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {
+                    let mut c = [0u8; size_of::<G1Projective>()];
+                    worker.read_exact(&mut c).await.unwrap();
+                    let c = c.cast::<G1Projective>()[0];
+                    Commitment(c.into())
+                }
+                _ => panic!(),
+            }
+        }))
+        .await;
+        transcript.append_commitments(b"quot_poly_comms", &split_quot_poly_comms)?;
+        Ok((alpha, split_quot_poly_comms))
+    }
+
+    #[fn_timer]
+    async fn prove_round4<T: PlonkTranscript<Fq>>(
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
+        transcript: &mut T,
+    ) -> Result<(Fr, ProofEvaluations<Fr>), PlonkError> {
+        let zeta = transcript.get_and_append_challenge::<Bls12_381>(b"zeta")?;
+        let wires_evals = join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveRound4EvaluateW as u8).await.unwrap();
+            worker.write_all([zeta].cast()).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {
+                    let mut w = [0u8; size_of::<Fr>()];
+                    worker.read_exact(&mut w).await.unwrap();
+                    let w = w.cast::<Fr>()[0];
+                    w
+                }
+                _ => panic!(),
+            }
+        }))
+        .await;
+        let mut wire_sigma_evals = join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveRound4EvaluateSigmaOrZ as u8).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {
+                    let mut w = [0u8; size_of::<Fr>()];
+                    worker.read_exact(&mut w).await.unwrap();
+                    let w = w.cast::<Fr>()[0];
+                    w
+                }
+                _ => panic!(),
+            }
+        }))
+        .await;
+        let perm_next_eval = wire_sigma_evals.pop().unwrap();
+        let poly_evals = ProofEvaluations { wires_evals, wire_sigma_evals, perm_next_eval };
+
+        transcript.append_proof_evaluations::<Bls12_381>(&poly_evals)?;
+        Ok((zeta, poly_evals))
+    }
+
+    #[fn_timer]
+    async fn prove_round5<T: PlonkTranscript<Fq>>(
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
+        transcript: &mut T,
+        s1: Fr,
+        s2: Fr,
+    ) -> Result<(Commitment<Bls12_381>, Commitment<Bls12_381>), PlonkError> {
+        let v = transcript.get_and_append_challenge::<Bls12_381>(b"v")?;
+        join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveRound5Prepare as u8).await.unwrap();
+            worker.write_all([v, s1, s2].cast()).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+
+        join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 0 || *i == 2).map(
+            |(_, worker)| async move {
+                worker.write_u8(Method::ProveRound5Exchange as u8).await.unwrap();
+                worker.flush().await.unwrap();
+
+                match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                    Status::Ok => {}
+                    _ => panic!(),
+                }
+            },
+        ))
+        .await;
+
+        workers[4].write_u8(Method::ProveRound5Commit as u8).await?;
+        workers[4].flush().await?;
+
+        match unsafe { transmute(workers[4].read_u8().await?) } {
+            Status::Ok => {
+                let mut c = [0u8; size_of::<G1Projective>() * 2];
+                workers[4].read_exact(&mut c).await?;
+                let c = c.cast::<G1Projective>();
+                Ok((Commitment(c[0].into()), Commitment(c[1].into())))
+            }
+            _ => panic!(),
+        }
+    }
+
     pub async fn prove_async(
-        workers: &[plonk_worker::Client],
+        workers: &mut [StubbornTcpStream<&'static SocketAddr>],
         pub_inputs: &[Fr],
         vk: &VerifyingKey<Bls12_381>,
     ) -> Result<Proof<Bls12_381>, PlonkError> {
@@ -183,225 +558,70 @@ impl Plonk {
         let mut transcript = <StandardTranscript as PlonkTranscript<Fr>>::new(b"PlonkProof");
         transcript.append_vk_and_pub_input(vk, &pub_inputs)?;
 
+        join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveInit as u8).await.unwrap();
+            worker.flush().await.unwrap();
+
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+
         // Round 1
-        let wires_poly_comms = Self::prove_round1(&workers, &mut transcript).await?;
+        let wires_poly_comms = Self::prove_round1(workers, &mut transcript).await?;
         println!("wires_poly_comms:");
         for i in &wires_poly_comms {
             println!("{}", i.0);
         }
 
         // Round 2
-        let now = Instant::now();
-        let beta = <StandardTranscript as PlonkTranscript<Fr>>::get_and_append_challenge::<
-            Bls12_381,
-        >(&mut transcript, b"beta")?;
-        let gamma = <StandardTranscript as PlonkTranscript<Fr>>::get_and_append_challenge::<
-            Bls12_381,
-        >(&mut transcript, b"gamma")?;
-        join_all(workers.iter().enumerate().map(|(_i, worker)| async move {
-            let mut request = worker.prove_round2_compute_request();
-            request.get().set_beta(serialize(&[beta]));
-            request.get().set_gamma(serialize(&[gamma]));
-            request.send().promise.await.unwrap();
-        }))
-        .await;
-        join_all([&workers[0], &workers[2]].map(|worker| async move {
-            worker.prove_round2_exchange_request().send().promise.await.unwrap();
-        }))
-        .await;
-        let prod_perm_poly_comm = Commitment(
-            deserialize::<G1Projective>(
-                workers[4]
-                    .prove_round2_commit_request()
-                    .send()
-                    .promise
-                    .await
-                    .unwrap()
-                    .get()
-                    .unwrap()
-                    .get_c()
-                    .unwrap(),
-            )[0]
-            .into(),
-        );
+        let (beta, gamma, prod_perm_poly_comm) =
+            Self::prove_round2(workers, &mut transcript).await?;
         println!("prod_perm_poly_comm:");
         println!("{}", prod_perm_poly_comm.0);
-        transcript.append_commitment(b"perm_poly_comms", &prod_perm_poly_comm)?;
-        println!("Elapsed: {:.2?}", now.elapsed());
 
         // Round 3
-        let now = Instant::now();
-        let alpha = <StandardTranscript as PlonkTranscript<Fr>>::get_and_append_challenge::<
-            Bls12_381,
-        >(&mut transcript, b"alpha")?;
-
-        join_all(workers.iter().map(|worker| async move {
-            let mut request = worker.prove_round3_prepare_request();
-            request.get().set_alpha(serialize(&[alpha]));
-            request.send().promise.await.unwrap();
-        }))
-        .await;
-
-        join_all(workers.iter().map(|worker| async move {
-            worker.prove_round3_compute_t_part1_type1_request().send().promise.await.unwrap();
-        }))
-        .await;
-
-        join_all(workers.iter().take(NUM_WIRE_TYPES - 1).map(|worker| async move {
-            worker.prove_round3_exchange_t_part1_type1_request().send().promise.await.unwrap();
-        }))
-        .await;
-
-        join_all([&workers[0], &workers[2]].map(|worker| async move {
-            worker.prove_round3_exchange_w1_request().send().promise.await.unwrap();
-        }))
-        .await;
-
-        workers[4]
-            .prove_round3_compute_and_exchange_t_part1_type3_request()
-            .send()
-            .promise
-            .await
-            .unwrap();
-        workers[4]
-            .prove_round3_compute_and_exchange_t_part2_request()
-            .send()
-            .promise
-            .await
-            .unwrap();
-
-        join_all([&workers[1], &workers[3]].map(|worker| async move {
-            worker
-                .prove_round3_compute_and_exchange_t_part1_type2_request()
-                .send()
-                .promise
-                .await
-                .unwrap();
-        }))
-        .await;
-
-        join_all([&workers[0], &workers[2]].map(|worker| async move {
-            worker.prove_round3_compute_and_exchange_w3_request().send().promise.await.unwrap();
-        }))
-        .await;
-
-        workers[4]
-            .prove_round3_compute_and_exchange_t_part3_request()
-            .send()
-            .promise
-            .await
-            .unwrap();
-
-        let split_quot_poly_comms = join_all(workers.iter().rev().map(|worker| async move {
-            Commitment(
-                deserialize::<G1Projective>(
-                    worker
-                        .prove_round3_commit_request()
-                        .send()
-                        .promise
-                        .await
-                        .unwrap()
-                        .get()
-                        .unwrap()
-                        .get_c()
-                        .unwrap(),
-                )[0]
-                .into(),
-            )
-        }))
-        .await;
+        let (alpha, split_quot_poly_comms) =
+            Self::prove_round3(workers, &mut transcript, domain).await?;
         println!("split_quot_poly_comms:");
         for i in &split_quot_poly_comms {
             println!("{}", i.0);
         }
-        transcript.append_commitments(b"quot_poly_comms", &split_quot_poly_comms)?;
-        println!("Elapsed: {:.2?}", now.elapsed());
 
         // Round 4
-        let now = Instant::now();
-        let zeta = <StandardTranscript as PlonkTranscript<Fr>>::get_and_append_challenge::<
-            Bls12_381,
-        >(&mut transcript, b"zeta")?;
-        let wires_evals = join_all(workers.iter().map(|worker| async move {
-            let mut request = worker.prove_round4_evaluate_w_request();
-            request.get().set_zeta(serialize(&[zeta]));
-
-            let reply = request.send().promise.await.unwrap();
-            let r = reply.get().unwrap();
-            deserialize::<Fr>(r.get_w().unwrap())[0]
-        }))
-        .await;
-        let mut wire_sigma_evals = join_all(workers.iter().map(|worker| async move {
-            let reply =
-                worker.prove_round4_evaluate_sigma_or_z_request().send().promise.await.unwrap();
-            let r = reply.get().unwrap();
-            deserialize::<Fr>(r.get_sigma_or_z().unwrap())[0]
-        }))
-        .await;
-        let perm_next_eval = wire_sigma_evals.pop().unwrap();
+        let (zeta, poly_evals) = Self::prove_round4(workers, &mut transcript).await?;
         println!("wires_evals:");
-        for i in &wires_evals {
+        for i in &poly_evals.wires_evals {
             println!("{}", i);
         }
         println!("wire_sigma_evals:");
-        for i in &wire_sigma_evals {
+        for i in &poly_evals.wire_sigma_evals {
             println!("{}", i);
         }
         println!("perm_next_eval:");
-        println!("{}", perm_next_eval);
-        let poly_evals = ProofEvaluations { wires_evals, wire_sigma_evals, perm_next_eval };
-
-        <StandardTranscript as PlonkTranscript<Fr>>::append_proof_evaluations::<Bls12_381>(
-            &mut transcript,
-            &poly_evals,
-        )?;
-        println!("Elapsed: {:.2?}", now.elapsed());
+        println!("{}", poly_evals.perm_next_eval);
 
         // Round 5
-        let now = Instant::now();
-        let v = <StandardTranscript as PlonkTranscript<Fr>>::get_and_append_challenge::<Bls12_381>(
-            &mut transcript,
-            b"v",
-        )?;
-        let s1 = alpha * (zeta.pow(&[n as u64]) - Fr::one())
+        let s1 = alpha.square() * (zeta.pow(&[n as u64]) - Fr::one())
             / (Fr::from(n as u32) * (zeta - Fr::one()))
-            + poly_evals.wires_evals.iter().zip(&vk.k).fold(Fr::one(), |acc, (w_of_zeta, k)| {
-                acc * (*w_of_zeta + beta * k * zeta + gamma)
-            });
-        let s2 = poly_evals
-            .wires_evals
-            .iter()
-            .zip(&poly_evals.wire_sigma_evals)
-            .fold(-alpha * beta * perm_next_eval, |acc, (w_of_zeta, sigma_of_zeta)| {
-                acc * (*w_of_zeta + beta * sigma_of_zeta + gamma)
-            });
-        join_all(workers.iter().map(|worker| async move {
-            let mut request = worker.prove_round5_prepare_request();
-            request.get().set_v(serialize(&[v]));
-            request.get().set_s1(serialize(&[s1]));
-            request.get().set_s2(serialize(&[s2]));
-            request.send().promise.await.unwrap();
-        }))
-        .await;
-
-        join_all([&workers[0], &workers[2]].map(|worker| async move {
-            worker.prove_round5_exchange_request().send().promise.await.unwrap();
-        }))
-        .await;
-
-        let reply = workers[4].prove_round5_commit_request().send().promise.await.unwrap();
-
-        let opening_proof = Commitment(
-            deserialize::<G1Projective>(reply.get().unwrap().get_c_t().unwrap())[0].into(),
-        );
-        let shifted_opening_proof = Commitment(
-            deserialize::<G1Projective>(reply.get().unwrap().get_c_z().unwrap())[0].into(),
-        );
+            + poly_evals
+                .wires_evals
+                .iter()
+                .zip(&vk.k)
+                .fold(alpha, |acc, (w_of_zeta, k)| acc * (beta * k * zeta + gamma + w_of_zeta));
+        let s2 =
+            poly_evals.wires_evals.iter().zip(&poly_evals.wire_sigma_evals).fold(
+                -alpha * beta * poly_evals.perm_next_eval,
+                |acc, (w_eval, sigma_eval)| acc * (beta * sigma_eval + gamma + w_eval),
+            );
+        let (opening_proof, shifted_opening_proof) =
+            Self::prove_round5(workers, &mut transcript, s1, s2).await?;
         println!("opening_proof:");
         println!("{}", opening_proof.0);
         println!("shifted_opening_proof:");
         println!("{}", shifted_opening_proof.0);
-        println!("Elapsed: {:.2?}", now.elapsed());
 
         Ok(Proof {
             wires_poly_comms,
@@ -502,21 +722,17 @@ impl Plonk {
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
+    use std::{error::Error, thread, time::Duration};
 
     use jf_plonk::proof_system::{PlonkKzgSnark, Snark};
     use rand::{thread_rng, SeedableRng};
     use rand_chacha::ChaChaRng;
 
     use super::*;
-    use crate::{circuit2::generate_circuit, worker::run_worker};
+    use crate::{circuit::generate_circuit, config::WORKERS};
 
-    #[test]
-    fn test_plonk() -> Result<(), Box<dyn Error>> {
-        let network: NetworkConfig =
-            serde_json::from_reader(File::open("config/network.json")?).unwrap();
-        assert_eq!(network.workers.len(), NUM_WIRE_TYPES);
-
+    #[tokio::test]
+    async fn test_plonk() -> Result<(), Box<dyn Error>> {
         let mut seed = [0; 32];
         thread_rng().fill_bytes(&mut seed);
 
@@ -527,54 +743,46 @@ mod tests {
 
         let public_inputs = circuit.public_input().unwrap();
 
-        let handle = thread::spawn(|| {
-            tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
-                async {
-                    run_worker(4).await.unwrap();
-                },
-            );
-        });
+        let mut workers = join_all(WORKERS.iter().map(|worker| async move {
+            let stream = loop {
+                match StubbornTcpStream::connect(worker).await {
+                    Ok(stream) => break stream,
+                    Err(_) => {
+                        thread::sleep(Duration::from_secs(1));
+                    }
+                }
+            };
+            stream.set_nodelay(true).unwrap();
+            stream
+        }))
+        .await;
+        let vk = Plonk::key_gen_async(&mut workers, seed, srs, public_inputs.len()).await;
 
-        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(
-            async {
-                tokio::task::LocalSet::new()
-                    .run_until(async {
-                        let workers = join_all(
-                            network
-                                .workers
-                                .iter()
-                                .map(|addr| async move { connect(addr).await.unwrap() }),
-                        )
-                        .await;
-                        let vk =
-                            Plonk::key_gen_async(&workers, seed, srs, public_inputs.len()).await;
+        for i in &vk.selector_comms {
+            println!("{}", i.0);
+        }
+        for i in &vk.sigma_comms {
+            println!("{}", i.0);
+        }
+        join_all(workers.iter_mut().map(|worker| async move {
+            worker.write_u8(Method::ProveInit as u8).await.unwrap();
+            worker.flush().await.unwrap();
 
-                        for i in &vk.selector_comms {
-                            println!("{}", i.0);
-                        }
-                        for i in &vk.sigma_comms {
-                            println!("{}", i.0);
-                        }
-                        join_all(workers.iter().map(|worker| async move {
-                            worker.prove_init_request().send().promise.await.unwrap()
-                        }))
-                        .await;
-                        for _ in 0..20 {
-                            let proof =
-                                Plonk::prove_async(&workers, &public_inputs, &vk).await.unwrap();
-                            assert!(PlonkKzgSnark::<Bls12_381>::verify::<StandardTranscript>(
-                                &vk,
-                                &public_inputs,
-                                &proof
-                            )
-                            .is_ok());
-                        }
-                    })
-                    .await
-            },
-        );
-
-        handle.join().unwrap();
+            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                Status::Ok => {}
+                _ => panic!(),
+            }
+        }))
+        .await;
+        for _ in 0..20 {
+            let proof = Plonk::prove_async(&mut workers, &public_inputs, &vk).await.unwrap();
+            assert!(PlonkKzgSnark::<Bls12_381>::verify::<StandardTranscript>(
+                &vk,
+                &public_inputs,
+                &proof
+            )
+            .is_ok());
+        }
 
         Ok(())
     }

@@ -1,34 +1,36 @@
-use std::{
-    collections::HashSet,
-};
-
 use ark_bls12_381::{Fr, G1Projective};
-use ark_ff::{Field, One, UniformRand};
 use fn_timer::fn_timer;
-use jf_plonk::{
-    circuit::{Variable},
-    constants::GATE_WIDTH,
-};
+use jf_plonk::{circuit::Variable, constants::GATE_WIDTH};
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use super::PlonkImplInner;
 use crate::{
-    gpu::Domain,
+    circuit::{Gate, generate_circuit, PlonkCircuit, coset_representatives},
+    gpu::{Domain, FFTDomain},
     timer,
-    worker::{Selectors, Utils}, circuit2::Gate,
+    worker::Selectors, config::NUM_WIRE_TYPES,
 };
 
 impl PlonkImplInner {
     #[fn_timer]
+    pub fn init_circuit(&self, seed: [u8; 32]) -> PlonkCircuit {
+        let mut rng = ChaCha20Rng::from_seed(seed);
+        let circuit = generate_circuit(&mut rng).unwrap();
+        assert_eq!(circuit.num_wire_types, NUM_WIRE_TYPES);
+        circuit
+    }
+
+    #[fn_timer]
     pub fn init_domains(&self, domain_elements: &[Fr]) {
+        // SAFETY:
         // We abuse `unsafe` here and there to make `self` mutable without declaring a `FnMut` closure,
         // so we can avoid setting the type of `PlonkImpl`'s `inner` field to `Arc<Mutex<...>>`,
         // and in turn reduce the ugly (personal opinion) `self.inner.lock().unwrap()` calls.
         // This is safe because we only call this function once, and the mutated fields are guaranteed
         // to be used only after this function is called.
-        let mut this = unsafe { &mut *(self as *const _ as *mut Self) };
+        let this = unsafe { &mut *(self as *const _ as *mut Self) };
         this.n = domain_elements.len();
         this.domain1 = timer!(
             format!("Initialize domain with size {}", self.n),
@@ -42,35 +44,14 @@ impl PlonkImplInner {
 
     #[fn_timer]
     pub fn init_k(&self, num_wire_types: usize) {
-        let mut this = unsafe { &mut *(self as *const _ as *mut Self) };
-
-        let mut k_vec = vec![Fr::one()];
-        let mut pow_k_n_set = HashSet::new();
-        pow_k_n_set.insert(Fr::one());
-        let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
-
-        for _ in 1..num_wire_types {
-            loop {
-                let next = Fr::rand(&mut rng);
-                let pow_next_n = next.pow([self.n as u64]);
-                if !pow_k_n_set.contains(&pow_next_n) {
-                    k_vec.push(next);
-                    pow_k_n_set.insert(pow_next_n);
-                    break;
-                }
-            }
-        }
-        this.k = k_vec;
+        let this = unsafe { &mut *(self as *const _ as *mut Self) };
+        this.k = coset_representatives(num_wire_types, self.n);
     }
 
     #[fn_timer]
-    pub fn store_public_inputs(&self, public_inputs: Vec<Fr>) {
-        let x = timer!("Compute public input polynomial", {
-            let mut x = public_inputs;
-            Utils::ifft(&self.domain1, &mut x);
-            x
-        });
-        self.x.store(&x).unwrap();
+    pub fn store_public_inputs(&self, mut public_inputs: Vec<Fr>) {
+        timer!("Compute public input polynomial", self.domain1.ifft_ii(&mut public_inputs));
+        self.x.store(&public_inputs).unwrap();
     }
 
     #[fn_timer]
@@ -86,8 +67,8 @@ impl PlonkImplInner {
             Selectors::Type1 { a, h } => {
                 let mut q_a = gates.iter().map(|i| i.q_lc()[me]).collect::<Vec<_>>();
                 let mut q_h = gates.iter().map(|i| i.q_hash()[me]).collect::<Vec<_>>();
-                Utils::ifft(&self.domain1, &mut q_a);
-                Utils::ifft(&self.domain1, &mut q_h);
+                self.domain1.ifft_ii(&mut q_a);
+                self.domain1.ifft_ii(&mut q_h);
                 let c_q_a = self.commit_polynomial(&q_a);
                 let c_q_h = self.commit_polynomial(&q_h);
                 a.store(&q_a).unwrap();
@@ -98,9 +79,9 @@ impl PlonkImplInner {
                 let mut q_a = gates.iter().map(|i| i.q_lc()[me]).collect::<Vec<_>>();
                 let mut q_h = gates.iter().map(|i| i.q_hash()[me]).collect::<Vec<_>>();
                 let mut q_m = gates.iter().map(|i| i.q_mul()[me >> 1]).collect::<Vec<_>>();
-                Utils::ifft(&self.domain1, &mut q_a);
-                Utils::ifft(&self.domain1, &mut q_h);
-                Utils::ifft(&self.domain1, &mut q_m);
+                self.domain1.ifft_ii(&mut q_a);
+                self.domain1.ifft_ii(&mut q_h);
+                self.domain1.ifft_ii(&mut q_m);
                 let c_q_a = self.commit_polynomial(&q_a);
                 let c_q_h = self.commit_polynomial(&q_h);
                 let c_q_m = self.commit_polynomial(&q_m);
@@ -113,9 +94,9 @@ impl PlonkImplInner {
                 let mut q_o = gates.iter().map(|i| i.q_o()).collect::<Vec<_>>();
                 let mut q_c = gates.iter().map(|i| i.q_c()).collect::<Vec<_>>();
                 let mut q_e = gates.iter().map(|i| i.q_ecc()).collect::<Vec<_>>();
-                Utils::ifft(&self.domain1, &mut q_o);
-                Utils::ifft(&self.domain1, &mut q_c);
-                Utils::ifft(&self.domain1, &mut q_e);
+                self.domain1.ifft_ii(&mut q_o);
+                self.domain1.ifft_ii(&mut q_c);
+                self.domain1.ifft_ii(&mut q_e);
                 let c_q_o = self.commit_polynomial(&q_o);
                 let c_q_c = self.commit_polynomial(&q_c);
                 let c_q_e = self.commit_polynomial(&q_e);
@@ -175,7 +156,7 @@ impl PlonkImplInner {
         self.domain1_elements.store(&domain_elements).unwrap();
         drop(domain_elements);
 
-        Utils::ifft(&self.domain1, &mut sigma);
+        self.domain1.ifft_ii(&mut sigma);
         self.sigma.store(&sigma).unwrap();
 
         self.commit_polynomial(&sigma)

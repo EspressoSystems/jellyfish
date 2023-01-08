@@ -8,7 +8,6 @@
 
 use std::{
     cmp::{self, min},
-    fs::File,
     mem::size_of,
     sync::Mutex,
 };
@@ -17,7 +16,6 @@ use ark_bls12_381::{Fr, G1Affine, G1Projective};
 use ark_ec::ProjectiveCurve;
 use ark_ff::{FftField, Field, One, PrimeField, Zero};
 use once_cell::sync::Lazy;
-
 use rayon::{
     prelude::{
         IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator,
@@ -27,8 +25,10 @@ use rayon::{
 };
 use rust_gpu_tools::{cuda, Device, GPUError, LocalBuffer};
 
-
-use crate::{config::GpuConfig, utils::{MutMmap, Mmap}};
+use crate::{
+    config::GPU_CONFIG,
+    mmap::{Mmap, MutMmap},
+};
 
 /// On the GPU, the exponents are split into windows, this is the maximum number of such windows.
 const MAX_WINDOW_SIZE: usize = 10;
@@ -561,18 +561,6 @@ impl Kernel {
     }
 }
 
-pub static KERNELS: Lazy<Vec<Mutex<Kernel>>> = Lazy::new(|| {
-    let gpu_config: GpuConfig =
-        serde_json::from_reader(File::open("config/gpu.json").unwrap()).unwrap();
-
-    Device::all()
-        .iter()
-        .enumerate()
-        .filter(|(i, _)| !gpu_config.disabled_ids.contains(i))
-        .map(|(_, device)| Mutex::new(Kernel::create(include_bytes!("./cl/lib.fatbin"), device)))
-        .collect()
-});
-
 #[derive(Default)]
 pub struct DomainPrecomputed {
     size: usize,
@@ -635,6 +623,11 @@ pub trait FFTDomain<T> {
     fn ifft_oi(&self, input: &mut T);
 
     fn derange(&self, input: &mut T);
+
+    fn ifft_ii(&self, input: &mut T) {
+        self.derange(input);
+        self.ifft_oi(input);
+    }
 }
 
 #[derive(Default)]
@@ -958,3 +951,12 @@ where
 
 impl MSM for &[G1Affine] {}
 impl MSM for Mmap<G1Affine> {}
+
+pub static KERNELS: Lazy<Vec<Mutex<Kernel>>> = Lazy::new(|| {
+    Device::all()
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !GPU_CONFIG.disabled_ids.contains(i))
+        .map(|(_, device)| Mutex::new(Kernel::create(include_bytes!("./cl/lib.fatbin"), device)))
+        .collect()
+});

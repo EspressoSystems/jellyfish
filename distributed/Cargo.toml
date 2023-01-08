@@ -3,8 +3,6 @@ name = "jf-distributed"
 version = "0.0.0"
 edition = "2018"
 
-build = "build.rs"
-
 [[bin]]
 name = "worker"
 path = "bin/worker.rs"
@@ -17,12 +15,7 @@ path = "bin/keygen_dispatcher.rs"
 name = "prove_dispatcher"
 path = "bin/prove_dispatcher.rs"
 
-[build-dependencies]
-capnpc = "*"
-
 [dependencies]
-capnp = "0.15.2"
-capnp-rpc = "0.15.0"
 futures = "0.3.0"
 tokio = { version = "1.0.0", features = ["full"] }
 tokio-util = { version = "0.6.0", features = ["compat"] }
@@ -42,10 +35,7 @@ merlin = "3.0.0"
 serde = "1.0.145"
 serde_json = "1.0.85"
 rayon = "1.5.3"
-crossbeam-channel = "0.5"
 once_cell = "1.15.0"
-yastl = "0.1.2"
-num_cpus = "1.13.1"
 rust-gpu-tools = { version = "0.6.1", default-features = false, features = ["cuda"] }
 rand_chacha = { version = "0.3.1" }
 libc = "0.2"
@@ -53,8 +43,8 @@ fn-timer = { path = "../attributes" }
 xxhash-rust = { version = "0.8.6", features = ["xxh3"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
-downcast-rs = { version = "1.2.0", default-features = false }
 stubborn-io = "0.3"
+strum = { version = "0.24", features = ["derive"] }
 
 [features]
 default = ["trace"]

@@ -1,13 +1,13 @@
 use ark_bls12_381::{Fr, G1Projective};
 use ark_ff::{One, UniformRand};
 use fn_timer::fn_timer;
-use rand::Rng;
+use rand::thread_rng;
 use rayon::prelude::{
     IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator,
 };
 
-use super::{PlonkImplInner, Utils};
-use crate::polynomial::VecPolynomial;
+use super::{PlonkImplInner};
+use crate::{polynomial::VecPolynomial, gpu::FFTDomain};
 
 impl PlonkImplInner {
     #[fn_timer]
@@ -16,11 +16,11 @@ impl PlonkImplInner {
 
         let mut product_vec = self
             .w_evals
-            .load()
+            .mmap()
             .unwrap()
             .par_iter()
-            .zip_eq(self.sigma_evals.load().unwrap().par_iter())
-            .zip_eq(self.domain1_elements.load().unwrap().par_iter())
+            .zip_eq(self.sigma_evals.mmap().unwrap().par_iter())
+            .zip_eq(self.domain1_elements.mmap().unwrap().par_iter())
             .take(self.n - 1)
             .map(|((w, sigma), g)| (gamma + beta * k * g + w) / (gamma + beta * sigma + w))
             .collect::<Vec<_>>();
@@ -40,11 +40,17 @@ impl PlonkImplInner {
         });
     }
 
-    pub fn compute_and_commit_z<R: Rng>(&self, rng: &mut R, z: &mut Vec<Fr>) -> G1Projective {
-        Utils::ifft(&self.domain1, z);
-        z.add_mut(&vec![Fr::one(), Fr::one(), Fr::one()].mul_by_vanishing_poly(self.n));
-        // z.add_mut(&vec![Fr::rand(rng), Fr::rand(rng), Fr::rand(rng)].mul_by_vanishing_poly(self.n));
-        let z_comm = self.commit_polynomial(z);
-        z_comm
+    pub fn compute_and_commit_z(&self, z: &mut Vec<Fr>) -> G1Projective {
+        let mut r = {
+            let rng = &mut thread_rng();
+            vec![Fr::rand(rng), Fr::rand(rng), Fr::rand(rng)]
+        };
+
+        self.domain1.ifft_ii(z);
+        // z.add_mut(&vec![Fr::one(), Fr::one(), Fr::one()].mul_by_vanishing_poly(self.n));
+        z.add_mut(&r.mul_by_vanishing_poly(self.n));
+        assert_eq!(z.len(), self.n + 3);
+
+        self.commit_polynomial(z)
     }
 }
