@@ -323,6 +323,8 @@ fn open_internal<E: PairingEngine>(
     }
 
     let nv = polynomial.num_vars();
+    // the first `ignored` SRS vectors are unused
+    let ignored = prover_param.num_vars - nv + 1;
 
     let mut f = polynomial.to_evaluations();
 
@@ -330,7 +332,7 @@ fn open_internal<E: PairingEngine>(
 
     for (i, (&point_at_k, gi)) in point
         .iter()
-        .zip(prover_param.powers_of_g[1..nv + 1].iter())
+        .zip(prover_param.powers_of_g[ignored..ignored + nv].iter())
         .enumerate()
     {
         let ith_round = start_timer!(|| format!("{}-th round", i));
@@ -403,8 +405,10 @@ fn verify_internal<E: PairingEngine>(
     let h_mul: Vec<E::G2Projective> =
         FixedBaseMSM::multi_scalar_mul(scalar_size, window_size, &h_table, point);
 
+    // the first `ignored` G2 parameters are unused
+    let ignored = verifier_param.num_vars - num_var;
     let h_vec: Vec<_> = (0..num_var)
-        .map(|i| verifier_param.h_mask[i].into_projective() - h_mul[i])
+        .map(|i| verifier_param.h_mask[ignored + i].into_projective() - h_mul[i])
         .collect();
     let h_vec: Vec<E::G2Affine> = E::G2Projective::batch_normalization_into_affine(&h_vec);
     end_timer!(prepare_inputs_timer);

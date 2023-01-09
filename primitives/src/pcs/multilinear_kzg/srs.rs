@@ -5,9 +5,9 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
-use crate::pcs::{prelude::PCSError, StructuredReferenceString};
+use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
 use ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
-use ark_ff::{Field, PrimeField};
+use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
@@ -16,6 +16,7 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     start_timer,
     string::ToString,
+    vec,
     vec::Vec,
     UniformRand,
 };
@@ -186,6 +187,10 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
             let pp_k_g = Evaluations {
                 evals: pp_g[start..(start + size)].to_vec(),
             };
+            // check correctness of pp_k_g
+            let t_eval_0 = eq_eval(&vec![E::Fr::zero(); num_vars - i], &t[i..num_vars])?;
+            assert_eq!(g.mul(t_eval_0.into_repr()).into_affine(), pp_k_g.evals[0]);
+
             powers_of_g.push(pp_k_g);
             start += size;
         }
