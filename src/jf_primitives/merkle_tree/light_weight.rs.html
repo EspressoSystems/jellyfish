@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/append_only.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>append_only.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/light_weight.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>light_weight.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -196,59 +196,19 @@
 <span id="196">196</span>
 <span id="197">197</span>
 <span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-</span><span class="doccomment">//! Implementation of a typical append only merkle tree
+</span><span class="doccomment">//! A light weight merkle tree is an append only merkle tree who only keeps its
+//! frontier -- the right-most path.
 
 </span><span class="kw">use </span>core::ops::AddAssign;
 
 <span class="kw">use super</span>::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{build_light_weight_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
@@ -261,10 +221,10 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>typenum::Unsigned;
 
-<span class="macro">impl_merkle_tree_scheme!</span>(MerkleTree, build_tree_internal);
-<span class="macro">impl_forgetable_merkle_tree_scheme!</span>(MerkleTree);
+<span class="macro">impl_merkle_tree_scheme!</span>(LightWeightMerkleTree, build_light_weight_tree_internal);
+<span class="macro">impl_forgetable_merkle_tree_scheme!</span>(LightWeightMerkleTree);
 
-<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; AppendableMerkleTreeScheme <span class="kw">for </span>MerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; AppendableMerkleTreeScheme <span class="kw">for </span>LightWeightMerkleTree&lt;E, H, I, Arity, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
@@ -283,7 +243,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>iter = elems.into_iter().peekable();
 
         <span class="kw">let </span>traversal_path = I::from(<span class="self">self</span>.num_leaves).to_traversal_path(<span class="self">self</span>.height);
-        <span class="self">self</span>.num_leaves += <span class="self">self</span>.root.extend_internal::&lt;H, Arity&gt;(
+        <span class="self">self</span>.num_leaves += <span class="self">self</span>.root.extend_and_forget_internal::&lt;H, Arity&gt;(
             <span class="self">self</span>.height,
             <span class="kw-2">&amp;</span>I::from(<span class="self">self</span>.num_leaves),
             <span class="kw-2">&amp;</span>traversal_path,
@@ -299,15 +259,12 @@
     }
 }
 
-<span class="comment">// TODO(Chengyu): extract a merkle frontier
-
-// TODO(Chengyu): unit tests
-</span><span class="attribute">#[cfg(test)]
+<span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>mt_tests {
     <span class="kw">use crate</span>::{
         merkle_tree::{
             internal::{MerkleNode, MerkleProof},
-            prelude::RescueMerkleTree,
+            prelude::{RescueLightWeightMerkleTree, RescueMerkleTree},
             <span class="kw-2">*</span>,
         },
         rescue::RescueParameter,
@@ -317,26 +274,29 @@
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>Fq254;
 
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_mt_builder() {
-        test_mt_builder_helper::&lt;Fq254&gt;();
-        test_mt_builder_helper::&lt;Fq377&gt;();
-        test_mt_builder_helper::&lt;Fq381&gt;();
+    </span><span class="kw">fn </span>test_light_mt_builder() {
+        test_light_mt_builder_helper::&lt;Fq254&gt;();
+        test_light_mt_builder_helper::&lt;Fq377&gt;();
+        test_light_mt_builder_helper::&lt;Fq381&gt;();
     }
 
-    <span class="kw">fn </span>test_mt_builder_helper&lt;F: RescueParameter&gt;() {
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">0u64</span>); <span class="number">3</span>]).is_ok());
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">0u64</span>); <span class="number">4</span>]).is_err());
+    <span class="kw">fn </span>test_light_mt_builder_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>arity: usize = RescueLightWeightMerkleTree::&lt;F&gt;::ARITY;
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[F::from(<span class="number">0u64</span>); arity];
+        <span class="macro">assert!</span>(RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, <span class="kw-2">&amp;</span>data).is_ok());
+        data.push(F::from(<span class="number">0u64</span>));
+        <span class="macro">assert!</span>(RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, <span class="kw-2">&amp;</span>data).is_err());
     }
 
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_mt_insertion() {
-        test_mt_insertion_helper::&lt;Fq254&gt;();
-        test_mt_insertion_helper::&lt;Fq377&gt;();
-        test_mt_insertion_helper::&lt;Fq381&gt;();
+    </span><span class="kw">fn </span>test_light_mt_insertion() {
+        test_light_mt_insertion_helper::&lt;Fq254&gt;();
+        test_light_mt_insertion_helper::&lt;Fq377&gt;();
+        test_light_mt_insertion_helper::&lt;Fq381&gt;();
     }
 
-    <span class="kw">fn </span>test_mt_insertion_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[]).unwrap();
+    <span class="kw">fn </span>test_light_mt_insertion_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[]).unwrap();
         <span class="macro">assert_eq!</span>(mt.capacity(), BigUint::from(<span class="number">9u64</span>));
         <span class="macro">assert!</span>(mt.push(F::from(<span class="number">2u64</span>)).is_ok());
         <span class="macro">assert!</span>(mt.push(F::from(<span class="number">3u64</span>)).is_ok());
@@ -350,15 +310,27 @@
     }
 
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_mt_lookup() {
-        test_mt_lookup_helper::&lt;Fq254&gt;();
-        test_mt_lookup_helper::&lt;Fq377&gt;();
-        test_mt_lookup_helper::&lt;Fq381&gt;();
+    </span><span class="kw">fn </span>test_light_mt_lookup() {
+        test_light_mt_lookup_helper::&lt;Fq254&gt;();
+        test_light_mt_lookup_helper::&lt;Fq377&gt;();
+        test_light_mt_lookup_helper::&lt;Fq381&gt;();
     }
 
-    <span class="kw">fn </span>test_mt_lookup_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
-        <span class="kw">let </span>(elem, proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
+    <span class="kw">fn </span>test_light_mt_lookup_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>mt =
+            RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)])
+                .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>mock_mt =
+            RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">0</span>).expect_not_in_memory().is_ok());
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">1</span>).expect_ok().is_ok());
+        <span class="macro">assert!</span>(mt.extend(<span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).is_ok());
+        <span class="macro">assert!</span>(mock_mt.extend(<span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).is_ok());
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">0</span>).expect_not_in_memory().is_ok());
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">1</span>).expect_not_in_memory().is_ok());
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">2</span>).expect_not_in_memory().is_ok());
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">3</span>).expect_ok().is_ok());
+        <span class="kw">let </span>(elem, proof) = mock_mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
         <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
         <span class="macro">assert!</span>(mt.verify(<span class="number">0u64</span>, <span class="kw-2">&amp;</span>proof).unwrap());
@@ -396,70 +368,16 @@
     }
 
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_mt_forget_remember() {
-        test_mt_forget_remember_helper::&lt;Fq254&gt;();
-        test_mt_forget_remember_helper::&lt;Fq377&gt;();
-        test_mt_forget_remember_helper::&lt;Fq381&gt;();
+    </span><span class="kw">fn </span>test_light_mt_serde() {
+        test_light_mt_serde_helper::&lt;Fq254&gt;();
+        test_light_mt_serde_helper::&lt;Fq377&gt;();
+        test_light_mt_serde_helper::&lt;Fq381&gt;();
     }
 
-    <span class="kw">fn </span>test_mt_forget_remember_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
-        <span class="kw">let </span>(lookup_elem, lookup_proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
-        <span class="kw">let </span>(elem, proof) = mt.forget(<span class="number">0</span>).expect_ok().unwrap();
-        <span class="macro">assert_eq!</span>(lookup_elem, elem);
-        <span class="macro">assert_eq!</span>(lookup_proof, proof);
-        <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
-        <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
-        <span class="macro">assert!</span>(mt.verify(<span class="number">0</span>, <span class="kw-2">&amp;</span>lookup_proof).unwrap());
-        <span class="macro">assert!</span>(mt.verify(<span class="number">0</span>, <span class="kw-2">&amp;</span>proof).unwrap());
-
-        <span class="macro">assert!</span>(mt.forget(<span class="number">0</span>).expect_ok().is_err());
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(mt.lookup(<span class="number">0</span>), LookupResult::NotInMemory));
-
-        <span class="kw">let </span><span class="kw-2">mut </span>bad_proof = proof.clone();
-        <span class="kw">if let </span>MerkleNode::Leaf {
-            value: <span class="kw">_</span>,
-            pos: <span class="kw">_</span>,
-            elem,
-        } = <span class="kw-2">&amp;mut </span>bad_proof.proof[<span class="number">0</span>]
-        {
-            <span class="kw-2">*</span>elem = F::from(<span class="number">4u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">unreachable!</span>()
-        }
-
-        <span class="kw">let </span>result = mt.remember(<span class="number">0u64</span>, elem, <span class="kw-2">&amp;</span>bad_proof);
-        <span class="macro">assert!</span>(result.is_err());
-
-        <span class="kw">let </span><span class="kw-2">mut </span>forge_proof = MerkleProof::new(<span class="number">2</span>, proof.proof.clone());
-        <span class="kw">if let </span>MerkleNode::Leaf {
-            value: <span class="kw">_</span>,
-            pos,
-            elem,
-        } = <span class="kw-2">&amp;mut </span>forge_proof.proof[<span class="number">0</span>]
-        {
-            <span class="kw-2">*</span>pos = <span class="number">2</span>;
-            <span class="kw-2">*</span>elem = F::from(<span class="number">0u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">unreachable!</span>()
-        }
-        <span class="kw">let </span>result = mt.remember(<span class="number">2u64</span>, elem, <span class="kw-2">&amp;</span>forge_proof);
-        <span class="macro">assert!</span>(result.is_err());
-
-        <span class="macro">assert!</span>(mt.remember(<span class="number">0</span>, elem, <span class="kw-2">&amp;</span>proof).is_ok());
-        <span class="macro">assert!</span>(mt.lookup(<span class="number">0</span>).expect_ok().is_ok());
-    }
-
-    <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_mt_serde() {
-        test_mt_serde_helper::&lt;Fq254&gt;();
-        test_mt_serde_helper::&lt;Fq377&gt;();
-        test_mt_serde_helper::&lt;Fq381&gt;();
-    }
-
-    <span class="kw">fn </span>test_mt_serde_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
-        <span class="kw">let </span>proof = mt.lookup(<span class="number">0</span>).expect_ok().unwrap().<span class="number">1</span>;
+    <span class="kw">fn </span>test_light_mt_serde_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span>mt = RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>[F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)])
+            .unwrap();
+        <span class="kw">let </span>proof = mt.lookup(<span class="number">1</span>).expect_ok().unwrap().<span class="number">1</span>;
         <span class="kw">let </span>node = <span class="kw-2">&amp;</span>proof.proof[<span class="number">0</span>];
 
         <span class="macro">assert_eq!</span>(

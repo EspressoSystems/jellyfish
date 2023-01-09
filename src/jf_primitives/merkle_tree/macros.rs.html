@@ -261,7 +261,7 @@
 /// Macro for generating a standard merkle tree implementation
 </span><span class="attribute">#[macro_export]
 </span><span class="macro">macro_rules! </span>impl_merkle_tree_scheme {
-    (<span class="macro-nonterminal">$name</span>: ident) =&gt; {
+    (<span class="macro-nonterminal">$name</span>: ident, <span class="macro-nonterminal">$builder</span>: ident) =&gt; {
         <span class="doccomment">/// A standard append only Merkle tree implementation
         </span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(
@@ -306,7 +306,7 @@
                 height: usize,
                 elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;&gt;,
             ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
-                <span class="kw">let </span>(root, num_leaves) = build_tree_internal::&lt;E, H, I, Arity, T&gt;(height, elems)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(root, num_leaves) = <span class="macro-nonterminal">$builder</span>::&lt;E, H, I, Arity, T&gt;(height, elems)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$name </span>{
                     root,
                     height,

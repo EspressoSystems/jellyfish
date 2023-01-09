@@ -260,7 +260,7 @@
 <span class="kw">use </span>typenum::Unsigned;
 
 <span class="comment">// A standard Universal Merkle tree implementation
-</span><span class="macro">impl_merkle_tree_scheme!</span>(UniversalMerkleTree);
+</span><span class="macro">impl_merkle_tree_scheme!</span>(UniversalMerkleTree, build_tree_internal);
 <span class="macro">impl_forgetable_merkle_tree_scheme!</span>(UniversalMerkleTree);
 
 <span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; UniversalMerkleTreeScheme <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;

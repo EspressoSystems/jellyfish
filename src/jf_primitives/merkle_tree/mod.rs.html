@@ -327,6 +327,20 @@
 <span id="327">327</span>
 <span id="328">328</span>
 <span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -336,6 +350,7 @@
 </span><span class="doccomment">//! Merkle Tree traits and implementations
 </span><span class="kw">pub mod </span>append_only;
 <span class="kw">pub mod </span>examples;
+<span class="kw">pub mod </span>light_weight;
 <span class="kw">pub mod </span>macros;
 <span class="kw">pub mod </span>universal_merkle_tree;
 
@@ -391,6 +406,19 @@
             )),
             LookupResult::NotInMemory =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
                 <span class="string">&quot;Expected NotFound, found NotInMemory&quot;</span>.to_string(),
+            )),
+        }
+    }
+
+    <span class="doccomment">/// Assert the lookup result is NotInMemory.
+    </span><span class="kw">pub fn </span>expect_not_in_memory(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            LookupResult::NotInMemory =&gt; <span class="prelude-val">Ok</span>(()),
+            LookupResult::Ok(..) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
+                <span class="string">&quot;Expected NotInMemory, found Ok&quot;</span>.to_string(),
+            )),
+            LookupResult::NotFound(..) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
+                <span class="string">&quot;Expected NotInMemory, found NotFound&quot;</span>.to_string(),
             )),
         }
     }

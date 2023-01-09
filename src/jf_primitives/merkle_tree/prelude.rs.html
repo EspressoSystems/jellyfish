@@ -65,6 +65,11 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -88,6 +93,8 @@
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>typenum::U3;
 
+<span class="kw">use </span><span class="kw">super</span>::light_weight::LightWeightMerkleTree;
+
 <span class="doccomment">/// Wrapper for rescue hash function
 </span><span class="attribute">#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>RescueHash&lt;F: RescueParameter&gt; {
@@ -107,6 +114,9 @@
 
 <span class="doccomment">/// A standard merkle tree using RATE-3 rescue hash function
 </span><span class="kw">pub type </span>RescueMerkleTree&lt;F&gt; = MerkleTree&lt;F, RescueHash&lt;F&gt;, u64, U3, F&gt;;
+
+<span class="doccomment">/// A standard light merkle tree using RATE-3 rescue hash function
+</span><span class="kw">pub type </span>RescueLightWeightMerkleTree&lt;F&gt; = LightWeightMerkleTree&lt;F, RescueHash&lt;F&gt;, u64, U3, F&gt;;
 
 <span class="kw">impl</span>&lt;F: RescueParameter&gt; DigestAlgorithm&lt;F, BigUint, F&gt; <span class="kw">for </span>RescueHash&lt;F&gt; {
     <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[F]) -&gt; F {
