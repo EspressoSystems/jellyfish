@@ -83,8 +83,11 @@ mod mt_tests {
     }
 
     fn test_light_mt_builder_helper<F: RescueParameter>() {
-        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &[F::from(0u64); 3]).is_ok());
-        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &[F::from(0u64); 4]).is_err());
+        let arity: usize = RescueLightWeightMerkleTree::<F>::ARITY;
+        let mut data = vec![F::from(0u64); arity];
+        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &data).is_ok());
+        data.push(F::from(0u64));
+        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &data).is_err());
     }
 
     #[test]

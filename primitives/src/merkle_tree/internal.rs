@@ -390,7 +390,7 @@ where
         }
     }
 
-    /// Re-insert a forgotten leave to the Merkle tree if the proof is valid.
+    /// Re-insert a forgotten leaf to the Merkle tree if the proof is valid.
     pub(crate) fn remember_internal<H, Arity>(
         &mut self,
         height: usize,
@@ -697,7 +697,7 @@ where
     }
 
     /// Similar to [`extend_internal`], but this function will automatically
-    /// forget every leave except for the Merkle tree frontier.
+    /// forget every leaf except for the Merkle tree frontier.
     pub(crate) fn extend_and_forget_internal<H, Arity>(
         &mut self,
         height: usize,
