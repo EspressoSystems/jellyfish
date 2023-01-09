@@ -7,6 +7,7 @@
 //! Merkle Tree traits and implementations
 pub mod append_only;
 pub mod examples;
+pub mod light_weight;
 pub mod macros;
 pub mod universal_merkle_tree;
 
@@ -62,6 +63,19 @@ impl<F, P, N> LookupResult<F, P, N> {
             )),
             LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
                 "Expected NotFound, found NotInMemory".to_string(),
+            )),
+        }
+    }
+
+    /// Assert the lookup result is NotInMemory.
+    pub fn expect_not_in_memory(self) -> Result<(), PrimitivesError> {
+        match self {
+            LookupResult::NotInMemory => Ok(()),
+            LookupResult::Ok(..) => Err(PrimitivesError::InternalError(
+                "Expected NotInMemory, found Ok".to_string(),
+            )),
+            LookupResult::NotFound(..) => Err(PrimitivesError::InternalError(
+                "Expected NotInMemory, found NotFound".to_string(),
             )),
         }
     }
