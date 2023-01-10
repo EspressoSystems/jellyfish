@@ -21,6 +21,8 @@ use ark_std::marker::PhantomData;
 use num_bigint::BigUint;
 use typenum::U3;
 
+use super::light_weight::LightWeightMerkleTree;
+
 /// Wrapper for rescue hash function
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RescueHash<F: RescueParameter> {
@@ -40,6 +42,9 @@ impl<F: RescueParameter> DigestAlgorithm<F, u64, F> for RescueHash<F> {
 
 /// A standard merkle tree using RATE-3 rescue hash function
 pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
+
+/// A standard light merkle tree using RATE-3 rescue hash function
+pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, U3, F>;
 
 impl<F: RescueParameter> DigestAlgorithm<F, BigUint, F> for RescueHash<F> {
     fn digest(data: &[F]) -> F {
