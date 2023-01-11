@@ -14,7 +14,7 @@ macro_rules! timer {
     }};
 }
 
-pub trait CastSlice<From> where Self: AsRef<[From]> {
+pub trait CastSlice<From>: AsRef<[From]> {
     #[inline]
     fn cast<To>(&self) -> &[To] {
         let slice = self.as_ref();

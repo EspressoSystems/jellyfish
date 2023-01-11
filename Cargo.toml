@@ -5,10 +5,8 @@ members = [
   "primitives",
   "utilities",
   "utilities_derive",
-  "zprice",
-  "prover_single_gpu",
   "distributed",
-  "attributes",
+  "distributed_derive",
 ]
 
 [profile.test]

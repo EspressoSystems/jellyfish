@@ -1,0 +1,5 @@
+# We found that one of the GPUs on a server somehow returns different results than all the others.
+# We did not know why, but it's unlikely a bug (say, racing condition) in our code - this GPU failed
+# on every run, while others were fine all the time. So we decided to use a configuration file to 
+# exclude the faulty GPU.
+excluded_ids = []

@@ -117,141 +117,7 @@ extern "C" __global__ void multiexp(
 }
 
 __device__ fr_t pow_lookup(fr_t *bases, uint exponent) {
-  fr_t res = fr_t::one();
-  uint i = 0;
-  while(exponent > 0) {
-    if (exponent & 1)
-      res = res * bases[i];
-    exponent = exponent >> 1;
-    i++;
-  }
-  return res;
-}
-
-__device__ fr_t pow(fr_t base, uint exponent) {
-  fr_t res = fr_t::one();
-  while(exponent > 0) {
-    if (exponent & 1)
-      res *= base;
-    exponent = exponent >> 1;
-    base.sqr();
-  }
-  return res;
-}
-
-extern "C" __global__ void radix_fft(fr_t* x, // Source buffer
-                      fr_t* y, // Destination buffer
-                      fr_t* pq, // Precalculated twiddle factors
-                      fr_t* omegas, // [omega, omega^2, omega^4, ...]
-                      __shared__ fr_t* u_arg, // Local buffer to store intermediary values
-                      uint n, // Number of elements
-                      uint lgp, // Log2 of `p` (Read more in the link above)
-                      uint deg, // 1=>radix2, 2=>radix4, 3=>radix8, ...
-                      uint max_deg) // Maximum degree supported, according to `pq` and `omegas`
-{
-// CUDA doesn't support local buffers ("shared memory" in CUDA lingo) as function arguments,
-// ignore that argument and use the globally defined extern memory instead.
-  // There can only be a single dynamic shared memory item, hence cast it to the type we need.
-  fr_t* u = (fr_t*)cuda_shared;
-
-  uint lid = threadIdx.x;
-  uint index = blockIdx.x;
-  uint t = n >> deg;
-  uint p = 1 << lgp;
-  uint k = index & (p - 1);
-
-  x += index;
-  y += ((index - k) << deg) + k;
-
-  uint gap = 1 << (deg - 1);
-
-  // Compute powers of twiddle
-  const fr_t twiddle = pow_lookup(omegas, (n >> lgp >> deg) * k);
-  fr_t tmp = pow(twiddle, 2 * lid);
-
-  u[2 * lid] = tmp * x[2 * lid * t];
-  u[2 * lid + 1] = tmp * twiddle * x[(2 * lid + 1) * t];
-
-  __syncthreads();
-
-  const uint pqshift = max_deg - deg;
-  for (uint rnd = 0; rnd < deg; rnd++) {
-    const uint bit = gap >> rnd;
-    const uint di = lid & (bit - 1);
-    const uint i0 = (lid << 1) - di;
-    const uint i1 = i0 + bit;
-    tmp = u[i0];
-    u[i0] = u[i0] + u[i1];
-    u[i1] = tmp - u[i1];
-    if(di != 0) u[i1] = pq[di << rnd << pqshift] * u[i1];
-
-    __syncthreads();
-  }
-
-  y[lid*p] = u[bitreverse(lid, deg)];
-  y[(lid+gap)*p] = u[bitreverse(lid + gap, deg)];
-}
-
-extern "C" __global__ void batch_radix_fft(fr_t* x, // Source buffer
-                      fr_t* y, // Destination buffer
-                      fr_t* pq, // Precalculated twiddle factors
-                      fr_t* omegas, // [omega, omega^2, omega^4, ...]
-                      __shared__ fr_t* u_arg, // Local buffer to store intermediary values
-                      uint m,
-                      uint n, // Number of elements
-                      uint lgp, // Log2 of `p` (Read more in the link above)
-                      uint deg, // 1=>radix2, 2=>radix4, 3=>radix8, ...
-                      uint max_deg) // Maximum degree supported, according to `pq` and `omegas`
-{
-// CUDA doesn't support local buffers ("shared memory" in CUDA lingo) as function arguments,
-// ignore that argument and use the globally defined extern memory instead.
-  // There can only be a single dynamic shared memory item, hence cast it to the type we need.
-  fr_t* u = (fr_t*)cuda_shared;
-
-  uint lid = threadIdx.x;
-  uint index = blockIdx.x;
-  uint t = n >> deg;
-  uint p = 1 << lgp;
-  uint k = index & (p - 1);
-
-  uint count = 1 << deg; // 2^deg
-  uint counth = count >> 1; // Half of count
-
-  uint counts = 2 * lid;
-  uint counte = counts + 2;
-
-  const uint pqshift = max_deg - deg;
-  // Compute powers of twiddle
-  const fr_t twiddle = pow_lookup(omegas, (n >> lgp >> deg) * k);
-  fr_t base = pow(twiddle, counts);
-
-  for (uint j = 0; j < m; j++) {
-    fr_t tmp = base;
-    for (uint i = counts; i < counte; i++) {
-      u[i] = tmp * x[index + i * t + j * n];
-      tmp = tmp * twiddle;
-    }
-    __syncthreads();
-
-    for (uint rnd = 0; rnd < deg; rnd++) {
-      const uint bit = counth >> rnd;
-      for (uint i = counts >> 1; i < counte >> 1; i++) {
-        const uint di = i & (bit - 1);
-        const uint i0 = (i << 1) - di;
-        const uint i1 = i0 + bit;
-        tmp = u[i0] - u[i1];
-        u[i0] = u[i0] + u[i1];
-        u[i1] = tmp * pq[di << rnd << pqshift];
-      }
-
-      __syncthreads();
-    }
-
-    for (uint i = counts >> 1; i < counte >> 1; i++) {
-      y[((index - k) << deg) + k + i*p + j * n] = u[bitreverse(i, deg)];
-      y[((index - k) << deg) + k + (i+counth)*p + j * n] = u[bitreverse(i + counth, deg)];
-    }
-  }
+  return bases[exponent & 65535] * bases[(exponent >> 16) + 65536];
 }
 
 extern "C" __global__ void butterfly_io_update(fr_t* x, fr_t* y, fr_t* omegas, uint num_chunks, uint offset)
@@ -274,7 +140,7 @@ extern "C" __global__ void butterfly_oi_update(fr_t* x, fr_t* y, fr_t* omegas, u
   y[i] = neg;
 }
 
-extern "C" __global__ void butterfly_io_finalize(fr_t* x, uint len, fr_t* omegas, uint gap, __shared__ fr_t* u_arg)
+extern "C" __global__ void butterfly_io_finalize(fr_t* x, uint len, fr_t* omegas, uint gap)
 {
   fr_t* u = (fr_t*)cuda_shared;
 
@@ -307,7 +173,7 @@ extern "C" __global__ void butterfly_io_finalize(fr_t* x, uint len, fr_t* omegas
   x[id + gap] = u[threadIdx.x + blockDim.x];
 }
 
-extern "C" __global__ void butterfly_oi_finalize(fr_t* x, uint len, fr_t* omegas, uint gap, __shared__ fr_t* u_arg)
+extern "C" __global__ void butterfly_oi_finalize(fr_t* x, uint len, fr_t* omegas, uint gap)
 {
   fr_t* u = (fr_t*)cuda_shared;
 

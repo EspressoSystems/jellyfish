@@ -24,7 +24,7 @@ use rayon::prelude::{
     IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator,
 };
 
-use crate::config::{NUM_MEMBERSHIP_PROOFS, TREE_HEIGHT};
+use crate::config::CIRCUIT_CONFIG;
 
 /// A re-implementation of Jellyfish's Gate.
 /// We converted the circuit generation code into a parallelizable form,
@@ -233,7 +233,7 @@ impl PlonkCircuit {
             .map(|(row, k)| {
                 row.iter()
                     .zip(input_var)
-                    .fold(k, |acc, (&a, &b)| acc + a * self.witness(b).unwrap().pow(&[Fr::A]))
+                    .fold(k, |acc, (&a, &b)| acc + a * self.witness(b).unwrap().pow([Fr::A]))
             })
             .collect::<Vec<_>>();
 
@@ -250,7 +250,7 @@ impl PlonkCircuit {
     fn pow_alpha_inv(&mut self, input_var: Variable) -> Result<Variable, PlonkError> {
         let input_val = self.witness(input_var)?;
 
-        let output_val = input_val.pow(&Fr::A_INV);
+        let output_val = input_val.pow(Fr::A_INV);
         let output_var = self.create_variable(output_val)?;
         assert_eq!(Fr::A, 5);
         let wire_vars = &[output_var, 0, 0, 0, input_var];
@@ -298,10 +298,8 @@ impl PlonkCircuit {
             let left_plus_right = self.add(left_node, right_node)?;
             let mid_node = {
                 let y = self.create_variable(
-                    self.witness(cur_label)?
-                        + &self.witness(sibling1)?
-                        + &self.witness(sibling2)?
-                        - &self.witness(left_plus_right)?,
+                    self.witness(cur_label)? + self.witness(sibling1)? + self.witness(sibling2)?
+                        - self.witness(left_plus_right)?,
                 )?;
 
                 self.insert_gate(
@@ -493,10 +491,10 @@ impl PlonkCircuit {
                         * self.witness[w2]
                         * self.witness[w3]
                         * self.witness[w4]
-                    + q_hash[0] * self.witness[w0].pow(&[5])
-                    + q_hash[1] * self.witness[w1].pow(&[5])
-                    + q_hash[2] * self.witness[w2].pow(&[5])
-                    + q_hash[3] * self.witness[w3].pow(&[5])
+                    + q_hash[0] * self.witness[w0].pow([5])
+                    + q_hash[1] * self.witness[w1].pow([5])
+                    + q_hash[2] * self.witness[w2].pow([5])
+                    + q_hash[3] * self.witness[w3].pow([5])
                     + q_c;
                 let gate_output = q_o * self.witness[w4];
                 assert_eq!(expected_gate_output, gate_output);
@@ -542,8 +540,8 @@ impl PlonkCircuit {
     fn witness(&self, idx: Variable) -> Result<Fr, PlonkError> {
         self.check_var_bound(idx)?;
         match idx {
-            0 => return Ok(Fr::zero()),
-            1 => return Ok(Fr::one()),
+            0 => Ok(Fr::zero()),
+            1 => Ok(Fr::one()),
             _ => Ok(self.witness[idx - self.var_offset]),
         }
     }
@@ -670,17 +668,14 @@ impl PlonkCircuit {
     }
 }
 
-const NUM_CONSTRAINTS: usize = NUM_MEMBERSHIP_PROOFS * (157 * TREE_HEIGHT as usize + 149);
-const NUM_VARS: usize = NUM_MEMBERSHIP_PROOFS * (158 * TREE_HEIGHT as usize + 150);
-
 /// Generate a gigantic circuit (with random, satisfiable wire assignments).
 /// We refactored the original code and added support for parallelism.
 /// The resulting circuits should be identical, except for `wire_permutation`
 /// and `extended_id_permutation`, which are omitted deliberately.
-#[fn_timer(format!("Generate circuit with {NUM_CONSTRAINTS} constraints and {NUM_VARS} variables"))]
+#[fn_timer(format!("Generate circuit with {} constraints and {} variables", CIRCUIT_CONFIG.num_membership_proofs * (157 * CIRCUIT_CONFIG.tree_height as usize + 149), CIRCUIT_CONFIG.num_membership_proofs * (158 * CIRCUIT_CONFIG.tree_height as usize + 150)))]
 pub fn generate_circuit<R: Rng>(rng: &mut R) -> Result<PlonkCircuit, PlonkError> {
-    let mut builder = FilledMTBuilder::new(TREE_HEIGHT).unwrap();
-    for _ in 0..NUM_MEMBERSHIP_PROOFS {
+    let mut builder = FilledMTBuilder::new(CIRCUIT_CONFIG.tree_height).unwrap();
+    for _ in 0..CIRCUIT_CONFIG.num_membership_proofs {
         builder.push(Fr::rand(rng));
     }
     let mt = builder.build();
@@ -689,11 +684,12 @@ pub fn generate_circuit<R: Rng>(rng: &mut R) -> Result<PlonkCircuit, PlonkError>
     let mut circuit = PlonkCircuit::new();
     let root_var = circuit.create_public_variable(root)?;
     let n = circuit.num_vars();
-    let parts = (0..NUM_MEMBERSHIP_PROOFS)
+    let parts = (0..CIRCUIT_CONFIG.num_membership_proofs)
         .into_par_iter()
         .map(|uid| {
-            let mut circuit =
-                PlonkCircuit::new_partial(n + (150 + TREE_HEIGHT as usize * 158) * uid);
+            let mut circuit = PlonkCircuit::new_partial(
+                n + (150 + CIRCUIT_CONFIG.tree_height as usize * 158) * uid,
+            );
             let (_, MerkleLeafProof { leaf, path }) = mt.get_leaf(uid as u64).expect_ok().unwrap();
             let uid = circuit.create_variable(Fr::from(uid as u64)).unwrap();
             let elem = circuit.create_variable(leaf.0).unwrap();

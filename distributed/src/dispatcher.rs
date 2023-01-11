@@ -1,6 +1,8 @@
 use std::{
-    cmp::max,
-    mem::{size_of, transmute},
+    cmp::{max, min},
+    convert::TryInto,
+    io,
+    mem::size_of,
     net::SocketAddr,
 };
 
@@ -31,13 +33,13 @@ use tokio::{
 
 use crate::{
     circuit::coset_representatives,
-    config::{CHUNK_SIZE, DATA_DIR, NUM_WIRE_TYPES, WORKERS},
+    config::{DATA_DIR, IP_NAME_MAP, NUM_WIRE_TYPES, WORKERS},
     gpu::{Domain, FFTDomain},
     polynomial::VecPolynomial,
     storage::SliceStorage,
     timer,
     utils::CastSlice,
-    worker::{Method, PlonkImplInner, Status},
+    worker::{Method, Status},
 };
 
 pub struct Plonk {}
@@ -94,23 +96,23 @@ impl Plonk {
             worker.write_u8(Method::KeyGenPrepare as u8).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
         }))
         .await;
 
-        for chunk in srs.powers_of_g.cast::<u8>().chunks(CHUNK_SIZE) {
+        for chunk in srs.powers_of_g.cast::<u8>().chunks(1 << 30) {
             join_all(workers.iter_mut().map(|worker| async move {
                 loop {
                     worker.write_u8(Method::KeyGenSetCk as u8).await.unwrap();
                     worker.write_u64_le(xxhash_rust::xxh3::xxh3_64(chunk)).await.unwrap();
                     worker.write_u64_le(chunk.len() as u64).await.unwrap();
-                    worker.write_all(&chunk).await.unwrap();
+                    worker.write_all(chunk).await.unwrap();
                     worker.flush().await.unwrap();
 
-                    match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                    match worker.read_u8().await.unwrap().try_into().unwrap() {
                         Status::Ok => break,
                         Status::HashMismatch => continue,
                     }
@@ -125,7 +127,7 @@ impl Plonk {
             worker.write_all(&seed).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {
                     let mut c_s = [0u8; size_of::<G1Projective>()];
                     worker.read_exact(&mut c_s).await.unwrap();
@@ -176,7 +178,7 @@ impl Plonk {
             worker.write_u8(Method::ProveRound1 as u8).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {
                     let mut c = [0u8; size_of::<G1Projective>()];
                     worker.read_exact(&mut c).await.unwrap();
@@ -203,7 +205,7 @@ impl Plonk {
             worker.write_all([beta, gamma].cast()).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
@@ -214,7 +216,7 @@ impl Plonk {
                 worker.write_u8(Method::ProveRound2Exchange as u8).await.unwrap();
                 worker.flush().await.unwrap();
 
-                match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                match worker.read_u8().await.unwrap().try_into().unwrap() {
                     Status::Ok => {}
                     _ => panic!(),
                 }
@@ -225,7 +227,7 @@ impl Plonk {
             workers[4].write_u8(Method::ProveRound2Commit as u8).await.unwrap();
             workers[4].flush().await.unwrap();
 
-            match unsafe { transmute(workers[4].read_u8().await.unwrap()) } {
+            match workers[4].read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {
                     let mut c = [0u8; size_of::<G1Projective>()];
                     workers[4].read_exact(&mut c).await.unwrap();
@@ -245,6 +247,9 @@ impl Plonk {
         transcript: &mut T,
         domain: Domain,
     ) -> Result<(Fr, Vec<Commitment<Bls12_381>>), PlonkError> {
+        let n = domain.size();
+        let quot_domain = Domain::new(n * 8);
+
         let alpha = transcript.get_and_append_challenge::<Bls12_381>(b"alpha")?;
 
         join_all(workers.iter_mut().map(|worker| async move {
@@ -252,18 +257,28 @@ impl Plonk {
             worker.write_all([alpha].cast()).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
         }))
         .await;
 
-        join_all(workers.iter_mut().map(|worker| async move {
+        join_all(workers.iter_mut().enumerate().map(|(i, worker)| async move {
+            if i == 4 {
+                Self::receive_and_store_poly(
+                    worker,
+                    Method::ProveRound3GetZ,
+                    n + 3,
+                    &SliceStorage::new(DATA_DIR.join("dispatcher/z_evals.bin")),
+                )
+                .await
+                .unwrap();
+            }
             worker.write_u8(Method::ProveRound3ComputeTPart1Type1 as u8).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
@@ -274,7 +289,7 @@ impl Plonk {
             worker.write_u8(Method::ProveRound3ExchangeTPart1Type1 as u8).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
@@ -288,7 +303,7 @@ impl Plonk {
                         worker.write_u8(Method::ProveRound3ExchangeW1 as u8).await.unwrap();
                         worker.flush().await.unwrap();
 
-                        match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                        match worker.read_u8().await.unwrap().try_into().unwrap() {
                             Status::Ok => {}
                             _ => panic!(),
                         }
@@ -297,42 +312,15 @@ impl Plonk {
                 .await;
 
                 workers[4]
-                    .write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type3 as u8)
+                    .write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type3AndPart2 as u8)
                     .await
                     .unwrap();
                 workers[4].flush().await.unwrap();
 
-                match unsafe { transmute(workers[4].read_u8().await.unwrap()) } {
+                match workers[4].read_u8().await.unwrap().try_into().unwrap() {
                     Status::Ok => {}
                     _ => panic!(),
                 }
-
-                workers[4]
-                    .write_u8(Method::ProveRound3ComputeAndExchangeTPart2 as u8)
-                    .await
-                    .unwrap();
-                workers[4].flush().await.unwrap();
-
-                match unsafe { transmute(workers[4].read_u8().await.unwrap()) } {
-                    Status::Ok => {}
-                    _ => panic!(),
-                }
-
-                join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 1 || *i == 3).map(
-                    |(_, worker)| async move {
-                        worker
-                            .write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type2 as u8)
-                            .await
-                            .unwrap();
-                        worker.flush().await.unwrap();
-
-                        match unsafe { transmute(worker.read_u8().await.unwrap()) } {
-                            Status::Ok => {}
-                            _ => panic!(),
-                        }
-                    },
-                ))
-                .await;
             },
             async {
                 let mut peers = join_all(WORKERS.iter().map(|worker| async move {
@@ -342,44 +330,41 @@ impl Plonk {
                 }))
                 .await;
 
-                let n = domain.size();
-                let quot_domain = Domain::new(n * 8);
-
                 join_all(peers.iter_mut().map(|peer| async move {
                     peer.write_u8(Method::ProveRound3ComputeW3 as u8).await.unwrap();
                     peer.flush().await.unwrap();
 
-                    match unsafe { transmute(peer.read_u8().await.unwrap()) } {
+                    match peer.read_u8().await.unwrap().try_into().unwrap() {
                         Status::Ok => {}
                         _ => panic!(),
                     }
                 }))
                 .await;
-                let mut w = vec![];
-                for (i, peer) in peers.iter_mut().enumerate().rev() {
-                    let mut w3 = PlonkImplInner::receive_poly_until_ok(
+                join_all(peers.iter_mut().enumerate().rev().map(|(i, peer)| async move {
+                    Self::receive_and_store_poly(
                         peer,
                         Method::ProveRound3GetW3,
                         n + 2,
+                        &SliceStorage::new(DATA_DIR.join(format!("dispatcher/w3_evals_{i}.bin"))),
                     )
                     .await
                     .unwrap();
-                    w.push(timer!(format!("FFT on (w{0} + β * σ{0} + γ)", i), {
+                }))
+                .await;
+                let mut w = vec![];
+                for i in 0..peers.len() {
+                    timer!(format!("FFT on (w{0} + β * σ{0} + γ)", i), {
+                        let storage = SliceStorage::new(
+                            DATA_DIR.join(format!("dispatcher/w3_evals_{i}.bin")),
+                        );
+                        let mut w3 = storage.load().unwrap();
                         quot_domain.fft_io(&mut w3);
-                        SliceStorage::new(DATA_DIR.join(format!("dispatcher/quot_evals_{i}.bin")))
-                            .store_and_mmap(&w3)
-                            .unwrap()
-                    }));
+                        w.push(storage.store_and_mmap(&w3).unwrap())
+                    })
                 }
-
-                let mut z = PlonkImplInner::receive_poly_until_ok(
-                    &mut peers[4],
-                    Method::ProveRound3GetZ,
-                    n + 3,
-                )
-                .await
-                .unwrap();
                 let mut u = timer!("FFT on -α * z'", {
+                    let mut z =
+                        SliceStorage::new(DATA_DIR.join("dispatcher/z_evals.bin")).load().unwrap();
                     Radix2EvaluationDomain::distribute_powers_and_mul_by_const(
                         &mut z,
                         domain.generator(),
@@ -410,7 +395,42 @@ impl Plonk {
                 u.div_by_vanishing_poly(n);
 
                 assert!(u.len() <= 6 * n + 8, "{} {}", u.len(), 6 * n + 8);
-                PlonkImplInner::share_t(&mut peers, &u[n..], n + 2).await.unwrap();
+
+                const CHUNK_SIZE: usize = (1 << 30) / size_of::<Fr>();
+                for i in (0..n + 2).step_by(CHUNK_SIZE) {
+                    join_all(u[n..].chunks(n + 2).zip(peers.iter_mut().rev()).map(
+                        |(t, peer)| async move {
+                            if i < t.len() {
+                                let chunk = t[i..min(i + CHUNK_SIZE, t.len())].cast();
+                                let hash = xxhash_rust::xxh3::xxh3_64(chunk);
+                                timer!(
+                                    format!(
+                                        "Send t[{}..{}] to {}",
+                                        i,
+                                        min(i + CHUNK_SIZE, t.len()),
+                                        IP_NAME_MAP.get(&peer.peer_addr().unwrap().ip()).unwrap()
+                                    ),
+                                    loop {
+                                        peer.write_u8(Method::ProveRound3UpdateT as u8)
+                                            .await
+                                            .unwrap();
+                                        peer.write_u64_le(i as u64).await.unwrap();
+                                        peer.write_u64_le(hash).await.unwrap();
+                                        peer.write_u64_le(chunk.len() as u64).await.unwrap();
+                                        peer.write_all(chunk).await.unwrap();
+                                        peer.flush().await.unwrap();
+
+                                        match peer.read_u8().await.unwrap().try_into().unwrap() {
+                                            Status::Ok => break,
+                                            Status::HashMismatch => continue,
+                                        }
+                                    }
+                                );
+                            }
+                        },
+                    ))
+                    .await;
+                }
             }
         );
 
@@ -419,7 +439,7 @@ impl Plonk {
         //         worker.write_u8(Method::ProveRound3ComputeAndExchangeW3 as u8).await.unwrap();
         //         worker.flush().await.unwrap();
 
-        //         match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+        //         match worker.read_u8().await.unwrap().try_into().unwrap() {
         //             Status::Ok => {}
         //             _ => panic!(),
         //         }
@@ -441,7 +461,7 @@ impl Plonk {
             worker.write_u8(Method::ProveRound3Commit as u8).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {
                     let mut c = [0u8; size_of::<G1Projective>()];
                     worker.read_exact(&mut c).await.unwrap();
@@ -467,7 +487,7 @@ impl Plonk {
             worker.write_all([zeta].cast()).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {
                     let mut w = [0u8; size_of::<Fr>()];
                     worker.read_exact(&mut w).await.unwrap();
@@ -482,7 +502,7 @@ impl Plonk {
             worker.write_u8(Method::ProveRound4EvaluateSigmaOrZ as u8).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {
                     let mut w = [0u8; size_of::<Fr>()];
                     worker.read_exact(&mut w).await.unwrap();
@@ -513,7 +533,7 @@ impl Plonk {
             worker.write_all([v, s1, s2].cast()).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
@@ -525,7 +545,7 @@ impl Plonk {
                 worker.write_u8(Method::ProveRound5Exchange as u8).await.unwrap();
                 worker.flush().await.unwrap();
 
-                match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+                match worker.read_u8().await.unwrap().try_into().unwrap() {
                     Status::Ok => {}
                     _ => panic!(),
                 }
@@ -536,7 +556,7 @@ impl Plonk {
         workers[4].write_u8(Method::ProveRound5Commit as u8).await?;
         workers[4].flush().await?;
 
-        match unsafe { transmute(workers[4].read_u8().await?) } {
+        match workers[4].read_u8().await?.try_into().unwrap() {
             Status::Ok => {
                 let mut c = [0u8; size_of::<G1Projective>() * 2];
                 workers[4].read_exact(&mut c).await?;
@@ -556,13 +576,14 @@ impl Plonk {
         let n = domain.size();
 
         let mut transcript = <StandardTranscript as PlonkTranscript<Fr>>::new(b"PlonkProof");
-        transcript.append_vk_and_pub_input(vk, &pub_inputs)?;
+        transcript.append_vk_and_pub_input(vk, pub_inputs)?;
 
         join_all(workers.iter_mut().map(|worker| async move {
             worker.write_u8(Method::ProveInit as u8).await.unwrap();
+            worker.write_u64_le(n as u64).await.unwrap();
             worker.flush().await.unwrap();
 
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
+            match worker.read_u8().await.unwrap().try_into().unwrap() {
                 Status::Ok => {}
                 _ => panic!(),
             }
@@ -604,18 +625,20 @@ impl Plonk {
         println!("{}", poly_evals.perm_next_eval);
 
         // Round 5
-        let s1 = alpha.square() * (zeta.pow(&[n as u64]) - Fr::one())
+        let s1 = alpha.square() * (zeta.pow([n as u64]) - Fr::one())
             / (Fr::from(n as u32) * (zeta - Fr::one()))
             + poly_evals
                 .wires_evals
                 .iter()
                 .zip(&vk.k)
                 .fold(alpha, |acc, (w_of_zeta, k)| acc * (beta * k * zeta + gamma + w_of_zeta));
-        let s2 =
-            poly_evals.wires_evals.iter().zip(&poly_evals.wire_sigma_evals).fold(
-                -alpha * beta * poly_evals.perm_next_eval,
-                |acc, (w_eval, sigma_eval)| acc * (beta * sigma_eval + gamma + w_eval),
-            );
+        let s2 = poly_evals
+            .wires_evals
+            .iter()
+            .zip(&poly_evals.wire_sigma_evals)
+            .fold(-alpha * beta * poly_evals.perm_next_eval, |acc, (w_eval, sigma_eval)| {
+                acc * (beta * sigma_eval + gamma + w_eval)
+            });
         let (opening_proof, shifted_opening_proof) =
             Self::prove_round5(workers, &mut transcript, s1, s2).await?;
         println!("opening_proof:");
@@ -631,6 +654,43 @@ impl Plonk {
             shifted_opening_proof,
             poly_evals,
         })
+    }
+}
+
+impl Plonk {
+    pub async fn receive_and_store_poly(
+        peer: &mut StubbornTcpStream<&'static SocketAddr>,
+        method: Method,
+        length: usize,
+        storage: &SliceStorage,
+    ) -> io::Result<()> {
+        storage.create()?;
+        let mut i = 0;
+        const CHUNK_SIZE: usize = (1 << 32) / size_of::<Fr>();
+        while i < length {
+            loop {
+                peer.write_u8(method as u8).await?;
+                peer.write_u64_le(i as u64).await?;
+                peer.write_u64_le(min(i + CHUNK_SIZE, length) as u64).await?;
+                peer.flush().await?;
+
+                match peer.read_u8().await?.try_into().unwrap() {
+                    Status::Ok => {}
+                    _ => panic!(),
+                }
+
+                let hash = peer.read_u64_le().await?;
+                let mut w_buffer = vec![0u8; min(CHUNK_SIZE, length - i) * size_of::<Fr>()];
+                peer.read_exact(&mut w_buffer).await?;
+
+                if xxhash_rust::xxh3::xxh3_64(&w_buffer) == hash {
+                    storage.append(&w_buffer)?;
+                    break;
+                }
+            }
+            i += CHUNK_SIZE;
+        }
+        Ok(())
     }
 }
 
@@ -708,7 +768,7 @@ impl Plonk {
 
                 // Second pass: iterate backwards to compute inverses
                 for ((z, s), r) in z.into_iter().zip(prod.into_iter()).zip(r.iter_mut()).rev() {
-                    let inv = tmp * &s;
+                    let inv = tmp * s;
                     tmp *= z;
                     let z2 = inv.square();
                     r.x *= z2;
@@ -764,16 +824,6 @@ mod tests {
         for i in &vk.sigma_comms {
             println!("{}", i.0);
         }
-        join_all(workers.iter_mut().map(|worker| async move {
-            worker.write_u8(Method::ProveInit as u8).await.unwrap();
-            worker.flush().await.unwrap();
-
-            match unsafe { transmute(worker.read_u8().await.unwrap()) } {
-                Status::Ok => {}
-                _ => panic!(),
-            }
-        }))
-        .await;
         for _ in 0..20 {
             let proof = Plonk::prove_async(&mut workers, &public_inputs, &vk).await.unwrap();
             assert!(PlonkKzgSnark::<Bls12_381>::verify::<StandardTranscript>(

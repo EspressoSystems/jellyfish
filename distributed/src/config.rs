@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     fs::File,
+    io::Read,
     net::{IpAddr, SocketAddr},
     path::{Path, PathBuf},
 };
@@ -8,12 +9,7 @@ use std::{
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 
-pub const TREE_HEIGHT: u8 = 21;
-pub const NUM_MEMBERSHIP_PROOFS: usize = 1024;
-
 pub const NUM_WIRE_TYPES: usize = 5;
-
-pub const CHUNK_SIZE: usize = 1 << 30;
 
 #[derive(Clone, Deserialize)]
 pub struct NetworkConfig {
@@ -23,8 +19,13 @@ pub struct NetworkConfig {
 
 #[derive(Clone, Deserialize)]
 pub struct GpuConfig {
-    // TODO: rename to excluded_ids
-    pub disabled_ids: Vec<usize>,
+    pub excluded_ids: Vec<usize>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct CircuitConfig {
+    pub tree_height: u8,
+    pub num_membership_proofs: usize,
 }
 
 pub static DATA_DIR: Lazy<PathBuf> =
@@ -34,17 +35,21 @@ pub static CONFIG_DIR: Lazy<PathBuf> =
     Lazy::new(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("config"));
 
 pub static NETWOKR_CONFIG: Lazy<NetworkConfig> = Lazy::new(|| {
-    serde_json::from_reader(
-        File::open(CONFIG_DIR.join("network.json")).unwrap(),
-    )
-    .unwrap()
+    let mut bytes = vec![];
+    File::open(CONFIG_DIR.join("network.toml")).unwrap().read_to_end(&mut bytes).unwrap();
+    toml::from_slice(&bytes).unwrap()
 });
 
 pub static GPU_CONFIG: Lazy<GpuConfig> = Lazy::new(|| {
-    serde_json::from_reader(
-        File::open(CONFIG_DIR.join("gpu.json")).unwrap(),
-    )
-    .unwrap()
+    let mut bytes = vec![];
+    File::open(CONFIG_DIR.join("gpu.toml")).unwrap().read_to_end(&mut bytes).unwrap();
+    toml::from_slice(&bytes).unwrap()
+});
+
+pub static CIRCUIT_CONFIG: Lazy<CircuitConfig> = Lazy::new(|| {
+    let mut bytes = vec![];
+    File::open(CONFIG_DIR.join("circuit.toml")).unwrap().read_to_end(&mut bytes).unwrap();
+    toml::from_slice(&bytes).unwrap()
 });
 
 pub static WORKERS: Lazy<&'static [SocketAddr]> = Lazy::new(|| &NETWOKR_CONFIG.workers);

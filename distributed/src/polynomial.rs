@@ -6,7 +6,7 @@ use ark_std::vec::Vec;
 use fn_timer::fn_timer;
 use rayon::prelude::*;
 
-fn add_within(v: &mut Vec<Fr>, to: Range<usize>, from: Range<usize>) {
+fn add_within(v: &mut [Fr], to: Range<usize>, from: Range<usize>) {
     // SAFEFY:
     // We use `unsafe` here because a vector cannot have a mutable reference and an immutable reference at the same time.
     // This is actually safe because `to` and `from` are assumed to be disjoint.

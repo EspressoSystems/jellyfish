@@ -7,10 +7,11 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use super::PlonkImplInner;
 use crate::{
-    circuit::{Gate, generate_circuit, PlonkCircuit, coset_representatives},
+    circuit::{coset_representatives, generate_circuit, Gate, PlonkCircuit},
+    config::NUM_WIRE_TYPES,
     gpu::{Domain, FFTDomain},
     timer,
-    worker::Selectors, config::NUM_WIRE_TYPES,
+    worker::Selectors,
 };
 
 impl PlonkImplInner {
@@ -23,7 +24,7 @@ impl PlonkImplInner {
     }
 
     #[fn_timer]
-    pub fn init_domains(&self, domain_elements: &[Fr]) {
+    pub fn init_domains(&self, n: usize) {
         // SAFETY:
         // We abuse `unsafe` here and there to make `self` mutable without declaring a `FnMut` closure,
         // so we can avoid setting the type of `PlonkImpl`'s `inner` field to `Arc<Mutex<...>>`,
@@ -31,15 +32,13 @@ impl PlonkImplInner {
         // This is safe because we only call this function once, and the mutated fields are guaranteed
         // to be used only after this function is called.
         let this = unsafe { &mut *(self as *const _ as *mut Self) };
-        this.n = domain_elements.len();
-        this.domain1 = timer!(
-            format!("Initialize domain with size {}", self.n),
-            Domain::from_group_elems(domain_elements)
-        );
+        this.n = n;
+        this.domain1 =
+            timer!(format!("Initialize domain with size {}", n), Domain::new(n));
         this.domain4 =
-            timer!(format!("Initialize domain with size {}", self.n * 4), Domain::new(self.n * 4));
+            timer!(format!("Initialize domain with size {}", n * 4), Domain::new(n * 4));
         this.domain8 =
-            timer!(format!("Initialize domain with size {}", self.n * 8), Domain::new(self.n * 8));
+            timer!(format!("Initialize domain with size {}", n * 8), Domain::new(n * 8));
     }
 
     #[fn_timer]
@@ -108,12 +107,11 @@ impl PlonkImplInner {
         }
     }
 
-    #[fn_timer(format!("Worker {}: init_sigma_and_commit", self.me))]
+    #[fn_timer]
     pub fn init_and_commit_sigma(
         &self,
         wire_variables: [Vec<Variable>; GATE_WIDTH + 2],
         num_vars: usize,
-        domain_elements: Vec<Fr>,
     ) -> G1Projective {
         let me = self.me;
         let n = self.n;
@@ -128,7 +126,7 @@ impl PlonkImplInner {
                         let prev_wire_id = prev >> logn;
                         let prev_gate_id = prev & (n - 1);
                         if prev_wire_id == me {
-                            sigma[prev_gate_id] = self.k[wire_id] * domain_elements[gate_id];
+                            sigma[prev_gate_id] = self.k[wire_id] * self.domain1.element(gate_id);
                         }
                     }
                     None => {
@@ -140,21 +138,16 @@ impl PlonkImplInner {
         }
         drop(wire_variables);
         for i in 0..num_vars {
-            match variable_wire_map[i] {
-                Some(prev) => {
-                    let prev_wire_id = prev >> logn;
-                    let prev_gate_id = prev & (n - 1);
-                    if prev_wire_id == me {
-                        sigma[prev_gate_id] = self.k[variable_wire_first[i] >> logn]
-                            * domain_elements[variable_wire_first[i] & (n - 1)];
-                    }
+            if let Some(prev) = variable_wire_map[i] {
+                let prev_wire_id = prev >> logn;
+                let prev_gate_id = prev & (n - 1);
+                if prev_wire_id == me {
+                    sigma[prev_gate_id] = self.k[variable_wire_first[i] >> logn]
+                        * self.domain1.element(variable_wire_first[i] & (n - 1));
                 }
-                None => {}
             }
         }
         self.sigma_evals.store(&sigma).unwrap();
-        self.domain1_elements.store(&domain_elements).unwrap();
-        drop(domain_elements);
 
         self.domain1.ifft_ii(&mut sigma);
         self.sigma.store(&sigma).unwrap();

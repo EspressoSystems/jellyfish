@@ -141,8 +141,17 @@ impl PlonkImplInner {
     }
 
     #[fn_timer]
-    pub fn compute_t_part1_type3(&self, mut w0w1: Vec<Fr>, mut w2w3: Vec<Fr>) -> Vec<Fr> {
+    pub fn compute_t_part1_type3_and_part2(
+        &self,
+        mut w0w1: Vec<Fr>,
+        mut w2w3: Vec<Fr>,
+        mut delta01: Vec<Fr>,
+        mut delta23: Vec<Fr>,
+        z: &[Fr],
+    ) -> Vec<Fr> {
         let n = self.n;
+        let d = self.beta * self.k[self.me];
+        let m = 64 - self.domain8.size().trailing_zeros();
         match &self.q {
             Selectors::Type3 { e, .. } => {
                 let w0w1 = timer!("FFT on w0 * w1", {
@@ -154,67 +163,29 @@ impl PlonkImplInner {
                     self.domain8.fft_io(&mut w2w3);
                     self.vec_to_mmap("quot_evals_2", w2w3)
                 });
-                // w2w3 is dropped from memory here, so we can reuse the memory for w4.
+                // w2w3 is dropped from memory here, so we can reuse the memory for delta01.
+                let delta01 =
+                    timer!("FFT on (w0 + β * k0 * X + γ) * (w1 + β * k1 * X + γ) - w0 * w1", {
+                        self.domain8.fft_io(&mut delta01);
+                        self.vec_to_mmap("quot_evals_4", delta01)
+                    });
+                // delta01 is dropped from memory here, so we can reuse the memory for delta23.
+                let delta23 =
+                    timer!("FFT on (w2 + β * k2 * X + γ) * (w3 + β * k3 * X + γ) - w2 * w3", {
+                        self.domain8.fft_io(&mut delta23);
+                        self.vec_to_mmap("quot_evals_5", delta23)
+                    });
+                // delta23 is dropped from memory here, so we can reuse the memory for w4.
                 let w4 = timer!("FFT on w4", {
                     let mut w4 = self.w.load().unwrap();
                     self.domain8.fft_io(&mut w4);
                     self.vec_to_mmap("quot_evals_3", w4)
                 });
-                // w4 is dropped from memory here, so we can reuse the memory for u.
-                let mut u = timer!("FFT on e", {
-                    let mut u = e.load().unwrap();
-                    self.domain8.fft_io(&mut u);
-                    u
-                });
-                // Only u is present in memory now.
-                // u is of size 8n, and we assume that it fits in memory.
-                timer!("Compute evals of e * Π(wi)", {
-                    u.par_iter_mut()
-                        .zip_eq(w0w1.par_iter())
-                        .zip_eq(w2w3.par_iter())
-                        .zip_eq(w4.par_iter())
-                        .for_each(|(((u, w0w1), w2w3), w4)| {
-                            *u *= w0w1;
-                            *u *= w2w3;
-                            *u *= w4;
-                        });
-                });
-                timer!("IFFT on u", {
-                    self.domain8.ifft_oi(&mut u);
-                });
-
-                u.div_by_vanishing_poly(n);
-
-                assert!(u.len() <= 6 * n + 5, "{} {}", u.len(), 6 * n + 5);
-
-                u
-            }
-            _ => unreachable!(),
-        }
-    }
-
-    #[fn_timer]
-    pub fn compute_t_part2(&self, mut w0w1: Vec<Fr>, mut w2w3: Vec<Fr>, z: &[Fr]) -> Vec<Fr> {
-        match &self.q {
-            Selectors::Type3 { .. } => {
-                let n = self.n;
-
-                let w0w1 = timer!("FFT on (w0 + β * k0 * X + γ) * (w1 + β * k1 * X + γ)", {
-                    self.domain8.fft_io(&mut w0w1);
-                    self.vec_to_mmap("quot_evals_1", w0w1)
-                });
-                // w0w1 is dropped from memory here, so we can reuse the memory for w2w3.
-                let w2w3 = timer!("FFT on (w2 + β * k2 * X + γ) * (w3 + β * k3 * X + γ)", {
-                    self.domain8.fft_io(&mut w2w3);
-                    self.vec_to_mmap("quot_evals_2", w2w3)
-                });
-                // w2w3 is dropped from memory here, so we can reuse the memory for w4.
-                let w4 = timer!("FFT on (w4 + β * k4 * X + γ)", {
-                    let mut w4 = self.w.load().unwrap();
-                    w4[0] += self.gamma;
-                    w4[1] += self.beta * self.k[self.me];
-                    self.domain8.fft_io(&mut w4);
-                    self.vec_to_mmap("quot_evals_3", w4)
+                // w4 is dropped from memory here, so we can reuse the memory for e.
+                let e = timer!("FFT on e", {
+                    let mut e = e.load().unwrap();
+                    self.domain8.fft_io(&mut e);
+                    self.vec_to_mmap("quot_evals_6", e)
                 });
                 // w4 is dropped from memory here, so we can reuse the memory for u.
                 let mut u = timer!("FFT on z", {
@@ -224,16 +195,21 @@ impl PlonkImplInner {
                 });
                 // Only u is present in memory now.
                 // u is of size 8n, and we assume that it fits in memory.
-                timer!("Compute evals of α * z * Π(wi + β * ki * X + γ) ", {
+                timer!("Compute evals of e * Π(wi) + α * z * Π(wi + β * ki * X + γ)", {
                     u.par_iter_mut()
                         .zip_eq(w0w1.par_iter())
                         .zip_eq(w2w3.par_iter())
                         .zip_eq(w4.par_iter())
-                        .for_each(|(((u, w0w1), w2w3), w4)| {
+                        .zip_eq(e.par_iter())
+                        .zip_eq(delta01.par_iter())
+                        .zip_eq(delta23.par_iter())
+                        .enumerate()
+                        .for_each(|(i, ((((((u, w0w1), w2w3), w4), e), delta01), delta23))| {
                             *u *= self.alpha;
-                            *u *= w0w1;
-                            *u *= w2w3;
-                            *u *= w4;
+                            *u *= *w0w1 + delta01;
+                            *u *= *w2w3 + delta23;
+                            *u *= self.domain8.element(i.reverse_bits() >> m) * d + self.gamma + w4;
+                            *u += *e * w0w1 * w2w3 * w4;
                         });
                 });
                 timer!("IFFT on u", {
@@ -272,14 +248,14 @@ impl PlonkImplInner {
     }
 
     #[fn_timer]
-    pub fn compute_ww_type1_and_type2(&self, mut w_other: Vec<Fr>) {
+    pub fn compute_ww_type1_and_type2_delta(&self, mut w_other: Vec<Fr>) {
         let beta = self.beta;
         let gamma = self.gamma;
 
         let n = self.n;
         let mut w_self = self.w.load().unwrap();
 
-        let this = unsafe {&mut *(self as *const _ as *mut Self)};
+        let this = unsafe { &mut *(self as *const _ as *mut Self) };
 
         this.w2_tmp = {
             let mut u = vec![
@@ -318,10 +294,8 @@ impl PlonkImplInner {
             u
         };
 
-        this.w2_tmp.add_mut(&this.w1_tmp);
-
         this.w1_tmp.resize(2 * n + 3, Default::default());
-        this.w2_tmp.resize(2 * n + 3, Default::default());
+        this.w2_tmp.resize(n + 3, Default::default());
     }
 
     #[fn_timer]

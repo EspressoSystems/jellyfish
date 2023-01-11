@@ -1,7 +1,8 @@
 use std::{
     cmp::min,
+    convert::TryInto,
     fs::create_dir_all,
-    mem::{size_of, transmute},
+    mem::{size_of},
     net::SocketAddr,
     path::PathBuf,
     sync::Arc,
@@ -11,18 +12,20 @@ use ark_bls12_381::Fr;
 use ark_ff::Zero;
 use ark_poly::EvaluationDomain;
 use futures::future::join_all;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use stubborn_io::StubbornTcpStream;
 use tokio::{
     io,
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader, BufWriter},
+    join,
     net::TcpListener,
     sync::Mutex,
 };
 
 use crate::{
     circuit::PlonkCircuit,
-    config::{CHUNK_SIZE, DATA_DIR, IP_NAME_MAP, NUM_WIRE_TYPES, WORKERS},
+    config::{DATA_DIR, IP_NAME_MAP, NUM_WIRE_TYPES, WORKERS},
     gpu::Domain,
     polynomial::VecPolynomial,
     storage::SliceStorage,
@@ -62,7 +65,6 @@ pub struct PlonkImplInner {
     w_evals: SliceStorage,
     x: SliceStorage,
     ck: SliceStorage,
-    domain1_elements: SliceStorage,
 
     z: Mutex<Vec<Fr>>,
 
@@ -83,7 +85,7 @@ pub struct PlonkImplInner {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, strum::Display)]
+#[derive(Clone, Copy, strum::Display, TryFromPrimitive, IntoPrimitive)]
 pub enum Method {
     KeyGenPrepare = 0x00,
     KeyGenSetCk = 0x01,
@@ -101,10 +103,9 @@ pub enum Method {
     ProveRound3ComputeTPart1Type1 = 0x31,
     ProveRound3ExchangeTPart1Type1 = 0x32,
     ProveRound3ExchangeW1 = 0x33,
-    ProveRound3ComputeAndExchangeTPart1Type3 = 0x34,
-    ProveRound3ComputeAndExchangeTPart2 = 0x35,
-    ProveRound3ComputeAndExchangeTPart1Type2 = 0x36,
-    ProveRound3Commit = 0x37,
+    ProveRound3ComputeAndExchangeTPart1Type3AndPart2 = 0x34,
+    ProveRound3ComputeAndExchangeTPart1Type2 = 0x35,
+    ProveRound3Commit = 0x36,
 
     ProveRound4EvaluateW = 0x40,
     ProveRound4EvaluateSigmaOrZ = 0x41,
@@ -118,7 +119,7 @@ pub enum Method {
     ProveRound3UpdateW1Product = 0x90,
     ProveRound3UpdateT = 0x92,
     ProveRound3GetW1Product = 0x93,
-    ProveRound3GetW2Product = 0x94,
+    ProveRound3GetW2ProductDelta = 0x94,
     ProveRound3ComputeW3 = 0x95,
     ProveRound3GetW3 = 0x96,
     ProveRound3GetZ = 0x97,
@@ -127,6 +128,7 @@ pub enum Method {
 }
 
 #[repr(u8)]
+#[derive(Clone, Copy, strum::Display, TryFromPrimitive, IntoPrimitive)]
 pub enum Status {
     Ok = 0x00,
     HashMismatch = 0x01,
@@ -150,7 +152,6 @@ impl PlonkImplInner {
             w_evals: SliceStorage::new(data_path.join("circuit.wire_evals.bin")),
             sigma: SliceStorage::new(data_path.join("pk.sigma.bin")),
             sigma_evals: SliceStorage::new(data_path.join("pk.sigma_evals.bin")),
-            domain1_elements: SliceStorage::new(data_path.join("pk.domain_elements.bin")),
             q: match me {
                 0 | 2 => Selectors::Type1 {
                     a: SliceStorage::new(data_path.join("pk.q_a.bin")),
@@ -224,11 +225,8 @@ impl PlonkImplInner {
                 self.prove_round3_exchange_t_part1_type1(req, res).await
             }
             Method::ProveRound3ExchangeW1 => self.prove_round3_exchange_w1(req, res).await,
-            Method::ProveRound3ComputeAndExchangeTPart1Type3 => {
-                self.prove_round3_compute_and_exchange_t_part1_type3(req, res).await
-            }
-            Method::ProveRound3ComputeAndExchangeTPart2 => {
-                self.prove_round3_compute_and_exchange_t_part2(req, res).await
+            Method::ProveRound3ComputeAndExchangeTPart1Type3AndPart2 => {
+                self.prove_round3_compute_and_exchange_t_part1_type3_and_part2(req, res).await
             }
             Method::ProveRound3ComputeAndExchangeTPart1Type2 => {
                 self.prove_round3_compute_and_exchange_t_part1_type2(req, res).await
@@ -251,7 +249,9 @@ impl PlonkImplInner {
             }
             Method::ProveRound3UpdateT => self.prove_round3_update_t(req, res).await,
             Method::ProveRound3GetW1Product => self.prove_round3_get_w1_product(req, res).await,
-            Method::ProveRound3GetW2Product => self.prove_round3_get_w2_product(req, res).await,
+            Method::ProveRound3GetW2ProductDelta => {
+                self.prove_round3_get_w2_product_delta(req, res).await
+            }
             Method::ProveRound3ComputeW3 => self.prove_round3_compute_w3(req, res).await,
             Method::ProveRound3GetW3 => self.prove_round3_get_w3(req, res).await,
             Method::ProveRound3GetZ => self.prove_round3_get_z(req, res).await,
@@ -310,8 +310,7 @@ impl PlonkImplInner {
             eval_domain,
             ..
         } = self.init_circuit(seed);
-        let domain_elements = eval_domain.elements().collect::<Vec<_>>();
-        self.init_domains(&domain_elements);
+        self.init_domains(eval_domain.size());
         self.init_k(NUM_WIRE_TYPES);
         if self.me == 4 {
             self.store_public_inputs(
@@ -324,10 +323,7 @@ impl PlonkImplInner {
         self.store_w_evals(&wire_variables[self.me], witness);
 
         res.write_u8(Status::Ok as u8).await?;
-        res.write_all(
-            [self.init_and_commit_sigma(wire_variables, num_vars, domain_elements)].cast(),
-        )
-        .await?;
+        res.write_all([self.init_and_commit_sigma(wire_variables, num_vars)].cast()).await?;
         res.write_all(self.init_and_commit_selectors(gates).cast()).await?;
         res.flush().await?;
 
@@ -336,11 +332,12 @@ impl PlonkImplInner {
 
     async fn prove_init<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
         &self,
-        _: BufReader<R>,
+        mut req: BufReader<R>,
         mut res: BufWriter<W>,
     ) -> io::Result<()> {
+        let n = req.read_u64_le().await? as usize;
         if self.n == 0 {
-            self.init_domains(&self.domain1_elements.mmap()?);
+            self.init_domains(n);
             self.init_k(NUM_WIRE_TYPES);
         }
 
@@ -400,7 +397,7 @@ impl PlonkImplInner {
             peer.write_all(z_tmp_buf).await?;
             peer.flush().await?;
 
-            match unsafe { transmute(peer.read_u8().await?) } {
+            match peer.read_u8().await?.try_into().unwrap() {
                 Status::Ok => break,
                 Status::HashMismatch => continue,
             }
@@ -485,7 +482,7 @@ impl PlonkImplInner {
     ) -> io::Result<()> {
         match &self.q {
             Selectors::Type1 { .. } | Selectors::Type2 { .. } => {
-                Self::share_t(&mut Self::peers().await, &self.t_part1_tmp[self.n..], self.n + 2)
+                self.share_t(&mut Self::peers().await, &self.t_part1_tmp[self.n..], self.n + 2)
                     .await?;
 
                 unsafe {
@@ -519,7 +516,7 @@ impl PlonkImplInner {
                     peer.write_all(&w).await?;
                     peer.flush().await?;
 
-                    match unsafe { transmute(peer.read_u8().await?) } {
+                    match peer.read_u8().await?.try_into().unwrap() {
                         Status::Ok => break,
                         Status::HashMismatch => continue,
                     }
@@ -534,7 +531,7 @@ impl PlonkImplInner {
         Ok(())
     }
 
-    async fn prove_round3_compute_and_exchange_t_part1_type3<
+    async fn prove_round3_compute_and_exchange_t_part1_type3_and_part2<
         R: AsyncRead + Unpin,
         W: AsyncWrite + Unpin,
     >(
@@ -542,43 +539,55 @@ impl PlonkImplInner {
         _: BufReader<R>,
         mut res: BufWriter<W>,
     ) -> io::Result<()> {
-        let l = self.n * 2 + 3;
+        let mut peer1 = Self::peer(1).await;
+        let mut peer3 = Self::peer(3).await;
+        let (w0w1, w2w3) = join!(
+            Self::receive_poly_until_ok(
+                &mut peer1,
+                Method::ProveRound3GetW1Product,
+                self.n * 2 + 3
+            ),
+            Self::receive_poly_until_ok(
+                &mut peer3,
+                Method::ProveRound3GetW1Product,
+                self.n * 2 + 3
+            ),
+        );
+        let (delta01, delta23) = join!(
+            Self::receive_poly_until_ok(
+                &mut peer1,
+                Method::ProveRound3GetW2ProductDelta,
+                self.n + 3
+            ),
+            Self::receive_poly_until_ok(
+                &mut peer3,
+                Method::ProveRound3GetW2ProductDelta,
+                self.n + 3
+            ),
+        );
 
-        let mut peers = Self::peers().await;
+        peer1.write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type2 as u8).await?;
+        peer1.flush().await?;
+        peer3.write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type2 as u8).await?;
+        peer3.flush().await?;
 
-        let w0w1 =
-            Self::receive_poly_until_ok(&mut peers[1], Method::ProveRound3GetW1Product, l).await?;
-        let w2w3 =
-            Self::receive_poly_until_ok(&mut peers[3], Method::ProveRound3GetW1Product, l).await?;
+        let t = self.compute_t_part1_type3_and_part2(
+            w0w1?,
+            w2w3?,
+            delta01?,
+            delta23?,
+            &self.z.lock().await,
+        );
+        self.share_t(&mut Self::peers().await, &t[self.n..], self.n + 2).await?;
 
-        let t = self.compute_t_part1_type3(w0w1, w2w3);
-        Self::share_t(&mut peers, &t[self.n..], self.n + 2).await?;
-
-        res.write_u8(Status::Ok as u8).await?;
-        res.flush().await?;
-
-        Ok(())
-    }
-
-    async fn prove_round3_compute_and_exchange_t_part2<
-        R: AsyncRead + Unpin,
-        W: AsyncWrite + Unpin,
-    >(
-        &self,
-        _: BufReader<R>,
-        mut res: BufWriter<W>,
-    ) -> io::Result<()> {
-        let l = self.n * 2 + 3;
-
-        let mut peers = Self::peers().await;
-
-        let w0w1 =
-            Self::receive_poly_until_ok(&mut peers[1], Method::ProveRound3GetW2Product, l).await?;
-        let w2w3 =
-            Self::receive_poly_until_ok(&mut peers[3], Method::ProveRound3GetW2Product, l).await?;
-
-        let t = self.compute_t_part2(w0w1, w2w3, &self.z.lock().await);
-        Self::share_t(&mut peers, &t[self.n..], self.n + 2).await?;
+        match peer1.read_u8().await?.try_into().unwrap() {
+            Status::Ok => {}
+            _ => panic!(),
+        }
+        match peer3.read_u8().await?.try_into().unwrap() {
+            Status::Ok => {}
+            _ => panic!(),
+        }
 
         res.write_u8(Status::Ok as u8).await?;
         res.flush().await?;
@@ -601,7 +610,7 @@ impl PlonkImplInner {
         };
 
         let t = self.compute_t_part1_type2(ww);
-        Self::share_t(&mut Self::peers().await, &t[self.n..], self.n + 2).await?;
+        self.share_t(&mut Self::peers().await, &t[self.n..], self.n + 2).await?;
 
         res.write_u8(Status::Ok as u8).await?;
         res.flush().await?;
@@ -714,7 +723,7 @@ impl PlonkImplInner {
                     peer.write_all(t_buf).await?;
                     peer.flush().await?;
 
-                    match unsafe { transmute(peer.read_u8().await?) } {
+                    match peer.read_u8().await?.try_into().unwrap() {
                         Status::Ok => break,
                         Status::HashMismatch => continue,
                     }
@@ -781,7 +790,7 @@ impl PlonkImplInner {
                         peer.write_all(z_tmp_buf).await?;
                         peer.flush().await?;
 
-                        match unsafe { transmute(peer.read_u8().await?) } {
+                        match peer.read_u8().await?.try_into().unwrap() {
                             Status::Ok => break,
                             Status::HashMismatch => continue,
                         }
@@ -812,7 +821,7 @@ impl PlonkImplInner {
                 if xxhash_rust::xxh3::xxh3_64(w1_buf) != hash {
                     res.write_u8(Status::HashMismatch as u8).await?;
                 } else {
-                    self.compute_ww_type1_and_type2(w1);
+                    self.compute_ww_type1_and_type2_delta(w1);
 
                     res.write_u8(Status::Ok as u8).await?;
                 }
@@ -842,7 +851,7 @@ impl PlonkImplInner {
         Ok(())
     }
 
-    async fn prove_round3_get_w2_product<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
+    async fn prove_round3_get_w2_product_delta<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
         &self,
         mut req: BufReader<R>,
         res: BufWriter<W>,
@@ -962,7 +971,7 @@ impl PlonkImplInner {
                         peer.write_all(t_buf).await?;
                         peer.flush().await?;
 
-                        match unsafe { transmute(peer.read_u8().await?) } {
+                        match peer.read_u8().await?.try_into().unwrap() {
                             Status::Ok => break,
                             Status::HashMismatch => continue,
                         }
@@ -983,30 +992,47 @@ impl PlonkImplInner {
 
 impl PlonkImplInner {
     pub async fn share_t(
+        &self,
         connections: &mut [StubbornTcpStream<&'static SocketAddr>],
         t: &[Fr],
         t_size_per_peer: usize,
     ) -> io::Result<()> {
-        let chunk_size = CHUNK_SIZE / size_of::<Fr>();
-        for i in (0..t_size_per_peer).step_by(chunk_size) {
+        const CHUNK_SIZE: usize = (1 << 30) / size_of::<Fr>();
+        for i in (0..t_size_per_peer).step_by(CHUNK_SIZE) {
             join_all(t.chunks(t_size_per_peer).zip(connections.iter_mut().rev()).map(
                 |(t, peer)| async move {
                     if i < t.len() {
-                        let chunk = t[i..min(i + chunk_size, t.len())].cast();
+                        let chunk = t[i..min(i + CHUNK_SIZE, t.len())].cast();
                         let hash = xxhash_rust::xxh3::xxh3_64(chunk);
-                        loop {
-                            peer.write_u8(Method::ProveRound3UpdateT as u8).await.unwrap();
-                            peer.write_u64_le(i as u64).await.unwrap();
-                            peer.write_u64_le(hash).await.unwrap();
-                            peer.write_u64_le(chunk.len() as u64).await.unwrap();
-                            peer.write_all(chunk).await.unwrap();
-                            peer.flush().await.unwrap();
+                        timer!(
+                            format!(
+                                "Send t[{}..{}] to {}",
+                                i,
+                                min(i + CHUNK_SIZE, t.len()),
+                                IP_NAME_MAP.get(&peer.peer_addr().unwrap().ip()).unwrap()
+                            ),
+                            if peer.peer_addr().unwrap() != WORKERS[self.me] {
+                                loop {
+                                    peer.write_u8(Method::ProveRound3UpdateT as u8).await.unwrap();
+                                    peer.write_u64_le(i as u64).await.unwrap();
+                                    peer.write_u64_le(hash).await.unwrap();
+                                    peer.write_u64_le(chunk.len() as u64).await.unwrap();
+                                    peer.write_all(chunk).await.unwrap();
+                                    peer.flush().await.unwrap();
 
-                            match unsafe { transmute(peer.read_u8().await.unwrap()) } {
-                                Status::Ok => break,
-                                Status::HashMismatch => continue,
+                                    match peer.read_u8().await.unwrap().try_into().unwrap() {
+                                        Status::Ok => break,
+                                        Status::HashMismatch => continue,
+                                    }
+                                }
+                            } else {
+                                self.update_t(
+                                    &mut self.t.lock().await as &mut Vec<_>,
+                                    chunk.cast(),
+                                    i,
+                                );
                             }
-                        }
+                        );
                     }
                 },
             ))
@@ -1038,21 +1064,21 @@ impl PlonkImplInner {
     ) -> io::Result<Vec<Fr>> {
         let mut w: Vec<Fr> = vec![];
         let mut i = 0;
-        let chunk_size = CHUNK_SIZE / size_of::<Fr>();
+        const CHUNK_SIZE: usize = (1 << 32) / size_of::<Fr>();
         while i < length {
             loop {
                 peer.write_u8(method as u8).await?;
                 peer.write_u64_le(i as u64).await?;
-                peer.write_u64_le(min(i + chunk_size, length) as u64).await?;
+                peer.write_u64_le(min(i + CHUNK_SIZE, length) as u64).await?;
                 peer.flush().await?;
 
-                match unsafe { transmute(peer.read_u8().await?) } {
+                match peer.read_u8().await?.try_into().unwrap() {
                     Status::Ok => {}
                     _ => panic!(),
                 }
 
                 let hash = peer.read_u64_le().await?;
-                let mut w_buffer = vec![0u8; min(chunk_size, length - i) * size_of::<Fr>()];
+                let mut w_buffer = vec![0u8; min(CHUNK_SIZE, length - i) * size_of::<Fr>()];
                 peer.read_exact(&mut w_buffer).await?;
 
                 if xxhash_rust::xxh3::xxh3_64(&w_buffer) == hash {
@@ -1060,7 +1086,7 @@ impl PlonkImplInner {
                     break;
                 }
             }
-            i += chunk_size;
+            i += CHUNK_SIZE;
         }
         Ok(w)
     }
@@ -1094,7 +1120,7 @@ impl Worker {
                         let res = BufWriter::new(write);
                         match req.read_u8().await {
                             Ok(method) => {
-                                let method: Method = unsafe { transmute(method) };
+                                let method: Method = method.try_into().unwrap();
                                 timer!(format!("{} -> {}: {}", peer_name, my_name, method), {
                                     this.handle(method, req, res).await?;
                                 });

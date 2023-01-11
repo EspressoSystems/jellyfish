@@ -29,7 +29,7 @@ fn evaluate(v: &[Fr], point: &Fr) -> Fr {
         .enumerate()
         .map(|(i, chunk)| {
             chunk.iter().rfold(Fr::zero(), move |result, coeff| result * point + coeff)
-                * point.pow(&[(i * num_elem_per_thread) as u64])
+                * point.pow([(i * num_elem_per_thread) as u64])
         })
         .sum()
 }

@@ -1,37 +1,53 @@
 use ark_bls12_381::{Fr, G1Projective};
-use ark_ff::{One, UniformRand};
+use ark_ff::{batch_inversion, One, UniformRand};
 use fn_timer::fn_timer;
 use rand::thread_rng;
 use rayon::prelude::{
     IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator,
 };
 
-use super::{PlonkImplInner};
-use crate::{polynomial::VecPolynomial, gpu::FFTDomain};
+use super::PlonkImplInner;
+use crate::{gpu::FFTDomain, polynomial::VecPolynomial};
 
 impl PlonkImplInner {
     #[fn_timer]
     pub fn compute_z_evals(&self, beta: Fr, gamma: Fr) -> Vec<Fr> {
         let k = self.k[self.me];
 
-        let mut product_vec = self
-            .w_evals
-            .mmap()
-            .unwrap()
+        let mut w_evals = self.w_evals.load().unwrap();
+
+        let mut denominators = w_evals
             .par_iter()
             .zip_eq(self.sigma_evals.mmap().unwrap().par_iter())
-            .zip_eq(self.domain1_elements.mmap().unwrap().par_iter())
             .take(self.n - 1)
-            .map(|((w, sigma), g)| (gamma + beta * k * g + w) / (gamma + beta * sigma + w))
+            .map(|(w, sigma)| gamma + beta * sigma + w)
             .collect::<Vec<_>>();
 
-        let mut t = Fr::one();
-        for i in 0..(self.n - 1) {
-            (product_vec[i], t) = (t, t * product_vec[i]);
-        }
-        product_vec.push(t);
+        batch_inversion(&mut denominators);
 
-        product_vec
+        w_evals
+            .par_iter_mut()
+            .enumerate()
+            .take(self.n - 1)
+            .for_each(|(i, w)| *w += gamma + beta * k * self.domain1.element(i));
+
+        w_evals.pop();
+
+        let mut nominators = w_evals;
+
+        nominators.par_iter_mut().zip_eq(denominators).for_each(|(n, d)| {
+            *n *= d;
+        });
+
+        let mut z = nominators;
+
+        let mut t = Fr::one();
+        (0..(self.n - 1)).for_each(|i| {
+            (z[i], t) = (t, t * z[i]);
+        });
+        z.push(t);
+
+        z
     }
 
     pub fn update_z_evals(&self, z_self: &mut Vec<Fr>, z_other: &[Fr]) {
@@ -47,8 +63,7 @@ impl PlonkImplInner {
         };
 
         self.domain1.ifft_ii(z);
-        // z.add_mut(&vec![Fr::one(), Fr::one(), Fr::one()].mul_by_vanishing_poly(self.n));
-        z.add_mut(&r.mul_by_vanishing_poly(self.n));
+        z.add_mut(r.mul_by_vanishing_poly(self.n));
         assert_eq!(z.len(), self.n + 3);
 
         self.commit_polynomial(z)

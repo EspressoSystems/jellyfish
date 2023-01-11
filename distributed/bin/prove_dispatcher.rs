@@ -25,10 +25,10 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
         stream
     }))
     .await;
-    for _ in 0..10 {
+    for i in 0..10 {
         let now = Instant::now();
         let proof = Plonk::prove_async(&mut workers, &public_inputs, &vk).await.unwrap();
-        println!("prove: {:?}", now.elapsed());
+        println!("prove {}: {:?}", i, now.elapsed());
         assert!(PlonkKzgSnark::verify::<StandardTranscript>(&vk, &public_inputs, &proof).is_ok());
     }
     Ok(())

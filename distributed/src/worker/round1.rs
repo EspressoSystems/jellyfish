@@ -1,5 +1,5 @@
 use ark_bls12_381::{Fr, G1Projective};
-use ark_ff::{One, UniformRand};
+use ark_ff::UniformRand;
 use fn_timer::fn_timer;
 use rand::thread_rng;
 
@@ -17,8 +17,7 @@ impl PlonkImplInner {
 
         self.domain1.ifft_ii(&mut w);
 
-        // w.add_mut(&vec![Fr::one(), Fr::one()].mul_by_vanishing_poly(self.n));
-        w.add_mut(&r.mul_by_vanishing_poly(self.n));
+        w.add_mut(r.mul_by_vanishing_poly(self.n));
 
         assert_eq!(w.len(), self.n + 2);
         self.w.store(&w).unwrap();
