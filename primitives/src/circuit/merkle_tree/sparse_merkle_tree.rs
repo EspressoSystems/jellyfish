@@ -46,7 +46,7 @@ where
     fn is_non_member(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerkleProofVar,
+        merkle_proof: Self::MembershipProofVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError> {
         // constrain that the element's index is part of the proof
@@ -58,7 +58,7 @@ where
     fn enforce_non_membership_proof(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerkleProofVar,
+        merkle_proof: Self::MembershipProofVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError> {
         let bool_val = self.is_non_member(elem, merkle_proof, expected_merkle_root)?;
@@ -71,7 +71,7 @@ where
     F: RescueParameter,
 {
     type LeafVar = LeafVar;
-    type MerkleProofVar = Merkle3AryMembershipProofVar;
+    type MembershipProofVar = Merkle3AryMembershipProofVar;
 
     fn create_leaf_variable(
         &mut self,

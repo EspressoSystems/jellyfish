@@ -67,10 +67,10 @@ where
     /// Type to represent the leaf element of the concrete MT instantiation.
     type LeafVar;
 
-    /// Type to represent the merkle path of the concrete MT instantiation.
+    /// Type to represent the merkle proof of the concrete MT instantiation.
     /// It is MT-specific, e.g arity will affect the exact definition of the
-    /// Merkle path.
-    type MerkleProofVar;
+    /// underlying Merkle path.
+    type MembershipProofVar;
 
     /// Allocate a variable for the leaf element.
     fn create_leaf_variable(
@@ -83,7 +83,7 @@ where
     fn create_membership_proof_variable(
         &mut self,
         membership_proof: &M::MembershipProof,
-    ) -> Result<Self::MerkleProofVar, CircuitError>;
+    ) -> Result<Self::MembershipProofVar, CircuitError>;
 
     /// Allocate a variable for the merkle root.
     fn create_root_variable(&mut self, root: M::NodeValue) -> Result<Variable, CircuitError>;
@@ -93,7 +93,7 @@ where
     fn is_member(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerkleProofVar,
+        merkle_proof: Self::MembershipProofVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
@@ -102,7 +102,7 @@ where
     fn enforce_membership_proof(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerkleProofVar,
+        merkle_proof: Self::MembershipProofVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }
@@ -169,7 +169,7 @@ where
     fn is_non_member(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MerkleProofVar,
+        merkle_proof: Self::MembershipProofVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
@@ -178,7 +178,7 @@ where
     fn enforce_non_membership_proof(
         &mut self,
         empty_elem: Self::LeafVar,
-        merkle_proof: Self::MerkleProofVar,
+        merkle_proof: Self::MembershipProofVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError>;
 }

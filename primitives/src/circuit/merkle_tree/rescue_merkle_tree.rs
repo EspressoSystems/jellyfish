@@ -41,7 +41,7 @@ where
     F: RescueParameter,
 {
     type LeafVar = LeafVar;
-    type MerkleProofVar = Merkle3AryMembershipProofVar;
+    type MembershipProofVar = Merkle3AryMembershipProofVar;
 
     fn create_leaf_variable(
         &mut self,
