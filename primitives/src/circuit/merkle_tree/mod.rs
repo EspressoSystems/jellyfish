@@ -39,7 +39,7 @@ use ark_std::vec::Vec;
 ///         Fq::from(100_u64)
 ///     )
 ///     .unwrap();
-/// let path_vars =
+/// let proof_var =
 ///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_membership_proof_variable(
 ///         &mut circuit,
 ///         &proof
@@ -54,7 +54,7 @@ use ark_std::vec::Vec;
 /// MerkleTreeGadget::<RescueMerkleTree<Fq>>::enforce_membership_proof(
 ///     &mut circuit,
 ///     leaf_var,
-///     path_vars,
+///     proof_var,
 ///     root_var
 /// )
 /// .unwrap();
@@ -140,7 +140,7 @@ where
 ///         Fq::from(100_u64)
 ///     )
 ///     .unwrap();
-/// let path_vars =
+/// let proof_var =
 ///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_membership_proof_variable(
 ///         &mut circuit,
 ///         &proof
@@ -155,7 +155,7 @@ where
 /// UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::enforce_non_membership_proof(
 ///     &mut circuit,
 ///     non_leaf_var,
-///     path_vars,
+///     proof_var,
 ///     root_var
 /// )
 /// .unwrap();
