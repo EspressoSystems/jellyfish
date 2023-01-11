@@ -33,25 +33,25 @@ use ark_std::vec::Vec;
 ///
 /// // Circuit computation with a MT
 /// let leaf_var =
-///     <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::create_leaf_variable(
+///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_leaf_variable(
 ///         &mut circuit,
 ///         2_u64,
 ///         Fq::from(100_u64)
 ///     )
 ///     .unwrap();
 /// let path_vars =
-///     <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::create_membership_proof_variable(
+///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_membership_proof_variable(
 ///         &mut circuit,
 ///         &proof
 ///     )
 ///     .unwrap();
 /// let root_var =
-///     <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::create_root_variable(
+///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_root_variable(
 ///         &mut circuit,
 ///         expected_root
 ///     )
 ///     .unwrap();
-/// <PlonkCircuit<Fq> as MerkleTreeGadget<RescueMerkleTree<Fq>>>::enforce_membership_proof(
+/// MerkleTreeGadget::<RescueMerkleTree<Fq>>::enforce_membership_proof(
 ///     &mut circuit,
 ///     leaf_var,
 ///     path_vars,
@@ -134,25 +134,25 @@ where
 ///
 /// // Circuit computation with a MT
 /// let non_leaf_var =
-///     <PlonkCircuit<Fq> as MerkleTreeGadget<SparseMerkleTree<Fq>>>::create_leaf_variable(
+///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_leaf_variable(
 ///         &mut circuit,
 ///         BigUint::from(3u64),
 ///         Fq::from(100_u64)
 ///     )
 ///     .unwrap();
 /// let path_vars =
-///     <PlonkCircuit<Fq> as MerkleTreeGadget<SparseMerkleTree<Fq>>>::create_membership_proof_variable(
+///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_membership_proof_variable(
 ///         &mut circuit,
 ///         &proof
 ///     )
 ///     .unwrap();
 /// let root_var =
-///     <PlonkCircuit<Fq> as MerkleTreeGadget<SparseMerkleTree<Fq>>>::create_root_variable(
+///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_root_variable(
 ///         &mut circuit,
 ///         expected_root
 ///     )
 ///     .unwrap();
-/// <PlonkCircuit<Fq> as UniversalMerkleTreeGadget<SparseMerkleTree<Fq>>>::enforce_non_membership_proof(
+/// UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::enforce_non_membership_proof(
 ///     &mut circuit,
 ///     non_leaf_var,
 ///     path_vars,
