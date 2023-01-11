@@ -27,8 +27,8 @@ use num_bigint::BigUint;
 use typenum::U3;
 
 use super::{
-    LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeRepr, Merkle3AryNodeVar, MerklePathRepr,
-    MerkleTreeGadget, MerkleTreeHelperGadget, UniversalMerkleTreeGadget,
+    LeafVar, Merkle3AryNodeRepr, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar,
+    MerklePathRepr, MerkleTreeGadget, MerkleTreeHelperGadget, UniversalMerkleTreeGadget,
 };
 
 impl<F: RescueParameter> MerklePathRepr<SparseMerkleTree<F>> {
@@ -43,25 +43,27 @@ impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
+    type NonMembershipProofVar = Merkle3AryNonMembershipProofVar;
+
     fn is_non_member(
         &mut self,
         elem: Self::LeafVar,
-        merkle_proof: Self::MembershipProofVar,
-        merkle_root: Variable,
+        proof_var: Self::NonMembershipProofVar,
+        root_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
         // constrain that the element's index is part of the proof
-        self.enforce_equal(merkle_proof.pos, elem.uid)?;
-        let root_var = self.compute_merkle_root_for_empty(&merkle_proof)?;
-        self.is_equal(root_var, merkle_root)
+        self.enforce_equal(proof_var.pos, elem.uid)?;
+        let computed_root_var = self.compute_merkle_root_for_empty(&proof_var)?;
+        self.is_equal(computed_root_var, root_var)
     }
 
     fn enforce_non_membership_proof(
         &mut self,
-        elem: Self::LeafVar,
-        merkle_proof: Self::MembershipProofVar,
-        expected_merkle_root: Variable,
+        elem_var: Self::LeafVar,
+        proof_var: Self::NonMembershipProofVar,
+        expected_root_var: Variable,
     ) -> Result<(), CircuitError> {
-        let bool_val = self.is_non_member(elem, merkle_proof, expected_merkle_root)?;
+        let bool_val = self.is_non_member(elem_var, proof_var, expected_root_var)?;
         self.enforce_true(bool_val.into())
     }
 }
@@ -71,7 +73,7 @@ where
     F: RescueParameter,
 {
     type LeafVar = LeafVar;
-    type MembershipProofVar = Merkle3AryMembershipProofVar;
+    type MembershipProofVar = Merkle3AryNonMembershipProofVar;
 
     fn create_leaf_variable(
         &mut self,
@@ -88,7 +90,7 @@ where
     fn create_membership_proof_variable(
         &mut self,
         merkle_proof: &MembershipProof<F>,
-    ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
+    ) -> Result<Self::MembershipProofVar, CircuitError> {
         // Encode Merkle path nodes positions with boolean variables
         let merkle_path = MerklePathRepr::from(merkle_proof);
 
@@ -105,29 +107,27 @@ where
 
     fn is_member(
         &mut self,
-        elem: LeafVar,
-        merkle_proof: Merkle3AryMembershipProofVar,
-        merkle_root: Variable,
+        elem_var: LeafVar,
+        proof_var: Self::MembershipProofVar,
+        root_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        let root_var = MerkleTreeHelperGadget::<SparseMerkleTree<F>>::compute_merkle_root(
-            self,
-            elem,
-            &merkle_proof,
+        let computed_root_var = MerkleTreeHelperGadget::<SparseMerkleTree<F>>::compute_merkle_root(
+            self, elem_var, &proof_var,
         )?;
-        self.is_equal(root_var, merkle_root)
+        self.is_equal(root_var, computed_root_var)
     }
 
     fn enforce_membership_proof(
         &mut self,
-        elem: LeafVar,
-        merkle_proof: Merkle3AryMembershipProofVar,
-        expected_merkle_root: Variable,
+        elem_var: LeafVar,
+        proof_var: Self::MembershipProofVar,
+        expected_root_var: Variable,
     ) -> Result<(), CircuitError> {
         let bool_val = MerkleTreeGadget::<SparseMerkleTree<F>>::is_member(
             self,
-            elem,
-            merkle_proof,
-            expected_merkle_root,
+            elem_var,
+            proof_var,
+            expected_root_var,
         )?;
         self.enforce_true(bool_val.into())
     }
@@ -166,14 +166,14 @@ trait SparseMerkleTreeHelperGadget<F: RescueParameter> {
     ///   tree.
     fn compute_merkle_root_for_empty(
         &mut self,
-        path_vars: &Merkle3AryMembershipProofVar,
+        path_vars: &Merkle3AryNonMembershipProofVar,
     ) -> Result<Variable, CircuitError>;
 }
 
 impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     fn compute_merkle_root_for_empty(
         &mut self,
-        path_vars: &Merkle3AryMembershipProofVar,
+        path_vars: &Merkle3AryNonMembershipProofVar,
     ) -> Result<Variable, CircuitError> {
         let mut cur_label = self.zero();
         for cur_node in path_vars.nodes.iter() {
@@ -198,7 +198,7 @@ impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
 impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCircuit<F> {
     type MerklePathEncoding = MerklePathRepr<SparseMerkleTree<F>>;
 
-    type MembershipProofVar = Merkle3AryMembershipProofVar;
+    type MembershipProofVar = Merkle3AryNonMembershipProofVar;
 
     fn constrain_sibling_order(
         &mut self,
@@ -223,7 +223,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
         &mut self,
         merkle_path: &MerklePathRepr<SparseMerkleTree<F>>,
         pos: Index<F>,
-    ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
+    ) -> Result<Self::MembershipProofVar, CircuitError> {
         // Setup node variables
         let nodes = merkle_path
             .nodes
@@ -250,13 +250,13 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
 
         let pos = self.create_variable(pos.into())?;
 
-        Ok(Merkle3AryMembershipProofVar { nodes, pos })
+        Ok(Self::MembershipProofVar { nodes, pos })
     }
 
     fn compute_merkle_root(
         &mut self,
         elem: LeafVar,
-        path_vars: &Merkle3AryMembershipProofVar,
+        proof_var: &Self::MembershipProofVar,
     ) -> Result<Variable, CircuitError> {
         let zero_var = self.zero();
 
@@ -266,7 +266,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
             &[zero_var, elem.uid, elem.elem],
             1,
         )?[0];
-        for cur_node in path_vars.nodes.iter() {
+        for cur_node in proof_var.nodes.iter() {
             let input_labels =
                 MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_sibling_order(
                     self,
@@ -290,8 +290,7 @@ mod test {
     use crate::{
         circuit::merkle_tree::{
             sparse_merkle_tree::{
-                LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeRepr, MerklePathRepr,
-                MerkleTreeHelperGadget,
+                LeafVar, Merkle3AryNodeRepr, MerklePathRepr, MerkleTreeHelperGadget,
             },
             MerkleTreeGadget, UniversalMerkleTreeGadget,
         },
@@ -513,12 +512,11 @@ mod test {
             elem,
         )
         .unwrap();
-        let path_vars: Merkle3AryMembershipProofVar =
-            MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
-                &mut circuit,
-                &proof,
-            )
-            .unwrap();
+        let path_vars = MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
+            &mut circuit,
+            &proof,
+        )
+        .unwrap();
         let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
             expected_root,
@@ -557,12 +555,11 @@ mod test {
                 elem: F::one(),
             });
         }
-        let path_vars: Merkle3AryMembershipProofVar =
-            MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
-                &mut circuit,
-                &bad_proof,
-            )
-            .unwrap();
+        let path_vars = MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
+            &mut circuit,
+            &bad_proof,
+        )
+        .unwrap();
         let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
             expected_root,
@@ -609,12 +606,11 @@ mod test {
         )
         .unwrap();
 
-        let path_vars: Merkle3AryMembershipProofVar =
-            MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
-                &mut circuit,
-                &proof,
-            )
-            .unwrap();
+        let proof_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
+            &mut circuit,
+            &proof,
+        )
+        .unwrap();
 
         let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
@@ -625,7 +621,7 @@ mod test {
         UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
             &mut circuit,
             non_leaf_var,
-            path_vars,
+            proof_var,
             root_var,
         )
         .unwrap();
@@ -645,12 +641,11 @@ mod test {
         )
         .unwrap();
 
-        let path_vars: Merkle3AryMembershipProofVar =
-            MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
-                &mut circuit,
-                &proof,
-            )
-            .unwrap();
+        let path_vars = MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
+            &mut circuit,
+            &proof,
+        )
+        .unwrap();
 
         let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,

@@ -92,18 +92,18 @@ where
     /// return `BoolVar` indicating the correctness of its membership proof
     fn is_member(
         &mut self,
-        elem: Self::LeafVar,
-        merkle_proof: Self::MembershipProofVar,
-        merkle_root: Variable,
+        elem_var: Self::LeafVar,
+        proof_var: Self::MembershipProofVar,
+        root_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
-    /// Enforce correct `merkle_proof` for the `elem` against
-    /// `expected_merkle_root`.
+    /// Enforce correct `proof_var` for the `elem` against
+    /// `expected_root_var`.
     fn enforce_membership_proof(
         &mut self,
-        elem: Self::LeafVar,
-        merkle_proof: Self::MembershipProofVar,
-        expected_merkle_root: Variable,
+        elem_var: Self::LeafVar,
+        proof_var: Self::MembershipProofVar,
+        expected_root_var: Variable,
     ) -> Result<(), CircuitError>;
 }
 
@@ -165,21 +165,26 @@ pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
 {
+    /// Type to represent the merkle non-membership proof of the concrete MT
+    /// instantiation. It is MT-specific, e.g arity will affect the exact
+    /// definition of the underlying Merkle path.
+    type NonMembershipProofVar;
+
     /// checking non-membership proof
     fn is_non_member(
         &mut self,
-        elem: Self::LeafVar,
-        merkle_proof: Self::MembershipProofVar,
-        merkle_root: Variable,
+        elem_var: Self::LeafVar,
+        proof_var: Self::NonMembershipProofVar,
+        root_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
-    /// Enforce correct `merkle_proof` for the empty leaf `elem` against
-    /// `expected_merkle_root`.
+    /// Enforce correct `proof_var` for the empty leaf `empty_elem_var` against
+    /// `expected_root_var`.
     fn enforce_non_membership_proof(
         &mut self,
-        empty_elem: Self::LeafVar,
-        merkle_proof: Self::MembershipProofVar,
-        expected_merkle_root: Variable,
+        empty_elem_var: Self::LeafVar,
+        proof_var: Self::NonMembershipProofVar,
+        expected_root_var: Variable,
     ) -> Result<(), CircuitError>;
 }
 
@@ -221,15 +226,15 @@ where
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
-    /// * `elem` - variables corresponding to the uid and the element value
+    /// * `elem_var` - variables corresponding to the uid and the element value
     ///   (e.g.: record commitment).
-    /// * `path_vars` - variables corresponding to the Merkle path.
+    /// * `proof_var` - variable corresponding to the Merkle proof.
     /// * `return` - variable corresponding to the root value of the Merkle
     ///   tree.
     fn compute_merkle_root(
         &mut self,
-        elem: LeafVar,
-        path_vars: &Self::MembershipProofVar,
+        elem_var: LeafVar,
+        proof_var: &Self::MembershipProofVar,
     ) -> Result<Variable, CircuitError>;
 }
 
@@ -292,12 +297,20 @@ pub(crate) struct MerklePathRepr<M: MerkleTreeScheme> {
     pub(crate) nodes: Vec<Merkle3AryNodeRepr<M>>,
 }
 
-/// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
+/// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
 /// Constains:
 /// * a list of node variables in the path,
 /// * a variable correseponsing to the position of the leaf element.
 #[derive(Debug, Clone)]
-pub struct Merkle3AryMembershipProofVar {
+pub struct Merkle3AryNonMembershipProofVar {
     nodes: Vec<Merkle3AryNodeVar>,
     pos: Variable,
+}
+
+/// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
+/// Constains:
+/// * a list of node variables in the path,
+#[derive(Debug, Clone)]
+pub struct Merkle3AryMembershipProofVar {
+    nodes: Vec<Merkle3AryNodeVar>,
 }

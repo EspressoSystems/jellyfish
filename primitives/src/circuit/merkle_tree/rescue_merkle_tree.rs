@@ -75,29 +75,27 @@ where
 
     fn is_member(
         &mut self,
-        elem: LeafVar,
-        merkle_proof: Merkle3AryMembershipProofVar,
-        merkle_root: Variable,
+        elem_var: LeafVar,
+        proof_var: Merkle3AryMembershipProofVar,
+        root_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        let root_var = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::compute_merkle_root(
-            self,
-            elem,
-            &merkle_proof,
+        let computed_root_var = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::compute_merkle_root(
+            self, elem_var, &proof_var,
         )?;
-        self.is_equal(root_var, merkle_root)
+        self.is_equal(root_var, computed_root_var)
     }
 
     fn enforce_membership_proof(
         &mut self,
-        elem: LeafVar,
-        merkle_proof: Merkle3AryMembershipProofVar,
-        expected_merkle_root: Variable,
+        elem_var: LeafVar,
+        proof_var: Merkle3AryMembershipProofVar,
+        expected_root_var: Variable,
     ) -> Result<(), CircuitError> {
         let bool_val = MerkleTreeGadget::<RescueMerkleTree<F>>::is_member(
             self,
-            elem,
-            merkle_proof,
-            expected_merkle_root,
+            elem_var,
+            proof_var,
+            expected_root_var,
         )?;
         self.enforce_true(bool_val.into())
     }
@@ -180,11 +178,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
             self.enforce_bool(left_plus_right)?;
         }
 
-        Ok(Merkle3AryMembershipProofVar {
-            nodes,
-            // position is only used for universal MT
-            pos: Variable::default(),
-        })
+        Ok(Merkle3AryMembershipProofVar { nodes })
     }
 
     fn compute_merkle_root(
