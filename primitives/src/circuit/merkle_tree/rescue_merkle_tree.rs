@@ -62,7 +62,7 @@ where
         // Encode Merkle path nodes positions with boolean variables
         let merkle_path = MerklePathRepr::from(merkle_proof);
 
-        <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_membership_proof(
+        MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_membership_proof(
             self,
             &merkle_path,
             merkle_proof.pos,
@@ -79,12 +79,11 @@ where
         merkle_proof: Merkle3AryMembershipProofVar,
         merkle_root: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        let root_var =
-            <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::compute_merkle_root(
-                self,
-                elem,
-                &merkle_proof,
-            )?;
+        let root_var = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::compute_merkle_root(
+            self,
+            elem,
+            &merkle_proof,
+        )?;
         self.is_equal(root_var, merkle_root)
     }
 
@@ -94,7 +93,7 @@ where
         merkle_proof: Merkle3AryMembershipProofVar,
         expected_merkle_root: Variable,
     ) -> Result<(), CircuitError> {
-        let bool_val = <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::is_member(
+        let bool_val = MerkleTreeGadget::<RescueMerkleTree<F>>::is_member(
             self,
             elem,
             merkle_proof,
@@ -203,7 +202,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
         )?[0];
         for cur_node in path_vars.nodes.iter() {
             let input_labels =
-                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_sibling_order(
+                MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_sibling_order(
                     self,
                     cur_label,
                     cur_node.sibling1,
@@ -265,7 +264,11 @@ mod test {
             let one = F::one();
             let node = Merkle3AryNodeRepr::new(one, zero, is_left_child, is_right_child);
             let path = MerklePathRepr::new(&[node]);
-            let _ = <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_membership_proof(&mut circuit, &path, 0);
+            let _ = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_membership_proof(
+                &mut circuit,
+                &path,
+                0,
+            );
             if accept {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             } else {
@@ -310,16 +313,15 @@ mod test {
             let sib1 = input_vars[1];
             let sib2 = input_vars[2];
 
-            let out_vars =
-                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_sibling_order(
-                    circuit,
-                    node,
-                    sib1,
-                    sib2,
-                    node_is_left,
-                    node_is_right,
-                )
-                .unwrap();
+            let out_vars = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_sibling_order(
+                circuit,
+                node,
+                sib1,
+                sib2,
+                node_is_left,
+                node_is_right,
+            )
+            .unwrap();
 
             let output: Vec<F> = out_vars[..]
                 .iter()
@@ -435,26 +437,21 @@ mod test {
 
         // Circuit computation with a MT
         let leaf_var: LeafVar =
-            <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::create_leaf_variable(
+            MerkleTreeGadget::<RescueMerkleTree<F>>::create_leaf_variable(&mut circuit, uid, elem)
+                .unwrap();
+        let path_vars: Merkle3AryMembershipProofVar =
+            MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
                 &mut circuit,
-                uid,
-                elem,
+                &proof,
             )
             .unwrap();
-        let path_vars: Merkle3AryMembershipProofVar = <PlonkCircuit<F> as MerkleTreeGadget<
-            RescueMerkleTree<F>,
-        >>::create_membership_proof_variable(
-            &mut circuit, &proof
+        let root_var = MerkleTreeGadget::<RescueMerkleTree<F>>::create_root_variable(
+            &mut circuit,
+            expected_root,
         )
         .unwrap();
-        let root_var =
-            <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::create_root_variable(
-                &mut circuit,
-                expected_root,
-            )
-            .unwrap();
 
-        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_membership_proof(
+        MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
             leaf_var,
             path_vars,
@@ -471,12 +468,8 @@ mod test {
         // zero value.
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let leaf_var: LeafVar =
-            <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::create_leaf_variable(
-                &mut circuit,
-                uid,
-                elem,
-            )
-            .unwrap();
+            MerkleTreeGadget::<RescueMerkleTree<F>>::create_leaf_variable(&mut circuit, uid, elem)
+                .unwrap();
 
         let mut bad_proof = proof.clone();
 
@@ -487,20 +480,19 @@ mod test {
                 elem: F::one(),
             });
         }
-        let path_vars: Merkle3AryMembershipProofVar = <PlonkCircuit<F> as MerkleTreeGadget<
-            RescueMerkleTree<F>,
-        >>::create_membership_proof_variable(
-            &mut circuit, &bad_proof
-        )
-        .unwrap();
-        let root_var =
-            <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::create_root_variable(
+        let path_vars: Merkle3AryMembershipProofVar =
+            MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
                 &mut circuit,
-                expected_root,
+                &bad_proof,
             )
             .unwrap();
+        let root_var = MerkleTreeGadget::<RescueMerkleTree<F>>::create_root_variable(
+            &mut circuit,
+            expected_root,
+        )
+        .unwrap();
 
-        <PlonkCircuit<F> as MerkleTreeGadget<RescueMerkleTree<F>>>::enforce_membership_proof(
+        MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
             leaf_var.clone(),
             path_vars.clone(),
