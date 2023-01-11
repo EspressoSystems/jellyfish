@@ -189,16 +189,17 @@ where
 {
     type MerklePathEncoding;
     type MembershipProofVar;
-    /// Produces an ordered list of variables based on the relative position of
-    /// a node and its siblings.
-    /// * `node` - node to be inserted in the final list.
+    /// Produces a list of circuit variables representing the ordered nodes,
+    /// based on the location of a `node` among its siblings, and otherwise
+    /// preserving the relative location of the siblings.
+    /// * `node` - node to be placed in the correct position
     /// * `sibling1` - first sibling
     /// * `sibling2` - second sibling
     /// * `node_is_left` - variable that is true if node is the leftmost one.
     /// * `node_is_right` -  variable that is true if node is the rightmost one.
     /// * `returns` - list of variables corresponding to the node and its
     ///   siblings in the correct order.
-    fn permute(
+    fn constrain_sibling_order(
         &mut self,
         node: Variable,
         sib1: Variable,

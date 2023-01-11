@@ -132,7 +132,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
 
     type MembershipProofVar = Merkle3AryMembershipProofVar;
 
-    fn permute(
+    fn constrain_sibling_order(
         &mut self,
         node: Variable,
         sib1: Variable,
@@ -203,7 +203,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
         )?[0];
         for cur_node in path_vars.nodes.iter() {
             let input_labels =
-                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::permute(
+                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_sibling_order(
                     self,
                     cur_label,
                     cur_node.sibling1,
@@ -311,7 +311,7 @@ mod test {
             let sib2 = input_vars[2];
 
             let out_vars =
-                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::permute(
+                <PlonkCircuit<F> as MerkleTreeHelperGadget<RescueMerkleTree<F>>>::constrain_sibling_order(
                     circuit,
                     node,
                     sib1,
