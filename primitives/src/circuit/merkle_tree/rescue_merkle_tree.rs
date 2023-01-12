@@ -47,25 +47,27 @@ where
 
     fn is_member(
         &mut self,
-        elem_var: Variable,
+        leaf_idx_var: Variable,
         proof_var: Merkle3AryMembershipProofVar,
         root_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
         let computed_root_var = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::compute_merkle_root(
-            self, elem_var, &proof_var,
+            self,
+            leaf_idx_var,
+            &proof_var,
         )?;
         self.is_equal(root_var, computed_root_var)
     }
 
     fn enforce_membership_proof(
         &mut self,
-        elem_var: Variable,
+        leaf_idx_var: Variable,
         proof_var: Merkle3AryMembershipProofVar,
         expected_root_var: Variable,
     ) -> Result<(), CircuitError> {
         let bool_val = MerkleTreeGadget::<RescueMerkleTree<F>>::is_member(
             self,
-            elem_var,
+            leaf_idx_var,
             proof_var,
             expected_root_var,
         )?;
@@ -142,7 +144,10 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
             self.enforce_bool(left_plus_right)?;
         }
 
-        Ok(Merkle3AryMembershipProofVar { nodes, leaf })
+        Ok(Merkle3AryMembershipProofVar {
+            node_vars: nodes,
+            leaf_var: leaf,
+        })
     }
 
     fn compute_merkle_root(
@@ -155,10 +160,10 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
         // leaf label = H(0, uid, elem)
         let mut cur_label = RescueNativeGadget::<F>::rescue_sponge_no_padding(
             self,
-            &[zero_var, elem, proof_var.leaf],
+            &[zero_var, elem, proof_var.leaf_var],
             1,
         )?[0];
-        for cur_node in proof_var.nodes.iter() {
+        for cur_node in proof_var.node_vars.iter() {
             let input_labels =
                 MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_sibling_order(
                     self,

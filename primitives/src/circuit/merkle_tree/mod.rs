@@ -72,20 +72,23 @@ where
     /// Allocate a variable for the merkle root.
     fn create_root_variable(&mut self, root: M::NodeValue) -> Result<Variable, CircuitError>;
 
-    /// Given a leaf element and its merkle proof,
-    /// return `BoolVar` indicating the correctness of its membership proof
+    /// Given variables representing:
+    /// * a leaf index
+    /// * its merkle proof
+    /// * root
+    /// * return `BoolVar` indicating the correctness of its membership proof.
     fn is_member(
         &mut self,
-        elem_var: Variable,
+        leaf_idx_var: Variable,
         proof_var: Self::MembershipProofVar,
         root_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
-    /// Enforce correct `proof_var` for the `elem` against
+    /// Enforce correct `proof_var` for the `leaf_idx_var` against
     /// `expected_root_var`.
     fn enforce_membership_proof(
         &mut self,
-        elem_var: Variable,
+        leaf_idx_var: Variable,
         proof_var: Self::MembershipProofVar,
         expected_root_var: Variable,
     ) -> Result<(), CircuitError>;
@@ -158,16 +161,16 @@ where
     /// checking non-membership proof
     fn is_non_member(
         &mut self,
-        elem_var: Variable,
+        non_leaf_idx_var: Variable,
         proof_var: Self::NonMembershipProofVar,
         root_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
-    /// Enforce correct `proof_var` for the empty leaf `empty_elem_var` against
-    /// `expected_root_var`.
+    /// Enforce correct `proof_var` for the empty leaf `empty_leaf_idx_var`
+    /// against `expected_root_var`.
     fn enforce_non_membership_proof(
         &mut self,
-        empty_elem_var: Variable,
+        non_leaf_idx_var: Variable,
         proof_var: Self::NonMembershipProofVar,
         expected_root_var: Variable,
     ) -> Result<(), CircuitError>;
@@ -199,24 +202,23 @@ where
 
     /// Ensure that the position of each node of the path is correctly encoded
     /// Used for testing purposes.
-    /// * `merkle_path` - list of node of an authentication path
-    /// * `pos` - position of the missing leaf
+    /// * `membership_proof` - proof, including list of nodes of an
+    ///   authentication path
     /// * `returns` - list of variables corresponding to the authentication path
     fn constrain_membership_proof(
         &mut self,
-        merkle_path: &M::MembershipProof,
+        membership_proof: &M::MembershipProof,
     ) -> Result<Self::MembershipProofVar, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
     /// merkle path.
-    /// * `elem_var` - variables corresponding to the uid and the element value
-    ///   (e.g.: record commitment).
+    /// * `leaf_idx_var` - variables corresponding to the uid of the leaf.
     /// * `proof_var` - variable corresponding to the Merkle proof.
     /// * `return` - variable corresponding to the root value of the Merkle
     ///   tree.
     fn compute_merkle_root(
         &mut self,
-        elem_var: Variable,
+        leaf_idx_var: Variable,
         proof_var: &Self::MembershipProofVar,
     ) -> Result<Variable, CircuitError>;
 }
@@ -234,30 +236,22 @@ pub struct Merkle3AryNodeVar {
     pub is_right_child: BoolVar,
 }
 
-/// Circuit variable for a leaf element.
-#[derive(Debug, Clone)]
-pub struct LeafVar {
-    /// Position of the leaf element in the MT. Serves as UID.
-    pub uid: Variable,
-    /// The value of the leaf element.
-    pub elem: Variable,
-}
-
 /// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
 /// Constains:
 /// * a list of node variables in the path,
 /// * a variable correseponsing to the position of the leaf element.
 #[derive(Debug, Clone)]
 pub struct Merkle3AryNonMembershipProofVar {
-    nodes: Vec<Merkle3AryNodeVar>,
-    pos: Variable,
+    node_vars: Vec<Merkle3AryNodeVar>,
+    pos_var: Variable,
 }
 
 /// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
 /// Constains:
 /// * a list of node variables in the path,
+/// * a variable correseponsing to the value of the leaf element.
 #[derive(Debug, Clone)]
 pub struct Merkle3AryMembershipProofVar {
-    nodes: Vec<Merkle3AryNodeVar>,
-    leaf: Variable,
+    node_vars: Vec<Merkle3AryNodeVar>,
+    leaf_var: Variable,
 }
