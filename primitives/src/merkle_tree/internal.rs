@@ -256,9 +256,9 @@ where
 {
     let leaves: Vec<_> = elems.into_iter().collect();
     let num_leaves = leaves.len() as u64;
-    let capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or(
-        PrimitivesError::ParameterError("Merkle tree size too large.".to_string()),
-    )?;
+    let capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or_else(|| {
+        PrimitivesError::ParameterError("Merkle tree size too large.".to_string())
+    })?;
 
     if num_leaves > capacity {
         Err(PrimitivesError::ParameterError(
@@ -442,7 +442,7 @@ where
         }
 
         match (&mut *self, &proof[height]) {
-            (Self::ForgettenSubtree { .. }, Self::Branch { children, .. }) => {
+            (Self::ForgettenSubtree { value }, Self::Branch { children, .. }) => {
                 // Recurse into the appropriate sub-tree to remember the rest of the path.
                 let mut children = children.clone();
                 children[traversal_path[height - 1]].remember_internal::<H, Arity>(
@@ -451,9 +451,9 @@ where
                     path_values,
                     proof,
                 )?;
-                // Compute new value and remember `*self`.
+                // Remember `*self`.
                 *self = Self::Branch {
-                    value: digest_branch::<E, H, I, T>(&children),
+                    value: *value,
                     children,
                 };
                 Ok(())
