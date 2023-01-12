@@ -117,15 +117,10 @@ where
 /// let proof = mt.universal_lookup(&BigUint::from(3u64)).expect_not_found().unwrap();
 ///
 /// // Circuit computation with a MT
-/// let non_leaf_var =
-///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_leaf_variable(
-///         &mut circuit,
-///         BigUint::from(3u64),
-///         Fq::from(100_u64)
-///     )
-///     .unwrap();
+/// let non_leaf_idx_var = circuit.create_variable(BigUint::from(3u64).into()).unwrap();
+///
 /// let proof_var =
-///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_membership_proof_variable(
+///     UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::create_non_membership_proof_variable(
 ///         &mut circuit,
 ///         &proof
 ///     )
@@ -138,7 +133,7 @@ where
 ///     .unwrap();
 /// UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::enforce_non_membership_proof(
 ///     &mut circuit,
-///     non_leaf_var,
+///     non_leaf_idx_var,
 ///     proof_var,
 ///     root_var
 /// )
