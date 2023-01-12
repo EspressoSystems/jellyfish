@@ -27,17 +27,9 @@ use num_bigint::BigUint;
 use typenum::U3;
 
 use super::{
-    LeafVar, Merkle3AryNodeRepr, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar,
-    MerklePathRepr, MerkleTreeGadget, MerkleTreeHelperGadget, UniversalMerkleTreeGadget,
+    LeafVar, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar, MerkleTreeGadget,
+    MerkleTreeHelperGadget, UniversalMerkleTreeGadget,
 };
-
-impl<F: RescueParameter> MerklePathRepr<SparseMerkleTree<F>> {
-    fn new(nodes: &[Merkle3AryNodeRepr<SparseMerkleTree<F>>]) -> Self {
-        MerklePathRepr {
-            nodes: nodes.to_vec(),
-        }
-    }
-}
 
 impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
 where
@@ -91,13 +83,9 @@ where
         &mut self,
         merkle_proof: &MembershipProof<F>,
     ) -> Result<Self::MembershipProofVar, CircuitError> {
-        // Encode Merkle path nodes positions with boolean variables
-        let merkle_path = MerklePathRepr::from(merkle_proof);
-
         MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_membership_proof(
             self,
-            &merkle_path,
-            merkle_proof.pos.clone(),
+            merkle_proof,
         )
     }
 
@@ -130,31 +118,6 @@ where
             expected_root_var,
         )?;
         self.enforce_true(bool_val.into())
-    }
-}
-
-impl<F: RescueParameter> From<&MembershipProof<F>> for MerklePathRepr<SparseMerkleTree<F>> {
-    fn from(proof: &MembershipProof<F>) -> Self {
-        let path = <BigUint as ToTraversalPath<U3>>::to_traversal_path(
-            &proof.pos,
-            proof.tree_height() - 1,
-        );
-
-        let nodes: Vec<Merkle3AryNodeRepr<SparseMerkleTree<F>>> = path
-            .iter()
-            .zip(proof.proof.iter().skip(1))
-            .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => Some(Merkle3AryNodeRepr::new(
-                    children[0].value(),
-                    children[1].value(),
-                    branch == &0,
-                    branch == &2,
-                )),
-                _ => None,
-            })
-            .collect();
-
-        Self::new(&nodes)
     }
 }
 
@@ -196,8 +159,6 @@ impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
 }
 
 impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCircuit<F> {
-    type MerklePathEncoding = MerklePathRepr<SparseMerkleTree<F>>;
-
     type MembershipProofVar = Merkle3AryNonMembershipProofVar;
 
     fn constrain_sibling_order(
@@ -221,19 +182,26 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
 
     fn constrain_membership_proof(
         &mut self,
-        merkle_path: &MerklePathRepr<SparseMerkleTree<F>>,
-        pos: Index<F>,
+        merkle_proof: &MembershipProof<F>,
     ) -> Result<Self::MembershipProofVar, CircuitError> {
-        // Setup node variables
-        let nodes = merkle_path
-            .nodes
+        let path = <BigUint as ToTraversalPath<U3>>::to_traversal_path(
+            &merkle_proof.pos,
+            merkle_proof.tree_height() - 1,
+        );
+
+        let nodes = path
             .iter()
-            .map(|node| -> Result<Merkle3AryNodeVar, CircuitError> {
+            .zip(merkle_proof.proof.iter().skip(1))
+            .filter_map(|(branch, node)| match node {
+                MerkleNode::Branch { value: _, children } => Some((children, branch)),
+                _ => None,
+            })
+            .map(|(children, branch)| {
                 Ok(Merkle3AryNodeVar {
-                    sibling1: self.create_variable(node.sibling1)?,
-                    sibling2: self.create_variable(node.sibling2)?,
-                    is_left_child: self.create_boolean_variable(node.is_left_child)?,
-                    is_right_child: self.create_boolean_variable(node.is_right_child)?,
+                    sibling1: self.create_variable(children[0].value())?,
+                    sibling2: self.create_variable(children[1].value())?,
+                    is_left_child: self.create_boolean_variable(branch == &0)?,
+                    is_right_child: self.create_boolean_variable(branch == &2)?,
                 })
             })
             .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
@@ -248,7 +216,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
             self.enforce_bool(left_plus_right)?;
         }
 
-        let pos = self.create_variable(pos.into())?;
+        let pos = self.create_variable(merkle_proof.pos.clone().into())?;
 
         Ok(Self::MembershipProofVar { nodes, pos })
     }
@@ -289,15 +257,12 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            sparse_merkle_tree::{
-                LeafVar, Merkle3AryNodeRepr, MerklePathRepr, MerkleTreeHelperGadget,
-            },
+            sparse_merkle_tree::{LeafVar, MerkleTreeHelperGadget},
             MerkleTreeGadget, UniversalMerkleTreeGadget,
         },
         merkle_tree::{
-            internal::MerkleNode,
-            prelude::{RescueHash, RescueSparseMerkleTree},
-            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme, UniversalMerkleTreeScheme,
+            internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleCommitment,
+            MerkleTreeScheme, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -306,55 +271,12 @@ mod test {
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_ff::{UniformRand, Zero};
-    use ark_std::{boxed::Box, test_rng, vec, vec::Vec};
+    use ark_std::{boxed::Box, vec, vec::Vec};
     use hashbrown::HashMap;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
     use num_bigint::BigUint;
 
     type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;
-
-    #[test]
-    fn test_constrain_merkle_path() {
-        test_constrain_merkle_path_helper::<FqEd254>();
-        test_constrain_merkle_path_helper::<FqEd377>();
-        test_constrain_merkle_path_helper::<FqEd381>();
-        test_constrain_merkle_path_helper::<FqEd381b>();
-        test_constrain_merkle_path_helper::<Fq377>();
-    }
-    fn test_constrain_merkle_path_helper<F: RescueParameter>() {
-        fn check_merkle_path<F: RescueParameter>(
-            is_left_child: bool,
-            is_right_child: bool,
-            accept: bool,
-        ) {
-            let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-            let zero = F::zero();
-            let one = F::one();
-            let node = Merkle3AryNodeRepr::new(one, zero, is_left_child, is_right_child);
-            let path = MerklePathRepr::new(&[node]);
-            let _ = MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_membership_proof(
-                &mut circuit,
-                &path,
-                BigUint::zero(),
-            );
-            if accept {
-                assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            } else {
-                assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-            }
-        }
-        // Happy path:
-        // `is_left_child`,`is_right_child` and `is_left_child + is_right_child` are
-        // boolean
-        check_merkle_path::<F>(true, false, true);
-        check_merkle_path::<F>(false, true, true);
-        check_merkle_path::<F>(false, false, true);
-
-        // Circuit cannot be satisfied when `is_left_child + is_right_child` is not
-        // boolean
-        check_merkle_path::<F>(true, true, false);
-    }
 
     #[test]
     fn test_permute() {
@@ -447,36 +369,6 @@ mod test {
             &[node, sib1, sib2],
             &[sib1, node, sib2],
         );
-    }
-
-    #[test]
-    fn test_bool_encoding_from_merkle_proof() {
-        let rng = &mut test_rng();
-        let elements = vec![FqEd254::rand(rng); 3];
-        let mt = SparseMerkleTree::<FqEd254>::from_elems(1, elements.clone()).unwrap();
-
-        let tests = vec![
-            (BigUint::from(0u64), true, false),
-            (BigUint::from(1u64), false, false),
-            (BigUint::from(2u64), false, true),
-        ];
-
-        for (i, left, right) in tests {
-            let (_elem, proof) = mt.lookup(i).expect_ok().unwrap();
-            assert_eq!(proof.tree_height(), 2);
-
-            let expected_bool_node = Merkle3AryNodeRepr::<SparseMerkleTree<FqEd254>> {
-                sibling1: RescueHash::digest_leaf(&0, &elements[0].clone()),
-                sibling2: RescueHash::digest_leaf(&1, &elements[1].clone()),
-                is_left_child: left,
-                is_right_child: right,
-            };
-
-            let expected_bool_path = MerklePathRepr::new(&[expected_bool_node]);
-            let bool_path = MerklePathRepr::from(&proof);
-
-            assert_eq!(bool_path, expected_bool_path);
-        }
     }
 
     #[test]

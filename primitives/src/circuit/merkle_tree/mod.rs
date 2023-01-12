@@ -192,7 +192,6 @@ pub(crate) trait MerkleTreeHelperGadget<M>
 where
     M: MerkleTreeScheme,
 {
-    type MerklePathEncoding;
     type MembershipProofVar;
     /// Produces a list of circuit variables representing the ordered nodes,
     /// based on the location of a `node` among its siblings, and otherwise
@@ -220,8 +219,7 @@ where
     /// * `returns` - list of variables corresponding to the authentication path
     fn constrain_membership_proof(
         &mut self,
-        merkle_path: &Self::MerklePathEncoding,
-        pos: M::Index,
+        merkle_path: &M::MembershipProof,
     ) -> Result<Self::MembershipProofVar, CircuitError>;
 
     /// Computes the merkle root based on some element placed at a leaf and a
@@ -258,43 +256,6 @@ pub struct LeafVar {
     pub uid: Variable,
     /// The value of the leaf element.
     pub elem: Variable,
-}
-
-/// Intermediate representation for a node in the Merkle path, used for
-/// constructing `Merkle3AryNodeVar`. For constraining the membership proof to
-/// be correct, we need to encode each node in the merkle path s.t. it contains
-/// the following information:
-/// * the two siblings of the node,
-/// * whether the node is a left child, right child, or in the middle.
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub(crate) struct Merkle3AryNodeRepr<M: MerkleTreeScheme> {
-    sibling1: M::NodeValue,
-    sibling2: M::NodeValue,
-    is_left_child: bool,
-    is_right_child: bool,
-}
-
-impl<M: MerkleTreeScheme> Merkle3AryNodeRepr<M> {
-    fn new(
-        sibling1: M::NodeValue,
-        sibling2: M::NodeValue,
-        is_left_child: bool,
-        is_right_child: bool,
-    ) -> Self {
-        Merkle3AryNodeRepr {
-            sibling1,
-            sibling2,
-            is_left_child,
-            is_right_child,
-        }
-    }
-}
-
-/// Intermediate encoding for Merkle path, used for constructing
-/// `Merkle3AryMembershipProofVar`. Constains a list of nodes in its path.
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub(crate) struct MerklePathRepr<M: MerkleTreeScheme> {
-    pub(crate) nodes: Vec<Merkle3AryNodeRepr<M>>,
 }
 
 /// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.

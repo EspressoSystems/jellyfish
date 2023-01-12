@@ -24,17 +24,9 @@ type Index<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::Index;
 use typenum::U3;
 
 use super::{
-    LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeRepr, Merkle3AryNodeVar, MerklePathRepr,
-    MerkleTreeGadget, MerkleTreeHelperGadget,
+    LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeVar, MerkleTreeGadget,
+    MerkleTreeHelperGadget,
 };
-
-impl<F: RescueParameter> MerklePathRepr<RescueMerkleTree<F>> {
-    fn new(nodes: &[Merkle3AryNodeRepr<RescueMerkleTree<F>>]) -> Self {
-        MerklePathRepr {
-            nodes: nodes.to_vec(),
-        }
-    }
-}
 
 impl<F> MerkleTreeGadget<RescueMerkleTree<F>> for PlonkCircuit<F>
 where
@@ -59,13 +51,9 @@ where
         &mut self,
         merkle_proof: &MembershipProof<F>,
     ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
-        // Encode Merkle path nodes positions with boolean variables
-        let merkle_path = MerklePathRepr::from(merkle_proof);
-
         MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_membership_proof(
             self,
-            &merkle_path,
-            merkle_proof.pos,
+            merkle_proof,
         )
     }
 
@@ -101,32 +89,7 @@ where
     }
 }
 
-impl<F: RescueParameter> From<&MembershipProof<F>> for MerklePathRepr<RescueMerkleTree<F>> {
-    fn from(proof: &MembershipProof<F>) -> Self {
-        let path =
-            <u64 as ToTraversalPath<U3>>::to_traversal_path(&proof.pos, proof.tree_height() - 1);
-
-        let nodes: Vec<Merkle3AryNodeRepr<RescueMerkleTree<F>>> = path
-            .iter()
-            .zip(proof.proof.iter().skip(1))
-            .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => Some(Merkle3AryNodeRepr::new(
-                    children[0].value(),
-                    children[1].value(),
-                    branch == &0,
-                    branch == &2,
-                )),
-                _ => None,
-            })
-            .collect();
-
-        Self::new(&nodes)
-    }
-}
-
 impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCircuit<F> {
-    type MerklePathEncoding = MerklePathRepr<RescueMerkleTree<F>>;
-
     type MembershipProofVar = Merkle3AryMembershipProofVar;
 
     fn constrain_sibling_order(
@@ -150,20 +113,26 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
 
     fn constrain_membership_proof(
         &mut self,
-        merkle_path: &MerklePathRepr<RescueMerkleTree<F>>,
-        _pos: u64,
+        merkle_proof: &MembershipProof<F>,
     ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
-        // Setup node variables
-        let nodes = merkle_path
-            .nodes
-            .clone()
-            .into_iter()
-            .map(|node| -> Result<Merkle3AryNodeVar, CircuitError> {
+        let path = <u64 as ToTraversalPath<U3>>::to_traversal_path(
+            &merkle_proof.pos,
+            merkle_proof.tree_height() - 1,
+        );
+
+        let nodes = path
+            .iter()
+            .zip(merkle_proof.proof.iter().skip(1))
+            .filter_map(|(branch, node)| match node {
+                MerkleNode::Branch { value: _, children } => Some((children, branch)),
+                _ => None,
+            })
+            .map(|(children, branch)| {
                 Ok(Merkle3AryNodeVar {
-                    sibling1: self.create_variable(node.sibling1)?,
-                    sibling2: self.create_variable(node.sibling2)?,
-                    is_left_child: self.create_boolean_variable(node.is_left_child)?,
-                    is_right_child: self.create_boolean_variable(node.is_right_child)?,
+                    sibling1: self.create_variable(children[0].value())?,
+                    sibling2: self.create_variable(children[1].value())?,
+                    is_left_child: self.create_boolean_variable(branch == &0)?,
+                    is_right_child: self.create_boolean_variable(branch == &2)?,
                 })
             })
             .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
@@ -217,16 +186,11 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            rescue_merkle_tree::{
-                LeafVar, Merkle3AryMembershipProofVar, Merkle3AryNodeRepr, MerklePathRepr,
-                MerkleTreeHelperGadget,
-            },
+            rescue_merkle_tree::{LeafVar, Merkle3AryMembershipProofVar, MerkleTreeHelperGadget},
             MerkleTreeGadget,
         },
         merkle_tree::{
-            internal::MerkleNode,
-            prelude::{RescueHash, RescueMerkleTree},
-            DigestAlgorithm, MerkleCommitment, MerkleTreeScheme,
+            internal::MerkleNode, prelude::RescueMerkleTree, MerkleCommitment, MerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -235,51 +199,8 @@ mod test {
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_ff::UniformRand;
-    use ark_std::{boxed::Box, test_rng, vec, vec::Vec};
+    use ark_std::{boxed::Box, vec, vec::Vec};
     use jf_relation::{Circuit, PlonkCircuit, Variable};
-
-    #[test]
-    fn test_constrain_merkle_path() {
-        test_constrain_merkle_path_helper::<FqEd254>();
-        test_constrain_merkle_path_helper::<FqEd377>();
-        test_constrain_merkle_path_helper::<FqEd381>();
-        test_constrain_merkle_path_helper::<FqEd381b>();
-        test_constrain_merkle_path_helper::<Fq377>();
-    }
-    fn test_constrain_merkle_path_helper<F: RescueParameter>() {
-        fn check_merkle_path<F: RescueParameter>(
-            is_left_child: bool,
-            is_right_child: bool,
-            accept: bool,
-        ) {
-            let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-            let zero = F::zero();
-            let one = F::one();
-            let node = Merkle3AryNodeRepr::new(one, zero, is_left_child, is_right_child);
-            let path = MerklePathRepr::new(&[node]);
-            let _ = MerkleTreeHelperGadget::<RescueMerkleTree<F>>::constrain_membership_proof(
-                &mut circuit,
-                &path,
-                0,
-            );
-            if accept {
-                assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            } else {
-                assert!(circuit.check_circuit_satisfiability(&[]).is_err());
-            }
-        }
-        // Happy path:
-        // `is_left_child`,`is_right_child` and `is_left_child + is_right_child` are
-        // boolean
-        check_merkle_path::<F>(true, false, true);
-        check_merkle_path::<F>(false, true, true);
-        check_merkle_path::<F>(false, false, true);
-
-        // Circuit cannot be satisfied when `is_left_child + is_right_child` is not
-        // boolean
-        check_merkle_path::<F>(true, true, false);
-    }
 
     #[test]
     fn test_permute() {
@@ -372,36 +293,6 @@ mod test {
             &[node, sib1, sib2],
             &[sib1, node, sib2],
         );
-    }
-
-    #[test]
-    fn test_bool_encoding_from_merkle_proof() {
-        let rng = &mut test_rng();
-        let elements = vec![FqEd254::rand(rng); 3];
-        let mt = RescueMerkleTree::<FqEd254>::from_elems(1, elements.clone()).unwrap();
-
-        let tests = vec![
-            (0u64, true, false),
-            (1u64, false, false),
-            (2u64, false, true),
-        ];
-
-        for (i, left, right) in tests {
-            let (_elem, proof) = mt.lookup(i).expect_ok().unwrap();
-            assert_eq!(proof.tree_height(), 2);
-
-            let expected_bool_node = Merkle3AryNodeRepr::<RescueMerkleTree<FqEd254>> {
-                sibling1: RescueHash::digest_leaf(&0, &elements[0].clone()),
-                sibling2: RescueHash::digest_leaf(&1, &elements[1].clone()),
-                is_left_child: left,
-                is_right_child: right,
-            };
-
-            let expected_bool_path = MerklePathRepr::new(&[expected_bool_node]);
-            let bool_path = MerklePathRepr::from(&proof);
-
-            assert_eq!(bool_path, expected_bool_path);
-        }
     }
 
     #[test]
