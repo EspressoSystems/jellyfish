@@ -73,10 +73,21 @@ where
     }
 }
 
+type MerklePath<E, I, T> = Vec<MerkleNode<E, I, T>>;
+
 /// A merkle commitment consists a root hash value, a tree height and number of
 /// leaves
 #[derive(
-    Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash, CanonicalSerialize, CanonicalDeserialize,
+    Eq,
+    PartialEq,
+    Clone,
+    Copy,
+    Debug,
+    Ord,
+    PartialOrd,
+    Hash,
+    CanonicalSerialize,
+    CanonicalDeserialize,
 )]
 #[tagged("MERKLE_COMM")]
 pub struct MerkleTreeCommitment<T: NodeValue> {
@@ -126,7 +137,7 @@ where
     #[serde(with = "canonical")]
     pub pos: I,
     /// Nodes of proof path, from root to leaf
-    pub proof: Vec<MerkleNode<E, I, T>>,
+    pub proof: MerklePath<E, I, T>,
 
     /// Place holder for Arity
     _phantom_arity: PhantomData<Arity>,
@@ -143,7 +154,7 @@ where
         self.proof.len()
     }
 
-    pub fn new(pos: I, proof: Vec<MerkleNode<E, I, T>>) -> Self {
+    pub fn new(pos: I, proof: MerklePath<E, I, T>) -> Self {
         MerkleProof {
             pos,
             proof,
@@ -341,11 +352,13 @@ where
         &mut self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, ()> {
+    ) -> LookupResult<E, MerklePath<E, I, T>, MerklePath<E, I, T>> {
         match self {
-            MerkleNode::Empty => LookupResult::NotFound(()),
+            MerkleNode::Empty => LookupResult::NotFound(vec![MerkleNode::Empty; height + 1]),
             MerkleNode::Branch { value, children } => {
-                match children[traversal_path[height - 1]].forget_internal(height, traversal_path) {
+                match children[traversal_path[height - 1]]
+                    .forget_internal(height - 1, traversal_path)
+                {
                     LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
                             value: T::default(),
@@ -373,7 +386,24 @@ where
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
-                    LookupResult::NotFound(_) => LookupResult::NotFound(()),
+                    LookupResult::NotFound(mut non_membership_proof) => {
+                        non_membership_proof.push(MerkleNode::Branch {
+                            value: T::default(),
+                            children: children
+                                .iter()
+                                .map(|child| {
+                                    if let MerkleNode::Empty = **child {
+                                        Box::new(MerkleNode::Empty)
+                                    } else {
+                                        Box::new(MerkleNode::ForgettenSubtree {
+                                            value: child.value(),
+                                        })
+                                    }
+                                })
+                                .collect_vec(),
+                        });
+                        LookupResult::NotFound(non_membership_proof)
+                    },
                 }
             },
             MerkleNode::Leaf { value, pos, elem } => {
@@ -410,67 +440,39 @@ where
                 path_values[height]
             )));
         }
-        if height == 0 && matches!(self, MerkleNode::ForgettenSubtree { value: _ }) {
-            *self = proof[height].clone();
-            Ok(())
-        } else if let MerkleNode::Branch {
-            value: _,
-            children: proof_children,
-        } = &proof[height]
-        {
-            match &mut *self {
-                MerkleNode::Branch { value: _, children } => {
-                    let branch = traversal_path[height - 1];
-                    if !children.iter().zip(proof_children.iter()).enumerate().all(
-                        |(index, (child, proof_child))| {
-                            index == branch
-                                || (matches!(**child, MerkleNode::Empty)
-                                    && matches!(**proof_child, MerkleNode::Empty))
-                                || child.value() == proof_child.value()
-                        },
-                    ) {
-                        Err(PrimitivesError::ParameterError(format!(
-                            "Invalid proof. Sibling differs at height {}",
-                            height
-                        )))
-                    } else {
-                        children[branch].remember_internal::<H, Arity>(
-                            height - 1,
-                            traversal_path,
-                            path_values,
-                            proof,
-                        )
-                    }
-                },
-                MerkleNode::ForgettenSubtree { value: _ } => {
-                    *self = MerkleNode::Branch {
-                        value: path_values[height],
-                        children: {
-                            let mut children = proof_children.clone();
-                            children[traversal_path[height - 1]].remember_internal::<H, Arity>(
-                                height - 1,
-                                traversal_path,
-                                path_values,
-                                proof,
-                            )?;
-                            children
-                        },
-                    };
-                    Ok(())
-                },
-                MerkleNode::Empty => Err(PrimitivesError::ParameterError(
-                    "Invalid proof. Given location is supposed to be empty.".to_string(),
-                )),
-                MerkleNode::Leaf {
-                    value: _,
-                    pos: _,
-                    elem: _,
-                } => Err(PrimitivesError::ParameterError(
-                    "Given position is already occupied".to_string(),
-                )),
-            }
-        } else {
-            Err(PrimitivesError::ParameterError("Invalid proof".to_string()))
+
+        match (&mut *self, &proof[height]) {
+            (Self::ForgettenSubtree { .. }, Self::Branch { children, .. }) => {
+                // Recurse into the appropriate sub-tree to remember the rest of the path.
+                let mut children = children.clone();
+                children[traversal_path[height - 1]].remember_internal::<H, Arity>(
+                    height - 1,
+                    traversal_path,
+                    path_values,
+                    proof,
+                )?;
+                // Compute new value and remember `*self`.
+                *self = Self::Branch {
+                    value: digest_branch::<E, H, I, T>(&children),
+                    children,
+                };
+                Ok(())
+            },
+            (Self::ForgettenSubtree { .. }, node) => {
+                // Replace forgotten sub-tree with a hopefully-less-forgotten sub-tree from the
+                // proof. Safe because we already checked our hash value matches the proof.
+                *self = node.clone();
+                Ok(())
+            },
+            (Self::Branch { children, .. }, Self::Branch { .. }) => children
+                [traversal_path[height - 1]]
+                .remember_internal::<H, Arity>(height - 1, traversal_path, path_values, proof),
+            (Self::Leaf { .. }, Self::Leaf { .. }) | (Self::Empty, Self::Empty) => {
+                // This node is already a complete sub-tree, so there's nothing to remember. The
+                // proof matches, so just return success.
+                Ok(())
+            },
+            (..) => Err(PrimitivesError::ParameterError("Invalid proof".into())),
         }
     }
 
@@ -482,7 +484,7 @@ where
         &self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, Vec<MerkleNode<E, I, T>>, Vec<MerkleNode<E, I, T>>> {
+    ) -> LookupResult<E, MerklePath<E, I, T>, MerklePath<E, I, T>> {
         match self {
             MerkleNode::Empty => {
                 LookupResult::NotFound(vec![MerkleNode::<E, I, T>::Empty; height + 1])
