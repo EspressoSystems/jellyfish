@@ -281,7 +281,7 @@ mod mt_tests {
     }
 
     fn test_universal_mt_forget_remember_helper<F: RescueParameter>() {
-        let mut mt = RescueSparseMerkleTree::<BigUint, F, F>::from_kv_set(
+        let mut mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(
             10,
             [
                 (BigUint::from(0u64), F::from(1u64)),
