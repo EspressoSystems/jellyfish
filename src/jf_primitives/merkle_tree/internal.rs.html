@@ -899,6 +899,8 @@
 <span id="899">899</span>
 <span id="900">900</span>
 <span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -974,10 +976,21 @@
     }
 }
 
+<span class="kw">type </span>MerklePath&lt;E, I, T&gt; = Vec&lt;MerkleNode&lt;E, I, T&gt;&gt;;
+
 <span class="doccomment">/// A merkle commitment consists a root hash value, a tree height and number of
 /// leaves
 </span><span class="attribute">#[derive(
-    Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash, CanonicalSerialize, CanonicalDeserialize,
+    Eq,
+    PartialEq,
+    Clone,
+    Copy,
+    Debug,
+    Ord,
+    PartialOrd,
+    Hash,
+    CanonicalSerialize,
+    CanonicalDeserialize,
 )]
 #[tagged(<span class="string">&quot;MERKLE_COMM&quot;</span>)]
 </span><span class="kw">pub struct </span>MerkleTreeCommitment&lt;T: NodeValue&gt; {
@@ -1027,7 +1040,7 @@
     </span><span class="attribute">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
     </span><span class="kw">pub </span>pos: I,
     <span class="doccomment">/// Nodes of proof path, from root to leaf
-    </span><span class="kw">pub </span>proof: Vec&lt;MerkleNode&lt;E, I, T&gt;&gt;,
+    </span><span class="kw">pub </span>proof: MerklePath&lt;E, I, T&gt;,
 
     <span class="doccomment">/// Place holder for Arity
     </span>_phantom_arity: PhantomData&lt;Arity&gt;,
@@ -1044,7 +1057,7 @@
         <span class="self">self</span>.proof.len()
     }
 
-    <span class="kw">pub fn </span>new(pos: I, proof: Vec&lt;MerkleNode&lt;E, I, T&gt;&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(pos: I, proof: MerklePath&lt;E, I, T&gt;) -&gt; <span class="self">Self </span>{
         MerkleProof {
             pos,
             proof,
@@ -1146,9 +1159,9 @@
 {
     <span class="kw">let </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = elems.into_iter().collect();
     <span class="kw">let </span>num_leaves = leaves.len() <span class="kw">as </span>u64;
-    <span class="kw">let </span>capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or(
-        PrimitivesError::ParameterError(<span class="string">&quot;Merkle tree size too large.&quot;</span>.to_string()),
-    )<span class="question-mark">?</span>;
+    <span class="kw">let </span>capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or_else(|| {
+        PrimitivesError::ParameterError(<span class="string">&quot;Merkle tree size too large.&quot;</span>.to_string())
+    })<span class="question-mark">?</span>;
 
     <span class="kw">if </span>num_leaves &gt; capacity {
         <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
@@ -1242,11 +1255,13 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         height: usize,
         traversal_path: <span class="kw-2">&amp;</span>[usize],
-    ) -&gt; LookupResult&lt;E, Vec&lt;MerkleNode&lt;E, I, T&gt;&gt;, ()&gt; {
+    ) -&gt; LookupResult&lt;E, MerklePath&lt;E, I, T&gt;, MerklePath&lt;E, I, T&gt;&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            MerkleNode::Empty =&gt; LookupResult::NotFound(()),
+            MerkleNode::Empty =&gt; LookupResult::NotFound(<span class="macro">vec!</span>[MerkleNode::Empty; height + <span class="number">1</span>]),
             MerkleNode::Branch { value, children } =&gt; {
-                <span class="kw">match </span>children[traversal_path[height - <span class="number">1</span>]].forget_internal(height, traversal_path) {
+                <span class="kw">match </span>children[traversal_path[height - <span class="number">1</span>]]
+                    .forget_internal(height - <span class="number">1</span>, traversal_path)
+                {
                     LookupResult::Ok(elem, <span class="kw-2">mut </span>proof) =&gt; {
                         proof.push(MerkleNode::Branch {
                             value: T::default(),
@@ -1274,7 +1289,24 @@
                         LookupResult::Ok(elem, proof)
                     },
                     LookupResult::NotInMemory =&gt; LookupResult::NotInMemory,
-                    LookupResult::NotFound(<span class="kw">_</span>) =&gt; LookupResult::NotFound(()),
+                    LookupResult::NotFound(<span class="kw-2">mut </span>non_membership_proof) =&gt; {
+                        non_membership_proof.push(MerkleNode::Branch {
+                            value: T::default(),
+                            children: children
+                                .iter()
+                                .map(|child| {
+                                    <span class="kw">if let </span>MerkleNode::Empty = <span class="kw-2">**</span>child {
+                                        Box::new(MerkleNode::Empty)
+                                    } <span class="kw">else </span>{
+                                        Box::new(MerkleNode::ForgettenSubtree {
+                                            value: child.value(),
+                                        })
+                                    }
+                                })
+                                .collect_vec(),
+                        });
+                        LookupResult::NotFound(non_membership_proof)
+                    },
                 }
             },
             MerkleNode::Leaf { value, pos, elem } =&gt; {
@@ -1311,67 +1343,39 @@
                 path_values[height]
             )));
         }
-        <span class="kw">if </span>height == <span class="number">0 </span>&amp;&amp; <span class="macro">matches!</span>(<span class="self">self</span>, MerkleNode::ForgettenSubtree { value: <span class="kw">_ </span>}) {
-            <span class="kw-2">*</span><span class="self">self </span>= proof[height].clone();
-            <span class="prelude-val">Ok</span>(())
-        } <span class="kw">else if let </span>MerkleNode::Branch {
-            value: <span class="kw">_</span>,
-            children: proof_children,
-        } = <span class="kw-2">&amp;</span>proof[height]
-        {
-            <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="self">self </span>{
-                MerkleNode::Branch { value: <span class="kw">_</span>, children } =&gt; {
-                    <span class="kw">let </span>branch = traversal_path[height - <span class="number">1</span>];
-                    <span class="kw">if </span>!children.iter().zip(proof_children.iter()).enumerate().all(
-                        |(index, (child, proof_child))| {
-                            index == branch
-                                || (<span class="macro">matches!</span>(<span class="kw-2">**</span>child, MerkleNode::Empty)
-                                    &amp;&amp; <span class="macro">matches!</span>(<span class="kw-2">**</span>proof_child, MerkleNode::Empty))
-                                || child.value() == proof_child.value()
-                        },
-                    ) {
-                        <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
-                            <span class="string">&quot;Invalid proof. Sibling differs at height {}&quot;</span>,
-                            height
-                        )))
-                    } <span class="kw">else </span>{
-                        children[branch].remember_internal::&lt;H, Arity&gt;(
-                            height - <span class="number">1</span>,
-                            traversal_path,
-                            path_values,
-                            proof,
-                        )
-                    }
-                },
-                MerkleNode::ForgettenSubtree { value: <span class="kw">_ </span>} =&gt; {
-                    <span class="kw-2">*</span><span class="self">self </span>= MerkleNode::Branch {
-                        value: path_values[height],
-                        children: {
-                            <span class="kw">let </span><span class="kw-2">mut </span>children = proof_children.clone();
-                            children[traversal_path[height - <span class="number">1</span>]].remember_internal::&lt;H, Arity&gt;(
-                                height - <span class="number">1</span>,
-                                traversal_path,
-                                path_values,
-                                proof,
-                            )<span class="question-mark">?</span>;
-                            children
-                        },
-                    };
-                    <span class="prelude-val">Ok</span>(())
-                },
-                MerkleNode::Empty =&gt; <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                    <span class="string">&quot;Invalid proof. Given location is supposed to be empty.&quot;</span>.to_string(),
-                )),
-                MerkleNode::Leaf {
-                    value: <span class="kw">_</span>,
-                    pos: <span class="kw">_</span>,
-                    elem: <span class="kw">_</span>,
-                } =&gt; <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                    <span class="string">&quot;Given position is already occupied&quot;</span>.to_string(),
-                )),
-            }
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="string">&quot;Invalid proof&quot;</span>.to_string()))
+
+        <span class="kw">match </span>(<span class="kw-2">&amp;mut *</span><span class="self">self</span>, <span class="kw-2">&amp;</span>proof[height]) {
+            (<span class="self">Self</span>::ForgettenSubtree { value }, <span class="self">Self</span>::Branch { children, .. }) =&gt; {
+                <span class="comment">// Recurse into the appropriate sub-tree to remember the rest of the path.
+                </span><span class="kw">let </span><span class="kw-2">mut </span>children = children.clone();
+                children[traversal_path[height - <span class="number">1</span>]].remember_internal::&lt;H, Arity&gt;(
+                    height - <span class="number">1</span>,
+                    traversal_path,
+                    path_values,
+                    proof,
+                )<span class="question-mark">?</span>;
+                <span class="comment">// Remember `*self`.
+                </span><span class="kw-2">*</span><span class="self">self </span>= <span class="self">Self</span>::Branch {
+                    value: <span class="kw-2">*</span>value,
+                    children,
+                };
+                <span class="prelude-val">Ok</span>(())
+            },
+            (<span class="self">Self</span>::ForgettenSubtree { .. }, node) =&gt; {
+                <span class="comment">// Replace forgotten sub-tree with a hopefully-less-forgotten sub-tree from the
+                // proof. Safe because we already checked our hash value matches the proof.
+                </span><span class="kw-2">*</span><span class="self">self </span>= node.clone();
+                <span class="prelude-val">Ok</span>(())
+            },
+            (<span class="self">Self</span>::Branch { children, .. }, <span class="self">Self</span>::Branch { .. }) =&gt; children
+                [traversal_path[height - <span class="number">1</span>]]
+                .remember_internal::&lt;H, Arity&gt;(height - <span class="number">1</span>, traversal_path, path_values, proof),
+            (<span class="self">Self</span>::Leaf { .. }, <span class="self">Self</span>::Leaf { .. }) | (<span class="self">Self</span>::Empty, <span class="self">Self</span>::Empty) =&gt; {
+                <span class="comment">// This node is already a complete sub-tree, so there&#39;s nothing to remember. The
+                // proof matches, so just return success.
+                </span><span class="prelude-val">Ok</span>(())
+            },
+            (..) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="string">&quot;Invalid proof&quot;</span>.into())),
         }
     }
 
@@ -1383,7 +1387,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         height: usize,
         traversal_path: <span class="kw-2">&amp;</span>[usize],
-    ) -&gt; LookupResult&lt;E, Vec&lt;MerkleNode&lt;E, I, T&gt;&gt;, Vec&lt;MerkleNode&lt;E, I, T&gt;&gt;&gt; {
+    ) -&gt; LookupResult&lt;E, MerklePath&lt;E, I, T&gt;, MerklePath&lt;E, I, T&gt;&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             MerkleNode::Empty =&gt; {
                 LookupResult::NotFound(<span class="macro">vec!</span>[MerkleNode::&lt;E, I, T&gt;::Empty; height + <span class="number">1</span>])
@@ -1801,4 +1805,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>
