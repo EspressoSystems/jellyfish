@@ -6,7 +6,7 @@
 
 //! Trait definitions for a Merkle tree gadget.
 
-use crate::merkle_tree::MerkleTreeScheme;
+use crate::merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme};
 use jf_relation::{errors::CircuitError, BoolVar, Variable};
 
 mod rescue_merkle_tree;
@@ -145,7 +145,7 @@ where
 /// ```
 pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
-    M: MerkleTreeScheme,
+    M: UniversalMerkleTreeScheme,
 {
     /// Type to represent the merkle non-membership proof of the concrete MT
     /// instantiation. It is MT-specific, e.g arity will affect the exact
@@ -155,7 +155,7 @@ where
     /// Allocate a variable for the membership proof.
     fn create_non_membership_proof_variable(
         &mut self,
-        membership_proof: &M::MembershipProof,
+        membership_proof: &M::NonMembershipProof,
     ) -> Result<Self::NonMembershipProofVar, CircuitError>;
 
     /// checking non-membership proof
