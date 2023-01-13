@@ -1,4 +1,4 @@
-// Copyright Filecoin
+// Copyright Filecoin Project
 //
 // This file is adapted from the ec-gpu library, which is licensed under either of the following licenses:
 // - Apache License, Version 2.0, (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)

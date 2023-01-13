@@ -33,7 +33,7 @@ use crate::config::CIRCUIT_CONFIG;
 /// Our new implementation does not have this problem,
 /// although it is not generic and only supports BLS12-381.
 /// In addition, our `Gate` only takes 3 bytes of memory and is much smaller than
-/// the original one, which may take up to 4 Fr elements.
+/// the original one, which may take up to 5 Fr elements.
 #[derive(Clone)]
 pub enum GateType {
     Padding,

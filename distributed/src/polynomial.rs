@@ -92,7 +92,7 @@ impl VecPolynomial for Vec<Fr> {
         }
         // Trick: add the remainder to the quotient.
         // Although at this point u is not divisible by the vanishing polynomial,
-        // the final quotient polynomial t will be.
+        // the numerator of the final quotient polynomial t will be.
         // One can check this by running the following code:
         // ```
         // let rng = &mut thread_rng();

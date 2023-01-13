@@ -270,7 +270,7 @@ impl Plonk {
                     worker,
                     Method::ProveRound3GetZ,
                     n + 3,
-                    &SliceStorage::new(DATA_DIR.join("dispatcher/z_evals.bin")),
+                    &SliceStorage::new(DATA_DIR.join("dispatcher/z_poly.bin")),
                 )
                 .await
                 .unwrap();
@@ -345,7 +345,7 @@ impl Plonk {
                         peer,
                         Method::ProveRound3GetW3,
                         n + 2,
-                        &SliceStorage::new(DATA_DIR.join(format!("dispatcher/w3_evals_{i}.bin"))),
+                        &SliceStorage::new(DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin"))),
                     )
                     .await
                     .unwrap();
@@ -355,7 +355,7 @@ impl Plonk {
                 for i in 0..peers.len() {
                     timer!(format!("FFT on (w{0} + β * σ{0} + γ)", i), {
                         let storage = SliceStorage::new(
-                            DATA_DIR.join(format!("dispatcher/w3_evals_{i}.bin")),
+                            DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin")),
                         );
                         let mut w3 = storage.load().unwrap();
                         quot_domain.fft_io(&mut w3);
@@ -364,7 +364,7 @@ impl Plonk {
                 }
                 let mut u = timer!("FFT on -α * z'", {
                     let mut z =
-                        SliceStorage::new(DATA_DIR.join("dispatcher/z_evals.bin")).load().unwrap();
+                        SliceStorage::new(DATA_DIR.join("dispatcher/z_poly.bin")).load().unwrap();
                     Radix2EvaluationDomain::distribute_powers_and_mul_by_const(
                         &mut z,
                         domain.generator(),
@@ -373,7 +373,7 @@ impl Plonk {
                     quot_domain.fft_io(&mut z);
                     z
                 });
-                timer!("Compute evals of -α * z' * Π(wi + β * σi + γ) ", {
+                timer!("Compute evals of -α * z' * Π(wi + β * σi + γ)", {
                     u.par_iter_mut()
                         .zip_eq(w[0].par_iter())
                         .zip_eq(w[1].par_iter())
@@ -433,29 +433,6 @@ impl Plonk {
                 }
             }
         );
-
-        // join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 0 || *i == 2).map(
-        //     |(_, worker)| async move {
-        //         worker.write_u8(Method::ProveRound3ComputeAndExchangeW3 as u8).await.unwrap();
-        //         worker.flush().await.unwrap();
-
-        //         match worker.read_u8().await.unwrap().try_into().unwrap() {
-        //             Status::Ok => {}
-        //             _ => panic!(),
-        //         }
-        //     },
-        // ))
-        // .await;
-
-        // {
-        //     workers[4].write_u8(Method::ProveRound3ComputeAndExchangeTPart3 as u8).await?;
-        //     workers[4].flush().await?;
-
-        //     match unsafe { transmute(workers[4].read_u8().await?) } {
-        //         Status::Ok => {}
-        //         _ => panic!(),
-        //     }
-        // }
 
         let split_quot_poly_comms = join_all(workers.iter_mut().rev().map(|worker| async move {
             worker.write_u8(Method::ProveRound3Commit as u8).await.unwrap();

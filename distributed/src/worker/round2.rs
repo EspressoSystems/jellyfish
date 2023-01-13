@@ -33,13 +33,13 @@ impl PlonkImplInner {
 
         w_evals.pop();
 
-        let mut nominators = w_evals;
+        let mut numerators = w_evals;
 
-        nominators.par_iter_mut().zip_eq(denominators).for_each(|(n, d)| {
+        numerators.par_iter_mut().zip_eq(denominators).for_each(|(n, d)| {
             *n *= d;
         });
 
-        let mut z = nominators;
+        let mut z = numerators;
 
         let mut t = Fr::one();
         (0..(self.n - 1)).for_each(|i| {
