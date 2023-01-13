@@ -794,11 +794,10 @@
 /// same. This function does not need to take the evaluation value as an
 /// input.
 ///
-/// This function takes 2^{num_var +1} number of scalar multiplications over
+/// This function takes 2^{num_var} number of scalar multiplications over
 /// G1:
 /// - it proceeds with `num_var` number of rounds,
-/// - at round i, we compute an MSM for `2^{num_var - i + 1}` number of G2
-///   elements.
+/// - at round i, we compute an MSM for `2^{num_var - i}` number of G1 elements.
 </span><span class="kw">fn </span>open_internal&lt;E: PairingEngine&gt;(
     prover_param: <span class="kw-2">&amp;</span>MultilinearProverParam&lt;E&gt;,
     polynomial: <span class="kw-2">&amp;</span>DenseMultilinearExtension&lt;E::Fr&gt;,
@@ -822,48 +821,48 @@
     }
 
     <span class="kw">let </span>nv = polynomial.num_vars();
-    <span class="kw">let </span>ignored = prover_param.num_vars - nv;
-    <span class="kw">let </span><span class="kw-2">mut </span>r: Vec&lt;Vec&lt;E::Fr&gt;&gt; = (<span class="number">0</span>..nv + <span class="number">1</span>).map(|<span class="kw">_</span>| Vec::new()).collect();
-    <span class="kw">let </span><span class="kw-2">mut </span>q: Vec&lt;Vec&lt;E::Fr&gt;&gt; = (<span class="number">0</span>..nv + <span class="number">1</span>).map(|<span class="kw">_</span>| Vec::new()).collect();
+    <span class="comment">// the first `ignored` SRS vectors are unused
+    </span><span class="kw">let </span>ignored = prover_param.num_vars - nv + <span class="number">1</span>;
 
-    r[nv] = polynomial.to_evaluations();
+    <span class="kw">let </span><span class="kw-2">mut </span>f = polynomial.to_evaluations();
 
     <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::new();
 
     <span class="kw">for </span>(i, (<span class="kw-2">&amp;</span>point_at_k, gi)) <span class="kw">in </span>point
         .iter()
-        .zip(prover_param.powers_of_g[ignored..].iter())
-        .take(nv)
+        .zip(prover_param.powers_of_g[ignored..ignored + nv].iter())
         .enumerate()
     {
         <span class="kw">let </span>ith_round = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;{}-th round&quot;</span>, i));
 
-        <span class="kw">let </span>k = nv - i;
-        <span class="kw">let </span>cur_dim = <span class="number">1 </span>&lt;&lt; (k - <span class="number">1</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>cur_q = <span class="macro">vec!</span>[E::Fr::zero(); cur_dim];
-        <span class="kw">let </span><span class="kw-2">mut </span>cur_r = <span class="macro">vec!</span>[E::Fr::zero(); cur_dim];
+        <span class="kw">let </span>k = nv - <span class="number">1 </span>- i;
+        <span class="kw">let </span>cur_dim = <span class="number">1 </span>&lt;&lt; k;
+        <span class="kw">let </span><span class="kw-2">mut </span>q = <span class="macro">vec!</span>[E::Fr::zero(); cur_dim];
+        <span class="kw">let </span><span class="kw-2">mut </span>r = <span class="macro">vec!</span>[E::Fr::zero(); cur_dim];
 
-        <span class="kw">for </span>b <span class="kw">in </span><span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; (k - <span class="number">1</span>)) {
-            <span class="comment">// q_b = pre_r [2^b + 1] - pre_r [2^b]
-            </span>cur_q[b] = r[k][(b &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>] - r[k][b &lt;&lt; <span class="number">1</span>];
+        <span class="kw">let </span>ith_round_eval = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;{}-th round eval&quot;</span>, i));
+        <span class="kw">for </span>b <span class="kw">in </span><span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; k) {
+            <span class="comment">// q[b] = f[1, b] - f[0, b]
+            </span>q[b] = f[(b &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>] - f[b &lt;&lt; <span class="number">1</span>];
 
-            <span class="comment">// r_b = pre_r [2^b]*(1-p) + pre_r [2^b + 1] * p
-            </span>cur_r[b] =
-                r[k][b &lt;&lt; <span class="number">1</span>] * (E::Fr::one() - point_at_k) + (r[k][(b &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>] * point_at_k);
+            <span class="comment">// r[b] = f[0, b] + q[b] * p
+            </span>r[b] = f[b &lt;&lt; <span class="number">1</span>] + (q[b] * point_at_k);
         }
-
-        <span class="kw">let </span>scalars: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; k)).map(|x| cur_q[x &gt;&gt; <span class="number">1</span>].into_repr()).collect();
-
-        q[k] = cur_q;
-        r[k - <span class="number">1</span>] = cur_r;
+        f = r;
+        <span class="macro">end_timer!</span>(ith_round_eval);
+        <span class="kw">let </span>scalars: Vec&lt;<span class="kw">_</span>&gt; = q.iter().map(|x| x.into_repr()).collect();
 
         <span class="comment">// this is a MSM over G1 and is likely to be the bottleneck
-        </span>proofs.push(VariableBaseMSM::multi_scalar_mul(<span class="kw-2">&amp;</span>gi.evals, <span class="kw-2">&amp;</span>scalars).into_affine());
+        </span><span class="kw">let </span>msm_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;msm of size {} at round {}&quot;</span>, gi.evals.len(), i));
+
+        proofs.push(VariableBaseMSM::multi_scalar_mul(<span class="kw-2">&amp;</span>gi.evals, <span class="kw-2">&amp;</span>scalars).into_affine());
+        <span class="macro">end_timer!</span>(msm_timer);
+
         <span class="macro">end_timer!</span>(ith_round);
     }
-    <span class="kw">let </span>eval = polynomial.evaluate(point).ok_or_else(|| {
-        PCSError::InvalidParameters(<span class="string">&quot;fail to evaluate the polynomial&quot;</span>.to_string())
-    })<span class="question-mark">?</span>;
+    <span class="kw">let </span>eval = polynomial
+        .evaluate(point)
+        .ok_or_else(|| PCSError::InvalidParameters(<span class="string">&quot;fail to eval poly at the point&quot;</span>.to_string()))<span class="question-mark">?</span>;
     <span class="macro">end_timer!</span>(open_timer);
     <span class="prelude-val">Ok</span>((MultilinearKzgProof { proofs }, eval))
 }
@@ -891,7 +890,6 @@
         )));
     }
 
-    <span class="kw">let </span>ignored = verifier_param.num_vars - num_var;
     <span class="kw">let </span>prepare_inputs_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;prepare pairing inputs&quot;</span>);
 
     <span class="kw">let </span>scalar_size = E::Fr::size_in_bits();
@@ -905,6 +903,8 @@
     <span class="kw">let </span>h_mul: Vec&lt;E::G2Projective&gt; =
         FixedBaseMSM::multi_scalar_mul(scalar_size, window_size, <span class="kw-2">&amp;</span>h_table, point);
 
+    <span class="comment">// the first `ignored` G2 parameters are unused
+    </span><span class="kw">let </span>ignored = verifier_param.num_vars - num_var;
     <span class="kw">let </span>h_vec: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..num_var)
         .map(|i| verifier_param.h_mask[ignored + i].into_projective() - h_mul[i])
         .collect();
@@ -952,7 +952,7 @@
         <span class="kw">let </span>nv = poly.num_vars();
         <span class="macro">assert_ne!</span>(nv, <span class="number">0</span>);
         <span class="kw">let </span>uni_degree = <span class="number">1</span>;
-        <span class="kw">let </span>(ck, vk) = MultilinearKzgPCS::trim(params, uni_degree, <span class="prelude-val">Some</span>(nv + <span class="number">1</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>(ck, vk) = MultilinearKzgPCS::trim(params, uni_degree, <span class="prelude-val">Some</span>(nv))<span class="question-mark">?</span>;
         <span class="kw">let </span>point: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..nv).map(|<span class="kw">_</span>| Fr::rand(rng)).collect();
         <span class="kw">let </span>com = MultilinearKzgPCS::commit(<span class="kw-2">&amp;</span>ck, poly)<span class="question-mark">?</span>;
         <span class="kw">let </span>(proof, value) = MultilinearKzgPCS::open(<span class="kw-2">&amp;</span>ck, poly, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;

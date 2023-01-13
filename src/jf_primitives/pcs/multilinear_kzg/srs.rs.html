@@ -272,6 +272,16 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -279,9 +289,9 @@
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
 </span><span class="doccomment">//! Implementing Structured Reference Strings for multilinear polynomial KZG
-</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{prelude::PCSError, StructuredReferenceString};
+</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
 <span class="kw">use </span>ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
-<span class="kw">use </span>ark_ff::{Field, PrimeField};
+<span class="kw">use </span>ark_ff::{Field, PrimeField, Zero};
 <span class="kw">use </span>ark_poly::DenseMultilinearExtension;
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 <span class="kw">use </span>ark_std::{
@@ -290,6 +300,7 @@
     rand::{CryptoRng, RngCore},
     start_timer,
     string::ToString,
+    vec,
     vec::Vec,
     UniformRand,
 };
@@ -316,8 +327,9 @@
 </span><span class="kw">pub struct </span>MultilinearProverParam&lt;E: PairingEngine&gt; {
     <span class="doccomment">/// number of variables
     </span><span class="kw">pub </span>num_vars: usize,
-    <span class="doccomment">/// `pp_{num_vars}`, `pp_{num_vars - 1}`, `pp_{num_vars - 2}`, ..., defined
-    /// by XZZPD19
+    <span class="doccomment">/// `pp_{0}`, `pp_{1}`, ...,pp_{nu_vars} defined
+    /// by XZZPD19 where pp_{nv-0}=g and
+    /// pp_{nv-i}=g^{eq((t_1,..t_i),(X_1,..X_i))}
     </span><span class="kw">pub </span>powers_of_g: Vec&lt;Evaluations&lt;E::G1Affine&gt;&gt;,
     <span class="doccomment">/// generator for G1
     </span><span class="kw">pub </span>g: E::G1Affine,
@@ -459,9 +471,17 @@
             <span class="kw">let </span>pp_k_g = Evaluations {
                 evals: pp_g[start..(start + size)].to_vec(),
             };
+            <span class="comment">// check correctness of pp_k_g
+            </span><span class="kw">let </span>t_eval_0 = eq_eval(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[E::Fr::zero(); num_vars - i], <span class="kw-2">&amp;</span>t[i..num_vars])<span class="question-mark">?</span>;
+            <span class="macro">assert_eq!</span>(g.mul(t_eval_0.into_repr()).into_affine(), pp_k_g.evals[<span class="number">0</span>]);
+
             powers_of_g.push(pp_k_g);
             start += size;
         }
+        <span class="kw">let </span>gg = Evaluations {
+            evals: [g.into_affine()].to_vec(),
+        };
+        powers_of_g.push(gg);
 
         <span class="kw">let </span>pp = <span class="self">Self</span>::ProverParam {
             num_vars,

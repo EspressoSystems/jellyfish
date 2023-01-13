@@ -432,6 +432,8 @@
 <span id="432">432</span>
 <span id="433">433</span>
 <span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -486,6 +488,8 @@
 /// 7. get a point `p := l(r)`
 /// 8. output an opening of `w` over point `p`
 /// 9. output `w(p)`
+///
+/// TODO: Migrate the batching algorithm in HyperPlonk repo
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>multi_open_internal&lt;E: PairingEngine&gt;(
     uni_prover_param: <span class="kw-2">&amp;</span>UnivariateProverParam&lt;E::G1Affine&gt;,
     ml_prover_param: <span class="kw-2">&amp;</span>MultilinearProverParam&lt;E&gt;,
