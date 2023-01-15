@@ -28,7 +28,7 @@ Take a circuit with 2^28 constraints as an example, a single wire polynomial tak
 
 We aim to reduce the communication cost and avoid sending polynomials over the network when possible. In our current architecture, what we distribute are more coarse-grained workloads.
 
-For instance, in round 3, one part of quotient polynomial $t$ is $q_{a_0} w_0 + q_{h_0} w_0^4 + q_{a_1} w_1 + q_{h_1} w_1^4 + q_{a_2} w_2 + q_{h_2} w_2^4 + q_{a_3} w_3 + q_{h_3} w_3^4$, which can be computed by 4 workers independently (assume that they already knows their own $q_{a_i}$, $q_{h_i}$ and $w_i$). The only network communication occurs when computing the sum of the 4 results.
+For instance, in round 3, one part of quotient polynomial $t$ is $q_{a_0} w_0 + q_{h_0} w_0^4 + q_{a_1} w_1 + q_{h_1} w_1^4 + q_{a_2} w_2 + q_{h_2} w_2^4 + q_{a_3} w_3 + q_{h_3} w_3^4$, which can be computed by 4 workers independently (assume that they already know their own $q_{a_i}$, $q_{h_i}$ and $w_i$). The only network communication occurs when computing the sum of the 4 results.
 
 This intuition leads to the following workflow.
 
@@ -224,11 +224,12 @@ Our implementation no longer provides the same interface as the baseline, and th
 Instead, please follow the instruction below to "benchmark" our implementation:
 
 1. Clone the repository
-2. `cd jellyfish/distributed/`
-3. Edit TOML files in `config/` to match your environment
-4. On each server that acts as the worker, run `cargo run --release --bin worker -- $i`, where `$i` is the index of the worker (starting from 0). Worker 4 should run on the 120 GB server.
-5. Generate parameters: `cargo run --release --bin keygen_dispatcher`
-6. Run the "benchmark": `cargo run --release --bin prove_dispatcher`
+2. Switch to the `zprize_submission` branch
+3. `cd jellyfish/distributed/`
+4. Edit TOML files in `config/` to match your environment
+5. On each server that acts as the worker, run `cargo run --release --bin worker -- $i`, where `$i` is the index of the worker (starting from 0). Worker 4 should run on the 120 GB server.
+6. Generate parameters: `cargo run --release --bin keygen_dispatcher`
+7. Run the "benchmark": `cargo run --release --bin prove_dispatcher`
     * `prove_dispatcher` actually runs the proof generation process and verifies the proof for 10 times and reports the time taken for each run.
 
 For `TREE_HEIGHT = 21` and `NUM_MEMBERSHIP_PROOFS = 65536` (about 2^28 constraints), the proof generation takes about 48 minutes on the provided servers.
