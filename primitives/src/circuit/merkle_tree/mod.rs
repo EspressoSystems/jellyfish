@@ -6,8 +6,11 @@
 
 //! Trait definitions for a Merkle tree gadget.
 
-use crate::merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme};
-use jf_relation::{errors::CircuitError, BoolVar, Variable};
+use crate::{
+    merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme},
+    rescue::RescueParameter,
+};
+use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 mod rescue_merkle_tree;
 mod sparse_merkle_tree;
@@ -176,29 +179,40 @@ where
     ) -> Result<(), CircuitError>;
 }
 
+/// Produces a list of circuit variables representing the ordered nodes,
+/// based on the location of a `node` among its siblings, and otherwise
+/// preserving the relative location of the siblings.
+/// * `node` - node to be placed in the correct position
+/// * `sibling1` - first sibling
+/// * `sibling2` - second sibling
+/// * `node_is_left` - variable that is true if node is the leftmost one.
+/// * `node_is_right` -  variable that is true if node is the rightmost one.
+/// * `returns` - list of variables corresponding to the node and its siblings
+///   in the correct order.
+fn constrain_sibling_order<F: RescueParameter>(
+    circuit: &mut PlonkCircuit<F>,
+    node: Variable,
+    sib1: Variable,
+    sib2: Variable,
+    node_is_left: BoolVar,
+    node_is_right: BoolVar,
+) -> Result<[Variable; 3], CircuitError> {
+    let one = F::one();
+    let left_node = circuit.conditional_select(node_is_left, sib1, node)?;
+    let right_node = circuit.conditional_select(node_is_right, sib2, node)?;
+    let left_plus_right = circuit.add(left_node, right_node)?;
+    let mid_node = circuit.lc(
+        &[node, sib1, sib2, left_plus_right],
+        &[one, one, one, one.neg()],
+    )?;
+    Ok([left_node, mid_node, right_node])
+}
+
 pub(crate) trait MerkleTreeHelperGadget<M>
 where
     M: MerkleTreeScheme,
 {
     type MembershipProofVar;
-    /// Produces a list of circuit variables representing the ordered nodes,
-    /// based on the location of a `node` among its siblings, and otherwise
-    /// preserving the relative location of the siblings.
-    /// * `node` - node to be placed in the correct position
-    /// * `sibling1` - first sibling
-    /// * `sibling2` - second sibling
-    /// * `node_is_left` - variable that is true if node is the leftmost one.
-    /// * `node_is_right` -  variable that is true if node is the rightmost one.
-    /// * `returns` - list of variables corresponding to the node and its
-    ///   siblings in the correct order.
-    fn constrain_sibling_order(
-        &mut self,
-        node: Variable,
-        sib1: Variable,
-        sib2: Variable,
-        node_is_left: BoolVar,
-        node_is_right: BoolVar,
-    ) -> Result<[Variable; 3], CircuitError>;
 
     /// Ensure that the position of each node of the path is correctly encoded
     /// Used for testing purposes.

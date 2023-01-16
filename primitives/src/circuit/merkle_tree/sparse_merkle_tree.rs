@@ -25,8 +25,9 @@ use num_bigint::BigUint;
 use typenum::U3;
 
 use super::{
-    Merkle3AryMembershipProofVar, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar,
-    MerkleTreeGadget, MerkleTreeHelperGadget, UniversalMerkleTreeGadget,
+    constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
+    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, MerkleTreeHelperGadget,
+    UniversalMerkleTreeGadget,
 };
 
 impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
@@ -171,15 +172,14 @@ impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
     ) -> Result<Variable, CircuitError> {
         let mut cur_label = self.zero();
         for cur_node in path_vars.node_vars.iter() {
-            let input_labels =
-                MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_sibling_order(
-                    self,
-                    cur_label,
-                    cur_node.sibling1,
-                    cur_node.sibling2,
-                    cur_node.is_left_child,
-                    cur_node.is_right_child,
-                )?;
+            let input_labels = constrain_sibling_order(
+                self,
+                cur_label,
+                cur_node.sibling1,
+                cur_node.sibling2,
+                cur_node.is_left_child,
+                cur_node.is_right_child,
+            )?;
             // check that the left child's label is non-zero
             self.non_zero_gate(input_labels[0])?;
             cur_label =
@@ -191,25 +191,6 @@ impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
 
 impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCircuit<F> {
     type MembershipProofVar = Merkle3AryMembershipProofVar;
-
-    fn constrain_sibling_order(
-        &mut self,
-        node: Variable,
-        sib1: Variable,
-        sib2: Variable,
-        node_is_left: BoolVar,
-        node_is_right: BoolVar,
-    ) -> Result<[Variable; 3], CircuitError> {
-        let one = F::one();
-        let left_node = self.conditional_select(node_is_left, sib1, node)?;
-        let right_node = self.conditional_select(node_is_right, sib2, node)?;
-        let left_plus_right = self.add(left_node, right_node)?;
-        let mid_node = self.lc(
-            &[node, sib1, sib2, left_plus_right],
-            &[one, one, one, one.neg()],
-        )?;
-        Ok([left_node, mid_node, right_node])
-    }
 
     fn constrain_membership_proof(
         &mut self,
@@ -278,15 +259,14 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
             1,
         )?[0];
         for cur_node in proof_var.node_vars.iter() {
-            let input_labels =
-                MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_sibling_order(
-                    self,
-                    cur_label,
-                    cur_node.sibling1,
-                    cur_node.sibling2,
-                    cur_node.is_left_child,
-                    cur_node.is_right_child,
-                )?;
+            let input_labels = constrain_sibling_order(
+                self,
+                cur_label,
+                cur_node.sibling1,
+                cur_node.sibling2,
+                cur_node.is_left_child,
+                cur_node.is_right_child,
+            )?;
             // check that the left child's label is non-zero
             self.non_zero_gate(input_labels[0])?;
             cur_label =
@@ -300,7 +280,7 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCi
 mod test {
     use crate::{
         circuit::merkle_tree::{
-            sparse_merkle_tree::MerkleTreeHelperGadget, MerkleTreeGadget, UniversalMerkleTreeGadget,
+            constrain_sibling_order, MerkleTreeGadget, UniversalMerkleTreeGadget,
         },
         merkle_tree::{
             internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleCommitment,
@@ -346,15 +326,9 @@ mod test {
             let sib1 = input_vars[1];
             let sib2 = input_vars[2];
 
-            let out_vars = MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_sibling_order(
-                circuit,
-                node,
-                sib1,
-                sib2,
-                node_is_left,
-                node_is_right,
-            )
-            .unwrap();
+            let out_vars =
+                constrain_sibling_order(circuit, node, sib1, sib2, node_is_left, node_is_right)
+                    .unwrap();
 
             let output: Vec<F> = out_vars[..]
                 .iter()
