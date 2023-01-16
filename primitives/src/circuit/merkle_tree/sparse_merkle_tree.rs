@@ -26,8 +26,7 @@ use typenum::U3;
 
 use super::{
     constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
-    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, MerkleTreeHelperGadget,
-    UniversalMerkleTreeGadget,
+    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, UniversalMerkleTreeGadget,
 };
 
 impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
@@ -113,10 +112,53 @@ where
         &mut self,
         merkle_proof: &MembershipProof<F>,
     ) -> Result<Self::MembershipProofVar, CircuitError> {
-        MerkleTreeHelperGadget::<SparseMerkleTree<F>>::constrain_membership_proof(
-            self,
-            merkle_proof,
-        )
+        let path = <BigUint as ToTraversalPath<U3>>::to_traversal_path(
+            &merkle_proof.pos,
+            merkle_proof.tree_height() - 1,
+        );
+
+        let leaf_elem = match merkle_proof.elem() {
+            Some(elem) => elem,
+            None => {
+                return Err(CircuitError::InternalError(
+                    "The proof doesn't contain a leaf element".to_string(),
+                ))
+            },
+        };
+
+        let leaf = self.create_variable(*leaf_elem)?;
+
+        let nodes = path
+            .iter()
+            .zip(merkle_proof.proof.iter().skip(1))
+            .filter_map(|(branch, node)| match node {
+                MerkleNode::Branch { value: _, children } => Some((children, branch)),
+                _ => None,
+            })
+            .map(|(children, branch)| {
+                Ok(Merkle3AryNodeVar {
+                    sibling1: self.create_variable(children[0].value())?,
+                    sibling2: self.create_variable(children[1].value())?,
+                    is_left_child: self.create_boolean_variable(branch == &0)?,
+                    is_right_child: self.create_boolean_variable(branch == &2)?,
+                })
+            })
+            .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
+
+        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
+        // boolean
+        for node in nodes.iter() {
+            // Boolean constrain `is_left_child + is_right_child` because a node
+            // can either be the left or the right child of its parent
+            let left_plus_right =
+                self.add(node.is_left_child.into(), node.is_right_child.into())?;
+            self.enforce_bool(left_plus_right)?;
+        }
+
+        Ok(Self::MembershipProofVar {
+            node_vars: nodes,
+            leaf_var: leaf,
+        })
     }
 
     fn create_root_variable(&mut self, root: NodeVal<F>) -> Result<Variable, CircuitError> {
@@ -207,63 +249,6 @@ impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
                 RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
         }
         Ok(cur_label)
-    }
-}
-
-impl<F: RescueParameter> MerkleTreeHelperGadget<SparseMerkleTree<F>> for PlonkCircuit<F> {
-    type MembershipProofVar = Merkle3AryMembershipProofVar;
-
-    fn constrain_membership_proof(
-        &mut self,
-        merkle_proof: &MembershipProof<F>,
-    ) -> Result<Self::MembershipProofVar, CircuitError> {
-        let path = <BigUint as ToTraversalPath<U3>>::to_traversal_path(
-            &merkle_proof.pos,
-            merkle_proof.tree_height() - 1,
-        );
-
-        let leaf_elem = match merkle_proof.elem() {
-            Some(elem) => elem,
-            None => {
-                return Err(CircuitError::InternalError(
-                    "The proof doesn't contain a leaf element".to_string(),
-                ))
-            },
-        };
-
-        let leaf = self.create_variable(*leaf_elem)?;
-
-        let nodes = path
-            .iter()
-            .zip(merkle_proof.proof.iter().skip(1))
-            .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => Some((children, branch)),
-                _ => None,
-            })
-            .map(|(children, branch)| {
-                Ok(Merkle3AryNodeVar {
-                    sibling1: self.create_variable(children[0].value())?,
-                    sibling2: self.create_variable(children[1].value())?,
-                    is_left_child: self.create_boolean_variable(branch == &0)?,
-                    is_right_child: self.create_boolean_variable(branch == &2)?,
-                })
-            })
-            .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
-
-        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
-        // boolean
-        for node in nodes.iter() {
-            // Boolean constrain `is_left_child + is_right_child` because a node
-            // can either be the left or the right child of its parent
-            let left_plus_right =
-                self.add(node.is_left_child.into(), node.is_right_child.into())?;
-            self.enforce_bool(left_plus_right)?;
-        }
-
-        Ok(Self::MembershipProofVar {
-            node_vars: nodes,
-            leaf_var: leaf,
-        })
     }
 }
 

@@ -208,23 +208,6 @@ fn constrain_sibling_order<F: RescueParameter>(
     Ok([left_node, mid_node, right_node])
 }
 
-pub(crate) trait MerkleTreeHelperGadget<M>
-where
-    M: MerkleTreeScheme,
-{
-    type MembershipProofVar;
-
-    /// Ensure that the position of each node of the path is correctly encoded
-    /// Used for testing purposes.
-    /// * `membership_proof` - proof, including list of nodes of an
-    ///   authentication path
-    /// * `returns` - list of variables corresponding to the authentication path
-    fn constrain_membership_proof(
-        &mut self,
-        membership_proof: &M::MembershipProof,
-    ) -> Result<Self::MembershipProofVar, CircuitError>;
-}
-
 #[derive(Debug, Clone)]
 /// Circuit variable for a node in the Merkle path.
 pub struct Merkle3AryNodeVar {
