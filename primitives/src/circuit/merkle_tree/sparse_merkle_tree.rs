@@ -43,7 +43,25 @@ where
     ) -> Result<BoolVar, CircuitError> {
         // constrain that the element's index is part of the proof
         self.enforce_equal(proof_var.pos_var, non_leaf_idx_var)?;
-        let computed_root_var = self.compute_merkle_root_for_empty(&proof_var)?;
+        let computed_root_var = {
+            let path_vars = &proof_var;
+            let mut cur_label = self.zero();
+            for cur_node in path_vars.node_vars.iter() {
+                let input_labels = constrain_sibling_order(
+                    self,
+                    cur_label,
+                    cur_node.sibling1,
+                    cur_node.sibling2,
+                    cur_node.is_left_child,
+                    cur_node.is_right_child,
+                )?;
+                // check that the left child's label is non-zero
+                self.non_zero_gate(input_labels[0])?;
+                cur_label =
+                    RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
+            }
+            Ok(cur_label)
+        }?;
         self.is_equal(computed_root_var, root_var)
     }
 
@@ -213,42 +231,6 @@ where
             expected_root_var,
         )?;
         self.enforce_true(bool_val.into())
-    }
-}
-
-trait SparseMerkleTreeHelperGadget<F: RescueParameter> {
-    /// Computes the merkle root based on an empty leaf element and a
-    /// merkle path.
-    /// * `path_vars` - variables corresponding to the Merkle path.
-    /// * `return` - variable corresponding to the root value of the Merkle
-    ///   tree.
-    fn compute_merkle_root_for_empty(
-        &mut self,
-        path_vars: &Merkle3AryNonMembershipProofVar,
-    ) -> Result<Variable, CircuitError>;
-}
-
-impl<F: RescueParameter> SparseMerkleTreeHelperGadget<F> for PlonkCircuit<F> {
-    fn compute_merkle_root_for_empty(
-        &mut self,
-        path_vars: &Merkle3AryNonMembershipProofVar,
-    ) -> Result<Variable, CircuitError> {
-        let mut cur_label = self.zero();
-        for cur_node in path_vars.node_vars.iter() {
-            let input_labels = constrain_sibling_order(
-                self,
-                cur_label,
-                cur_node.sibling1,
-                cur_node.sibling2,
-                cur_node.is_left_child,
-                cur_node.is_right_child,
-            )?;
-            // check that the left child's label is non-zero
-            self.non_zero_gate(input_labels[0])?;
-            cur_label =
-                RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
-        }
-        Ok(cur_label)
     }
 }
 
