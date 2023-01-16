@@ -5,9 +5,9 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
-use crate::pcs::{prelude::PCSError, StructuredReferenceString};
+use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
 use ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
-use ark_ff::{Field, PrimeField};
+use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
@@ -16,6 +16,7 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     start_timer,
     string::ToString,
+    vec,
     vec::Vec,
     UniformRand,
 };
@@ -42,8 +43,9 @@ pub struct MultilinearUniversalParams<E: PairingEngine> {
 pub struct MultilinearProverParam<E: PairingEngine> {
     /// number of variables
     pub num_vars: usize,
-    /// `pp_{num_vars}`, `pp_{num_vars - 1}`, `pp_{num_vars - 2}`, ..., defined
-    /// by XZZPD19
+    /// `pp_{0}`, `pp_{1}`, ...,pp_{nu_vars} defined
+    /// by XZZPD19 where pp_{nv-0}=g and
+    /// pp_{nv-i}=g^{eq((t_1,..t_i),(X_1,..X_i))}
     pub powers_of_g: Vec<Evaluations<E::G1Affine>>,
     /// generator for G1
     pub g: E::G1Affine,
@@ -185,9 +187,17 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
             let pp_k_g = Evaluations {
                 evals: pp_g[start..(start + size)].to_vec(),
             };
+            // check correctness of pp_k_g
+            let t_eval_0 = eq_eval(&vec![E::Fr::zero(); num_vars - i], &t[i..num_vars])?;
+            assert_eq!(g.mul(t_eval_0.into_repr()).into_affine(), pp_k_g.evals[0]);
+
             powers_of_g.push(pp_k_g);
             start += size;
         }
+        let gg = Evaluations {
+            evals: [g.into_affine()].to_vec(),
+        };
+        powers_of_g.push(gg);
 
         let pp = Self::ProverParam {
             num_vars,
