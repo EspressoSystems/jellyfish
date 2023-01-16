@@ -223,18 +223,6 @@ where
         &mut self,
         membership_proof: &M::MembershipProof,
     ) -> Result<Self::MembershipProofVar, CircuitError>;
-
-    /// Computes the merkle root based on some element placed at a leaf and a
-    /// merkle path.
-    /// * `leaf_idx_var` - variables corresponding to the uid of the leaf.
-    /// * `proof_var` - variable corresponding to the Merkle proof.
-    /// * `return` - variable corresponding to the root value of the Merkle
-    ///   tree.
-    fn compute_merkle_root(
-        &mut self,
-        leaf_idx_var: Variable,
-        proof_var: &Self::MembershipProofVar,
-    ) -> Result<Variable, CircuitError>;
 }
 
 #[derive(Debug, Clone)]

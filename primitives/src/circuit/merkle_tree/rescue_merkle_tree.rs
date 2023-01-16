@@ -152,36 +152,6 @@ impl<F: RescueParameter> MerkleTreeHelperGadget<RescueMerkleTree<F>> for PlonkCi
             leaf_var: leaf,
         })
     }
-
-    fn compute_merkle_root(
-        &mut self,
-        elem: Variable,
-        proof_var: &Merkle3AryMembershipProofVar,
-    ) -> Result<Variable, CircuitError> {
-        let zero_var = self.zero();
-
-        // leaf label = H(0, uid, elem)
-        let mut cur_label = RescueNativeGadget::<F>::rescue_sponge_no_padding(
-            self,
-            &[zero_var, elem, proof_var.leaf_var],
-            1,
-        )?[0];
-        for cur_node in proof_var.node_vars.iter() {
-            let input_labels = constrain_sibling_order(
-                self,
-                cur_label,
-                cur_node.sibling1,
-                cur_node.sibling2,
-                cur_node.is_left_child,
-                cur_node.is_right_child,
-            )?;
-            // check that the left child's label is non-zero
-            self.non_zero_gate(input_labels[0])?;
-            cur_label =
-                RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
-        }
-        Ok(cur_label)
-    }
 }
 
 #[cfg(test)]
