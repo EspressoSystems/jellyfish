@@ -138,7 +138,7 @@ where
         let leaf_elem = match merkle_proof.elem() {
             Some(elem) => elem,
             None => {
-                return Err(CircuitError::InternalError(
+                return Err(CircuitError::ParameterError(
                     "The proof doesn't contain a leaf element".to_string(),
                 ))
             },
