@@ -129,11 +129,32 @@ where
         proof_var: Self::MembershipProofVar,
         root_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        let computed_root_var = MerkleTreeHelperGadget::<SparseMerkleTree<F>>::compute_merkle_root(
-            self,
-            leaf_idx_var,
-            &proof_var,
-        )?;
+        let computed_root_var = {
+            let proof_var = &proof_var;
+            let zero_var = self.zero();
+
+            // leaf label = H(0, uid, elem)
+            let mut cur_label = RescueNativeGadget::<F>::rescue_sponge_no_padding(
+                self,
+                &[zero_var, leaf_idx_var, proof_var.leaf_var],
+                1,
+            )?[0];
+            for cur_node in proof_var.node_vars.iter() {
+                let input_labels = constrain_sibling_order(
+                    self,
+                    cur_label,
+                    cur_node.sibling1,
+                    cur_node.sibling2,
+                    cur_node.is_left_child,
+                    cur_node.is_right_child,
+                )?;
+                // check that the left child's label is non-zero
+                self.non_zero_gate(input_labels[0])?;
+                cur_label =
+                    RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
+            }
+            Ok(cur_label)
+        }?;
         self.is_equal(root_var, computed_root_var)
     }
 
