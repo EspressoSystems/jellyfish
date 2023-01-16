@@ -52,6 +52,8 @@ use ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec
 /// 7. get a point `p := l(r)`
 /// 8. output an opening of `w` over point `p`
 /// 9. output `w(p)`
+///
+/// TODO: Migrate the batching algorithm in HyperPlonk repo
 pub(super) fn batch_open_internal<E: PairingEngine>(
     uni_prover_param: &UnivariateProverParam<E::G1Affine>,
     ml_prover_param: &MultilinearProverParam<E>,

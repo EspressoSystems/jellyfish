@@ -14,6 +14,23 @@ use ark_poly::{
 };
 use ark_std::{end_timer, format, log2, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
 
+/// Evaluate eq polynomial. use the public one later
+pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {
+    if x.len() != y.len() {
+        return Err(PCSError::InvalidParameters(
+            "x and y have different length".to_string(),
+        ));
+    }
+    let start = start_timer!(|| "eq_eval");
+    let mut res = F::one();
+    for (&xi, &yi) in x.iter().zip(y.iter()) {
+        let xi_yi = xi * yi;
+        res *= xi_yi + xi_yi - xi - yi + F::one();
+    }
+    end_timer!(start);
+    Ok(res)
+}
+
 /// Decompose an integer into a binary vector in little endian.
 #[allow(dead_code)]
 pub(crate) fn bit_decompose(input: u64, num_var: usize) -> Vec<bool> {

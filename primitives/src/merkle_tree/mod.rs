@@ -7,6 +7,7 @@
 //! Merkle Tree traits and implementations
 pub mod append_only;
 pub mod examples;
+pub mod light_weight;
 pub mod macros;
 pub mod universal_merkle_tree;
 
@@ -62,6 +63,19 @@ impl<F, P, N> LookupResult<F, P, N> {
             )),
             LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
                 "Expected NotFound, found NotInMemory".to_string(),
+            )),
+        }
+    }
+
+    /// Assert the lookup result is NotInMemory.
+    pub fn expect_not_in_memory(self) -> Result<(), PrimitivesError> {
+        match self {
+            LookupResult::NotInMemory => Ok(()),
+            LookupResult::Ok(..) => Err(PrimitivesError::InternalError(
+                "Expected NotInMemory, found Ok".to_string(),
+            )),
+            LookupResult::NotFound(..) => Err(PrimitivesError::InternalError(
+                "Expected NotInMemory, found NotFound".to_string(),
             )),
         }
     }
@@ -326,4 +340,42 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
     /// Rebuild a merkle tree from a commitment.
     /// Return a tree which is entirely forgotten.
     fn from_commitment(commitment: impl Borrow<Self::Commitment>) -> Self;
+}
+
+/// Universal Merkle tree that allows forget/remember elements from the memory
+pub trait ForgetableUniversalMerkleTreeScheme:
+    ForgetableMerkleTreeScheme + UniversalMerkleTreeScheme
+{
+    /// Trim the leaf at position `pos` from memory.
+    ///
+    /// This is similar to [forget](ForgetableMerkleTreeScheme::forget), but it
+    /// may prune even an empty sub-tree at `pos` and will return a
+    /// non-membership proof for the pruned position if it does so. Note
+    /// that an implementation may choose _not_ to prune an empty sub-tree, as
+    /// it may be more efficient to represent an empty sub-tree than a
+    /// forgotten one. In this case,
+    /// [universal_lookup](UniversalMerkleTreeScheme::universal_lookup) may
+    /// return _either_ [LookupResult::NotInMemory] or
+    /// [LookupResult::NotFound] after a successful call to
+    /// [universal_forget](Self::universal_forget). In any case, if this
+    /// function is called for a `pos` which is in memory but not in the
+    /// tree, it will return a non-membership proof.
+    ///
+    /// The return value is the same as if
+    /// [universal_lookup](UniversalMerkleTreeScheme::universal_lookup) were
+    /// called before this call.
+    fn universal_forget(
+        &mut self,
+        pos: Self::Index,
+    ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof>;
+
+    /// "Re-insert" an empty leaf into the tree using its proof.
+    ///
+    /// Returns `Ok(())` if insertion is successful, or `Err(err)` if the proof
+    /// disagrees with the merkle tree
+    fn non_membership_remember(
+        &mut self,
+        pos: Self::Index,
+        proof: impl Borrow<Self::NonMembershipProof>,
+    ) -> Result<(), PrimitivesError>;
 }

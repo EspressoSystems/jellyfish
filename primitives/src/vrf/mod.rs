@@ -4,6 +4,9 @@ use crate::errors::PrimitivesError;
 use ark_std::rand::{CryptoRng, RngCore};
 pub mod blsvrf;
 pub mod ecvrf;
+use core::fmt::Debug;
+use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 /// A trait for VRF proof, evaluation and verification.
 pub trait Vrf {
@@ -11,19 +14,34 @@ pub trait Vrf {
     type PublicParameter;
 
     /// VRF public key.
-    type PublicKey;
+    type PublicKey: Debug
+        + Clone
+        + Send
+        + Sync
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// VRF secret key.
-    type SecretKey;
+    type SecretKey: Debug
+        + Clone
+        + Send
+        + Sync
+        + Zeroize
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// VRF signature.
-    type Proof;
+    type Proof: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize + PartialEq + Eq;
 
     /// The input of VRF proof.
-    type Input;
+    type Input: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize + PartialEq + Eq;
 
     /// The output of VRF evaluation.
-    type Output;
+    type Output: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize + PartialEq + Eq;
 
     /// generate public parameters from RNG.
     /// If the RNG is not presented, use the default group generator.

@@ -69,6 +69,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#85](https://github.com/EspressoSystems/jellyfish/pull/85), [#87](https://github.com/EspressoSystems/jellyfish/pull/87) (all) Added `no_std` compliance
 - [#116](https://github.com/EspressoSystems/jellyfish/pull/116) (`jf-primitives`) Introduced new `PolynomialCommitmentScheme` trait
 - [#117](https://github.com/EspressoSystems/jellyfish/pull/117) (`jf-relation`) Added gadgets for comparison with constant values
+- [#176](https://github.com/EspressoSystems/jellyfish/pull/176) (`jf-primitives`) Added implementation for light weight merkle tree -- an append-only merkle tree who only keeps its frontier.
 
 ### Changed
 
@@ -76,6 +77,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#108](https://github.com/EspressoSystems/jellyfish/pull/108) (`jf-utils`) Allowed more general input to `deserialize_canonical_bytes!()`
 - [#113](https://github.com/EspressoSystems/jellyfish/pull/113) (`jf-plonk`) Corrected error type for `PlonkVerifier` gadgets
 - [#162](https://github.com/EspressoSystems/jellyfish/pull/162) (`jf-utils`) Renamed `#serde(with="field_elem")` to `#serde(with="canonical")`
+- [#177](https://github.com/EspressoSystems/jellyfish/pull/177) (`jf-primitives`) Refactor multilinear PCS opening.
 
 ### Removed
 
