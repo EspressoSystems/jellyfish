@@ -92,13 +92,14 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// &Self::ProverParam, ..)` or `commit(prover_param:
     /// Box<Self::ProverParam>, ..)` or `commit(prover_param:
     /// Arc<Self::ProverParam>, ..)` etc.
+    /// Also, the commitment is not necessarily hiding.
     fn commit(
         prover_param: impl Borrow<Self::ProverParam>,
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError>;
 
-    /// Generate a commitment for a list of polynomials
-    fn multi_commit(
+    /// Batch commit a list of polynomials
+    fn batch_commit(
         prover_param: impl Borrow<Self::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError>;
@@ -111,11 +112,11 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
         point: &Self::Point,
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError>;
 
-    /// Input a list of multilinear extensions, and a same number of points, and
-    /// a transcript, compute a multi-opening for all the polynomials.
-    fn multi_open(
+    /// Input a list of polynomials, and a same number of points,
+    /// compute a batch opening for all the polynomials.
+    fn batch_open(
         prover_param: impl Borrow<Self::ProverParam>,
-        multi_commitment: &Self::BatchCommitment,
+        batch_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError>;
