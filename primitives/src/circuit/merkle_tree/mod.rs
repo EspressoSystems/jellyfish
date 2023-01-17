@@ -35,7 +35,7 @@ use ark_std::vec::Vec;
 /// let (_, proof) = mt.lookup(2).expect_ok().unwrap();
 ///
 /// // Circuit computation with a MT
-/// let leaf_idx = circuit.create_variable(2_u64.into()).unwrap();
+/// let elem_idx = circuit.create_variable(2_u64.into()).unwrap();
 /// let proof_var =
 ///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_membership_proof_variable(
 ///         &mut circuit,
@@ -50,7 +50,7 @@ use ark_std::vec::Vec;
 ///     .unwrap();
 /// MerkleTreeGadget::<RescueMerkleTree<Fq>>::enforce_membership_proof(
 ///     &mut circuit,
-///     leaf_idx,
+///     elem_idx,
 ///     proof_var,
 ///     root_var
 /// )
@@ -76,22 +76,22 @@ where
     fn create_root_variable(&mut self, root: M::NodeValue) -> Result<Variable, CircuitError>;
 
     /// Given variables representing:
-    /// * a leaf index
+    /// * an element index
     /// * its merkle proof
     /// * root
     /// * return `BoolVar` indicating the correctness of its membership proof.
     fn is_member(
         &mut self,
-        leaf_idx_var: Variable,
+        elem_idx_var: Variable,
         proof_var: Self::MembershipProofVar,
         root_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
-    /// Enforce correct `proof_var` for the `leaf_idx_var` against
+    /// Enforce correct `proof_var` for the `elem_idx_var` against
     /// `expected_root_var`.
     fn enforce_membership_proof(
         &mut self,
-        leaf_idx_var: Variable,
+        elem_idx_var: Variable,
         proof_var: Self::MembershipProofVar,
         expected_root_var: Variable,
     ) -> Result<(), CircuitError>;
@@ -123,7 +123,7 @@ where
 /// let proof = mt.universal_lookup(&BigUint::from(3u64)).expect_not_found().unwrap();
 ///
 /// // Circuit computation with a MT
-/// let non_leaf_idx_var = circuit.create_variable(BigUint::from(3u64).into()).unwrap();
+/// let non_elem_idx_var = circuit.create_variable(BigUint::from(3u64).into()).unwrap();
 ///
 /// let proof_var =
 ///     UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::create_non_membership_proof_variable(
@@ -139,7 +139,7 @@ where
 ///     .unwrap();
 /// UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::enforce_non_membership_proof(
 ///     &mut circuit,
-///     non_leaf_idx_var,
+///     non_elem_idx_var,
 ///     proof_var,
 ///     root_var
 /// )
@@ -164,16 +164,16 @@ where
     /// checking non-membership proof
     fn is_non_member(
         &mut self,
-        non_leaf_idx_var: Variable,
+        non_elem_idx_var: Variable,
         proof_var: Self::NonMembershipProofVar,
         root_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
-    /// Enforce correct `proof_var` for the empty leaf `empty_leaf_idx_var`
+    /// Enforce correct `proof_var` for the empty elem `empty_elem_idx_var`
     /// against `expected_root_var`.
     fn enforce_non_membership_proof(
         &mut self,
-        non_leaf_idx_var: Variable,
+        non_elem_idx_var: Variable,
         proof_var: Self::NonMembershipProofVar,
         expected_root_var: Variable,
     ) -> Result<(), CircuitError>;
@@ -224,7 +224,7 @@ pub struct Merkle3AryNodeVar {
 /// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
 /// Constains:
 /// * a list of node variables in the path,
-/// * a variable correseponsing to the position of the leaf element.
+/// * a variable correseponsing to the position of the element.
 #[derive(Debug, Clone)]
 pub struct Merkle3AryNonMembershipProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,
@@ -234,9 +234,9 @@ pub struct Merkle3AryNonMembershipProofVar {
 /// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
 /// Constains:
 /// * a list of node variables in the path,
-/// * a variable correseponsing to the value of the leaf element.
+/// * a variable correseponsing to the value of the element.
 #[derive(Debug, Clone)]
 pub struct Merkle3AryMembershipProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,
-    leaf_var: Variable,
+    elem_var: Variable,
 }
