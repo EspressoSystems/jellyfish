@@ -21,14 +21,6 @@ We recommend the following tools:
 
 Run `direnv allow` at the repo root. You should see dependencies (including Rust) being installed.
 
-### Git Hooks [TODO: is this necessary?]
-
-The pre-commit hooks are installed via the nix shell. To run them on all files use
-
-```
-pre-commit run --all-files
-```
-
 ## Build, run tests and examples
 
 Build:
@@ -114,3 +106,11 @@ RAYON_NUM_THREADS=N cargo bench
 where N is the number of threads you want to use (N = 1 for single-thread).
 
 A sample benchmark result is available under [`bench.md`](./bench.md).
+
+## Git Hooks
+
+The pre-commit hooks are installed via the nix shell. To run them on all files use
+
+```
+pre-commit run --all-files
+```
