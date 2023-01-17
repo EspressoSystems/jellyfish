@@ -5,12 +5,14 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Interfaces for Plonk-based proof systems
-use crate::{circuit::Arithmetization, errors::PlonkError};
 use ark_ec::PairingEngine;
 use ark_std::{
+    error::Error,
+    fmt::Debug,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
+use jf_relation::Arithmetization;
 pub mod batch_arg;
 pub(crate) mod prover;
 pub(crate) mod snark;
@@ -19,8 +21,10 @@ pub(crate) mod verifier;
 use crate::transcript::PlonkTranscript;
 pub use snark::PlonkKzgSnark;
 
-/// An interface for SNARKs.
-pub trait Snark<E: PairingEngine> {
+// TODO: (alex) should we name it `PlonkishSNARK` instead? since we use
+// `PlonkTranscript` on prove and verify.
+/// An interface for SNARKs with universal setup.
+pub trait UniversalSNARK<E: PairingEngine> {
     /// The SNARK proof computed by the prover.
     type Proof: Clone;
 
@@ -32,18 +36,28 @@ pub trait Snark<E: PairingEngine> {
     /// specific circuit.
     type VerifyingKey: Clone;
 
-    // TODO: (alex) add back when `trait PolynomialCommitment` is implemented for
-    // KZG10, and the following can be compiled so that the Snark trait can be
-    // generic over prime field F.
-    // pub type UniversalSrs<F, PC> = <PC as PolynomialCommitment<F,
-    // DensePolynomial<F>>>::UniversalParams;
-    //
-    // /// Compute the proving/verifying keys from the circuit `circuit`.
-    // fn preprocess<C: Arithmetization<F>>(
-    //     &self,
-    //     srs: &UniversalSrs<F, PC>,
-    //     circuit: &C,
-    // ) -> Result<(Self::ProvingKey, Self::VerifyingKey), PlonkError>;
+    /// Universal Structured Reference String from `universal_setup`, used for
+    /// all subsequent circuit-specific preprocessing
+    type UniversalSRS: Clone + Debug;
+
+    /// SNARK related error
+    type Error: 'static + Error;
+
+    /// Generate the universal SRS for the argument system.
+    /// This setup is for trusted party to run, and mostly only used for
+    /// testing purpose. In practice, a MPC flavor of the setup will be carried
+    /// out to have higher assurance on the "toxic waste"/trapdoor being thrown
+    /// away to ensure soundness of the argument system.
+    fn universal_setup<R: RngCore + CryptoRng>(
+        max_degree: usize,
+        rng: &mut R,
+    ) -> Result<Self::UniversalSRS, Self::Error>;
+
+    /// Circuit-specific preprocessing to compute the proving/verifying keys.
+    fn preprocess<C: Arithmetization<E::Fr>>(
+        srs: &Self::UniversalSRS,
+        circuit: &C,
+    ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error>;
 
     /// Compute a SNARK proof of a circuit `circuit`, using the corresponding
     /// proving key `prove_key`. The witness used to
@@ -55,11 +69,11 @@ pub trait Snark<E: PairingEngine> {
     /// resulting proof without any check on the data. It does not incur any
     /// additional cost in proof size or prove time.
     fn prove<C, R, T>(
-        prng: &mut R,
+        rng: &mut R,
         circuit: &C,
         prove_key: &Self::ProvingKey,
         extra_transcript_init_msg: Option<Vec<u8>>,
-    ) -> Result<Self::Proof, PlonkError>
+    ) -> Result<Self::Proof, Self::Error>
     where
         C: Arithmetization<E::Fr>,
         R: CryptoRng + RngCore,
@@ -74,5 +88,5 @@ pub trait Snark<E: PairingEngine> {
         public_input: &[E::Fr],
         proof: &Self::Proof,
         extra_transcript_init_msg: Option<Vec<u8>>,
-    ) -> Result<(), PlonkError>;
+    ) -> Result<(), Self::Error>;
 }

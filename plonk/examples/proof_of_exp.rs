@@ -20,11 +20,11 @@ use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
 use ark_ff::PrimeField;
 use ark_std::{rand::SeedableRng, UniformRand};
 use jf_plonk::{
-    circuit::{customized::ecc::Point, Arithmetization, Circuit, PlonkCircuit},
     errors::PlonkError,
-    proof_system::{PlonkKzgSnark, Snark},
+    proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
 };
+use jf_relation::{gadgets::ecc::Point, Arithmetization, Circuit, PlonkCircuit};
 use jf_utils::fr_to_fq;
 use rand_chacha::ChaCha20Rng;
 
@@ -94,7 +94,7 @@ fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
     X: TEAffine<EmbedCurve>,
 ) -> Result<PlonkCircuit<EmbedCurve::BaseField>, PlonkError>
 where
-    EmbedCurve: TEModelParameters + Clone,
+    EmbedCurve: TEModelParameters,
     <EmbedCurve as ModelParameters>::BaseField: PrimeField,
     PairingCurve: PairingEngine,
 {
@@ -128,7 +128,7 @@ where
     // Step 3:
     // Connect the wires.
     let X_var_computed = circuit.variable_base_scalar_mul::<EmbedCurve>(x_var, &G_var)?;
-    circuit.point_equal_gate(&X_var_computed, &X_var)?;
+    circuit.enforce_point_equal(&X_var_computed, &X_var)?;
 
     // Sanity check: the circuit must be satisfied.
     assert!(circuit

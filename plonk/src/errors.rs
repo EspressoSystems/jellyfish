@@ -6,8 +6,10 @@
 
 //! Error module.
 
-use ark_std::string::String;
+use ark_std::{format, string::String};
 use displaydoc::Display;
+use jf_primitives::pcs::errors::PCSError;
+use jf_relation::errors::CircuitError;
 
 /// A `enum` specifying the possible failure modes of the Plonk.
 #[derive(Display, Debug)]
@@ -23,7 +25,7 @@ pub enum PlonkError {
     /// An error in the Plonk SNARK logic: {0}
     SnarkError(SnarkError),
     /// An error in the underlying polynomial commitment: {0}
-    PcsError(ark_poly_commit::Error),
+    PCSError(PCSError),
     /// An error in the Plonk circuit: {0}
     CircuitError(CircuitError),
     /// An error during IO: {0}
@@ -33,7 +35,7 @@ pub enum PlonkError {
     /// Plonk proof verification failed due to wrong proof
     WrongProof,
     /// Rescue Error
-    RescueError(jf_rescue::errors::RescueError),
+    PrimitiveError(jf_primitives::errors::PrimitivesError),
     /// Invalid parameters
     InvalidParameters(String),
     /// Non-native field overflow
@@ -44,12 +46,11 @@ pub enum PlonkError {
     PublicInputsDoNotMatch,
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for PlonkError {}
+impl ark_std::error::Error for PlonkError {}
 
-impl From<ark_poly_commit::Error> for PlonkError {
-    fn from(e: ark_poly_commit::Error) -> Self {
-        Self::PcsError(e)
+impl From<PCSError> for PlonkError {
+    fn from(e: PCSError) -> Self {
+        Self::PCSError(e)
     }
 }
 
@@ -65,9 +66,9 @@ impl From<ark_serialize::SerializationError> for PlonkError {
     }
 }
 
-impl From<jf_rescue::errors::RescueError> for PlonkError {
-    fn from(e: jf_rescue::errors::RescueError) -> Self {
-        Self::RescueError(e)
+impl From<jf_primitives::errors::PrimitivesError> for PlonkError {
+    fn from(e: jf_primitives::errors::PrimitivesError) -> Self {
+        Self::PrimitiveError(e)
     }
 }
 
@@ -75,7 +76,7 @@ impl From<jf_rescue::errors::RescueError> for PlonkError {
 #[derive(Display, Debug)]
 pub enum SnarkError {
     #[rustfmt::skip]
-    /// The quotient polynomial has wrong degree: {0}, expected: {1}. Suspect: circuit is not satisfied.
+    /// Suspect: circuit is not satisfied. The quotient polynomial has wrong degree: {0}, expected: {1}. 
     WrongQuotientPolyDegree(usize, usize),
     /// Invalid parameters: {0}
     ParameterError(String),
@@ -92,44 +93,16 @@ impl From<SnarkError> for PlonkError {
     }
 }
 
-/// A `enum` specifying the possible failure modes of the circuit.
-#[derive(Display, Debug)]
-pub enum CircuitError {
-    /// Variable index {0} is larger than the bound {1}.
-    VarIndexOutOfBound(usize, usize),
-    /// Public input length {0} doesn't match num_inputs = {1}.
-    PubInputLenMismatch(usize, usize),
-    /// The {0}-th gate failed: {1}
-    GateCheckFailure(usize, String),
-    /// Invalid parameters: {0}
-    ParameterError(String),
-    /// The circuit is not finalized before doing arithmetization
-    UnfinalizedCircuit,
-    /// Attempt to modify the finalized circuit
-    ModifyFinalizedCircuit,
-    /// The circuit has wrong Plonk type
-    WrongPlonkType,
-    /// The circuit does not support lookup
-    LookupUnsupported,
-    /// Failed to get array value by index
-    IndexError,
-    /// Algebra over field failed: {0}
-    FieldAlgebraError(String),
-    #[rustfmt::skip]
-    /// Unexpected field for elliptic curve operation, currently only support Bn254, BLS12-381/377 scalar field
-    UnsupportedCurve,
-    #[rustfmt::skip]
-    /// ‼ ️Internal error! Please report to Crypto Team immediately!\n\Message: {0}
-    InternalError(String),
-    /// Feature not supported: {0}
-    NotSupported(String),
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for CircuitError {}
-
 impl From<CircuitError> for PlonkError {
     fn from(e: CircuitError) -> Self {
         Self::CircuitError(e)
+    }
+}
+
+impl From<PlonkError> for CircuitError {
+    // this happen during invocation of Plonk proof system API inside Verifier
+    // gadget
+    fn from(e: PlonkError) -> Self {
+        Self::ParameterError(format!("Plonk proof system err: {:?}", e))
     }
 }

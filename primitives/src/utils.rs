@@ -8,12 +8,12 @@ use crate::{elgamal, signatures::schnorr};
 use ark_ec::{models::TEModelParameters, ProjectiveCurve, TEModelParameters as Parameters};
 use ark_ff::{FpParameters, PrimeField};
 use ark_std::vec::Vec;
-use jf_plonk::circuit::Variable;
+use jf_relation::Variable;
 
 impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
 where
     F: PrimeField,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn from(vk: &schnorr::VerKey<P>) -> Self {
         let point = vk.0.into_affine();
@@ -23,7 +23,7 @@ where
 
 impl<P> From<&elgamal::EncKey<P>> for (P::BaseField, P::BaseField)
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn from(pk: &elgamal::EncKey<P>) -> Self {
         let point = pk.key.into_affine();

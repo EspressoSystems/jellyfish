@@ -1,38 +1,51 @@
 //! BLS signature based VRF
-
 use super::Vrf;
 use crate::{
-    constants::CS_ID_BLS_VRF_NAIVE,
     errors::PrimitivesError,
-    hash_to_group::SWHashToGroup,
     signatures::{
         bls::{BLSSignKey, BLSSignature, BLSVerKey},
         BLSSignatureScheme, SignatureScheme,
     },
 };
-use ark_ec::bls12::Bls12Parameters;
-use ark_serialize::CanonicalSerialize;
 use ark_std::{
-    marker::PhantomData,
+    boxed::Box,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
-use digest::Digest;
+use digest::{Digest, DynDigest};
+use sha2::{Sha256, Sha512};
+
+/// Supported Cipher Suites for BLS VRF.
+#[allow(non_camel_case_types)]
+#[derive(Debug)]
+pub enum BLSVRFCipherSuite {
+    /// using blst library and VRF output from SHA256 hashing
+    VRF_BLS_12_381_SHA256,
+    /// using blst library and VRF output from SHA512 hashing
+    VRF_BLS_12_381_SHA512,
+}
 
 /// BLS VRF scheme.
 /// Optimized for signature size, i.e.: PK in G2 and sig in G1
-pub struct BLSVRFScheme<P: Bls12Parameters> {
-    pairing_friend_curve: PhantomData<P>,
+pub struct BLSVRFScheme {
+    hasher: Box<dyn DynDigest>,
 }
 
-impl<H, P> Vrf<H, P> for BLSVRFScheme<P>
-where
-    H: Digest,
-    P: Bls12Parameters,
-    P::G1Parameters: SWHashToGroup,
-{
-    const CS_ID: &'static str = CS_ID_BLS_VRF_NAIVE;
+impl BLSVRFScheme {
+    /// Creates a new BLS VRF instance with the given ciphersuite.
+    pub fn new(cs_id: BLSVRFCipherSuite) -> Self {
+        match cs_id {
+            BLSVRFCipherSuite::VRF_BLS_12_381_SHA256 => Self {
+                hasher: Box::new(Sha256::new()),
+            },
+            BLSVRFCipherSuite::VRF_BLS_12_381_SHA512 => Self {
+                hasher: Box::new(Sha512::new()),
+            },
+        }
+    }
+}
 
+impl Vrf for BLSVRFScheme {
     /// Public Parameter.
     /// For BLS signatures, we want to use default
     /// prime subgroup generators. So here we don't need
@@ -40,22 +53,23 @@ where
     type PublicParameter = ();
 
     /// VRF public key.
-    type PublicKey = BLSVerKey<P>;
+    type PublicKey = BLSVerKey;
 
     /// VRF secret key.
-    type SecretKey = BLSSignKey<P>;
+    type SecretKey = BLSSignKey;
 
     /// VRF signature.
-    type Proof = BLSSignature<P>;
+    type Proof = BLSSignature;
 
     /// The input of VRF proof.
-    type Input = [u8; 32];
+    type Input = Vec<u8>;
 
     /// The output of VRF evaluation.
-    type Output = [u8; 32];
+    type Output = Vec<u8>;
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
+        &self,
         _prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
         Ok(())
@@ -63,72 +77,105 @@ where
 
     /// Creates a pair of VRF public and private keys.
     fn key_gen<R: CryptoRng + RngCore>(
+        &self,
         pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SecretKey, Self::PublicKey), PrimitivesError> {
-        <BLSSignatureScheme<P> as SignatureScheme>::key_gen(pp, prng)
+        <BLSSignatureScheme as SignatureScheme>::key_gen(pp, prng)
     }
 
     /// Creates the VRF proof associated with a VRF secret key.
     fn prove<R: CryptoRng + RngCore>(
+        &self,
         pp: &Self::PublicParameter,
         secret_key: &Self::SecretKey,
         input: &Self::Input,
         prng: &mut R,
     ) -> Result<Self::Proof, PrimitivesError> {
-        <BLSSignatureScheme<P> as SignatureScheme>::sign(pp, secret_key, input, prng)
+        <BLSSignatureScheme as SignatureScheme>::sign(pp, secret_key, input, prng)
     }
 
     /// Computes the VRF output associated with a VRF proof.
-    fn evaluate(
+    fn proof_to_hash(
+        &mut self,
         _pp: &Self::PublicParameter,
         proof: &Self::Proof,
     ) -> Result<Self::Output, PrimitivesError> {
-        let mut proof_serialized = Vec::new();
-        proof.0.serialize_uncompressed(&mut proof_serialized)?;
-        let mut hasher = H::new();
+        let proof_serialized = proof.serialize();
+        let mut hasher = (*self.hasher).box_clone();
         hasher.update(&proof_serialized);
-        let mut output = [0u8; 32];
-        output.copy_from_slice(hasher.finalize().as_ref());
-        Ok(output)
+        let output = hasher.finalize();
+        Ok(output.to_vec())
     }
 
     /// Verifies a VRF proof.
     fn verify(
+        &mut self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
         input: &Self::Input,
-    ) -> Result<bool, PrimitivesError> {
-        if <BLSSignatureScheme<P> as SignatureScheme>::verify(pp, public_key, input, proof).is_err()
-        {
-            return Ok(false);
+    ) -> Result<(bool, Option<Self::Output>), PrimitivesError> {
+        if <BLSSignatureScheme as SignatureScheme>::verify(pp, public_key, input, proof).is_ok() {
+            Ok((true, Some(Self::proof_to_hash(self, pp, proof).unwrap())))
+        } else {
+            Ok((false, None))
         }
-
-        Ok(true)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::vrf::tests::{failed_verification, sign_and_verify};
-    use ark_bls12_377::Parameters as Param377;
-    use ark_bls12_381::Parameters as Param381;
-    use sha2::Sha256;
+    use ark_std::{rand::Rng, test_rng};
 
-    macro_rules! test_bls_vrf {
-        ($curve_param:tt) => {
-            let message = [0u8; 32];
-            let message_bad = [1u8; 32];
-            sign_and_verify::<BLSVRFScheme<$curve_param>, Sha256, _>(&message);
-            failed_verification::<BLSVRFScheme<$curve_param>, Sha256, _>(&message, &message_bad);
-        };
+    pub(crate) fn sign_and_verify<H: Digest>(
+        vrf: &mut BLSVRFScheme,
+        message: &<BLSVRFScheme as Vrf>::Input,
+        bad_message: &<BLSVRFScheme as Vrf>::Input,
+    ) {
+        let rng = &mut test_rng();
+
+        let parameters = vrf.param_gen(Some(rng)).unwrap();
+        let (sk, pk) = vrf.key_gen(&parameters, rng).unwrap();
+        let vrf_proof = vrf.prove(&parameters, &sk, message, rng).unwrap();
+        let vrf_output = vrf.proof_to_hash(&parameters, &vrf_proof).unwrap();
+        let (is_correct, output) = vrf.verify(&parameters, &vrf_proof, &pk, message).unwrap();
+        assert!(is_correct);
+        // need to use the result
+        assert!(output.is_some());
+
+        // check that proof_to_hash(proof) == evaluate(sk, message)
+        let out = vrf.evaluate(&parameters, &sk, &message, rng).unwrap();
+        assert_eq!(out, vrf_output);
+
+        // check the VRF output vs. hashing the proof directly
+        let mut hasher = H::new();
+        hasher.update(vrf_proof.serialize());
+        let direct_hash_output = hasher.finalize().to_vec();
+        assert_eq!(direct_hash_output, vrf_output);
+
+        // now test for bad message. User can choose to ignore the output if they really
+        // want to.
+        let (is_correct, _) = vrf
+            .verify(&parameters, &vrf_proof, &pk, bad_message)
+            .unwrap();
+        assert!(!is_correct);
     }
 
     #[test]
     fn test_bls_vrf() {
-        test_bls_vrf!(Param377);
-        test_bls_vrf!(Param381);
+        let rng = &mut test_rng();
+        for _ in 0..10 {
+            let message = rng.gen::<[u8; 32]>().to_vec();
+            // bad message is truncated
+            let message_bad = message.clone()[..31].to_vec();
+            let mut blsvrf256 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA256);
+
+            sign_and_verify::<Sha256>(&mut blsvrf256, &message, &message_bad);
+
+            let mut blsvrf512 = BLSVRFScheme::new(BLSVRFCipherSuite::VRF_BLS_12_381_SHA512);
+            sign_and_verify::<Sha512>(&mut blsvrf512, &message, &message_bad);
+        }
     }
 }

@@ -8,7 +8,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Outdated Builds
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
         with:
           all_but_latest: true
           access_token: ${{ github.token }}
@@ -33,7 +33,7 @@ jobs:
           default: true
           components: rustfmt, clippy
 
-      - name: Install stable toolchain
+      - name: Install nightly toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -42,7 +42,7 @@ jobs:
           default: false
           components: rustfmt
 
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         name: Enable Rust Caching
 
       - name: Format Check
@@ -64,9 +64,12 @@ jobs:
       - name: Check Ignored Tests
         run: cargo test --no-run -- --ignored
 
+      - name: Check no_std compilation
+        run: cargo test --no-run --no-default-features
+
       - name: Test
-        run: bash ./scripts/run_tests.sh      
-      
+        run: bash ./scripts/run_tests.sh
+
       - name: Example
         run: cargo run --release --example proof_of_exp
 

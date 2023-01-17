@@ -23,7 +23,7 @@ use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
 };
 use ark_ff::PrimeField;
-use ark_poly_commit::kzg10::Commitment;
+use jf_primitives::pcs::prelude::Commitment;
 use jf_utils::to_bytes;
 
 /// Defines transcript APIs.
@@ -48,7 +48,7 @@ pub trait PlonkTranscript<F> {
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(
             self,
@@ -111,7 +111,7 @@ pub trait PlonkTranscript<F> {
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         for comm in comms.iter() {
             self.append_commitment(label, comm)?;
@@ -127,7 +127,7 @@ pub trait PlonkTranscript<F> {
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
     }
@@ -207,5 +207,5 @@ pub trait PlonkTranscript<F> {
     /// and then append it to the transcript.
     fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
-        E: PairingEngine;
+        E: PairingEngine<Fq = F>;
 }

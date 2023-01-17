@@ -6,13 +6,14 @@
 
 //! Circuit implementation of the commitment scheme.
 
-use crate::utils::pad_with;
-use ark_std::vec;
-use jf_plonk::{
-    circuit::{customized::rescue::RescueGadget, Circuit, PlonkCircuit, Variable},
-    errors::PlonkError,
+use crate::{
+    rescue::{RescueParameter, CRHF_RATE},
+    utils::pad_with,
 };
-use jf_rescue::{RescueParameter, RATE};
+use ark_std::vec;
+use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+
+use super::rescue::RescueNativeGadget;
 
 /// Circuit implementation of the commitment scheme.
 pub trait CommitmentGadget {
@@ -23,24 +24,27 @@ pub trait CommitmentGadget {
     /// * `returns` a variable that refers to the commitment value
     /// The underlying the commitment instance is bound to a specific length.
     /// Hence input length must match it.
-    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, PlonkError>;
+    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, CircuitError>;
 }
 
 impl<F> CommitmentGadget for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
-    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, PlonkError> {
+    fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, CircuitError> {
         let mut msg = vec![blinding];
         msg.extend_from_slice(input);
-        pad_with(&mut msg, RATE, self.zero());
-        Ok(self.rescue_sponge_no_padding(&msg, 1)?[0])
+        pad_with(&mut msg, CRHF_RATE, self.zero());
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &msg, 1)?[0])
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{circuit::commitment::CommitmentGadget, commitment::Commitment};
+    use crate::{
+        circuit::commitment::CommitmentGadget,
+        commitment::{CommitmentScheme, FixedLengthRescueCommitment},
+    };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -49,25 +53,34 @@ mod tests {
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
     use itertools::Itertools;
-    use jf_plonk::circuit::{Circuit, PlonkCircuit, Variable};
+    use jf_relation::{Circuit, PlonkCircuit, Variable};
+
+    const TEST_INPUT_LEN: usize = 10;
+    const TEST_INPUT_LEN_PLUS_ONE: usize = 10 + 1;
 
     macro_rules! test_commit_circuit {
         ($base_field:tt) => {
             let mut circuit: PlonkCircuit<$base_field> = PlonkCircuit::new_turbo_plonk();
             let mut prng = ark_std::test_rng();
+
             let blinding = $base_field::rand(&mut prng);
             let blinding_var = circuit.create_variable(blinding).unwrap();
-            let input_len = 10;
-            let data: Vec<$base_field> = (0..input_len)
-                .map(|_| $base_field::rand(&mut prng))
-                .collect_vec();
+
+            let mut data = [$base_field::from(0u64); TEST_INPUT_LEN];
+            for i in 0..TEST_INPUT_LEN {
+                data[i] = $base_field::rand(&mut prng);
+            }
             let data_vars: Vec<Variable> = data
                 .iter()
                 .map(|&x| circuit.create_variable(x).unwrap())
                 .collect_vec();
 
-            let commitment_instance = Commitment::new(input_len);
-            let expected_commitment = commitment_instance.commit(&data, &blinding).unwrap();
+            let expected_commitment = FixedLengthRescueCommitment::<
+                $base_field,
+                TEST_INPUT_LEN,
+                TEST_INPUT_LEN_PLUS_ONE,
+            >::commit(&data, Some(&blinding))
+            .unwrap();
 
             let commitment_var = circuit.commit(&data_vars, blinding_var).unwrap();
 

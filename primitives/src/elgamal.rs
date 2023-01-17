@@ -9,6 +9,7 @@
 use crate::{
     elgamal::Direction::{Decrypt, Encrypt},
     errors::PrimitivesError,
+    rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
 };
 use ark_ec::{
     group::Group,
@@ -24,34 +25,36 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
 use jf_utils::pad_with_zeros;
-use rayon::{
-    iter::{IndexedParallelIterator, ParallelIterator},
-    prelude::ParallelSliceMut,
-};
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 use zeroize::Zeroize;
 
 // =====================================================
 // encrypt key
 // =====================================================
 /// Encryption key for encryption scheme
-#[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Default, Zeroize, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters"),
+    Eq(bound = "P: Parameters"),
+    Default(bound = "P: Parameters")
+)]
 pub struct EncKey<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     pub(crate) key: GroupProjective<P>,
 }
 
-impl<P: Parameters + Clone> Hash for EncKey<P> {
+impl<P: Parameters> Hash for EncKey<P> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.key.into_affine(), state)
     }
 }
 
-impl<P: Parameters + Clone> PartialEq for EncKey<P> {
+impl<P: Parameters> PartialEq for EncKey<P> {
     fn eq(&self, other: &Self) -> bool {
         self.key.into_affine() == other.key.into_affine()
     }
@@ -61,16 +64,20 @@ impl<P: Parameters + Clone> PartialEq for EncKey<P> {
 // decrypt key
 // =====================================================
 /// Decryption key for encryption scheme
-#[derive(Clone, Zeroize, PartialEq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
+#[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters"),
+    PartialEq(bound = "P: Parameters")
+)]
 pub(crate) struct DecKey<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     key: P::ScalarField,
 }
 
-impl<P: Parameters + Clone> Drop for DecKey<P> {
+impl<P: Parameters> Drop for DecKey<P> {
     fn drop(&mut self) {
         self.key.zeroize();
     }
@@ -80,12 +87,16 @@ impl<P: Parameters + Clone> Drop for DecKey<P> {
 // key pair
 // =====================================================
 
-#[derive(Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters"),
+    PartialEq(bound = "P: Parameters")
+)]
 /// KeyPair structure for encryption scheme
 pub struct KeyPair<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     pub(crate) enc: EncKey<P>,
     dec: DecKey<P>,
@@ -95,12 +106,17 @@ where
 // ciphertext
 // =====================================================
 /// Public encryption cipher text
-#[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
-#[derivative(Hash(bound = "P: Parameters"), PartialEq)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters"),
+    PartialEq(bound = "P: Parameters"),
+    Eq(bound = "P: Parameters"),
+    Hash(bound = "P: Parameters")
+)]
 pub struct Ciphertext<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     pub(crate) ephemeral: EncKey<P>,
     pub(crate) data: Vec<P::BaseField>,
@@ -108,7 +124,7 @@ where
 
 impl<P> Ciphertext<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     /// Flatten out the ciphertext into a vector of scalars
     pub fn to_scalars(&self) -> Vec<P::BaseField> {
@@ -149,7 +165,7 @@ where
 
 impl<P> KeyPair<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     /// Key generation algorithm for public key encryption scheme
     pub fn generate<R: CryptoRng + RngCore>(rng: &mut R) -> KeyPair<P> {
@@ -178,7 +194,7 @@ where
 
 impl<P> From<DecKey<P>> for KeyPair<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn from(dec: DecKey<P>) -> Self {
         let enc = EncKey::from(&dec);
@@ -187,7 +203,7 @@ where
 }
 
 /// Sample a random public key with unknown associated secret key
-impl<P: Parameters + Clone> UniformRand for EncKey<P> {
+impl<P: Parameters> UniformRand for EncKey<P> {
     fn rand<R>(rng: &mut R) -> Self
     where
         R: Rng + RngCore + ?Sized,
@@ -201,7 +217,7 @@ impl<P: Parameters + Clone> UniformRand for EncKey<P> {
 impl<F, P> EncKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     fn compute_cipher_text_from_ephemeral_key_pair(
         &self,
@@ -248,7 +264,7 @@ where
 impl<F, P> DecKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     /// Decryption function
     fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<P::BaseField> {
@@ -267,7 +283,7 @@ where
 
 impl<P> From<&DecKey<P>> for EncKey<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn from(dec_key: &DecKey<P>) -> Self {
         let mut point = GroupProjective::<P>::prime_subgroup_generator();
@@ -279,7 +295,7 @@ where
 impl<F, P> KeyPair<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     /// Decryption function
     pub fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<F> {
@@ -300,7 +316,7 @@ pub(crate) fn apply_counter_mode_stream<F, P>(
 ) -> Vec<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     let prp = PRP::default();
     let round_keys = prp.key_schedule(key);
@@ -309,28 +325,37 @@ where
     // temporarily append dummy padding element
     pad_with_zeros(&mut output, STATE_SIZE);
 
-    output
-        .par_chunks_exact_mut(STATE_SIZE)
-        .enumerate()
-        .for_each(|(i, output_chunk)| {
-            let stream_chunk = prp.prp_with_round_keys(
-                &round_keys,
-                &RescueVector::from(&[
-                    nonce.add(F::from(i as u64)),
-                    F::zero(),
-                    F::zero(),
-                    F::zero(),
-                ]),
-            );
-            for (output_elem, stream_elem) in
-                output_chunk.iter_mut().zip(stream_chunk.elems().iter())
-            {
-                match direction {
-                    Direction::Encrypt => output_elem.add_assign(stream_elem),
-                    Direction::Decrypt => output_elem.sub_assign(stream_elem),
-                }
+    let round_fn = |(idx, output_chunk): (usize, &mut [F])| {
+        let stream_chunk = prp.prp_with_round_keys(
+            &round_keys,
+            &RescueVector::from(&[
+                nonce.add(F::from(idx as u64)),
+                F::zero(),
+                F::zero(),
+                F::zero(),
+            ]),
+        );
+        for (output_elem, stream_elem) in output_chunk.iter_mut().zip(stream_chunk.elems().iter()) {
+            match direction {
+                Direction::Encrypt => output_elem.add_assign(stream_elem),
+                Direction::Decrypt => output_elem.sub_assign(stream_elem),
             }
-        });
+        }
+    };
+    #[cfg(feature = "parallel")]
+    {
+        output
+            .par_chunks_exact_mut(STATE_SIZE)
+            .enumerate()
+            .for_each(round_fn);
+    }
+    #[cfg(not(feature = "parallel"))]
+    {
+        output
+            .chunks_exact_mut(STATE_SIZE)
+            .enumerate()
+            .for_each(round_fn);
+    }
     // remove dummy padding elements
     output.truncate(data.len());
     output

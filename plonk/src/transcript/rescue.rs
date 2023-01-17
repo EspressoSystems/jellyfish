@@ -7,16 +7,19 @@
 //! This module is a defines rescue transcript.
 use super::PlonkTranscript;
 use crate::{
-    circuit::customized::ecc::{Point, SWToTEConParam},
     errors::PlonkError,
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
     short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
 };
-use ark_poly_commit::kzg10::Commitment;
 use ark_std::vec::Vec;
-use jf_rescue::{Permutation as RescueHash, RescueParameter, STATE_SIZE};
+use jf_primitives::{
+    crhf::{VariableLengthRescueCRHF, CRHF},
+    pcs::prelude::Commitment,
+    rescue::{RescueParameter, STATE_SIZE},
+};
+use jf_relation::gadgets::ecc::{Point, SWToTEConParam};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 /// Transcript with rescue hash function.
@@ -59,7 +62,7 @@ where
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         // to enable a more efficient verifier circuit, we remove
         // the following messages (c.f. merlin transcript)
@@ -109,7 +112,7 @@ where
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
-        P: SWParam<BaseField = F> + Clone,
+        P: SWParam<BaseField = F>,
     {
         // convert the SW form commitments into TE form
         let te_point: Point<F> = (&comm.0).into();
@@ -167,16 +170,14 @@ where
     /// efficiency.
     fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
-        E: PairingEngine,
+        E: PairingEngine<Fq = F>,
     {
         // 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr
         // 3. transcript = Vec::new()
 
-        let hasher = RescueHash::default();
-
         let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
-        let tmp = hasher.sponge_with_padding(&input, STATE_SIZE);
+        let tmp: [F; STATE_SIZE] = VariableLengthRescueCRHF::evaluate(&input)?;
         let challenge = fq_to_fr_with_mask::<F, E::Fr>(&tmp[0]);
         self.state.copy_from_slice(&tmp);
         self.transcript = Vec::new();

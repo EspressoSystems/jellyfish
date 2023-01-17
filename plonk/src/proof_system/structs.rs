@@ -6,17 +6,7 @@
 
 //! Data structures used in Plonk proof systems
 use crate::{
-    circuit::{
-        customized::{
-            ecc::{Point, SWToTEConParam},
-            ultraplonk::{
-                mod_arith::FpElemVar,
-                plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
-            },
-        },
-        PlonkCircuit,
-    },
-    constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
+    circuit::plonk_verifier::{BatchProofVar, ProofEvaluationsVar},
     errors::{
         PlonkError,
         SnarkError::{self, ParameterError, SnarkLookupUnsupported},
@@ -27,37 +17,42 @@ use ark_ec::{
 };
 use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
-use ark_poly_commit::kzg10::{Commitment, Powers, UniversalParams, VerifierKey};
 use ark_serialize::*;
 use ark_std::{
-    collections::HashMap,
     convert::{TryFrom, TryInto},
     format,
     string::ToString,
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
-use jf_utils::{field_switching, fq_to_fr, fr_to_fq, tagged_blob};
+use espresso_systems_common::jellyfish::tag;
+use hashbrown::HashMap;
+use jf_primitives::{
+    pcs::prelude::{
+        Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
+    },
+    rescue::RescueParameter,
+};
+use jf_relation::{
+    constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
+    gadgets::{
+        ecc::{Point, SWToTEConParam},
+        ultraplonk::mod_arith::FpElemVar,
+    },
+    PlonkCircuit,
+};
+use jf_utils::{field_switching, fq_to_fr, fr_to_fq};
+use tagged_base64::tagged;
 
-/// Universal Structured Reference String for PlonkKzgSnark
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct UniversalSrs<E: PairingEngine>(pub(crate) UniversalParams<E>);
-
-impl<E: PairingEngine> UniversalSrs<E> {
-    /// Expose powers of g via reference.
-    pub fn powers_of_g_ref(&self) -> &[E::G1Affine] {
-        &self.0.powers_of_g
-    }
-}
-
-pub(crate) type CommitKey<'a, E> = Powers<'a, E>;
-
-/// Key for verifying PCS opening proof (alias to kzg10::VerifierKey).
-pub type OpenKey<E> = VerifierKey<E>;
+/// Universal StructuredReferenceString
+pub type UniversalSrs<E> = UnivariateUniversalParams<E>;
+/// Commitment key
+pub type CommitKey<E> = UnivariateProverParam<<E as PairingEngine>::G1Affine>;
+/// Key for verifying PCS opening proof.
+pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
-#[tagged_blob("PROOF")]
+#[tagged(tag::PROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
 pub struct Proof<E: PairingEngine> {
@@ -87,7 +82,7 @@ pub struct Proof<E: PairingEngine> {
 impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
 where
     E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
+    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
 {
     type Error = SnarkError;
 
@@ -182,7 +177,7 @@ where
 impl<E, P> From<Proof<E>> for Vec<E::Fq>
 where
     E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
+    P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
 {
     fn from(proof: Proof<E>) -> Self {
         if proof.plookup_proof.is_some() {
@@ -232,7 +227,7 @@ pub struct PlookupProof<E: PairingEngine> {
 }
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
-#[tagged_blob("BATCHPROOF")]
+#[tagged(tag::BATCHPROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(Hash(bound = "E:PairingEngine"))]
 pub struct BatchProof<E: PairingEngine> {
@@ -356,7 +351,7 @@ impl<E: PairingEngine> BatchProof<E> {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
     {
         let mut wires_poly_comms_vec = Vec::new();
         for e in self.wires_poly_comms_vec.iter() {
@@ -549,8 +544,8 @@ impl<F: Field> PlookupEvaluations<F> {
 
 /// Preprocessed prover parameters used to compute Plonk proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<'a, E: PairingEngine> {
+#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
+pub struct ProvingKey<E: PairingEngine> {
     /// Extended permutation (sigma) polynomials.
     pub(crate) sigmas: Vec<DensePolynomial<E::Fr>>,
 
@@ -558,7 +553,7 @@ pub struct ProvingKey<'a, E: PairingEngine> {
     pub(crate) selectors: Vec<DensePolynomial<E::Fr>>,
 
     // KZG PCS committing key.
-    pub(crate) commit_key: CommitKey<'a, E>,
+    pub(crate) commit_key: CommitKey<E>,
 
     /// The verifying key. It is used by prover to initialize transcripts.
     pub vk: VerifyingKey<E>,
@@ -569,7 +564,7 @@ pub struct ProvingKey<'a, E: PairingEngine> {
 
 /// Preprocessed prover parameters used to compute Plookup proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct PlookupProvingKey<E: PairingEngine> {
     /// Range table polynomial.
     pub(crate) range_table_poly: DensePolynomial<E::Fr>,
@@ -584,7 +579,7 @@ pub struct PlookupProvingKey<E: PairingEngine> {
     pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
 }
 
-impl<'a, E: PairingEngine> ProvingKey<'a, E> {
+impl<E: PairingEngine> ProvingKey<E> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) fn domain_size(&self) -> usize {
         self.vk.domain_size
@@ -656,7 +651,7 @@ impl<'a, E: PairingEngine> ProvingKey<'a, E> {
 
 /// Preprocessed verifier parameters used to verify Plonk proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct VerifyingKey<E: PairingEngine> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) domain_size: usize,
@@ -688,8 +683,8 @@ impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
 where
     E: PairingEngine<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>, Fqe = Fp2<F>>,
     F: Fp2Parameters<Fp = E::Fq>,
-    P1: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr> + Clone,
-    P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr> + Clone,
+    P1: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
+    P2: SWModelParameters<BaseField = E::Fqe, ScalarField = E::Fr>,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
         if vk.plookup_vk.is_some() {
@@ -723,7 +718,7 @@ impl<E, F, P> VerifyingKey<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Convert the group elements to a list of scalars that represent the
     /// Twisted Edwards coordinates.
@@ -745,7 +740,7 @@ where
 
 /// Preprocessed verifier parameters used to verify Plookup proofs for a certain
 /// circuit.
-#[derive(Debug, Clone, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct PlookupVerifyingKey<E: PairingEngine> {
     /// Range table polynomial commitment. The commitment is not hiding.
     pub(crate) range_table_comm: Commitment<E>,
@@ -823,7 +818,7 @@ impl<E: PairingEngine> VerifyingKey<E> {
             sigma_comms,
             selector_comms,
             k: self.k.clone(),
-            open_key: self.open_key.clone(),
+            open_key: self.open_key,
             plookup_vk: None,
             is_merged: true,
         })
@@ -883,54 +878,24 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
         let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
         *entry_scalar += scalar;
     }
+
     /// Add a list of scalars and bases into self, where each scalar is
     /// multiplied by a constant c.
     pub(crate) fn merge(&mut self, c: E::Fr, scalars_and_bases: &Self) {
-        for (&base, scalar) in &scalars_and_bases.base_scalar_map {
-            self.push(c * scalar, base);
+        for (base, scalar) in &scalars_and_bases.base_scalar_map {
+            self.push(c * scalar, *base);
         }
     }
     /// Compute the multi-scalar multiplication.
     pub(crate) fn multi_scalar_mul(&self) -> E::G1Projective {
         let mut bases = vec![];
         let mut scalars = vec![];
-        for (&base, scalar) in &self.base_scalar_map {
-            bases.push(base);
+        for (base, scalar) in &self.base_scalar_map {
+            bases.push(*base);
             scalars.push(scalar.into_repr());
         }
         VariableBaseMSM::multi_scalar_mul(&bases, &scalars)
     }
-}
-
-/// Specializes the public parameters for a given maximum degree `d` for
-/// polynomials `d` should be less that `pp.max_degree()`.
-/// TODO: (binyi) This is copied from a `pub(crate)` method in Arkworks, we
-/// should fork Arkwork's KZG10 library and make this method public.
-/// NOTE: This doesn't support hiding variant of KZG10 since Plonk don't need
-/// it, and `powers_of_gamma_g` is empty and `gamma_g` is dummy.
-pub(crate) fn trim<E: PairingEngine>(
-    pp: &UniversalParams<E>,
-    mut supported_degree: usize,
-) -> (Powers<E>, VerifierKey<E>) {
-    if supported_degree == 1 {
-        supported_degree += 1;
-    }
-    let powers_of_g = pp.powers_of_g[..=supported_degree].to_vec();
-    let powers_of_gamma_g = vec![]; // not used
-
-    let powers = Powers {
-        powers_of_g: ark_std::borrow::Cow::Owned(powers_of_g),
-        powers_of_gamma_g: ark_std::borrow::Cow::Owned(powers_of_gamma_g),
-    };
-    let vk = VerifierKey {
-        g: pp.powers_of_g[0],
-        gamma_g: E::G1Affine::default(), // not used
-        h: pp.h,
-        beta_h: pp.beta_h,
-        prepared_h: pp.prepared_h.clone(),
-        prepared_beta_h: pp.prepared_beta_h.clone(),
-    };
-    (powers, vk)
 }
 
 // Utility function for computing merged table evaluations.

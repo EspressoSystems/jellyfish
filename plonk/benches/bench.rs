@@ -14,12 +14,13 @@ use ark_bn254::{Bn254, Fr as Fr254};
 use ark_bw6_761::{Fr as Fr761, BW6_761};
 use ark_ff::PrimeField;
 use jf_plonk::{
-    circuit::{Circuit, PlonkCircuit},
     errors::PlonkError,
-    proof_system::{PlonkKzgSnark, Snark},
+    proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
     PlonkType,
 };
+use jf_relation::{Circuit, PlonkCircuit};
+use std::time::Instant;
 
 const NUM_REPETITIONS: usize = 10;
 const NUM_GATES_LARGE: usize = 32768;
@@ -54,7 +55,7 @@ macro_rules! plonk_prove_bench {
 
         let (pk, _) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
-        let start = ark_std::time::Instant::now();
+        let start = Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
             let _ = PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(
@@ -97,7 +98,7 @@ macro_rules! plonk_verify_bench {
             PlonkKzgSnark::<$bench_curve>::prove::<_, _, StandardTranscript>(rng, &cs, &pk, None)
                 .unwrap();
 
-        let start = ark_std::time::Instant::now();
+        let start = Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
             let _ =
@@ -144,7 +145,7 @@ macro_rules! plonk_batch_verify_bench {
         let public_inputs_ref = vec![&pub_input[..]; $num_proofs];
         let proofs_ref = vec![&proof; $num_proofs];
 
-        let start = ark_std::time::Instant::now();
+        let start = Instant::now();
 
         for _ in 0..NUM_REPETITIONS {
             let _ = PlonkKzgSnark::<$bench_curve>::batch_verify::<StandardTranscript>(

@@ -8,7 +8,13 @@
 //! curves.
 
 use super::SignatureScheme;
-use crate::{constants::CS_ID_SCHNORR, errors::PrimitivesError, utils::curve_cofactor};
+use crate::{
+    constants::CS_ID_SCHNORR,
+    crhf::{VariableLengthRescueCRHF, CRHF},
+    errors::PrimitivesError,
+    rescue::RescueParameter,
+    utils::curve_cofactor,
+};
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
@@ -23,8 +29,10 @@ use ark_std::{
     string::ToString,
     vec,
 };
-use jf_rescue::{Permutation, RescueParameter};
-use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq, tagged_blob};
+use core::convert::TryInto;
+use espresso_systems_common::jellyfish::tag;
+use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
+use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// Schnorr signature scheme.
@@ -35,7 +43,7 @@ pub struct SchnorrSignatureScheme<P> {
 impl<F, P> SignatureScheme for SchnorrSignatureScheme<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     const CS_ID: &'static str = CS_ID_SCHNORR;
 
@@ -95,8 +103,9 @@ where
 // =====================================================
 // Signing key
 // =====================================================
+#[tagged(tag::SCHNORR_SIGNING_KEY)]
 #[derive(
-    Clone, Hash, Default, Zeroize, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
+    Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
 /// Signing key for Schnorr signature.
 pub struct SignKey<F: PrimeField>(pub(crate) F);
@@ -120,16 +129,19 @@ impl<F: PrimeField> SignKey<F> {
 
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
-#[tagged_blob("SCHNORRVERKEY")]
-#[derive(Clone, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
-#[derivative(Default(bound = "P: Parameters"))]
-#[derivative(Eq(bound = "P: Parameters"))]
+#[tagged(tag::SCHNORR_VER_KEY)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Default(bound = "P: Parameters"),
+    Eq(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters")
+)]
 pub struct VerKey<P>(pub(crate) GroupProjective<P>)
 where
-    P: Parameters + Clone;
+    P: Parameters;
 
-impl<P: Parameters + Clone> VerKey<P> {
+impl<P: Parameters> VerKey<P> {
     /// Return a randomized verification key.
     pub fn randomize_with<F>(&self, randomizer: &F) -> Self
     where
@@ -148,7 +160,7 @@ impl<P: Parameters + Clone> VerKey<P> {
 
 impl<P> Hash for VerKey<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.0.into_affine(), state)
@@ -157,7 +169,7 @@ where
 
 impl<P> PartialEq for VerKey<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0.into_affine().eq(&other.0.into_affine())
@@ -166,14 +178,14 @@ where
 
 impl<P> From<GroupAffine<P>> for VerKey<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn from(point: GroupAffine<P>) -> Self {
         VerKey(point.into_projective())
     }
 }
 
-impl<P: Parameters + Clone> VerKey<P> {
+impl<P: Parameters> VerKey<P> {
     /// Convert the verification key into the affine form.
     pub fn to_affine(&self) -> GroupAffine<P> {
         self.0.into_affine()
@@ -186,12 +198,17 @@ impl<P: Parameters + Clone> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
-#[tagged_blob("SIGNKEYPAIR")]
-#[derive(Clone, Default, CanonicalSerialize, CanonicalDeserialize, PartialEq, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
+#[tagged(tag::SCHNORR_KEY_PAIR)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Default(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters"),
+    PartialEq(bound = "P: Parameters")
+)]
 pub struct KeyPair<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     sk: SignKey<P::ScalarField>,
     vk: VerKey<P>,
@@ -202,14 +219,18 @@ where
 // =====================================================
 
 /// The signature of Schnorr signature scheme
-#[tagged_blob("SIG")]
-#[derive(Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Debug(bound = "P: Parameters"))]
-#[derivative(Default(bound = "P: Parameters"))]
+#[tagged(tag::SCHNORR_SIG)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(
+    Debug(bound = "P: Parameters"),
+    Default(bound = "P: Parameters"),
+    Eq(bound = "P: Parameters"),
+    Clone(bound = "P: Parameters")
+)]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     pub(crate) s: P::ScalarField,
     pub(crate) R: GroupProjective<P>,
@@ -217,7 +238,7 @@ where
 
 impl<P> Hash for Signature<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.s, state);
@@ -227,7 +248,7 @@ where
 
 impl<P> PartialEq for Signature<P>
 where
-    P: Parameters + Clone,
+    P: Parameters,
 {
     fn eq(&self, other: &Self) -> bool {
         self.s == other.s && self.R.into_affine() == other.R.into_affine()
@@ -240,7 +261,7 @@ where
 impl<F, P> KeyPair<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     /// Key-pair generation algorithm
     pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
@@ -274,15 +295,15 @@ where
     /// Signature function
     #[allow(non_snake_case)]
     pub fn sign<B: AsRef<[u8]>>(&self, msg: &[F], csid: B) -> Signature<P> {
-        let hash = Permutation::default();
         // Do we want to remove the instance description?
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut msg_input = vec![instance_description, fr_to_fq::<F, P>(&self.sk.0)];
         msg_input.extend(msg.iter());
 
-        let r = fq_to_fr::<F, P>(&hash.sponge_with_padding(&msg_input, 1)[0]);
+        let r =
+            fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
         let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
-        let c = self.vk.challenge(&hash, &R, msg, csid);
+        let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
         Signature { s, R }
@@ -308,7 +329,7 @@ impl<F: PrimeField> SignKey<F> {
 
 impl<P, F> From<&SignKey<F>> for VerKey<P>
 where
-    P: Parameters<ScalarField = F> + Clone,
+    P: Parameters<ScalarField = F>,
     F: PrimeField,
 {
     fn from(sk: &SignKey<F>) -> Self {
@@ -322,7 +343,7 @@ where
 impl<F, P> VerKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     /// Get the internal of verifying key, namely a curve Point
     pub fn internal(&self) -> &GroupProjective<P> {
@@ -347,8 +368,7 @@ where
         }
 
         // restrictive cofactorless verification
-        let hash = Permutation::<F>::default();
-        let c = self.challenge(&hash, &sig.R, msg, csid);
+        let c = self.challenge(&sig.R, msg, csid);
 
         let base = GroupProjective::<P>::prime_subgroup_generator();
         let x = Group::mul(&base, &sig.s);
@@ -367,14 +387,13 @@ where
 impl<F, P> VerKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F> + Clone,
+    P: Parameters<BaseField = F>,
 {
     // TODO: this function should be generic w.r.t. hash functions
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
     fn challenge<B: AsRef<[u8]>>(
         &self,
-        hash: &Permutation<F>,
         R: &GroupProjective<P>,
         msg: &[F],
         csid: B,
@@ -394,7 +413,7 @@ where
             ]
         };
         challenge_input.extend(msg);
-        let challenge_fq = hash.sponge_with_padding(&challenge_input, 1)[0];
+        let challenge_fq = VariableLengthRescueCRHF::<F, 1>::evaluate(challenge_input).unwrap()[0]; // safe unwrap
 
         // this masking will drop the last byte, and the resulting
         // challenge will be 248 bits

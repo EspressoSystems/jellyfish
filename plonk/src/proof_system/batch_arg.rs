@@ -6,15 +6,13 @@
 
 //! An argument system that proves/verifies multiple instances in a batch.
 use crate::{
-    circuit::{customized::ecc::SWToTEConParam, Circuit, PlonkCircuit},
     errors::{PlonkError, SnarkError::ParameterError},
     proof_system::{
         structs::{BatchProof, OpenKey, ProvingKey, ScalarsAndBases, UniversalSrs, VerifyingKey},
         verifier::Verifier,
-        PlonkKzgSnark,
+        PlonkKzgSnark, UniversalSNARK,
     },
     transcript::PlonkTranscript,
-    MergeableCircuitType,
 };
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
 use ark_ff::One;
@@ -26,23 +24,24 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_rescue::RescueParameter;
+use jf_primitives::rescue::RescueParameter;
+use jf_relation::{gadgets::ecc::SWToTEConParam, Circuit, MergeableCircuitType, PlonkCircuit};
 use jf_utils::multi_pairing;
 
 /// A batching argument.
-pub struct BatchArgument<'a, E: PairingEngine>(PhantomData<&'a E>);
+pub struct BatchArgument<E: PairingEngine>(PhantomData<E>);
 
 /// A circuit instance that consists of the corresponding proving
 /// key/verification key/circuit.
 #[derive(Clone)]
-pub struct Instance<'a, E: PairingEngine> {
+pub struct Instance<E: PairingEngine> {
     // TODO: considering giving instance an ID
-    prove_key: ProvingKey<'a, E>, // the verification key can be obtained inside the proving key.
+    prove_key: ProvingKey<E>, // the verification key can be obtained inside the proving key.
     circuit: PlonkCircuit<E::Fr>,
     _circuit_type: MergeableCircuitType,
 }
 
-impl<'a, E: PairingEngine> Instance<'a, E> {
+impl<E: PairingEngine> Instance<E> {
     /// Get verification key by reference.
     pub fn verify_key_ref(&self) -> &VerifyingKey<E> {
         &self.prove_key.vk
@@ -54,18 +53,18 @@ impl<'a, E: PairingEngine> Instance<'a, E> {
     }
 }
 
-impl<'a, E, F, P> BatchArgument<'a, E>
+impl<E, F, P> BatchArgument<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Setup the circuit and the proving key for a (mergeable) instance.
     pub fn setup_instance(
-        srs: &'a UniversalSrs<E>,
+        srs: &UniversalSrs<E>,
         mut circuit: PlonkCircuit<E::Fr>,
         circuit_type: MergeableCircuitType,
-    ) -> Result<Instance<'a, E>, PlonkError> {
+    ) -> Result<Instance<E>, PlonkError> {
         circuit.finalize_for_mergeable_circuit(circuit_type)?;
         let (prove_key, _) = PlonkKzgSnark::preprocess(srs, &circuit)?;
         Ok(Instance {
@@ -78,8 +77,8 @@ where
     /// Prove satisfiability of multiple instances in a batch.
     pub fn batch_prove<R, T>(
         prng: &mut R,
-        instances_type_a: &[Instance<'a, E>],
-        instances_type_b: &[Instance<'a, E>],
+        instances_type_a: &[Instance<E>],
+        instances_type_b: &[Instance<E>],
     ) -> Result<BatchProof<E>, PlonkError>
     where
         R: CryptoRng + RngCore,
@@ -96,13 +95,13 @@ where
             .iter()
             .zip(instances_type_b.iter())
             .map(|(pred_a, pred_b)| pred_a.prove_key.merge(&pred_b.prove_key))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         let circuits = instances_type_a
             .iter()
             .zip(instances_type_b.iter())
             .map(|(pred_a, pred_b)| pred_a.circuit.merge(&pred_b.circuit))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
         let pks_ref: Vec<&ProvingKey<E>> = pks.iter().collect();
         let circuits_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
 
@@ -175,7 +174,7 @@ where
     }
 }
 
-impl<'a, E> BatchArgument<'a, E>
+impl<E> BatchArgument<E>
 where
     E: PairingEngine,
 {
@@ -245,7 +244,7 @@ pub fn build_batch_proof_and_vks_for_test<E, F, P, R, T>(
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
     R: CryptoRng + RngCore,
     T: PlonkTranscript<F>,
 {
@@ -257,20 +256,18 @@ where
         let circuit = new_mergeable_circuit_for_test::<E>(
             shared_public_input,
             i,
-            crate::MergeableCircuitType::TypeA,
+            MergeableCircuitType::TypeA,
         )?;
-        let instance =
-            BatchArgument::setup_instance(srs, circuit, crate::MergeableCircuitType::TypeA)?;
+        let instance = BatchArgument::setup_instance(srs, circuit, MergeableCircuitType::TypeA)?;
         vks_type_a.push(instance.verify_key_ref().clone());
         instances_type_a.push(instance);
 
         let circuit = new_mergeable_circuit_for_test::<E>(
             shared_public_input,
             i,
-            crate::MergeableCircuitType::TypeB,
+            MergeableCircuitType::TypeB,
         )?;
-        let instance =
-            BatchArgument::setup_instance(srs, circuit, crate::MergeableCircuitType::TypeB)?;
+        let instance = BatchArgument::setup_instance(srs, circuit, MergeableCircuitType::TypeB)?;
         vks_type_b.push(instance.verify_key_ref().clone());
         instances_type_b.push(instance);
     }
@@ -296,7 +293,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + Clone,
+        P: SWModelParameters<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -313,19 +310,19 @@ mod test {
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
                 i,
-                crate::MergeableCircuitType::TypeA,
+                MergeableCircuitType::TypeA,
             )?;
             let instance =
-                BatchArgument::setup_instance(&srs, circuit, crate::MergeableCircuitType::TypeA)?;
+                BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeA)?;
             instances_type_a.push(instance);
 
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
                 i,
-                crate::MergeableCircuitType::TypeB,
+                MergeableCircuitType::TypeB,
             )?;
             let instance =
-                BatchArgument::setup_instance(&srs, circuit, crate::MergeableCircuitType::TypeB)?;
+                BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeB)?;
             instances_type_b.push(instance);
         }
 
@@ -354,7 +351,7 @@ mod test {
 
         // 5. Verification
         let open_key_ref = &vks_type_a[0].open_key;
-        let beta_g_ref = &srs.0.powers_of_g[1];
+        let beta_g_ref = &srs.powers_of_g[1];
         let blinding_factor = E::Fr::rand(rng);
         let (inner1, inner2) = BatchArgument::partial_verify::<T>(
             beta_g_ref,
@@ -364,7 +361,7 @@ mod test {
             &batch_proof,
             blinding_factor,
         )?;
-        assert_eq!(BatchArgument::decide(open_key_ref, inner1, inner2)?, true);
+        assert!(BatchArgument::decide(open_key_ref, inner1, inner2)?);
         // error paths
         // empty merged_vks
         assert!(BatchArgument::partial_verify::<T>(

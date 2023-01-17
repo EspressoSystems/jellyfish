@@ -6,23 +6,21 @@
 
 //! Circuit implementation of the ElGamal scheme.
 
-use crate::elgamal::{Ciphertext, EncKey};
+use crate::{
+    circuit::rescue::{RescueGadget, RescueStateVar},
+    elgamal::{Ciphertext, EncKey},
+    rescue::{RescueParameter, PRP, STATE_SIZE},
+};
 use ark_ec::{
     twisted_edwards_extended::GroupAffine, AffineCurve, ProjectiveCurve, TEModelParameters,
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
-use jf_plonk::{
-    circuit::{
-        customized::{
-            ecc::{Point, PointVariable},
-            rescue::{RescueGadget, RescueStateVar},
-        },
-        Circuit, PlonkCircuit, Variable,
-    },
-    errors::PlonkError,
+use jf_relation::{
+    errors::CircuitError,
+    gadgets::ecc::{Point, PointVariable},
+    Circuit, PlonkCircuit, Variable,
 };
-use jf_rescue::{RescueParameter, PRP, STATE_SIZE};
 use jf_utils::compute_len_to_next_multiple;
 
 /// Variables holding an encryption key.
@@ -53,7 +51,7 @@ where
         &mut self,
         key_var: &RescueStateVar,
         data_vars: &[RescueStateVar],
-    ) -> Result<Vec<RescueStateVar>, PlonkError>;
+    ) -> Result<Vec<RescueStateVar>, CircuitError>;
 
     /// Rescue counter mode encryption with padding
     /// The function pads the input data and then calls
@@ -68,7 +66,7 @@ where
         &mut self,
         key_var: &RescueStateVar,
         data_vars: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError>;
+    ) -> Result<Vec<Variable>, CircuitError>;
 }
 
 impl<F> ElGamalEncryptionHelperGadget<F> for PlonkCircuit<F>
@@ -79,7 +77,7 @@ where
         &mut self,
         key_var: &RescueStateVar,
         data_vars: &[RescueStateVar],
-    ) -> Result<Vec<RescueStateVar>, PlonkError> {
+    ) -> Result<Vec<RescueStateVar>, CircuitError> {
         let zero_var = self.zero();
 
         let mut output_vars = data_vars.to_vec();
@@ -96,7 +94,7 @@ where
 
         output_vars
             .iter_mut()
-            .try_for_each(|output_chunk_vars| -> Result<(), PlonkError> {
+            .try_for_each(|output_chunk_vars| -> Result<(), CircuitError> {
                 let stream_chunk_vars = self.prp_with_round_keys(
                     &RescueStateVar::from([counter_var, zero_var, zero_var, zero_var]),
                     mds_states,
@@ -123,7 +121,7 @@ where
         &mut self,
         key_var: &RescueStateVar,
         data_vars: &[Variable],
-    ) -> Result<Vec<Variable>, PlonkError> {
+    ) -> Result<Vec<Variable>, CircuitError> {
         let zero_var = self.zero();
 
         // Compute the length of padded input
@@ -167,7 +165,7 @@ where
 pub trait ElGamalEncryptionGadget<F, P>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     /// Compute the gadget that check a correct Elgamal encryption
     /// * `pk_vars` - variables corresponding to the encryption public key
@@ -180,31 +178,31 @@ where
         pk_vars: &EncKeyVars,
         data_vars: &[Variable],
         r: Variable,
-    ) -> Result<ElGamalHybridCtxtVars, PlonkError>;
+    ) -> Result<ElGamalHybridCtxtVars, CircuitError>;
 
     /// Helper function to create encryption key variables struct
     /// * `pk` - encryption public key
     /// * `returns` - struct containing the variables corresponding to `p`
-    fn create_enc_key_variable(&mut self, pk: &EncKey<P>) -> Result<EncKeyVars, PlonkError>;
+    fn create_enc_key_variable(&mut self, pk: &EncKey<P>) -> Result<EncKeyVars, CircuitError>;
 
     /// Helper function to create a ciphertext variable
     fn create_ciphertext_variable(
         &mut self,
         ctxts: &Ciphertext<P>,
-    ) -> Result<ElGamalHybridCtxtVars, PlonkError>;
+    ) -> Result<ElGamalHybridCtxtVars, CircuitError>;
 }
 
 impl<F, P> ElGamalEncryptionGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: TEModelParameters<BaseField = F> + Clone,
+    P: TEModelParameters<BaseField = F>,
 {
     fn elgamal_encrypt(
         &mut self,
         pk_var: &EncKeyVars,
         data_vars: &[Variable],
         r: Variable,
-    ) -> Result<ElGamalHybridCtxtVars, PlonkError> {
+    ) -> Result<ElGamalHybridCtxtVars, CircuitError> {
         let shared_pk_var = self.variable_base_scalar_mul::<P>(r, &pk_var.0)?;
         let zero_var = self.zero();
         let key_perm_input_var = RescueStateVar::from([
@@ -224,7 +222,7 @@ where
         })
     }
 
-    fn create_enc_key_variable(&mut self, pk: &EncKey<P>) -> Result<EncKeyVars, PlonkError> {
+    fn create_enc_key_variable(&mut self, pk: &EncKey<P>) -> Result<EncKeyVars, CircuitError> {
         let point = Point::from(pk.key.into_affine());
         let point_variable = self.create_point_variable(point)?;
         Ok(EncKeyVars(point_variable))
@@ -233,14 +231,14 @@ where
     fn create_ciphertext_variable(
         &mut self,
         ctxts: &Ciphertext<P>,
-    ) -> Result<ElGamalHybridCtxtVars, PlonkError> {
+    ) -> Result<ElGamalHybridCtxtVars, CircuitError> {
         let ephemeral =
             self.create_point_variable(Point::from(ctxts.ephemeral.key.into_affine()))?;
         let symm_ctxts = ctxts
             .data
             .iter()
             .map(|&msg| self.create_variable(msg))
-            .collect::<Result<Vec<_>, PlonkError>>()?;
+            .collect::<Result<Vec<_>, CircuitError>>()?;
         Ok(ElGamalHybridCtxtVars {
             ephemeral,
             symm_ctxts,
@@ -251,8 +249,12 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        circuit::elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
+        circuit::{
+            elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
+            rescue::RescueGadget,
+        },
         elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
+        rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };
     use ark_ec::{ProjectiveCurve, TEModelParameters};
     use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
@@ -261,11 +263,7 @@ mod tests {
     use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::{vec, vec::Vec};
-    use jf_plonk::circuit::{
-        customized::{ecc::Point, rescue::RescueGadget},
-        Circuit, PlonkCircuit, Variable,
-    };
-    use jf_rescue::{RescueParameter, RescueVector, STATE_SIZE};
+    use jf_relation::{gadgets::ecc::Point, Circuit, PlonkCircuit, Variable};
     use jf_utils::fr_to_fq;
 
     #[test]
@@ -279,7 +277,7 @@ mod tests {
     fn apply_counter_mode_stream_no_padding_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F> + Clone,
+        P: TEModelParameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let mut prng = ark_std::test_rng();
@@ -315,7 +313,7 @@ mod tests {
         // Transfer updated data into blocks
         for block in encrypted_data.chunks(STATE_SIZE) {
             let block_vector = RescueVector::from(block);
-            blocks.push(block_vector.clone());
+            blocks.push(block_vector);
         }
 
         // Check ciphertext consistency
@@ -342,7 +340,7 @@ mod tests {
     fn test_elgamal_hybrid_encrypt_circuit_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F> + Clone,
+        P: TEModelParameters<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
@@ -422,7 +420,7 @@ mod tests {
     fn test_create_ciphertext_variable_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F> + Clone,
+        P: TEModelParameters<BaseField = F>,
     {
         // Prepare ciphertext
         let rng = &mut ark_std::test_rng();
@@ -438,7 +436,7 @@ mod tests {
             Point::from(ctxts.ephemeral.key.into_affine()),
             circuit.point_witness(&ctxts_var.ephemeral).unwrap()
         );
-        for (ctxt, ctxt_var) in ctxts.data.iter().zip(ctxts_var.symm_ctxts.clone()) {
+        for (ctxt, ctxt_var) in ctxts.data.iter().zip(ctxts_var.symm_ctxts) {
             assert_eq!(*ctxt, circuit.witness(ctxt_var).unwrap());
         }
         // The circuit is always satisfied.

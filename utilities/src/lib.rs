@@ -4,11 +4,12 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 
 mod conversion;
 mod macros;
 mod multi_pairing;
+pub mod par_utils;
 mod serialize;
 
 use ark_ff::Field;

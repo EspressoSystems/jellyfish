@@ -1,0 +1,41 @@
+[package]
+name = "jf-relation"
+description = "Jellyfish constraint system for PLONK"
+version = "0.1.2"
+edition = "2018"
+authors = ["Espresso Systems <hello@espressosys.com>"]
+license = "MIT"
+
+[dependencies]
+ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-bls12-381 = "0.3.0"
+ark-bn254 = "0.3.0"
+ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ec = "0.3.0"
+ark-ff = { version = "0.3.0", features = [ "asm" ] }
+ark-poly = "0.3.0"
+ark-serialize = "0.3.0"
+ark-std = { version = "0.3.0", default-features = false }
+derivative = { version = "2", features = ["use_core"] }
+displaydoc = { version = "0.2.3", default-features = false }
+downcast-rs = { version = "1.2.0", default-features = false }
+dyn-clone = "^1.0"
+hashbrown = "0.12.3"
+jf-utils = { path = "../utilities" }
+num-bigint = { version = "0.4", default-features = false }
+rand_chacha = { version = "0.3.1" }
+rayon = { version = "1.5.0", optional = true }
+
+[dev-dependencies]
+ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ed-on-bls12-381 = "0.3.0"
+ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
+ark-ed-on-bn254 = "0.3.0"
+itertools = { version = "0.10.1", default-features = false }
+
+[features]
+default = ["parallel"]
+std = ["ark-std/std", "ark-serialize/std", "ark-ff/std", 
+        "ark-ec/std", "ark-poly/std"]
+parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
+            "jf-utils/parallel", "rayon" ]

@@ -11,20 +11,15 @@ use super::structs::{
     PlookupOracles, ProofEvaluations, ProvingKey,
 };
 use crate::{
-    circuit::Arithmetization,
-    constants::{domain_size_ratio, GATE_WIDTH},
+    constants::domain_size_ratio,
     errors::{PlonkError, SnarkError::*},
     proof_system::structs::CommitKey,
 };
 use ark_ec::PairingEngine;
-use ark_ff::{FftField, Field, One, Zero};
+use ark_ff::{FftField, Field, One, UniformRand, Zero};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, UVPolynomial,
-};
-use ark_poly_commit::{
-    kzg10::{Commitment, Randomness, KZG10},
-    PCRandomness,
 };
 use ark_std::{
     rand::{CryptoRng, RngCore},
@@ -32,6 +27,13 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use jf_primitives::pcs::{
+    prelude::{Commitment, UnivariateKzgPCS},
+    PolynomialCommitmentScheme,
+};
+use jf_relation::{constants::GATE_WIDTH, Arithmetization};
+use jf_utils::par_utils::parallelizable_slice_iter;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 type CommitmentsAndPolys<E> = (
@@ -80,7 +82,7 @@ impl<E: PairingEngine> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
-        let wires_poly_comms = Self::commit_polynomials(ck, &wire_polys)?;
+        let wires_poly_comms = UnivariateKzgPCS::multi_commit(ck, &wire_polys)?;
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -104,7 +106,7 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
-        let h_poly_comms = Self::commit_polynomials(ck, &h_polys)?;
+        let h_poly_comms = UnivariateKzgPCS::multi_commit(ck, &h_polys)?;
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -122,7 +124,7 @@ impl<E: PairingEngine> Prover<E> {
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
             2,
         );
-        let prod_perm_comm = Self::commit_polynomial(ck, &prod_perm_poly)?;
+        let prod_perm_comm = UnivariateKzgPCS::commit(ck, &prod_perm_poly)?;
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
@@ -155,15 +157,16 @@ impl<E: PairingEngine> Prover<E> {
             )?,
             2,
         );
-        let prod_lookup_comm = Self::commit_polynomial(ck, &prod_lookup_poly)?;
+        let prod_lookup_comm = UnivariateKzgPCS::commit(ck, &prod_lookup_poly)?;
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
     /// Round 3: Return the splitted quotient polynomials and their commitments.
     /// Note that the first `num_wire_types`-1 splitted quotient polynomials
     /// have degree `domain_size`+1.
-    pub(crate) fn run_3rd_round(
+    pub(crate) fn run_3rd_round<R: CryptoRng + RngCore>(
         &self,
+        prng: &mut R,
         ck: &CommitKey<E>,
         pks: &[&ProvingKey<E>],
         challenges: &Challenges<E::Fr>,
@@ -172,8 +175,8 @@ impl<E: PairingEngine> Prover<E> {
     ) -> Result<CommitmentsAndPolys<E>, PlonkError> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
-        let split_quot_polys = self.split_quotient_polynomial(&quot_poly, num_wire_types)?;
-        let split_quot_poly_comms = Self::commit_polynomials(ck, &split_quot_polys)?;
+        let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
+        let split_quot_poly_comms = UnivariateKzgPCS::multi_commit(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
     }
@@ -190,14 +193,10 @@ impl<E: PairingEngine> Prover<E> {
         online_oracles: &Oracles<E::Fr>,
         num_wire_types: usize,
     ) -> ProofEvaluations<E::Fr> {
-        let wires_evals: Vec<E::Fr> = online_oracles
-            .wire_polys
-            .par_iter()
+        let wires_evals: Vec<E::Fr> = parallelizable_slice_iter(&online_oracles.wire_polys)
             .map(|poly| poly.evaluate(&challenges.zeta))
             .collect();
-        let wire_sigma_evals: Vec<E::Fr> = pk
-            .sigmas
-            .par_iter()
+        let wire_sigma_evals: Vec<E::Fr> = parallelizable_slice_iter(&pk.sigmas)
             .take(num_wire_types - 1)
             .map(|poly| poly.evaluate(&challenges.zeta))
             .collect();
@@ -326,7 +325,7 @@ impl<E: PairingEngine> Prover<E> {
         zeta: E::Fr,
         quot_polys: &[DensePolynomial<E::Fr>],
     ) -> Result<DensePolynomial<E::Fr>, PlonkError> {
-        let vanish_eval = zeta.pow(&[domain_size as u64]) - E::Fr::one();
+        let vanish_eval = zeta.pow([domain_size as u64]) - E::Fr::one();
         let zeta_to_n_plus_2 = (vanish_eval + E::Fr::one()) * zeta * zeta;
         let mut r_quot = quot_polys.first().ok_or(PlonkError::IndexError)?.clone();
         let mut coeff = E::Fr::one();
@@ -452,28 +451,6 @@ impl<E: PairingEngine> Prover<E> {
         mask_poly + poly
     }
 
-    /// Compute polynomial commitments.
-    fn commit_polynomials(
-        ck: &CommitKey<E>,
-        polys: &[DensePolynomial<E::Fr>],
-    ) -> Result<Vec<Commitment<E>>, PlonkError> {
-        let poly_comms = polys
-            .par_iter()
-            .map(|poly| Self::commit_polynomial(ck, poly))
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(poly_comms)
-    }
-
-    /// Commit a polynomial.
-    #[inline]
-    fn commit_polynomial(
-        ck: &CommitKey<E>,
-        poly: &DensePolynomial<E::Fr>,
-    ) -> Result<Commitment<E>, PlonkError> {
-        let (poly_comm, _) = KZG10::commit(ck, poly, None, None).map_err(PlonkError::PcsError)?;
-        Ok(poly_comm)
-    }
-
     /// Return a batched opening proof given a list of polynomials `polys_ref`,
     /// evaluation point `eval_point`, and randomized combiner `r`.
     fn compute_batched_witness_polynomial_commitment(
@@ -489,14 +466,10 @@ impl<E: PairingEngine> Prover<E> {
         );
 
         // Compute opening witness polynomial and its commitment
-        let empty_rand = Randomness::<E::Fr, DensePolynomial<E::Fr>>::empty();
-        let (witness_poly, _) = KZG10::<E, DensePolynomial<E::Fr>>::compute_witness_polynomial(
-            &batch_poly,
-            *eval_point,
-            &empty_rand,
-        )?;
+        let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::Fr::one()]);
+        let witness_poly = &batch_poly / &divisor;
 
-        Self::commit_polynomial(ck, &witness_poly)
+        UnivariateKzgPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
     }
 
     /// Compute the quotient polynomial via (i)FFTs.
@@ -538,22 +511,17 @@ impl<E: PairingEngine> Prover<E> {
             let lookup_flag = pk.plookup_pk.is_some();
 
             // Compute coset evaluations.
-            let selectors_coset_fft: Vec<Vec<E::Fr>> = pk
-                .selectors
-                .par_iter()
+            let selectors_coset_fft: Vec<Vec<E::Fr>> = parallelizable_slice_iter(&pk.selectors)
                 .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                 .collect();
-            let sigmas_coset_fft: Vec<Vec<E::Fr>> = pk
-                .sigmas
-                .par_iter()
+            let sigmas_coset_fft: Vec<Vec<E::Fr>> = parallelizable_slice_iter(&pk.sigmas)
                 .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                 .collect();
+            let wire_polys_coset_fft: Vec<Vec<E::Fr>> =
+                parallelizable_slice_iter(&oracles.wire_polys)
+                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .collect();
 
-            let wire_polys_coset_fft: Vec<Vec<E::Fr>> = oracles
-                .wire_polys
-                .par_iter()
-                .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                .collect();
             // TODO: (binyi) we can also compute below in parallel with
             // `wire_polys_coset_fft`.
             let prod_perm_poly_coset_fft =
@@ -582,12 +550,10 @@ impl<E: PairingEngine> Prover<E> {
                 let key_table_coset_fft = self
                     .quot_domain
                     .coset_fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
-                let h_coset_ffts: Vec<Vec<E::Fr>> = oracles
-                    .plookup_oracles
-                    .h_polys
-                    .par_iter()
-                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                    .collect();
+                let h_coset_ffts: Vec<Vec<E::Fr>> =
+                    parallelizable_slice_iter(&oracles.plookup_oracles.h_polys)
+                        .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                        .collect();
                 let prod_lookup_poly_coset_fft = self
                     .quot_domain
                     .coset_fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
@@ -604,58 +570,63 @@ impl<E: PairingEngine> Prover<E> {
             };
 
             // Compute coset evaluations of the quotient polynomial.
-            let quot_poly_coset_evals: Vec<E::Fr> = (0..m)
-                .into_par_iter()
-                .map(|i| {
-                    let w: Vec<E::Fr> = (0..num_wire_types)
-                        .map(|j| wire_polys_coset_fft[j][i])
-                        .collect();
-                    let w_next: Vec<E::Fr> = (0..num_wire_types)
-                        .map(|j| wire_polys_coset_fft[j][(i + domain_size_ratio) % m])
-                        .collect();
+            let quot_poly_coset_evals: Vec<E::Fr> =
+                parallelizable_slice_iter(&(0..m).collect::<Vec<_>>())
+                    .map(|&i| {
+                        let w: Vec<E::Fr> = (0..num_wire_types)
+                            .map(|j| wire_polys_coset_fft[j][i])
+                            .collect();
+                        let w_next: Vec<E::Fr> = (0..num_wire_types)
+                            .map(|j| wire_polys_coset_fft[j][(i + domain_size_ratio) % m])
+                            .collect();
 
-                    let t_circ = Self::compute_quotient_circuit_contribution(
-                        i,
-                        &w,
-                        &pub_input_poly_coset_fft[i],
-                        &selectors_coset_fft,
-                    );
-                    let (t_perm_1, t_perm_2) = Self::compute_quotient_copy_constraint_contribution(
-                        i,
-                        self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
-                        pk,
-                        &w,
-                        &prod_perm_poly_coset_fft[i],
-                        &prod_perm_poly_coset_fft[(i + domain_size_ratio) % m],
-                        challenges,
-                        &sigmas_coset_fft,
-                    );
-                    let mut t1 = t_circ + t_perm_1;
-                    let mut t2 = t_perm_2;
-
-                    // add Plookup-related terms
-                    if lookup_flag {
-                        let (t_lookup_1, t_lookup_2) = self.compute_quotient_plookup_contribution(
+                        let t_circ = Self::compute_quotient_circuit_contribution(
                             i,
-                            self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
-                            pk,
                             &w,
-                            &w_next,
-                            h_coset_ffts.as_ref().unwrap(),
-                            prod_lookup_poly_coset_fft.as_ref().unwrap(),
-                            range_table_coset_fft.as_ref().unwrap(),
-                            key_table_coset_fft.as_ref().unwrap(),
-                            selectors_coset_fft.last().unwrap(), // TODO: add a method to extract q_lookup_coset_fft
-                            table_dom_sep_coset_fft.as_ref().unwrap(),
-                            q_dom_sep_coset_fft.as_ref().unwrap(),
-                            challenges,
+                            &pub_input_poly_coset_fft[i],
+                            &selectors_coset_fft,
                         );
-                        t1 += t_lookup_1;
-                        t2 += t_lookup_2;
-                    }
-                    t1 * z_h_inv[i % domain_size_ratio] + t2
-                })
-                .collect();
+                        let (t_perm_1, t_perm_2) =
+                            Self::compute_quotient_copy_constraint_contribution(
+                                i,
+                                self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                                pk,
+                                &w,
+                                &prod_perm_poly_coset_fft[i],
+                                &prod_perm_poly_coset_fft[(i + domain_size_ratio) % m],
+                                challenges,
+                                &sigmas_coset_fft,
+                            );
+                        let mut t1 = t_circ + t_perm_1;
+                        let mut t2 = t_perm_2;
+
+                        // add Plookup-related terms
+                        if lookup_flag {
+                            let (t_lookup_1, t_lookup_2) = self
+                                .compute_quotient_plookup_contribution(
+                                    i,
+                                    self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                                    pk,
+                                    &w,
+                                    &w_next,
+                                    h_coset_ffts.as_ref().unwrap(),
+                                    prod_lookup_poly_coset_fft.as_ref().unwrap(),
+                                    range_table_coset_fft.as_ref().unwrap(),
+                                    key_table_coset_fft.as_ref().unwrap(),
+                                    selectors_coset_fft.last().unwrap(), /* TODO: add a method
+                                                                          * to extract
+                                                                          * q_lookup_coset_fft */
+                                    table_dom_sep_coset_fft.as_ref().unwrap(),
+                                    q_dom_sep_coset_fft.as_ref().unwrap(),
+                                    challenges,
+                                );
+                            t1 += t_lookup_1;
+                            t2 += t_lookup_2;
+                        }
+                        t1 * z_h_inv[i % domain_size_ratio] + t2
+                    })
+                    .collect();
+
             for (a, b) in quot_poly_coset_evals_sum
                 .iter_mut()
                 .zip(quot_poly_coset_evals.iter())
@@ -705,10 +676,10 @@ impl<E: PairingEngine> Prover<E> {
             + q_mul[0] * w[0] * w[1]
             + q_mul[1] * w[2] * w[3]
             + q_ecc * w[0] * w[1] * w[2] * w[3] * w[4]
-            + q_hash[0] * w[0].pow(&[5])
-            + q_hash[1] * w[1].pow(&[5])
-            + q_hash[2] * w[2].pow(&[5])
-            + q_hash[3] * w[3].pow(&[5])
+            + q_hash[0] * w[0].pow([5])
+            + q_hash[1] * w[1].pow([5])
+            + q_hash[2] * w[2].pow([5])
+            + q_hash[3] * w[3].pow([5])
             - q_o * w[4]
     }
 
@@ -895,8 +866,17 @@ impl<E: PairingEngine> Prover<E> {
 
     /// Split the quotient polynomial into `num_wire_types` polynomials.
     /// The first `num_wire_types`-1 polynomials have degree `domain_size`+1.
-    fn split_quotient_polynomial(
+    ///
+    /// Let t(X) be the input quotient polynomial, t_i(X) be the output
+    /// splitting polynomials. t(X) = \sum_{i=0}^{num_wire_types}
+    /// X^{i*(n+2)} * t_i(X)
+    ///
+    /// NOTE: we have a step polynomial of X^(n+2) instead of X^n as in the
+    /// GWC19 paper to achieve better balance among degrees of all splitting
+    /// polynomials (especially the highest-degree/last one).
+    fn split_quotient_polynomial<R: CryptoRng + RngCore>(
         &self,
+        prng: &mut R,
         quot_poly: &DensePolynomial<E::Fr>,
         num_wire_types: usize,
     ) -> Result<Vec<DensePolynomial<E::Fr>>, PlonkError> {
@@ -905,20 +885,43 @@ impl<E: PairingEngine> Prover<E> {
             return Err(WrongQuotientPolyDegree(quot_poly.degree(), expected_degree).into());
         }
         let n = self.domain.size();
-        let split_quot_polys = (0..num_wire_types)
-            .into_par_iter()
-            .map(|i| {
-                let end = if i < num_wire_types - 1 {
-                    (i + 1) * (n + 2)
-                } else {
-                    quot_poly.degree() + 1
-                };
-                // Degree-(n+1) polynomial has n + 2 coefficients.
-                DensePolynomial::<E::Fr>::from_coefficients_slice(
-                    &quot_poly.coeffs[i * (n + 2)..end],
-                )
-            })
-            .collect();
+        // compute the splitting polynomials t'_i(X) s.t. t(X) =
+        // \sum_{i=0}^{num_wire_types} X^{i*(n+2)} * t'_i(X)
+        let mut split_quot_polys: Vec<DensePolynomial<E::Fr>> =
+            parallelizable_slice_iter(&(0..num_wire_types).collect::<Vec<_>>())
+                .map(|&i| {
+                    let end = if i < num_wire_types - 1 {
+                        (i + 1) * (n + 2)
+                    } else {
+                        quot_poly.degree() + 1
+                    };
+                    // Degree-(n+1) polynomial has n + 2 coefficients.
+                    DensePolynomial::<E::Fr>::from_coefficients_slice(
+                        &quot_poly.coeffs[i * (n + 2)..end],
+                    )
+                })
+                .collect();
+
+        // mask splitting polynomials t_i(X), for i in {0..num_wire_types}.
+        // t_i(X) = t'_i(X) - b_last_i + b_now_i * X^(n+2)
+        // with t_lowest_i(X) = t_lowest_i(X) - 0 + b_now_i * X^(n+2)
+        // and t_highest_i(X) = t_highest_i(X) - b_last_i
+        let mut last_randomizer = E::Fr::zero();
+        split_quot_polys
+            .iter_mut()
+            .take(num_wire_types - 1)
+            .for_each(|poly| {
+                let now_randomizer = E::Fr::rand(prng);
+
+                poly.coeffs[0] -= last_randomizer;
+                assert_eq!(poly.degree(), n + 1);
+                poly.coeffs.push(now_randomizer);
+
+                last_randomizer = now_randomizer;
+            });
+        // mask the highest splitting poly
+        split_quot_polys[num_wire_types - 1].coeffs[0] -= last_randomizer;
+
         Ok(split_quot_polys)
     }
 
@@ -944,10 +947,10 @@ impl<E: PairingEngine> Prover<E> {
             + Self::mul_poly(&q_lc[3], &w_evals[3])
             + Self::mul_poly(&q_mul[0], &(w_evals[0] * w_evals[1]))
             + Self::mul_poly(&q_mul[1], &(w_evals[2] * w_evals[3]))
-            + Self::mul_poly(&q_hash[0], &w_evals[0].pow(&[5]))
-            + Self::mul_poly(&q_hash[1], &w_evals[1].pow(&[5]))
-            + Self::mul_poly(&q_hash[2], &w_evals[2].pow(&[5]))
-            + Self::mul_poly(&q_hash[3], &w_evals[3].pow(&[5]))
+            + Self::mul_poly(&q_hash[0], &w_evals[0].pow([5]))
+            + Self::mul_poly(&q_hash[1], &w_evals[1].pow([5]))
+            + Self::mul_poly(&q_hash[2], &w_evals[2].pow([5]))
+            + Self::mul_poly(&q_hash[3], &w_evals[3].pow([5]))
             + Self::mul_poly(
                 q_ecc,
                 &(w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4]),
@@ -963,7 +966,7 @@ impl<E: PairingEngine> Prover<E> {
         poly_evals: &ProofEvaluations<E::Fr>,
         prod_perm_poly: &DensePolynomial<E::Fr>,
     ) -> DensePolynomial<E::Fr> {
-        let dividend = challenges.zeta.pow(&[pk.domain_size() as u64]) - E::Fr::one();
+        let dividend = challenges.zeta.pow([pk.domain_size() as u64]) - E::Fr::one();
         let divisor = E::Fr::from(pk.domain_size() as u32) * (challenges.zeta - E::Fr::one());
         let lagrange_1_eval = dividend / divisor;
 
@@ -1010,7 +1013,7 @@ impl<E: PairingEngine> Prover<E> {
         let alpha_6 = alpha_4 * alpha_2;
         let n = pk.domain_size();
         let one = E::Fr::one();
-        let vanish_eval = challenges.zeta.pow(&[n as u64]) - one;
+        let vanish_eval = challenges.zeta.pow([n as u64]) - one;
 
         // compute lagrange_1 and lagrange_n
         let divisor = E::Fr::from(n as u32) * (challenges.zeta - one);
@@ -1075,7 +1078,9 @@ impl<E: PairingEngine> Prover<E> {
     #[inline]
     fn mul_poly(poly: &DensePolynomial<E::Fr>, coeff: &E::Fr) -> DensePolynomial<E::Fr> {
         DensePolynomial::<E::Fr>::from_coefficients_vec(
-            poly.coeffs.par_iter().map(|c| *coeff * c).collect(),
+            parallelizable_slice_iter(&poly.coeffs)
+                .map(|c| *coeff * c)
+                .collect(),
         )
     }
 }
@@ -1108,7 +1113,7 @@ mod test {
         let rng = &mut test_rng();
         let bad_quot_poly = DensePolynomial::<E::Fr>::rand(25, rng);
         assert!(prover
-            .split_quotient_polynomial(&bad_quot_poly, GATE_WIDTH + 1)
+            .split_quotient_polynomial(rng, &bad_quot_poly, GATE_WIDTH + 1)
             .is_err());
         Ok(())
     }

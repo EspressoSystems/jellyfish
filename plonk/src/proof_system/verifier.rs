@@ -8,7 +8,6 @@ use super::structs::{
     BatchProof, Challenges, PlookupProof, ProofEvaluations, ScalarsAndBases, VerifyingKey,
 };
 use crate::{
-    circuit::customized::ecc::SWToTEConParam,
     constants::*,
     errors::{PlonkError, SnarkError::ParameterError},
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
@@ -17,10 +16,10 @@ use crate::{
 use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
 use ark_ff::{Field, One, Zero};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
-use ark_poly_commit::kzg10::Commitment;
 use ark_std::{format, vec, vec::Vec};
 use core::ops::Neg;
-use jf_rescue::RescueParameter;
+use jf_primitives::{pcs::prelude::Commitment, rescue::RescueParameter};
+use jf_relation::{constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam};
 use jf_utils::multi_pairing;
 
 /// (Aggregated) polynomial commitment evaluation info.
@@ -53,7 +52,7 @@ impl<E, F, P> Verifier<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Construct a Plonk verifier that uses a domain with size `domain_size`.
     pub(crate) fn new(domain_size: usize) -> Result<Self, PlonkError> {
@@ -785,7 +784,7 @@ impl<E, F, P> Verifier<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F> + Clone,
+    P: SWModelParameters<BaseField = F>,
 {
     /// Merge a polynomial commitment into the aggregated polynomial commitment
     /// (in the ScalarAndBases form), update the random combiner afterward.

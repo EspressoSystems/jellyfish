@@ -6,8 +6,10 @@ use ark_std::rand::{CryptoRng, RngCore};
 pub mod bls;
 pub mod schnorr;
 pub use bls::BLSSignatureScheme;
+use core::fmt::Debug;
 pub use schnorr::SchnorrSignatureScheme;
-
+use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 /// Trait definition for a signature scheme.
 // A signature scheme is associated with a hash function H that is
 // to be used for challenge generation.
@@ -17,19 +19,41 @@ pub trait SignatureScheme {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey;
+    type SigningKey: Debug
+        + Clone
+        + Send
+        + Sync
+        + Zeroize
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// Verification key
-    type VerificationKey;
+    type VerificationKey: Debug
+        + Clone
+        + Send
+        + Sync
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// Public Parameter
     type PublicParameter;
 
     /// Signature
-    type Signature;
+    type Signature: Debug
+        + Clone
+        + Send
+        + Sync
+        + for<'a> Deserialize<'a>
+        + Serialize
+        + PartialEq
+        + Eq;
 
     /// A message is &\[MessageUnit\]
-    type MessageUnit;
+    type MessageUnit: Debug + Clone + Send + Sync;
 
     /// generate public parameters from RNG.
     /// If the RNG is not presented, use the default group generator.
@@ -78,13 +102,13 @@ mod tests {
         let rng = &mut test_rng();
         let parameters = S::param_gen(Some(rng)).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
-        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
-        assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
+        let sig = S::sign(&parameters, &sk, message, rng).unwrap();
+        assert!(S::verify(&parameters, &pk, message, &sig).is_ok());
 
         let parameters = S::param_gen::<StdRng>(None).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
-        let sig = S::sign(&parameters, &sk, &message, rng).unwrap();
-        assert!(S::verify(&parameters, &pk, &message, &sig).is_ok());
+        let sig = S::sign(&parameters, &sk, message, rng).unwrap();
+        assert!(S::verify(&parameters, &pk, message, &sig).is_ok());
     }
 
     pub(crate) fn failed_verification<S: SignatureScheme>(
@@ -95,6 +119,6 @@ mod tests {
         let parameters = S::param_gen(Some(rng)).unwrap();
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
         let sig = S::sign(&parameters, &sk, message, rng).unwrap();
-        assert!(!S::verify(&parameters, &pk, bad_message, &sig).is_ok());
+        assert!(S::verify(&parameters, &pk, bad_message, &sig).is_err());
     }
 }
