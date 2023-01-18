@@ -25,9 +25,9 @@ use ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec
 /// - the prover parameters for univariate KZG,
 /// - the prover parameters for multilinear KZG,
 /// - a list of MLEs,
-/// - a commitment to all MLEs
+/// - a batch commitment to all MLEs
 /// - and a same number of points,
-/// compute a multi-opening for all the polynomials.
+/// compute a batch opening for all the polynomials.
 ///
 /// For simplicity, this API requires each MLE to have only one point. If
 /// the caller wish to use more than one points per MLE, it should be
@@ -54,14 +54,14 @@ use ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec
 /// 9. output `w(p)`
 ///
 /// TODO: Migrate the batching algorithm in HyperPlonk repo
-pub(super) fn multi_open_internal<E: PairingEngine>(
+pub(super) fn batch_open_internal<E: PairingEngine>(
     uni_prover_param: &UnivariateProverParam<E::G1Affine>,
     ml_prover_param: &MultilinearProverParam<E>,
     polynomials: &[Rc<DenseMultilinearExtension<E::Fr>>],
-    multi_commitment: &Commitment<E>,
+    batch_commitment: &Commitment<E>,
     points: &[Vec<E::Fr>],
 ) -> Result<(MultilinearKzgBatchProof<E>, Vec<E::Fr>), PCSError> {
-    let open_timer = start_timer!(|| "multi open");
+    let open_timer = start_timer!(|| "batch open");
 
     // ===================================
     // Sanity checks on inputs
@@ -108,7 +108,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
     // 4. commit to q(x) and sample r from transcript
     // transcript contains: w commitment, points, q(x)'s commitment
     let mut transcript = IOPTranscript::new(b"ml kzg");
-    transcript.append_serializable_element(b"w", multi_commitment)?;
+    transcript.append_serializable_element(b"w", batch_commitment)?;
     for point in points {
         transcript.append_serializable_element(b"w", point)?;
     }
@@ -173,7 +173,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
     ))
 }
 
-/// Verifies that the `multi_commitment` is a valid commitment
+/// Verifies that the `batch_commitment` is a valid commitment
 /// to a list of MLEs for the given openings and evaluations in
 /// the batch_proof.
 ///
@@ -190,7 +190,7 @@ pub(super) fn multi_open_internal<E: PairingEngine>(
 pub(super) fn batch_verify_internal<E: PairingEngine>(
     uni_verifier_param: &UnivariateVerifierParam<E>,
     ml_verifier_param: &MultilinearVerifierParam<E>,
-    multi_commitment: &Commitment<E>,
+    batch_commitment: &Commitment<E>,
     points: &[Vec<E::Fr>],
     values: &[E::Fr],
     batch_proof: &MultilinearKzgBatchProof<E>,
@@ -233,7 +233,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
 
     // 1. push w, points and q_com into transcript
     let mut transcript = IOPTranscript::new(b"ml kzg");
-    transcript.append_serializable_element(b"w", multi_commitment)?;
+    transcript.append_serializable_element(b"w", batch_commitment)?;
     for point in points {
         transcript.append_serializable_element(b"w", point)?;
     }
@@ -281,7 +281,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
     // 6. verifies `p` is valid against multilinear KZG proof
     let res = verify_internal(
         ml_verifier_param,
-        multi_commitment,
+        batch_commitment,
         &point,
         &values[points_len],
         &batch_proof.proof,
@@ -314,7 +314,7 @@ mod tests {
     use ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
     type Fr = <E as PairingEngine>::Fr;
 
-    fn test_multi_commit_helper<R: RngCore + CryptoRng>(
+    fn test_batch_commit_helper<R: RngCore + CryptoRng>(
         uni_params: &UnivariateUniversalParams<E>,
         ml_params: &MultilinearUniversalParams<E>,
         polys: &[Rc<DenseMultilinearExtension<Fr>>],
@@ -337,9 +337,9 @@ mod tests {
 
         let evals = generate_evaluations(polys, &points)?;
 
-        let com = MultilinearKzgPCS::multi_commit(&(ml_ck.clone(), uni_ck.clone()), polys)?;
+        let com = MultilinearKzgPCS::batch_commit(&(ml_ck.clone(), uni_ck.clone()), polys)?;
         let (batch_proof, evaluations) =
-            multi_open_internal(&uni_ck, &ml_ck, polys, &com, &points)?;
+            batch_open_internal(&uni_ck, &ml_ck, polys, &com, &points)?;
 
         for (a, b) in evals.iter().zip(evaluations.iter()) {
             assert_eq!(a, b)
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multi_commit_internal() -> Result<(), PCSError> {
+    fn test_batch_commit_internal() -> Result<(), PCSError> {
         let mut rng = test_rng();
 
         let uni_params =
@@ -423,13 +423,13 @@ mod tests {
         let polys1: Vec<_> = (0..5)
             .map(|_| Rc::new(DenseMultilinearExtension::rand(4, &mut rng)))
             .collect();
-        test_multi_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
+        test_batch_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
 
         // single-variate polynomials
         let polys1: Vec<_> = (0..5)
             .map(|_| Rc::new(DenseMultilinearExtension::rand(1, &mut rng)))
             .collect();
-        test_multi_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
+        test_batch_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
 
         Ok(())
     }

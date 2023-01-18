@@ -123,7 +123,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     }
 
     /// Generate a commitment for a list of polynomials
-    fn multi_commit(
+    fn batch_commit(
         prover_param: impl Borrow<Self::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError> {
@@ -172,7 +172,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     // This is a naive approach
     // TODO: to implement the more efficient batch opening algorithm
     // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
-    fn multi_open(
+    fn batch_open(
         prover_param: impl Borrow<Self::ProverParam>,
         _multi_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
