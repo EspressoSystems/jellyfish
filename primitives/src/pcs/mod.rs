@@ -26,7 +26,7 @@ use errors::PCSError;
 
 /// This trait defines APIs for polynomial commitment schemes.
 /// Note that for our usage, this PCS is not hiding.
-/// TODO(#187): add hiding property. 
+/// TODO(#187): add hiding property.
 pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Prover parameters
     type ProverParam: Clone;
