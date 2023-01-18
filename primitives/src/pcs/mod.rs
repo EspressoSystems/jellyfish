@@ -25,7 +25,8 @@ use ark_std::{
 use errors::PCSError;
 
 /// This trait defines APIs for polynomial commitment schemes.
-/// Note that for our usage of PCS, we do not require the hiding property.
+/// Note that for our usage, this PCS is not hiding.
+/// TODO(#187): add hiding property. 
 pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// Prover parameters
     type ProverParam: Clone;
@@ -92,7 +93,7 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
     /// &Self::ProverParam, ..)` or `commit(prover_param:
     /// Box<Self::ProverParam>, ..)` or `commit(prover_param:
     /// Arc<Self::ProverParam>, ..)` etc.
-    /// Also, the commitment is not necessarily hiding.
+    /// Also, the commitment is not hiding.
     fn commit(
         prover_param: impl Borrow<Self::ProverParam>,
         poly: &Self::Polynomial,
