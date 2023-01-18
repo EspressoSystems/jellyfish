@@ -220,13 +220,13 @@ fn constrain_sibling_order<F: RescueParameter>(
 /// Circuit variable for a node in the Merkle path.
 pub struct Merkle3AryNodeVar {
     /// First sibling of the node.
-    pub sibling1: Variable,
+    sibling1: Variable,
     /// Second sibling of the node.
-    pub sibling2: Variable,
+    sibling2: Variable,
     /// Boolean variable indicating whether the node is a left child.
-    pub is_left_child: BoolVar,
+    is_left_child: BoolVar,
     /// Boolean variable indicating whether the node is a right child.
-    pub is_right_child: BoolVar,
+    is_right_child: BoolVar,
 }
 
 /// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
