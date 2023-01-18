@@ -23,6 +23,7 @@ use jf_relation::{
     },
     Circuit, PlonkCircuit, Variable,
 };
+use jf_utils::bytes_to_field_elements;
 
 /// Struct of variables representing a Rescue transcript type, including
 /// `STATE_SIZE` variables for the state, and a vector of variables for
@@ -33,14 +34,44 @@ pub struct RescueTranscriptVar<F: RescueParameter> {
     _phantom: PhantomData<F>,
 }
 
+/// Variable for Rescue transcript label
+pub struct RescueTranscriptLabelVar<F: RescueParameter> {
+    vars: Vec<Variable>,
+    _phantom: PhantomData<F>,
+}
+
+impl<F: RescueParameter> AsRef<[Variable]> for RescueTranscriptLabelVar<F> {
+    fn as_ref(&self) -> &[Variable] {
+        &self.vars
+    }
+}
+
+impl<F: RescueParameter> RescueTranscriptLabelVar<F> {
+    /// create a new RescueTranscriptLabelVar for a given circuit
+    pub(crate) fn new(
+        circuit: &mut PlonkCircuit<F>,
+        label: &'static [u8],
+    ) -> Result<Self, CircuitError> {
+        let vars_result: Result<Vec<Variable>, CircuitError> = bytes_to_field_elements(label)
+            .into_iter()
+            .map(|f| circuit.create_public_variable(f))
+            .collect();
+        let vars = vars_result?;
+        Ok(Self {
+            vars,
+            _phantom: PhantomData::default(),
+        })
+    }
+}
+
 impl<F> RescueTranscriptVar<F>
 where
     F: RescueParameter + SWToTEConParam,
 {
     /// create a new RescueTranscriptVar for a given circuit.
-    pub(crate) fn new(circuit: &mut PlonkCircuit<F>) -> Self {
+    pub(crate) fn new(circuit: &mut PlonkCircuit<F>, label: &RescueTranscriptLabelVar<F>) -> Self {
         Self {
-            transcript_var: Vec::new(),
+            transcript_var: label.as_ref().to_vec(),
             state_var: [circuit.zero(); STATE_SIZE],
             _phantom: PhantomData::default(),
         }
@@ -84,9 +115,10 @@ where
     // For efficiency purpose, label is not used for rescue FS.
     pub(crate) fn append_variable(
         &mut self,
-        _label: &'static [u8],
+        label: &RescueTranscriptLabelVar<F>,
         var: &Variable,
     ) -> Result<(), CircuitError> {
+        self.transcript_var.extend_from_slice(label.as_ref());
         self.transcript_var.push(*var);
 
         Ok(())
@@ -94,13 +126,14 @@ where
 
     // Append the message variables to the transcript.
     // For efficiency purpose, label is not used for rescue FS.
+    // TODO(Chengyu): fix the bug here.
     pub(crate) fn append_message_vars(
         &mut self,
-        _label: &'static [u8],
+        label: &RescueTranscriptLabelVar<F>,
         msg_vars: &[Variable],
     ) -> Result<(), CircuitError> {
         for e in msg_vars.iter() {
-            self.append_variable(_label, e)?;
+            self.append_variable(label, e)?;
         }
 
         Ok(())
@@ -112,13 +145,14 @@ where
     // For efficiency purpose, label is not used for rescue FS.
     pub(crate) fn append_commitment_var<E, P>(
         &mut self,
-        _label: &'static [u8],
+        label: &RescueTranscriptLabelVar<F>,
         poly_comm_var: &PointVariable,
     ) -> Result<(), CircuitError>
     where
         E: PairingEngine<G1Affine = GroupAffine<P>>,
         P: SWModelParameters<BaseField = F>,
     {
+        self.transcript_var.extend_from_slice(label.as_ref());
         // push the x and y coordinate of comm to the transcript
         self.transcript_var.push(poly_comm_var.get_x());
         self.transcript_var.push(poly_comm_var.get_y());
@@ -132,13 +166,14 @@ where
     // transcript For efficiency purpose, label is not used for rescue FS.
     pub(crate) fn append_commitments_vars<E, P>(
         &mut self,
-        _label: &'static [u8],
+        label: &RescueTranscriptLabelVar<F>,
         poly_comm_vars: &[PointVariable],
     ) -> Result<(), CircuitError>
     where
         E: PairingEngine<G1Affine = GroupAffine<P>>,
         P: SWModelParameters<BaseField = F>,
     {
+        self.transcript_var.extend_from_slice(label.as_ref());
         for poly_comm_var in poly_comm_vars.iter() {
             // push the x and y coordinate of comm to the transcript
             self.transcript_var.push(poly_comm_var.get_x());
@@ -151,10 +186,10 @@ where
     // For efficiency purpose, label is not used for rescue FS.
     pub(crate) fn append_challenge_var(
         &mut self,
-        _label: &'static [u8],
+        label: &RescueTranscriptLabelVar<F>,
         challenge_var: &Variable,
     ) -> Result<(), CircuitError> {
-        self.append_variable(_label, challenge_var)
+        self.append_variable(label, challenge_var)
     }
 
     // Append the proof evaluation to the transcript
@@ -183,7 +218,7 @@ where
     // curve due to its decomposition method.
     pub(crate) fn get_and_append_challenge_var<E>(
         &mut self,
-        _label: &'static [u8],
+        label: &RescueTranscriptLabelVar<F>,
         circuit: &mut PlonkCircuit<F>,
     ) -> Result<Variable, CircuitError>
     where
@@ -220,7 +255,7 @@ where
         // finish and update the states
         self.state_var.copy_from_slice(&res_var[0..STATE_SIZE]);
         self.transcript_var = Vec::new();
-        self.append_challenge_var(_label, &challenge_var)?;
+        self.append_challenge_var(label, &challenge_var)?;
 
         Ok(challenge_var)
     }
@@ -254,8 +289,9 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         let label = "testing".as_ref();
+        let label_var = RescueTranscriptLabelVar::new(&mut circuit, &label).unwrap();
 
-        let mut transcipt_var = RescueTranscriptVar::new(&mut circuit);
+        let mut transcipt_var = RescueTranscriptVar::new(&mut circuit, &label_var);
         let mut transcript = RescueTranscript::<F>::new(label);
 
         for _ in 0..10 {
@@ -270,16 +306,18 @@ mod tests {
                 transcript.append_message(label, msg.as_bytes()).unwrap();
 
                 transcipt_var
-                    .append_message_vars(label, &message_vars)
+                    .append_message_vars(&label_var, &message_vars)
                     .unwrap();
             }
 
             let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
 
             let challenge_var = transcipt_var
-                .get_and_append_challenge_var::<E>(label, &mut circuit)
+                .get_and_append_challenge_var::<E>(&label_var, &mut circuit)
                 .unwrap();
 
+            ark_std::println!("{:?}", field_switching::<_, F>(&challenge).into_repr());
+            ark_std::println!("{:?}", circuit.witness(challenge_var).unwrap().into_repr());
             assert_eq!(
                 circuit.witness(challenge_var).unwrap().into_repr(),
                 field_switching::<_, F>(&challenge).into_repr()
@@ -302,8 +340,9 @@ mod tests {
         let mut rng = test_rng();
 
         let label = "testing".as_ref();
+        let label_var = RescueTranscriptLabelVar::new(&mut circuit, label).unwrap();
 
-        let mut transcript_var = RescueTranscriptVar::new(&mut circuit);
+        let mut transcript_var = RescueTranscriptVar::new(&mut circuit, &label_var);
         let mut transcript = RescueTranscript::<F>::new(label);
 
         let open_key: UnivariateVerifierParam<E> = UnivariateVerifierParam {
@@ -334,7 +373,7 @@ mod tests {
         let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
 
         let challenge_var = transcript_var
-            .get_and_append_challenge_var::<E>(label, &mut circuit)
+            .get_and_append_challenge_var::<E>(&label_var, &mut circuit)
             .unwrap();
 
         assert_eq!(
@@ -402,7 +441,7 @@ mod tests {
             let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
 
             let challenge_var = transcript_var
-                .get_and_append_challenge_var::<E>(label, &mut circuit)
+                .get_and_append_challenge_var::<E>(&label_var, &mut circuit)
                 .unwrap();
 
             assert_eq!(

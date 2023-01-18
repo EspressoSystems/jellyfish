@@ -52,8 +52,7 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
     }
 
     /// Generate the challenge for the current transcript,
-    /// and then append it to the transcript. `_label` is omitted for
-    /// efficiency.
+    /// and then append it to the transcript.
     fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine,

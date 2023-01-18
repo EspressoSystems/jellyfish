@@ -47,7 +47,7 @@ impl<F> PlonkTranscript<F> for RescueTranscript<F>
 where
     F: RescueParameter + SWToTEConParam,
 {
-    /// Create a new plonk transcript. `_label` is omitted for efficiency.
+    /// Create a new plonk transcript.
     fn new(label: &'static [u8]) -> Self {
         RescueTranscript {
             transcript: bytes_to_field_elements(label).to_vec(),
@@ -94,24 +94,30 @@ where
     }
 
     /// Append the message to the transcript.
+    /// TODO(Chengyu): fix the bug here, current design brings trouble to the
+    /// gadget implementation. First, label, msg_len and msg shouldn't be
+    /// composed together before being converted into field elements.
+    /// Second, we should either remove the msg_len from transcript or find a
+    /// way to input it in the gadget design.
     fn append_message(&mut self, label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
-        let bytes = [label, msg.len().to_le_bytes().as_ref(), msg].concat();
+        let bytes = [label, &msg.len().to_le_bytes(), msg].concat();
         self.transcript
-            .extend_from_slice(bytes_to_field_elements(&bytes).as_ref());
+            .extend_from_slice(&bytes_to_field_elements(&bytes));
         Ok(())
     }
 
-    /// Append a single commitment to the transcript. `_label` is omitted for
-    /// efficiency.
+    /// Append a single commitment to the transcript.
     fn append_commitment<E, P>(
         &mut self,
-        _label: &'static [u8],
+        label: &'static [u8],
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         P: SWParam<BaseField = F>,
     {
+        self.transcript
+            .extend_from_slice(&bytes_to_field_elements(label));
         // convert the SW form commitments into TE form
         let te_point: Point<F> = (&comm.0).into();
         // push the x and y coordinate of comm (in twisted
@@ -165,8 +171,7 @@ where
     }
 
     /// Generate the challenge for the current transcript,
-    /// and then append it to the transcript. `_label` is omitted for
-    /// efficiency.
+    /// and then append it to the transcript.
     fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
     where
         E: PairingEngine<Fq = F>,

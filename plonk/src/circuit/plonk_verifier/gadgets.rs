@@ -6,7 +6,10 @@
 
 //! Circuits for the building blocks in Plonk verifiers.
 use crate::{
-    circuit::{plonk_verifier::*, transcript::RescueTranscriptVar},
+    circuit::{
+        plonk_verifier::*,
+        transcript::{RescueTranscriptLabelVar, RescueTranscriptVar},
+    },
     constants::EXTRA_TRANSCRIPT_MSG_LABEL,
     errors::PlonkError,
 };
@@ -205,42 +208,65 @@ where
                 public_inputs.len(),
             )));
     }
-    let mut transcript_var = RescueTranscriptVar::new(circuit);
+    let extra_transcript_msg_label_var =
+        RescueTranscriptLabelVar::new(circuit, EXTRA_TRANSCRIPT_MSG_LABEL)?;
+    let mut transcript_var = RescueTranscriptVar::new(circuit, &extra_transcript_msg_label_var);
     if let Some(msg) = extra_transcript_init_msg {
         let msg_fs = bytes_to_field_elements::<_, F>(msg);
         let msg_vars = msg_fs
             .iter()
             .map(|x| circuit.create_variable(*x))
             .collect::<Result<Vec<_>, _>>()?;
-        transcript_var.append_message_vars(EXTRA_TRANSCRIPT_MSG_LABEL, &msg_vars)?;
+        transcript_var.append_message_vars(&extra_transcript_msg_label_var, &msg_vars)?;
     }
     for (&vk, &pi) in verify_keys.iter().zip(public_inputs.iter()) {
         transcript_var.append_vk_and_pub_input_vars::<E>(circuit, vk, pi)?;
     }
+    let witness_poly_comms_label_var =
+        RescueTranscriptLabelVar::new(circuit, b"witness_poly_comms")?;
     for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
-        transcript_var.append_commitments_vars::<E, P>(b"witness_poly_comms", wires_poly_comms)?;
+        transcript_var
+            .append_commitments_vars::<E, P>(&witness_poly_comms_label_var, wires_poly_comms)?;
     }
-    let tau = transcript_var.get_and_append_challenge_var::<E>(b"tau", circuit)?;
+    let tau_label_var = RescueTranscriptLabelVar::new(circuit, b"tau")?;
+    let tau = transcript_var.get_and_append_challenge_var::<E>(&tau_label_var, circuit)?;
 
-    let beta = transcript_var.get_and_append_challenge_var::<E>(b"beta", circuit)?;
-    let gamma = transcript_var.get_and_append_challenge_var::<E>(b"gamma", circuit)?;
+    let beta_label_var = RescueTranscriptLabelVar::new(circuit, b"beta")?;
+    let gamma_label_var = RescueTranscriptLabelVar::new(circuit, b"gamma")?;
+    let beta = transcript_var.get_and_append_challenge_var::<E>(&beta_label_var, circuit)?;
+    let gamma = transcript_var.get_and_append_challenge_var::<E>(&gamma_label_var, circuit)?;
+    let perm_poly_comms_label_var = RescueTranscriptLabelVar::new(circuit, b"perm_poly_comms")?;
     for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
-        transcript_var.append_commitment_var::<E, P>(b"perm_poly_comms", prod_perm_poly_comm)?;
+        transcript_var
+            .append_commitment_var::<E, P>(&perm_poly_comms_label_var, prod_perm_poly_comm)?;
     }
 
-    let alpha = transcript_var.get_and_append_challenge_var::<E>(b"alpha", circuit)?;
-    transcript_var
-        .append_commitments_vars::<E, P>(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
-    let zeta = transcript_var.get_and_append_challenge_var::<E>(b"zeta", circuit)?;
+    let alpha_label_var = RescueTranscriptLabelVar::new(circuit, b"alpha")?;
+    let zeta_label_var = RescueTranscriptLabelVar::new(circuit, b"zeta")?;
+    let alpha = transcript_var.get_and_append_challenge_var::<E>(&alpha_label_var, circuit)?;
+    let quot_poly_comms_label_var = RescueTranscriptLabelVar::new(circuit, b"quot_poly_comms")?;
+    transcript_var.append_commitments_vars::<E, P>(
+        &quot_poly_comms_label_var,
+        &batch_proof.split_quot_poly_comms,
+    )?;
+    let zeta = transcript_var.get_and_append_challenge_var::<E>(&zeta_label_var, circuit)?;
     for poly_evals in batch_proof.poly_evals_vec.iter() {
         transcript_var.append_proof_evaluations_vars::<E>(circuit, poly_evals)?;
     }
 
-    let v = transcript_var.get_and_append_challenge_var::<E>(b"v", circuit)?;
-    transcript_var.append_commitment_var::<E, P>(b"open_proof", &batch_proof.opening_proof)?;
+    let v_label_var = RescueTranscriptLabelVar::new(circuit, b"v")?;
+    let v = transcript_var.get_and_append_challenge_var::<E>(&v_label_var, circuit)?;
+    let open_proof_label_var = RescueTranscriptLabelVar::new(circuit, b"open_proof")?;
+    let shifted_open_proof_label_var =
+        RescueTranscriptLabelVar::new(circuit, b"shifted_open_proof")?;
     transcript_var
-        .append_commitment_var::<E, P>(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
-    let u = transcript_var.get_and_append_challenge_var::<E>(b"u", circuit)?;
+        .append_commitment_var::<E, P>(&open_proof_label_var, &batch_proof.opening_proof)?;
+    transcript_var.append_commitment_var::<E, P>(
+        &shifted_open_proof_label_var,
+        &batch_proof.shifted_opening_proof,
+    )?;
+    let u_label_var = RescueTranscriptLabelVar::new(circuit, b"u")?;
+    let u = transcript_var.get_and_append_challenge_var::<E>(&u_label_var, circuit)?;
 
     // convert challenge vars into FpElemVars
     let challenge_var = ChallengesVar {
