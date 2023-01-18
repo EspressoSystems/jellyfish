@@ -1202,7 +1202,7 @@
             </span>.into_iter()
             .map(|poly| <span class="self">self</span>.mask_polynomial(prng, poly, <span class="number">1</span>))
             .collect();
-        <span class="kw">let </span>wires_poly_comms = UnivariateKzgPCS::multi_commit(ck, <span class="kw-2">&amp;</span>wire_polys)<span class="question-mark">?</span>;
+        <span class="kw">let </span>wires_poly_comms = UnivariateKzgPCS::batch_commit(ck, <span class="kw-2">&amp;</span>wire_polys)<span class="question-mark">?</span>;
         <span class="kw">let </span>pub_input_poly = cs.compute_pub_input_polynomial()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -1226,7 +1226,7 @@
         <span class="kw">let </span>h_1_poly = <span class="self">self</span>.mask_polynomial(prng, h_1_poly, <span class="number">2</span>);
         <span class="kw">let </span>h_2_poly = <span class="self">self</span>.mask_polynomial(prng, h_2_poly, <span class="number">2</span>);
         <span class="kw">let </span>h_polys = <span class="macro">vec!</span>[h_1_poly, h_2_poly];
-        <span class="kw">let </span>h_poly_comms = UnivariateKzgPCS::multi_commit(ck, <span class="kw-2">&amp;</span>h_polys)<span class="question-mark">?</span>;
+        <span class="kw">let </span>h_poly_comms = UnivariateKzgPCS::batch_commit(ck, <span class="kw-2">&amp;</span>h_polys)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -1296,7 +1296,7 @@
         <span class="kw">let </span>quot_poly =
             <span class="self">self</span>.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)<span class="question-mark">?</span>;
         <span class="kw">let </span>split_quot_polys = <span class="self">self</span>.split_quotient_polynomial(prng, <span class="kw-2">&amp;</span>quot_poly, num_wire_types)<span class="question-mark">?</span>;
-        <span class="kw">let </span>split_quot_poly_comms = UnivariateKzgPCS::multi_commit(ck, <span class="kw-2">&amp;</span>split_quot_polys)<span class="question-mark">?</span>;
+        <span class="kw">let </span>split_quot_poly_comms = UnivariateKzgPCS::batch_commit(ck, <span class="kw-2">&amp;</span>split_quot_polys)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>((split_quot_poly_comms, split_quot_polys))
     }

@@ -539,7 +539,7 @@
     }
 
     <span class="doccomment">/// Generate a commitment for a list of polynomials
-    </span><span class="kw">fn </span>multi_commit(
+    </span><span class="kw">fn </span>batch_commit(
         prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
         polys: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BatchCommitment, PCSError&gt; {
@@ -588,7 +588,7 @@
     </span><span class="comment">// This is a naive approach
     // TODO: to implement the more efficient batch opening algorithm
     // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
-    </span><span class="kw">fn </span>multi_open(
+    </span><span class="kw">fn </span>batch_open(
         prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
         _multi_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
         polynomials: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],

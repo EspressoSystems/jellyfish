@@ -534,7 +534,7 @@
     vec::Vec,
     One, Zero,
 };
-<span class="kw">use </span>batching::{batch_verify_internal, multi_open_internal};
+<span class="kw">use </span>batching::{batch_open_internal, batch_verify_internal};
 <span class="kw">use </span>srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam};
 <span class="kw">use </span>util::merge_polynomials;
 
@@ -653,11 +653,11 @@
         <span class="prelude-val">Ok</span>(Commitment(commitment))
     }
 
-    <span class="doccomment">/// Generate a commitment for a list of polynomials.
+    <span class="doccomment">/// Batch commit a list of polynomials.
     ///
     /// This function takes `2^(num_vars + log(polys.len())` number of scalar
     /// multiplications over G1.
-    </span><span class="kw">fn </span>multi_commit(
+    </span><span class="kw">fn </span>batch_commit(
         prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
         polys: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
@@ -701,10 +701,10 @@
     <span class="doccomment">/// Input
     /// - the prover parameters for univariate KZG,
     /// - the prover parameters for multilinear KZG,
-    /// - a list of multilinear extensions (MLEs),
-    /// - a commitment to all multilinear extensions,
+    /// - a list of polynomials,
+    /// - a (batch) commitment to all polynomials,
     /// - and a same number of points,
-    /// compute a multi-opening for all the polynomials.
+    /// compute a batch opening for all the polynomials.
     ///
     /// For simplicity, this API requires each MLE to have only one point. If
     /// the caller wish to use more than one points per MLE, it should be
@@ -729,17 +729,17 @@
     /// 7. get a point `p := l(r)`
     /// 8. output an opening of `w` over point `p`
     /// 9. output `w(p)`
-    </span><span class="kw">fn </span>multi_open(
+    </span><span class="kw">fn </span>batch_open(
         prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
-        multi_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
+        batch_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
         polynomials: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
         points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::BatchProof, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt; {
-        multi_open_internal::&lt;E&gt;(
+        batch_open_internal::&lt;E&gt;(
             <span class="kw-2">&amp;</span>prover_param.borrow().<span class="number">1</span>,
             <span class="kw-2">&amp;</span>prover_param.borrow().<span class="number">0</span>,
             polynomials,
-            multi_commitment,
+            batch_commitment,
             points,
         )
     }
@@ -761,7 +761,7 @@
     }
 
     <span class="doccomment">/// Verifies that `value` is the evaluation at `x_i` of the polynomial
-    /// `poly_i` committed inside `comm`.
+    /// `poly_i` committed inside `commitment`.
     /// steps:
     ///
     /// 1. put `q(x)`&#39;s evaluations over `(1, omega,...)` into transcript
@@ -773,7 +773,7 @@
     /// 6. verifies `p` is verifies against proof
     </span><span class="kw">fn </span>batch_verify&lt;R: RngCore + CryptoRng&gt;(
         verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
-        multi_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
+        batch_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
         points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
         values: <span class="kw-2">&amp;</span>[E::Fr],
         batch_proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchProof,
@@ -782,7 +782,7 @@
         batch_verify_internal(
             <span class="kw-2">&amp;</span>verifier_param.<span class="number">1</span>,
             <span class="kw-2">&amp;</span>verifier_param.<span class="number">0</span>,
-            multi_commitment,
+            batch_commitment,
             points,
             values,
             batch_proof,
