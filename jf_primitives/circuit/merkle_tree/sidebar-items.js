@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["MerkleTreeGadget","Gadget for a Merkle tree"]]};
+window.SIDEBAR_ITEMS = {"struct":[["Merkle3AryMembershipProofVar","Circuit variable for a Merkle proof of a 3-ary Merkle tree. Constains:"],["Merkle3AryNodeVar","Circuit variable for a node in the Merkle path."],["Merkle3AryNonMembershipProofVar","Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree. Constains:"]],"trait":[["MerkleTreeGadget","Gadget for a Merkle tree"],["UniversalMerkleTreeGadget","Gadget for the universal Merkle tree"]]};

@@ -676,7 +676,7 @@
     }
 
     <span class="kw">fn </span>test_universal_mt_builder_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F, F&gt;::from_kv_set(
+        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F&gt;::from_kv_set(
             <span class="number">1</span>,
             <span class="kw-2">&amp;</span>[(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">1u64</span>))],
         )
@@ -687,7 +687,7 @@
         hashmap.insert(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(BigUint::from(<span class="number">2u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">3u64</span>));
-        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F, F&gt;::from_kv_set(<span class="number">10</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
+        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F&gt;::from_kv_set(<span class="number">10</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
         <span class="macro">assert_eq!</span>(mt.num_leaves(), hashmap.len() <span class="kw">as </span>u64);
     }
 
@@ -703,7 +703,7 @@
         hashmap.insert(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(BigUint::from(<span class="number">2u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">3u64</span>));
-        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F, F&gt;::from_kv_set(<span class="number">10</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
+        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F&gt;::from_kv_set(<span class="number">10</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
         <span class="macro">assert_eq!</span>(mt.num_leaves(), hashmap.len() <span class="kw">as </span>u64);
 
         <span class="kw">let </span><span class="kw-2">mut </span>proof = mt
@@ -735,19 +735,19 @@
     <span class="kw">fn </span>test_update_and_lookup_helper&lt;I, F&gt;()
     <span class="kw">where
         </span>I: Index + ToTraversalPath&lt;U3&gt; + From&lt;u64&gt;,
-        F: RescueParameter,
+        F: RescueParameter + ToTraversalPath&lt;U3&gt;,
         RescueHash&lt;F&gt;: DigestAlgorithm&lt;F, I, F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>mt =
-            RescueSparseMerkleTree::&lt;I, F, F&gt;::from_kv_set(<span class="number">10</span>, HashMap::&lt;I, F&gt;::new()).unwrap();
+            RescueSparseMerkleTree::&lt;F, F&gt;::from_kv_set(<span class="number">10</span>, HashMap::&lt;F, F&gt;::new()).unwrap();
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
-            mt.update(I::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64));
+            mt.update(F::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64));
         }
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
-            <span class="kw">let </span>(val, proof) = mt.universal_lookup(I::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
+            <span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
             <span class="macro">assert_eq!</span>(val, F::from(i <span class="kw">as </span>u64));
             <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>proof.elem().unwrap(), val);
-            <span class="macro">assert!</span>(mt.verify(I::from(i <span class="kw">as </span>u64), <span class="kw-2">&amp;</span>proof).unwrap());
+            <span class="macro">assert!</span>(mt.verify(F::from(i <span class="kw">as </span>u64), <span class="kw-2">&amp;</span>proof).unwrap());
         }
     }
 
@@ -759,7 +759,7 @@
     }
 
     <span class="kw">fn </span>test_universal_mt_forget_remember_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueSparseMerkleTree::&lt;BigUint, F, F&gt;::from_kv_set(
+        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueSparseMerkleTree::&lt;BigUint, F&gt;::from_kv_set(
             <span class="number">10</span>,
             [
                 (BigUint::from(<span class="number">0u64</span>), F::from(<span class="number">1u64</span>)),
@@ -928,7 +928,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hashmap = HashMap::new();
         hashmap.insert(F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(F::from(<span class="number">10u64</span>), F::from(<span class="number">3u64</span>));
-        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;F, F, F&gt;::from_kv_set(<span class="number">3</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
+        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;F, F&gt;::from_kv_set(<span class="number">3</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
         <span class="kw">let </span>mem_proof = mt.lookup(F::from(<span class="number">10u64</span>)).expect_ok().unwrap().<span class="number">1</span>;
         <span class="kw">let </span>node = <span class="kw-2">&amp;</span>mem_proof.proof[<span class="number">0</span>];
         <span class="kw">let </span>non_mem_proof = <span class="kw">match </span>mt.universal_lookup(F::from(<span class="number">9u64</span>)) {

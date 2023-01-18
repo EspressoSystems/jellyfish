@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/merkle_tree/rescue_merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rescue_merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/circuit/merkle_tree/sparse_merkle_tree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sparse_merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -336,34 +336,304 @@
 <span id="336">336</span>
 <span id="337">337</span>
 <span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-</span><span class="doccomment">//! Circuit implementation of an append-only, 3-ary Merkle tree, instantiated
+</span><span class="doccomment">//! Circuit implementation of a sparse, 3-ary Merkle tree, instantiated
 //! with a Rescue hash function.
 
 </span><span class="kw">use crate</span>::{
     circuit::rescue::RescueNativeGadget,
     merkle_tree::{
-        internal::MerkleNode, prelude::RescueMerkleTree, MerkleTreeScheme, ToTraversalPath,
+        internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleTreeScheme, ToTraversalPath,
     },
     rescue::RescueParameter,
 };
 <span class="kw">use </span>ark_std::{string::ToString, vec::Vec};
 <span class="kw">use </span>jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
-<span class="kw">type </span>NodeVal&lt;F&gt; = &lt;RescueMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::NodeValue;
-<span class="kw">type </span>MembershipProof&lt;F&gt; = &lt;RescueMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::MembershipProof;
+<span class="kw">type </span>SparseMerkleTree&lt;F&gt; = RescueSparseMerkleTree&lt;BigUint, F&gt;;
+
+<span class="kw">type </span>NodeVal&lt;F&gt; = &lt;SparseMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::NodeValue;
+<span class="kw">type </span>MembershipProof&lt;F&gt; = &lt;SparseMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::MembershipProof;
+<span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>typenum::U3;
 
 <span class="kw">use super</span>::{
-    constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar, MerkleTreeGadget,
+    constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
+    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, UniversalMerkleTreeGadget,
 };
 
-<span class="kw">impl</span>&lt;F&gt; MerkleTreeGadget&lt;RescueMerkleTree&lt;F&gt;&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">impl</span>&lt;F&gt; UniversalMerkleTreeGadget&lt;SparseMerkleTree&lt;F&gt;&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
+<span class="kw">where
+    </span>F: RescueParameter,
+{
+    <span class="kw">type </span>NonMembershipProofVar = Merkle3AryNonMembershipProofVar;
+
+    <span class="kw">fn </span>is_non_member(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        non_elem_idx_var: Variable,
+        proof_var: <span class="self">Self</span>::NonMembershipProofVar,
+        root_var: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="comment">// constrain that the element&#39;s index is part of the proof
+        </span><span class="self">self</span>.enforce_equal(proof_var.pos_var, non_elem_idx_var)<span class="question-mark">?</span>;
+        <span class="kw">let </span>computed_root_var = {
+            <span class="kw">let </span>path_vars = <span class="kw-2">&amp;</span>proof_var;
+            <span class="kw">let </span><span class="kw-2">mut </span>cur_label = <span class="self">self</span>.zero();
+            <span class="kw">for </span>cur_node <span class="kw">in </span>path_vars.node_vars.iter() {
+                <span class="kw">let </span>input_labels = constrain_sibling_order(
+                    <span class="self">self</span>,
+                    cur_label,
+                    cur_node.sibling1,
+                    cur_node.sibling2,
+                    cur_node.is_left_child,
+                    cur_node.is_right_child,
+                )<span class="question-mark">?</span>;
+                <span class="comment">// check that the left child&#39;s label is non-zero
+                </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
+                cur_label =
+                    RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+            }
+            <span class="prelude-val">Ok</span>(cur_label)
+        }<span class="question-mark">?</span>;
+        <span class="self">self</span>.is_equal(computed_root_var, root_var)
+    }
+
+    <span class="kw">fn </span>enforce_non_membership_proof(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        non_elem_idx_var: Variable,
+        proof_var: <span class="self">Self</span>::NonMembershipProofVar,
+        expected_root_var: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="kw">let </span>bool_val = <span class="self">self</span>.is_non_member(non_elem_idx_var, proof_var, expected_root_var)<span class="question-mark">?</span>;
+        <span class="self">self</span>.enforce_true(bool_val.into())
+    }
+
+    <span class="kw">fn </span>create_non_membership_proof_variable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        merkle_proof: <span class="kw-2">&amp;</span>&lt;SparseMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::MembershipProof,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::NonMembershipProofVar, CircuitError&gt; {
+        <span class="kw">let </span>path = &lt;BigUint <span class="kw">as </span>ToTraversalPath&lt;U3&gt;&gt;::to_traversal_path(
+            <span class="kw-2">&amp;</span>merkle_proof.pos,
+            merkle_proof.tree_height() - <span class="number">1</span>,
+        );
+
+        <span class="kw">let </span>nodes = path
+            .iter()
+            .zip(merkle_proof.proof.iter().skip(<span class="number">1</span>))
+            .filter_map(|(branch, node)| <span class="kw">match </span>node {
+                MerkleNode::Branch { value: <span class="kw">_</span>, children } =&gt; <span class="prelude-val">Some</span>((children, branch)),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            })
+            .map(|(children, branch)| {
+                <span class="prelude-val">Ok</span>(Merkle3AryNodeVar {
+                    sibling1: <span class="self">self</span>.create_variable(children[<span class="number">0</span>].value())<span class="question-mark">?</span>,
+                    sibling2: <span class="self">self</span>.create_variable(children[<span class="number">1</span>].value())<span class="question-mark">?</span>,
+                    is_left_child: <span class="self">self</span>.create_boolean_variable(branch == <span class="kw-2">&amp;</span><span class="number">0</span>)<span class="question-mark">?</span>,
+                    is_right_child: <span class="self">self</span>.create_boolean_variable(branch == <span class="kw-2">&amp;</span><span class="number">2</span>)<span class="question-mark">?</span>,
+                })
+            })
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Merkle3AryNodeVar&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
+
+        <span class="comment">// `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
+        // boolean
+        </span><span class="kw">for </span>node <span class="kw">in </span>nodes.iter() {
+            <span class="comment">// Boolean constrain `is_left_child + is_right_child` because a node
+            // can either be the left or the right child of its parent
+            </span><span class="kw">let </span>left_plus_right =
+                <span class="self">self</span>.add(node.is_left_child.into(), node.is_right_child.into())<span class="question-mark">?</span>;
+            <span class="self">self</span>.enforce_bool(left_plus_right)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">let </span>pos = <span class="self">self</span>.create_variable(merkle_proof.pos.clone().into())<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::NonMembershipProofVar {
+            node_vars: nodes,
+            pos_var: pos,
+        })
+    }
+}
+
+<span class="kw">impl</span>&lt;F&gt; MerkleTreeGadget&lt;SparseMerkleTree&lt;F&gt;&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: RescueParameter,
 {
@@ -372,8 +642,8 @@
     <span class="kw">fn </span>create_membership_proof_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         merkle_proof: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Merkle3AryMembershipProofVar, CircuitError&gt; {
-        <span class="kw">let </span>path = &lt;u64 <span class="kw">as </span>ToTraversalPath&lt;U3&gt;&gt;::to_traversal_path(
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::MembershipProofVar, CircuitError&gt; {
+        <span class="kw">let </span>path = &lt;BigUint <span class="kw">as </span>ToTraversalPath&lt;U3&gt;&gt;::to_traversal_path(
             <span class="kw-2">&amp;</span>merkle_proof.pos,
             merkle_proof.tree_height() - <span class="number">1</span>,
         );
@@ -381,7 +651,7 @@
         <span class="kw">let </span>elem = <span class="kw">match </span>merkle_proof.elem() {
             <span class="prelude-val">Some</span>(elem) =&gt; elem,
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::InternalError(
+                <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::ParameterError(
                     <span class="string">&quot;The proof doesn&#39;t contain a leaf element&quot;</span>.to_string(),
                 ))
             },
@@ -416,7 +686,7 @@
             <span class="self">self</span>.enforce_bool(left_plus_right)<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(Merkle3AryMembershipProofVar {
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::MembershipProofVar {
             node_vars: nodes,
             elem_var,
         })
@@ -429,7 +699,7 @@
     <span class="kw">fn </span>is_member(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         elem_idx_var: Variable,
-        proof_var: Merkle3AryMembershipProofVar,
+        proof_var: <span class="self">Self</span>::MembershipProofVar,
         root_var: Variable,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
         <span class="kw">let </span>computed_root_var = {
@@ -464,10 +734,10 @@
     <span class="kw">fn </span>enforce_membership_proof(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         elem_idx_var: Variable,
-        proof_var: Merkle3AryMembershipProofVar,
+        proof_var: <span class="self">Self</span>::MembershipProofVar,
         expected_root_var: Variable,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        <span class="kw">let </span>bool_val = MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::is_member(
+        <span class="kw">let </span>bool_val = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::is_member(
             <span class="self">self</span>,
             elem_idx_var,
             proof_var,
@@ -481,11 +751,11 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use crate</span>::{
         circuit::merkle_tree::{
-            constrain_sibling_order, rescue_merkle_tree::Merkle3AryMembershipProofVar,
-            MerkleTreeGadget,
+            constrain_sibling_order, MerkleTreeGadget, UniversalMerkleTreeGadget,
         },
         merkle_tree::{
-            internal::MerkleNode, prelude::RescueMerkleTree, MerkleCommitment, MerkleTreeScheme,
+            internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleCommitment,
+            MerkleTreeScheme, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -495,7 +765,11 @@
     <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::Fq <span class="kw">as </span>FqEd381b;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
     <span class="kw">use </span>ark_std::{boxed::Box, vec, vec::Vec};
+    <span class="kw">use </span>hashbrown::HashMap;
     <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit, Variable};
+    <span class="kw">use </span>num_bigint::BigUint;
+
+    <span class="kw">type </span>SparseMerkleTree&lt;F&gt; = RescueSparseMerkleTree&lt;BigUint, F&gt;;
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>test_permute() {
@@ -585,45 +859,45 @@
     }
 
     <span class="attribute">#[test]
-    </span><span class="kw">fn </span>test_mt_gadget() {
-        test_mt_gadget_helper::&lt;FqEd254&gt;();
-        test_mt_gadget_helper::&lt;FqEd377&gt;();
-        test_mt_gadget_helper::&lt;FqEd381&gt;();
-        test_mt_gadget_helper::&lt;FqEd381b&gt;();
-        test_mt_gadget_helper::&lt;Fq377&gt;();
+    </span><span class="kw">fn </span>test_sparse_mt_gadget() {
+        test_membership_helper::&lt;FqEd254&gt;();
+        test_non_membership_helper::&lt;FqEd254&gt;();
+        test_membership_helper::&lt;FqEd377&gt;();
+        test_membership_helper::&lt;FqEd381&gt;();
+        test_membership_helper::&lt;FqEd381b&gt;();
+        test_membership_helper::&lt;Fq377&gt;();
     }
 
-    <span class="kw">fn </span>test_mt_gadget_helper&lt;F: RescueParameter&gt;() {
+    <span class="kw">fn </span>test_membership_helper&lt;F: RescueParameter&gt;() {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
 
         <span class="comment">// Happy path
 
-        // An elemement we care about is inserted in position 2
-        </span><span class="kw">let </span>uid = <span class="number">2u64</span>;
+        // An element we care about is inserted in position 2
+        </span><span class="kw">let </span>uid = BigUint::from(<span class="number">2u64</span>);
         <span class="kw">let </span>elem = F::from(<span class="number">310_u64</span>);
 
         <span class="comment">// native computation with a MT
         </span><span class="kw">let </span>elements = <span class="macro">vec!</span>[F::from(<span class="number">1_u64</span>), F::from(<span class="number">2_u64</span>), elem];
-        <span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, elements).unwrap();
+        <span class="kw">let </span>mt = SparseMerkleTree::&lt;F&gt;::from_elems(<span class="number">1</span>, elements).unwrap();
         <span class="kw">let </span>expected_root = mt.commitment().digest();
-        <span class="kw">let </span>(retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
+        <span class="kw">let </span>(retrieved_elem, proof) = mt.lookup(<span class="kw-2">&amp;</span>uid).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(retrieved_elem, elem);
 
         <span class="comment">// Circuit computation with a MT
-        </span><span class="kw">let </span>elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
-        <span class="kw">let </span>proof_var: Merkle3AryMembershipProofVar =
-            MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::create_membership_proof_variable(
-                <span class="kw-2">&amp;mut </span>circuit,
-                <span class="kw-2">&amp;</span>proof,
-            )
-            .unwrap();
-        <span class="kw">let </span>root_var = MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::create_root_variable(
+        </span><span class="kw">let </span>elem_idx_var = circuit.create_variable(uid.clone().into()).unwrap();
+        <span class="kw">let </span>proof_var = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_membership_proof_variable(
+            <span class="kw-2">&amp;mut </span>circuit,
+            <span class="kw-2">&amp;</span>proof,
+        )
+        .unwrap();
+        <span class="kw">let </span>root_var = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_root_variable(
             <span class="kw-2">&amp;mut </span>circuit,
             expected_root,
         )
         .unwrap();
 
-        MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::enforce_membership_proof(
+        MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::enforce_membership_proof(
             <span class="kw-2">&amp;mut </span>circuit,
             elem_idx_var,
             proof_var,
@@ -639,30 +913,106 @@
         // The circuit cannot be satisfied if an internal node has a left child with
         // zero value.
         </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
-        <span class="kw">let </span>elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
+        <span class="kw">let </span>elem_idx_var = circuit.create_variable(uid.into()).unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>bad_proof = proof.clone();
 
         <span class="kw">if let </span>MerkleNode::Branch { value: <span class="kw">_</span>, children } = <span class="kw-2">&amp;mut </span>bad_proof.proof[<span class="number">1</span>] {
             children[<span class="number">0</span>] = Box::new(MerkleNode::Leaf {
                 value: F::zero(),
-                pos: <span class="number">0</span>,
+                pos: BigUint::from(<span class="number">0u64</span>),
                 elem: F::one(),
             });
         }
-        <span class="kw">let </span>path_vars: Merkle3AryMembershipProofVar =
-            MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::create_membership_proof_variable(
-                <span class="kw-2">&amp;mut </span>circuit,
-                <span class="kw-2">&amp;</span>bad_proof,
-            )
-            .unwrap();
-        <span class="kw">let </span>root_var = MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::create_root_variable(
+        <span class="kw">let </span>path_vars = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_membership_proof_variable(
+            <span class="kw-2">&amp;mut </span>circuit,
+            <span class="kw-2">&amp;</span>bad_proof,
+        )
+        .unwrap();
+        <span class="kw">let </span>root_var = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_root_variable(
             <span class="kw-2">&amp;mut </span>circuit,
             expected_root,
         )
         .unwrap();
 
-        MerkleTreeGadget::&lt;RescueMerkleTree&lt;F&gt;&gt;::enforce_membership_proof(
+        MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::enforce_membership_proof(
+            <span class="kw-2">&amp;mut </span>circuit,
+            elem_idx_var.clone(),
+            path_vars.clone(),
+            root_var,
+        )
+        .unwrap();
+
+        <span class="comment">// Circuit does not verify because a left node value is 0
+        </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+    }
+
+    <span class="kw">fn </span>test_non_membership_helper&lt;F: RescueParameter&gt;() {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+
+        <span class="comment">// Happy path
+
+        // An element we care about is inserted in position 2
+        </span><span class="kw">let </span>uid = BigUint::from(<span class="number">3u64</span>);
+
+        <span class="comment">// native computation with a MT
+        </span><span class="kw">let </span><span class="kw-2">mut </span>hashmap = HashMap::new();
+        hashmap.insert(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>));
+        hashmap.insert(BigUint::from(<span class="number">2u64</span>), F::from(<span class="number">2u64</span>));
+        hashmap.insert(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">3u64</span>));
+        <span class="kw">let </span>mt = SparseMerkleTree::&lt;F&gt;::from_kv_set(<span class="number">2</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
+        <span class="kw">let </span>expected_root = mt.commitment().digest();
+
+        <span class="comment">// proof of non-membership
+        </span><span class="kw">let </span>proof = mt.universal_lookup(<span class="kw-2">&amp;</span>uid).expect_not_found().unwrap();
+
+        <span class="comment">// Circuit computation with a MT
+        </span><span class="kw">let </span>non_elem_idx_var = circuit.create_variable(uid.into()).unwrap();
+        <span class="kw">let </span>proof_var =
+            UniversalMerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_non_membership_proof_variable(
+                <span class="kw-2">&amp;mut </span>circuit,
+                <span class="kw-2">&amp;</span>proof,
+            )
+            .unwrap();
+
+        <span class="kw">let </span>root_var = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_root_variable(
+            <span class="kw-2">&amp;mut </span>circuit,
+            expected_root,
+        )
+        .unwrap();
+
+        UniversalMerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::enforce_non_membership_proof(
+            <span class="kw-2">&amp;mut </span>circuit,
+            non_elem_idx_var,
+            proof_var,
+            root_var,
+        )
+        .unwrap();
+
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>circuit.witness_mut(root_var) = F::zero();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+
+        <span class="comment">// Bad path:
+        // The circuit cannot be satisfied if we try to prove non-membership of an
+        // existing element.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>elem_idx_var = circuit.create_variable(<span class="number">2u64</span>.into()).unwrap();
+
+        <span class="kw">let </span>path_vars =
+            UniversalMerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_non_membership_proof_variable(
+                <span class="kw-2">&amp;mut </span>circuit,
+                <span class="kw-2">&amp;</span>proof,
+            )
+            .unwrap();
+
+        <span class="kw">let </span>root_var = MerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::create_root_variable(
+            <span class="kw-2">&amp;mut </span>circuit,
+            expected_root,
+        )
+        .unwrap();
+
+        UniversalMerkleTreeGadget::&lt;SparseMerkleTree&lt;F&gt;&gt;::enforce_non_membership_proof(
             <span class="kw-2">&amp;mut </span>circuit,
             elem_idx_var.clone(),
             path_vars.clone(),
