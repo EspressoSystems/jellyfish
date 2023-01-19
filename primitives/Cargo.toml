@@ -19,7 +19,7 @@ ark-ff = "0.3.0"
 ark-poly = "0.3.0"
 ark-serialize = "0.3.0"
 ark-sponge = "0.3.0"
-ark-std = { version = "0.3.0", default-features = false }
+ark-std = { version = "0.4.0", default-features = false }
 blst = "0.3.10"
 crypto_box = "0.8.1"
 derivative = { version = "2", features = ["use_core"] }
