@@ -274,7 +274,7 @@ impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
 
     fn digest_leaf(
         circuit: &mut PlonkCircuit<F>,
-        pos: usize,
+        pos: Variable,
         elem: Variable,
     ) -> Result<Variable, CircuitError> {
         let zero = circuit.zero();
