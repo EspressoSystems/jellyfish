@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 set -x
 
 cargo-nono check --no-default-features --package jf-utils

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # We want the code to panic if there is an integer overflow
 export RUSTFLAGS="-C overflow-checks=on"
