@@ -60,10 +60,10 @@ use super::rescue::RescueNativeGadget;
 /// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 /// ```
-pub trait MerkleTreeGadget<M, F>
+pub trait MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
-    F: PrimeField,
+    M::NodeValue: PrimeField,
 {
     /// Type to represent the merkle proof of the concrete MT instantiation.
     /// It is MT-specific, e.g arity will affect the exact definition of the
@@ -71,7 +71,7 @@ where
     type MembershipProofVar;
 
     /// Gadget for the digest algorithm.
-    type DigestGadget: DigestAlgorithmGadget<F>;
+    type DigestGadget: DigestAlgorithmGadget<M::NodeValue>;
 
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
@@ -153,10 +153,10 @@ where
 /// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 /// ```
-pub trait UniversalMerkleTreeGadget<M, F>: MerkleTreeGadget<M, F>
+pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
     M: UniversalMerkleTreeScheme,
-    F: PrimeField,
+    M::NodeValue: PrimeField,
 {
     /// Type to represent the merkle non-membership proof of the concrete MT
     /// instantiation. It is MT-specific, e.g arity will affect the exact

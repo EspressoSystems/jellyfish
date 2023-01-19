@@ -29,7 +29,7 @@ use super::{
     UniversalMerkleTreeGadget,
 };
 
-impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>, F> for PlonkCircuit<F>
+impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
@@ -119,7 +119,7 @@ where
     }
 }
 
-impl<F> MerkleTreeGadget<SparseMerkleTree<F>, F> for PlonkCircuit<F>
+impl<F> MerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
 where
     F: RescueParameter,
 {
@@ -220,7 +220,7 @@ where
         proof_var: Self::MembershipProofVar,
         expected_root_var: Variable,
     ) -> Result<(), CircuitError> {
-        let bool_val = MerkleTreeGadget::<SparseMerkleTree<F>, F>::is_member(
+        let bool_val = MerkleTreeGadget::<SparseMerkleTree<F>>::is_member(
             self,
             elem_idx_var,
             proof_var,
@@ -369,19 +369,18 @@ mod test {
 
         // Circuit computation with a MT
         let elem_idx_var = circuit.create_variable(uid.clone().into()).unwrap();
-        let proof_var =
-            MerkleTreeGadget::<SparseMerkleTree<F>, F>::create_membership_proof_variable(
-                &mut circuit,
-                &proof,
-            )
-            .unwrap();
-        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>, F>::create_root_variable(
+        let proof_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
+            &mut circuit,
+            &proof,
+        )
+        .unwrap();
+        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
             expected_root,
         )
         .unwrap();
 
-        MerkleTreeGadget::<SparseMerkleTree<F>, F>::enforce_membership_proof(
+        MerkleTreeGadget::<SparseMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
             elem_idx_var,
             proof_var,
@@ -408,19 +407,18 @@ mod test {
                 elem: F::one(),
             });
         }
-        let path_vars =
-            MerkleTreeGadget::<SparseMerkleTree<F>, F>::create_membership_proof_variable(
-                &mut circuit,
-                &bad_proof,
-            )
-            .unwrap();
-        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>, F>::create_root_variable(
+        let path_vars = MerkleTreeGadget::<SparseMerkleTree<F>>::create_membership_proof_variable(
+            &mut circuit,
+            &bad_proof,
+        )
+        .unwrap();
+        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
             expected_root,
         )
         .unwrap();
 
-        MerkleTreeGadget::<SparseMerkleTree<F>, F>::enforce_membership_proof(
+        MerkleTreeGadget::<SparseMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
             elem_idx_var.clone(),
             path_vars.clone(),
@@ -454,19 +452,19 @@ mod test {
         // Circuit computation with a MT
         let non_elem_idx_var = circuit.create_variable(uid.into()).unwrap();
         let proof_var =
-            UniversalMerkleTreeGadget::<SparseMerkleTree<F>, F>::create_non_membership_proof_variable(
+            UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::create_non_membership_proof_variable(
                 &mut circuit,
                 &proof,
             )
             .unwrap();
 
-        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>, F>::create_root_variable(
+        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
             expected_root,
         )
         .unwrap();
 
-        UniversalMerkleTreeGadget::<SparseMerkleTree<F>, F>::enforce_non_membership_proof(
+        UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
             &mut circuit,
             non_elem_idx_var,
             proof_var,
@@ -485,19 +483,19 @@ mod test {
         let elem_idx_var = circuit.create_variable(2u64.into()).unwrap();
 
         let path_vars =
-            UniversalMerkleTreeGadget::<SparseMerkleTree<F>, F>::create_non_membership_proof_variable(
+            UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::create_non_membership_proof_variable(
                 &mut circuit,
                 &proof,
             )
             .unwrap();
 
-        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>, F>::create_root_variable(
+        let root_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_root_variable(
             &mut circuit,
             expected_root,
         )
         .unwrap();
 
-        UniversalMerkleTreeGadget::<SparseMerkleTree<F>, F>::enforce_non_membership_proof(
+        UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
             &mut circuit,
             elem_idx_var.clone(),
             path_vars.clone(),
