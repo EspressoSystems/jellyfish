@@ -10,9 +10,9 @@ pub use crate::{
     impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
     merkle_tree::{
         append_only::MerkleTree, universal_merkle_tree::UniversalMerkleTree,
-        AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-        LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
-        UniversalMerkleTreeScheme,
+        AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme,
+        ForgetableUniversalMerkleTreeScheme, Index, LookupResult, MerkleCommitment,
+        MerkleTreeScheme, NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
     },
 };
 
@@ -69,4 +69,4 @@ impl<F: RescueParameter> DigestAlgorithm<F, F, F> for RescueHash<F> {
 }
 
 /// Example instantiation of a SparseMerkleTree indexed by I
-pub type RescueSparseMerkleTree<I, E, F> = UniversalMerkleTree<E, RescueHash<F>, I, U3, F>;
+pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, U3, F>;

@@ -36,7 +36,7 @@ use ark_std::{
     vec::Vec,
     One, Zero,
 };
-use batching::{batch_verify_internal, multi_open_internal};
+use batching::{batch_open_internal, batch_verify_internal};
 use srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam};
 use util::merge_polynomials;
 
@@ -155,11 +155,11 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
         Ok(Commitment(commitment))
     }
 
-    /// Generate a commitment for a list of polynomials.
+    /// Batch commit a list of polynomials.
     ///
     /// This function takes `2^(num_vars + log(polys.len())` number of scalar
     /// multiplications over G1.
-    fn multi_commit(
+    fn batch_commit(
         prover_param: impl Borrow<Self::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::Commitment, PCSError> {
@@ -203,10 +203,10 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     /// Input
     /// - the prover parameters for univariate KZG,
     /// - the prover parameters for multilinear KZG,
-    /// - a list of multilinear extensions (MLEs),
-    /// - a commitment to all multilinear extensions,
+    /// - a list of polynomials,
+    /// - a (batch) commitment to all polynomials,
     /// - and a same number of points,
-    /// compute a multi-opening for all the polynomials.
+    /// compute a batch opening for all the polynomials.
     ///
     /// For simplicity, this API requires each MLE to have only one point. If
     /// the caller wish to use more than one points per MLE, it should be
@@ -231,17 +231,17 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     /// 7. get a point `p := l(r)`
     /// 8. output an opening of `w` over point `p`
     /// 9. output `w(p)`
-    fn multi_open(
+    fn batch_open(
         prover_param: impl Borrow<Self::ProverParam>,
-        multi_commitment: &Self::BatchCommitment,
+        batch_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError> {
-        multi_open_internal::<E>(
+        batch_open_internal::<E>(
             &prover_param.borrow().1,
             &prover_param.borrow().0,
             polynomials,
-            multi_commitment,
+            batch_commitment,
             points,
         )
     }
@@ -263,7 +263,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     }
 
     /// Verifies that `value` is the evaluation at `x_i` of the polynomial
-    /// `poly_i` committed inside `comm`.
+    /// `poly_i` committed inside `commitment`.
     /// steps:
     ///
     /// 1. put `q(x)`'s evaluations over `(1, omega,...)` into transcript
@@ -275,7 +275,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     /// 6. verifies `p` is verifies against proof
     fn batch_verify<R: RngCore + CryptoRng>(
         verifier_param: &Self::VerifierParam,
-        multi_commitment: &Self::BatchCommitment,
+        batch_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
         values: &[E::Fr],
         batch_proof: &Self::BatchProof,
@@ -284,7 +284,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
         batch_verify_internal(
             &verifier_param.1,
             &verifier_param.0,
-            multi_commitment,
+            batch_commitment,
             points,
             values,
             batch_proof,
@@ -296,11 +296,10 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
 /// same. This function does not need to take the evaluation value as an
 /// input.
 ///
-/// This function takes 2^{num_var +1} number of scalar multiplications over
+/// This function takes 2^{num_var} number of scalar multiplications over
 /// G1:
 /// - it proceeds with `num_var` number of rounds,
-/// - at round i, we compute an MSM for `2^{num_var - i + 1}` number of G2
-///   elements.
+/// - at round i, we compute an MSM for `2^{num_var - i}` number of G1 elements.
 fn open_internal<E: PairingEngine>(
     prover_param: &MultilinearProverParam<E>,
     polynomial: &DenseMultilinearExtension<E::Fr>,
@@ -324,48 +323,48 @@ fn open_internal<E: PairingEngine>(
     }
 
     let nv = polynomial.num_vars();
-    let ignored = prover_param.num_vars - nv;
-    let mut r: Vec<Vec<E::Fr>> = (0..nv + 1).map(|_| Vec::new()).collect();
-    let mut q: Vec<Vec<E::Fr>> = (0..nv + 1).map(|_| Vec::new()).collect();
+    // the first `ignored` SRS vectors are unused
+    let ignored = prover_param.num_vars - nv + 1;
 
-    r[nv] = polynomial.to_evaluations();
+    let mut f = polynomial.to_evaluations();
 
     let mut proofs = Vec::new();
 
     for (i, (&point_at_k, gi)) in point
         .iter()
-        .zip(prover_param.powers_of_g[ignored..].iter())
-        .take(nv)
+        .zip(prover_param.powers_of_g[ignored..ignored + nv].iter())
         .enumerate()
     {
         let ith_round = start_timer!(|| format!("{}-th round", i));
 
-        let k = nv - i;
-        let cur_dim = 1 << (k - 1);
-        let mut cur_q = vec![E::Fr::zero(); cur_dim];
-        let mut cur_r = vec![E::Fr::zero(); cur_dim];
+        let k = nv - 1 - i;
+        let cur_dim = 1 << k;
+        let mut q = vec![E::Fr::zero(); cur_dim];
+        let mut r = vec![E::Fr::zero(); cur_dim];
 
-        for b in 0..(1 << (k - 1)) {
-            // q_b = pre_r [2^b + 1] - pre_r [2^b]
-            cur_q[b] = r[k][(b << 1) + 1] - r[k][b << 1];
+        let ith_round_eval = start_timer!(|| format!("{}-th round eval", i));
+        for b in 0..(1 << k) {
+            // q[b] = f[1, b] - f[0, b]
+            q[b] = f[(b << 1) + 1] - f[b << 1];
 
-            // r_b = pre_r [2^b]*(1-p) + pre_r [2^b + 1] * p
-            cur_r[b] =
-                r[k][b << 1] * (E::Fr::one() - point_at_k) + (r[k][(b << 1) + 1] * point_at_k);
+            // r[b] = f[0, b] + q[b] * p
+            r[b] = f[b << 1] + (q[b] * point_at_k);
         }
-
-        let scalars: Vec<_> = (0..(1 << k)).map(|x| cur_q[x >> 1].into_repr()).collect();
-
-        q[k] = cur_q;
-        r[k - 1] = cur_r;
+        f = r;
+        end_timer!(ith_round_eval);
+        let scalars: Vec<_> = q.iter().map(|x| x.into_repr()).collect();
 
         // this is a MSM over G1 and is likely to be the bottleneck
+        let msm_timer = start_timer!(|| format!("msm of size {} at round {}", gi.evals.len(), i));
+
         proofs.push(VariableBaseMSM::multi_scalar_mul(&gi.evals, &scalars).into_affine());
+        end_timer!(msm_timer);
+
         end_timer!(ith_round);
     }
-    let eval = polynomial.evaluate(point).ok_or_else(|| {
-        PCSError::InvalidParameters("fail to evaluate the polynomial".to_string())
-    })?;
+    let eval = polynomial
+        .evaluate(point)
+        .ok_or_else(|| PCSError::InvalidParameters("fail to eval poly at the point".to_string()))?;
     end_timer!(open_timer);
     Ok((MultilinearKzgProof { proofs }, eval))
 }
@@ -393,7 +392,6 @@ fn verify_internal<E: PairingEngine>(
         )));
     }
 
-    let ignored = verifier_param.num_vars - num_var;
     let prepare_inputs_timer = start_timer!(|| "prepare pairing inputs");
 
     let scalar_size = E::Fr::size_in_bits();
@@ -407,6 +405,8 @@ fn verify_internal<E: PairingEngine>(
     let h_mul: Vec<E::G2Projective> =
         FixedBaseMSM::multi_scalar_mul(scalar_size, window_size, &h_table, point);
 
+    // the first `ignored` G2 parameters are unused
+    let ignored = verifier_param.num_vars - num_var;
     let h_vec: Vec<_> = (0..num_var)
         .map(|i| verifier_param.h_mask[ignored + i].into_projective() - h_mul[i])
         .collect();
@@ -454,7 +454,7 @@ mod tests {
         let nv = poly.num_vars();
         assert_ne!(nv, 0);
         let uni_degree = 1;
-        let (ck, vk) = MultilinearKzgPCS::trim(params, uni_degree, Some(nv + 1))?;
+        let (ck, vk) = MultilinearKzgPCS::trim(params, uni_degree, Some(nv))?;
         let point: Vec<_> = (0..nv).map(|_| Fr::rand(rng)).collect();
         let com = MultilinearKzgPCS::commit(&ck, poly)?;
         let (proof, value) = MultilinearKzgPCS::open(&ck, poly, &point)?;

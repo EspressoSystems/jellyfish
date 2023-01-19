@@ -82,7 +82,7 @@ impl<E: PairingEngine> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
-        let wires_poly_comms = UnivariateKzgPCS::multi_commit(ck, &wire_polys)?;
+        let wires_poly_comms = UnivariateKzgPCS::batch_commit(ck, &wire_polys)?;
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -106,7 +106,7 @@ impl<E: PairingEngine> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
-        let h_poly_comms = UnivariateKzgPCS::multi_commit(ck, &h_polys)?;
+        let h_poly_comms = UnivariateKzgPCS::batch_commit(ck, &h_polys)?;
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -176,7 +176,7 @@ impl<E: PairingEngine> Prover<E> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
         let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
-        let split_quot_poly_comms = UnivariateKzgPCS::multi_commit(ck, &split_quot_polys)?;
+        let split_quot_poly_comms = UnivariateKzgPCS::batch_commit(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
     }
