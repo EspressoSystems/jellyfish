@@ -98,6 +98,7 @@ else
 fi
 
 # Run the benchmark binary
+set -e
 cargo bench
 
 
