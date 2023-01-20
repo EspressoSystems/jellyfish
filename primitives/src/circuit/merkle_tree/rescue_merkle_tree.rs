@@ -8,7 +8,7 @@
 //! with a Rescue hash function.
 
 use crate::{
-    circuit::rescue::RescueNativeGadget,
+    circuit::merkle_tree::DigestAlgorithmGadget,
     merkle_tree::{
         internal::MerkleNode, prelude::RescueMerkleTree, MerkleTreeScheme, ToTraversalPath,
     },
@@ -16,13 +16,13 @@ use crate::{
 };
 use ark_std::{string::ToString, vec::Vec};
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
-
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
 type MembershipProof<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
 use typenum::U3;
 
 use super::{
     constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar, MerkleTreeGadget,
+    RescueDigestGadget,
 };
 
 impl<F> MerkleTreeGadget<RescueMerkleTree<F>> for PlonkCircuit<F>
@@ -30,6 +30,8 @@ where
     F: RescueParameter,
 {
     type MembershipProofVar = Merkle3AryMembershipProofVar;
+
+    type DigestGadget = RescueDigestGadget;
 
     fn create_membership_proof_variable(
         &mut self,
@@ -96,14 +98,10 @@ where
     ) -> Result<BoolVar, CircuitError> {
         let computed_root_var = {
             let proof_var = &proof_var;
-            let zero_var = self.zero();
 
             // elem label = H(0, uid, elem)
-            let mut cur_label = RescueNativeGadget::<F>::rescue_sponge_no_padding(
-                self,
-                &[zero_var, elem_idx_var, proof_var.elem_var],
-                1,
-            )?[0];
+            let mut cur_label =
+                Self::DigestGadget::digest_leaf(self, elem_idx_var, proof_var.elem_var)?;
             for cur_node in proof_var.node_vars.iter() {
                 let input_labels = constrain_sibling_order(
                     self,
@@ -115,8 +113,7 @@ where
                 )?;
                 // check that the left child's label is non-zero
                 self.non_zero_gate(input_labels[0])?;
-                cur_label =
-                    RescueNativeGadget::<F>::rescue_sponge_no_padding(self, &input_labels, 1)?[0];
+                cur_label = Self::DigestGadget::digest(self, &input_labels)?;
             }
             Ok(cur_label)
         }?;
