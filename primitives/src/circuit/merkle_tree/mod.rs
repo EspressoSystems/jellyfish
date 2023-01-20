@@ -10,11 +10,14 @@ use crate::{
     merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme},
     rescue::RescueParameter,
 };
+use ark_ff::PrimeField;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 mod rescue_merkle_tree;
 mod sparse_merkle_tree;
 use ark_std::vec::Vec;
+
+use super::rescue::RescueNativeGadget;
 
 /// Gadget for a Merkle tree
 ///
@@ -60,11 +63,15 @@ use ark_std::vec::Vec;
 pub trait MerkleTreeGadget<M>
 where
     M: MerkleTreeScheme,
+    M::NodeValue: PrimeField,
 {
     /// Type to represent the merkle proof of the concrete MT instantiation.
     /// It is MT-specific, e.g arity will affect the exact definition of the
     /// underlying Merkle path.
     type MembershipProofVar;
+
+    /// Gadget for the digest algorithm.
+    type DigestGadget: DigestAlgorithmGadget<M::NodeValue>;
 
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
@@ -149,6 +156,7 @@ where
 pub trait UniversalMerkleTreeGadget<M>: MerkleTreeGadget<M>
 where
     M: UniversalMerkleTreeScheme,
+    M::NodeValue: PrimeField,
 {
     /// Type to represent the merkle non-membership proof of the concrete MT
     /// instantiation. It is MT-specific, e.g arity will affect the exact
@@ -212,13 +220,13 @@ fn constrain_sibling_order<F: RescueParameter>(
 /// Circuit variable for a node in the Merkle path.
 pub struct Merkle3AryNodeVar {
     /// First sibling of the node.
-    pub sibling1: Variable,
+    sibling1: Variable,
     /// Second sibling of the node.
-    pub sibling2: Variable,
+    sibling2: Variable,
     /// Boolean variable indicating whether the node is a left child.
-    pub is_left_child: BoolVar,
+    is_left_child: BoolVar,
     /// Boolean variable indicating whether the node is a right child.
-    pub is_right_child: BoolVar,
+    is_right_child: BoolVar,
 }
 
 /// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
@@ -239,4 +247,37 @@ pub struct Merkle3AryNonMembershipProofVar {
 pub struct Merkle3AryMembershipProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,
     elem_var: Variable,
+}
+/// Circuit counterpart to DigestAlgorithm
+pub trait DigestAlgorithmGadget<F>
+where
+    F: PrimeField,
+{
+    /// Digest a list of variables
+    fn digest(circuit: &mut PlonkCircuit<F>, data: &[Variable]) -> Result<Variable, CircuitError>;
+
+    /// Digest an indexed element
+    fn digest_leaf(
+        circuit: &mut PlonkCircuit<F>,
+        pos: usize,
+        elem: Variable,
+    ) -> Result<Variable, CircuitError>;
+}
+
+/// Digest gadget using for the Rescue hash function.
+pub struct RescueDigestGadget {}
+
+impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
+    fn digest(circuit: &mut PlonkCircuit<F>, data: &[Variable]) -> Result<Variable, CircuitError> {
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, data, 1)?[0])
+    }
+
+    fn digest_leaf(
+        circuit: &mut PlonkCircuit<F>,
+        pos: Variable,
+        elem: Variable,
+    ) -> Result<Variable, CircuitError> {
+        let zero = circuit.zero();
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &[zero, pos, elem], 1)?[0])
+    }
 }
