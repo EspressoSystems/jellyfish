@@ -1,10 +1,11 @@
 [package]
 name = "jf-plonk"
 description = "UltraPlonk implementation"
-version = "0.1.2"
-authors = ["Espresso Systems <hello@espressosys.com>"]
-edition = "2018"
-license = "MIT"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
@@ -21,7 +22,7 @@ displaydoc = { version = "0.2.3", default-features = false }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
-hashbrown = "0.12.3"
+hashbrown = "0.13.2"
 itertools = { version = "0.10.1", default-features = false }
 jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
