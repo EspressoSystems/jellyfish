@@ -45,6 +45,7 @@
 <span id="45">45</span>
 <span id="46">46</span>
 <span id="47">47</span>
+<span id="48">48</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -53,7 +54,8 @@
 
 </span><span class="doccomment">//! Error module.
 
-</span><span class="kw">use </span>displaydoc::Display;
+</span><span class="kw">use </span>ark_std::string::String;
+<span class="kw">use </span>displaydoc::Display;
 
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the circuit.
 </span><span class="attribute">#[derive(Display, Debug)]

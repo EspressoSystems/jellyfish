@@ -12,13 +12,21 @@
 <span id="12">12</span>
 <span id="13">13</span>
 <span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-</span><span class="doccomment">/// Interfaces for Plonk-based constraint systems
+</span><span class="doccomment">//! Interfaces for Plonk-based constraint systems
+
+</span><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
+#![warn(missing_docs)]
+#![allow(clippy::derive_hash_xor_eq)]
 </span><span class="kw">pub mod </span>constants;
 <span class="kw">pub mod </span>errors;
 <span class="kw">pub mod </span>gadgets;

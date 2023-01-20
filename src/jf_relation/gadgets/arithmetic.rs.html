@@ -983,6 +983,7 @@
 <span id="983">983</span>
 <span id="984">984</span>
 <span id="985">985</span>
+<span id="986">986</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1002,6 +1003,7 @@
     Circuit, PlonkCircuit, Variable,
 };
 <span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec::Vec};
 <span class="kw">use </span>num_bigint::BigUint;
 
 <span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
@@ -1490,7 +1492,7 @@
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>FqEd254;
     <span class="kw">use </span>ark_ff::PrimeField;
-    <span class="kw">use </span>ark_std::{convert::TryInto, test_rng};
+    <span class="kw">use </span>ark_std::{convert::TryInto, test_rng, vec, vec::Vec};
     <span class="kw">use </span>num_bigint::BigUint;
 
     <span class="attribute">#[test]

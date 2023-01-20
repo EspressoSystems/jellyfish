@@ -1901,8 +1901,8 @@
     <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters <span class="kw">as </span>Param381b, Fq <span class="kw">as </span>FqEd381b};
     <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>Param254, Fq <span class="kw">as </span>FqEd354};
     <span class="kw">use </span>ark_ff::{One, UniformRand, Zero};
+    <span class="kw">use </span>ark_std::str::FromStr;
     <span class="kw">use </span>jf_utils::fr_to_fq;
-    <span class="kw">use </span>std::str::FromStr;
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>test_is_neutral() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {

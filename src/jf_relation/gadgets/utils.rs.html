@@ -50,7 +50,7 @@
 </span><span class="doccomment">//! Helper functions for circuit gadgets implementation
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::CircuitError;
-<span class="kw">use </span>ark_std::cmp::Ordering;
+<span class="kw">use </span>ark_std::{cmp::Ordering, string::ToString};
 
 <span class="comment">// helper function to find the next multiple of `divisor` for `current` value
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>next_multiple(current: usize, divisor: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, CircuitError&gt; {

@@ -43,6 +43,7 @@
 <span id="43">43</span>
 <span id="44">44</span>
 <span id="45">45</span>
+<span id="46">46</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -66,12 +67,13 @@
 <span class="comment">// Helper functions
 </span><span class="kw">mod </span>utils;
 
-<span class="kw">pub mod </span>test_utils {
+<span class="doccomment">/// Utils for test
+</span><span class="kw">pub mod </span>test_utils {
     <span class="kw">use crate</span>::{errors::CircuitError, Arithmetization, Circuit, PlonkCircuit};
     <span class="kw">use </span>ark_ff::PrimeField;
 
-    <span class="comment">// two circuit with the same statement should have the same extended permutation
-    // polynomials even with different variable assignment
+    <span class="doccomment">/// two circuit with the same statement should have the same extended
+    /// permutation polynomials even with different variable assignment
     </span><span class="kw">pub fn </span>test_variable_independence_for_circuit&lt;F: PrimeField&gt;(
         circuit_1: PlonkCircuit&lt;F&gt;,
         circuit_2: PlonkCircuit&lt;F&gt;,

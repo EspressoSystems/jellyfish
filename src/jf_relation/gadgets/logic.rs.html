@@ -456,13 +456,13 @@
 
 </span><span class="doccomment">//! Logic related circuit implementations
 
-</span><span class="kw">use </span>ark_ff::PrimeField;
-
-<span class="kw">use crate</span>::{
+</span><span class="kw">use crate</span>::{
     errors::CircuitError,
     gates::{CondSelectGate, LogicOrGate, LogicOrOutputGate},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
+<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::{boxed::Box, string::ToString};
 
 <span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
     <span class="doccomment">/// Constrain that `a` is true or `b` is true.
