@@ -6,6 +6,7 @@
 
 //! Error module.
 
+use ark_std::string::String;
 use displaydoc::Display;
 
 /// A `enum` specifying the possible failure modes of the circuit.

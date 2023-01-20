@@ -17,6 +17,7 @@ use crate::{
     Circuit, PlonkCircuit, Variable,
 };
 use ark_ff::PrimeField;
+use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec::Vec};
 use num_bigint::BigUint;
 
 impl<F: PrimeField> PlonkCircuit<F> {
@@ -505,7 +506,7 @@ mod test {
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
-    use ark_std::{convert::TryInto, test_rng};
+    use ark_std::{convert::TryInto, test_rng, vec, vec::Vec};
     use num_bigint::BigUint;
 
     #[test]

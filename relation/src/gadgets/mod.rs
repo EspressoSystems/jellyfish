@@ -21,12 +21,13 @@ pub use range::*;
 // Helper functions
 mod utils;
 
+/// Utils for test
 pub mod test_utils {
     use crate::{errors::CircuitError, Arithmetization, Circuit, PlonkCircuit};
     use ark_ff::PrimeField;
 
-    // two circuit with the same statement should have the same extended permutation
-    // polynomials even with different variable assignment
+    /// two circuit with the same statement should have the same extended
+    /// permutation polynomials even with different variable assignment
     pub fn test_variable_independence_for_circuit<F: PrimeField>(
         circuit_1: PlonkCircuit<F>,
         circuit_2: PlonkCircuit<F>,
