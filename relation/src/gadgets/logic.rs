@@ -6,13 +6,13 @@
 
 //! Logic related circuit implementations
 
-use ark_ff::PrimeField;
-
 use crate::{
     errors::CircuitError,
     gates::{CondSelectGate, LogicOrGate, LogicOrOutputGate},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
+use ark_ff::PrimeField;
+use ark_std::{boxed::Box, string::ToString};
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain that `a` is true or `b` is true.

@@ -57,6 +57,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#169](https://github.com/EspressoSystems/jellyfish/pull/158) (`jf-primitives`) Stabilize API effort
     - Introduced `trait CRHF` and moved current implementations under `struct FixedLengthRescueCRHF, VariableLengthRescueCRHF`.
     - Introduced `trait CommitmentScheme` and moved current implementations under `struct FixedLengthRescueCommitment`.
+- [#194](https://github.com/EspressoSystems/jellyfish/pull/194) (all) Set MSVR of all crates to 1.64.
 
 ### Fixed
 
@@ -70,6 +71,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#116](https://github.com/EspressoSystems/jellyfish/pull/116) (`jf-primitives`) Introduced new `PolynomialCommitmentScheme` trait
 - [#117](https://github.com/EspressoSystems/jellyfish/pull/117) (`jf-relation`) Added gadgets for comparison with constant values
 - [#176](https://github.com/EspressoSystems/jellyfish/pull/176) (`jf-primitives`) Added implementation for light weight merkle tree -- an append-only merkle tree who only keeps its frontier.
+- [#167](https://github.com/EspressoSystems/jellyfish/pull/167) (`jf-primitives`) Add `DigestGadget` associated type to `MerkleTreeGadget`.
 
 ### Changed
 
@@ -78,6 +80,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#113](https://github.com/EspressoSystems/jellyfish/pull/113) (`jf-plonk`) Corrected error type for `PlonkVerifier` gadgets
 - [#162](https://github.com/EspressoSystems/jellyfish/pull/162) (`jf-utils`) Renamed `#serde(with="field_elem")` to `#serde(with="canonical")`
 - [#177](https://github.com/EspressoSystems/jellyfish/pull/177) (`jf-primitives`) Refactor multilinear PCS opening.
+- [#197](https://github.com/EspressoSystems/jellyfish/pull/197) (`jf-relation`) Added `no_std` attribute.
 
 ### Removed
 
