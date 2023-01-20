@@ -605,8 +605,8 @@ mod test {
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as Param381b, Fq as FqEd381b};
     use ark_ed_on_bn254::{EdwardsParameters as Param254, Fq as FqEd354};
     use ark_ff::{One, UniformRand, Zero};
+    use ark_std::str::FromStr;
     use jf_utils::fr_to_fq;
-    use std::str::FromStr;
 
     #[test]
     fn test_is_neutral() -> Result<(), CircuitError> {
