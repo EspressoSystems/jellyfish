@@ -6,7 +6,21 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 **Breaking Changes** and **Fixed** contain backward incompatible changes, bug fixes, and security patches;
 **Added, Changed, Removed, Deprecated** contain backward compatible improvements or new features.
 
-## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.1.2...main)
+## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.2.0...main)
+
+### Breaking Changes
+
+### Fixed
+
+### Added
+
+### Changed
+
+### Removed
+
+### Deprecated
+
+## [v0.2.0](https://github.com/EspressoSystems/jellyfish/compare/0.1.2...0.2.0) - 2023-01-20
 
 ### Breaking Changes
 
