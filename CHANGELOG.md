@@ -78,6 +78,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#113](https://github.com/EspressoSystems/jellyfish/pull/113) (`jf-plonk`) Corrected error type for `PlonkVerifier` gadgets
 - [#162](https://github.com/EspressoSystems/jellyfish/pull/162) (`jf-utils`) Renamed `#serde(with="field_elem")` to `#serde(with="canonical")`
 - [#177](https://github.com/EspressoSystems/jellyfish/pull/177) (`jf-primitives`) Refactor multilinear PCS opening.
+- [#197](https://github.com/EspressoSystems/jellyfish/pull/197) (`jf-relation`) Added `no_std` attribute.
 
 ### Removed
 
