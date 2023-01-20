@@ -507,10 +507,6 @@
 <span id="507">507</span>
 <span id="508">508</span>
 <span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -521,7 +517,7 @@
 //! with a Rescue hash function.
 
 </span><span class="kw">use crate</span>::{
-    circuit::rescue::RescueNativeGadget,
+    circuit::merkle_tree::DigestAlgorithmGadget,
     merkle_tree::{
         internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleTreeScheme, ToTraversalPath,
     },
@@ -531,7 +527,6 @@
 <span class="kw">use </span>jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 <span class="kw">type </span>SparseMerkleTree&lt;F&gt; = RescueSparseMerkleTree&lt;BigUint, F&gt;;
-
 <span class="kw">type </span>NodeVal&lt;F&gt; = &lt;SparseMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::NodeValue;
 <span class="kw">type </span>MembershipProof&lt;F&gt; = &lt;SparseMerkleTree&lt;F&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::MembershipProof;
 <span class="kw">use </span>num_bigint::BigUint;
@@ -539,7 +534,8 @@
 
 <span class="kw">use super</span>::{
     constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
-    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, UniversalMerkleTreeGadget,
+    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, RescueDigestGadget,
+    UniversalMerkleTreeGadget,
 };
 
 <span class="kw">impl</span>&lt;F&gt; UniversalMerkleTreeGadget&lt;SparseMerkleTree&lt;F&gt;&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
@@ -570,8 +566,7 @@
                 )<span class="question-mark">?</span>;
                 <span class="comment">// check that the left child&#39;s label is non-zero
                 </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
-                cur_label =
-                    RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+                cur_label = <span class="self">Self</span>::DigestGadget::digest(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_labels)<span class="question-mark">?</span>;
             }
             <span class="prelude-val">Ok</span>(cur_label)
         }<span class="question-mark">?</span>;
@@ -639,6 +634,8 @@
 {
     <span class="kw">type </span>MembershipProofVar = Merkle3AryMembershipProofVar;
 
+    <span class="kw">type </span>DigestGadget = RescueDigestGadget;
+
     <span class="kw">fn </span>create_membership_proof_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         merkle_proof: <span class="kw-2">&amp;</span>MembershipProof&lt;F&gt;,
@@ -704,14 +701,10 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
         <span class="kw">let </span>computed_root_var = {
             <span class="kw">let </span>proof_var = <span class="kw-2">&amp;</span>proof_var;
-            <span class="kw">let </span>zero_var = <span class="self">self</span>.zero();
 
             <span class="comment">// elem label = H(0, uid, elem)
-            </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label = RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(
-                <span class="self">self</span>,
-                <span class="kw-2">&amp;</span>[zero_var, elem_idx_var, proof_var.elem_var],
-                <span class="number">1</span>,
-            )<span class="question-mark">?</span>[<span class="number">0</span>];
+            </span><span class="kw">let </span><span class="kw-2">mut </span>cur_label =
+                <span class="self">Self</span>::DigestGadget::digest_leaf(<span class="self">self</span>, elem_idx_var, proof_var.elem_var)<span class="question-mark">?</span>;
             <span class="kw">for </span>cur_node <span class="kw">in </span>proof_var.node_vars.iter() {
                 <span class="kw">let </span>input_labels = constrain_sibling_order(
                     <span class="self">self</span>,
@@ -723,8 +716,7 @@
                 )<span class="question-mark">?</span>;
                 <span class="comment">// check that the left child&#39;s label is non-zero
                 </span><span class="self">self</span>.non_zero_gate(input_labels[<span class="number">0</span>])<span class="question-mark">?</span>;
-                cur_label =
-                    RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_labels, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>];
+                cur_label = <span class="self">Self</span>::DigestGadget::digest(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_labels)<span class="question-mark">?</span>;
             }
             <span class="prelude-val">Ok</span>(cur_label)
         }<span class="question-mark">?</span>;

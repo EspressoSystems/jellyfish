@@ -240,6 +240,47 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -252,11 +293,14 @@
     merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme},
     rescue::RescueParameter,
 };
+<span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 <span class="kw">mod </span>rescue_merkle_tree;
 <span class="kw">mod </span>sparse_merkle_tree;
 <span class="kw">use </span>ark_std::vec::Vec;
+
+<span class="kw">use </span><span class="kw">super</span>::rescue::RescueNativeGadget;
 
 <span class="doccomment">/// Gadget for a Merkle tree
 ///
@@ -302,11 +346,15 @@
 </span><span class="kw">pub trait </span>MerkleTreeGadget&lt;M&gt;
 <span class="kw">where
     </span>M: MerkleTreeScheme,
+    M::NodeValue: PrimeField,
 {
     <span class="doccomment">/// Type to represent the merkle proof of the concrete MT instantiation.
     /// It is MT-specific, e.g arity will affect the exact definition of the
     /// underlying Merkle path.
     </span><span class="kw">type </span>MembershipProofVar;
+
+    <span class="doccomment">/// Gadget for the digest algorithm.
+    </span><span class="kw">type </span>DigestGadget: DigestAlgorithmGadget&lt;M::NodeValue&gt;;
 
     <span class="doccomment">/// Allocate a variable for the membership proof.
     </span><span class="kw">fn </span>create_membership_proof_variable(
@@ -391,6 +439,7 @@
 </span><span class="kw">pub trait </span>UniversalMerkleTreeGadget&lt;M&gt;: MerkleTreeGadget&lt;M&gt;
 <span class="kw">where
     </span>M: UniversalMerkleTreeScheme,
+    M::NodeValue: PrimeField,
 {
     <span class="doccomment">/// Type to represent the merkle non-membership proof of the concrete MT
     /// instantiation. It is MT-specific, e.g arity will affect the exact
@@ -454,13 +503,13 @@
 </span><span class="doccomment">/// Circuit variable for a node in the Merkle path.
 </span><span class="kw">pub struct </span>Merkle3AryNodeVar {
     <span class="doccomment">/// First sibling of the node.
-    </span><span class="kw">pub </span>sibling1: Variable,
+    </span>sibling1: Variable,
     <span class="doccomment">/// Second sibling of the node.
-    </span><span class="kw">pub </span>sibling2: Variable,
+    </span>sibling2: Variable,
     <span class="doccomment">/// Boolean variable indicating whether the node is a left child.
-    </span><span class="kw">pub </span>is_left_child: BoolVar,
+    </span>is_left_child: BoolVar,
     <span class="doccomment">/// Boolean variable indicating whether the node is a right child.
-    </span><span class="kw">pub </span>is_right_child: BoolVar,
+    </span>is_right_child: BoolVar,
 }
 
 <span class="doccomment">/// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
@@ -481,6 +530,39 @@
 </span><span class="kw">pub struct </span>Merkle3AryMembershipProofVar {
     node_vars: Vec&lt;Merkle3AryNodeVar&gt;,
     elem_var: Variable,
+}
+<span class="doccomment">/// Circuit counterpart to DigestAlgorithm
+</span><span class="kw">pub trait </span>DigestAlgorithmGadget&lt;F&gt;
+<span class="kw">where
+    </span>F: PrimeField,
+{
+    <span class="doccomment">/// Digest a list of variables
+    </span><span class="kw">fn </span>digest(circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;, data: <span class="kw-2">&amp;</span>[Variable]) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
+
+    <span class="doccomment">/// Digest an indexed element
+    </span><span class="kw">fn </span>digest_leaf(
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        pos: usize,
+        elem: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
+}
+
+<span class="doccomment">/// Digest gadget using for the Rescue hash function.
+</span><span class="kw">pub struct </span>RescueDigestGadget {}
+
+<span class="kw">impl</span>&lt;F: RescueParameter&gt; DigestAlgorithmGadget&lt;F&gt; <span class="kw">for </span>RescueDigestGadget {
+    <span class="kw">fn </span>digest(circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;, data: <span class="kw-2">&amp;</span>[Variable]) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="prelude-val">Ok</span>(RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(circuit, data, <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>])
+    }
+
+    <span class="kw">fn </span>digest_leaf(
+        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+        pos: Variable,
+        elem: Variable,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt; {
+        <span class="kw">let </span>zero = circuit.zero();
+        <span class="prelude-val">Ok</span>(RescueNativeGadget::&lt;F&gt;::rescue_sponge_no_padding(circuit, <span class="kw-2">&amp;</span>[zero, pos, elem], <span class="number">1</span>)<span class="question-mark">?</span>[<span class="number">0</span>])
+    }
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="jf_primitives" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>
