@@ -9,6 +9,6 @@ members = [
 [workspace.package]
 version = "0.1.2"
 authors = ["Espresso Systems <hello@espressosys.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 rust-version = "1.64.0"
