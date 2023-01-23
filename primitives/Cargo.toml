@@ -41,7 +41,7 @@ sha2 = { version = "0.10.1", default-features = false }
 sha3 = { version = "0.10.5", default-features = false }
 tagged-base64 = { git = "https://github.com/espressosystems/tagged-base64", tag = "0.2.4" }
 typenum = { version = "1.15.0", default-features = false }
-zeroize = { version = "1.3", default-features = false }
+zeroize = { version = "1.5", default-features = false }
 
 [dev-dependencies]
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }

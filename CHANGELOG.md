@@ -6,7 +6,21 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 **Breaking Changes** and **Fixed** contain backward incompatible changes, bug fixes, and security patches;
 **Added, Changed, Removed, Deprecated** contain backward compatible improvements or new features.
 
-## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.1.2...main)
+## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.2.0...main)
+
+### Breaking Changes
+
+### Fixed
+
+### Added
+
+### Changed
+
+### Removed
+
+### Deprecated
+
+## [v0.2.0](https://github.com/EspressoSystems/jellyfish/compare/0.1.2...0.2.0) - 2023-01-20
 
 ### Breaking Changes
 
@@ -14,7 +28,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#89](https://github.com/EspressoSystems/jellyfish/pull/89) (`jf-primitives`) Use [blst](https://github.com/supranational/blst) library for BLS signature/VRF
 - [#91](https://github.com/EspressoSystems/jellyfish/pull/91) (`jf-plonk`) Introduce `struct BoolVar` whenever necessary and possible
 - [#96](https://github.com/EspressoSystems/jellyfish/pull/96) (`jf-plonk`) Introduce comparison gates
-- [#107](https://github.com/EspressoSystems/jellyfish/pull/110) (`jf-primitives`) Updated `crypto_box` from `0.7.1` to `0.8.1`
+- [#107](https://github.com/EspressoSystems/jellyfish/pull/107) (`jf-primitives`) Updated `crypto_box` from `0.7.1` to `0.8.1`
 - [#110](https://github.com/EspressoSystems/jellyfish/pull/110) (workspace) Reorganized codebase structure
     - Remove `jf-rescue` crate, rescue hash function now resides in `jf-primitives/rescue`.
     - Plonk constraint system definition and concrete constructions now live in a standalone crate `jf-relation`.
@@ -54,10 +68,11 @@ and follow [semantic versioning](https://semver.org/) for our releases.
     - New methods for enforcing constraints: `is_member` and `enforce_merkle_proof`.
     - Move the remaining methods to the internals of circuit implementation for `RescueMerkleTree`.
     - Implement `MerkleTreeGadget` for `RescueMerkleTree`.
-- [#169](https://github.com/EspressoSystems/jellyfish/pull/158) (`jf-primitives`) Stabilize API effort
+- [#169](https://github.com/EspressoSystems/jellyfish/pull/169) (`jf-primitives`) Stabilize API effort
     - Introduced `trait CRHF` and moved current implementations under `struct FixedLengthRescueCRHF, VariableLengthRescueCRHF`.
     - Introduced `trait CommitmentScheme` and moved current implementations under `struct FixedLengthRescueCommitment`.
 - [#194](https://github.com/EspressoSystems/jellyfish/pull/194) (all) Set MSVR of all crates to 1.64.
+- (`jf-primitives`) `zeroize` from `1.3` to `^1.5`
 
 ### Fixed
 
