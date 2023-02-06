@@ -1,11 +1,11 @@
 [package]
 name = "jf-primitives"
 description = "Cryptographic primitives"
-version.workspace = true
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
-rust-version.workspace = true
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
 
 [dependencies]
 ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
