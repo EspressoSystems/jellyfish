@@ -103,6 +103,6 @@ impl From<PlonkError> for CircuitError {
     // this happen during invocation of Plonk proof system API inside Verifier
     // gadget
     fn from(e: PlonkError) -> Self {
-        Self::ParameterError(format!("Plonk proof system err: {:?}", e))
+        Self::ParameterError(format!("Plonk proof system err: {e:?}"))
     }
 }

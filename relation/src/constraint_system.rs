@@ -629,8 +629,7 @@ impl<F: FftField> Circuit<F> for PlonkCircuit<F> {
                         return Err(GateCheckFailure(
                             gate_id,
                             format!(
-                                "Lookup gate failed: ({}, {}, {}, {}) not in the table",
-                                q_dom_sep, key, val0, val1
+                                "Lookup gate failed: ({q_dom_sep}, {key}, {val0}, {val1}) not in the table",
                             ),
                         ));
                     }

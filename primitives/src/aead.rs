@@ -98,7 +98,7 @@ impl EncKey {
         // encrypt the message and associated data using crypto box
         let ct = my_box
             .encrypt(&nonce, Payload { msg: message, aad })
-            .map_err(|e| PrimitivesError::InternalError(format!("{}", e)))?;
+            .map_err(|e| PrimitivesError::InternalError(format!("{e:?}")))?;
 
         Ok(Ciphertext {
             nonce,
@@ -204,7 +204,7 @@ impl KeyPair {
                     aad,
                 },
             )
-            .map_err(|e| PrimitivesError::FailedDecryption(format!("{}", e)))?;
+            .map_err(|e| PrimitivesError::FailedDecryption(format!("{e:?}")))?;
         Ok(plaintext)
     }
 }
