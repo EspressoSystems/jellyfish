@@ -221,7 +221,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
 
         let res = E::product_of_pairings(pairing_inputs.iter()).is_one();
 
-        end_timer!(check_time, || format!("Result: {}", res));
+        end_timer!(check_time, || format!("Result: {res}"));
         Ok(res)
     }
 
@@ -281,7 +281,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         ])
         .is_one();
         end_timer!(pairing_time);
-        end_timer!(check_time, || format!("Result: {}", result));
+        end_timer!(check_time, || format!("Result: {result}"));
         Ok(result)
     }
 }

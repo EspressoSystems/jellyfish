@@ -103,8 +103,7 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
         if supported_num_vars > self.prover_param.num_vars {
             return Err(PCSError::InvalidParameters(format!(
-                "SRS does not support target number of vars {}",
-                supported_num_vars
+                "SRS does not support target number of vars {supported_num_vars}"
             )));
         }
 

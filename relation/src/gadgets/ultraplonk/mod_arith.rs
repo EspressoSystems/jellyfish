@@ -261,8 +261,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let z_range = F::from(range_size as u32);
         if z >= z_range {
             return Err(ParameterError(format!(
-                "z = {} is out of range, the sum of variable values = {} might be too large for modulus = {}",
-                z, sum_x, p
+                "z = {z} is out of range, the sum of variable values = {sum_x} might be too large for modulus = {p}",
             )));
         }
 
@@ -396,8 +395,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let divisor_range = F::from(range_size as u32);
         if divisor >= divisor_range {
             return Err(ParameterError(format!(
-              "divisor = {} is out of range, the sum of variable values = {} might be too large for modulus = {}",
-              divisor, sum, p_f
+              "divisor = {divisor} is out of range, the sum of variable values = {sum} might be too large for modulus = {p_f}",
           ))
           );
         }
