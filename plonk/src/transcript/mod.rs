@@ -20,7 +20,7 @@ use crate::{
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig as SWParam,
+    short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
 };
 use ark_ff::PrimeField;
 use jf_primitives::pcs::prelude::Commitment;
@@ -44,16 +44,16 @@ pub trait PlonkTranscript<F> {
     fn append_vk_and_pub_input<E, P>(
         &mut self,
         vk: &VerifyingKey<E>,
-        pub_input: &[E::Fr],
+        pub_input: &[E::ScalarField],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(
             self,
             b"field size in bits",
-            E::Fr::size_in_bits().to_le_bytes().as_ref(),
+            E::ScalarField::size_in_bits().to_le_bytes().as_ref(),
         )?;
         <Self as PlonkTranscript<F>>::append_message(
             self,
@@ -110,7 +110,7 @@ pub trait PlonkTranscript<F> {
         comms: &[Commitment<E>],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         P: SWParam<BaseField = F>,
     {
         for comm in comms.iter() {
@@ -126,7 +126,7 @@ pub trait PlonkTranscript<F> {
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
@@ -136,18 +136,18 @@ pub trait PlonkTranscript<F> {
     fn append_challenge<E>(
         &mut self,
         label: &'static [u8],
-        challenge: &E::Fr,
+        challenge: &E::ScalarField,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F>,
+        E: Pairing<Fq = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(challenge)?)
     }
 
     /// Append a proof evaluation to the transcript.
-    fn append_proof_evaluations<E: PairingEngine>(
+    fn append_proof_evaluations<E: Pairing>(
         &mut self,
-        evals: &ProofEvaluations<E::Fr>,
+        evals: &ProofEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         for w_eval in &evals.wires_evals {
             <Self as PlonkTranscript<F>>::append_message(self, b"wire_evals", &to_bytes!(w_eval)?)?;
@@ -167,9 +167,9 @@ pub trait PlonkTranscript<F> {
     }
 
     /// Append the plookup evaluation to the transcript.
-    fn append_plookup_evaluations<E: PairingEngine>(
+    fn append_plookup_evaluations<E: Pairing>(
         &mut self,
-        evals: &PlookupEvaluations<E::Fr>,
+        evals: &PlookupEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         <Self as PlonkTranscript<F>>::append_message(
             self,
@@ -205,7 +205,7 @@ pub trait PlonkTranscript<F> {
 
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript.
-    fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::Fr, PlonkError>
+    fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
     where
-        E: PairingEngine<Fq = F>;
+        E: Pairing<Fq = F>;
 }

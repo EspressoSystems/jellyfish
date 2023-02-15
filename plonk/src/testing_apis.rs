@@ -19,7 +19,7 @@ use crate::{
     },
     transcript::PlonkTranscript,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig};
 use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_std::vec::Vec;
@@ -69,11 +69,11 @@ impl<F: Field> From<Challenges<F>> for structs::Challenges<F> {
 
 /// A wrapper of crate::proof_system::structs::ScalarsAndBases
 #[derive(Debug, Clone)]
-pub struct ScalarsAndBases<E: PairingEngine> {
-    pub base_scalar_map: HashMap<E::G1Affine, E::Fr>,
+pub struct ScalarsAndBases<E: Pairing> {
+    pub base_scalar_map: HashMap<E::G1Affine, E::ScalarField>,
 }
 
-impl<E: PairingEngine> From<structs::ScalarsAndBases<E>> for ScalarsAndBases<E> {
+impl<E: Pairing> From<structs::ScalarsAndBases<E>> for ScalarsAndBases<E> {
     fn from(other: structs::ScalarsAndBases<E>) -> Self {
         Self {
             base_scalar_map: other.base_scalar_map,
@@ -81,7 +81,7 @@ impl<E: PairingEngine> From<structs::ScalarsAndBases<E>> for ScalarsAndBases<E> 
     }
 }
 
-impl<E: PairingEngine> From<ScalarsAndBases<E>> for structs::ScalarsAndBases<E> {
+impl<E: Pairing> From<ScalarsAndBases<E>> for structs::ScalarsAndBases<E> {
     fn from(other: ScalarsAndBases<E>) -> Self {
         Self {
             base_scalar_map: other.base_scalar_map,
@@ -89,9 +89,9 @@ impl<E: PairingEngine> From<ScalarsAndBases<E>> for structs::ScalarsAndBases<E> 
     }
 }
 
-impl<E: PairingEngine> ScalarsAndBases<E> {
+impl<E: Pairing> ScalarsAndBases<E> {
     /// Compute the multi-scalar multiplication.
-    pub fn multi_scalar_mul(&self) -> E::G1Projective {
+    pub fn multi_scalar_mul(&self) -> E::G1 {
         let tmp: structs::ScalarsAndBases<E> = self.clone().into();
         tmp.multi_scalar_mul()
     }
@@ -99,15 +99,15 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
 
 /// A wrapper of crate::proof_system::verifier::PcsInfo
 #[derive(Debug, Clone)]
-pub struct PcsInfo<E: PairingEngine> {
+pub struct PcsInfo<E: Pairing> {
     /// TODO: change back these visibilities
-    pub u: E::Fr,
+    pub u: E::ScalarField,
     ///
-    pub eval_point: E::Fr,
+    pub eval_point: E::ScalarField,
     ///
-    pub next_eval_point: E::Fr,
+    pub next_eval_point: E::ScalarField,
     ///
-    pub eval: E::Fr,
+    pub eval: E::ScalarField,
     ///
     pub comm_scalars_and_bases: ScalarsAndBases<E>,
     ///
@@ -116,7 +116,7 @@ pub struct PcsInfo<E: PairingEngine> {
     pub shifted_opening_proof: Commitment<E>,
 }
 
-impl<E: PairingEngine> From<PcsInfo<E>> for verifier::PcsInfo<E> {
+impl<E: Pairing> From<PcsInfo<E>> for verifier::PcsInfo<E> {
     fn from(other: PcsInfo<E>) -> Self {
         Self {
             u: other.u,
@@ -130,7 +130,7 @@ impl<E: PairingEngine> From<PcsInfo<E>> for verifier::PcsInfo<E> {
     }
 }
 
-impl<E: PairingEngine> From<verifier::PcsInfo<E>> for PcsInfo<E> {
+impl<E: Pairing> From<verifier::PcsInfo<E>> for PcsInfo<E> {
     fn from(other: verifier::PcsInfo<E>) -> Self {
         Self {
             u: other.u,
@@ -146,11 +146,11 @@ impl<E: PairingEngine> From<verifier::PcsInfo<E>> for PcsInfo<E> {
 
 /// A wrapper of crate::proof_system::verifier::Verifier
 #[derive(Debug, Clone)]
-pub struct Verifier<E: PairingEngine> {
-    pub(crate) domain: Radix2EvaluationDomain<E::Fr>,
+pub struct Verifier<E: Pairing> {
+    pub(crate) domain: Radix2EvaluationDomain<E::ScalarField>,
 }
 
-impl<E: PairingEngine> From<Verifier<E>> for verifier::Verifier<E> {
+impl<E: Pairing> From<Verifier<E>> for verifier::Verifier<E> {
     fn from(other: Verifier<E>) -> Self {
         Self {
             domain: other.domain,
@@ -158,7 +158,7 @@ impl<E: PairingEngine> From<Verifier<E>> for verifier::Verifier<E> {
     }
 }
 
-impl<E: PairingEngine> From<verifier::Verifier<E>> for Verifier<E> {
+impl<E: Pairing> From<verifier::Verifier<E>> for Verifier<E> {
     fn from(other: verifier::Verifier<E>) -> Self {
         Self {
             domain: other.domain,
@@ -168,7 +168,7 @@ impl<E: PairingEngine> From<verifier::Verifier<E>> for Verifier<E> {
 
 impl<E, F, P> Verifier<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -180,7 +180,7 @@ where
     pub fn prepare_pcs_info<T>(
         &self,
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
         extra_transcript_init_msg: &Option<Vec<u8>>,
     ) -> Result<PcsInfo<E>, PlonkError>
@@ -203,10 +203,10 @@ where
     #[inline]
     pub fn compute_challenges<T>(
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
         extra_transcript_init_msg: &Option<Vec<u8>>,
-    ) -> Result<Challenges<E::Fr>, PlonkError>
+    ) -> Result<Challenges<E::ScalarField>, PlonkError>
     where
         T: PlonkTranscript<F>,
     {
@@ -238,18 +238,18 @@ where
     #[allow(clippy::too_many_arguments)]
     pub fn compute_lin_poly_constant_term(
         &self,
-        challenges: &Challenges<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
-    ) -> Result<E::Fr, PlonkError> {
+        vanish_eval: &E::ScalarField,
+        lagrange_1_eval: &E::ScalarField,
+        lagrange_n_eval: &E::ScalarField,
+        alpha_powers: &[E::ScalarField],
+        alpha_bases: &[E::ScalarField],
+    ) -> Result<E::ScalarField, PlonkError> {
         let tmp: verifier::Verifier<E> = (*self).clone().into();
-        let challenges: structs::Challenges<E::Fr> = (*challenges).into();
+        let challenges: structs::Challenges<E::ScalarField> = (*challenges).into();
         Ok(tmp
             .compute_lin_poly_constant_term(
                 &challenges,
@@ -273,16 +273,16 @@ where
     pub fn aggregate_poly_commitments(
         &self,
         vks: &[&VerifyingKey<E>],
-        challenges: &Challenges<E::Fr>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
+        challenges: &Challenges<E::ScalarField>,
+        vanish_eval: &E::ScalarField,
+        lagrange_1_eval: &E::ScalarField,
+        lagrange_n_eval: &E::ScalarField,
         batch_proof: &BatchProof<E>,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
-    ) -> Result<(ScalarsAndBases<E>, Vec<E::Fr>), PlonkError> {
+        alpha_powers: &[E::ScalarField],
+        alpha_bases: &[E::ScalarField],
+    ) -> Result<(ScalarsAndBases<E>, Vec<E::ScalarField>), PlonkError> {
         let tmp: verifier::Verifier<E> = (*self).clone().into();
-        let challenges: structs::Challenges<E::Fr> = (*challenges).into();
+        let challenges: structs::Challenges<E::ScalarField> = (*challenges).into();
         let res = tmp.aggregate_poly_commitments(
             vks,
             &challenges,
@@ -303,16 +303,16 @@ where
     pub fn linearization_scalars_and_bases(
         &self,
         vks: &[&VerifyingKey<E>],
-        challenges: &Challenges<E::Fr>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
+        challenges: &Challenges<E::ScalarField>,
+        vanish_eval: &E::ScalarField,
+        lagrange_1_eval: &E::ScalarField,
+        lagrange_n_eval: &E::ScalarField,
         batch_proof: &BatchProof<E>,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
+        alpha_powers: &[E::ScalarField],
+        alpha_bases: &[E::ScalarField],
     ) -> Result<ScalarsAndBases<E>, PlonkError> {
         let tmp: verifier::Verifier<E> = (*self).clone().into();
-        let challenges: structs::Challenges<E::Fr> = (*challenges).into();
+        let challenges: structs::Challenges<E::ScalarField> = (*challenges).into();
         Ok(tmp
             .linearization_scalars_and_bases(
                 vks,
@@ -331,11 +331,11 @@ where
     /// batch opening.
     /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
     pub fn aggregate_evaluations(
-        lin_poly_constant: &E::Fr,
-        poly_evals_vec: &[ProofEvaluations<E::Fr>],
+        lin_poly_constant: &E::ScalarField,
+        poly_evals_vec: &[ProofEvaluations<E::ScalarField>],
         plookup_proofs_vec: &[Option<PlookupProof<E>>],
-        buffer_v_and_uv_basis: &[E::Fr],
-    ) -> Result<E::Fr, PlonkError> {
+        buffer_v_and_uv_basis: &[E::ScalarField],
+    ) -> Result<E::ScalarField, PlonkError> {
         verifier::Verifier::<E>::aggregate_evaluations(
             lin_poly_constant,
             poly_evals_vec,

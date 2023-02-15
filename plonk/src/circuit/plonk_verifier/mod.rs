@@ -7,7 +7,7 @@
 //! Circuits for Plonk verifiers.
 use crate::proof_system::{structs::VerifyingKey, verifier::Verifier};
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig as SWParam,
+    short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
     TECurveConfig as TEParam,
 };
 use ark_ff::{BigInteger, FpParameters, PrimeField};
@@ -31,7 +31,7 @@ pub use structs::*;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Represent variable of a Plonk verifying key.
-pub struct VerifyingKeyVar<E: PairingEngine> {
+pub struct VerifyingKeyVar<E: Pairing> {
     /// The variables for the permutation polynomial commitments.
     pub(crate) sigma_comms: Vec<PointVariable>,
     /// The variables for the selector polynomial commitments.
@@ -47,17 +47,17 @@ pub struct VerifyingKeyVar<E: PairingEngine> {
 
     /// The constants K0, ..., K_num_wire_types that ensure wire subsets are
     /// disjoint.
-    k: Vec<E::Fr>,
+    k: Vec<E::ScalarField>,
 }
 
-impl<E: PairingEngine> VerifyingKeyVar<E> {
+impl<E: Pairing> VerifyingKeyVar<E> {
     /// Create a variable for a Plonk verifying key.
     pub fn new<F, P>(
         circuit: &mut PlonkCircuit<F>,
         verify_key: &VerifyingKey<E>,
     ) -> Result<Self, CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + SWToTEConParam,
         P: SWParam<BaseField = F>,
     {
@@ -156,7 +156,7 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         blinding_factor: Variable,
     ) -> Result<(PointVariable, PointVariable), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F> + TEParam,
     {
@@ -182,14 +182,14 @@ impl<E: PairingEngine> VerifyingKeyVar<E> {
         }
 
         let range_bit_len = circuit.range_bit_len()?;
-        let m2 = (<E::Fr as PrimeField>::size_in_bits() + 1) >> 1;
+        let m2 = (<E::ScalarField as PrimeField>::size_in_bits() + 1) >> 1;
         // m should be a multiple of `range_bit_len`
         let m = (m2 - 1) / range_bit_len * range_bit_len + range_bit_len;
 
         // constants
         let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
 
-        let fr_modulus_bits = <E::Fr as PrimeField>::Params::MODULUS.to_bytes_le();
+        let fr_modulus_bits = <E::ScalarField as PrimeField>::Params::MODULUS.to_bytes_le();
         let modulus_in_f = F::from_le_bytes_mod_order(&fr_modulus_bits);
         let modulus_fp_elem = FpElem::new(&modulus_in_f, m, two_power_m)?;
 
@@ -284,7 +284,7 @@ pub trait BatchableCircuit<F> {
         vk_type_b_vars: &[VerifyingKeyVar<E>],
     ) -> Result<Vec<VerifyingKeyVar<E>>, CircuitError>
     where
-        E: PairingEngine,
+        E: Pairing,
         P: TEParam<BaseField = F>;
 }
 
@@ -299,7 +299,7 @@ where
         vk_type_b_vars: &[VerifyingKeyVar<E>],
     ) -> Result<Vec<VerifyingKeyVar<E>>, CircuitError>
     where
-        E: PairingEngine,
+        E: Pairing,
         P: TEParam<BaseField = F>,
     {
         if vk_type_a_vars.len() != vk_type_b_vars.len() {
@@ -347,7 +347,7 @@ mod test {
 
     fn test_aggregate_vks_helper<E, F, P, Q>() -> Result<(), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F>,
         Q: TEParam<BaseField = F>,
@@ -361,7 +361,7 @@ mod test {
         // Setup instances and create verifying keys
         let mut vks_type_a = vec![];
         let mut vks_type_b = vec![];
-        let shared_public_input = E::Fr::rand(rng);
+        let shared_public_input = E::ScalarField::rand(rng);
         for i in 0..5 {
             let circuit = new_mergeable_circuit_for_test::<E>(
                 shared_public_input,
@@ -439,7 +439,7 @@ mod test {
         vk_var: &VerifyingKeyVar<E>,
         vk: &VerifyingKey<E>,
     ) where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: PrimeField + SWToTEConParam,
         P: SWParam<BaseField = F>,
     {
@@ -461,7 +461,7 @@ mod test {
 
     fn test_partial_verification_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
@@ -480,7 +480,7 @@ mod test {
             let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
             // 2. Setup instances
-            let shared_public_input = E::Fr::rand(rng);
+            let shared_public_input = E::ScalarField::rand(rng);
             let mut instances_type_a = vec![];
             let mut instances_type_b = vec![];
             for i in 32..50 {
@@ -522,7 +522,7 @@ mod test {
             // 5. Verification
             let open_key_ref = &vks_type_a[0].open_key;
             let beta_g_ref = &srs.powers_of_g[1];
-            let blinding_factor = E::Fr::rand(rng);
+            let blinding_factor = E::ScalarField::rand(rng);
             let (inner1, inner2) = BatchArgument::partial_verify::<T>(
                 beta_g_ref,
                 &open_key_ref.g,
@@ -631,7 +631,7 @@ mod test {
                 // wrong shared input, the circuit is not satisfied
                 // instance inputs = satisfiability inputs != partial verify inputs
                 let public_inputs = [[field_switching(&shared_public_input)].as_ref()].concat();
-                let wrong_shared_public_input = E::Fr::rand(rng);
+                let wrong_shared_public_input = E::ScalarField::rand(rng);
                 let (circuit, partial_verify_points) = build_circuit::<E, F, P>(
                     &wrong_shared_public_input,
                     &merged_vks,
@@ -686,15 +686,15 @@ mod test {
     }
 
     fn build_circuit<E, F, P>(
-        shared_public_input: &E::Fr,
+        shared_public_input: &E::ScalarField,
         merged_vks: &[VerifyingKey<E>],
         batch_proof: &BatchProof<E>,
         beta_g_ref: &GroupAffine<P>,
         generator_g: &GroupAffine<P>,
-        blinding_factor: &E::Fr,
+        blinding_factor: &E::ScalarField,
     ) -> Result<(PlonkCircuit<F>, (PointVariable, PointVariable)), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
     {
@@ -750,7 +750,7 @@ mod test {
     fn test_variable_independence_for_partial_verification_circuit_helper<E, F, P, Q, T>(
     ) -> Result<(), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
@@ -771,7 +771,7 @@ mod test {
             // =======================================
 
             // 2. Setup instances
-            let shared_public_input = E::Fr::rand(rng);
+            let shared_public_input = E::ScalarField::rand(rng);
             let mut instances_type_a = vec![];
             let mut instances_type_b = vec![];
 
@@ -811,7 +811,7 @@ mod test {
             // 5. Build circuit
             let open_key_ref = &vks_type_a[0].open_key;
             let beta_g_ref = &srs.powers_of_g[1];
-            let blinding_factor = E::Fr::rand(rng);
+            let blinding_factor = E::ScalarField::rand(rng);
 
             let (mut circuit, _partial_verify_points) = build_circuit::<E, F, P>(
                 &shared_public_input,

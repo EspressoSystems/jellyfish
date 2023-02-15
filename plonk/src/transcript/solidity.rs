@@ -7,7 +7,7 @@
 //! This module implements solidity transcript.
 use super::PlonkTranscript;
 use crate::{constants::KECCAK256_STATE_SIZE, errors::PlonkError};
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use sha3::{Digest, Keccak256};
@@ -53,9 +53,9 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript. `_label` is omitted for
     /// efficiency.
-    fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
+    fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
     where
-        E: PairingEngine,
+        E: Pairing,
     {
         // 1. state = keccak256(state|transcript|0) || keccak256(state|transcript|1)
         let input0 = [self.state.as_ref(), self.transcript.as_ref(), &[0u8]].concat();
@@ -72,7 +72,7 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
         self.state.copy_from_slice(&[buf0, buf1].concat());
 
         // 2. challenge: sample field from random bytes.
-        let challenge = E::Fr::from_le_bytes_mod_order(&self.state[..48]);
+        let challenge = E::ScalarField::from_le_bytes_mod_order(&self.state[..48]);
         Ok(challenge)
     }
 }

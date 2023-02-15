@@ -7,7 +7,7 @@
 //! Implementing *native* circuit for rescue transcript
 
 use super::plonk_verifier::*;
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig};
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
@@ -47,7 +47,7 @@ where
     }
 
     // append the verification key and the public input
-    pub(crate) fn append_vk_and_pub_input_vars<E: PairingEngine<Fq = F>>(
+    pub(crate) fn append_vk_and_pub_input_vars<E: Pairing<Fq = F>>(
         &mut self,
         circuit: &mut PlonkCircuit<F>,
         vk_var: &VerifyingKeyVar<E>,
@@ -116,7 +116,7 @@ where
         poly_comm_var: &PointVariable,
     ) -> Result<(), CircuitError>
     where
-        E: PairingEngine<G1Affine = GroupAffine<P>>,
+        E: Pairing<G1Affine = GroupAffine<P>>,
         P: SWCurveConfig<BaseField = F>,
     {
         // push the x and y coordinate of comm to the transcript
@@ -136,7 +136,7 @@ where
         poly_comm_vars: &[PointVariable],
     ) -> Result<(), CircuitError>
     where
-        E: PairingEngine<G1Affine = GroupAffine<P>>,
+        E: Pairing<G1Affine = GroupAffine<P>>,
         P: SWCurveConfig<BaseField = F>,
     {
         for poly_comm_var in poly_comm_vars.iter() {
@@ -158,7 +158,7 @@ where
     }
 
     // Append the proof evaluation to the transcript
-    pub(crate) fn append_proof_evaluations_vars<E: PairingEngine>(
+    pub(crate) fn append_proof_evaluations_vars<E: Pairing>(
         &mut self,
         circuit: &mut PlonkCircuit<F>,
         evals: &ProofEvaluationsVar<F>,
@@ -187,13 +187,13 @@ where
         circuit: &mut PlonkCircuit<F>,
     ) -> Result<Variable, CircuitError>
     where
-        E: PairingEngine,
+        E: Pairing,
     {
         if !circuit.support_lookup() {
             return Err(ParameterError("does not support range table".to_string()));
         }
 
-        if E::Fr::size_in_bits() != 253 || E::Fq::size_in_bits() != 377 {
+        if E::ScalarField::size_in_bits() != 253 || E::Fq::size_in_bits() != 377 {
             return Err(ParameterError(
                 "Curve Parameter does not support for rescue transcript circuit".to_string(),
             ));
@@ -247,7 +247,7 @@ mod tests {
     }
     fn test_rescue_transcript_challenge_circuit_helper<E, F, P>()
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -293,7 +293,7 @@ mod tests {
     }
     fn test_rescue_transcript_append_vk_and_input_circuit_helper<E, F, P>()
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -309,7 +309,7 @@ mod tests {
         let open_key: UnivariateVerifierParam<E> = UnivariateVerifierParam {
             g: E::G1Affine::prime_subgroup_generator(),
             h: E::G2Affine::prime_subgroup_generator(),
-            beta_h: E::G2Projective::rand(&mut rng).into_affine(),
+            beta_h: E::G2::rand(&mut rng).into_affine(),
         };
 
         let dummy_vk = VerifyingKey {
@@ -344,11 +344,11 @@ mod tests {
 
         for _ in 0..10 {
             // inputs
-            let input: Vec<E::Fr> = (0..16).map(|_| E::Fr::rand(&mut rng)).collect();
+            let input: Vec<E::ScalarField> = (0..16).map(|_| E::ScalarField::rand(&mut rng)).collect();
 
             // sigma commitments
             let sigma_comms: Vec<Commitment<E>> = (0..42)
-                .map(|_| Commitment(E::G1Projective::rand(&mut rng).into_affine()))
+                .map(|_| Commitment(E::G1::rand(&mut rng).into_affine()))
                 .collect();
             let mut sigma_comms_vars: Vec<PointVariable> = Vec::new();
             for e in sigma_comms.iter() {
@@ -359,7 +359,7 @@ mod tests {
 
             // selector commitments
             let selector_comms: Vec<Commitment<E>> = (0..33)
-                .map(|_| Commitment(E::G1Projective::rand(&mut rng).into_affine()))
+                .map(|_| Commitment(E::G1::rand(&mut rng).into_affine()))
                 .collect();
             let mut selector_comms_vars: Vec<PointVariable> = Vec::new();
             for e in selector_comms.iter() {
@@ -369,7 +369,7 @@ mod tests {
             }
 
             // k
-            let k: Vec<E::Fr> = (0..5).map(|_| E::Fr::rand(&mut rng)).collect();
+            let k: Vec<E::ScalarField> = (0..5).map(|_| E::ScalarField::rand(&mut rng)).collect();
 
             let vk = VerifyingKey {
                 domain_size: 512,

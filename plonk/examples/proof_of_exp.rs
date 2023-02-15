@@ -13,7 +13,7 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, CurveConfig, PairingEngine,
+    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, CurveConfig, pairing::Pairing,
     ProjectiveCurve, TECurveConfig,
 };
 use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
@@ -96,7 +96,7 @@ fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
 where
     EmbedCurve: TECurveConfig,
     <EmbedCurve as CurveConfig>::BaseField: PrimeField,
-    PairingCurve: PairingEngine,
+    PairingCurve: Pairing,
 {
     // Let's check that the inputs are indeed correct before we build a circuit.
     let G = TEAffine::<EmbedCurve>::prime_subgroup_generator();

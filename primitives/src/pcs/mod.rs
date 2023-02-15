@@ -12,7 +12,7 @@ mod structs;
 mod transcript;
 mod univariate_kzg;
 
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
@@ -27,7 +27,7 @@ use errors::PCSError;
 /// This trait defines APIs for polynomial commitment schemes.
 /// Note that for our usage, this PCS is not hiding.
 /// TODO(#187): add hiding property.
-pub trait PolynomialCommitmentScheme<E: PairingEngine> {
+pub trait PolynomialCommitmentScheme<E: Pairing> {
     /// Prover parameters
     type ProverParam: Clone;
     /// Verifier parameters
@@ -128,7 +128,7 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
         verifier_param: &Self::VerifierParam,
         commitment: &Self::Commitment,
         point: &Self::Point,
-        value: &E::Fr,
+        value: &E::ScalarField,
         proof: &Self::Proof,
     ) -> Result<bool, PCSError>;
 
@@ -138,14 +138,14 @@ pub trait PolynomialCommitmentScheme<E: PairingEngine> {
         verifier_param: &Self::VerifierParam,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
-        values: &[E::Fr],
+        values: &[E::ScalarField],
         batch_proof: &Self::BatchProof,
         rng: &mut R,
     ) -> Result<bool, PCSError>;
 }
 
 /// API definitions for structured reference string
-pub trait StructuredReferenceString<E: PairingEngine>: Sized {
+pub trait StructuredReferenceString<E: Pairing>: Sized {
     /// Prover parameters
     type ProverParam;
     /// Verifier parameters

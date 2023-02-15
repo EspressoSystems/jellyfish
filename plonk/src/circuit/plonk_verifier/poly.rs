@@ -6,7 +6,7 @@
 
 //! Circuits for the polynomial evaluations within Plonk verifiers.
 use crate::{circuit::plonk_verifier::*, errors::PlonkError};
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, string::ToString, vec, vec::Vec, One};
@@ -41,7 +41,7 @@ pub(super) fn evaluate_poly_helper<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<([FpElemVar<F>; 3]), CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<Fq = F>,
     F: PrimeField,
 {
     // constants
@@ -53,7 +53,7 @@ where
 
     // zeta
     let zeta = zeta_fp_elem_var.witness(circuit)?;
-    let zeta_fr = field_switching::<_, E::Fr>(&zeta);
+    let zeta_fr = field_switching::<_, E::ScalarField>(&zeta);
 
     // ================================
     // compute zeta^n - 1
@@ -93,7 +93,7 @@ where
     // zeta^n = zeta_n_minus_1 + 1
     let zeta_n = zeta_n_fp_elem_var.witness(circuit)?;
     let zeta_n_minus_one =
-        field_switching::<_, F>(&(field_switching::<_, E::Fr>(&zeta_n) - E::Fr::one()));
+        field_switching::<_, F>(&(field_switching::<_, E::ScalarField>(&zeta_n) - E::ScalarField::one()));
     let zeta_n_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
         &zeta_n_minus_one,
@@ -121,8 +121,8 @@ where
     // ================================
 
     // lagrange_1_eval
-    let zeta_n_minus_one = field_switching::<_, E::Fr>(&zeta_n_minus_one);
-    let divisor = E::Fr::from(domain_size as u64) * (zeta_fr - E::Fr::one());
+    let zeta_n_minus_one = field_switching::<_, E::ScalarField>(&zeta_n_minus_one);
+    let divisor = E::ScalarField::from(domain_size as u64) * (zeta_fr - E::ScalarField::one());
     let lagrange_1_eval = zeta_n_minus_one / divisor;
     let lagrange_1_eval_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
@@ -132,7 +132,7 @@ where
     )?;
 
     // zeta - 1
-    let zeta_minus_one_fr = zeta_fr - E::Fr::one();
+    let zeta_minus_one_fr = zeta_fr - E::ScalarField::one();
     let zeta_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
         &field_switching(&zeta_minus_one_fr),
@@ -188,7 +188,7 @@ pub(super) fn evaluate_pi_poly_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<Fq = F>,
     F: PrimeField,
 {
     // the circuit is already merged
@@ -200,13 +200,13 @@ where
     let len = pub_inputs_fp_elem_var.len() >> 1;
 
     // constants
-    let zeta = field_switching::<_, E::Fr>(&zeta_fp_elem_var.witness(circuit)?);
-    let vanish_eval = field_switching::<_, E::Fr>(&vanish_eval_fp_elem_var.witness(circuit)?);
+    let zeta = field_switching::<_, E::ScalarField>(&zeta_fp_elem_var.witness(circuit)?);
+    let vanish_eval = field_switching::<_, E::ScalarField>(&vanish_eval_fp_elem_var.witness(circuit)?);
 
     // compute v_i = g^i / n in the clear
-    let domain = Radix2EvaluationDomain::<E::Fr>::new(domain_size).unwrap();
-    let v_i: Vec<E::Fr> = (0..domain_size)
-        .map(|x| domain.element(x) / E::Fr::from(domain_size as u64))
+    let domain = Radix2EvaluationDomain::<E::ScalarField>::new(domain_size).unwrap();
+    let v_i: Vec<E::ScalarField> = (0..domain_size)
+        .map(|x| domain.element(x) / E::ScalarField::from(domain_size as u64))
         .collect();
 
     // compute L_{i,H}(zeta) = Z_H(zeta) * v_i / (zeta - g^i)
@@ -319,7 +319,7 @@ pub(super) fn compute_lin_poly_constant_term_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<Fq = F>,
     F: PrimeField,
 {
     if verify_keys.len() != batch_proof.len() || verify_keys.len() != public_inputs.len() {
@@ -354,7 +354,7 @@ where
         true,
         non_native_field_info,
     )?;
-    let pi_fr = field_switching::<_, E::Fr>(&pi_fp_elem_var.witness(circuit)?);
+    let pi_fr = field_switching::<_, E::ScalarField>(&pi_fp_elem_var.witness(circuit)?);
 
     // L1(x)*alpha_2
     let l1_mul_alpha_2_fp_elem_var = circuit.mod_mul(
@@ -364,7 +364,7 @@ where
     )?;
 
     let l1_mul_alpha_2_fr =
-        field_switching::<_, E::Fr>(&l1_mul_alpha_2_fp_elem_var.witness(circuit)?);
+        field_switching::<_, E::ScalarField>(&l1_mul_alpha_2_fp_elem_var.witness(circuit)?);
 
     // the big loop to compute r_0[j]
     //
@@ -429,7 +429,7 @@ where
             &non_native_field_info.modulus_fp_elem,
         )?;
         tmp = circuit.mod_mul(&tmp, &prod, &non_native_field_info.modulus_fp_elem)?;
-        let tmp_fr = field_switching::<_, E::Fr>(&tmp.witness(circuit)?);
+        let tmp_fr = field_switching::<_, E::ScalarField>(&tmp.witness(circuit)?);
 
         // r_plonk_j
         let r_plonk_j_fr = pi_fr - l1_mul_alpha_2_fr - tmp_fr;
@@ -491,7 +491,7 @@ pub(super) fn linearization_scalars_and_bases_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<ScalarsAndBasesVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<Fq = F>,
     F: PrimeField,
 {
     let beta_times_zeta_fp_elem_var = circuit.mod_mul(
@@ -637,17 +637,17 @@ where
             &non_native_field_info.modulus_fp_elem,
         )?);
         // q_scalars[6] = w_evals[0].pow([5]);
-        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::Fr>(&w_evals[0])?);
+        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::ScalarField>(&w_evals[0])?);
         // q_scalars[7] = w_evals[1].pow([5]);
-        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::Fr>(&w_evals[1])?);
+        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::ScalarField>(&w_evals[1])?);
         // q_scalars[8] = w_evals[2].pow([5]);
-        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::Fr>(&w_evals[2])?);
+        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::ScalarField>(&w_evals[2])?);
         // q_scalars[9] = w_evals[3].pow([5]);
-        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::Fr>(&w_evals[3])?);
+        q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::ScalarField>(&w_evals[3])?);
         // q_scalars[10] = -w_evals[4];
         // note that we push w_eval to the buffer, so we will need to inverse the basis
         q_scalars_fp_elem_vars.push(w_evals[4]);
-        // q_scalars[11] = E::Fr::one();
+        // q_scalars[11] = E::ScalarField::one();
         // TODO(optimization): public wire?
         q_scalars_fp_elem_vars.push(FpElemVar::one(
             circuit,
@@ -747,19 +747,19 @@ mod test {
         test_evaluate_poly_helper::<Bls12_377>();
     }
 
-    fn test_evaluate_poly_helper<E: PairingEngine>() {
+    fn test_evaluate_poly_helper<E: Pairing>() {
         let mut rng = test_rng();
 
         let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        let zeta = E::Fr::rand(&mut rng);
+        let zeta = E::ScalarField::rand(&mut rng);
         let zeta_var = circuit.create_variable(field_switching(&zeta)).unwrap();
 
         for domain_size in [64, 128, 256, 512, 1024] {
             // compute the result in the clear
-            let domain = Radix2EvaluationDomain::<E::Fr>::new(domain_size).unwrap();
+            let domain = Radix2EvaluationDomain::<E::ScalarField>::new(domain_size).unwrap();
             let vanish_eval = domain.evaluate_vanishing_polynomial(zeta);
-            let zeta_n = vanish_eval + E::Fr::one();
-            let divisor = E::Fr::from(domain_size as u32) * (zeta - E::Fr::one());
+            let zeta_n = vanish_eval + E::ScalarField::one();
+            let divisor = E::ScalarField::from(domain_size as u32) * (zeta - E::ScalarField::one());
             let lagrange_1_eval = vanish_eval / divisor;
 
             // compute the variables
@@ -767,7 +767,7 @@ mod test {
             // constants
             let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
 
-            let fr_modulus_bits = <E::Fr as PrimeField>::Params::MODULUS.to_bytes_le();
+            let fr_modulus_bits = <E::ScalarField as PrimeField>::Params::MODULUS.to_bytes_le();
             let modulus_in_f = E::Fq::from_le_bytes_mod_order(&fr_modulus_bits);
             let modulus_fp_elem = FpElem::new(&modulus_in_f, m, two_power_m).unwrap();
 

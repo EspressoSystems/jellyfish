@@ -20,7 +20,7 @@ use crate::{
     proof_system::structs::UniversalSrs,
     transcript::*,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig};
 use ark_ff::{Field, One};
 use ark_std::{
     format,
@@ -42,11 +42,11 @@ use jf_utils::par_utils::parallelizable_slice_iter;
 use rayon::prelude::*;
 
 /// A Plonk instantiated with KZG PCS
-pub struct PlonkKzgSnark<E: PairingEngine>(PhantomData<E>);
+pub struct PlonkKzgSnark<E: Pairing>(PhantomData<E>);
 
 impl<E, F, P> PlonkKzgSnark<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -63,7 +63,7 @@ where
         prove_keys: &[&ProvingKey<E>],
     ) -> Result<BatchProof<E>, PlonkError>
     where
-        C: Arithmetization<E::Fr>,
+        C: Arithmetization<E::ScalarField>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {
@@ -75,7 +75,7 @@ where
     /// Verify a single aggregated Plonk proof.
     pub fn verify_batch_proof<T>(
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
     ) -> Result<(), PlonkError>
     where
@@ -99,7 +99,7 @@ where
     /// Batch verify multiple SNARK proofs (w.r.t. different verifying keys).
     pub fn batch_verify<T>(
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         proofs: &[&Proof<E>],
         extra_transcript_init_msgs: &[Option<Vec<u8>>],
     ) -> Result<(), PlonkError>
@@ -164,9 +164,9 @@ where
         circuits: &[&C],
         prove_keys: &[&ProvingKey<E>],
         extra_transcript_init_msg: Option<Vec<u8>>,
-    ) -> Result<(BatchProof<E>, Vec<Oracles<E::Fr>>, Challenges<E::Fr>), PlonkError>
+    ) -> Result<(BatchProof<E>, Vec<Oracles<E::ScalarField>>, Challenges<E::ScalarField>), PlonkError>
     where
-        C: Arithmetization<E::Fr>,
+        C: Arithmetization<E::ScalarField>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {
@@ -353,7 +353,7 @@ where
             challenges.zeta,
             &split_quot_polys,
         )?;
-        let mut alpha_base = E::Fr::one();
+        let mut alpha_base = E::ScalarField::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
         for i in 0..circuits.len() {
@@ -419,7 +419,7 @@ where
 
 impl<E, F, P> UniversalSNARK<E> for PlonkKzgSnark<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -438,7 +438,7 @@ where
 
     /// Input a circuit and the SRS, precompute the proving key and verification
     /// key.
-    fn preprocess<C: Arithmetization<E::Fr>>(
+    fn preprocess<C: Arithmetization<E::ScalarField>>(
         srs: &Self::UniversalSRS,
         circuit: &C,
     ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error> {
@@ -540,7 +540,7 @@ where
         extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<Self::Proof, Self::Error>
     where
-        C: Arithmetization<E::Fr>,
+        C: Arithmetization<E::ScalarField>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {
@@ -563,7 +563,7 @@ where
 
     fn verify<T>(
         verify_key: &Self::VerifyingKey,
-        public_input: &[E::Fr],
+        public_input: &[E::ScalarField],
         proof: &Self::Proof,
         extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<(), Self::Error>
@@ -600,7 +600,7 @@ pub mod test {
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
     use ark_bn254::{Bn254, Fq as Fq254};
     use ark_bw6_761::{Fq as Fq761, BW6_761};
-    use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
+    use ark_ec::{short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig};
     use ark_ff::{One, PrimeField, Zero};
     use ark_poly::{
         univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
@@ -709,7 +709,7 @@ pub mod test {
     }
     fn test_preprocessing_helper<E, F, P>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -844,7 +844,7 @@ pub mod test {
 
     fn test_plonk_proof_system_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -883,10 +883,10 @@ pub mod test {
         }
 
         // 5. Verification
-        let public_inputs: Vec<Vec<E::Fr>> = circuits
+        let public_inputs: Vec<Vec<E::ScalarField>> = circuits
             .iter()
             .map(|cs| cs.public_input())
-            .collect::<Result<Vec<Vec<E::Fr>>, _>>()?;
+            .collect::<Result<Vec<Vec<E::ScalarField>>, _>>()?;
         for (i, proof) in proofs.iter().enumerate() {
             let vk_ref = if i < 3 { &vk1 } else { &vk2 };
             assert!(PlonkKzgSnark::<E>::verify::<T>(
@@ -898,7 +898,7 @@ pub mod test {
             .is_ok());
             // Inconsistent proof should fail the verification.
             let mut bad_pub_input = public_inputs[i].clone();
-            bad_pub_input[0] = E::Fr::from(0u8);
+            bad_pub_input[0] = E::ScalarField::from(0u8);
             assert!(PlonkKzgSnark::<E>::verify::<T>(
                 vk_ref,
                 &bad_pub_input,
@@ -932,7 +932,7 @@ pub mod test {
 
         // 6. Batch verification
         let vks = vec![&vk1, &vk1, &vk1, &vk2, &vk2, &vk2];
-        let mut public_inputs_ref: Vec<&[E::Fr]> = public_inputs
+        let mut public_inputs_ref: Vec<&[E::ScalarField]> = public_inputs
             .iter()
             .map(|pub_input| &pub_input[..])
             .collect();
@@ -1059,7 +1059,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1071,18 +1071,18 @@ pub mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         // 2. Create circuits
-        let mut cs1: PlonkCircuit<E::Fr> = match plonk_type {
+        let mut cs1: PlonkCircuit<E::ScalarField> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
             PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(2),
         };
-        let var = cs1.create_variable(E::Fr::from(1u8))?;
-        cs1.enforce_constant(var, E::Fr::from(1u8))?;
+        let var = cs1.create_variable(E::ScalarField::from(1u8))?;
+        cs1.enforce_constant(var, E::ScalarField::from(1u8))?;
         cs1.finalize_for_arithmetization()?;
-        let mut cs2: PlonkCircuit<E::Fr> = match plonk_type {
+        let mut cs2: PlonkCircuit<E::ScalarField> = match plonk_type {
             PlonkType::TurboPlonk => PlonkCircuit::new_turbo_plonk(),
             PlonkType::UltraPlonk => PlonkCircuit::new_ultra_plonk(2),
         };
-        cs2.create_public_variable(E::Fr::from(1u8))?;
+        cs2.create_public_variable(E::ScalarField::from(1u8))?;
         cs2.finalize_for_arithmetization()?;
 
         // 3. Preprocessing
@@ -1094,10 +1094,10 @@ pub mod test {
         let proof2 = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &cs2, &pk2, None)?;
 
         // 5. Verification
-        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[E::Fr::from(1u8)], &proof2, None,).is_ok());
+        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[E::ScalarField::from(1u8)], &proof2, None,).is_ok());
         // wrong verification key
         assert!(
-            PlonkKzgSnark::<E>::verify::<T>(&vk1, &[E::Fr::from(1u8)], &proof2, None,).is_err()
+            PlonkKzgSnark::<E>::verify::<T>(&vk1, &[E::ScalarField::from(1u8)], &proof2, None,).is_err()
         );
         // wrong public input
         assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[], &proof2, None).is_err());
@@ -1154,7 +1154,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1182,11 +1182,11 @@ pub mod test {
         Ok(())
     }
 
-    fn check_plonk_prover_polynomials<E: PairingEngine>(
+    fn check_plonk_prover_polynomials<E: Pairing>(
         plonk_type: PlonkType,
-        oracles: &Oracles<E::Fr>,
+        oracles: &Oracles<E::ScalarField>,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         check_circuit_polynomial_on_vanishing_set(oracles, pk)?;
         check_perm_polynomials_on_vanishing_set(oracles, pk, challenges)?;
@@ -1197,16 +1197,16 @@ pub mod test {
         Ok(())
     }
 
-    fn check_circuit_polynomial_on_vanishing_set<E: PairingEngine>(
-        oracles: &Oracles<E::Fr>,
+    fn check_circuit_polynomial_on_vanishing_set<E: Pairing>(
+        oracles: &Oracles<E::ScalarField>,
         pk: &ProvingKey<E>,
     ) -> Result<(), PlonkError> {
-        let q_lc: Vec<&DensePolynomial<E::Fr>> =
+        let q_lc: Vec<&DensePolynomial<E::ScalarField>> =
             (0..GATE_WIDTH).map(|j| &pk.selectors[j]).collect();
-        let q_mul: Vec<&DensePolynomial<E::Fr>> = (GATE_WIDTH..GATE_WIDTH + 2)
+        let q_mul: Vec<&DensePolynomial<E::ScalarField>> = (GATE_WIDTH..GATE_WIDTH + 2)
             .map(|j| &pk.selectors[j])
             .collect();
-        let q_hash: Vec<&DensePolynomial<E::Fr>> = (GATE_WIDTH + 2..2 * GATE_WIDTH + 2)
+        let q_hash: Vec<&DensePolynomial<E::ScalarField>> = (GATE_WIDTH + 2..2 * GATE_WIDTH + 2)
             .map(|j| &pk.selectors[j])
             .collect();
         let q_o = &pk.selectors[2 * GATE_WIDTH + 2];
@@ -1257,26 +1257,26 @@ pub mod test {
             + oracles.wire_polys[4].mul(q_o).neg();
 
         // check that the polynomial evaluates to zero on the vanishing set
-        let domain = Radix2EvaluationDomain::<E::Fr>::new(pk.domain_size())
+        let domain = Radix2EvaluationDomain::<E::ScalarField>::new(pk.domain_size())
             .ok_or(PlonkError::DomainCreationError)?;
         for i in 0..domain.size() {
-            assert_eq!(circuit_poly.evaluate(&domain.element(i)), E::Fr::zero());
+            assert_eq!(circuit_poly.evaluate(&domain.element(i)), E::ScalarField::zero());
         }
 
         Ok(())
     }
 
-    fn check_perm_polynomials_on_vanishing_set<E: PairingEngine>(
-        oracles: &Oracles<E::Fr>,
+    fn check_perm_polynomials_on_vanishing_set<E: Pairing>(
+        oracles: &Oracles<E::ScalarField>,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         let beta = challenges.beta;
         let gamma = challenges.gamma;
 
         // check that \prod_i [w_i(X) + beta * k_i * X + gamma] * z(X) = \prod_i [w_i(X)
         // + beta * sigma_i(X) + gamma] * z(wX) on the vanishing set
-        let one_poly = DensePolynomial::from_coefficients_vec(vec![E::Fr::one()]);
+        let one_poly = DensePolynomial::from_coefficients_vec(vec![E::ScalarField::one()]);
         let poly_1 = oracles
             .wire_polys
             .iter()
@@ -1298,7 +1298,7 @@ pub mod test {
                     acc.mul(&poly)
                 });
 
-        let domain = Radix2EvaluationDomain::<E::Fr>::new(pk.domain_size())
+        let domain = Radix2EvaluationDomain::<E::ScalarField>::new(pk.domain_size())
             .ok_or(PlonkError::DomainCreationError)?;
         for i in 0..domain.size() {
             let point = domain.element(i);
@@ -1311,30 +1311,30 @@ pub mod test {
         // check z(X) = 1 at point 1
         assert_eq!(
             oracles.prod_perm_poly.evaluate(&domain.element(0)),
-            E::Fr::one()
+            E::ScalarField::one()
         );
 
         Ok(())
     }
 
-    fn check_lookup_polynomials_on_vanishing_set<E: PairingEngine>(
-        oracles: &Oracles<E::Fr>,
+    fn check_lookup_polynomials_on_vanishing_set<E: Pairing>(
+        oracles: &Oracles<E::ScalarField>,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         let beta = challenges.beta;
         let gamma = challenges.gamma;
         let n = pk.domain_size();
         let domain =
-            Radix2EvaluationDomain::<E::Fr>::new(n).ok_or(PlonkError::DomainCreationError)?;
+            Radix2EvaluationDomain::<E::ScalarField>::new(n).ok_or(PlonkError::DomainCreationError)?;
         let prod_poly = &oracles.plookup_oracles.prod_lookup_poly;
         let h_polys = &oracles.plookup_oracles.h_polys;
 
         // check z(X) = 1 at point 1
-        assert_eq!(prod_poly.evaluate(&domain.element(0)), E::Fr::one());
+        assert_eq!(prod_poly.evaluate(&domain.element(0)), E::ScalarField::one());
 
         // check z(X) = 1 at point w^{n-1}
-        assert_eq!(prod_poly.evaluate(&domain.element(n - 1)), E::Fr::one());
+        assert_eq!(prod_poly.evaluate(&domain.element(n - 1)), E::ScalarField::one());
 
         // check h1(X) = h2(w * X) at point w^{n-1}
         assert_eq!(
@@ -1349,7 +1349,7 @@ pub mod test {
         //      (gamma(1+beta) + h1(X) + beta * h1(Xw)) *
         //      (gamma(1+beta) + h2(x) + beta * h2(Xw))
         // on the vanishing set excluding point w^{n-1}
-        let beta_plus_one = E::Fr::one() + beta;
+        let beta_plus_one = E::ScalarField::one() + beta;
         let gamma_mul_beta_plus_one = gamma * beta_plus_one;
 
         let range_table_poly_ref = &pk.plookup_pk.as_ref().unwrap().range_table_poly;
@@ -1416,9 +1416,9 @@ pub mod test {
 
     fn test_proof_from_to_fields_helper<E, P>() -> Result<(), PlonkError>
     where
-        E: PairingEngine<G1Affine = GroupAffine<P>>,
+        E: Pairing<G1Affine = GroupAffine<P>>,
         E::Fq: RescueParameter + SWToTEConParam,
-        P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::Fr>,
+        P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
     {
         let rng = &mut ark_std::test_rng();
         let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
@@ -1461,7 +1461,7 @@ pub mod test {
 
     fn test_serde_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1524,7 +1524,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1537,9 +1537,9 @@ pub mod test {
 
         // 2. Create many circuits with same domain size
         let circuits = (6..13)
-            .map(|i| gen_circuit_for_test::<E::Fr>(i, i, plonk_type))
+            .map(|i| gen_circuit_for_test::<E::ScalarField>(i, i, plonk_type))
             .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
-        let cs_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
+        let cs_ref: Vec<&PlonkCircuit<E::ScalarField>> = circuits.iter().collect();
 
         // 3. Preprocessing
         let mut prove_keys = vec![];
@@ -1558,7 +1558,7 @@ pub mod test {
         // Batch proving with circuit/key aggregation
         //
         // 2. Create circuits
-        let type_a_circuits: Vec<PlonkCircuit<E::Fr>> = (6..13)
+        let type_a_circuits: Vec<PlonkCircuit<E::ScalarField>> = (6..13)
             .map(|i| gen_mergeable_circuit(i, i, MergeableCircuitType::TypeA))
             .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
         let type_b_circuits = (6..13)
@@ -1570,7 +1570,7 @@ pub mod test {
             .zip(type_b_circuits.iter())
             .map(|(cs_a, cs_b)| cs_a.merge(cs_b))
             .collect::<Result<Vec<_>, _>>()?;
-        let cs_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
+        let cs_ref: Vec<&PlonkCircuit<E::ScalarField>> = circuits.iter().collect();
 
         // 3. Preprocessing
         let mut pks_type_a = vec![];
@@ -1617,12 +1617,12 @@ pub mod test {
 
     fn check_batch_prove_and_verify<E, F, P, R, T>(
         rng: &mut R,
-        cs_ref: &[&PlonkCircuit<E::Fr>],
+        cs_ref: &[&PlonkCircuit<E::ScalarField>],
         pks_ref: &[&ProvingKey<E>],
         vks_ref: &[&VerifyingKey<E>],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         R: CryptoRng + RngCore,
@@ -1632,11 +1632,11 @@ pub mod test {
         let batch_proof = PlonkKzgSnark::<E>::batch_prove::<_, _, T>(rng, cs_ref, pks_ref)?;
 
         // Verification
-        let public_inputs: Vec<Vec<E::Fr>> = cs_ref
+        let public_inputs: Vec<Vec<E::ScalarField>> = cs_ref
             .iter()
             .map(|&cs| cs.public_input())
-            .collect::<Result<Vec<Vec<E::Fr>>, _>>()?;
-        let pi_ref: Vec<&[E::Fr]> = public_inputs
+            .collect::<Result<Vec<Vec<E::ScalarField>>, _>>()?;
+        let pi_ref: Vec<&[E::ScalarField]> = public_inputs
             .iter()
             .map(|pub_input| &pub_input[..])
             .collect();

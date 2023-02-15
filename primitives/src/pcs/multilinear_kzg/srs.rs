@@ -6,7 +6,7 @@
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
 use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-use ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+use ark_ec::{msm::FixedBaseMSM, AffineCurve, pairing::Pairing, ProjectiveCurve};
 use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
@@ -31,7 +31,7 @@ pub struct Evaluations<C: AffineCurve> {
 
 /// Universal Parameter
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct MultilinearUniversalParams<E: PairingEngine> {
+pub struct MultilinearUniversalParams<E: Pairing> {
     /// prover parameters
     pub prover_param: MultilinearProverParam<E>,
     /// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**
@@ -40,7 +40,7 @@ pub struct MultilinearUniversalParams<E: PairingEngine> {
 
 /// Prover Parameters
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct MultilinearProverParam<E: PairingEngine> {
+pub struct MultilinearProverParam<E: Pairing> {
     /// number of variables
     pub num_vars: usize,
     /// `pp_{0}`, `pp_{1}`, ...,pp_{nu_vars} defined
@@ -55,7 +55,7 @@ pub struct MultilinearProverParam<E: PairingEngine> {
 
 /// Verifier Parameters
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct MultilinearVerifierParam<E: PairingEngine> {
+pub struct MultilinearVerifierParam<E: Pairing> {
     /// number of variables
     pub num_vars: usize,
     /// generator of G1
@@ -66,7 +66,7 @@ pub struct MultilinearVerifierParam<E: PairingEngine> {
     pub h_mask: Vec<E::G2Affine>,
 }
 
-impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalParams<E> {
+impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> {
     type ProverParam = MultilinearProverParam<E>;
     type VerifierParam = MultilinearVerifierParam<E>;
 
@@ -140,15 +140,15 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
 
         let pp_generation_timer = start_timer!(|| "Prover Param generation");
 
-        let g = E::G1Projective::rand(rng);
-        let h = E::G2Projective::rand(rng);
+        let g = E::G1::rand(rng);
+        let h = E::G2::rand(rng);
 
         let mut powers_of_g = Vec::new();
 
-        let t: Vec<_> = (0..num_vars).map(|_| E::Fr::rand(rng)).collect();
-        let scalar_bits = E::Fr::size_in_bits();
+        let t: Vec<_> = (0..num_vars).map(|_| E::ScalarField::rand(rng)).collect();
+        let scalar_bits = E::ScalarField::size_in_bits();
 
-        let mut eq: LinkedList<DenseMultilinearExtension<E::Fr>> =
+        let mut eq: LinkedList<DenseMultilinearExtension<E::ScalarField>> =
             LinkedList::from_iter(eq_extension(&t).into_iter());
         let mut eq_arr = LinkedList::new();
         let mut base = eq.pop_back().unwrap().evaluations;
@@ -176,7 +176,7 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
         let window_size = FixedBaseMSM::get_mul_window_size(total_scalars);
         let g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
 
-        let pp_g = E::G1Projective::batch_normalization_into_affine(
+        let pp_g = E::G1::batch_normalization_into_affine(
             &FixedBaseMSM::multi_scalar_mul(scalar_bits, window_size, &g_table, &pp_powers),
         );
 
@@ -187,7 +187,7 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
                 evals: pp_g[start..(start + size)].to_vec(),
             };
             // check correctness of pp_k_g
-            let t_eval_0 = eq_eval(&vec![E::Fr::zero(); num_vars - i], &t[i..num_vars])?;
+            let t_eval_0 = eq_eval(&vec![E::ScalarField::zero(); num_vars - i], &t[i..num_vars])?;
             assert_eq!(g.mul(t_eval_0.into_repr()).into_affine(), pp_k_g.evals[0]);
 
             powers_of_g.push(pp_k_g);
@@ -211,7 +211,7 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
         let h_mask = {
             let window_size = FixedBaseMSM::get_mul_window_size(num_vars);
             let h_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, h);
-            E::G2Projective::batch_normalization_into_affine(&FixedBaseMSM::multi_scalar_mul(
+            E::G2::batch_normalization_into_affine(&FixedBaseMSM::multi_scalar_mul(
                 scalar_bits,
                 window_size,
                 &h_table,

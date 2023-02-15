@@ -13,7 +13,7 @@ use crate::{
     },
 };
 use ark_ec::{
-    msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig,
+    msm::VariableBaseMSM, short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig,
 };
 use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
@@ -47,15 +47,15 @@ use tagged_base64::tagged;
 /// Universal StructuredReferenceString
 pub type UniversalSrs<E> = UnivariateUniversalParams<E>;
 /// Commitment key
-pub type CommitKey<E> = UnivariateProverParam<<E as PairingEngine>::G1Affine>;
+pub type CommitKey<E> = UnivariateProverParam<<E as Pairing>::G1Affine>;
 /// Key for verifying PCS opening proof.
 pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
 #[tagged(tag::PROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:PairingEngine"))]
-pub struct Proof<E: PairingEngine> {
+#[derivative(Hash(bound = "E:Pairing"))]
+pub struct Proof<E: Pairing> {
     /// Wire witness polynomials commitments.
     pub(crate) wires_poly_comms: Vec<Commitment<E>>,
 
@@ -73,7 +73,7 @@ pub struct Proof<E: PairingEngine> {
     pub(crate) shifted_opening_proof: Commitment<E>,
 
     /// Polynomial evaluations.
-    pub(crate) poly_evals: ProofEvaluations<E::Fr>,
+    pub(crate) poly_evals: ProofEvaluations<E::ScalarField>,
 
     /// The partial proof for Plookup argument
     pub(crate) plookup_proof: Option<PlookupProof<E>>,
@@ -81,8 +81,8 @@ pub struct Proof<E: PairingEngine> {
 
 impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
 where
-    E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::Fr>,
+    E: Pairing<G1Affine = GroupAffine<P>>,
+    P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
 {
     type Error = SnarkError;
 
@@ -131,7 +131,7 @@ where
                 Commitment(GroupAffine::new(value[ptr], value[ptr + 1], false));
             ptr += 2;
 
-            let poly_evals_scalars: Vec<E::Fr> = value[ptr..]
+            let poly_evals_scalars: Vec<E::ScalarField> = value[ptr..]
                 .iter()
                 .map(|f| fq_to_fr::<E::Fq, P>(f))
                 .collect();
@@ -157,7 +157,7 @@ where
 // helper function to convert a G1Affine or G2Affine into two base fields
 fn group1_to_fields<E, P>(p: GroupAffine<P>) -> Vec<E::Fq>
 where
-    E: PairingEngine<G1Affine = GroupAffine<P>>,
+    E: Pairing<G1Affine = GroupAffine<P>>,
     P: SWCurveConfig<BaseField = E::Fq>,
 {
     // contains x, y, infinity_flag, only need the first 2 field elements
@@ -166,7 +166,7 @@ where
 
 fn group2_to_fields<E, F, P>(p: GroupAffine<P>) -> Vec<E::Fq>
 where
-    E: PairingEngine<G2Affine = GroupAffine<P>, Fqe = Fp2<F>>,
+    E: Pairing<G2Affine = GroupAffine<P>, Fqe = Fp2<F>>,
     F: Fp2Parameters<Fp = E::Fq>,
     P: SWCurveConfig<BaseField = E::Fqe>,
 {
@@ -176,14 +176,14 @@ where
 
 impl<E, P> From<Proof<E>> for Vec<E::Fq>
 where
-    E: PairingEngine<G1Affine = GroupAffine<P>>,
-    P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::Fr>,
+    E: Pairing<G1Affine = GroupAffine<P>>,
+    P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
 {
     fn from(proof: Proof<E>) -> Self {
         if proof.plookup_proof.is_some() {
             panic!("Only support TurboPlonk for now.");
         }
-        let poly_evals_scalars: Vec<E::Fr> = proof.poly_evals.into();
+        let poly_evals_scalars: Vec<E::ScalarField> = proof.poly_evals.into();
 
         // NOTE: order of these fields must match deserialization
         [
@@ -213,8 +213,8 @@ where
 
 /// A Plookup argument proof.
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:PairingEngine"))]
-pub struct PlookupProof<E: PairingEngine> {
+#[derivative(Hash(bound = "E:Pairing"))]
+pub struct PlookupProof<E: Pairing> {
     /// The commitments for the polynomials that interpolate the sorted
     /// concatenation of the lookup table and the witnesses in the lookup gates.
     pub(crate) h_poly_comms: Vec<Commitment<E>>,
@@ -223,14 +223,14 @@ pub struct PlookupProof<E: PairingEngine> {
     pub(crate) prod_lookup_poly_comm: Commitment<E>,
 
     /// Polynomial evaluations.
-    pub(crate) poly_evals: PlookupEvaluations<E::Fr>,
+    pub(crate) poly_evals: PlookupEvaluations<E::ScalarField>,
 }
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
 #[tagged(tag::BATCHPROOF)]
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:PairingEngine"))]
-pub struct BatchProof<E: PairingEngine> {
+#[derivative(Hash(bound = "E:Pairing"))]
+pub struct BatchProof<E: Pairing> {
     /// The list of wire witness polynomials commitments.
     pub(crate) wires_poly_comms_vec: Vec<Vec<Commitment<E>>>,
 
@@ -238,7 +238,7 @@ pub struct BatchProof<E: PairingEngine> {
     pub(crate) prod_perm_poly_comms_vec: Vec<Commitment<E>>,
 
     /// The list of polynomial evaluations.
-    pub(crate) poly_evals_vec: Vec<ProofEvaluations<E::Fr>>,
+    pub(crate) poly_evals_vec: Vec<ProofEvaluations<E::ScalarField>>,
 
     /// The list of partial proofs for Plookup argument
     pub(crate) plookup_proofs_vec: Vec<Option<PlookupProof<E>>>,
@@ -254,7 +254,7 @@ pub struct BatchProof<E: PairingEngine> {
     pub(crate) shifted_opening_proof: Commitment<E>,
 }
 
-impl<E: PairingEngine> BatchProof<E> {
+impl<E: Pairing> BatchProof<E> {
     /// The number of instances being proved in a batch proof.
     pub fn len(&self) -> usize {
         self.prod_perm_poly_comms_vec.len()
@@ -278,7 +278,7 @@ impl<E: PairingEngine> BatchProof<E> {
     }
 }
 
-impl<E: PairingEngine> From<Proof<E>> for BatchProof<E> {
+impl<E: Pairing> From<Proof<E>> for BatchProof<E> {
     fn from(proof: Proof<E>) -> Self {
         Self {
             wires_poly_comms_vec: vec![proof.wires_poly_comms],
@@ -340,7 +340,7 @@ impl<T: PrimeField> ProofEvaluations<T> {
     }
 }
 
-impl<E: PairingEngine> BatchProof<E> {
+impl<E: Pairing> BatchProof<E> {
     /// Create a `BatchProofVar` variable from a `BatchProof`.
     pub fn create_variables<F, P>(
         &self,
@@ -349,7 +349,7 @@ impl<E: PairingEngine> BatchProof<E> {
         two_power_m: Option<F>,
     ) -> Result<BatchProofVar<F>, PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -545,12 +545,12 @@ impl<F: Field> PlookupEvaluations<F> {
 /// Preprocessed prover parameters used to compute Plonk proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<E: PairingEngine> {
+pub struct ProvingKey<E: Pairing> {
     /// Extended permutation (sigma) polynomials.
-    pub(crate) sigmas: Vec<DensePolynomial<E::Fr>>,
+    pub(crate) sigmas: Vec<DensePolynomial<E::ScalarField>>,
 
     /// Selector polynomials.
-    pub(crate) selectors: Vec<DensePolynomial<E::Fr>>,
+    pub(crate) selectors: Vec<DensePolynomial<E::ScalarField>>,
 
     // KZG PCS committing key.
     pub(crate) commit_key: CommitKey<E>,
@@ -565,21 +565,21 @@ pub struct ProvingKey<E: PairingEngine> {
 /// Preprocessed prover parameters used to compute Plookup proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupProvingKey<E: PairingEngine> {
+pub struct PlookupProvingKey<E: Pairing> {
     /// Range table polynomial.
-    pub(crate) range_table_poly: DensePolynomial<E::Fr>,
+    pub(crate) range_table_poly: DensePolynomial<E::ScalarField>,
 
     /// Key table polynomial.
-    pub(crate) key_table_poly: DensePolynomial<E::Fr>,
+    pub(crate) key_table_poly: DensePolynomial<E::ScalarField>,
 
     /// Table domain separation polynomial.
-    pub(crate) table_dom_sep_poly: DensePolynomial<E::Fr>,
+    pub(crate) table_dom_sep_poly: DensePolynomial<E::ScalarField>,
 
     /// Lookup domain separation selector polynomial.
-    pub(crate) q_dom_sep_poly: DensePolynomial<E::Fr>,
+    pub(crate) q_dom_sep_poly: DensePolynomial<E::ScalarField>,
 }
 
-impl<E: PairingEngine> ProvingKey<E> {
+impl<E: Pairing> ProvingKey<E> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) fn domain_size(&self) -> usize {
         self.vk.domain_size
@@ -590,12 +590,12 @@ impl<E: PairingEngine> ProvingKey<E> {
         self.vk.num_inputs
     }
     /// The constants K0, ..., K4 that ensure wire subsets are disjoint.
-    pub(crate) fn k(&self) -> &[E::Fr] {
+    pub(crate) fn k(&self) -> &[E::ScalarField] {
         &self.vk.k
     }
 
     /// The lookup selector polynomial
-    pub(crate) fn q_lookup_poly(&self) -> Result<&DensePolynomial<E::Fr>, PlonkError> {
+    pub(crate) fn q_lookup_poly(&self) -> Result<&DensePolynomial<E::ScalarField>, PlonkError> {
         if self.plookup_pk.is_none() {
             return Err(SnarkLookupUnsupported.into());
         }
@@ -626,13 +626,13 @@ impl<E: PairingEngine> ProvingKey<E> {
         if self.plookup_pk.is_some() || other_pk.plookup_pk.is_some() {
             return Err(ParameterError("cannot merge UltraPlonk proving keys".to_string()).into());
         }
-        let sigmas: Vec<DensePolynomial<E::Fr>> = self
+        let sigmas: Vec<DensePolynomial<E::ScalarField>> = self
             .sigmas
             .iter()
             .zip(other_pk.sigmas.iter())
             .map(|(poly1, poly2)| poly1 + poly2)
             .collect();
-        let selectors: Vec<DensePolynomial<E::Fr>> = self
+        let selectors: Vec<DensePolynomial<E::ScalarField>> = self
             .selectors
             .iter()
             .zip(other_pk.selectors.iter())
@@ -652,7 +652,7 @@ impl<E: PairingEngine> ProvingKey<E> {
 /// Preprocessed verifier parameters used to verify Plonk proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct VerifyingKey<E: PairingEngine> {
+pub struct VerifyingKey<E: Pairing> {
     /// The size of the evaluation domain. Should be a power of two.
     pub(crate) domain_size: usize,
 
@@ -667,7 +667,7 @@ pub struct VerifyingKey<E: PairingEngine> {
 
     /// The constants K0, ..., K_num_wire_types that ensure wire subsets are
     /// disjoint.
-    pub(crate) k: Vec<E::Fr>,
+    pub(crate) k: Vec<E::ScalarField>,
 
     /// KZG PCS opening key.
     pub open_key: OpenKey<E>,
@@ -681,10 +681,10 @@ pub struct VerifyingKey<E: PairingEngine> {
 
 impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
 where
-    E: PairingEngine<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>, Fqe = Fp2<F>>,
+    E: Pairing<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>, Fqe = Fp2<F>>,
     F: Fp2Parameters<Fp = E::Fq>,
-    P1: SWCurveConfig<BaseField = E::Fq, ScalarField = E::Fr>,
-    P2: SWCurveConfig<BaseField = E::Fqe, ScalarField = E::Fr>,
+    P1: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
+    P2: SWCurveConfig<BaseField = E::Fqe, ScalarField = E::ScalarField>,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
         if vk.plookup_vk.is_some() {
@@ -716,7 +716,7 @@ where
 
 impl<E, F, P> VerifyingKey<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
     F: SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -741,7 +741,7 @@ where
 /// Preprocessed verifier parameters used to verify Plookup proofs for a certain
 /// circuit.
 #[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PlookupVerifyingKey<E: PairingEngine> {
+pub struct PlookupVerifyingKey<E: Pairing> {
     /// Range table polynomial commitment. The commitment is not hiding.
     pub(crate) range_table_comm: Commitment<E>,
 
@@ -757,7 +757,7 @@ pub struct PlookupVerifyingKey<E: PairingEngine> {
     pub(crate) q_dom_sep_comm: Commitment<E>,
 }
 
-impl<E: PairingEngine> VerifyingKey<E> {
+impl<E: Pairing> VerifyingKey<E> {
     /// Create a dummy TurboPlonk verification key for a circuit with
     /// `num_inputs` public inputs and domain size `domain_size`.
     pub fn dummy(num_inputs: usize, domain_size: usize) -> Self {
@@ -863,31 +863,31 @@ pub(crate) struct PlookupOracles<F: FftField> {
 
 /// The vector representation of bases and corresponding scalars.
 #[derive(Debug)]
-pub(crate) struct ScalarsAndBases<E: PairingEngine> {
-    pub(crate) base_scalar_map: HashMap<E::G1Affine, E::Fr>,
+pub(crate) struct ScalarsAndBases<E: Pairing> {
+    pub(crate) base_scalar_map: HashMap<E::G1Affine, E::ScalarField>,
 }
 
-impl<E: PairingEngine> ScalarsAndBases<E> {
+impl<E: Pairing> ScalarsAndBases<E> {
     pub(crate) fn new() -> Self {
         Self {
             base_scalar_map: HashMap::new(),
         }
     }
     /// Insert a base point and the corresponding scalar.
-    pub(crate) fn push(&mut self, scalar: E::Fr, base: E::G1Affine) {
-        let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::Fr::zero);
+    pub(crate) fn push(&mut self, scalar: E::ScalarField, base: E::G1Affine) {
+        let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::ScalarField::zero);
         *entry_scalar += scalar;
     }
 
     /// Add a list of scalars and bases into self, where each scalar is
     /// multiplied by a constant c.
-    pub(crate) fn merge(&mut self, c: E::Fr, scalars_and_bases: &Self) {
+    pub(crate) fn merge(&mut self, c: E::ScalarField, scalars_and_bases: &Self) {
         for (base, scalar) in &scalars_and_bases.base_scalar_map {
             self.push(c * scalar, *base);
         }
     }
     /// Compute the multi-scalar multiplication.
-    pub(crate) fn multi_scalar_mul(&self) -> E::G1Projective {
+    pub(crate) fn multi_scalar_mul(&self) -> E::G1 {
         let mut bases = vec![];
         let mut scalars = vec![];
         for (base, scalar) in &self.base_scalar_map {
@@ -900,15 +900,15 @@ impl<E: PairingEngine> ScalarsAndBases<E> {
 
 // Utility function for computing merged table evaluations.
 #[inline]
-pub(crate) fn eval_merged_table<E: PairingEngine>(
-    tau: E::Fr,
-    range_eval: E::Fr,
-    key_eval: E::Fr,
-    q_lookup_eval: E::Fr,
-    w3_eval: E::Fr,
-    w4_eval: E::Fr,
-    table_dom_sep_eval: E::Fr,
-) -> E::Fr {
+pub(crate) fn eval_merged_table<E: Pairing>(
+    tau: E::ScalarField,
+    range_eval: E::ScalarField,
+    key_eval: E::ScalarField,
+    q_lookup_eval: E::ScalarField,
+    w3_eval: E::ScalarField,
+    w4_eval: E::ScalarField,
+    table_dom_sep_eval: E::ScalarField,
+) -> E::ScalarField {
     range_eval
         + q_lookup_eval
             * tau
@@ -917,15 +917,15 @@ pub(crate) fn eval_merged_table<E: PairingEngine>(
 
 // Utility function for computing merged lookup witness evaluations.
 #[inline]
-pub(crate) fn eval_merged_lookup_witness<E: PairingEngine>(
-    tau: E::Fr,
-    w_range_eval: E::Fr,
-    w_0_eval: E::Fr,
-    w_1_eval: E::Fr,
-    w_2_eval: E::Fr,
-    q_lookup_eval: E::Fr,
-    q_dom_sep_eval: E::Fr,
-) -> E::Fr {
+pub(crate) fn eval_merged_lookup_witness<E: Pairing>(
+    tau: E::ScalarField,
+    w_range_eval: E::ScalarField,
+    w_0_eval: E::ScalarField,
+    w_1_eval: E::ScalarField,
+    w_2_eval: E::ScalarField,
+    q_lookup_eval: E::ScalarField,
+    q_dom_sep_eval: E::ScalarField,
+) -> E::ScalarField {
     w_range_eval
         + q_lookup_eval
             * tau
@@ -940,10 +940,10 @@ mod test {
 
     #[test]
     fn test_group_to_field() {
-        let g1 = <Bn254 as PairingEngine>::G1Affine::prime_subgroup_generator();
+        let g1 = <Bn254 as Pairing>::G1Affine::prime_subgroup_generator();
         let f1: Vec<Fq> = group1_to_fields::<Bn254, Parameters>(g1);
         assert_eq!(f1.len(), 2);
-        let g2 = <Bn254 as PairingEngine>::G2Affine::prime_subgroup_generator();
+        let g2 = <Bn254 as Pairing>::G2Affine::prime_subgroup_generator();
         let f2: Vec<Fq> = group2_to_fields::<Bn254, _, _>(g2);
         assert_eq!(f2.len(), 4);
     }

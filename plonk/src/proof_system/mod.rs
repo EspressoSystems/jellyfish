@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Interfaces for Plonk-based proof systems
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_std::{
     error::Error,
     fmt::Debug,
@@ -24,7 +24,7 @@ pub use snark::PlonkKzgSnark;
 // TODO: (alex) should we name it `PlonkishSNARK` instead? since we use
 // `PlonkTranscript` on prove and verify.
 /// An interface for SNARKs with universal setup.
-pub trait UniversalSNARK<E: PairingEngine> {
+pub trait UniversalSNARK<E: Pairing> {
     /// The SNARK proof computed by the prover.
     type Proof: Clone;
 
@@ -54,7 +54,7 @@ pub trait UniversalSNARK<E: PairingEngine> {
     ) -> Result<Self::UniversalSRS, Self::Error>;
 
     /// Circuit-specific preprocessing to compute the proving/verifying keys.
-    fn preprocess<C: Arithmetization<E::Fr>>(
+    fn preprocess<C: Arithmetization<E::ScalarField>>(
         srs: &Self::UniversalSRS,
         circuit: &C,
     ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error>;
@@ -75,7 +75,7 @@ pub trait UniversalSNARK<E: PairingEngine> {
         extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<Self::Proof, Self::Error>
     where
-        C: Arithmetization<E::Fr>,
+        C: Arithmetization<E::ScalarField>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<E::Fq>;
 
@@ -85,7 +85,7 @@ pub trait UniversalSNARK<E: PairingEngine> {
     /// `extra_transcript_init_msg`: refer to documentation of `prove`
     fn verify<T: PlonkTranscript<E::Fq>>(
         verify_key: &Self::VerifyingKey,
-        public_input: &[E::Fr],
+        public_input: &[E::ScalarField],
         proof: &Self::Proof,
         extra_transcript_init_msg: Option<Vec<u8>>,
     ) -> Result<(), Self::Error>;

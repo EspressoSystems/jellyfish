@@ -6,13 +6,13 @@
 
 //! This module implements a simple wrapper of multi-pairing function
 
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_std::vec::Vec;
 
 /// A simple wrapper of multi-pairing function.
-pub fn multi_pairing<E>(g1_elems: &[E::G1Affine], g2_elems: &[E::G2Affine]) -> E::Fqk
+pub fn multi_pairing<E>(g1_elems: &[E::G1Affine], g2_elems: &[E::G2Affine]) -> E::TargetField
 where
-    E: PairingEngine,
+    E: Pairing,
 {
     let inputs: Vec<(E::G1Prepared, E::G2Prepared)> = g1_elems
         .iter()
@@ -29,7 +29,7 @@ mod test {
     use ark_bls12_377::Bls12_377;
     use ark_bls12_381::Bls12_381;
     use ark_bn254::Bn254;
-    use ark_ec::{AffineCurve, PairingEngine, ProjectiveCurve};
+    use ark_ec::{AffineCurve, pairing::Pairing, ProjectiveCurve};
     use ark_std::{test_rng, One, UniformRand};
 
     #[test]
@@ -39,7 +39,7 @@ mod test {
         test_multi_pairing_helper::<Bls12_381>();
     }
 
-    fn test_multi_pairing_helper<E: PairingEngine>() {
+    fn test_multi_pairing_helper<E: Pairing>() {
         let mut rng = test_rng();
 
         // generators with single pairing
@@ -50,8 +50,8 @@ mod test {
         assert_eq!(multi_pairing::<E>(&[g1], &[g2]), gt);
 
         // random elements with single pairing
-        let r1 = E::Fr::rand(&mut rng);
-        let r2 = E::Fr::rand(&mut rng);
+        let r1 = E::ScalarField::rand(&mut rng);
+        let r2 = E::ScalarField::rand(&mut rng);
         let f1 = g1.mul(r1).into_affine();
         let f2 = g2.mul(r2).into_affine();
         let ft = E::pairing(f1, f2);
@@ -63,6 +63,6 @@ mod test {
         assert_eq!(multi_pairing::<E>(&[g1, f1], &[g2, f2]), ht);
 
         // equality test
-        assert_eq!(multi_pairing::<E>(&[g1, -g1], &[g2, g2]), E::Fqk::one());
+        assert_eq!(multi_pairing::<E>(&[g1, -g1], &[g2, g2]), E::TargetField::one());
     }
 }

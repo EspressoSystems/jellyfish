@@ -15,7 +15,7 @@ use crate::{
     errors::{PlonkError, SnarkError::*},
     proof_system::structs::CommitKey,
 };
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_ff::{FftField, Field, One, UniformRand, Zero};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
@@ -38,25 +38,25 @@ use rayon::prelude::*;
 
 type CommitmentsAndPolys<E> = (
     Vec<Commitment<E>>,
-    Vec<DensePolynomial<<E as PairingEngine>::Fr>>,
+    Vec<DensePolynomial<<E as Pairing>::Fr>>,
 );
 
 /// A Plonk IOP prover.
-pub(crate) struct Prover<E: PairingEngine> {
-    domain: Radix2EvaluationDomain<E::Fr>,
-    quot_domain: GeneralEvaluationDomain<E::Fr>,
+pub(crate) struct Prover<E: Pairing> {
+    domain: Radix2EvaluationDomain<E::ScalarField>,
+    quot_domain: GeneralEvaluationDomain<E::ScalarField>,
 }
 
-impl<E: PairingEngine> Prover<E> {
+impl<E: Pairing> Prover<E> {
     /// Construct a Plonk prover that uses a domain with size `domain_size` and
     /// quotient polynomial domain with a size that is larger than the degree of
     /// the quotient polynomial.
     /// * `num_wire_types` - number of wire types in the corresponding
     ///   constraint system.
     pub(crate) fn new(domain_size: usize, num_wire_types: usize) -> Result<Self, PlonkError> {
-        let domain = Radix2EvaluationDomain::<E::Fr>::new(domain_size)
+        let domain = Radix2EvaluationDomain::<E::ScalarField>::new(domain_size)
             .ok_or(PlonkError::DomainCreationError)?;
-        let quot_domain = GeneralEvaluationDomain::<E::Fr>::new(
+        let quot_domain = GeneralEvaluationDomain::<E::ScalarField>::new(
             domain_size * domain_size_ratio(domain_size, num_wire_types),
         )
         .ok_or(PlonkError::DomainCreationError)?;
@@ -71,13 +71,13 @@ impl<E: PairingEngine> Prover<E> {
     /// 2. Compute public input polynomial.
     /// Return the wire witness polynomials and their commitments,
     /// also return the public input polynomial.
-    pub(crate) fn run_1st_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_1st_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
         cs: &C,
-    ) -> Result<(CommitmentsAndPolys<E>, DensePolynomial<E::Fr>), PlonkError> {
-        let wire_polys: Vec<DensePolynomial<E::Fr>> = cs
+    ) -> Result<(CommitmentsAndPolys<E>, DensePolynomial<E::ScalarField>), PlonkError> {
+        let wire_polys: Vec<DensePolynomial<E::ScalarField>> = cs
             .compute_wire_polynomials()?
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
@@ -93,13 +93,13 @@ impl<E: PairingEngine> Prover<E> {
     /// polynomials and their commitments, as well as the merged lookup table.
     /// `cs` is guaranteed to support lookup.
     #[allow(clippy::type_complexity)]
-    pub(crate) fn run_plookup_1st_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_plookup_1st_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
         cs: &C,
-        tau: E::Fr,
-    ) -> Result<(CommitmentsAndPolys<E>, Vec<E::Fr>, Vec<E::Fr>), PlonkError> {
+        tau: E::ScalarField,
+    ) -> Result<(CommitmentsAndPolys<E>, Vec<E::ScalarField>, Vec<E::ScalarField>), PlonkError> {
         let merged_lookup_table = cs.compute_merged_lookup_table(tau)?;
         let (sorted_vec, h_1_poly, h_2_poly) =
             cs.compute_lookup_sorted_vec_polynomials(tau, &merged_lookup_table)?;
@@ -112,13 +112,13 @@ impl<E: PairingEngine> Prover<E> {
 
     /// Round 2: Compute and commit the permutation grand product polynomial.
     /// Return the grand product polynomial and its commitment.
-    pub(crate) fn run_2nd_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_2nd_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
         cs: &C,
-        challenges: &Challenges<E::Fr>,
-    ) -> Result<(Commitment<E>, DensePolynomial<E::Fr>), PlonkError> {
+        challenges: &Challenges<E::ScalarField>,
+    ) -> Result<(Commitment<E>, DensePolynomial<E::ScalarField>), PlonkError> {
         let prod_perm_poly = self.mask_polynomial(
             prng,
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
@@ -131,15 +131,15 @@ impl<E: PairingEngine> Prover<E> {
     /// Round 2.5 (Plookup): Compute and commit the Plookup grand product
     /// polynomial. Return the grand product polynomial and its commitment.
     /// `cs` is guaranteed to support lookup
-    pub(crate) fn run_plookup_2nd_round<C: Arithmetization<E::Fr>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_plookup_2nd_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
         cs: &C,
-        challenges: &Challenges<E::Fr>,
-        merged_lookup_table: Option<&Vec<E::Fr>>,
-        sorted_vec: Option<&Vec<E::Fr>>,
-    ) -> Result<(Commitment<E>, DensePolynomial<E::Fr>), PlonkError> {
+        challenges: &Challenges<E::ScalarField>,
+        merged_lookup_table: Option<&Vec<E::ScalarField>>,
+        sorted_vec: Option<&Vec<E::ScalarField>>,
+    ) -> Result<(Commitment<E>, DensePolynomial<E::ScalarField>), PlonkError> {
         if sorted_vec.is_none() {
             return Err(
                 ParameterError("Run Plookup with empty sorted lookup vectors".to_string()).into(),
@@ -169,8 +169,8 @@ impl<E: PairingEngine> Prover<E> {
         prng: &mut R,
         ck: &CommitKey<E>,
         pks: &[&ProvingKey<E>],
-        challenges: &Challenges<E::Fr>,
-        online_oracles: &[Oracles<E::Fr>],
+        challenges: &Challenges<E::ScalarField>,
+        online_oracles: &[Oracles<E::ScalarField>],
         num_wire_types: usize,
     ) -> Result<CommitmentsAndPolys<E>, PlonkError> {
         let quot_poly =
@@ -189,14 +189,14 @@ impl<E: PairingEngine> Prover<E> {
     pub(crate) fn compute_evaluations(
         &self,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
-        online_oracles: &Oracles<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
+        online_oracles: &Oracles<E::ScalarField>,
         num_wire_types: usize,
-    ) -> ProofEvaluations<E::Fr> {
-        let wires_evals: Vec<E::Fr> = parallelizable_slice_iter(&online_oracles.wire_polys)
+    ) -> ProofEvaluations<E::ScalarField> {
+        let wires_evals: Vec<E::ScalarField> = parallelizable_slice_iter(&online_oracles.wire_polys)
             .map(|poly| poly.evaluate(&challenges.zeta))
             .collect();
-        let wire_sigma_evals: Vec<E::Fr> = parallelizable_slice_iter(&pk.sigmas)
+        let wire_sigma_evals: Vec<E::ScalarField> = parallelizable_slice_iter(&pk.sigmas)
             .take(num_wire_types - 1)
             .map(|poly| poly.evaluate(&challenges.zeta))
             .collect();
@@ -216,9 +216,9 @@ impl<E: PairingEngine> Prover<E> {
     pub(crate) fn compute_plookup_evaluations(
         &self,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
-        online_oracles: &Oracles<E::Fr>,
-    ) -> Result<PlookupEvaluations<E::Fr>, PlonkError> {
+        challenges: &Challenges<E::ScalarField>,
+        online_oracles: &Oracles<E::ScalarField>,
+    ) -> Result<PlookupEvaluations<E::ScalarField>, PlonkError> {
         if pk.plookup_pk.is_none() {
             return Err(ParameterError(
                 "Evaluate Plookup polynomials without supporting lookup".to_string(),
@@ -281,13 +281,13 @@ impl<E: PairingEngine> Prover<E> {
     /// Compute linearization polynomial (excluding the quotient part)
     pub(crate) fn compute_non_quotient_component_for_lin_poly(
         &self,
-        alpha_base: E::Fr,
+        alpha_base: E::ScalarField,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
-        online_oracles: &Oracles<E::Fr>,
-        poly_evals: &ProofEvaluations<E::Fr>,
-        plookup_evals: Option<&PlookupEvaluations<E::Fr>>,
-    ) -> Result<DensePolynomial<E::Fr>, PlonkError> {
+        challenges: &Challenges<E::ScalarField>,
+        online_oracles: &Oracles<E::ScalarField>,
+        poly_evals: &ProofEvaluations<E::ScalarField>,
+        plookup_evals: Option<&PlookupEvaluations<E::ScalarField>>,
+    ) -> Result<DensePolynomial<E::ScalarField>, PlonkError> {
         let r_circ = Self::compute_lin_poly_circuit_contribution(pk, &poly_evals.wires_evals);
         let r_perm = Self::compute_lin_poly_copy_constraint_contribution(
             pk,
@@ -322,13 +322,13 @@ impl<E: PairingEngine> Prover<E> {
     // t_{num_wire_types}(X)]
     pub(crate) fn compute_quotient_component_for_lin_poly(
         domain_size: usize,
-        zeta: E::Fr,
-        quot_polys: &[DensePolynomial<E::Fr>],
-    ) -> Result<DensePolynomial<E::Fr>, PlonkError> {
-        let vanish_eval = zeta.pow([domain_size as u64]) - E::Fr::one();
-        let zeta_to_n_plus_2 = (vanish_eval + E::Fr::one()) * zeta * zeta;
+        zeta: E::ScalarField,
+        quot_polys: &[DensePolynomial<E::ScalarField>],
+    ) -> Result<DensePolynomial<E::ScalarField>, PlonkError> {
+        let vanish_eval = zeta.pow([domain_size as u64]) - E::ScalarField::one();
+        let zeta_to_n_plus_2 = (vanish_eval + E::ScalarField::one()) * zeta * zeta;
         let mut r_quot = quot_polys.first().ok_or(PlonkError::IndexError)?.clone();
-        let mut coeff = E::Fr::one();
+        let mut coeff = E::ScalarField::one();
         for poly in quot_polys.iter().skip(1) {
             coeff *= zeta_to_n_plus_2;
             r_quot = r_quot + Self::mul_poly(poly, &coeff);
@@ -343,10 +343,10 @@ impl<E: PairingEngine> Prover<E> {
         &self,
         ck: &CommitKey<E>,
         pks: &[&ProvingKey<E>],
-        zeta: &E::Fr,
-        v: &E::Fr,
-        online_oracles: &[Oracles<E::Fr>],
-        lin_poly: &DensePolynomial<E::Fr>,
+        zeta: &E::ScalarField,
+        v: &E::ScalarField,
+        online_oracles: &[Oracles<E::ScalarField>],
+        lin_poly: &DensePolynomial<E::ScalarField>,
     ) -> Result<(Commitment<E>, Commitment<E>), PlonkError> {
         if pks.is_empty() || pks.len() != online_oracles.len() {
             return Err(ParameterError(
@@ -400,14 +400,14 @@ impl<E: PairingEngine> Prover<E> {
 }
 
 /// Private helper methods
-impl<E: PairingEngine> Prover<E> {
+impl<E: Pairing> Prover<E> {
     /// Return the list of plookup polynomials to be opened at point `zeta`
     /// The order should be consistent with the verifier side.
     #[inline]
     fn plookup_open_polys_ref<'a>(
-        oracles: &'a Oracles<E::Fr>,
+        oracles: &'a Oracles<E::ScalarField>,
         pk: &'a ProvingKey<E>,
-    ) -> Result<Vec<&'a DensePolynomial<E::Fr>>, PlonkError> {
+    ) -> Result<Vec<&'a DensePolynomial<E::ScalarField>>, PlonkError> {
         Ok(vec![
             &pk.plookup_pk.as_ref().unwrap().range_table_poly,
             &pk.plookup_pk.as_ref().unwrap().key_table_poly,
@@ -422,9 +422,9 @@ impl<E: PairingEngine> Prover<E> {
     /// The order should be consistent with the verifier side.
     #[inline]
     fn plookup_shifted_open_polys_ref<'a>(
-        oracles: &'a Oracles<E::Fr>,
+        oracles: &'a Oracles<E::ScalarField>,
         pk: &'a ProvingKey<E>,
-    ) -> Result<Vec<&'a DensePolynomial<E::Fr>>, PlonkError> {
+    ) -> Result<Vec<&'a DensePolynomial<E::ScalarField>>, PlonkError> {
         Ok(vec![
             &oracles.plookup_oracles.prod_lookup_poly,
             &pk.plookup_pk.as_ref().unwrap().range_table_poly,
@@ -443,9 +443,9 @@ impl<E: PairingEngine> Prover<E> {
     fn mask_polynomial<R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
-        poly: DensePolynomial<E::Fr>,
+        poly: DensePolynomial<E::ScalarField>,
         hiding_bound: usize,
-    ) -> DensePolynomial<E::Fr> {
+    ) -> DensePolynomial<E::ScalarField> {
         let mask_poly =
             DensePolynomial::rand(hiding_bound, prng).mul_by_vanishing_poly(self.domain);
         mask_poly + poly
@@ -455,18 +455,18 @@ impl<E: PairingEngine> Prover<E> {
     /// evaluation point `eval_point`, and randomized combiner `r`.
     fn compute_batched_witness_polynomial_commitment(
         ck: &CommitKey<E>,
-        polys_ref: &[&DensePolynomial<E::Fr>],
-        r: &E::Fr,
-        eval_point: &E::Fr,
+        polys_ref: &[&DensePolynomial<E::ScalarField>],
+        r: &E::ScalarField,
+        eval_point: &E::ScalarField,
     ) -> Result<Commitment<E>, PlonkError> {
         // Compute the aggregated polynomial
         let (batch_poly, _) = polys_ref.iter().fold(
-            (DensePolynomial::zero(), E::Fr::one()),
+            (DensePolynomial::zero(), E::ScalarField::one()),
             |(acc, coeff), &poly| (acc + Self::mul_poly(poly, &coeff), coeff * r),
         );
 
         // Compute opening witness polynomial and its commitment
-        let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::Fr::one()]);
+        let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::ScalarField::one()]);
         let witness_poly = &batch_poly / &divisor;
 
         UnivariateKzgPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
@@ -475,11 +475,11 @@ impl<E: PairingEngine> Prover<E> {
     /// Compute the quotient polynomial via (i)FFTs.
     fn compute_quotient_polynomial(
         &self,
-        challenges: &Challenges<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
         pks: &[&ProvingKey<E>],
-        online_oracles: &[Oracles<E::Fr>],
+        online_oracles: &[Oracles<E::ScalarField>],
         num_wire_types: usize,
-    ) -> Result<DensePolynomial<E::Fr>, PlonkError> {
+    ) -> Result<DensePolynomial<E::ScalarField>, PlonkError> {
         if pks.is_empty() || pks.len() != online_oracles.len() {
             return Err(ParameterError(
                 "inconsistent pks/online oracles when computing quotient polys".to_string(),
@@ -491,18 +491,18 @@ impl<E: PairingEngine> Prover<E> {
         let m = self.quot_domain.size();
         let domain_size_ratio = m / n;
         // Compute 1/Z_H(w^i).
-        let z_h_inv: Vec<E::Fr> = (0..domain_size_ratio)
+        let z_h_inv: Vec<E::ScalarField> = (0..domain_size_ratio)
             .map(|i| {
-                ((E::Fr::multiplicative_generator() * self.quot_domain.element(i)).pow([n as u64])
-                    - E::Fr::one())
+                ((E::ScalarField::multiplicative_generator() * self.quot_domain.element(i)).pow([n as u64])
+                    - E::ScalarField::one())
                 .inverse()
                 .unwrap()
             })
             .collect();
 
         // Compute coset evaluations of the quotient polynomial.
-        let mut quot_poly_coset_evals_sum = vec![E::Fr::zero(); m];
-        let mut alpha_base = E::Fr::one();
+        let mut quot_poly_coset_evals_sum = vec![E::ScalarField::zero(); m];
+        let mut alpha_base = E::ScalarField::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
         // enumerate proving instances
@@ -511,13 +511,13 @@ impl<E: PairingEngine> Prover<E> {
             let lookup_flag = pk.plookup_pk.is_some();
 
             // Compute coset evaluations.
-            let selectors_coset_fft: Vec<Vec<E::Fr>> = parallelizable_slice_iter(&pk.selectors)
+            let selectors_coset_fft: Vec<Vec<E::ScalarField>> = parallelizable_slice_iter(&pk.selectors)
                 .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                 .collect();
-            let sigmas_coset_fft: Vec<Vec<E::Fr>> = parallelizable_slice_iter(&pk.sigmas)
+            let sigmas_coset_fft: Vec<Vec<E::ScalarField>> = parallelizable_slice_iter(&pk.sigmas)
                 .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                 .collect();
-            let wire_polys_coset_fft: Vec<Vec<E::Fr>> =
+            let wire_polys_coset_fft: Vec<Vec<E::ScalarField>> =
                 parallelizable_slice_iter(&oracles.wire_polys)
                     .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                     .collect();
@@ -550,7 +550,7 @@ impl<E: PairingEngine> Prover<E> {
                 let key_table_coset_fft = self
                     .quot_domain
                     .coset_fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
-                let h_coset_ffts: Vec<Vec<E::Fr>> =
+                let h_coset_ffts: Vec<Vec<E::ScalarField>> =
                     parallelizable_slice_iter(&oracles.plookup_oracles.h_polys)
                         .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
                         .collect();
@@ -570,13 +570,13 @@ impl<E: PairingEngine> Prover<E> {
             };
 
             // Compute coset evaluations of the quotient polynomial.
-            let quot_poly_coset_evals: Vec<E::Fr> =
+            let quot_poly_coset_evals: Vec<E::ScalarField> =
                 parallelizable_slice_iter(&(0..m).collect::<Vec<_>>())
                     .map(|&i| {
-                        let w: Vec<E::Fr> = (0..num_wire_types)
+                        let w: Vec<E::ScalarField> = (0..num_wire_types)
                             .map(|j| wire_polys_coset_fft[j][i])
                             .collect();
-                        let w_next: Vec<E::Fr> = (0..num_wire_types)
+                        let w_next: Vec<E::ScalarField> = (0..num_wire_types)
                             .map(|j| wire_polys_coset_fft[j][(i + domain_size_ratio) % m])
                             .collect();
 
@@ -589,7 +589,7 @@ impl<E: PairingEngine> Prover<E> {
                         let (t_perm_1, t_perm_2) =
                             Self::compute_quotient_copy_constraint_contribution(
                                 i,
-                                self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                                self.quot_domain.element(i) * E::ScalarField::multiplicative_generator(),
                                 pk,
                                 &w,
                                 &prod_perm_poly_coset_fft[i],
@@ -605,7 +605,7 @@ impl<E: PairingEngine> Prover<E> {
                             let (t_lookup_1, t_lookup_2) = self
                                 .compute_quotient_plookup_contribution(
                                     i,
-                                    self.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                                    self.quot_domain.element(i) * E::ScalarField::multiplicative_generator(),
                                     pk,
                                     &w,
                                     &w_next,
@@ -650,18 +650,18 @@ impl<E: PairingEngine> Prover<E> {
     // polynomial.
     fn compute_quotient_circuit_contribution(
         i: usize,
-        w: &[E::Fr],
-        pi: &E::Fr,
-        selectors_coset_fft: &[Vec<E::Fr>],
-    ) -> E::Fr {
+        w: &[E::ScalarField],
+        pi: &E::ScalarField,
+        selectors_coset_fft: &[Vec<E::ScalarField>],
+    ) -> E::ScalarField {
         // Selectors
         // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
         // TODO: (binyi) get the order from a function.
-        let q_lc: Vec<E::Fr> = (0..GATE_WIDTH).map(|j| selectors_coset_fft[j][i]).collect();
-        let q_mul: Vec<E::Fr> = (GATE_WIDTH..GATE_WIDTH + 2)
+        let q_lc: Vec<E::ScalarField> = (0..GATE_WIDTH).map(|j| selectors_coset_fft[j][i]).collect();
+        let q_mul: Vec<E::ScalarField> = (GATE_WIDTH..GATE_WIDTH + 2)
             .map(|j| selectors_coset_fft[j][i])
             .collect();
-        let q_hash: Vec<E::Fr> = (GATE_WIDTH + 2..2 * GATE_WIDTH + 2)
+        let q_hash: Vec<E::ScalarField> = (GATE_WIDTH + 2..2 * GATE_WIDTH + 2)
             .map(|j| selectors_coset_fft[j][i])
             .collect();
         let q_o = selectors_coset_fft[2 * GATE_WIDTH + 2][i];
@@ -693,14 +693,14 @@ impl<E: PairingEngine> Prover<E> {
     #[allow(clippy::too_many_arguments)]
     fn compute_quotient_copy_constraint_contribution(
         i: usize,
-        eval_point: E::Fr,
+        eval_point: E::ScalarField,
         pk: &ProvingKey<E>,
-        w: &[E::Fr],
-        z_x: &E::Fr,
-        z_xw: &E::Fr,
-        challenges: &Challenges<E::Fr>,
-        sigmas_coset_fft: &[Vec<E::Fr>],
-    ) -> (E::Fr, E::Fr) {
+        w: &[E::ScalarField],
+        z_x: &E::ScalarField,
+        z_xw: &E::ScalarField,
+        challenges: &Challenges<E::ScalarField>,
+        sigmas_coset_fft: &[Vec<E::ScalarField>],
+    ) -> (E::ScalarField, E::ScalarField) {
         let num_wire_types = w.len();
         let n = pk.domain_size();
 
@@ -711,7 +711,7 @@ impl<E: PairingEngine> Prover<E> {
         // Delay the division of Z_H(X).
         //
         // Extended permutation values
-        let sigmas: Vec<E::Fr> = (0..num_wire_types)
+        let sigmas: Vec<E::ScalarField> = (0..num_wire_types)
             .map(|j| sigmas_coset_fft[j][i])
             .collect();
 
@@ -730,8 +730,8 @@ impl<E: PairingEngine> Prover<E> {
 
         // The check that z(x) = 1 at point 1.
         // (z(x)-1) * L1(x) * alpha^2 / Z_H(x) = (z(x)-1) * alpha^2 / (n * (x - 1))
-        let result_2 = challenges.alpha.square() * (*z_x - E::Fr::one())
-            / (E::Fr::from(n as u64) * (eval_point - E::Fr::one()));
+        let result_2 = challenges.alpha.square() * (*z_x - E::ScalarField::one())
+            / (E::ScalarField::from(n as u64) * (eval_point - E::ScalarField::one()));
 
         (result_1, result_2)
     }
@@ -751,29 +751,29 @@ impl<E: PairingEngine> Prover<E> {
     fn compute_quotient_plookup_contribution(
         &self,
         i: usize,
-        eval_point: E::Fr,
+        eval_point: E::ScalarField,
         pk: &ProvingKey<E>,
-        w: &[E::Fr],
-        w_next: &[E::Fr],
-        h_coset_ffts: &[Vec<E::Fr>],
-        prod_lookup_coset_fft: &[E::Fr],
-        range_table_coset_fft: &[E::Fr],
-        key_table_coset_fft: &[E::Fr],
-        q_lookup_coset_fft: &[E::Fr],
-        table_dom_sep_coset_fft: &[E::Fr],
-        q_dom_sep_coset_fft: &[E::Fr],
-        challenges: &Challenges<E::Fr>,
-    ) -> (E::Fr, E::Fr) {
+        w: &[E::ScalarField],
+        w_next: &[E::ScalarField],
+        h_coset_ffts: &[Vec<E::ScalarField>],
+        prod_lookup_coset_fft: &[E::ScalarField],
+        range_table_coset_fft: &[E::ScalarField],
+        key_table_coset_fft: &[E::ScalarField],
+        q_lookup_coset_fft: &[E::ScalarField],
+        table_dom_sep_coset_fft: &[E::ScalarField],
+        q_dom_sep_coset_fft: &[E::ScalarField],
+        challenges: &Challenges<E::ScalarField>,
+    ) -> (E::ScalarField, E::ScalarField) {
         assert!(pk.plookup_pk.is_some());
         assert_eq!(h_coset_ffts.len(), 2);
 
         let n = pk.domain_size();
         let m = self.quot_domain.size();
         let domain_size_ratio = m / n;
-        let n_field = E::Fr::from(n as u64);
+        let n_field = E::ScalarField::from(n as u64);
         let lagrange_n_coeff =
             self.domain.group_gen_inv / (n_field * (eval_point - self.domain.group_gen_inv));
-        let lagrange_1_coeff = E::Fr::one() / (n_field * (eval_point - E::Fr::one()));
+        let lagrange_1_coeff = E::ScalarField::one() / (n_field * (eval_point - E::ScalarField::one()));
         let mut alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
         // extract polynomial evaluations
@@ -830,7 +830,7 @@ impl<E: PairingEngine> Prover<E> {
         // The check that p(X) = 1 at point 1.
         //
         // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X - 1))
-        let term_p_1 = (p_x - E::Fr::one()) * lagrange_1_coeff;
+        let term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff;
         result_2 += alpha_power * term_p_1;
         alpha_power *= challenges.alpha;
 
@@ -838,7 +838,7 @@ impl<E: PairingEngine> Prover<E> {
         //
         // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1} / (n *
         // (X - w^{n-1}))
-        let term_p_2 = (p_x - E::Fr::one()) * lagrange_n_coeff;
+        let term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff;
         result_2 += alpha_power * term_p_2;
         alpha_power *= challenges.alpha;
 
@@ -849,7 +849,7 @@ impl<E: PairingEngine> Prover<E> {
         // [gamma*(1+beta) + merged_table(X) + beta * merged_table(Xw)]
         //        - (X - w^{n-1}) * p(Xw) * [gamma(1+beta) + h_1(X) + beta * h_1(Xw)] *
         //          [gamma(1+beta) + h_2(X) + beta * h_2(Xw)]
-        let beta_plus_one = E::Fr::one() + challenges.beta;
+        let beta_plus_one = E::ScalarField::one() + challenges.beta;
         let gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
         let term_p_3 = (eval_point - self.domain.group_gen_inv)
             * (p_x
@@ -877,9 +877,9 @@ impl<E: PairingEngine> Prover<E> {
     fn split_quotient_polynomial<R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
-        quot_poly: &DensePolynomial<E::Fr>,
+        quot_poly: &DensePolynomial<E::ScalarField>,
         num_wire_types: usize,
-    ) -> Result<Vec<DensePolynomial<E::Fr>>, PlonkError> {
+    ) -> Result<Vec<DensePolynomial<E::ScalarField>>, PlonkError> {
         let expected_degree = quotient_polynomial_degree(self.domain.size(), num_wire_types);
         if quot_poly.degree() != expected_degree {
             return Err(WrongQuotientPolyDegree(quot_poly.degree(), expected_degree).into());
@@ -887,7 +887,7 @@ impl<E: PairingEngine> Prover<E> {
         let n = self.domain.size();
         // compute the splitting polynomials t'_i(X) s.t. t(X) =
         // \sum_{i=0}^{num_wire_types} X^{i*(n+2)} * t'_i(X)
-        let mut split_quot_polys: Vec<DensePolynomial<E::Fr>> =
+        let mut split_quot_polys: Vec<DensePolynomial<E::ScalarField>> =
             parallelizable_slice_iter(&(0..num_wire_types).collect::<Vec<_>>())
                 .map(|&i| {
                     let end = if i < num_wire_types - 1 {
@@ -896,7 +896,7 @@ impl<E: PairingEngine> Prover<E> {
                         quot_poly.degree() + 1
                     };
                     // Degree-(n+1) polynomial has n + 2 coefficients.
-                    DensePolynomial::<E::Fr>::from_coefficients_slice(
+                    DensePolynomial::<E::ScalarField>::from_coefficients_slice(
                         &quot_poly.coeffs[i * (n + 2)..end],
                     )
                 })
@@ -906,12 +906,12 @@ impl<E: PairingEngine> Prover<E> {
         // t_i(X) = t'_i(X) - b_last_i + b_now_i * X^(n+2)
         // with t_lowest_i(X) = t_lowest_i(X) - 0 + b_now_i * X^(n+2)
         // and t_highest_i(X) = t_highest_i(X) - b_last_i
-        let mut last_randomizer = E::Fr::zero();
+        let mut last_randomizer = E::ScalarField::zero();
         split_quot_polys
             .iter_mut()
             .take(num_wire_types - 1)
             .for_each(|poly| {
-                let now_randomizer = E::Fr::rand(prng);
+                let now_randomizer = E::ScalarField::rand(prng);
 
                 poly.coeffs[0] -= last_randomizer;
                 assert_eq!(poly.degree(), n + 1);
@@ -928,8 +928,8 @@ impl<E: PairingEngine> Prover<E> {
     // Compute the circuit part of the linearization polynomial
     fn compute_lin_poly_circuit_contribution(
         pk: &ProvingKey<E>,
-        w_evals: &[E::Fr],
-    ) -> DensePolynomial<E::Fr> {
+        w_evals: &[E::ScalarField],
+    ) -> DensePolynomial<E::ScalarField> {
         // The selectors order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
         // TODO: (binyi) get the order from a function.
         let q_lc = &pk.selectors[..GATE_WIDTH];
@@ -962,12 +962,12 @@ impl<E: PairingEngine> Prover<E> {
     // Compute the wire permutation part of the linearization polynomial
     fn compute_lin_poly_copy_constraint_contribution(
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
-        poly_evals: &ProofEvaluations<E::Fr>,
-        prod_perm_poly: &DensePolynomial<E::Fr>,
-    ) -> DensePolynomial<E::Fr> {
-        let dividend = challenges.zeta.pow([pk.domain_size() as u64]) - E::Fr::one();
-        let divisor = E::Fr::from(pk.domain_size() as u32) * (challenges.zeta - E::Fr::one());
+        challenges: &Challenges<E::ScalarField>,
+        poly_evals: &ProofEvaluations<E::ScalarField>,
+        prod_perm_poly: &DensePolynomial<E::ScalarField>,
+    ) -> DensePolynomial<E::ScalarField> {
+        let dividend = challenges.zeta.pow([pk.domain_size() as u64]) - E::ScalarField::one();
+        let divisor = E::ScalarField::from(pk.domain_size() as u32) * (challenges.zeta - E::ScalarField::one());
         let lagrange_1_eval = dividend / divisor;
 
         // Compute the coefficient of z(X)
@@ -1002,23 +1002,23 @@ impl<E: PairingEngine> Prover<E> {
     fn compute_lin_poly_plookup_contribution(
         &self,
         pk: &ProvingKey<E>,
-        challenges: &Challenges<E::Fr>,
-        w_evals: &[E::Fr],
-        plookup_evals: &PlookupEvaluations<E::Fr>,
-        oracles: &PlookupOracles<E::Fr>,
-    ) -> DensePolynomial<E::Fr> {
+        challenges: &Challenges<E::ScalarField>,
+        w_evals: &[E::ScalarField],
+        plookup_evals: &PlookupEvaluations<E::ScalarField>,
+        oracles: &PlookupOracles<E::ScalarField>,
+    ) -> DensePolynomial<E::ScalarField> {
         let alpha_2 = challenges.alpha.square();
         let alpha_4 = alpha_2.square();
         let alpha_5 = alpha_4 * challenges.alpha;
         let alpha_6 = alpha_4 * alpha_2;
         let n = pk.domain_size();
-        let one = E::Fr::one();
+        let one = E::ScalarField::one();
         let vanish_eval = challenges.zeta.pow([n as u64]) - one;
 
         // compute lagrange_1 and lagrange_n
-        let divisor = E::Fr::from(n as u32) * (challenges.zeta - one);
+        let divisor = E::ScalarField::from(n as u32) * (challenges.zeta - one);
         let lagrange_1_eval = vanish_eval / divisor;
-        let divisor = E::Fr::from(n as u32) * (challenges.zeta - self.domain.group_gen_inv);
+        let divisor = E::ScalarField::from(n as u32) * (challenges.zeta - self.domain.group_gen_inv);
         let lagrange_n_eval = vanish_eval * self.domain.group_gen_inv / divisor;
 
         // compute the coefficient for polynomial `prod_lookup_poly`
@@ -1076,8 +1076,8 @@ impl<E: PairingEngine> Prover<E> {
     }
 
     #[inline]
-    fn mul_poly(poly: &DensePolynomial<E::Fr>, coeff: &E::Fr) -> DensePolynomial<E::Fr> {
-        DensePolynomial::<E::Fr>::from_coefficients_vec(
+    fn mul_poly(poly: &DensePolynomial<E::ScalarField>, coeff: &E::ScalarField) -> DensePolynomial<E::ScalarField> {
+        DensePolynomial::<E::ScalarField>::from_coefficients_vec(
             parallelizable_slice_iter(&poly.coeffs)
                 .map(|c| *coeff * c)
                 .collect(),
@@ -1107,11 +1107,11 @@ mod test {
         test_split_quotient_polynomial_wrong_degree_helper::<BW6_761>()
     }
 
-    fn test_split_quotient_polynomial_wrong_degree_helper<E: PairingEngine>(
+    fn test_split_quotient_polynomial_wrong_degree_helper<E: Pairing>(
     ) -> Result<(), PlonkError> {
         let prover = Prover::<E>::new(4, GATE_WIDTH + 1)?;
         let rng = &mut test_rng();
-        let bad_quot_poly = DensePolynomial::<E::Fr>::rand(25, rng);
+        let bad_quot_poly = DensePolynomial::<E::ScalarField>::rand(25, rng);
         assert!(prover
             .split_quotient_polynomial(rng, &bad_quot_poly, GATE_WIDTH + 1)
             .is_err());

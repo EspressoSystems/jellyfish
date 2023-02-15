@@ -11,7 +11,7 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig as SWParam,
+    short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -51,7 +51,7 @@ pub(super) fn aggregate_poly_commitments_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<(ScalarsAndBasesVar<F>, Vec<FpElemVar<F>>), CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<Fq = F>,
     F: PrimeField,
 {
     if vks.len() != batch_proof.len() {
@@ -134,7 +134,7 @@ pub(super) fn aggregate_evaluations_circuit<E, F>(
     buffer_v_and_uv_basis: &[FpElemVar<F>],
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<Fq = F>,
     F: PrimeField,
 {
     let mut result = circuit.mod_negate(lin_poly_constant, &non_native_field_info.modulus_in_f)?;
@@ -193,7 +193,7 @@ pub(super) fn compute_challenges_vars<E, F, P>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<ChallengesFpElemVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -267,11 +267,11 @@ pub(super) fn prepare_pcs_info_var<E, F, P>(
     batch_proof: &BatchProofVar<F>,
     extra_transcript_init_msg: &Option<Vec<u8>>,
 
-    domain: Radix2EvaluationDomain<E::Fr>,
+    domain: Radix2EvaluationDomain<E::ScalarField>,
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<PcsInfoVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -475,7 +475,7 @@ mod test {
 
     fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
@@ -488,7 +488,7 @@ mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         // 2. Setup instances
-        let shared_public_input = E::Fr::rand(rng);
+        let shared_public_input = E::ScalarField::rand(rng);
         let mut instances_type_a = vec![];
         let mut instances_type_b = vec![];
         for i in 32..50 {
@@ -530,7 +530,7 @@ mod test {
         // 5. Verification
         let open_key_ref = &vks_type_a[0].open_key;
         let beta_g_ref = &srs.powers_of_g[1];
-        let blinding_factor = E::Fr::rand(rng);
+        let blinding_factor = E::ScalarField::rand(rng);
         let (inner1, inner2) = BatchArgument::partial_verify::<T>(
             beta_g_ref,
             &open_key_ref.g,
@@ -550,7 +550,7 @@ mod test {
         let m = 128;
         let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
 
-        let fr_modulus_bits = <E::Fr as PrimeField>::Params::MODULUS.to_bytes_le();
+        let fr_modulus_bits = <E::ScalarField as PrimeField>::Params::MODULUS.to_bytes_le();
         let modulus_in_f = F::from_le_bytes_mod_order(&fr_modulus_bits);
         let modulus_fp_elem = FpElem::new(&modulus_in_f, m, two_power_m)?;
         let non_native_field_info = NonNativeFieldInfo::<F> {
