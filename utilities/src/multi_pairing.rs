@@ -6,21 +6,21 @@
 
 //! This module implements a simple wrapper of multi-pairing function
 
-use ark_ec::pairing::Pairing;
+use ark_ec::pairing::{Pairing, PairingOutput};
 use ark_std::vec::Vec;
 
 /// A simple wrapper of multi-pairing function.
-pub fn multi_pairing<E>(g1_elems: &[E::G1Affine], g2_elems: &[E::G2Affine]) -> E::TargetField
+pub fn multi_pairing<E>(g1_elems: &[E::G1Affine], g2_elems: &[E::G2Affine]) -> PairingOutput<E>
 where
     E: Pairing,
 {
-    let inputs: Vec<(E::G1Prepared, E::G2Prepared)> = g1_elems
+    let (inputs_g1, inputs_g2): (Vec<E::G1Prepared>, Vec<E::G2Prepared>) = g1_elems
         .iter()
         .zip(g2_elems.iter())
         .map(|(g1, g2)| ((*g1).into(), (*g2).into()))
-        .collect();
+        .unzip();
 
-    E::product_of_pairings(&inputs)
+    E::multi_pairing(inputs_g1, inputs_g2)
 }
 
 #[cfg(test)]
@@ -29,7 +29,7 @@ mod test {
     use ark_bls12_377::Bls12_377;
     use ark_bls12_381::Bls12_381;
     use ark_bn254::Bn254;
-    use ark_ec::{AffineRepr, pairing::Pairing, CurveGroup};
+    use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup};
     use ark_std::{test_rng, One, UniformRand};
 
     #[test]
@@ -52,17 +52,22 @@ mod test {
         // random elements with single pairing
         let r1 = E::ScalarField::rand(&mut rng);
         let r2 = E::ScalarField::rand(&mut rng);
-        let f1 = g1.mul(r1).into_affine();
-        let f2 = g2.mul(r2).into_affine();
+        let f1 = (g1 * r1).into_affine();
+        let f2 = (g2 * r2).into_affine();
         let ft = E::pairing(f1, f2);
 
         assert_eq!(multi_pairing::<E>(&[f1], &[f2]), ft);
 
         // random multi pairing products
-        let ht = gt * ft;
+        let ht = PairingOutput(gt.0 * ft.0);
         assert_eq!(multi_pairing::<E>(&[g1, f1], &[g2, f2]), ht);
 
         // equality test
-        assert_eq!(multi_pairing::<E>(&[g1, -g1], &[g2, g2]), E::TargetField::one());
+        assert!(multi_pairing::<E>(
+            &[g1, (g1 * -E::ScalarField::one()).into_affine()],
+            &[g2, g2]
+        )
+        .0
+        .is_one());
     }
 }
