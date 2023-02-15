@@ -134,7 +134,7 @@ impl SWToTEConParam for Fq761 {
 mod test {
     use super::*;
     use ark_bls12_377::{G1Affine, G1Projective};
-    use ark_ec::{AffineRepr, ProjectiveCurve};
+    use ark_ec::{AffineRepr, CurveGroup};
     use ark_ff::{field_new, One};
     use ark_std::{test_rng, UniformRand, Zero};
 

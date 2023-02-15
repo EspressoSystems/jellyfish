@@ -12,7 +12,7 @@ use crate::{
     rescue::{RescueParameter, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine, AffineRepr, ProjectiveCurve, TECurveConfig,
+    twisted_edwards_extended::GroupAffine, AffineRepr, CurveGroup, TECurveConfig,
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
@@ -256,7 +256,7 @@ mod tests {
         elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
         rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };
-    use ark_ec::{ProjectiveCurve, TECurveConfig};
+    use ark_ec::{CurveGroup, TECurveConfig};
     use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as ParamEd381b, Fq as FqEd381b};

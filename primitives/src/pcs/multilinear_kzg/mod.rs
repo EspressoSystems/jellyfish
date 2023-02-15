@@ -19,7 +19,7 @@ use crate::pcs::{
 };
 use ark_ec::{
     msm::{FixedBaseMSM, VariableBaseMSM},
-    AffineRepr, pairing::Pairing, ProjectiveCurve,
+    AffineRepr, pairing::Pairing, CurveGroup,
 };
 use ark_ff::PrimeField;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};

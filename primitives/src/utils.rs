@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::{elgamal, signatures::schnorr};
-use ark_ec::{models::TECurveConfig, ProjectiveCurve, TECurveConfig as Parameters};
+use ark_ec::{models::TECurveConfig, CurveGroup, TECurveConfig as Parameters};
 use ark_ff::{FpParameters, PrimeField};
 use ark_std::vec::Vec;
 use jf_relation::Variable;

@@ -12,7 +12,7 @@ use ark_ec::{
     group::Group,
     short_weierstrass_jacobian::GroupAffine as SWGroupAffine,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineRepr, CurveConfig, ProjectiveCurve, SWCurveConfig,
+    AffineRepr, CurveConfig, CurveGroup, SWCurveConfig,
     TECurveConfig as Parameters,
 };
 use ark_ff::{PrimeField, Zero};
