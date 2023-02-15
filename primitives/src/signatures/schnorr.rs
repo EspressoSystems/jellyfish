@@ -18,7 +18,7 @@ use crate::{
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, CurveConfig, ProjectiveCurve, TECurveConfig as Parameters,
+    AffineRepr, CurveConfig, ProjectiveCurve, TECurveConfig as Parameters,
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;

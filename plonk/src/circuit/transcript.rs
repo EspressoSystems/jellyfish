@@ -234,7 +234,7 @@ mod tests {
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::Bls12_377;
-    use ark_ec::{AffineCurve, ProjectiveCurve};
+    use ark_ec::{AffineRepr, ProjectiveCurve};
     use ark_std::{format, test_rng, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::Point;

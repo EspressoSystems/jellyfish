@@ -9,7 +9,7 @@
 use crate::errors::PrimitivesError;
 use ark_ec::{
     short_weierstrass_jacobian::{GroupAffine, GroupProjective},
-    AffineCurve, SWCurveConfig,
+    AffineRepr, SWCurveConfig,
 };
 use ark_std::{
     rand::{Rng, SeedableRng},

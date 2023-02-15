@@ -13,7 +13,7 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, CurveConfig, pairing::Pairing,
+    twisted_edwards_extended::GroupAffine as TEAffine, AffineRepr, CurveConfig, pairing::Pairing,
     ProjectiveCurve, TECurveConfig,
 };
 use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};

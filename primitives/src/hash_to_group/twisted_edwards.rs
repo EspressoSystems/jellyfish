@@ -9,7 +9,7 @@
 use crate::errors::PrimitivesError;
 use ark_ec::{
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, TECurveConfig,
+    AffineRepr, TECurveConfig,
 };
 use ark_std::{
     rand::{Rng, SeedableRng},

@@ -7,7 +7,7 @@
 //! Implementing Structured Reference Strings for univariate polynomial KZG
 
 use crate::pcs::{PCSError, StructuredReferenceString};
-use ark_ec::{msm::FixedBaseMSM, AffineCurve, pairing::Pairing, ProjectiveCurve};
+use ark_ec::{msm::FixedBaseMSM, AffineRepr, pairing::Pairing, ProjectiveCurve};
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
@@ -41,7 +41,7 @@ impl<E: Pairing> UnivariateUniversalParams<E> {
 
 /// `UnivariateProverParam` is used to generate a proof
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
-pub struct UnivariateProverParam<C: AffineCurve> {
+pub struct UnivariateProverParam<C: AffineRepr> {
     /// Parameters
     pub powers_of_g: Vec<C>,
 }

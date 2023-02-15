@@ -9,7 +9,7 @@
 use crate::pcs::{
     prelude::Commitment, PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
-use ark_ec::{msm::VariableBaseMSM, AffineCurve, pairing::Pairing, ProjectiveCurve};
+use ark_ec::{msm::VariableBaseMSM, AffineRepr, pairing::Pairing, ProjectiveCurve};
 use ark_ff::PrimeField;
 use ark_poly::{univariate::DensePolynomial, Polynomial, UVPolynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};

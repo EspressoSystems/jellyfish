@@ -12,7 +12,7 @@ use ark_ec::{
     group::Group,
     short_weierstrass_jacobian::GroupAffine as SWGroupAffine,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, CurveConfig, ProjectiveCurve, SWCurveConfig,
+    AffineRepr, CurveConfig, ProjectiveCurve, SWCurveConfig,
     TECurveConfig as Parameters,
 };
 use ark_ff::{PrimeField, Zero};
@@ -526,7 +526,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 // The function computes:
 // {4^i * [G]}_{i=0..n-1}, {2 * 4^i * [G]}_{i=0..n-1}, and {3 * 4^i *
 // [G]}_{i=0..n-1}
-fn compute_base_points<E: AffineCurve + Group>(
+fn compute_base_points<E: AffineRepr + Group>(
     base: &E,
     len: usize,
 ) -> Result<[Vec<E>; 3], CircuitError> {
@@ -535,7 +535,7 @@ fn compute_base_points<E: AffineCurve + Group>(
             "compute base points length input parameter must be positive".to_string(),
         ));
     }
-    fn next_base<E: AffineCurve + Group>(bases: &[E]) -> Result<E, CircuitError> {
+    fn next_base<E: AffineRepr + Group>(bases: &[E]) -> Result<E, CircuitError> {
         let last = *bases.last().ok_or_else(|| {
             CircuitError::InternalError(
                 "Initialize the fixed base vector before calling this function".to_string(),
@@ -543,7 +543,7 @@ fn compute_base_points<E: AffineCurve + Group>(
         })?;
         Ok(last.double().double())
     }
-    fn fill_bases<E: AffineCurve + Group>(
+    fn fill_bases<E: AffineRepr + Group>(
         bases: &mut Vec<E>,
         len: usize,
     ) -> Result<(), CircuitError> {

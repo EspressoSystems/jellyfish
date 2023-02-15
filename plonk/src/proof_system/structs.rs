@@ -936,7 +936,7 @@ pub(crate) fn eval_merged_lookup_witness<E: Pairing>(
 mod test {
     use super::*;
     use ark_bn254::{g1::Parameters, Bn254, Fq};
-    use ark_ec::AffineCurve;
+    use ark_ec::AffineRepr;
 
     #[test]
     fn test_group_to_field() {

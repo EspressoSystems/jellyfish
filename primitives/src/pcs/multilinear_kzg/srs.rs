@@ -6,7 +6,7 @@
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
 use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-use ark_ec::{msm::FixedBaseMSM, AffineCurve, pairing::Pairing, ProjectiveCurve};
+use ark_ec::{msm::FixedBaseMSM, AffineRepr, pairing::Pairing, ProjectiveCurve};
 use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
@@ -24,7 +24,7 @@ use core::iter::FromIterator;
 
 /// Evaluations over {0,1}^n for G1 or G2
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct Evaluations<C: AffineCurve> {
+pub struct Evaluations<C: AffineRepr> {
     /// The evaluations.
     pub evals: Vec<C>,
 }

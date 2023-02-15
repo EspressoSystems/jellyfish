@@ -13,7 +13,7 @@ use crate::{
     signatures::schnorr::{Signature, VerKey},
     utils::{challenge_bit_len, field_bit_len},
 };
-use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TECurveConfig as Parameters};
+use ark_ec::{twisted_edwards_extended::GroupAffine, AffineRepr, TECurveConfig as Parameters};
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{

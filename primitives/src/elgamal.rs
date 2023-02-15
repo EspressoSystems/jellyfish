@@ -14,7 +14,7 @@ use crate::{
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ProjectiveCurve, TECurveConfig as Parameters,
+    AffineRepr, ProjectiveCurve, TECurveConfig as Parameters,
 };
 use ark_ff::UniformRand;
 use ark_serialize::*;
