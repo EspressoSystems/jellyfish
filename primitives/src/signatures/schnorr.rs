@@ -151,7 +151,7 @@ impl<P: Parameters> VerKey<P> {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
         Self(
             Group::mul(
-                &GroupProjective::<P>::prime_subgroup_generator(),
+                &GroupProjective::<P>::generator(),
                 randomizer,
             ) + self.0,
         )
@@ -302,7 +302,7 @@ where
 
         let r =
             fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
-        let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
+        let R = Group::mul(&GroupProjective::<P>::generator(), &r);
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
@@ -334,7 +334,7 @@ where
 {
     fn from(sk: &SignKey<F>) -> Self {
         VerKey(Group::mul(
-            &GroupProjective::<P>::prime_subgroup_generator(),
+            &GroupProjective::<P>::generator(),
             &sk.0,
         ))
     }
@@ -370,7 +370,7 @@ where
         // restrictive cofactorless verification
         let c = self.challenge(&sig.R, msg, csid);
 
-        let base = GroupProjective::<P>::prime_subgroup_generator();
+        let base = GroupProjective::<P>::generator();
         let x = Group::mul(&base, &sig.s);
         let y = sig.R + Group::mul(&self.0, &c);
 

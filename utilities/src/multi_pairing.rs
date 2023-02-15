@@ -43,8 +43,8 @@ mod test {
         let mut rng = test_rng();
 
         // generators with single pairing
-        let g1 = E::G1Affine::prime_subgroup_generator();
-        let g2 = E::G2Affine::prime_subgroup_generator();
+        let g1 = E::G1Affine::generator();
+        let g2 = E::G2Affine::generator();
         let gt = E::pairing(g1, g2);
 
         assert_eq!(multi_pairing::<E>(&[g1], &[g2]), gt);

@@ -34,7 +34,7 @@ fn main() -> Result<(), PlonkError> {
     // set up the inputs and parameters
     let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
     let x = Fr::rand(&mut rng);
-    let G = EdwardsAffine::prime_subgroup_generator();
+    let G = EdwardsAffine::generator();
     let X = G.mul(x).into_affine();
 
     // Our first step is to build a circuit for the following statements.
@@ -99,7 +99,7 @@ where
     PairingCurve: Pairing,
 {
     // Let's check that the inputs are indeed correct before we build a circuit.
-    let G = TEAffine::<EmbedCurve>::prime_subgroup_generator();
+    let G = TEAffine::<EmbedCurve>::generator();
     assert_eq!(X, G.mul(x), "the inputs are incorrect: X != xG");
 
     // Step 1:

@@ -160,7 +160,7 @@ mod test {
         let mut rng = test_rng();
 
         // test generator
-        let g1 = &G1Affine::prime_subgroup_generator();
+        let g1 = &G1Affine::generator();
         let p: Point<Fq377> = g1.into();
         assert!(is_on_bls12_377_ed_curve(&p));
 

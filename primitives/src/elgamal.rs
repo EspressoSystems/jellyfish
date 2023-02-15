@@ -286,7 +286,7 @@ where
     P: Parameters,
 {
     fn from(dec_key: &DecKey<P>) -> Self {
-        let mut point = GroupProjective::<P>::prime_subgroup_generator();
+        let mut point = GroupProjective::<P>::generator();
         point *= dec_key.key;
         Self { key: point }
     }

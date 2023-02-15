@@ -307,8 +307,8 @@ mod tests {
         let mut transcript = RescueTranscript::<F>::new(label);
 
         let open_key: UnivariateVerifierParam<E> = UnivariateVerifierParam {
-            g: E::G1Affine::prime_subgroup_generator(),
-            h: E::G2Affine::prime_subgroup_generator(),
+            g: E::G1Affine::generator(),
+            h: E::G2Affine::generator(),
             beta_h: E::G2::rand(&mut rng).into_affine(),
         };
 

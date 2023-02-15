@@ -138,7 +138,7 @@ where
     ) -> Result<(PointVariable, PointVariable), CircuitError> {
         let c_bits_le =
             <Self as SignatureHelperGadget<F, P>>::challenge_bits(self, vk, &sig.R, msg)?;
-        let base = GroupAffine::<P>::prime_subgroup_generator();
+        let base = GroupAffine::<P>::generator();
         let x = self.fixed_base_scalar_mul(sig.s, &base)?;
         let z = self.variable_base_binary_scalar_mul::<P>(&c_bits_le, &vk.0)?;
         let y = self.ecc_add::<P>(&sig.R, &z)?;
