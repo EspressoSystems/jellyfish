@@ -11,7 +11,7 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
+    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig as SWParam,
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -460,7 +460,7 @@ mod test {
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::{g1::Parameters as Param377, Bls12_377};
-    use ark_ec::{SWModelParameters, TEModelParameters};
+    use ark_ec::{SWCurveConfig, TECurveConfig};
     use ark_std::{test_rng, vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{Circuit, MergeableCircuitType};
@@ -477,7 +477,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {

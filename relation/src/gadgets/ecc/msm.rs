@@ -9,8 +9,8 @@
 use super::{Point, PointVariable};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    group::Group, twisted_edwards_extended::GroupProjective, ModelParameters,
-    TEModelParameters as Parameters,
+    group::Group, twisted_edwards_extended::GroupProjective, CurveConfig,
+    TECurveConfig as Parameters,
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, vec, vec::Vec};
@@ -52,7 +52,7 @@ where
         bases: &[PointVariable],
         scalars: &[Variable],
     ) -> Result<PointVariable, CircuitError> {
-        let scalar_bit_length = <P as ModelParameters>::ScalarField::size_in_bits();
+        let scalar_bit_length = <P as CurveConfig>::ScalarField::size_in_bits();
         MultiScalarMultiplicationCircuit::<F, P>::msm_with_var_scalar_length(
             self,
             bases,
@@ -372,7 +372,7 @@ mod tests {
     use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
     use ark_ec::{
         msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
-        TEModelParameters as Parameters,
+        TECurveConfig as Parameters,
     };
     use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};

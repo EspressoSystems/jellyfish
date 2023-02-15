@@ -7,8 +7,8 @@
 //! Circuits for Plonk verifiers.
 use crate::proof_system::{structs::VerifyingKey, verifier::Verifier};
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
-    TEModelParameters as TEParam,
+    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig as SWParam,
+    TECurveConfig as TEParam,
 };
 use ark_ff::{BigInteger, FpParameters, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
@@ -329,7 +329,7 @@ mod test {
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::{g1::Parameters as Param377, Bls12_377, Fq as Fq377};
-    use ark_ec::{ProjectiveCurve, SWModelParameters, TEModelParameters};
+    use ark_ec::{ProjectiveCurve, SWCurveConfig, TECurveConfig};
     use ark_std::{test_rng, vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{
@@ -463,7 +463,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
@@ -696,7 +696,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        P: SWCurveConfig<BaseField = F> + TECurveConfig,
     {
         let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
@@ -752,7 +752,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {

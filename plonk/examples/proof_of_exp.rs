@@ -13,8 +13,8 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, ModelParameters, PairingEngine,
-    ProjectiveCurve, TEModelParameters,
+    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, CurveConfig, PairingEngine,
+    ProjectiveCurve, TECurveConfig,
 };
 use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
 use ark_ff::PrimeField;
@@ -94,8 +94,8 @@ fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
     X: TEAffine<EmbedCurve>,
 ) -> Result<PlonkCircuit<EmbedCurve::BaseField>, PlonkError>
 where
-    EmbedCurve: TEModelParameters,
-    <EmbedCurve as ModelParameters>::BaseField: PrimeField,
+    EmbedCurve: TECurveConfig,
+    <EmbedCurve as CurveConfig>::BaseField: PrimeField,
     PairingCurve: PairingEngine,
 {
     // Let's check that the inputs are indeed correct before we build a circuit.

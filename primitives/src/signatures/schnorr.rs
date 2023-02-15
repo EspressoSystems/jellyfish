@@ -18,7 +18,7 @@ use crate::{
 use ark_ec::{
     group::Group,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ModelParameters, ProjectiveCurve, TEModelParameters as Parameters,
+    AffineCurve, CurveConfig, ProjectiveCurve, TECurveConfig as Parameters,
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;
@@ -311,7 +311,7 @@ where
 
     /// Randomize the key pair with the `randomizer`, return the randomized key
     /// pair.
-    pub fn randomize_with(&self, randomizer: &<P as ModelParameters>::ScalarField) -> Self {
+    pub fn randomize_with(&self, randomizer: &<P as CurveConfig>::ScalarField) -> Self {
         let randomized_sk = self.sk.randomize_with(randomizer);
         let randomized_vk = self.vk.randomize_with(randomizer);
         Self {
@@ -440,9 +440,9 @@ mod tests {
 
             let keypair1 = KeyPair::generate(&mut rng);
             // test randomized key pair
-            let randomizer2 = <$curve_param as ModelParameters>::ScalarField::rand(&mut rng);
+            let randomizer2 = <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
             let keypair2 = keypair1.randomize_with(&randomizer2);
-            let randomizer3 = <$curve_param as ModelParameters>::ScalarField::rand(&mut rng);
+            let randomizer3 = <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
             let keypair3 = keypair2.randomize_with(&randomizer3);
             let keypairs = vec![keypair1, keypair2, keypair3];
 
@@ -459,16 +459,16 @@ mod tests {
                     // wrong public key
                     assert!(pk_bad.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
                     // wrong message
-                    msg.push(<$curve_param as ModelParameters>::BaseField::from(i as u64));
+                    msg.push(<$curve_param as CurveConfig>::BaseField::from(i as u64));
                     assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
                 }
             }
 
-            let message = <$curve_param as ModelParameters>::BaseField::rand(&mut rng);
+            let message = <$curve_param as CurveConfig>::BaseField::rand(&mut rng);
             sign_and_verify::<SchnorrSignatureScheme<$curve_param>>(&[message]);
             failed_verification::<SchnorrSignatureScheme<$curve_param>>(
                 &[message],
-                &[<$curve_param as ModelParameters>::BaseField::rand(&mut rng)],
+                &[<$curve_param as CurveConfig>::BaseField::rand(&mut rng)],
             );
         };
     }

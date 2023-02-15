@@ -11,7 +11,7 @@ use crate::{
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
+    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig as SWParam,
 };
 use ark_std::vec::Vec;
 use jf_primitives::{

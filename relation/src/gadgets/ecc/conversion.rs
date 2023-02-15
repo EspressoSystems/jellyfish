@@ -16,7 +16,7 @@
 //! points to the TE form and work on the TE form inside the circuits.
 
 use super::Point;
-use ark_ec::{short_weierstrass_jacobian::GroupAffine as SWAffine, SWModelParameters as SWParam};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine as SWAffine, SWCurveConfig as SWParam};
 use ark_ff::{BigInteger256, BigInteger384, BigInteger768, PrimeField};
 
 impl<F, P> From<&SWAffine<P>> for Point<F>

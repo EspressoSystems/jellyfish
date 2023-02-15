@@ -20,7 +20,7 @@ use crate::{
     proof_system::structs::UniversalSrs,
     transcript::*,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
 use ark_ff::{Field, One};
 use ark_std::{
     format,
@@ -48,7 +48,7 @@ impl<E, F, P> PlonkKzgSnark<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     #[allow(clippy::new_without_default)]
     /// A new Plonk KZG SNARK
@@ -421,7 +421,7 @@ impl<E, F, P> UniversalSNARK<E> for PlonkKzgSnark<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     type Proof = Proof<E>;
     type ProvingKey = ProvingKey<E>;
@@ -600,7 +600,7 @@ pub mod test {
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
     use ark_bn254::{Bn254, Fq as Fq254};
     use ark_bw6_761::{Fq as Fq761, BW6_761};
-    use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+    use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
     use ark_ff::{One, PrimeField, Zero};
     use ark_poly::{
         univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
@@ -711,7 +711,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
     {
         let rng = &mut ark_std::test_rng();
         let circuit = gen_circuit_for_test(5, 6, plonk_type)?;
@@ -846,7 +846,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1061,7 +1061,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1156,7 +1156,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1418,7 +1418,7 @@ pub mod test {
     where
         E: PairingEngine<G1Affine = GroupAffine<P>>,
         E::Fq: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = E::Fq, ScalarField = E::Fr>,
+        P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::Fr>,
     {
         let rng = &mut ark_std::test_rng();
         let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
@@ -1463,7 +1463,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         let rng = &mut ark_std::test_rng();
@@ -1526,7 +1526,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -1624,7 +1624,7 @@ pub mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         R: CryptoRng + RngCore,
         T: PlonkTranscript<F>,
     {

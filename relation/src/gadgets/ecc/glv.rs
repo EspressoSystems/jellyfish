@@ -9,7 +9,7 @@ use crate::{
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use ark_ec::{twisted_edwards_extended::GroupProjective, ProjectiveCurve, TEModelParameters};
+use ark_ec::{twisted_edwards_extended::GroupProjective, ProjectiveCurve, TECurveConfig};
 use ark_ff::{FpParameters, PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};
@@ -83,7 +83,7 @@ where
 {
     /// Perform GLV multiplication in circuit (which costs a few less
     /// constraints).
-    pub fn glv_mul<P: TEModelParameters<BaseField = F>>(
+    pub fn glv_mul<P: TECurveConfig<BaseField = F>>(
         &mut self,
         scalar: Variable,
         base: &PointVariable,
@@ -109,7 +109,7 @@ fn multi_scalar_mul_circuit<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     let endo_base_neg = circuit.inverse_point(endo_base)?;
     let endo_base =
@@ -127,7 +127,7 @@ where
 fn endomorphism<F, P>(base: &Point<F>) -> Point<F>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     let x = base.get_x();
     let y = base.get_y();
@@ -152,7 +152,7 @@ fn endomorphism_circuit<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     let base = circuit.point_witness(point_var)?;
     let endo_point = endomorphism::<_, P>(&base);
@@ -267,7 +267,7 @@ fn scalar_decomposition_gate<F, P, S>(
 ) -> Result<(Variable, Variable, BoolVar), CircuitError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F, ScalarField = S>,
+    P: TECurveConfig<BaseField = F, ScalarField = S>,
     S: PrimeField,
 {
     // the order of scalar field
@@ -569,7 +569,7 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{twisted_edwards_extended::GroupAffine, TEModelParameters as Parameters};
+    use ark_ec::{twisted_edwards_extended::GroupAffine, TECurveConfig as Parameters};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsParameters, Fq, Fr};
     use ark_ff::{BigInteger, One, PrimeField, UniformRand};
     use ark_std::{str::FromStr, test_rng};

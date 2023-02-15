@@ -9,7 +9,7 @@
 use crate::errors::PrimitivesError;
 use ark_ec::{
     short_weierstrass_jacobian::{GroupAffine, GroupProjective},
-    AffineCurve, SWModelParameters,
+    AffineCurve, SWCurveConfig,
 };
 use ark_std::{
     rand::{Rng, SeedableRng},
@@ -21,7 +21,7 @@ use sha2::Sha256;
 
 /// Trait definition and default implementation for hash to group functions for
 /// Short Weierstrass Curves.
-pub trait SWHashToGroup: SWModelParameters + Sized {
+pub trait SWHashToGroup: SWCurveConfig + Sized {
     /// Hash to Group point, using sha2-512 function
     /// hashing to G1 point of `C: ProjectiveCurve`.
     // Default implementation implements a naive solution via rejection sampling.

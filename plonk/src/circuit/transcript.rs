@@ -7,7 +7,7 @@
 //! Implementing *native* circuit for rescue transcript
 
 use super::plonk_verifier::*;
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
@@ -117,7 +117,7 @@ where
     ) -> Result<(), CircuitError>
     where
         E: PairingEngine<G1Affine = GroupAffine<P>>,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
     {
         // push the x and y coordinate of comm to the transcript
         self.transcript_var.push(poly_comm_var.get_x());
@@ -137,7 +137,7 @@ where
     ) -> Result<(), CircuitError>
     where
         E: PairingEngine<G1Affine = GroupAffine<P>>,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
     {
         for poly_comm_var in poly_comm_vars.iter() {
             // push the x and y coordinate of comm to the transcript
@@ -249,7 +249,7 @@ mod tests {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
@@ -295,7 +295,7 @@ mod tests {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 

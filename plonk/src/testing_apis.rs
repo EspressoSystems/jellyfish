@@ -19,7 +19,7 @@ use crate::{
     },
     transcript::PlonkTranscript,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
 use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_std::vec::Vec;
@@ -170,7 +170,7 @@ impl<E, F, P> Verifier<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     /// Construct a Plonk verifier that uses a domain with size `domain_size`.
     pub fn new(domain_size: usize) -> Result<Self, PlonkError> {

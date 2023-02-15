@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use ark_ec::ModelParameters;
+use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{cmp::min, vec::Vec};
 use sha2::{Digest, Sha512};
@@ -15,7 +15,7 @@ use sha2::{Digest, Sha512};
 pub fn fr_to_fq<F, P>(scalar: &P::ScalarField) -> F
 where
     F: PrimeField,
-    P: ModelParameters<BaseField = F>,
+    P: CurveConfig<BaseField = F>,
 {
     // sanity checks:
     // ensure | jubjub scalar field | <= | BLS Scalar field |
@@ -36,7 +36,7 @@ where
 pub fn fq_to_fr<F, P>(base: &F) -> P::ScalarField
 where
     F: PrimeField,
-    P: ModelParameters<BaseField = F>,
+    P: CurveConfig<BaseField = F>,
 {
     P::ScalarField::from_le_bytes_mod_order(&base.into_repr().to_bytes_le())
 }

@@ -14,7 +14,7 @@ use crate::{
     },
     transcript::PlonkTranscript,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWCurveConfig};
 use ark_ff::One;
 use ark_std::{
     format,
@@ -57,7 +57,7 @@ impl<E, F, P> BatchArgument<E>
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     /// Setup the circuit and the proving key for a (mergeable) instance.
     pub fn setup_instance(
@@ -244,7 +244,7 @@ pub fn build_batch_proof_and_vks_for_test<E, F, P, R, T>(
 where
     E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
     R: CryptoRng + RngCore,
     T: PlonkTranscript<F>,
 {
@@ -293,7 +293,7 @@ mod test {
     where
         E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup

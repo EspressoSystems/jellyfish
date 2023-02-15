@@ -12,8 +12,8 @@ use ark_ec::{
     group::Group,
     short_weierstrass_jacobian::GroupAffine as SWGroupAffine,
     twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ModelParameters, ProjectiveCurve, SWModelParameters,
-    TEModelParameters as Parameters,
+    AffineCurve, CurveConfig, ProjectiveCurve, SWCurveConfig,
+    TECurveConfig as Parameters,
 };
 use ark_ff::{PrimeField, Zero};
 use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
@@ -51,7 +51,7 @@ where
 impl<F, P> From<SWGroupAffine<P>> for Point<F>
 where
     F: PrimeField,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     fn from(p: SWGroupAffine<P>) -> Self {
         if p.is_zero() {
@@ -423,7 +423,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ) -> Result<PointVariable, CircuitError> {
         self.check_var_bound(scalar)?;
 
-        let mut num_bits = <P as ModelParameters>::ScalarField::size_in_bits();
+        let mut num_bits = <P as CurveConfig>::ScalarField::size_in_bits();
         // `num_bits` needs to be an even number
         num_bits += num_bits & 1;
         let scalar_bits_le = self.unpack(scalar, num_bits)?;
@@ -599,7 +599,7 @@ mod test {
     use super::*;
     use crate::{gadgets::test_utils::test_variable_independence_for_circuit, Circuit};
     use ark_bls12_377::{g1::Parameters as Param761, Fq as Fq377};
-    use ark_ec::TEModelParameters as Parameters;
+    use ark_ec::TECurveConfig as Parameters;
     use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fq as FqEd381};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as Param381b, Fq as FqEd381b};

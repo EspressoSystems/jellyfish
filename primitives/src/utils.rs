@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::{elgamal, signatures::schnorr};
-use ark_ec::{models::TEModelParameters, ProjectiveCurve, TEModelParameters as Parameters};
+use ark_ec::{models::TECurveConfig, ProjectiveCurve, TECurveConfig as Parameters};
 use ark_ff::{FpParameters, PrimeField};
 use ark_std::vec::Vec;
 use jf_relation::Variable;
@@ -60,6 +60,6 @@ pub(crate) fn challenge_bit_len<F: PrimeField>() -> usize {
 }
 
 #[inline]
-pub(crate) fn curve_cofactor<P: TEModelParameters>() -> u64 {
+pub(crate) fn curve_cofactor<P: TECurveConfig>() -> u64 {
     P::COFACTOR[0]
 }

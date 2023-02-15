@@ -12,7 +12,7 @@ use crate::{
     rescue::{RescueParameter, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine, AffineCurve, ProjectiveCurve, TEModelParameters,
+    twisted_edwards_extended::GroupAffine, AffineCurve, ProjectiveCurve, TECurveConfig,
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
@@ -165,7 +165,7 @@ where
 pub trait ElGamalEncryptionGadget<F, P>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     /// Compute the gadget that check a correct Elgamal encryption
     /// * `pk_vars` - variables corresponding to the encryption public key
@@ -195,7 +195,7 @@ where
 impl<F, P> ElGamalEncryptionGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     fn elgamal_encrypt(
         &mut self,
@@ -256,7 +256,7 @@ mod tests {
         elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
         rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };
-    use ark_ec::{ProjectiveCurve, TEModelParameters};
+    use ark_ec::{ProjectiveCurve, TECurveConfig};
     use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as ParamEd381b, Fq as FqEd381b};
@@ -277,7 +277,7 @@ mod tests {
     fn apply_counter_mode_stream_no_padding_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F>,
+        P: TECurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let mut prng = ark_std::test_rng();
@@ -340,7 +340,7 @@ mod tests {
     fn test_elgamal_hybrid_encrypt_circuit_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F>,
+        P: TECurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
@@ -420,7 +420,7 @@ mod tests {
     fn test_create_ciphertext_variable_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F>,
+        P: TECurveConfig<BaseField = F>,
     {
         // Prepare ciphertext
         let rng = &mut ark_std::test_rng();
