@@ -570,14 +570,14 @@ mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
     use ark_ec::{twisted_edwards_extended::GroupAffine, TECurveConfig as Parameters};
-    use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsParameters, Fq, Fr};
+    use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
     use ark_ff::{BigInteger, One, PrimeField, UniformRand};
     use ark_std::{str::FromStr, test_rng};
     use jf_utils::{field_switching, fr_to_fq};
 
     #[test]
     fn test_glv() -> Result<(), CircuitError> {
-        test_glv_helper::<Fq, EdwardsParameters>()
+        test_glv_helper::<Fq, EdwardsConfig>()
     }
 
     fn test_glv_helper<F, P>() -> Result<(), CircuitError>
@@ -665,13 +665,13 @@ mod tests {
         let base_point: Point<Fq> = base_point.into();
         let endo_point: Point<Fq> = endo_point.into();
 
-        let t = endomorphism::<_, EdwardsParameters>(&base_point);
+        let t = endomorphism::<_, EdwardsConfig>(&base_point);
         assert_eq!(t, endo_point);
 
         let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_turbo_plonk();
         let point_var = circuit.create_point_variable(base_point).unwrap();
         let endo_var =
-            endomorphism_circuit::<_, EdwardsParameters>(&mut circuit, &point_var).unwrap();
+            endomorphism_circuit::<_, EdwardsConfig>(&mut circuit, &point_var).unwrap();
         let endo_point_rec = circuit.point_witness(&endo_var).unwrap();
         assert_eq!(endo_point_rec, endo_point);
     }
@@ -693,7 +693,7 @@ mod tests {
             let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_ultra_plonk(16);
             let scalar_var = circuit.create_variable(field_switching(&scalar)).unwrap();
             let (k1_var, k2_var, k2_sign_var) =
-                scalar_decomposition_gate::<_, EdwardsParameters, _>(&mut circuit, &scalar_var)
+                scalar_decomposition_gate::<_, EdwardsConfig, _>(&mut circuit, &scalar_var)
                     .unwrap();
 
             let k1_rec = circuit.witness(k1_var).unwrap();

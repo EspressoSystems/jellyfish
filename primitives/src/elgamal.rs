@@ -364,12 +364,12 @@ where
 #[cfg(test)]
 mod test {
     use super::{Ciphertext, DecKey, EncKey, KeyPair, UniformRand};
-    use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377, Fr as FrEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381, Fr as FrEd381};
+    use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377, Fr as FrEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381, Fr as FrEd381};
     use ark_ed_on_bls12_381_bandersnatch::{
-        EdwardsParameters as ParamEd381b, Fq as FqEd381b, Fr as FrEd381b,
+        EdwardsConfig as ParamEd381b, Fq as FqEd381b, Fr as FrEd381b,
     };
-    use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254, Fr as FrEd254};
+    use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254, Fr as FrEd254};
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{vec, vec::Vec};
 

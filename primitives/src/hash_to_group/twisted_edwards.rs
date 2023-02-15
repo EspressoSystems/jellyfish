@@ -49,13 +49,13 @@ pub trait TEHashToGroup: TECurveConfig + Sized {
     }
 }
 
-impl TEHashToGroup for ark_ed_on_bls12_377::EdwardsParameters {
+impl TEHashToGroup for ark_ed_on_bls12_377::EdwardsConfig {
     // TODO:
     // overload hash to group with the method in
     // <https://github.com/algorand/pairing-plus/blob/7ec2ae03aae4ba2fc5210810211478171ccededf/src/bls12_381/osswu_map/g1.rs#L47>
 }
 
-impl TEHashToGroup for ark_ed_on_bls12_381::EdwardsParameters {
+impl TEHashToGroup for ark_ed_on_bls12_381::EdwardsConfig {
     // TODO:
     // overload hash to group with the method in
     // <https://github.com/algorand/pairing-plus/blob/7ec2ae03aae4ba2fc5210810211478171ccededf/src/bls12_381/osswu_map/g1.rs#L47>
@@ -68,8 +68,8 @@ mod test {
 
     #[test]
     fn test_hash_to_group() {
-        test_hash_to_group_helper::<ark_ed_on_bls12_377::EdwardsParameters>();
-        test_hash_to_group_helper::<ark_ed_on_bls12_381::EdwardsParameters>();
+        test_hash_to_group_helper::<ark_ed_on_bls12_377::EdwardsConfig>();
+        test_hash_to_group_helper::<ark_ed_on_bls12_381::EdwardsConfig>();
     }
 
     fn test_hash_to_group_helper<P: TEHashToGroup>() {

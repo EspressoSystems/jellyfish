@@ -374,9 +374,9 @@ mod tests {
         msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
         TECurveConfig as Parameters,
     };
-    use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};
-    use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254};
+    use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
+    use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
     use jf_utils::fr_to_fq;

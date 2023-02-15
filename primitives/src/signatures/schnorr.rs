@@ -428,10 +428,10 @@ mod tests {
         constants::CS_ID_SCHNORR,
         signatures::tests::{failed_verification, sign_and_verify},
     };
-    use ark_ed_on_bls12_377::EdwardsParameters as Param377;
-    use ark_ed_on_bls12_381::EdwardsParameters as Param381;
-    use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
-    use ark_ed_on_bn254::EdwardsParameters as Param254;
+    use ark_ed_on_bls12_377::EdwardsConfig as Param377;
+    use ark_ed_on_bls12_381::EdwardsConfig as Param381;
+    use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;
+    use ark_ed_on_bn254::EdwardsConfig as Param254;
     use ark_std::UniformRand;
 
     macro_rules! test_signature {
@@ -485,12 +485,12 @@ mod tests {
         use super::super::{KeyPair, SignKey, Signature, VerKey};
         use crate::constants::CS_ID_SCHNORR;
         use ark_ec::twisted_edwards_extended::GroupProjective;
-        use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377, Fr as FrEd377};
-        use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fq as FqEd381, Fr as FrEd381};
+        use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377, Fr as FrEd377};
+        use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as FqEd381, Fr as FrEd381};
         use ark_ed_on_bls12_381_bandersnatch::{
-            EdwardsParameters as Param381b, Fq as FqEd381b, Fr as FrEd381b,
+            EdwardsConfig as Param381b, Fq as FqEd381b, Fr as FrEd381b,
         };
-        use ark_ed_on_bn254::{EdwardsParameters as Param254, Fq as FqEd254, Fr as FrEd254};
+        use ark_ed_on_bn254::{EdwardsConfig as Param254, Fq as FqEd254, Fr as FrEd254};
         use ark_ff::Zero;
         use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
         use ark_std::{vec, vec::Vec, UniformRand};

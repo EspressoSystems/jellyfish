@@ -16,7 +16,7 @@ use ark_ec::{
     twisted_edwards_extended::GroupAffine as TEAffine, AffineRepr, CurveConfig, pairing::Pairing,
     CurveGroup, TECurveConfig,
 };
-use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
+use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsConfig, Fr};
 use ark_ff::PrimeField;
 use ark_std::{rand::SeedableRng, UniformRand};
 use jf_plonk::{
@@ -43,7 +43,7 @@ fn main() -> Result<(), PlonkError> {
     // - public group element `X := xG`
     // This circuit does not need to have real inputs.
     // We can simply use a dummy data set.
-    let circuit = proof_of_exponent_circuit::<EdwardsParameters, Bls12_381>(x, X)?;
+    let circuit = proof_of_exponent_circuit::<EdwardsConfig, Bls12_381>(x, X)?;
 
     // Knowing the circuit size, we are able to simulate the universal
     // setup and obtain the structured reference string (SRS).

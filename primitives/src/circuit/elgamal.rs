@@ -257,10 +257,10 @@ mod tests {
         rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };
     use ark_ec::{CurveGroup, TECurveConfig};
-    use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};
-    use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as ParamEd381b, Fq as FqEd381b};
-    use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254};
+    use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
+    use ark_ed_on_bls12_381_bandersnatch::{EdwardsConfig as ParamEd381b, Fq as FqEd381b};
+    use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::{vec, vec::Vec};
     use jf_relation::{gadgets::ecc::Point, Circuit, PlonkCircuit, Variable};

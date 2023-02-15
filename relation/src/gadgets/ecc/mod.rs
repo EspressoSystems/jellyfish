@@ -600,10 +600,10 @@ mod test {
     use crate::{gadgets::test_utils::test_variable_independence_for_circuit, Circuit};
     use ark_bls12_377::{g1::Parameters as Param761, Fq as Fq377};
     use ark_ec::TECurveConfig as Parameters;
-    use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fq as FqEd381};
-    use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as Param381b, Fq as FqEd381b};
-    use ark_ed_on_bn254::{EdwardsParameters as Param254, Fq as FqEd354};
+    use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as FqEd381};
+    use ark_ed_on_bls12_381_bandersnatch::{EdwardsConfig as Param381b, Fq as FqEd381b};
+    use ark_ed_on_bn254::{EdwardsConfig as Param254, Fq as FqEd354};
     use ark_ff::{One, UniformRand, Zero};
     use ark_std::str::FromStr;
     use jf_utils::fr_to_fq;
