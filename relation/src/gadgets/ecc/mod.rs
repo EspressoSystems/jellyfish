@@ -423,7 +423,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ) -> Result<PointVariable, CircuitError> {
         self.check_var_bound(scalar)?;
 
-        let mut num_bits = <P as CurveConfig>::ScalarField::size_in_bits();
+        let mut num_bits = <P as CurveConfig>::ScalarField::MODULUS_BIT_SIZE;
         // `num_bits` needs to be an even number
         num_bits += num_bits & 1;
         let scalar_bits_le = self.unpack(scalar, num_bits)?;
@@ -474,8 +474,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.check_point_var_bound(base)?;
 
         if self.support_lookup()
-            && P::ScalarField::size_in_bits() == 253
-            && P::BaseField::size_in_bits() == 255
+            && P::ScalarField::MODULUS_BIT_SIZE == 253
+            && P::BaseField::MODULUS_BIT_SIZE == 255
         {
             // bandersnatch glv multiplication
             // FIXME: we do not have an easier flag to tell if a parameter

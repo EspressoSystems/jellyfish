@@ -53,7 +53,7 @@ pub trait PlonkTranscript<F> {
         <Self as PlonkTranscript<F>>::append_message(
             self,
             b"field size in bits",
-            E::ScalarField::size_in_bits().to_le_bytes().as_ref(),
+            E::ScalarField::MODULUS_BIT_SIZE.to_le_bytes().as_ref(),
         )?;
         <Self as PlonkTranscript<F>>::append_message(
             self,

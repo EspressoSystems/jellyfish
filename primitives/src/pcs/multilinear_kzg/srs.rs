@@ -146,7 +146,7 @@ impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> 
         let mut powers_of_g = Vec::new();
 
         let t: Vec<_> = (0..num_vars).map(|_| E::ScalarField::rand(rng)).collect();
-        let scalar_bits = E::ScalarField::size_in_bits();
+        let scalar_bits = E::ScalarField::MODULUS_BIT_SIZE;
 
         let mut eq: LinkedList<DenseMultilinearExtension<E::ScalarField>> =
             LinkedList::from_iter(eq_extension(&t).into_iter());

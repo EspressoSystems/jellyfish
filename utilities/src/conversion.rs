@@ -43,14 +43,14 @@ where
 
 /// Convert a field element in F(rom) to a field element in T(o),
 /// with |T| < |F|; truncating the element via masking the top
-/// F::size_in_bits() - T::size_in_bits() with 0s
+/// F::MODULUS_BIT_SIZE - T::MODULUS_BIT_SIZE with 0s
 pub fn fq_to_fr_with_mask<F, T>(base: &F) -> T
 where
     F: PrimeField,
     T: PrimeField,
 {
-    assert!(T::size_in_bits() < F::size_in_bits());
-    let length = T::size_in_bits() >> 3;
+    assert!(T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE);
+    let length = T::MODULUS_BIT_SIZE >> 3;
     // ensure that no mod reduction happened
     T::from_le_bytes_mod_order(&base.into_bigint().to_bytes_le()[0..length])
 }
@@ -85,7 +85,7 @@ where
     // we extract a random `rand_byte_len` bytes from the hash
     // the compute res = OS2IP(output) mod p
     // which is less than 2^-128 from uniform
-    let rand_byte_len = (F::size_in_bits() + 7) / 8 + 128 / 8;
+    let rand_byte_len = (F::MODULUS_BIT_SIZE + 7) / 8 + 128 / 8;
     let mut hasher = Sha512::default();
     hasher.update(bytes.as_ref());
     let output = &hasher.finalize()[0..rand_byte_len];
@@ -107,7 +107,7 @@ where
     // note that mod_reduction is guaranteed to not occur
 
     // Field order is never a multiple of 8
-    let chunk_length = F::size_in_bits() / 8;
+    let chunk_length = F::MODULUS_BIT_SIZE / 8;
 
     // pad the input to a multiple of chunk_length
     let padded_length = (bytes.as_ref().len() + chunk_length - 1) / chunk_length * chunk_length;

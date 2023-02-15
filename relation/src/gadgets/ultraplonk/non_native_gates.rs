@@ -31,11 +31,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.check_var_bound(x_to_11.components().0)?;
         self.check_var_bound(x_to_11.components().1)?;
 
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(CircuitError::NotSupported(format!(
                 "Target field size ({}) is greater than evaluation field size (P{})",
-                T::size_in_bits(),
-                F::size_in_bits()
+                T::MODULUS_BIT_SIZE,
+                F::MODULUS_BIT_SIZE
             )));
         }
 
@@ -58,17 +58,17 @@ impl<F: PrimeField> PlonkCircuit<F> {
         x: &FpElemVar<F>,
     ) -> Result<FpElemVar<F>, CircuitError> {
         // // checks already done by the caller
-        // if T::size_in_bits() >= F::size_in_bits() {
+        // if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
         //     return Err(CircuitError::NotSupported(format!(
         //         "Target field size ({}) is greater than evaluation field size (P{})",
-        //         T::size_in_bits(),
-        //         F::size_in_bits()
+        //         T::MODULUS_BIT_SIZE,
+        //         F::MODULUS_BIT_SIZE
         //     ))
         //     .into());
         // }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::size_in_bits() < F::size_in_bits()
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE
         let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
@@ -97,16 +97,16 @@ impl<F: PrimeField> PlonkCircuit<F> {
         x: &FpElemVar<F>,
     ) -> Result<FpElemVar<F>, CircuitError> {
         // checks already done by the caller
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(CircuitError::NotSupported(format!(
                 "Target field size ({}) is greater than evaluation field size (P{})",
-                T::size_in_bits(),
-                F::size_in_bits()
+                T::MODULUS_BIT_SIZE,
+                F::MODULUS_BIT_SIZE
             )));
         }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::size_in_bits() < F::size_in_bits()
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE
         let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
@@ -138,11 +138,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let two_power_m = Some(c.two_power_m());
 
         // check the correctness of parameters
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(CircuitError::NotSupported(format!(
                 "Target field size ({}) is greater than evaluation field size ({})",
-                T::size_in_bits(),
-                F::size_in_bits()
+                T::MODULUS_BIT_SIZE,
+                F::MODULUS_BIT_SIZE
             )));
         }
 
@@ -173,7 +173,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::size_in_bits() < F::size_in_bits()
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE
         let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
@@ -217,7 +217,7 @@ mod test {
         let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -261,7 +261,7 @@ mod test {
         let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -305,7 +305,7 @@ mod test {
         let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -350,7 +350,7 @@ mod test {
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let mut rng = test_rng();
 

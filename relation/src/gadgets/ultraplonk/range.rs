@@ -56,7 +56,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// RANGE_SIZE^NUM_RANGES >= p,
     #[inline]
     pub fn num_range_blocks(&self) -> Result<usize, CircuitError> {
-        Ok(F::size_in_bits() / self.range_bit_len()? + 1)
+        Ok(F::MODULUS_BIT_SIZE / self.range_bit_len()? + 1)
     }
 }
 
@@ -103,7 +103,7 @@ mod test {
         test_decompose_le_helper::<Fq377>();
     }
     fn test_decompose_le_helper<F: PrimeField>() {
-        let len = F::size_in_bits() / RANGE_BIT_LEN_FOR_TEST + 1;
+        let len = F::MODULUS_BIT_SIZE / RANGE_BIT_LEN_FOR_TEST + 1;
         let mut rng = test_rng();
         for _ in 0..10 {
             let val = F::rand(&mut rng);

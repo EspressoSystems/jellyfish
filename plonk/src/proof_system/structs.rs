@@ -306,11 +306,11 @@ impl<T: PrimeField> ProofEvaluations<T> {
     where
         F: RescueParameter + SWToTEConParam,
     {
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(PlonkError::InvalidParameters(format!(
                 "circuit field size {} is not greater than Plookup Evaluation field size {}",
-                F::size_in_bits(),
-                T::size_in_bits()
+                F::MODULUS_BIT_SIZE,
+                T::MODULUS_BIT_SIZE
             )));
         }
         let wires_evals = self

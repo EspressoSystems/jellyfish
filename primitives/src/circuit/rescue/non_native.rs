@@ -237,7 +237,7 @@ where
         state: &RescueVector<T>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
         // parameter m
-        let m = (T::size_in_bits() / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
+        let m = (T::MODULUS_BIT_SIZE / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
 
         // move the modulus to the right field
         let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
@@ -1000,7 +1000,7 @@ mod tests {
 
         let max_output_len = if ignored { 3 } else { 10 };
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let mut prng = ark_std::test_rng();
 
@@ -1085,7 +1085,7 @@ mod tests {
     }
     fn test_rescue_sponge_with_padding_helper<T: RescueParameter, F: PrimeField>(ignored: bool) {
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let mut prng = ark_std::test_rng();
         let max_input_len = if ignored { 3 } else { 10 };
@@ -1157,7 +1157,7 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let rate = 3;
 
@@ -1202,7 +1202,7 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
         let mut prng = ark_std::test_rng();
 

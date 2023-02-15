@@ -29,7 +29,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// range [0, 2^`bit_len`). Return error if the variable is invalid.
     /// TODO: optimize the gate for UltraPlonk.
     pub fn is_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, CircuitError> {
-        let a_bit_le: Vec<BoolVar> = self.unpack(a, F::size_in_bits())?;
+        let a_bit_le: Vec<BoolVar> = self.unpack(a, F::MODULUS_BIT_SIZE)?;
         let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
         // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
         // zeroes.
@@ -42,7 +42,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// representation of `a`.
     /// Return error if the `a` is not the range of [0, 2^`bit_len`).
     pub fn unpack(&mut self, a: Variable, bit_len: usize) -> Result<Vec<BoolVar>, CircuitError> {
-        if bit_len < F::size_in_bits() && self.witness(a)? >= F::from(2u32).pow([bit_len as u64]) {
+        if bit_len < F::MODULUS_BIT_SIZE && self.witness(a)? >= F::from(2u32).pow([bit_len as u64]) {
             return Err(CircuitError::ParameterError(
                 "Failed to unpack variable to a range of smaller than 2^bit_len".to_string(),
             ));
@@ -196,7 +196,7 @@ mod test {
         assert!(circuit.enforce_in_range(a, 0).is_err());
         // bit length bigger than that of a field element (bit length takes 256 or 381
         // bits)
-        let bit_len = (F::size_in_bits() / 8 + 1) * 8;
+        let bit_len = (F::MODULUS_BIT_SIZE / 8 + 1) * 8;
         assert!(circuit.enforce_in_range(a, bit_len + 1).is_err());
         // if mess up the wire value, should fail
         *circuit.witness_mut(b) = F::from(1024u32);

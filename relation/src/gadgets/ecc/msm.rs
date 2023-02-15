@@ -52,7 +52,7 @@ where
         bases: &[PointVariable],
         scalars: &[Variable],
     ) -> Result<PointVariable, CircuitError> {
-        let scalar_bit_length = <P as CurveConfig>::ScalarField::size_in_bits();
+        let scalar_bit_length = <P as CurveConfig>::ScalarField::MODULUS_BIT_SIZE;
         MultiScalarMultiplicationCircuit::<F, P>::msm_with_var_scalar_length(
             self,
             bases,

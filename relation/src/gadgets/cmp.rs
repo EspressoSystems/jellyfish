@@ -223,14 +223,14 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     /// Helper function to check whether `a` is greater than a given
-    /// constant. Let N = F::size_in_bits(), it assumes that the
+    /// constant. Let N = F::MODULUS_BIT_SIZE, it assumes that the
     /// constant < 2^N. And it uses at most N AND/OR gates.
     fn is_gt_constant_internal(
         &mut self,
         a: Variable,
         constant: &F,
     ) -> Result<BoolVar, CircuitError> {
-        let a_bits_le = self.unpack(a, F::size_in_bits())?;
+        let a_bits_le = self.unpack(a, F::MODULUS_BIT_SIZE)?;
         let const_bits_le = constant.into_bigint().to_bits_le();
 
         // Iterating from LSB to MSB. Skip the front consecutive 1's.

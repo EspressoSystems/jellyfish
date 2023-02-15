@@ -193,7 +193,7 @@ where
             return Err(ParameterError("does not support range table".to_string()));
         }
 
-        if E::ScalarField::size_in_bits() != 253 || E::Fq::size_in_bits() != 377 {
+        if E::ScalarField::MODULUS_BIT_SIZE != 253 || E::Fq::MODULUS_BIT_SIZE != 377 {
             return Err(ParameterError(
                 "Curve Parameter does not support for rescue transcript circuit".to_string(),
             ));

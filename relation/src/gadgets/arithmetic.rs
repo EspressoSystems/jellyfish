@@ -363,7 +363,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             ));
         }
 
-        let native_field_bit_length = F::size_in_bits();
+        let native_field_bit_length = F::MODULUS_BIT_SIZE;
         if native_field_bit_length <= bit_length {
             return Err(CircuitError::ParameterError(
                 "Truncation error: native field is not greater than truncation target".to_string(),
@@ -881,7 +881,7 @@ mod test {
 
         // more tests
         for minus_len in 1..=16 {
-            let len = F::size_in_bits() - minus_len;
+            let len = F::MODULUS_BIT_SIZE - minus_len;
             let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
             let x_var = circuit.create_variable(x)?;
             let modulus = F::from(2u8).pow([len as u64]);
@@ -915,7 +915,7 @@ mod test {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         }
 
-        // Bad path: bit_len = F::size_in_bits()
+        // Bad path: bit_len = F::MODULUS_BIT_SIZE
         {
             let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
             let x = F::rand(&mut rng);
@@ -923,7 +923,7 @@ mod test {
             let y = F::one();
             let y_var = circuit.create_variable(y)?;
             assert!(circuit
-                .truncate_gate(x_var, y_var, F::size_in_bits())
+                .truncate_gate(x_var, y_var, F::MODULUS_BIT_SIZE)
                 .is_err());
         }
 

@@ -127,7 +127,7 @@ impl<E: Pairing> StructuredReferenceString<E> for UnivariateUniversalParams<E> {
 
         let window_size = FixedBaseMSM::get_mul_window_size(max_degree + 1);
 
-        let scalar_bits = E::ScalarField::size_in_bits();
+        let scalar_bits = E::ScalarField::MODULUS_BIT_SIZE;
         let g_time = start_timer!(|| "Generating powers of G");
         // TODO: parallelization
         let g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
