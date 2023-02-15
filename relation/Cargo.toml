@@ -8,15 +8,15 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
-ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-bls12-381 = "0.3.0"
-ark-bn254 = "0.3.0"
-ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-ec = "0.3.0"
-ark-ff = { version = "0.3.0", features = [ "asm" ] }
-ark-poly = "0.3.0"
-ark-serialize = "0.3.0"
-ark-std = { version = "0.3.0", default-features = false }
+ark-bls12-377 = "0.4.0"
+ark-bls12-381 = "0.4.0"
+ark-bn254 = "0.4.0"
+ark-bw6-761 = "0.4.0"
+ark-ec = "0.4.0"
+ark-ff = { version = "0.4.0", features = [ "asm" ] }
+ark-poly = "0.4.0"
+ark-serialize = "0.4.0"
+ark-std = { version = "0.4.0", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
 displaydoc = { version = "0.2.3", default-features = false }
 downcast-rs = { version = "1.2.0", default-features = false }
@@ -28,10 +28,10 @@ rand_chacha = { version = "0.3.1" }
 rayon = { version = "1.5.0", optional = true }
 
 [dev-dependencies]
-ark-ed-on-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-ed-on-bls12-381 = "0.3.0"
-ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-ed-on-bn254 = "0.3.0"
+ark-ed-on-bls12-377 = "0.4.0"
+ark-ed-on-bls12-381 = "0.4.0"
+ark-ed-on-bls12-381-bandersnatch = "0.4.0"
+ark-ed-on-bn254 = "0.4.0"
 itertools = { version = "0.10.1", default-features = false }
 
 [features]
