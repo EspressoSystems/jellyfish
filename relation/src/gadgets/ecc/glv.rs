@@ -240,7 +240,7 @@ fn scalar_decomposition<F: PrimeField>(scalar: &F) -> (F, F, bool) {
 
 macro_rules! fq_to_big_int {
     ($fq: expr) => {
-        <BigInt as From<BigUint>>::from($fq.into_repr().into())
+        <BigInt as From<BigUint>>::from($fq.into_bigint().into())
     };
 }
 
@@ -408,8 +408,8 @@ where
 
         //  (a) k1 < 2^128
         //  (b) k2 < 2^128
-        let k1_bits = get_bits(&k1.into_repr().to_bits_le());
-        let k2_bits = get_bits(&k1.into_repr().to_bits_le());
+        let k1_bits = get_bits(&k1.into_bigint().to_bits_le());
+        let k2_bits = get_bits(&k1.into_bigint().to_bits_le());
 
         assert!(k1_bits < 128, "k1 bits {}", k1_bits);
         assert!(k2_bits < 128, "k2 bits {}", k1_bits);
@@ -419,7 +419,7 @@ where
         //  (e) tmp = tmp1 + 2^128 tmp2
         assert!(tmp1_int == BigInt::from(0));
         let tmp2_fq = F::from_le_bytes_mod_order(&tmp2_int.to_bytes_le().1);
-        let tmp2_bits = get_bits(&tmp2_fq.into_repr().to_bits_le());
+        let tmp2_bits = get_bits(&tmp2_fq.into_bigint().to_bits_le());
         assert!(tmp1_int == BigInt::from(0));
         assert!(tmp2_bits < 128, "tmp2 bits {}", tmp2_bits);
 
@@ -684,8 +684,8 @@ mod tests {
         for _ in 0..100 {
             let scalar = Fr::rand(&mut rng);
             let (k1, k2, is_k2_pos) = scalar_decomposition(&scalar);
-            assert!(get_bits(&k1.into_repr().to_bits_le()) <= 128);
-            assert!(get_bits(&k2.into_repr().to_bits_le()) <= 128);
+            assert!(get_bits(&k1.into_bigint().to_bits_le()) <= 128);
+            assert!(get_bits(&k2.into_bigint().to_bits_le()) <= 128);
             let k2 = if is_k2_pos { k2 } else { -k2 };
 
             assert_eq!(k1 - k2 * lambda, scalar,);

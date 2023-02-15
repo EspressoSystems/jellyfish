@@ -63,7 +63,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 /// Decompose `val` into `a_0`, ..., `a_{len-1}` s.t.
 /// val = a_0 + RANGE_SIZE * a_1 + ... + RANGE_SIZE^{len-1} * a_{len-1}
 fn decompose_le<F: PrimeField>(val: F, len: usize, range_bit_len: usize) -> Vec<F> {
-    let repr_le = val.into_repr().to_bits_le();
+    let repr_le = val.into_bigint().to_bits_le();
     let mut res: Vec<F> = repr_le
         .chunks(range_bit_len)
         .map(|vec| {

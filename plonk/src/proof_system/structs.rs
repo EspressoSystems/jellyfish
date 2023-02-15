@@ -892,7 +892,7 @@ impl<E: Pairing> ScalarsAndBases<E> {
         let mut scalars = vec![];
         for (base, scalar) in &self.base_scalar_map {
             bases.push(*base);
-            scalars.push(scalar.into_repr());
+            scalars.push(scalar.into_bigint());
         }
         VariableBaseMSM::multi_scalar_mul(&bases, &scalars)
     }

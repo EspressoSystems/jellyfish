@@ -214,8 +214,8 @@ mod test {
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
         let y_t = x_t.pow([11]);
-        let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
-        let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
+        let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
+        let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
         let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
@@ -258,8 +258,8 @@ mod test {
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
         let y_t = x_t.pow([5]);
-        let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
-        let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
+        let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
+        let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
         let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
@@ -302,8 +302,8 @@ mod test {
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
         let y_t = x_t.pow([11]);
-        let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
-        let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
+        let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
+        let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
         let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
 
@@ -361,17 +361,17 @@ mod test {
         for (&xi, &yi) in x_t.iter().zip(y_t.iter()) {
             res_t += xi * yi;
         }
-        let res_p = F::from_le_bytes_mod_order(res_t.into_repr().to_bytes_le().as_ref());
+        let res_p = F::from_le_bytes_mod_order(res_t.into_bigint().to_bytes_le().as_ref());
 
         let x_p: Vec<F> = x_t
             .iter()
-            .map(|x| F::from_le_bytes_mod_order(x.into_repr().to_bytes_le().as_ref()))
+            .map(|x| F::from_le_bytes_mod_order(x.into_bigint().to_bytes_le().as_ref()))
             .collect();
         let y_p: Vec<F> = y_t
             .iter()
-            .map(|y| F::from_le_bytes_mod_order(y.into_repr().to_bytes_le().as_ref()))
+            .map(|y| F::from_le_bytes_mod_order(y.into_bigint().to_bytes_le().as_ref()))
             .collect();
-        let c_p = F::from_le_bytes_mod_order(c_t.into_repr().to_bytes_le().as_ref());
+        let c_p = F::from_le_bytes_mod_order(c_t.into_bigint().to_bytes_le().as_ref());
 
         let x_vars: Vec<Variable> = x_p
             .iter()

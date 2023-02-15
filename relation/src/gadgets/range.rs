@@ -105,7 +105,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             ));
         }
 
-        let a_bits_le: Vec<bool> = self.witness(a)?.into_repr().to_bits_le();
+        let a_bits_le: Vec<bool> = self.witness(a)?.into_bigint().to_bits_le();
         if bit_len > a_bits_le.len() {
             return Err(CircuitError::ParameterError(format!(
                 "Maximum field bit size: {}, requested range upper bound bit len: {}",

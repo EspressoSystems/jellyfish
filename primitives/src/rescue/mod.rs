@@ -617,7 +617,7 @@ mod test_prp {
     // let keys = rescue_hash.key_schedule(&RescueBls4Vector::zero());
     // for key in keys {
     // for elem in key.vec.iter() {
-    // let str: Vec<String> = elem.into_repr().to_bytes_le().iter().map(|b|
+    // let str: Vec<String> = elem.into_bigint().to_bytes_le().iter().map(|b|
     // format!("0x{:02X},", b)) .collect();
     // println!("{:?}", str.join(" "));
     // }
@@ -658,7 +658,7 @@ mod test_permutation {
         // for e in keys2.iter() {
         //     for f in e.vec.iter() {
         //         ark_std::println!("permutation_round_key.append(0x{})",
-        // f.into_repr());     }
+        // f.into_bigint());     }
         // }
         // assert!(false);
 

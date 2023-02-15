@@ -17,7 +17,7 @@ use num_bigint::BigUint;
 
 macro_rules! to_big_int {
     ($x:expr) => {
-        ($x).into_repr().into()
+        ($x).into_bigint().into()
     };
 }
 
@@ -870,7 +870,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 #[inline]
 // Integer division: c = a / b
 fn int_div<F: PrimeField>(a: &F, b: &F) -> F {
-    let c_big_int: BigUint = a.into_repr().into() / b.into_repr().into();
+    let c_big_int: BigUint = a.into_bigint().into() / b.into_bigint().into();
     F::from(c_big_int)
 }
 

@@ -209,8 +209,8 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         let check_time = start_timer!(|| "Checking evaluation");
         let pairing_inputs: Vec<(E::G1Prepared, E::G2Prepared)> = vec![
             (
-                (verifier_param.g.mul(value.into_repr())
-                    - proof.proof.mul(point.into_repr())
+                (verifier_param.g.mul(value.into_bigint())
+                    - proof.proof.mul(point.into_bigint())
                     - commitment.0.into_projective())
                 .into_affine()
                 .into(),
@@ -260,8 +260,8 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
             temp.add_assign_mixed(&c.0);
             let c = temp;
             g_multiplier += &(randomizer * v);
-            total_c += &c.mul(randomizer.into_repr());
-            total_w += &w.mul(randomizer.into_repr());
+            total_c += &c.mul(randomizer.into_bigint());
+            total_w += &w.mul(randomizer.into_bigint());
             // We don't need to sample randomizers from the full field,
             // only from 128-bit strings.
             randomizer = u128::rand(rng).into();
@@ -299,7 +299,7 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: UVPolynomial<F>>(
 
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
     let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to bigints");
-    let coeffs = p.iter().map(|s| s.into_repr()).collect::<Vec<_>>();
+    let coeffs = p.iter().map(|s| s.into_bigint()).collect::<Vec<_>>();
     end_timer!(to_bigint_time);
     coeffs
 }

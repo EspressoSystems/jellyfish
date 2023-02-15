@@ -231,7 +231,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         constant: &F,
     ) -> Result<BoolVar, CircuitError> {
         let a_bits_le = self.unpack(a, F::size_in_bits())?;
-        let const_bits_le = constant.into_repr().to_bits_le();
+        let const_bits_le = constant.into_bigint().to_bits_le();
 
         // Iterating from LSB to MSB. Skip the front consecutive 1's.
         // Put an OR gate for bit 0 and an AND gate for bit 1.

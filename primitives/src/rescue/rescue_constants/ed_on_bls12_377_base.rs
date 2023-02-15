@@ -767,7 +767,7 @@ impl RescueParameter for Fq {
     // for e in keys2.iter() {
     //     for f in e.vec.iter() {
     //         ark_std::println!("permutation_round_key.append(0x{})",
-    // f.into_repr());     }
+    // f.into_bigint());     }
     // }
     // The keys are not cross-checked with sage, however, the hash function
     // is, which implies that the permutation round keys must be correct

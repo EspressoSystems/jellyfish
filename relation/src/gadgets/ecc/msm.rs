@@ -318,7 +318,7 @@ where
 {
     // create witness
     let m = (scalar_bit_length - 1) / c + 1;
-    let mut scalar_val = circuit.witness(scalar_var)?.into_repr();
+    let mut scalar_val = circuit.witness(scalar_var)?.into_bigint();
     let decomposed_scalar_vars = (0..m)
         .map(|_| {
             // We mod the remaining bits by 2^{window size}, thus taking `c` bits.
@@ -421,7 +421,7 @@ mod tests {
             let scalars: Vec<P::ScalarField> =
                 (0..dim).map(|_| P::ScalarField::rand(&mut rng)).collect();
             let scalar_reprs: Vec<<P::ScalarField as PrimeField>::BigInt> =
-                scalars.iter().map(|x| x.into_repr()).collect();
+                scalars.iter().map(|x| x.into_bigint()).collect();
             let res = VariableBaseMSM::multi_scalar_mul(&bases, &scalar_reprs);
             let res_point: Point<F> = res.into();
 

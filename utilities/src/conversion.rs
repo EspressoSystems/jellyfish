@@ -27,7 +27,7 @@ where
     // 2111115437357092606062206234695386632838870926408408195193685246394721360383
     // BLS12-377 scalar field:
     // 8444461749428370424248824938781546531375899335154063827935233455917409239041
-    F::from_le_bytes_mod_order(&scalar.into_repr().to_bytes_le())
+    F::from_le_bytes_mod_order(&scalar.into_bigint().to_bytes_le())
 }
 
 /// Convert a base field element to a scalar field element.
@@ -38,7 +38,7 @@ where
     F: PrimeField,
     P: CurveConfig<BaseField = F>,
 {
-    P::ScalarField::from_le_bytes_mod_order(&base.into_repr().to_bytes_le())
+    P::ScalarField::from_le_bytes_mod_order(&base.into_bigint().to_bytes_le())
 }
 
 /// Convert a field element in F(rom) to a field element in T(o),
@@ -52,7 +52,7 @@ where
     assert!(T::size_in_bits() < F::size_in_bits());
     let length = T::size_in_bits() >> 3;
     // ensure that no mod reduction happened
-    T::from_le_bytes_mod_order(&base.into_repr().to_bytes_le()[0..length])
+    T::from_le_bytes_mod_order(&base.into_bigint().to_bytes_le()[0..length])
 }
 
 // convert a field element in F(rom)
@@ -64,12 +64,12 @@ where
     F: PrimeField,
     T: PrimeField,
 {
-    let bytes = base.into_repr().to_bytes_le();
+    let bytes = base.into_bigint().to_bytes_le();
     let t = T::from_le_bytes_mod_order(&bytes);
 
     // check t == base
     // i.e., t did not overflow the target field
-    let bytes_rec = t.into_repr().to_bytes_le();
+    let bytes_rec = t.into_bigint().to_bytes_le();
     let length = min(bytes.len(), bytes_rec.len());
     assert_eq!(bytes_rec[0..length], bytes[0..length],);
     t
@@ -136,7 +136,7 @@ mod tests {
         for _ in 0..6 {
             let jj = Fr254::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param254>(&jj);
-            assert!(jj.into_repr() == jj_bls.into_repr());
+            assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
     }
 
@@ -146,7 +146,7 @@ mod tests {
         for _ in 0..6 {
             let jj = Fr377::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param377>(&jj);
-            assert!(jj.into_repr() == jj_bls.into_repr());
+            assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
     }
 
@@ -156,7 +156,7 @@ mod tests {
         for _ in 0..6 {
             let jj = Fr381::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param381>(&jj);
-            assert!(jj.into_repr() == jj_bls.into_repr());
+            assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
     }
 }

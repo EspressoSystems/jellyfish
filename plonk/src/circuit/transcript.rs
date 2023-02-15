@@ -281,8 +281,8 @@ mod tests {
                 .unwrap();
 
             assert_eq!(
-                circuit.witness(challenge_var).unwrap().into_repr(),
-                field_switching::<_, F>(&challenge).into_repr()
+                circuit.witness(challenge_var).unwrap().into_bigint(),
+                field_switching::<_, F>(&challenge).into_bigint()
             );
         }
     }
