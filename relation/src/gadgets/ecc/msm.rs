@@ -9,7 +9,7 @@
 use super::{Point, PointVariable};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    group::Group,
+    Group,
     twisted_edwards::{Projective, TECurveConfig as Parameters},
     CurveConfig,
 };

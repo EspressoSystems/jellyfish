@@ -9,7 +9,7 @@
 
 use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    group::Group,
+    Group,
     short_weierstrass::{Affine as SWGroupAffine, SWCurveConfig},
     twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
     AffineRepr, CurveConfig, CurveGroup,
