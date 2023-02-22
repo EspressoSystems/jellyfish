@@ -14,7 +14,7 @@ ark-bn254 = "0.3.0"
 ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
 ark-ec = "0.3.0"
 ark-ff = { version = "0.3.0", features = [ "asm" ] }
-ark-poly = "0.3.0"
+ark-poly = "0.4.1"
 ark-serialize = "0.3.0"
 ark-std = { version = "0.3.0", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
