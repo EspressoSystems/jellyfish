@@ -11,7 +11,7 @@ use crate::pcs::{
 };
 use ark_ec::{msm::VariableBaseMSM, AffineRepr, pairing::Pairing, CurveGroup};
 use ark_ff::PrimeField;
-use ark_poly::{univariate::DensePolynomial, Polynomial, UVPolynomial};
+use ark_poly::{univariate::DensePolynomial, Polynomial, DenseUVPolynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
     borrow::Borrow,
@@ -286,7 +286,7 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     }
 }
 
-fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: UVPolynomial<F>>(
+fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial<F>>(
     p: &P,
 ) -> (usize, Vec<F::BigInt>) {
     let mut num_leading_zeros = 0;
@@ -325,7 +325,7 @@ mod tests {
             }
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
-            let p = <DensePolynomial<E::ScalarField> as UVPolynomial<E::ScalarField>>::rand(degree, rng);
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(degree, rng);
             let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
             let point = E::ScalarField::rand(rng);
             let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
@@ -349,7 +349,7 @@ mod tests {
 
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
-            let p = <DensePolynomial<E::ScalarField> as UVPolynomial<E::ScalarField>>::rand(degree, rng);
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(degree, rng);
             let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
             let point = E::ScalarField::rand(rng);
             let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
@@ -380,7 +380,7 @@ mod tests {
             let mut points = Vec::new();
             let mut proofs = Vec::new();
             for _ in 0..10 {
-                let p = <DensePolynomial<E::ScalarField> as UVPolynomial<E::ScalarField>>::rand(degree, rng);
+                let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(degree, rng);
                 let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
                 let point = E::ScalarField::rand(rng);
                 let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;

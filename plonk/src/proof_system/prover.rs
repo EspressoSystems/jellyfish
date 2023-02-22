@@ -19,7 +19,7 @@ use ark_ec::pairing::Pairing;
 use ark_ff::{FftField, Field, One, UniformRand, Zero};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
-    Radix2EvaluationDomain, UVPolynomial,
+    Radix2EvaluationDomain, DenseUVPolynomial,
 };
 use ark_std::{
     rand::{CryptoRng, RngCore},

@@ -604,7 +604,7 @@ pub mod test {
     use ark_ff::{One, PrimeField, Zero};
     use ark_poly::{
         univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
-        UVPolynomial,
+        DenseUVPolynomial,
     };
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{
