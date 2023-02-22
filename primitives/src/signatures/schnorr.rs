@@ -17,7 +17,7 @@ use crate::{
 };
 use ark_ec::{
     group::Group,
-    twisted_edwards::{Affine, GroupProjective},
+    twisted_edwards::{Affine, Projective},
     AffineRepr, CurveConfig, CurveGroup, TECurveConfig as Parameters,
 };
 use ark_ff::PrimeField;
@@ -137,7 +137,7 @@ impl<F: PrimeField> SignKey<F> {
     Eq(bound = "P: Parameters"),
     Clone(bound = "P: Parameters")
 )]
-pub struct VerKey<P>(pub(crate) GroupProjective<P>)
+pub struct VerKey<P>(pub(crate) Projective<P>)
 where
     P: Parameters;
 
@@ -151,7 +151,7 @@ impl<P: Parameters> VerKey<P> {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
         Self(
             Group::mul(
-                &GroupProjective::<P>::generator(),
+                &Projective::<P>::generator(),
                 randomizer,
             ) + self.0,
         )
@@ -233,7 +233,7 @@ where
     P: Parameters,
 {
     pub(crate) s: P::ScalarField,
-    pub(crate) R: GroupProjective<P>,
+    pub(crate) R: Projective<P>,
 }
 
 impl<P> Hash for Signature<P>
@@ -302,7 +302,7 @@ where
 
         let r =
             fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
-        let R = Group::mul(&GroupProjective::<P>::generator(), &r);
+        let R = Group::mul(&Projective::<P>::generator(), &r);
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
@@ -334,7 +334,7 @@ where
 {
     fn from(sk: &SignKey<F>) -> Self {
         VerKey(Group::mul(
-            &GroupProjective::<P>::generator(),
+            &Projective::<P>::generator(),
             &sk.0,
         ))
     }
@@ -346,7 +346,7 @@ where
     P: Parameters<BaseField = F>,
 {
     /// Get the internal of verifying key, namely a curve Point
-    pub fn internal(&self) -> &GroupProjective<P> {
+    pub fn internal(&self) -> &Projective<P> {
         &self.0
     }
 
@@ -360,7 +360,7 @@ where
     ) -> Result<(), PrimitivesError> {
         // Reject if public key is of small order
         if Group::mul(&self.0, &P::ScalarField::from(curve_cofactor::<P>()))
-            == GroupProjective::<P>::default()
+            == Projective::<P>::default()
         {
             return Err(PrimitivesError::VerificationError(
                 "public key is not valid: not in the correct subgroup".to_string(),
@@ -370,7 +370,7 @@ where
         // restrictive cofactorless verification
         let c = self.challenge(&sig.R, msg, csid);
 
-        let base = GroupProjective::<P>::generator();
+        let base = Projective::<P>::generator();
         let x = Group::mul(&base, &sig.s);
         let y = sig.R + Group::mul(&self.0, &c);
 
@@ -394,7 +394,7 @@ where
     #[allow(non_snake_case)]
     fn challenge<B: AsRef<[u8]>>(
         &self,
-        R: &GroupProjective<P>,
+        R: &Projective<P>,
         msg: &[F],
         csid: B,
     ) -> P::ScalarField {
@@ -484,7 +484,7 @@ mod tests {
     mod serde {
         use super::super::{KeyPair, SignKey, Signature, VerKey};
         use crate::constants::CS_ID_SCHNORR;
-        use ark_ec::twisted_edwards::GroupProjective;
+        use ark_ec::twisted_edwards::Projective;
         use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377, Fr as FrEd377};
         use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as FqEd381, Fr as FrEd381};
         use ark_ed_on_bls12_381_bandersnatch::{
@@ -506,7 +506,7 @@ mod tests {
                 assert!(&vk.verify(&[], &sig, CS_ID_SCHNORR).is_ok());
 
                 // Bad path
-                let bad_ver_key = VerKey(GroupProjective::<$curve_param>::zero());
+                let bad_ver_key = VerKey(Projective::<$curve_param>::zero());
                 let bad_keypair = KeyPair {
                     sk: SignKey($scalar_field::zero()),
                     vk: bad_ver_key.clone(),

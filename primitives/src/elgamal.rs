@@ -13,7 +13,7 @@ use crate::{
 };
 use ark_ec::{
     group::Group,
-    twisted_edwards::{Affine, GroupProjective},
+    twisted_edwards::{Affine, Projective},
     AffineRepr, CurveGroup, TECurveConfig as Parameters,
 };
 use ark_ff::UniformRand;
@@ -45,7 +45,7 @@ pub struct EncKey<P>
 where
     P: Parameters,
 {
-    pub(crate) key: GroupProjective<P>,
+    pub(crate) key: Projective<P>,
 }
 
 impl<P: Parameters> Hash for EncKey<P> {
@@ -209,7 +209,7 @@ impl<P: Parameters> UniformRand for EncKey<P> {
         R: Rng + RngCore + ?Sized,
     {
         EncKey {
-            key: GroupProjective::<P>::rand(rng),
+            key: Projective::<P>::rand(rng),
         }
     }
 }
@@ -286,7 +286,7 @@ where
     P: Parameters,
 {
     fn from(dec_key: &DecKey<P>) -> Self {
-        let mut point = GroupProjective::<P>::generator();
+        let mut point = Projective::<P>::generator();
         point *= dec_key.key;
         Self { key: point }
     }

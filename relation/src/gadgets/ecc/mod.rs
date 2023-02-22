@@ -11,7 +11,7 @@ use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Vari
 use ark_ec::{
     group::Group,
     short_weierstrass::Affine as SWGroupAffine,
-    twisted_edwards::{Affine, GroupProjective},
+    twisted_edwards::{Affine, Projective},
     AffineRepr, CurveConfig, CurveGroup, SWCurveConfig,
     TECurveConfig as Parameters,
 };
@@ -80,12 +80,12 @@ impl<F: PrimeField> Point<F> {
     }
 }
 
-impl<F, P> From<GroupProjective<P>> for Point<F>
+impl<F, P> From<Projective<P>> for Point<F>
 where
     F: PrimeField,
     P: Parameters<BaseField = F>,
 {
-    fn from(p: GroupProjective<P>) -> Self {
+    fn from(p: Projective<P>) -> Self {
         let affine_repr = p.into_affine();
         Point(affine_repr.x, affine_repr.y)
     }
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl<F, P> From<Point<F>> for GroupProjective<P>
+impl<F, P> From<Point<F>> for Projective<P>
 where
     F: PrimeField,
     P: Parameters<BaseField = F>,

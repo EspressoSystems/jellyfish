@@ -8,7 +8,7 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    short_weierstrass::{Affine, GroupProjective},
+    short_weierstrass::{Affine, Projective},
     AffineRepr, SWCurveConfig,
 };
 use ark_std::{
@@ -32,7 +32,7 @@ pub trait SWHashToGroup: SWCurveConfig + Sized {
     fn hash_to_group<B: AsRef<[u8]>>(
         data: B,
         cs_id: B,
-    ) -> Result<GroupProjective<Self>, PrimitivesError> {
+    ) -> Result<Projective<Self>, PrimitivesError> {
         let mut hasher = Sha256::new();
         hasher.update([cs_id.as_ref(), data.as_ref()].concat());
         let mut seed = [0u8; 32];

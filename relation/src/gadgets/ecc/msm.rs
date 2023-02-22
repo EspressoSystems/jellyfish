@@ -9,7 +9,7 @@
 use super::{Point, PointVariable};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    group::Group, twisted_edwards::GroupProjective, CurveConfig,
+    group::Group, twisted_edwards::Projective, CurveConfig,
     TECurveConfig as Parameters,
 };
 use ark_ff::{BigInteger, PrimeField};
@@ -349,7 +349,7 @@ where
     F: PrimeField,
     P: Parameters<BaseField = F>,
 {
-    let curve_point: GroupProjective<P> = circuit.point_witness(base_var)?.into();
+    let curve_point: Projective<P> = circuit.point_witness(base_var)?.into();
     let scalar = fq_to_fr::<F, P>(&circuit.witness(scalar_var)?);
     let res = Group::mul(&curve_point, &scalar);
     Ok(res.into())

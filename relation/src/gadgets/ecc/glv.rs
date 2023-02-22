@@ -9,7 +9,7 @@ use crate::{
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use ark_ec::{twisted_edwards::GroupProjective, CurveGroup, TECurveConfig};
+use ark_ec::{twisted_edwards::Projective, CurveGroup, TECurveConfig};
 use ark_ff::{FpParameters, PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};
@@ -140,7 +140,7 @@ where
     let g_y = b * (y_square + b);
     let h_y = y_square - b;
 
-    GroupProjective::<P>::new(f_y * h_y, g_y * xy, F::one(), h_y * xy)
+    Projective::<P>::new(f_y * h_y, g_y * xy, F::one(), h_y * xy)
         .into_affine()
         .into()
 }
