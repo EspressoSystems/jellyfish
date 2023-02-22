@@ -12,9 +12,8 @@ use crate::{
     rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    group::Group,
-    twisted_edwards::{Affine, Projective},
-    AffineRepr, CurveGroup, TECurveConfig as Parameters,
+    twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
+    AffineRepr, CurveGroup, Group,
 };
 use ark_ff::UniformRand;
 use ark_serialize::*;

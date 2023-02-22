@@ -12,7 +12,7 @@ use crate::{
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
     gates::Gate,
 };
-use ark_ec::TECurveConfig as Parameters;
+use ark_ec::twisted_edwards::TECurveConfig as Parameters;
 use ark_ff::PrimeField;
 use derivative::Derivative;
 

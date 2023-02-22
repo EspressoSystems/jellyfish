@@ -8,8 +8,8 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    short_weierstrass::{Affine, Projective},
-    AffineRepr, SWCurveConfig,
+    short_weierstrass::{Affine, Projective, SWCurveConfig},
+    AffineRepr,
 };
 use ark_std::{
     rand::{Rng, SeedableRng},

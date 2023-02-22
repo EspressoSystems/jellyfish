@@ -9,7 +9,7 @@ use crate::{
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use ark_ec::{twisted_edwards::Projective, CurveGroup, TECurveConfig};
+use ark_ec::{twisted_edwards::{Projective,TECurveConfig}, CurveGroup};
 use ark_ff::{FpParameters, PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};

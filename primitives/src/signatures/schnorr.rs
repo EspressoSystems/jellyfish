@@ -16,9 +16,9 @@ use crate::{
     utils::curve_cofactor,
 };
 use ark_ec::{
-    group::Group,
-    twisted_edwards::{Affine, Projective},
-    AffineRepr, CurveConfig, CurveGroup, TECurveConfig as Parameters,
+    Group,
+    twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
+    AffineRepr, CurveConfig, CurveGroup,
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;

@@ -8,8 +8,8 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    twisted_edwards::{Affine, Projective},
-    AffineRepr, TECurveConfig,
+    twisted_edwards::{Affine, Projective, TECurveConfig},
+    AffineRepr,
 };
 use ark_std::{
     rand::{Rng, SeedableRng},
