@@ -74,7 +74,7 @@ pub trait SWToTEConParam: PrimeField {
 use ark_bls12_377::Fq as Fq377;
 impl SWToTEConParam for Fq377 {
     // s = 10189023633222963290707194929886294091415157242906428298294512798502806398782149227503530278436336312243746741931
-    const S: Self::BigInt = BigInteger384([
+    const S: Self::BigInt = BigInteger384::new([
         0x3401d618f0339eab,
         0x0f793b8504b428d4,
         0x0ff643cca95ccc0d,
@@ -84,10 +84,10 @@ impl SWToTEConParam for Fq377 {
     ]);
 
     // alpha = -1
-    const NEG_ALPHA: Self::BigInt = BigInteger384([1, 0, 0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger384::new([1, 0, 0, 0, 0, 0]);
 
     // beta = 23560188534917577818843641916571445935985386319233886518929971599490231428764380923487987729215299304184915158756
-    const BETA: Self::BigInt = BigInteger384([
+    const BETA: Self::BigInt = BigInteger384::new([
         0x450ae9206343e6e4,
         0x7af39509df5027b6,
         0xab82b31405cf8a30,
@@ -103,9 +103,9 @@ impl SWToTEConParam for Fq377 {
 use ark_bn254::Fq as Fq254;
 /// Dummy implementation for trait bounds
 impl SWToTEConParam for Fq254 {
-    const S: Self::BigInt = BigInteger256([0, 0, 0, 0]);
-    const NEG_ALPHA: Self::BigInt = BigInteger256([0, 0, 0, 0]);
-    const BETA: Self::BigInt = BigInteger256([0, 0, 0, 0]);
+    const S: Self::BigInt = BigInteger256::new([0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger256::new([0, 0, 0, 0]);
+    const BETA: Self::BigInt = BigInteger256::new([0, 0, 0, 0]);
 }
 
 // ================================================
@@ -114,9 +114,9 @@ impl SWToTEConParam for Fq254 {
 use ark_bls12_381::Fq as Fq381;
 /// Dummy implementation for trait bounds
 impl SWToTEConParam for Fq381 {
-    const S: Self::BigInt = BigInteger384([0, 0, 0, 0, 0, 0]);
-    const NEG_ALPHA: Self::BigInt = BigInteger384([0, 0, 0, 0, 0, 0]);
-    const BETA: Self::BigInt = BigInteger384([0, 0, 0, 0, 0, 0]);
+    const S: Self::BigInt = BigInteger384::new([0, 0, 0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger384::new([0, 0, 0, 0, 0, 0]);
+    const BETA: Self::BigInt = BigInteger384::new([0, 0, 0, 0, 0, 0]);
 }
 
 // ================================================
@@ -125,9 +125,9 @@ impl SWToTEConParam for Fq381 {
 use ark_bw6_761::Fq as Fq761;
 /// Dummy implementation for trait bounds
 impl SWToTEConParam for Fq761 {
-    const S: Self::BigInt = BigInteger768([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const NEG_ALPHA: Self::BigInt = BigInteger768([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const BETA: Self::BigInt = BigInteger768([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const S: Self::BigInt = BigInteger768::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger768::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const BETA: Self::BigInt = BigInteger768::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 }
 
 #[cfg(test)]
