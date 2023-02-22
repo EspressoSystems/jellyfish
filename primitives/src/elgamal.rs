@@ -13,7 +13,7 @@ use crate::{
 };
 use ark_ec::{
     group::Group,
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
+    twisted_edwards::{GroupAffine, GroupProjective},
     AffineRepr, CurveGroup, TECurveConfig as Parameters,
 };
 use ark_ff::UniformRand;

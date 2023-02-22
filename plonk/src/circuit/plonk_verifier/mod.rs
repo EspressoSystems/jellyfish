@@ -7,7 +7,7 @@
 //! Circuits for Plonk verifiers.
 use crate::proof_system::{structs::VerifyingKey, verifier::Verifier};
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
     TECurveConfig as TEParam,
 };
 use ark_ff::{BigInteger, FpParameters, PrimeField};

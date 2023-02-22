@@ -12,7 +12,7 @@ use crate::{
     rescue::{RescueParameter, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine, AffineRepr, CurveGroup, TECurveConfig,
+    twisted_edwards::GroupAffine, AffineRepr, CurveGroup, TECurveConfig,
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};

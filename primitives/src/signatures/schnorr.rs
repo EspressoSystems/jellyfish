@@ -17,7 +17,7 @@ use crate::{
 };
 use ark_ec::{
     group::Group,
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
+    twisted_edwards::{GroupAffine, GroupProjective},
     AffineRepr, CurveConfig, CurveGroup, TECurveConfig as Parameters,
 };
 use ark_ff::PrimeField;
@@ -484,7 +484,7 @@ mod tests {
     mod serde {
         use super::super::{KeyPair, SignKey, Signature, VerKey};
         use crate::constants::CS_ID_SCHNORR;
-        use ark_ec::twisted_edwards_extended::GroupProjective;
+        use ark_ec::twisted_edwards::GroupProjective;
         use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377, Fr as FrEd377};
         use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as FqEd381, Fr as FrEd381};
         use ark_ed_on_bls12_381_bandersnatch::{

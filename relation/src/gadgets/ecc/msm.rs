@@ -9,7 +9,7 @@
 use super::{Point, PointVariable};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    group::Group, twisted_edwards_extended::GroupProjective, CurveConfig,
+    group::Group, twisted_edwards::GroupProjective, CurveConfig,
     TECurveConfig as Parameters,
 };
 use ark_ff::{BigInteger, PrimeField};
@@ -371,7 +371,7 @@ mod tests {
     use crate::{gadgets::ecc::Point, Circuit, PlonkType};
     use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
     use ark_ec::{
-        msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
+        msm::VariableBaseMSM, twisted_edwards::GroupAffine,
         TECurveConfig as Parameters,
     };
     use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};

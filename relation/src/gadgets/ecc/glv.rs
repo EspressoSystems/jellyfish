@@ -9,7 +9,7 @@ use crate::{
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use ark_ec::{twisted_edwards_extended::GroupProjective, CurveGroup, TECurveConfig};
+use ark_ec::{twisted_edwards::GroupProjective, CurveGroup, TECurveConfig};
 use ark_ff::{FpParameters, PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};
@@ -569,7 +569,7 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{twisted_edwards_extended::GroupAffine, TECurveConfig as Parameters};
+    use ark_ec::{twisted_edwards::GroupAffine, TECurveConfig as Parameters};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
     use ark_ff::{BigInteger, One, PrimeField, UniformRand};
     use ark_std::{str::FromStr, test_rng};

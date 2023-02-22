@@ -8,7 +8,7 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
+    twisted_edwards::{GroupAffine, GroupProjective},
     AffineRepr, TECurveConfig,
 };
 use ark_std::{

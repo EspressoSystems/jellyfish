@@ -8,7 +8,7 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    short_weierstrass_jacobian::{GroupAffine, GroupProjective},
+    short_weierstrass::{GroupAffine, GroupProjective},
     AffineRepr, SWCurveConfig,
 };
 use ark_std::{

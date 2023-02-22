@@ -11,7 +11,7 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
