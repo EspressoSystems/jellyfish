@@ -24,7 +24,7 @@ mod rescue_constants;
 pub mod sponge;
 
 use ark_ff::{PrimeField, Zero};
-use ark_sponge::Absorb;
+use ark_crypto_primitives::sponge::Absorb;
 use ark_std::{vec, vec::Vec};
 
 /// The state size of rescue hash.

@@ -6,10 +6,10 @@
 
 //! This file contains the APIs wrappers for ark-sponge
 
-use ark_ff::PrimeField;
-use ark_sponge::{
+use ark_crypto_primitives::sponge::{
     Absorb, CryptographicSponge, FieldBasedCryptographicSponge, FieldElementSize, SpongeExt,
 };
+use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec, vec::Vec};
 use jf_utils::pad_with_zeros;
 
@@ -132,7 +132,7 @@ impl<F: RescueParameter> RescuePRFCore<F> {
 impl<F: RescueParameter, const RATE: usize> SpongeExt for RescueSponge<F, RATE> {
     type State = RescueVector<F>;
 
-    fn from_state(state: Self::State, permutation: &Self::Parameters) -> Self {
+    fn from_state(state: Self::State, permutation: &Self::Config) -> Self {
         Self {
             state,
             permutation: permutation.clone(),
@@ -148,10 +148,10 @@ impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
     for RescueSponge<T, RATE>
 {
     /// Parameters used by the sponge.
-    type Parameters = Permutation<T>;
+    type Config = Permutation<T>;
 
     /// Initialize a new instance of the sponge.
-    fn new(permutation: &Self::Parameters) -> Self {
+    fn new(permutation: &Self::Config) -> Self {
         Self {
             state: RescueVector::default(),
             permutation: permutation.clone(),
@@ -247,10 +247,8 @@ impl<T: RescueParameter, const RATE: usize> FieldBasedCryptographicSponge<T>
 mod test {
     use super::*;
     use ark_bls12_381::Fr;
+    use ark_crypto_primitives::{sponge::AbsorbWithLength, collect_sponge_bytes, absorb, collect_sponge_field_elements};
     use ark_ff::{One, UniformRand};
-    use ark_sponge::{
-        absorb, collect_sponge_bytes, collect_sponge_field_elements, AbsorbWithLength,
-    };
     use ark_std::test_rng;
 
     fn assert_different_encodings<F: RescueParameter, A: Absorb>(a: &A, b: &A) {
