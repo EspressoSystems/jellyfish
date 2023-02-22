@@ -17,7 +17,7 @@ use crate::{
 };
 use ark_ec::{
     group::Group,
-    twisted_edwards::{GroupAffine, GroupProjective},
+    twisted_edwards::{Affine, GroupProjective},
     AffineRepr, CurveConfig, CurveGroup, TECurveConfig as Parameters,
 };
 use ark_ff::PrimeField;
@@ -176,18 +176,18 @@ where
     }
 }
 
-impl<P> From<GroupAffine<P>> for VerKey<P>
+impl<P> From<Affine<P>> for VerKey<P>
 where
     P: Parameters,
 {
-    fn from(point: GroupAffine<P>) -> Self {
+    fn from(point: Affine<P>) -> Self {
         VerKey(point.into_projective())
     }
 }
 
 impl<P: Parameters> VerKey<P> {
     /// Convert the verification key into the affine form.
-    pub fn to_affine(&self) -> GroupAffine<P> {
+    pub fn to_affine(&self) -> Affine<P> {
         self.0.into_affine()
     }
 }

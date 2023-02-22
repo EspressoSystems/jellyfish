@@ -13,7 +13,7 @@ use crate::{
     signatures::schnorr::{Signature, VerKey},
     utils::{challenge_bit_len, field_bit_len},
 };
-use ark_ec::{twisted_edwards::GroupAffine, AffineRepr, TECurveConfig as Parameters};
+use ark_ec::{twisted_edwards::Affine, AffineRepr, TECurveConfig as Parameters};
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
@@ -138,7 +138,7 @@ where
     ) -> Result<(PointVariable, PointVariable), CircuitError> {
         let c_bits_le =
             <Self as SignatureHelperGadget<F, P>>::challenge_bits(self, vk, &sig.R, msg)?;
-        let base = GroupAffine::<P>::generator();
+        let base = Affine::<P>::generator();
         let x = self.fixed_base_scalar_mul(sig.s, &base)?;
         let z = self.variable_base_binary_scalar_mul::<P>(&c_bits_le, &vk.0)?;
         let y = self.ecc_add::<P>(&sig.R, &z)?;

@@ -7,7 +7,7 @@
 //! Implementing *native* circuit for rescue transcript
 
 use super::plonk_verifier::*;
-use ark_ec::{short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
@@ -116,7 +116,7 @@ where
         poly_comm_var: &PointVariable,
     ) -> Result<(), CircuitError>
     where
-        E: Pairing<G1Affine = GroupAffine<P>>,
+        E: Pairing<G1Affine = Affine<P>>,
         P: SWCurveConfig<BaseField = F>,
     {
         // push the x and y coordinate of comm to the transcript
@@ -136,7 +136,7 @@ where
         poly_comm_vars: &[PointVariable],
     ) -> Result<(), CircuitError>
     where
-        E: Pairing<G1Affine = GroupAffine<P>>,
+        E: Pairing<G1Affine = Affine<P>>,
         P: SWCurveConfig<BaseField = F>,
     {
         for poly_comm_var in poly_comm_vars.iter() {
@@ -247,7 +247,7 @@ mod tests {
     }
     fn test_rescue_transcript_challenge_circuit_helper<E, F, P>()
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -293,7 +293,7 @@ mod tests {
     }
     fn test_rescue_transcript_append_vk_and_input_circuit_helper<E, F, P>()
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {

@@ -569,7 +569,7 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{twisted_edwards::GroupAffine, TECurveConfig as Parameters};
+    use ark_ec::{twisted_edwards::Affine, TECurveConfig as Parameters};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
     use ark_ff::{BigInteger, One, PrimeField, UniformRand};
     use ark_std::{str::FromStr, test_rng};
@@ -589,7 +589,7 @@ mod tests {
 
         for _ in 0..100 {
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
@@ -603,7 +603,7 @@ mod tests {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
@@ -618,7 +618,7 @@ mod tests {
             }
 
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
@@ -633,7 +633,7 @@ mod tests {
             }
 
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 

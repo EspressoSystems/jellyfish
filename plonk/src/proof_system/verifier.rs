@@ -13,7 +13,7 @@ use crate::{
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::*,
 };
-use ark_ec::{short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
 use ark_ff::{Field, One, Zero};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec, vec::Vec};
@@ -50,7 +50,7 @@ pub(crate) struct Verifier<E: Pairing> {
 
 impl<E, F, P> Verifier<E>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -781,7 +781,7 @@ where
 /// Private helper methods
 impl<E, F, P> Verifier<E>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {

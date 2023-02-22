@@ -20,7 +20,7 @@ use crate::{
     proof_system::structs::UniversalSrs,
     transcript::*,
 };
-use ark_ec::{short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
 use ark_ff::{Field, One};
 use ark_std::{
     format,
@@ -46,7 +46,7 @@ pub struct PlonkKzgSnark<E: Pairing>(PhantomData<E>);
 
 impl<E, F, P> PlonkKzgSnark<E>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -419,7 +419,7 @@ where
 
 impl<E, F, P> UniversalSNARK<E> for PlonkKzgSnark<E>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -600,7 +600,7 @@ pub mod test {
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
     use ark_bn254::{Bn254, Fq as Fq254};
     use ark_bw6_761::{Fq as Fq761, BW6_761};
-    use ark_ec::{short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig};
+    use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
     use ark_ff::{One, PrimeField, Zero};
     use ark_poly::{
         univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
@@ -709,7 +709,7 @@ pub mod test {
     }
     fn test_preprocessing_helper<E, F, P>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -844,7 +844,7 @@ pub mod test {
 
     fn test_plonk_proof_system_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1059,7 +1059,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1154,7 +1154,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1416,7 +1416,7 @@ pub mod test {
 
     fn test_proof_from_to_fields_helper<E, P>() -> Result<(), PlonkError>
     where
-        E: Pairing<G1Affine = GroupAffine<P>>,
+        E: Pairing<G1Affine = Affine<P>>,
         E::Fq: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
     {
@@ -1461,7 +1461,7 @@ pub mod test {
 
     fn test_serde_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1524,7 +1524,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1622,7 +1622,7 @@ pub mod test {
         vks_ref: &[&VerifyingKey<E>],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         R: CryptoRng + RngCore,

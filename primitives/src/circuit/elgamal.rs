@@ -12,7 +12,7 @@ use crate::{
     rescue::{RescueParameter, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    twisted_edwards::GroupAffine, AffineRepr, CurveGroup, TECurveConfig,
+    twisted_edwards::Affine, AffineRepr, CurveGroup, TECurveConfig,
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
@@ -214,7 +214,7 @@ where
         let symm_key_vars = self.rescue_permutation(key_perm_input_var)?;
 
         let symm_ctxts = self.apply_counter_mode_stream(&symm_key_vars, data_vars)?;
-        let base = GroupAffine::<P>::generator();
+        let base = Affine::<P>::generator();
         let ephemeral = self.fixed_base_scalar_mul(r, &base)?;
         Ok(ElGamalHybridCtxtVars {
             ephemeral,

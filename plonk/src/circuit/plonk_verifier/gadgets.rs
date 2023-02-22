@@ -11,7 +11,7 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ec::{
-    short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -193,7 +193,7 @@ pub(super) fn compute_challenges_vars<E, F, P>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<ChallengesFpElemVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -271,7 +271,7 @@ pub(super) fn prepare_pcs_info_var<E, F, P>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<PcsInfoVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -475,7 +475,7 @@ mod test {
 
     fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,

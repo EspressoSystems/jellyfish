@@ -11,7 +11,7 @@ use crate::{
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
-    short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
 };
 use ark_std::vec::Vec;
 use jf_primitives::{
@@ -61,7 +61,7 @@ where
         pub_input: &[E::ScalarField],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         // to enable a more efficient verifier circuit, we remove
@@ -111,7 +111,7 @@ where
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         // convert the SW form commitments into TE form

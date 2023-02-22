@@ -20,7 +20,7 @@ use crate::{
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
-    short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
 };
 use ark_ff::PrimeField;
 use jf_primitives::pcs::prelude::Commitment;
@@ -47,7 +47,7 @@ pub trait PlonkTranscript<F> {
         pub_input: &[E::ScalarField],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(
@@ -110,7 +110,7 @@ pub trait PlonkTranscript<F> {
         comms: &[Commitment<E>],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         for comm in comms.iter() {
@@ -126,7 +126,7 @@ pub trait PlonkTranscript<F> {
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)

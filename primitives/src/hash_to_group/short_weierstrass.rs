@@ -8,7 +8,7 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    short_weierstrass::{GroupAffine, GroupProjective},
+    short_weierstrass::{Affine, GroupProjective},
     AffineRepr, SWCurveConfig,
 };
 use ark_std::{
@@ -42,7 +42,7 @@ pub trait SWHashToGroup: SWCurveConfig + Sized {
             let x = Self::BaseField::rand(&mut rng);
             // a boolean flag to decide if y is positive or not
             let y_flag = rng.gen();
-            if let Some(p) = GroupAffine::<Self>::get_point_from_x(x, y_flag) {
+            if let Some(p) = Affine::<Self>::get_point_from_x(x, y_flag) {
                 return Ok(p.mul_by_cofactor_to_projective());
             }
         }

@@ -8,7 +8,7 @@
 
 use crate::errors::PrimitivesError;
 use ark_ec::{
-    twisted_edwards::{GroupAffine, GroupProjective},
+    twisted_edwards::{Affine, GroupProjective},
     AffineRepr, TECurveConfig,
 };
 use ark_std::{
@@ -42,7 +42,7 @@ pub trait TEHashToGroup: TECurveConfig + Sized {
             let x = Self::BaseField::rand(&mut rng);
             // a boolean flag to decide if y is positive or not
             let y_flag = rng.gen();
-            if let Some(p) = GroupAffine::<Self>::get_point_from_x(x, y_flag) {
+            if let Some(p) = Affine::<Self>::get_point_from_x(x, y_flag) {
                 return Ok(p.mul_by_cofactor_to_projective());
             }
         }

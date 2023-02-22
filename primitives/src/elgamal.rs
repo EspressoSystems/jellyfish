@@ -13,7 +13,7 @@ use crate::{
 };
 use ark_ec::{
     group::Group,
-    twisted_edwards::{GroupAffine, GroupProjective},
+    twisted_edwards::{Affine, GroupProjective},
     AffineRepr, CurveGroup, TECurveConfig as Parameters,
 };
 use ark_ff::UniformRand;
@@ -143,7 +143,7 @@ where
                 "At least 2 scalars in length for ciphertext".to_string(),
             ));
         }
-        let key = GroupAffine::new(scalars[0], scalars[1]);
+        let key = Affine::new(scalars[0], scalars[1]);
         if !key.is_on_curve() {
             return Err(PrimitivesError::ParameterError(
                 "ephemeral pk should be a point on curve".to_string(),

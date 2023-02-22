@@ -13,7 +13,7 @@ use crate::{
     },
 };
 use ark_ec::{
-    msm::VariableBaseMSM, short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig,
+    msm::VariableBaseMSM, short_weierstrass::Affine, pairing::Pairing, SWCurveConfig,
 };
 use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
@@ -81,7 +81,7 @@ pub struct Proof<E: Pairing> {
 
 impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
 where
-    E: Pairing<G1Affine = GroupAffine<P>>,
+    E: Pairing<G1Affine = Affine<P>>,
     P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
 {
     type Error = SnarkError;
@@ -100,7 +100,7 @@ where
                 .chunks_exact(2)
                 .map(|chunk| {
                     if chunk.len() == 2 {
-                        Commitment(GroupAffine::new(chunk[0], chunk[1], false))
+                        Commitment(Affine::new(chunk[0], chunk[1], false))
                     } else {
                         unreachable!("Internal error");
                     }
@@ -112,7 +112,7 @@ where
                 .chunks_exact(2)
                 .map(|chunk| {
                     if chunk.len() == 2 {
-                        Commitment(GroupAffine::new(chunk[0], chunk[1], false))
+                        Commitment(Affine::new(chunk[0], chunk[1], false))
                     } else {
                         unreachable!("Internal error");
                     }
@@ -121,14 +121,14 @@ where
             ptr += (GATE_WIDTH + 1) * 2;
 
             let prod_perm_poly_comm =
-                Commitment(GroupAffine::new(value[ptr], value[ptr + 1], false));
+                Commitment(Affine::new(value[ptr], value[ptr + 1], false));
             ptr += 2;
 
-            let opening_proof = Commitment(GroupAffine::new(value[ptr], value[ptr + 1], false));
+            let opening_proof = Commitment(Affine::new(value[ptr], value[ptr + 1], false));
             ptr += 2;
 
             let shifted_opening_proof =
-                Commitment(GroupAffine::new(value[ptr], value[ptr + 1], false));
+                Commitment(Affine::new(value[ptr], value[ptr + 1], false));
             ptr += 2;
 
             let poly_evals_scalars: Vec<E::ScalarField> = value[ptr..]
@@ -155,18 +155,18 @@ where
 }
 
 // helper function to convert a G1Affine or G2Affine into two base fields
-fn group1_to_fields<E, P>(p: GroupAffine<P>) -> Vec<E::Fq>
+fn group1_to_fields<E, P>(p: Affine<P>) -> Vec<E::Fq>
 where
-    E: Pairing<G1Affine = GroupAffine<P>>,
+    E: Pairing<G1Affine = Affine<P>>,
     P: SWCurveConfig<BaseField = E::Fq>,
 {
     // contains x, y, infinity_flag, only need the first 2 field elements
     vec![p.x, p.y]
 }
 
-fn group2_to_fields<E, F, P>(p: GroupAffine<P>) -> Vec<E::Fq>
+fn group2_to_fields<E, F, P>(p: Affine<P>) -> Vec<E::Fq>
 where
-    E: Pairing<G2Affine = GroupAffine<P>, Fqe = Fp2<F>>,
+    E: Pairing<G2Affine = Affine<P>, Fqe = Fp2<F>>,
     F: Fp2Parameters<Fp = E::Fq>,
     P: SWCurveConfig<BaseField = E::Fqe>,
 {
@@ -176,7 +176,7 @@ where
 
 impl<E, P> From<Proof<E>> for Vec<E::Fq>
 where
-    E: Pairing<G1Affine = GroupAffine<P>>,
+    E: Pairing<G1Affine = Affine<P>>,
     P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
 {
     fn from(proof: Proof<E>) -> Self {
@@ -349,7 +349,7 @@ impl<E: Pairing> BatchProof<E> {
         two_power_m: Option<F>,
     ) -> Result<BatchProofVar<F>, PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -681,7 +681,7 @@ pub struct VerifyingKey<E: Pairing> {
 
 impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
 where
-    E: Pairing<G1Affine = GroupAffine<P1>, G2Affine = GroupAffine<P2>, Fqe = Fp2<F>>,
+    E: Pairing<G1Affine = Affine<P1>, G2Affine = Affine<P2>, Fqe = Fp2<F>>,
     F: Fp2Parameters<Fp = E::Fq>,
     P1: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
     P2: SWCurveConfig<BaseField = E::Fqe, ScalarField = E::ScalarField>,
@@ -716,7 +716,7 @@ where
 
 impl<E, F, P> VerifyingKey<E>
 where
-    E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<Fq = F, G1Affine = Affine<P>>,
     F: SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {

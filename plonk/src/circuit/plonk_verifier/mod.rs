@@ -7,7 +7,7 @@
 //! Circuits for Plonk verifiers.
 use crate::proof_system::{structs::VerifyingKey, verifier::Verifier};
 use ark_ec::{
-    short_weierstrass::GroupAffine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
     TECurveConfig as TEParam,
 };
 use ark_ff::{BigInteger, FpParameters, PrimeField};
@@ -57,7 +57,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         verify_key: &VerifyingKey<E>,
     ) -> Result<Self, CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: PrimeField + SWToTEConParam,
         P: SWParam<BaseField = F>,
     {
@@ -156,7 +156,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         blinding_factor: Variable,
     ) -> Result<(PointVariable, PointVariable), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F> + TEParam,
     {
@@ -347,7 +347,7 @@ mod test {
 
     fn test_aggregate_vks_helper<E, F, P, Q>() -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: PrimeField + RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F>,
         Q: TEParam<BaseField = F>,
@@ -439,7 +439,7 @@ mod test {
         vk_var: &VerifyingKeyVar<E>,
         vk: &VerifyingKey<E>,
     ) where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: PrimeField + SWToTEConParam,
         P: SWParam<BaseField = F>,
     {
@@ -461,7 +461,7 @@ mod test {
 
     fn test_partial_verification_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
@@ -689,12 +689,12 @@ mod test {
         shared_public_input: &E::ScalarField,
         merged_vks: &[VerifyingKey<E>],
         batch_proof: &BatchProof<E>,
-        beta_g_ref: &GroupAffine<P>,
-        generator_g: &GroupAffine<P>,
+        beta_g_ref: &Affine<P>,
+        generator_g: &Affine<P>,
         blinding_factor: &E::ScalarField,
     ) -> Result<(PlonkCircuit<F>, (PointVariable, PointVariable)), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
     {
@@ -750,7 +750,7 @@ mod test {
     fn test_variable_independence_for_partial_verification_circuit_helper<E, F, P, Q, T>(
     ) -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<Fq = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
