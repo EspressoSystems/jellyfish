@@ -18,7 +18,7 @@ ark-ed-on-bls12-381 = "0.3.0"
 ark-ed-on-bn254 = "0.3.0"
 ark-ff = "0.3.0"
 ark-poly = "0.3.0"
-ark-serialize = "0.3.0"
+ark-serialize = "0.4.1"
 ark-sponge = "0.3.0"
 ark-std = { version = "0.3.0", default-features = false }
 blst = "0.3.10"
