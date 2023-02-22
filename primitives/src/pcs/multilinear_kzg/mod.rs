@@ -18,7 +18,7 @@ use crate::pcs::{
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
 use ark_ec::{
-    msm::{FixedBaseMSM, VariableBaseMSM},
+    scalar_mul::{fixed_base::FixedBase, variable_base::VariableBaseMSM},
     AffineRepr, pairing::Pairing, CurveGroup,
 };
 use ark_ff::PrimeField;

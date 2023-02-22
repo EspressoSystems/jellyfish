@@ -13,7 +13,7 @@ use crate::{
     },
 };
 use ark_ec::{
-    msm::VariableBaseMSM, short_weierstrass::Affine, pairing::Pairing, SWCurveConfig,
+    scalar_mul::variable_base::VariableBaseMSM, short_weierstrass::Affine, pairing::Pairing, SWCurveConfig,
 };
 use ark_ff::{FftField, Field, Fp2, Fp2Parameters, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;

@@ -371,7 +371,7 @@ mod tests {
     use super::*;
     use crate::{gadgets::ecc::Point, Circuit, PlonkType};
     use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
-    use ark_ec::{msm::VariableBaseMSM, twisted_edwards::{Affine, TECurveConfig as Parameters}};
+    use ark_ec::{scalar_mul::variable_base::VariableBaseMSM, twisted_edwards::{Affine, TECurveConfig as Parameters}};
     use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
     use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
