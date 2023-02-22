@@ -12,7 +12,7 @@
 use crate::rescue::{
     Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE,
 };
-use ark_ff::{BigInteger, FpParameters, PrimeField};
+use ark_ff::{BigInteger, FpConfig, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
 use jf_relation::{

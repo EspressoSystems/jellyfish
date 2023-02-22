@@ -10,7 +10,7 @@ use ark_ec::{
     short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
     TECurveConfig as TEParam,
 };
-use ark_ff::{BigInteger, FpParameters, PrimeField};
+use ark_ff::{BigInteger, FpConfig, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{

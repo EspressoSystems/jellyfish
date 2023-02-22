@@ -10,7 +10,7 @@ use crate::{
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 use ark_ec::{twisted_edwards::{Projective,TECurveConfig}, CurveGroup};
-use ark_ff::{FpParameters, PrimeField, Zero};
+use ark_ff::{FpConfig, PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};
 
@@ -216,7 +216,7 @@ fn scalar_decomposition<F: PrimeField>(scalar: &F) -> (F, F, bool) {
     let tmp = F::from_le_bytes_mod_order(COEFF_N22.as_ref());
     let n22: BigUint = tmp.into();
 
-    let r: BigUint = <F::Params as FpParameters>::MODULUS.into();
+    let r: BigUint = <F::Params as FpConfig>::MODULUS.into();
     let r_over_2 = &r / BigUint::from(2u8);
 
     // beta = vector([n,0]) * self.curve.N_inv
