@@ -394,8 +394,8 @@ fn verify_internal<E: Pairing>(
 
     let prepare_inputs_timer = start_timer!(|| "prepare pairing inputs");
 
-    let scalar_size = E::ScalarField::MODULUS_BIT_SIZE;
-    let window_size = FixedBaseMSM::get_mul_window_size(num_var);
+    let scalar_size = E::ScalarField::MODULUS_BIT_SIZE as usize;
+    let window_size = FixedBase::get_mul_window_size(num_var);
 
     let h_table = FixedBaseMSM::get_window_table(
         scalar_size,
