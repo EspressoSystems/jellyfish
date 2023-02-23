@@ -150,7 +150,7 @@ where
         }
 
         let ephemeral = EncKey {
-            key: key.into_projective(),
+            key: key.into_group(),
         };
         let mut data = vec![];
         data.extend_from_slice(&scalars[2..]);

@@ -408,7 +408,7 @@ fn verify_internal<E: Pairing>(
     // the first `ignored` G2 parameters are unused
     let ignored = verifier_param.num_vars - num_var;
     let h_vec: Vec<_> = (0..num_var)
-        .map(|i| verifier_param.h_mask[ignored + i].into_projective() - h_mul[i])
+        .map(|i| verifier_param.h_mask[ignored + i].into_group() - h_mul[i])
         .collect();
     let h_vec: Vec<E::G2Affine> = E::G2::batch_normalization_into_affine(&h_vec);
     end_timer!(prepare_inputs_timer);

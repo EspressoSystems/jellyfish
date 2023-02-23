@@ -181,7 +181,7 @@ where
     P: Parameters,
 {
     fn from(point: Affine<P>) -> Self {
-        VerKey(point.into_projective())
+        VerKey(point.into_group())
     }
 }
 

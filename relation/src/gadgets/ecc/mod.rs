@@ -107,7 +107,7 @@ where
 {
     fn from(p: Point<F>) -> Self {
         let affine_point: Affine<P> = p.into();
-        affine_point.into_projective()
+        affine_point.into_group()
     }
 }
 
