@@ -119,7 +119,7 @@ where
         // TODO(ZZ): hmmm think of a way to pre-compute modulus in FpELem
         // Doesn't save #constraints though
         // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let modulus = FpElem::new(&t_modulus, m, two_power_m)?;
 
         // ABSORB PHASE
@@ -207,7 +207,7 @@ where
         // TODO(ZZ): hmmm think of a way to pre-compute modulus in FpELem
         // Doesn't save #constraints though
         // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let modulus = FpElem::new(&t_modulus, m, two_power_m)?;
 
         // set key
@@ -240,7 +240,7 @@ where
         let m = (T::MODULUS_BIT_SIZE / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
 
         // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let t = FpElem::new(&t_modulus, m, None)?;
 
         // move rescue state to the plonk field

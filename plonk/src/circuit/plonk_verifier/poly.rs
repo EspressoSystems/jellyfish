@@ -767,7 +767,7 @@ mod test {
             // constants
             let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
 
-            let fr_modulus_bits = <E::ScalarField as PrimeField>::Params::MODULUS.to_bytes_le();
+            let fr_modulus_bits = <E::ScalarField as PrimeField>::MODULUS.to_bytes_le();
             let modulus_in_f = E::Fq::from_le_bytes_mod_order(&fr_modulus_bits);
             let modulus_fp_elem = FpElem::new(&modulus_in_f, m, two_power_m).unwrap();
 

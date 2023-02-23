@@ -358,7 +358,7 @@ where
     let k2_with_sign = &k2_int * &k2_sign;
 
     // fr_order = r1 + 2^128 r2
-    let fr_order_uint: BigUint = S::Params::MODULUS.into();
+    let fr_order_uint: BigUint = S::MODULUS.into();
     let fr_order_int: BigInt = fr_order_uint.into();
     let r1 = F::from_le_bytes_mod_order(R1.as_ref());
     let r1_int = fq_to_big_int!(r1);
@@ -382,7 +382,7 @@ where
     {
         use ark_ff::BigInteger;
 
-        let fq_uint: BigUint = F::Params::MODULUS.into();
+        let fq_uint: BigUint = F::MODULUS.into();
         let fq_int: BigInt = fq_uint.into();
 
         let tmp1_int = &tmp_int % &two_to_128;

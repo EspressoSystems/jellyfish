@@ -1547,7 +1547,7 @@ mod test {
         m: usize,
         range_bit_len: usize,
     ) -> Result<(), CircuitError> {
-        let p = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let p = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let p_split = FpElem::new(&p, m, None)?;
         let mut rng = test_rng();
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(range_bit_len);
