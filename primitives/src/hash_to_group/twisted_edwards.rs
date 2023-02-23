@@ -39,11 +39,11 @@ pub trait TEHashToGroup: TECurveConfig + Sized {
         seed.copy_from_slice(hasher.finalize().as_ref());
         let mut rng = ChaCha20Rng::from_seed(seed);
         loop {
-            let x = Self::BaseField::rand(&mut rng);
+            let y = Self::BaseField::rand(&mut rng);
             // a boolean flag to decide if y is positive or not
-            let y_flag = rng.gen();
-            if let Some(p) = Affine::<Self>::get_point_from_x(x, y_flag) {
-                return Ok(p.mul_by_cofactor_to_projective());
+            let x_flag = rng.gen();
+            if let Some(p) = Affine::<Self>::get_point_from_y_unchecked(y, x_flag) {
+                return Ok(p.mul_by_cofactor_to_group());
             }
         }
     }
