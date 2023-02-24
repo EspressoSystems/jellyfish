@@ -16,9 +16,8 @@ use crate::{
     utils::curve_cofactor,
 };
 use ark_ec::{
-    Group,
     twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
-    AffineRepr, CurveConfig, CurveGroup,
+    AffineRepr, CurveConfig, CurveGroup, Group,
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;
@@ -149,12 +148,7 @@ impl<P: Parameters> VerKey<P> {
         P: Parameters<ScalarField = F>,
     {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
-        Self(
-            Group::mul(
-                &Projective::<P>::generator(),
-                randomizer,
-            ) + self.0,
-        )
+        Self(Projective::<P>::generator() * randomizer + self.0)
     }
 }
 
@@ -302,7 +296,7 @@ where
 
         let r =
             fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
-        let R = Group::mul(&Projective::<P>::generator(), &r);
+        let R = Projective::<P>::generator() * &r;
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
@@ -333,10 +327,7 @@ where
     F: PrimeField,
 {
     fn from(sk: &SignKey<F>) -> Self {
-        VerKey(Group::mul(
-            &Projective::<P>::generator(),
-            &sk.0,
-        ))
+        VerKey(Projective::<P>::generator() * &sk.0)
     }
 }
 
@@ -359,9 +350,7 @@ where
         csid: B,
     ) -> Result<(), PrimitivesError> {
         // Reject if public key is of small order
-        if Group::mul(&self.0, &P::ScalarField::from(curve_cofactor::<P>()))
-            == Projective::<P>::default()
-        {
+        if (self.0 * &P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
             return Err(PrimitivesError::VerificationError(
                 "public key is not valid: not in the correct subgroup".to_string(),
             ));
@@ -371,8 +360,8 @@ where
         let c = self.challenge(&sig.R, msg, csid);
 
         let base = Projective::<P>::generator();
-        let x = Group::mul(&base, &sig.s);
-        let y = sig.R + Group::mul(&self.0, &c);
+        let x = base * &sig.s;
+        let y = sig.R + self.0 * &c;
 
         if y == x {
             Ok(())
@@ -392,12 +381,7 @@ where
     // TODO: this function should be generic w.r.t. hash functions
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
-    fn challenge<B: AsRef<[u8]>>(
-        &self,
-        R: &Projective<P>,
-        msg: &[F],
-        csid: B,
-    ) -> P::ScalarField {
+    fn challenge<B: AsRef<[u8]>>(&self, R: &Projective<P>, msg: &[F], csid: B) -> P::ScalarField {
         // is the domain separator always an Fr? If so how about using Fr as domain
         // separator rather than bytes?
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());

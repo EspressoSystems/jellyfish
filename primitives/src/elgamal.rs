@@ -223,7 +223,7 @@ where
         ephemeral_key_pair: KeyPair<P>,
         msg: &[F],
     ) -> Ciphertext<P> {
-        let shared_key = Group::mul(&self.key, &ephemeral_key_pair.dec_key_ref().key).into_affine();
+        let shared_key = (self.key * &ephemeral_key_pair.dec_key_ref().key).into_affine();
         let perm = Permutation::default();
         // TODO check if ok to use (x,y,0,0) as a key, since
         // key = perm(x,y,0,0) doesn't buy us anything.
@@ -268,7 +268,7 @@ where
     /// Decryption function
     fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<P::BaseField> {
         let perm = Permutation::default();
-        let shared_key = Group::mul(&ctext.ephemeral.key, &self.key).into_affine();
+        let shared_key = (ctext.ephemeral.key * &self.key).into_affine();
         let key = perm.eval(&RescueVector::from(&[
             shared_key.x,
             shared_key.y,
