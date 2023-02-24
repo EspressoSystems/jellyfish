@@ -93,8 +93,7 @@ where
             }
             if vk.plookup_vk.is_some() != batch_proof.plookup_proofs_vec[i].is_some() {
                 return Err(ParameterError(format!(
-                    "Mismatched proof type and verification key type for the {}-th instance",
-                    i
+                    "Mismatched proof type and verification key type for the {i}-th instance",
                 ))
                 .into());
             }

@@ -11,6 +11,7 @@ use crate::{
     constants::GATE_WIDTH, errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable,
 };
 use ark_ff::{BigInteger, PrimeField};
+use ark_std::{format, string::ToString, vec::Vec};
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain a variable to be within the [0, 2^`bit_len`) range

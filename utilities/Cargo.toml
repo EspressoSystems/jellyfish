@@ -1,10 +1,11 @@
 [package]
 name = "jf-utils"
 description = "Utilities for Jellyfish cryptographic library"
-version = "0.1.2"
-authors = ["Espresso Systems <hello@espressosys.com>"]
-edition = "2018"
-license = "MIT"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
 
 [dependencies]
 ark-ec = { version = "0.3.0", default-features = false }

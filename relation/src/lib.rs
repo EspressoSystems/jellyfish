@@ -4,7 +4,11 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-/// Interfaces for Plonk-based constraint systems
+//! Interfaces for Plonk-based constraint systems
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![warn(missing_docs)]
+#![allow(clippy::derive_hash_xor_eq)]
 pub mod constants;
 pub mod errors;
 pub mod gadgets;

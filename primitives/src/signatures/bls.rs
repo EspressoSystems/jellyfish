@@ -346,7 +346,7 @@ impl SignatureScheme for BLSSignatureScheme {
     ) -> Result<(), PrimitivesError> {
         match sig.verify(false, msg.as_ref(), Self::CS_ID.as_bytes(), &[], vk, true) {
             BLST_ERROR::BLST_SUCCESS => Ok(()),
-            e => Err(PrimitivesError::VerificationError(format!("{:?}", e))),
+            e => Err(PrimitivesError::VerificationError(format!("{e:?}"))),
         }
     }
 }

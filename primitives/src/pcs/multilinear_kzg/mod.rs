@@ -36,7 +36,7 @@ use ark_std::{
     vec::Vec,
     One, Zero,
 };
-use batching::{batch_verify_internal, multi_open_internal};
+use batching::{batch_open_internal, batch_verify_internal};
 use srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam};
 use util::merge_polynomials;
 
@@ -155,11 +155,11 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
         Ok(Commitment(commitment))
     }
 
-    /// Generate a commitment for a list of polynomials.
+    /// Batch commit a list of polynomials.
     ///
     /// This function takes `2^(num_vars + log(polys.len())` number of scalar
     /// multiplications over G1.
-    fn multi_commit(
+    fn batch_commit(
         prover_param: impl Borrow<Self::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::Commitment, PCSError> {
@@ -203,10 +203,10 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     /// Input
     /// - the prover parameters for univariate KZG,
     /// - the prover parameters for multilinear KZG,
-    /// - a list of multilinear extensions (MLEs),
-    /// - a commitment to all multilinear extensions,
+    /// - a list of polynomials,
+    /// - a (batch) commitment to all polynomials,
     /// - and a same number of points,
-    /// compute a multi-opening for all the polynomials.
+    /// compute a batch opening for all the polynomials.
     ///
     /// For simplicity, this API requires each MLE to have only one point. If
     /// the caller wish to use more than one points per MLE, it should be
@@ -231,17 +231,17 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     /// 7. get a point `p := l(r)`
     /// 8. output an opening of `w` over point `p`
     /// 9. output `w(p)`
-    fn multi_open(
+    fn batch_open(
         prover_param: impl Borrow<Self::ProverParam>,
-        multi_commitment: &Self::BatchCommitment,
+        batch_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError> {
-        multi_open_internal::<E>(
+        batch_open_internal::<E>(
             &prover_param.borrow().1,
             &prover_param.borrow().0,
             polynomials,
-            multi_commitment,
+            batch_commitment,
             points,
         )
     }
@@ -263,7 +263,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     }
 
     /// Verifies that `value` is the evaluation at `x_i` of the polynomial
-    /// `poly_i` committed inside `comm`.
+    /// `poly_i` committed inside `commitment`.
     /// steps:
     ///
     /// 1. put `q(x)`'s evaluations over `(1, omega,...)` into transcript
@@ -275,7 +275,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     /// 6. verifies `p` is verifies against proof
     fn batch_verify<R: RngCore + CryptoRng>(
         verifier_param: &Self::VerifierParam,
-        multi_commitment: &Self::BatchCommitment,
+        batch_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
         values: &[E::Fr],
         batch_proof: &Self::BatchProof,
@@ -284,7 +284,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
         batch_verify_internal(
             &verifier_param.1,
             &verifier_param.0,
-            multi_commitment,
+            batch_commitment,
             points,
             values,
             batch_proof,
