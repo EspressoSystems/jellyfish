@@ -13,7 +13,7 @@
 macro_rules! to_bytes {
     ($x:expr) => {{
         let mut buf = ark_std::vec![];
-        ark_serialize::CanonicalSerialize::serialize($x, &mut buf).map(|_| buf)
+        ark_serialize::CanonicalSerialize::serialize_compressed($x, &mut buf).map(|_| buf)
     }};
 }
 
@@ -25,6 +25,6 @@ fn test_to_bytes() {
     let f1 = Fr::one();
 
     let mut bytes = ark_std::vec![];
-    f1.serialize(&mut bytes).unwrap();
+    f1.serialize_compressed(&mut bytes).unwrap();
     assert_eq!(bytes, to_bytes!(&f1).unwrap());
 }

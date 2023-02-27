@@ -10,7 +10,10 @@
 use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm, Element, Index};
 use crate::rescue::{sponge::RescueCRHF, RescueParameter};
 use ark_ff::Field;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_serialize::{
+    CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
+    Write,
+};
 use sha3::{Digest, Sha3_256};
 use typenum::U3;
 
@@ -45,20 +48,34 @@ impl AsRef<[u8]> for Sha3Node {
 }
 
 impl CanonicalSerialize for Sha3Node {
-    fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
+    fn serialize_with_mode<W: Write>(
+        &self,
+        mut writer: W,
+        _compress: Compress,
+    ) -> Result<(), SerializationError> {
         writer.write_all(&self.0)?;
         Ok(())
     }
 
-    fn serialized_size(&self) -> usize {
+    fn serialized_size(&self, _compress: Compress) -> usize {
         32
     }
 }
 impl CanonicalDeserialize for Sha3Node {
-    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
+    fn deserialize_with_mode<R: Read>(
+        mut reader: R,
+        _compress: Compress,
+        _validate: Validate,
+    ) -> Result<Self, SerializationError> {
         let mut ret = [0u8; 32];
         reader.read_exact(&mut ret)?;
         Ok(Sha3Node(ret))
+    }
+}
+
+impl Valid for Sha3Node {
+    fn check(&self) -> Result<(), SerializationError> {
+        Ok(())
     }
 }
 

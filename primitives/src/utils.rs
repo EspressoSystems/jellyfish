@@ -44,12 +44,12 @@ pub(crate) fn pad_with(vec: &mut Vec<Variable>, multiple: usize, var: Variable) 
 
 #[inline]
 pub(crate) fn field_byte_len<F: PrimeField>() -> usize {
-    ((F::Params::MODULUS_BITS + 7) / 8) as usize
+    ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
 }
 
 #[inline]
 pub(crate) fn field_bit_len<F: PrimeField>() -> usize {
-    F::Params::MODULUS_BITS as usize
+    F::MODULUS_BIT_SIZE as usize
 }
 
 #[inline]

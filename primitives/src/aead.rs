@@ -7,7 +7,10 @@
 //! Wraps crypto_box's AEAD encryption scheme.
 
 use crate::errors::PrimitivesError;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_serialize::{
+    CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
+    Write,
+};
 use ark_std::{
     format,
     rand::{CryptoRng, RngCore},
@@ -48,30 +51,50 @@ impl Default for EncKey {
 }
 
 impl CanonicalSerialize for EncKey {
-    fn serialize<W>(&self, w: W) -> Result<(), SerializationError>
+    /// Serializes the public key. Only compressed form is supported.
+    /// TODO (tessico): should we fail if user asks for uncompressed form?
+    fn serialize_with_mode<W>(&self, w: W, _compress: Compress) -> Result<(), SerializationError>
     where
         W: Write,
     {
-        CanonicalSerialize::serialize(self.0.as_ref(), w)
+        CanonicalSerialize::serialize_compressed(self.0.as_ref(), w)
     }
-    fn serialized_size(&self) -> usize {
+    fn serialized_size(&self, compress: Compress) -> usize {
         crypto_box::KEY_SIZE
     }
 }
 
 impl CanonicalDeserialize for EncKey {
-    fn deserialize<R>(mut reader: R) -> Result<Self, SerializationError>
+    /// Currently no checking is done on the public key. This is unimplemented upstream, see
+    /// https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338
+    fn deserialize_with_mode<R>(
+        mut reader: R,
+        compress: Compress,
+        validate: Validate,
+    ) -> Result<Self, SerializationError>
     where
         R: Read,
     {
-        let len = u64::deserialize(&mut reader)?;
+        let len = u64::deserialize_compressed_unchecked(&mut reader)?;
         if len != crypto_box::KEY_SIZE as u64 {
             return Err(SerializationError::InvalidData);
         }
 
         let mut key = [0u8; crypto_box::KEY_SIZE];
         reader.read_exact(&mut key)?;
-        Ok(Self(crypto_box::PublicKey::from(key)))
+        let enc_key = Self(crypto_box::PublicKey::from(key));
+        if validate == Validate::Yes {
+            // TODO (tessico): Currently this is a no-op. Should we fail if user asks to validate?
+            enc_key.check()?;
+        }
+
+        Ok(enc_key)
+    }
+}
+
+impl Valid for EncKey {
+    fn check(&self) -> Result<(), SerializationError> {
+        Ok(())
     }
 }
 
@@ -131,29 +154,46 @@ impl Default for DecKey {
 }
 
 impl CanonicalSerialize for DecKey {
-    fn serialize<W>(&self, w: W) -> Result<(), SerializationError>
+    fn serialize_with_mode<W>(&self, w: W, compress: Compress) -> Result<(), SerializationError>
     where
         W: Write,
     {
-        CanonicalSerialize::serialize(self.0.as_bytes().as_ref(), w)
+        CanonicalSerialize::serialize_compressed(self.0.as_bytes().as_ref(), w)
     }
-    fn serialized_size(&self) -> usize {
+    fn serialized_size(&self, compress: Compress) -> usize {
         crypto_box::KEY_SIZE
     }
 }
 
 impl CanonicalDeserialize for DecKey {
-    fn deserialize<R>(mut reader: R) -> Result<Self, SerializationError>
+    fn deserialize_with_mode<R>(
+        mut reader: R,
+        compress: Compress,
+        validate: Validate,
+    ) -> Result<Self, SerializationError>
     where
         R: Read,
     {
-        let len = u64::deserialize(&mut reader)?;
+        let len = u64::deserialize_compressed_unchecked(&mut reader)?;
         if len != crypto_box::KEY_SIZE as u64 {
             return Err(SerializationError::InvalidData);
         }
         let mut k = [0u8; crypto_box::KEY_SIZE];
         reader.read_exact(&mut k)?;
-        Ok(Self(crypto_box::SecretKey::from(k)))
+        let dec_key = Self(crypto_box::SecretKey::from(k));
+
+        if validate == Validate::Yes {
+            // TODO (tessico): Currently this is a no-op. Should we fail if user asks to validate?
+            dec_key.check()?;
+        }
+
+        Ok(dec_key)
+    }
+}
+
+impl Valid for DecKey {
+    fn check(&self) -> Result<(), SerializationError> {
+        Ok(())
     }
 }
 
@@ -218,34 +258,43 @@ pub struct Ciphertext {
 }
 
 impl CanonicalSerialize for Ciphertext {
-    fn serialize<W>(&self, mut writer: W) -> Result<(), ark_serialize::SerializationError>
+    /// Serialize the ciphertext. `Compress` mode is ignored.
+    fn serialize_with_mode<W>(
+        &self,
+        mut writer: W,
+        _compress: Compress,
+    ) -> Result<(), ark_serialize::SerializationError>
     where
         W: ark_serialize::Write,
     {
         let len = self.nonce.len() as u64;
-        len.serialize(&mut writer)?;
+        len.serialize_compressed(&mut writer)?;
         writer.write_all(self.nonce.as_slice())?;
 
         let len = self.ct.len() as u64;
-        len.serialize(&mut writer)?;
+        len.serialize_compressed(&mut writer)?;
         writer.write_all(&self.ct[..])?;
 
-        self.ephemeral_pk.serialize(&mut writer)
+        self.ephemeral_pk.serialize_compressed(&mut writer)
     }
-    fn serialized_size(&self) -> usize {
+    fn serialized_size(&self, compress: Compress) -> usize {
         core::mem::size_of::<u64>() * 2
             + self.nonce.len()
             + self.ct.len()
-            + self.ephemeral_pk.serialized_size()
+            + self.ephemeral_pk.serialized_size(compress)
     }
 }
 
 impl CanonicalDeserialize for Ciphertext {
-    fn deserialize<R>(mut reader: R) -> Result<Self, ark_serialize::SerializationError>
+    fn deserialize_with_mode<R>(
+        mut reader: R,
+        _compress: Compress,
+        validate: Validate,
+    ) -> Result<Self, ark_serialize::SerializationError>
     where
         R: ark_serialize::Read,
     {
-        let len = u64::deserialize(&mut reader)?;
+        let len = u64::deserialize_uncompressed_unchecked(&mut reader)?;
         if len != 24 {
             return Err(SerializationError::InvalidData);
         }
@@ -253,16 +302,24 @@ impl CanonicalDeserialize for Ciphertext {
         reader.read_exact(&mut nonce)?;
         let nonce: Nonce<ChaChaBox> = GenericArray::<u8, U24>::clone_from_slice(&nonce);
 
-        let len = u64::deserialize(&mut reader)?;
+        let len = u64::deserialize_uncompressed_unchecked(&mut reader)?;
         let mut ct = vec![0u8; len as usize];
         reader.read_exact(&mut ct)?;
 
-        let ephemeral_pk = EncKey::deserialize(&mut reader)?;
+        // Note: since EncKey validation check is a no-op, it will propagate here and validation will also be a no-op.
+        // Keeping the validation flag for potential future use when some EncKey validation is implemented.
+        let ephemeral_pk = EncKey::deserialize_with_mode(&mut reader, Compress::Yes, validate)?;
         Ok(Self {
             nonce,
             ct,
             ephemeral_pk,
         })
+    }
+}
+
+impl Valid for Ciphertext {
+    fn check(&self) -> Result<(), SerializationError> {
+        Ok(())
     }
 }
 
