@@ -173,8 +173,8 @@ impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> 
             pp_powers.extend(pp_k_powers);
             total_scalars += 1 << (num_vars - i);
         }
-        let window_size = FixedBaseMSM::get_mul_window_size(total_scalars);
-        let g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
+        let window_size = FixedBase::get_mul_window_size(total_scalars);
+        let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
 
         let pp_g = E::G1::normalize_batch(
             &FixedBase::msm(scalar_bits, window_size, &g_table, &pp_powers),

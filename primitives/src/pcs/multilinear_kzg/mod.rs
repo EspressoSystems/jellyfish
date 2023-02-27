@@ -395,13 +395,9 @@ fn verify_internal<E: Pairing>(
     let scalar_size = E::ScalarField::MODULUS_BIT_SIZE as usize;
     let window_size = FixedBase::get_mul_window_size(num_var);
 
-    let h_table = FixedBaseMSM::get_window_table(
-        scalar_size,
-        window_size,
-        verifier_param.h.into_projective(),
-    );
-    let h_mul: Vec<E::G2> =
-        FixedBaseMSM::multi_scalar_mul(scalar_size, window_size, &h_table, point);
+    let h_table =
+        FixedBase::get_window_table(scalar_size, window_size, verifier_param.h.into_group());
+    let h_mul: Vec<E::G2> = FixedBase::msm(scalar_size, window_size, &h_table, point);
 
     // the first `ignored` G2 parameters are unused
     let ignored = verifier_param.num_vars - num_var;
