@@ -309,7 +309,7 @@ mod tests {
         StructuredReferenceString,
     };
     use ark_bls12_381::Bls12_381 as E;
-    use ark_ec::Pairing;
+    use ark_ec::pairing::Pairing;
     use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
     use ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
     type Fr = <E as Pairing>::Fr;
