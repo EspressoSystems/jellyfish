@@ -9,7 +9,7 @@
 
 use super::mod_arith::{FpElem, FpElemVar};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit};
-use ark_ff::{BigInteger, FpConfig, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, vec::Vec};
 
 impl<F: PrimeField> PlonkCircuit<F> {

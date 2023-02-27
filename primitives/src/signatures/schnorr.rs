@@ -28,7 +28,7 @@ use ark_std::{
     string::ToString,
     vec,
 };
-use core::convert::TryInto;
+use ark_std::vec::Vec;
 use espresso_systems_common::jellyfish::tag;
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;

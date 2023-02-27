@@ -18,12 +18,13 @@ use crate::pcs::{
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
 use ark_ec::{
+    pairing::Pairing,
     scalar_mul::{fixed_base::FixedBase, variable_base::VariableBaseMSM},
-    AffineRepr, pairing::Pairing, CurveGroup,
+    AffineRepr, CurveGroup,
 };
 use ark_ff::PrimeField;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
     end_timer, format,

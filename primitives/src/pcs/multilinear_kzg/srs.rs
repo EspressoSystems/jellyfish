@@ -6,10 +6,10 @@
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
 use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-use ark_ec::{scalar_mul::fixed_base::FixedBase, AffineRepr, pairing::Pairing, CurveGroup};
+use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
 use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     collections::LinkedList,
     end_timer, format,

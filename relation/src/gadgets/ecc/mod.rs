@@ -9,12 +9,11 @@
 
 use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    Group,
     short_weierstrass::{Affine as SWGroupAffine, SWCurveConfig},
     twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
-    AffineRepr, CurveConfig, CurveGroup,
+    AffineRepr, CurveConfig, CurveGroup, Group,
 };
-use ark_ff::{PrimeField, Zero};
+use ark_ff::PrimeField;
 use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
 
