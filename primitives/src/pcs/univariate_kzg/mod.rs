@@ -6,12 +6,16 @@
 
 //! Main module for univariate KZG commitment scheme
 
+use core::ops::Mul;
+
 use crate::pcs::{
     prelude::Commitment, PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
-use ark_ec::{scalar_mul::variable_base::VariableBaseMSM, AffineRepr, pairing::Pairing, CurveGroup};
+use ark_ec::{
+    pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
+};
 use ark_ff::PrimeField;
-use ark_poly::{univariate::DensePolynomial, Polynomial, DenseUVPolynomial};
+use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
 use ark_std::{
     borrow::Borrow,
@@ -111,7 +115,7 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         let (num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
         let msm_time = start_timer!(|| "MSM to compute commitment to plaintext poly");
-        let commitment = VariableBaseMSM::multi_scalar_mul(
+        let commitment = E::G1::msm_bigint(
             &prover_param.powers_of_g[num_leading_zeros..],
             &plain_coeffs,
         )
@@ -155,7 +159,7 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         let (num_leading_zeros, witness_coeffs) =
             skip_leading_zeros_and_convert_to_bigints(&witness_polynomial);
 
-        let proof = VariableBaseMSM::multi_scalar_mul(
+        let proof: E::G1Affine = E::G1::msm_bigint(
             &prover_param.borrow().powers_of_g[num_leading_zeros..],
             &witness_coeffs,
         )
