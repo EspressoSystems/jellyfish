@@ -142,7 +142,7 @@ impl<E: Pairing> StructuredReferenceString<E> for UnivariateUniversalParams<E> {
         let powers_of_g = E::G1::normalize_batch(&powers_of_g);
 
         let h = h.into_affine();
-        let beta_h = h.mul(beta).into_affine();
+        let beta_h = (h * beta).into_affine();
 
         let pp = Self {
             powers_of_g,

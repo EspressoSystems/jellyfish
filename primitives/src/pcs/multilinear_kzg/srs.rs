@@ -188,7 +188,7 @@ impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> 
             };
             // check correctness of pp_k_g
             let t_eval_0 = eq_eval(&vec![E::ScalarField::zero(); num_vars - i], &t[i..num_vars])?;
-            assert_eq!(g.mul(t_eval_0.into_bigint()).into_affine(), pp_k_g.evals[0]);
+            assert_eq!((g * t_eval_0).into_affine(), pp_k_g.evals[0]);
 
             powers_of_g.push(pp_k_g);
             start += size;

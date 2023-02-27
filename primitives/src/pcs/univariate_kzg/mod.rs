@@ -212,11 +212,9 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     ) -> Result<bool, PCSError> {
         let check_time = start_timer!(|| "Checking evaluation");
         let mut pairing_inputs_l: Vec<E::G1Prepared> = vec![
-            (verifier_param.g.mul(value.into_bigint())
-                - proof.proof.mul(point.into_bigint())
-                - commitment.0.into_group())
-            .into_affine()
-            .into(),
+            (verifier_param.g * value - proof.proof * point - commitment.0.into_group())
+                .into_affine()
+                .into(),
             proof.proof.into(),
         ];
         let mut pairing_inputs_r: Vec<E::G2Prepared> =
@@ -262,11 +260,11 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         {
             let w = proof.proof;
             let mut temp = w.mul(*z);
-            temp.add_assign_mixed(&c.0);
+            temp += &c.0;
             let c = temp;
             g_multiplier += &(randomizer * v);
-            total_c += &c.mul(randomizer.into_bigint());
-            total_w += &w.mul(randomizer.into_bigint());
+            total_c += c * randomizer;
+            total_w += w * randomizer;
             // We don't need to sample randomizers from the full field,
             // only from 128-bit strings.
             randomizer = u128::rand(rng).into();
