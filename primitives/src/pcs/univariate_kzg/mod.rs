@@ -207,19 +207,20 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         proof: &Self::Proof,
     ) -> Result<bool, PCSError> {
         let check_time = start_timer!(|| "Checking evaluation");
-        let pairing_inputs: Vec<(E::G1Prepared, E::G2Prepared)> = vec![
-            (
-                (verifier_param.g.mul(value.into_bigint())
-                    - proof.proof.mul(point.into_bigint())
-                    - commitment.0.into_projective())
-                .into_affine()
-                .into(),
-                verifier_param.h.into(),
-            ),
-            (proof.proof.into(), verifier_param.beta_h.into()),
+        let mut pairing_inputs_l: Vec<E::G1Prepared> = vec![
+            (verifier_param.g.mul(value.into_bigint())
+                - proof.proof.mul(point.into_bigint())
+                - commitment.0.into_group())
+            .into_affine()
+            .into(),
+            proof.proof.into(),
         ];
+        let mut pairing_inputs_r: Vec<E::G2Prepared> =
+            vec![verifier_param.h.into(), verifier_param.beta_h.into()];
 
-        let res = E::product_of_pairings(pairing_inputs.iter()).is_one();
+        let res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
+            .0
+            .is_one();
 
         end_timer!(check_time, || format!("Result: {res}"));
         Ok(res)
@@ -275,10 +276,11 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         end_timer!(to_affine_time);
 
         let pairing_time = start_timer!(|| "Performing product of pairings");
-        let result = E::product_of_pairings(&[
-            (total_w.into(), verifier_param.beta_h.into()),
-            (total_c.into(), verifier_param.h.into()),
-        ])
+        let result = E::multi_pairing(
+            &[total_w.into(), total_c.into()],
+            &[verifier_param.beta_h.into(), verifier_param.h.into()],
+        )
+        .0
         .is_one();
         end_timer!(pairing_time);
         end_timer!(check_time, || format!("Result: {result}"));

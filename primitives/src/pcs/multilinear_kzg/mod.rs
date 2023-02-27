@@ -415,21 +415,23 @@ fn verify_internal<E: Pairing>(
 
     let pairing_product_timer = start_timer!(|| "pairing product");
 
-    let mut pairings: Vec<_> = proof
+    let mut pairings_l: Vec<E::G1Prepared> = proof
         .proofs
         .iter()
         .map(|&x| E::G1Prepared::from(x))
-        .zip(h_vec.into_iter().take(num_var).map(E::G2Prepared::from))
         .collect();
 
-    pairings.push((
-        E::G1Prepared::from(
-            (verifier_param.g.mul(*value) - commitment.0.into_projective()).into_affine(),
-        ),
-        E::G2Prepared::from(verifier_param.h),
+    let mut pairings_r: Vec<E::G2Prepared> = h_vec
+        .into_iter()
+        .take(num_var)
+        .map(E::G2Prepared::from)
+        .collect();
+    pairings_l.push(E::G1Prepared::from(
+        (verifier_param.g.mul(*value) - commitment.0.into_group()).into_affine(),
     ));
+    pairings_r.push(E::G2Prepared::from(verifier_param.h));
 
-    let res = E::product_of_pairings(pairings.iter()) == E::TargetField::one();
+    let res = E::multi_pairing(pairings_l, pairings_r).0 == E::TargetField::one();
 
     end_timer!(pairing_product_timer);
     end_timer!(verify_timer);
