@@ -894,7 +894,7 @@ impl<E: Pairing> ScalarsAndBases<E> {
             bases.push(*base);
             scalars.push(scalar.into_bigint());
         }
-        VariableBaseMSM::multi_scalar_mul(&bases, &scalars)
+        VariableBaseMSM::msm_bigint(&bases, &scalars)
     }
 }
 
