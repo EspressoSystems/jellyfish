@@ -279,8 +279,8 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
 
         let pairing_time = start_timer!(|| "Performing product of pairings");
         let result = E::multi_pairing(
-            &[total_w.into(), total_c.into()],
-            &[verifier_param.beta_h.into(), verifier_param.h.into()],
+            &[total_w, total_c],
+            &[verifier_param.beta_h, verifier_param.h],
         )
         .0
         .is_one();
