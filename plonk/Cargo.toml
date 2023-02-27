@@ -35,7 +35,7 @@ rand_chacha = { version = "0.3.1" }
 rayon = { version = "1.5.0", optional = true }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha3 = "^0.10"
-tagged-base64 = { git = "https://github.com/espressosystems/tagged-base64", tag = "0.2.4" }
+tagged-base64 = { git = "https://github.com/espressosystems/tagged-base64", branch = "update-ark-deps" }
 
 [dev-dependencies]
 ark-ed-on-bls12-377 = "0.4.0"
