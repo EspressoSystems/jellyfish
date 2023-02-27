@@ -216,7 +216,7 @@ fn scalar_decomposition<F: PrimeField>(scalar: &F) -> (F, F, bool) {
     let tmp = F::from_le_bytes_mod_order(COEFF_N22.as_ref());
     let n22: BigUint = tmp.into();
 
-    let r: BigUint = <F::Params as FpConfig>::MODULUS.into();
+    let r: BigUint = F::MODULUS.into();
     let r_over_2 = &r / BigUint::from(2u8);
 
     // beta = vector([n,0]) * self.curve.N_inv
