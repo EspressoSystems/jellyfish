@@ -459,7 +459,7 @@ mod test {
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
-    use ark_bls12_377::{g1::Parameters as Param377, Bls12_377};
+    use ark_bls12_377::{g1::Config as Param377, Bls12_377};
     use ark_ec::{SWCurveConfig, TECurveConfig};
     use ark_std::{test_rng, vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;

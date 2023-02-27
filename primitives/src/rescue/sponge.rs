@@ -147,7 +147,7 @@ impl<F: RescueParameter, const RATE: usize> SpongeExt for RescueSponge<F, RATE> 
 impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
     for RescueSponge<T, RATE>
 {
-    /// Parameters used by the sponge.
+    /// Config used by the sponge.
     type Config = Permutation<T>;
 
     /// Initialize a new instance of the sponge.

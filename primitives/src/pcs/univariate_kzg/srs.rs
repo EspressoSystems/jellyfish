@@ -42,7 +42,7 @@ impl<E: Pairing> UnivariateUniversalParams<E> {
 /// `UnivariateProverParam` is used to generate a proof
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
 pub struct UnivariateProverParam<C: AffineRepr> {
-    /// Parameters
+    /// Config
     pub powers_of_g: Vec<C>,
 }
 

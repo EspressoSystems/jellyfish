@@ -38,7 +38,7 @@ pub struct MultilinearUniversalParams<E: Pairing> {
     pub h_mask: Vec<E::G2Affine>,
 }
 
-/// Prover Parameters
+/// Prover Config
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
 pub struct MultilinearProverParam<E: Pairing> {
     /// number of variables
@@ -53,7 +53,7 @@ pub struct MultilinearProverParam<E: Pairing> {
     pub h: E::G2Affine,
 }
 
-/// Verifier Parameters
+/// Verifier Config
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
 pub struct MultilinearVerifierParam<E: Pairing> {
     /// number of variables

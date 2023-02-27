@@ -9,7 +9,7 @@
 use super::{Point, PointVariable};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    twisted_edwards::{Projective, TECurveConfig as Parameters},
+    twisted_edwards::{Projective, TECurveConfig as Config},
     CurveConfig,
 };
 use ark_ff::{BigInteger, PrimeField};
@@ -20,7 +20,7 @@ use jf_utils::fq_to_fr;
 pub trait MultiScalarMultiplicationCircuit<F, P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Compute the multi-scalar-multiplications.
     /// Use pippenger when the circuit supports lookup;
@@ -45,7 +45,7 @@ where
 impl<F, P> MultiScalarMultiplicationCircuit<F, P> for PlonkCircuit<F>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn msm(
         &mut self,
@@ -130,7 +130,7 @@ fn msm_naive<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     circuit.check_vars_bound(scalars)?;
     for base in bases.iter() {
@@ -194,7 +194,7 @@ fn msm_pippenger<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     // ================================================
     // check inputs
@@ -347,7 +347,7 @@ fn compute_scalar_mul_value<F, P>(
 ) -> Result<Point<F>, CircuitError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     let curve_point: Projective<P> = circuit.point_witness(base_var)?.into();
     let scalar = fq_to_fr::<F, P>(&circuit.witness(scalar_var)?);
@@ -369,10 +369,10 @@ mod tests {
 
     use super::*;
     use crate::{gadgets::ecc::Point, Circuit, PlonkType};
-    use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
+    use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
     use ark_ec::{
         scalar_mul::variable_base::VariableBaseMSM,
-        twisted_edwards::{Affine, TECurveConfig as Parameters},
+        twisted_edwards::{Affine, TECurveConfig as Config},
     };
     use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
@@ -405,7 +405,7 @@ mod tests {
     ) -> Result<(), CircuitError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
 

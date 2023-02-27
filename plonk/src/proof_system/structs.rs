@@ -935,13 +935,13 @@ pub(crate) fn eval_merged_lookup_witness<E: Pairing>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use ark_bn254::{g1::Parameters, Bn254, Fq};
+    use ark_bn254::{g1::Config, Bn254, Fq};
     use ark_ec::AffineRepr;
 
     #[test]
     fn test_group_to_field() {
         let g1 = <Bn254 as Pairing>::G1Affine::generator();
-        let f1: Vec<Fq> = group1_to_fields::<Bn254, Parameters>(g1);
+        let f1: Vec<Fq> = group1_to_fields::<Bn254, Config>(g1);
         assert_eq!(f1.len(), 2);
         let g2 = <Bn254 as Pairing>::G2Affine::generator();
         let f2: Vec<Fq> = group2_to_fields::<Bn254, _, _>(g2);

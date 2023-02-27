@@ -572,7 +572,7 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{twisted_edwards::Affine, TECurveConfig as Parameters};
+    use ark_ec::{twisted_edwards::Affine, TECurveConfig as Config};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
     use ark_ff::{BigInteger, One, PrimeField, UniformRand};
     use ark_std::{str::FromStr, test_rng};
@@ -586,7 +586,7 @@ mod tests {
     fn test_glv_helper<F, P>() -> Result<(), CircuitError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
 

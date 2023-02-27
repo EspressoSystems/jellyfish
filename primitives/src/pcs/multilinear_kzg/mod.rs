@@ -68,7 +68,7 @@ pub struct MultilinearKzgBatchProof<E: Pairing> {
 }
 
 impl<E: Pairing> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
-    // Parameters
+    // Config
     type ProverParam = (
         MultilinearProverParam<E>,
         UnivariateProverParam<E::G1Affine>,

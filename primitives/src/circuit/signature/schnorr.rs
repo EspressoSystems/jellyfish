@@ -14,7 +14,7 @@ use crate::{
     utils::{challenge_bit_len, field_bit_len},
 };
 use ark_ec::{
-    twisted_edwards::{Affine, TECurveConfig as Parameters},
+    twisted_edwards::{Affine, TECurveConfig as Config},
     AffineRepr,
 };
 use ark_ff::PrimeField;
@@ -46,7 +46,7 @@ pub struct SignatureVar {
 pub trait SignatureGadget<F, P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Signature verification circuit
     /// * `vk` - signature verification key variable.
@@ -93,7 +93,7 @@ where
 impl<F, P> SignatureGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn verify_signature(
         &mut self,
@@ -152,7 +152,7 @@ where
 trait SignatureHelperGadget<F, P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     // Return signature hash challenge in little-endian binary form.
     fn challenge_bits(
@@ -166,7 +166,7 @@ where
 impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn challenge_bits(
         &mut self,
@@ -216,7 +216,7 @@ mod tests {
     fn test_dsa_circuit_helper<F, P>() -> Result<(), CircuitError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut rng = ark_std::test_rng();
         let keypair = KeyPair::<P>::generate(&mut rng);
@@ -280,7 +280,7 @@ mod tests {
     ) -> Result<PlonkCircuit<F>, CircuitError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let vk_var = circuit.create_signature_vk_variable(vk)?;
@@ -300,7 +300,7 @@ mod tests {
     ) -> Result<(PlonkCircuit<F>, Variable), CircuitError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
         let vk_var = circuit.create_signature_vk_variable(vk)?;

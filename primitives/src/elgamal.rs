@@ -12,7 +12,7 @@ use crate::{
     rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
+    twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveGroup, Group,
 };
 use ark_ff::UniformRand;
@@ -35,25 +35,25 @@ use zeroize::Zeroize;
 /// Encryption key for encryption scheme
 #[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Default(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Default(bound = "P: Config")
 )]
 pub struct EncKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) key: Projective<P>,
 }
 
-impl<P: Parameters> Hash for EncKey<P> {
+impl<P: Config> Hash for EncKey<P> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.key.into_affine(), state)
     }
 }
 
-impl<P: Parameters> PartialEq for EncKey<P> {
+impl<P: Config> PartialEq for EncKey<P> {
     fn eq(&self, other: &Self) -> bool {
         self.key.into_affine() == other.key.into_affine()
     }
@@ -65,18 +65,18 @@ impl<P: Parameters> PartialEq for EncKey<P> {
 /// Decryption key for encryption scheme
 #[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config")
 )]
 pub(crate) struct DecKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     key: P::ScalarField,
 }
 
-impl<P: Parameters> Drop for DecKey<P> {
+impl<P: Config> Drop for DecKey<P> {
     fn drop(&mut self) {
         self.key.zeroize();
     }
@@ -88,14 +88,14 @@ impl<P: Parameters> Drop for DecKey<P> {
 
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config")
 )]
 /// KeyPair structure for encryption scheme
 pub struct KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) enc: EncKey<P>,
     dec: DecKey<P>,
@@ -107,15 +107,15 @@ where
 /// Public encryption cipher text
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Hash(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Hash(bound = "P: Config")
 )]
 pub struct Ciphertext<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) ephemeral: EncKey<P>,
     pub(crate) data: Vec<P::BaseField>,
@@ -123,7 +123,7 @@ where
 
 impl<P> Ciphertext<P>
 where
-    P: Parameters,
+    P: Config,
 {
     /// Flatten out the ciphertext into a vector of scalars
     pub fn to_scalars(&self) -> Vec<P::BaseField> {
@@ -164,7 +164,7 @@ where
 
 impl<P> KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     /// Key generation algorithm for public key encryption scheme
     pub fn generate<R: CryptoRng + RngCore>(rng: &mut R) -> KeyPair<P> {
@@ -193,7 +193,7 @@ where
 
 impl<P> From<DecKey<P>> for KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn from(dec: DecKey<P>) -> Self {
         let enc = EncKey::from(&dec);
@@ -202,7 +202,7 @@ where
 }
 
 /// Sample a random public key with unknown associated secret key
-impl<P: Parameters> UniformRand for EncKey<P> {
+impl<P: Config> UniformRand for EncKey<P> {
     fn rand<R>(rng: &mut R) -> Self
     where
         R: Rng + RngCore + ?Sized,
@@ -216,7 +216,7 @@ impl<P: Parameters> UniformRand for EncKey<P> {
 impl<F, P> EncKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn compute_cipher_text_from_ephemeral_key_pair(
         &self,
@@ -263,7 +263,7 @@ where
 impl<F, P> DecKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Decryption function
     fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<P::BaseField> {
@@ -282,7 +282,7 @@ where
 
 impl<P> From<&DecKey<P>> for EncKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn from(dec_key: &DecKey<P>) -> Self {
         let mut point = Projective::<P>::generator();
@@ -294,7 +294,7 @@ where
 impl<F, P> KeyPair<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Decryption function
     pub fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<F> {
@@ -315,7 +315,7 @@ pub(crate) fn apply_counter_mode_stream<F, P>(
 ) -> Vec<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     let prp = PRP::default();
     let round_keys = prp.key_schedule(key);

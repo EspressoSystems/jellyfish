@@ -16,7 +16,7 @@ use crate::{
     utils::curve_cofactor,
 };
 use ark_ec::{
-    twisted_edwards::{Affine, Projective, TECurveConfig as Parameters},
+    twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveConfig, CurveGroup, Group,
 };
 use ark_ff::PrimeField;
@@ -42,7 +42,7 @@ pub struct SchnorrSignatureScheme<P> {
 impl<F, P> SignatureScheme for SchnorrSignatureScheme<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     const CS_ID: &'static str = CS_ID_SCHNORR;
 
@@ -131,21 +131,21 @@ impl<F: PrimeField> SignKey<F> {
 #[tagged(tag::SCHNORR_VER_KEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Default(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Default(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Clone(bound = "P: Config")
 )]
 pub struct VerKey<P>(pub(crate) Projective<P>)
 where
-    P: Parameters;
+    P: Config;
 
-impl<P: Parameters> VerKey<P> {
+impl<P: Config> VerKey<P> {
     /// Return a randomized verification key.
     pub fn randomize_with<F>(&self, randomizer: &F) -> Self
     where
         F: PrimeField,
-        P: Parameters<ScalarField = F>,
+        P: Config<ScalarField = F>,
     {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
         Self(Projective::<P>::generator() * randomizer + self.0)
@@ -154,7 +154,7 @@ impl<P: Parameters> VerKey<P> {
 
 impl<P> Hash for VerKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.0.into_affine(), state)
@@ -163,7 +163,7 @@ where
 
 impl<P> PartialEq for VerKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0.into_affine().eq(&other.0.into_affine())
@@ -172,14 +172,14 @@ where
 
 impl<P> From<Affine<P>> for VerKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn from(point: Affine<P>) -> Self {
         VerKey(point.into_group())
     }
 }
 
-impl<P: Parameters> VerKey<P> {
+impl<P: Config> VerKey<P> {
     /// Convert the verification key into the affine form.
     pub fn to_affine(&self) -> Affine<P> {
         self.0.into_affine()
@@ -195,14 +195,14 @@ impl<P: Parameters> VerKey<P> {
 #[tagged(tag::SCHNORR_KEY_PAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Default(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Default(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config")
 )]
 pub struct KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     sk: SignKey<P::ScalarField>,
     vk: VerKey<P>,
@@ -216,15 +216,15 @@ where
 #[tagged(tag::SCHNORR_SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Default(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Default(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Clone(bound = "P: Config")
 )]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) s: P::ScalarField,
     pub(crate) R: Projective<P>,
@@ -232,7 +232,7 @@ where
 
 impl<P> Hash for Signature<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.s, state);
@@ -242,7 +242,7 @@ where
 
 impl<P> PartialEq for Signature<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn eq(&self, other: &Self) -> bool {
         self.s == other.s && self.R.into_affine() == other.R.into_affine()
@@ -255,7 +255,7 @@ where
 impl<F, P> KeyPair<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Key-pair generation algorithm
     pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
@@ -323,7 +323,7 @@ impl<F: PrimeField> SignKey<F> {
 
 impl<P, F> From<&SignKey<F>> for VerKey<P>
 where
-    P: Parameters<ScalarField = F>,
+    P: Config<ScalarField = F>,
     F: PrimeField,
 {
     fn from(sk: &SignKey<F>) -> Self {
@@ -334,7 +334,7 @@ where
 impl<F, P> VerKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Get the internal of verifying key, namely a curve Point
     pub fn internal(&self) -> &Projective<P> {
@@ -376,7 +376,7 @@ where
 impl<F, P> VerKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     // TODO: this function should be generic w.r.t. hash functions
     // Fixme after the hash-api PR is merged.
