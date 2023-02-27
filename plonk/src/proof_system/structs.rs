@@ -100,7 +100,7 @@ where
                 .chunks_exact(2)
                 .map(|chunk| {
                     if chunk.len() == 2 {
-                        Commitment(Affine::new(chunk[0], chunk[1], false))
+                        Commitment(Affine::new(chunk[0], chunk[1]))
                     } else {
                         unreachable!("Internal error");
                     }
@@ -112,7 +112,7 @@ where
                 .chunks_exact(2)
                 .map(|chunk| {
                     if chunk.len() == 2 {
-                        Commitment(Affine::new(chunk[0], chunk[1], false))
+                        Commitment(Affine::new(chunk[0], chunk[1]))
                     } else {
                         unreachable!("Internal error");
                     }
@@ -121,14 +121,14 @@ where
             ptr += (GATE_WIDTH + 1) * 2;
 
             let prod_perm_poly_comm =
-                Commitment(Affine::new(value[ptr], value[ptr + 1], false));
+                Commitment(Affine::new(value[ptr], value[ptr + 1]));
             ptr += 2;
 
-            let opening_proof = Commitment(Affine::new(value[ptr], value[ptr + 1], false));
+            let opening_proof = Commitment(Affine::new(value[ptr], value[ptr + 1]));
             ptr += 2;
 
             let shifted_opening_proof =
-                Commitment(Affine::new(value[ptr], value[ptr + 1], false));
+                Commitment(Affine::new(value[ptr], value[ptr + 1]));
             ptr += 2;
 
             let poly_evals_scalars: Vec<E::ScalarField> = value[ptr..]
