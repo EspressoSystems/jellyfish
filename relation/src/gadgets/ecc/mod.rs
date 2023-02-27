@@ -422,7 +422,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ) -> Result<PointVariable, CircuitError> {
         self.check_var_bound(scalar)?;
 
-        let mut num_bits = <P as CurveConfig>::ScalarField::MODULUS_BIT_SIZE;
+        let mut num_bits = <P as CurveConfig>::ScalarField::MODULUS_BIT_SIZE as usize;
         // `num_bits` needs to be an even number
         num_bits += num_bits & 1;
         let scalar_bits_le = self.unpack(scalar, num_bits)?;

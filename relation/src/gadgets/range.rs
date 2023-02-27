@@ -29,7 +29,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// range [0, 2^`bit_len`). Return error if the variable is invalid.
     /// TODO: optimize the gate for UltraPlonk.
     pub fn is_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, CircuitError> {
-        let a_bit_le: Vec<BoolVar> = self.unpack(a, F::MODULUS_BIT_SIZE)?;
+        let a_bit_le: Vec<BoolVar> = self.unpack(a, F::MODULUS_BIT_SIZE as usize)?;
         let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
         // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
         // zeroes.
@@ -42,7 +42,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// representation of `a`.
     /// Return error if the `a` is not the range of [0, 2^`bit_len`).
     pub fn unpack(&mut self, a: Variable, bit_len: usize) -> Result<Vec<BoolVar>, CircuitError> {
-        if bit_len < F::MODULUS_BIT_SIZE && self.witness(a)? >= F::from(2u32).pow([bit_len as u64]) {
+        if bit_len < F::MODULUS_BIT_SIZE as usize
+            && self.witness(a)? >= F::from(2u32).pow([bit_len as u64])
+        {
             return Err(CircuitError::ParameterError(
                 "Failed to unpack variable to a range of smaller than 2^bit_len".to_string(),
             ));

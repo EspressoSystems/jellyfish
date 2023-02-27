@@ -56,7 +56,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// RANGE_SIZE^NUM_RANGES >= p,
     #[inline]
     pub fn num_range_blocks(&self) -> Result<usize, CircuitError> {
-        Ok(F::MODULUS_BIT_SIZE / self.range_bit_len()? + 1)
+        Ok(F::MODULUS_BIT_SIZE as usize / self.range_bit_len()? + 1)
     }
 }
 

@@ -42,7 +42,7 @@ where
     /// Create a FpElem struct from field element `p` and split parameter `m`,
     /// where `m` <= F::MODULUS_BIT_SIZE / 2
     pub fn new(p: &F, m: usize, two_power_m: Option<F>) -> Result<Self, CircuitError> {
-        if m > F::MODULUS_BIT_SIZE / 2 {
+        if m > F::MODULUS_BIT_SIZE as usize / 2 {
             return Err(ParameterError(format!(
                 "field split parameter ({}) larger than half of the field size ({}) in bits",
                 m,

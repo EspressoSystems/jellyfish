@@ -363,7 +363,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             ));
         }
 
-        let native_field_bit_length = F::MODULUS_BIT_SIZE;
+        let native_field_bit_length = F::MODULUS_BIT_SIZE as usize;
         if native_field_bit_length <= bit_length {
             return Err(CircuitError::ParameterError(
                 "Truncation error: native field is not greater than truncation target".to_string(),
