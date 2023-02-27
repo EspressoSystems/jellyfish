@@ -186,9 +186,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
         b: Variable,
     ) -> Result<(BoolVar, BoolVar), CircuitError> {
         let a_gt_const =
-            self.is_gt_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
+            self.is_gt_constant_internal(a, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let b_gt_const =
-            self.is_gt_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
+            self.is_gt_constant_internal(b, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let a_leq_const = self.logic_neg(a_gt_const)?;
         // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
         let msb_check = self.logic_and(a_leq_const, b_gt_const)?;
@@ -204,7 +204,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // check whether (a-b) > (q-1)/2
         let c = self.sub(a, b)?;
         let cmp_result =
-            self.is_gt_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+            self.is_gt_constant_internal(c, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
         self.logic_or(msb_check, cmp_result)
@@ -216,7 +216,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // check whether (a-b) <= (q-1)/2
         let c = self.sub(a, b)?;
         let cmp_result =
-            self.is_gt_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+            self.is_gt_constant_internal(c, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
         self.logic_or_gate(msb_check, cmp_result)
@@ -280,12 +280,12 @@ mod test {
             (F::from(5u32), F::from(5u32)),
             (F::from(1u32), F::from(2u32)),
             (
-                F::from(F::modulus_minus_one_div_two()).add(F::one()),
+                F::from(F::MODULUS_MINUS_ONE_DIV_TWO).add(F::one()),
                 F::from(2u32),
             ),
             (
-                F::from(F::modulus_minus_one_div_two()).add(F::one()),
-                F::from(F::modulus_minus_one_div_two()).mul(F::from(2u32)),
+                F::from(F::MODULUS_MINUS_ONE_DIV_TWO).add(F::one()),
+                F::from(F::MODULUS_MINUS_ONE_DIV_TWO).mul(F::from(2u32)),
             ),
         ];
         multizip((
