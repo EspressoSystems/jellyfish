@@ -211,13 +211,13 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         proof: &Self::Proof,
     ) -> Result<bool, PCSError> {
         let check_time = start_timer!(|| "Checking evaluation");
-        let mut pairing_inputs_l: Vec<E::G1Prepared> = vec![
+        let pairing_inputs_l: Vec<E::G1Prepared> = vec![
             (verifier_param.g * value - proof.proof * point - commitment.0.into_group())
                 .into_affine()
                 .into(),
             proof.proof.into(),
         ];
-        let mut pairing_inputs_r: Vec<E::G2Prepared> =
+        let pairing_inputs_r: Vec<E::G2Prepared> =
             vec![verifier_param.h.into(), verifier_param.beta_h.into()];
 
         let res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
