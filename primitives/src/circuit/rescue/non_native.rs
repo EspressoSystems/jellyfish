@@ -237,7 +237,8 @@ where
         state: &RescueVector<T>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
         // parameter m
-        let m = (T::MODULUS_BIT_SIZE / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / self.range_bit_len()? + 1)
+            * self.range_bit_len()?;
 
         // move the modulus to the right field
         let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
