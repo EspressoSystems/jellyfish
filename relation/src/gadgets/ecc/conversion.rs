@@ -38,9 +38,9 @@ where
         // TE form, and then build the point
 
         // safe unwrap
-        let s = F::from_repr(F::S).unwrap();
-        let neg_alpha = F::from_repr(F::NEG_ALPHA).unwrap();
-        let beta = F::from_repr(F::BETA).unwrap();
+        let s = F::from(F::S);
+        let neg_alpha = F::from(F::NEG_ALPHA);
+        let beta = F::from(F::BETA);
 
         // we first transform the Weierstrass point (px, py) to Montgomery point (mx,
         // my) where mx = s * (px - alpha)
