@@ -453,7 +453,6 @@ mod test {
         test_canonical_serde_helper(sig);
     }
 
-    // TODO: (alex) update this after upgrading to arkwork 0.4.0
     fn test_canonical_serde_helper<T>(data: T)
     where
         T: CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq,
