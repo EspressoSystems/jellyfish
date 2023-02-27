@@ -230,7 +230,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         a: Variable,
         constant: &F,
     ) -> Result<BoolVar, CircuitError> {
-        let a_bits_le = self.unpack(a, F::MODULUS_BIT_SIZE)?;
+        let a_bits_le = self.unpack(a, F::MODULUS_BIT_SIZE as usize)?;
         let const_bits_le = constant.into_bigint().to_bits_le();
 
         // Iterating from LSB to MSB. Skip the front consecutive 1's.
