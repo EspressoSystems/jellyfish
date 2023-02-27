@@ -421,7 +421,7 @@ fn verify_internal<E: Pairing>(
         .map(E::G2Prepared::from)
         .collect();
     pairings_l.push(E::G1Prepared::from(
-        (verifier_param.g.mul(*value) - commitment.0.into_group()).into_affine(),
+        (verifier_param.g * (*value) - commitment.0.into_group()).into_affine(),
     ));
     pairings_r.push(E::G2Prepared::from(verifier_param.h));
 
