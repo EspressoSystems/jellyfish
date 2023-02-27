@@ -139,7 +139,7 @@ impl<E: Pairing> StructuredReferenceString<E> for UnivariateUniversalParams<E> {
         );
         end_timer!(g_time);
 
-        let powers_of_g = E::G1::batch_normalization_into_affine(&powers_of_g);
+        let powers_of_g = E::G1::normalize_batch(&powers_of_g);
 
         let h = h.into_affine();
         let beta_h = h.mul(beta).into_affine();

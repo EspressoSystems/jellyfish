@@ -410,7 +410,7 @@ fn verify_internal<E: Pairing>(
     let h_vec: Vec<_> = (0..num_var)
         .map(|i| verifier_param.h_mask[ignored + i].into_group() - h_mul[i])
         .collect();
-    let h_vec: Vec<E::G2Affine> = E::G2::batch_normalization_into_affine(&h_vec);
+    let h_vec: Vec<E::G2Affine> = E::G2::normalize_batch(&h_vec);
     end_timer!(prepare_inputs_timer);
 
     let pairing_product_timer = start_timer!(|| "pairing product");

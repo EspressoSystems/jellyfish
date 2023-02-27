@@ -176,8 +176,8 @@ impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> 
         let window_size = FixedBaseMSM::get_mul_window_size(total_scalars);
         let g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
 
-        let pp_g = E::G1::batch_normalization_into_affine(
-            &FixedBaseMSM::multi_scalar_mul(scalar_bits, window_size, &g_table, &pp_powers),
+        let pp_g = E::G1::normalize_batch(
+            &FixedBase::msm(scalar_bits, window_size, &g_table, &pp_powers),
         );
 
         let mut start = 0;
@@ -209,9 +209,9 @@ impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> 
 
         let vp_generation_timer = start_timer!(|| "VP generation");
         let h_mask = {
-            let window_size = FixedBaseMSM::get_mul_window_size(num_vars);
-            let h_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, h);
-            E::G2::batch_normalization_into_affine(&FixedBaseMSM::multi_scalar_mul(
+            let window_size = FixedBase::get_mul_window_size(num_vars);
+            let h_table = FixedBase::get_window_table(scalar_bits, window_size, h);
+            E::G2::normalize_batch(&FixedBase::msm(
                 scalar_bits,
                 window_size,
                 &h_table,
