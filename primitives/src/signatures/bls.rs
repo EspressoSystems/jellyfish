@@ -107,11 +107,9 @@ impl CanonicalSerialize for BLSSignKey {
     fn serialize_with_mode<W: Write>(
         &self,
         writer: W,
-        compress: Compress,
+        _compress: Compress,
     ) -> Result<(), SerializationError> {
-        if compress == Compress::No {
-            return Err(SerializationError::InvalidData);
-        }
+        // TODO (tessico): should we fail if compress is `Compress::No`?
         CanonicalSerialize::serialize_compressed(&self.to_bytes()[..], writer)
     }
 
