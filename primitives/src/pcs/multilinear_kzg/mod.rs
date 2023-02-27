@@ -29,9 +29,9 @@ use ark_std::{
     end_timer, format,
     marker::PhantomData,
     rand::{CryptoRng, RngCore},
-    rc::Rc,
     start_timer,
     string::ToString,
+    sync::Arc,
     vec,
     vec::Vec,
     One, Zero,
@@ -75,7 +75,7 @@ impl<E: Pairing> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
     type VerifierParam = (MultilinearVerifierParam<E>, UnivariateVerifierParam<E>);
     type SRS = (MultilinearUniversalParams<E>, UnivariateUniversalParams<E>);
     // Polynomial and its associated types
-    type Polynomial = Rc<DenseMultilinearExtension<E::ScalarField>>;
+    type Polynomial = Arc<DenseMultilinearExtension<E::ScalarField>>;
     type Point = Vec<E::ScalarField>;
     type Evaluation = E::ScalarField;
     // Commitments and proofs
@@ -444,7 +444,7 @@ mod tests {
 
     fn test_single_helper<R: RngCore + CryptoRng>(
         params: &(MultilinearUniversalParams<E>, UnivariateUniversalParams<E>),
-        poly: &Rc<DenseMultilinearExtension<Fr>>,
+        poly: &Arc<DenseMultilinearExtension<Fr>>,
         rng: &mut R,
     ) -> Result<(), PCSError> {
         let nv = poly.num_vars();
@@ -474,11 +474,11 @@ mod tests {
         let params = MultilinearKzgPCS::<E>::gen_srs_for_testing(&mut rng, 10)?;
 
         // normal polynomials
-        let poly1 = Rc::new(DenseMultilinearExtension::rand(8, &mut rng));
+        let poly1 = Arc::new(DenseMultilinearExtension::rand(8, &mut rng));
         test_single_helper(&params, &poly1, &mut rng)?;
 
         // single-variate polynomials
-        let poly2 = Rc::new(DenseMultilinearExtension::rand(1, &mut rng));
+        let poly2 = Arc::new(DenseMultilinearExtension::rand(1, &mut rng));
         test_single_helper(&params, &poly2, &mut rng)?;
 
         Ok(())

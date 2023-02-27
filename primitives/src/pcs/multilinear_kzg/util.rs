@@ -12,7 +12,7 @@ use ark_poly::{
     univariate::DensePolynomial, DenseMultilinearExtension, EvaluationDomain, Evaluations,
     MultilinearExtension, Polynomial, Radix2EvaluationDomain,
 };
-use ark_std::{end_timer, format, log2, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
+use ark_std::{end_timer, format, log2, sync::Arc, start_timer, string::ToString, vec, vec::Vec};
 
 /// Evaluate eq polynomial. use the public one later
 pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {
@@ -130,7 +130,7 @@ pub fn get_batched_nv(num_var: usize, polynomials_len: usize) -> usize {
 /// merge a set of polynomials. Returns an error if the
 /// polynomials do not share a same number of nvs.
 pub fn merge_polynomials<F: PrimeField>(
-    polynomials: &[Rc<DenseMultilinearExtension<F>>],
+    polynomials: &[Arc<DenseMultilinearExtension<F>>],
 ) -> Result<DenseMultilinearExtension<F>, PCSError> {
     let nv = polynomials[0].num_vars();
     for poly in polynomials.iter() {
@@ -192,7 +192,7 @@ pub(crate) fn build_l<F: PrimeField>(
 // are included in the `batch_proof`.
 #[cfg(test)]
 pub(crate) fn generate_evaluations<F: PrimeField>(
-    polynomials: &[Rc<DenseMultilinearExtension<F>>],
+    polynomials: &[Arc<DenseMultilinearExtension<F>>],
     points: &[Vec<F>],
 ) -> Result<Vec<F>, PCSError> {
     if polynomials.len() != points.len() {
@@ -316,7 +316,7 @@ mod test {
         // 1, 0 |-> 0
         // 1, 1 |-> 5
         let w_eval = vec![F::zero(), F::from(2u64), F::zero(), F::from(5u64)];
-        let w1 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w1 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W2 = x1x2 + x1 whose evaluations are
         // 0, 0 |-> 0
@@ -324,7 +324,7 @@ mod test {
         // 1, 0 |-> 1
         // 1, 1 |-> 2
         let w_eval = vec![F::zero(), F::zero(), F::from(1u64), F::from(2u64)];
-        let w2 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w2 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W3 = x1 + x2 whose evaluations are
         // 0, 0 |-> 0
@@ -332,7 +332,7 @@ mod test {
         // 1, 0 |-> 1
         // 1, 1 |-> 2
         let w_eval = vec![F::zero(), F::one(), F::from(1u64), F::from(2u64)];
-        let w3 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w3 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         {
             // W = (3x1x2 + 2x2)(1-x0) + (x1x2 + x1)x0
@@ -585,15 +585,15 @@ mod test {
         // Example from page 53:
         // W1 = 3x1x2 + 2x2
         let w_eval = vec![Fr::zero(), Fr::from(2u64), Fr::zero(), Fr::from(5u64)];
-        let w1 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w1 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W2 = x1x2 + x1
         let w_eval = vec![Fr::zero(), Fr::zero(), Fr::from(1u64), Fr::from(2u64)];
-        let w2 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w2 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W3 = x1 + x2
         let w_eval = vec![Fr::zero(), Fr::one(), Fr::from(1u64), Fr::from(2u64)];
-        let w3 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w3 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         let r = Fr::from(42u64);
 
