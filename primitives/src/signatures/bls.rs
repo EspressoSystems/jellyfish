@@ -80,7 +80,6 @@ use crate::{
 
 use ark_serialize::*;
 use ark_std::{
-    convert::TryInto,
     format,
     ops::{Deref, DerefMut},
     rand::{CryptoRng, RngCore},
@@ -116,7 +115,7 @@ impl CanonicalSerialize for BLSSignKey {
         CanonicalSerialize::serialize_compressed(&self.to_bytes()[..], writer)
     }
 
-    fn serialized_size(&self, compress: Compress) -> usize {
+    fn serialized_size(&self, _compress: Compress) -> usize {
         BLS_SIG_SK_SIZE
     }
 }
@@ -184,7 +183,7 @@ impl CanonicalSerialize for BLSVerKey {
         }
     }
 
-    fn serialized_size(&self, compress: Compress) -> usize {
+    fn serialized_size(&self, _compress: Compress) -> usize {
         BLS_SIG_COMPRESSED_PK_SIZE
     }
 
@@ -267,11 +266,11 @@ impl CanonicalSerialize for BLSSignature {
     }
 
     fn serialized_size(&self, compress: Compress) -> usize {
-        BLS_SIG_COMPRESSED_SIGNATURE_SIZE
-    }
-
-    fn uncompressed_size(&self) -> usize {
-        BLS_SIG_SIGNATURE_SIZE
+        if compress == Compress::Yes {
+            BLS_SIG_COMPRESSED_SIGNATURE_SIZE
+        } else {
+            BLS_SIG_SIGNATURE_SIZE
+        }
     }
 }
 

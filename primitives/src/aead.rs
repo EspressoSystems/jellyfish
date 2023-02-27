@@ -59,7 +59,7 @@ impl CanonicalSerialize for EncKey {
     {
         CanonicalSerialize::serialize_compressed(self.0.as_ref(), w)
     }
-    fn serialized_size(&self, compress: Compress) -> usize {
+    fn serialized_size(&self, _compress: Compress) -> usize {
         crypto_box::KEY_SIZE
     }
 }
@@ -69,7 +69,7 @@ impl CanonicalDeserialize for EncKey {
     /// https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338
     fn deserialize_with_mode<R>(
         mut reader: R,
-        compress: Compress,
+        _compress: Compress,
         validate: Validate,
     ) -> Result<Self, SerializationError>
     where
@@ -154,13 +154,13 @@ impl Default for DecKey {
 }
 
 impl CanonicalSerialize for DecKey {
-    fn serialize_with_mode<W>(&self, w: W, compress: Compress) -> Result<(), SerializationError>
+    fn serialize_with_mode<W>(&self, w: W, _compress: Compress) -> Result<(), SerializationError>
     where
         W: Write,
     {
         CanonicalSerialize::serialize_compressed(self.0.as_bytes().as_ref(), w)
     }
-    fn serialized_size(&self, compress: Compress) -> usize {
+    fn serialized_size(&self, _compress: Compress) -> usize {
         crypto_box::KEY_SIZE
     }
 }
@@ -168,7 +168,7 @@ impl CanonicalSerialize for DecKey {
 impl CanonicalDeserialize for DecKey {
     fn deserialize_with_mode<R>(
         mut reader: R,
-        compress: Compress,
+        _compress: Compress,
         validate: Validate,
     ) -> Result<Self, SerializationError>
     where
