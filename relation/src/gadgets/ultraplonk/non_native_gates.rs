@@ -197,7 +197,7 @@ mod test {
     use crate::{Circuit, Variable};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
-    use ark_std::test_rng;
+    use jf_utils::test_rng;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 8;
 

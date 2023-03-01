@@ -442,7 +442,7 @@ mod test {
 
     #[test]
     fn test_canonical_serde() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
         let pp = BLSSignatureScheme::param_gen::<StdRng>(None).unwrap();
         let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut rng).unwrap();
         let msg = "The quick brown fox jumps over the lazy dog";
@@ -459,8 +459,8 @@ mod test {
         T: CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq,
     {
         let mut bytes = vec![];
-        CanonicalSerialize::serialize(&data, &mut bytes).unwrap();
-        let de: T = CanonicalDeserialize::deserialize(&bytes[..]).unwrap();
+        CanonicalSerialize::serialize_compressed(&data, &mut bytes).unwrap();
+        let de: T = CanonicalDeserialize::deserialize_compressed(&bytes[..]).unwrap();
         assert_eq!(data, de);
 
         bytes = vec![];
@@ -469,8 +469,8 @@ mod test {
         assert_eq!(data, de);
 
         bytes = vec![];
-        CanonicalSerialize::serialize_unchecked(&data, &mut bytes).unwrap();
-        let de: T = CanonicalDeserialize::deserialize_unchecked(&bytes[..]).unwrap();
+        CanonicalSerialize::serialize_compressed(&data, &mut bytes).unwrap();
+        let de: T = CanonicalDeserialize::deserialize_compressed_unchecked(&bytes[..]).unwrap();
         assert_eq!(data, de);
     }
 }

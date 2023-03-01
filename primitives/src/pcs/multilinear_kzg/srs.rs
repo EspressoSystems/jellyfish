@@ -268,7 +268,7 @@ fn eq_extension<F: PrimeField>(t: &[F]) -> Vec<DenseMultilinearExtension<F>> {
 mod tests {
     use super::*;
     use ark_bls12_381::Bls12_381;
-    use ark_std::test_rng;
+    use jf_utils::test_rng;
     type E = Bls12_381;
 
     #[test]

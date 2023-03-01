@@ -126,8 +126,10 @@ impl Vrf for BLSVRFScheme {
 
 #[cfg(test)]
 mod test {
+    use jf_utils::test_rng;
+
     use super::*;
-    use ark_std::{rand::Rng, test_rng};
+    use ark_std::{rand::Rng};
 
     pub(crate) fn sign_and_verify<H: Digest>(
         vrf: &mut BLSVRFScheme,

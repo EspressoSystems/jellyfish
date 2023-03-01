@@ -315,7 +315,8 @@ mod tests {
     use ark_bls12_381::Bls12_381;
     use ark_ec::pairing::Pairing;
     use ark_poly::univariate::DensePolynomial;
-    use ark_std::{test_rng, UniformRand};
+    use ark_std::{UniformRand};
+    use jf_utils::test_rng;
 
     fn end_to_end_test_template<E>() -> Result<(), PCSError>
     where

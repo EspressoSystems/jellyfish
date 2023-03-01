@@ -34,7 +34,7 @@ macro_rules! deserialize_canonical_bytes {
     ($t:ident < $( $lt:lifetime ),* $( $T:ident : $trait:ident ),* >) => {
         impl<$($lt),* $( $T: $trait ),*> From<CanonicalBytes> for $t<$($lt),* $( $T ),*> {
             fn from(bytes: CanonicalBytes) -> Self {
-                ark_serialize::CanonicalDeserialize::deserialize(bytes.0.as_slice())
+                ark_serialize::CanonicalDeserialize::deserialize_compressed(bytes.0.as_slice())
                     .expect("fail to deserialize canonical bytes")
             }
         }
@@ -92,7 +92,7 @@ macro_rules! test_serde_default {
         let data = $struct::default();
         let mut ser_bytes: $crate::Vec<u8> = $crate::Vec::new();
         data.serialize(&mut ser_bytes).unwrap();
-        let de: $struct = $struct::deserialize(&ser_bytes[..]).unwrap();
+        let de: $struct = $struct::deserialize_compressed(&ser_bytes[..]).unwrap();
         assert_eq!(de, data);
     };
 }

@@ -1,7 +1,7 @@
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-use ark_std::{sync::Arc, test_rng};
+use ark_std::{sync::Arc};
 use jf_primitives::pcs::{
     prelude::{MultilinearKzgPCS, PCSError, PolynomialCommitmentScheme},
     StructuredReferenceString,

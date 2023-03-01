@@ -249,7 +249,7 @@ mod test {
     use ark_bls12_381::Fr;
     use ark_crypto_primitives::{sponge::AbsorbWithLength, collect_sponge_bytes, absorb, collect_sponge_field_elements};
     use ark_ff::{One, UniformRand};
-    use ark_std::test_rng;
+    use jf_utils::test_rng;
 
     fn assert_different_encodings<F: RescueParameter, A: Absorb>(a: &A, b: &A) {
         let bytes1 = a.to_sponge_bytes_as_vec();

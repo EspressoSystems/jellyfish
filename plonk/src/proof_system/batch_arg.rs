@@ -282,7 +282,8 @@ mod test {
     use super::*;
     use crate::transcript::RescueTranscript;
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
-    use ark_std::{test_rng, UniformRand};
+    use ark_std::UniformRand;
+    use jf_utils::test_rng;
 
     #[test]
     fn test_batch_argument() -> Result<(), PlonkError> {

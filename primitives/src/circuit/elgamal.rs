@@ -280,7 +280,7 @@ mod tests {
         P: TECurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let key = RescueVector::from(&[
             F::rand(&mut prng),
             F::rand(&mut prng),
@@ -344,7 +344,7 @@ mod tests {
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
 
         // Prepare data and keys
         let keypair = KeyPair::<P>::generate(&mut prng);
@@ -423,7 +423,7 @@ mod tests {
         P: TECurveConfig<BaseField = F>,
     {
         // Prepare ciphertext
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let data: Vec<F> = (0..5 * STATE_SIZE + 1).map(|i| F::from(i as u32)).collect();
         let ctxts = KeyPair::<P>::generate(rng)
             .enc_key_ref()

@@ -136,14 +136,14 @@ mod test {
     use ark_bls12_377::{G1Affine, G1Projective};
     use ark_ec::{AffineRepr, CurveGroup};
     use ark_ff::{field_new, One};
-    use ark_std::{test_rng, UniformRand, Zero};
+    use ark_std::{UniformRand, Zero};
 
     // a helper function to check if a point is on the ed curve
     // of bls12-377 G1
     fn is_on_bls12_377_ed_curve(p: &Point<Fq377>) -> bool {
         // Twisted Edwards curve 2: a * x² + y² = 1 + d * x² * y²
-        let a = field_new!(Fq377, "-1");
-        let d = field_new!(Fq377, "122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
+        let a = MontFp!(Fq377, "-1");
+        let d = MontFp!(Fq377, "122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
 
         let x2 = p.0 * p.0;
         let y2 = p.1 * p.1;

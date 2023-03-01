@@ -612,7 +612,7 @@ pub mod test {
         format,
         rand::{CryptoRng, RngCore},
         string::ToString,
-        test_rng, vec,
+        vec,
         vec::Vec,
     };
     use core::ops::{Mul, Neg};
@@ -627,6 +627,7 @@ pub mod test {
         constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
         MergeableCircuitType, PlonkCircuit,
     };
+    use jf_utils::test_rng;
 
     // Different `m`s lead to different circuits.
     // Different `a0`s lead to different witness values.
@@ -713,7 +714,7 @@ pub mod test {
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let circuit = gen_circuit_for_test(5, 6, plonk_type)?;
         let domain_size = circuit.eval_domain_size()?;
         let num_inputs = circuit.num_inputs();
@@ -1420,7 +1421,7 @@ pub mod test {
         E::Fq: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
     {
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
         let max_degree = 80;
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
@@ -1466,7 +1467,7 @@ pub mod test {
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let circuit = gen_circuit_for_test(3, 4, plonk_type)?;
         let max_degree = 80;
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
@@ -1475,23 +1476,23 @@ pub mod test {
         let proof = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &circuit, &pk, None)?;
 
         let mut ser_bytes = Vec::new();
-        srs.serialize(&mut ser_bytes)?;
-        let de = UniversalSrs::<E>::deserialize(&ser_bytes[..])?;
+        srs.serialize_compressed(&mut ser_bytes)?;
+        let de = UniversalSrs::<E>::deserialize_compressed(&ser_bytes[..])?;
         assert_eq!(de, srs);
 
         let mut ser_bytes = Vec::new();
-        pk.serialize(&mut ser_bytes)?;
-        let de = ProvingKey::<E>::deserialize(&ser_bytes[..])?;
+        pk.serialize_compressed(&mut ser_bytes)?;
+        let de = ProvingKey::<E>::deserialize_compressed(&ser_bytes[..])?;
         assert_eq!(de, pk);
 
         let mut ser_bytes = Vec::new();
-        vk.serialize(&mut ser_bytes)?;
-        let de = VerifyingKey::<E>::deserialize(&ser_bytes[..])?;
+        vk.serialize_compressed(&mut ser_bytes)?;
+        let de = VerifyingKey::<E>::deserialize_compressed(&ser_bytes[..])?;
         assert_eq!(de, vk);
 
         let mut ser_bytes = Vec::new();
-        proof.serialize(&mut ser_bytes)?;
-        let de = Proof::<E>::deserialize(&ser_bytes[..])?;
+        proof.serialize_compressed(&mut ser_bytes)?;
+        let de = Proof::<E>::deserialize_compressed(&ser_bytes[..])?;
         assert_eq!(de, proof);
 
         Ok(())

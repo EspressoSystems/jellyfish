@@ -420,7 +420,7 @@ mod tests {
 
     macro_rules! test_signature {
         ($curve_param:tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
 
             let keypair1 = KeyPair::generate(&mut rng);
             // test randomized key pair
@@ -481,7 +481,7 @@ mod tests {
 
         macro_rules! test_ver_key {
             ($curve_param:tt, $scalar_field:tt) => {
-                let mut rng = ark_std::test_rng();
+                let mut rng = jf_utils::test_rng();
 
                 // happy path
                 let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
@@ -503,8 +503,8 @@ mod tests {
 
                 // test serialization
                 let mut vk_bytes = vec![];
-                vk.serialize(&mut vk_bytes).unwrap();
-                let vk_de: VerKey<$curve_param> = VerKey::deserialize(vk_bytes.as_slice()).unwrap();
+                vk.serialize_compressed(&mut vk_bytes).unwrap();
+                let vk_de: VerKey<$curve_param> = VerKey::deserialize_compressed(vk_bytes.as_slice()).unwrap();
                 assert_eq!(*vk, vk_de, "normal ser/de should pass");
             };
         }
@@ -518,7 +518,7 @@ mod tests {
 
         macro_rules! test_signature {
             ($curve_param:tt, $base_field:tt) => {
-                let mut rng = ark_std::test_rng();
+                let mut rng = jf_utils::test_rng();
                 let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
 
                 // Happy path
@@ -527,19 +527,19 @@ mod tests {
                 assert!(keypair.vk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
                 assert!(keypair.vk.verify(&[], &sig, CS_ID_SCHNORR).is_err());
                 let mut bytes_sig = vec![];
-                sig.serialize(&mut bytes_sig).unwrap();
+                sig.serialize_compressed(&mut bytes_sig).unwrap();
                 let sig_de: Signature<$curve_param> =
-                    Signature::deserialize(bytes_sig.as_slice()).unwrap();
+                    Signature::deserialize_compressed(bytes_sig.as_slice()).unwrap();
                 assert_eq!(sig, sig_de);
 
                 // Bad path 1: when s bytes overflow
                 let mut bad_bytes_sig = bytes_sig.clone();
                 let mut q_minus_one_bytes = vec![];
                 (-$base_field::from(1u32))
-                    .serialize(&mut q_minus_one_bytes)
+                    .serialize_compressed(&mut q_minus_one_bytes)
                     .unwrap();
                 bad_bytes_sig.splice(.., q_minus_one_bytes.iter().cloned());
-                assert!(Signature::<$curve_param>::deserialize(bad_bytes_sig.as_slice()).is_err());
+                assert!(Signature::<$curve_param>::deserialize_compressed(bad_bytes_sig.as_slice()).is_err());
             };
         }
 
@@ -553,7 +553,7 @@ mod tests {
 
         macro_rules! test_serde {
             ($curve_param:tt, $scalar_field:tt, $base_field:tt) => {
-                let mut rng = ark_std::test_rng();
+                let mut rng = jf_utils::test_rng();
                 let keypair = KeyPair::generate(&mut rng);
                 let sk = SignKey::<$scalar_field>::generate(&mut rng);
                 let vk = keypair.ver_key();
@@ -561,24 +561,24 @@ mod tests {
                 let sig = keypair.sign(&msg, CS_ID_SCHNORR);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                keypair.serialize(&mut ser_bytes).unwrap();
-                let de: KeyPair<$curve_param> = KeyPair::deserialize(&ser_bytes[..]).unwrap();
+                keypair.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: KeyPair<$curve_param> = KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(de.ver_key_ref(), keypair.ver_key_ref());
                 assert_eq!(de.ver_key_ref(), &VerKey::from(&de.sk));
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                sk.serialize(&mut ser_bytes).unwrap();
-                let de: SignKey<$scalar_field> = SignKey::deserialize(&ser_bytes[..]).unwrap();
+                sk.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: SignKey<$scalar_field> = SignKey::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                vk.serialize(&mut ser_bytes).unwrap();
-                let de: VerKey<$curve_param> = VerKey::deserialize(&ser_bytes[..]).unwrap();
+                vk.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: VerKey<$curve_param> = VerKey::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(de, vk);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                sig.serialize(&mut ser_bytes).unwrap();
-                let de: Signature<$curve_param> = Signature::deserialize(&ser_bytes[..]).unwrap();
+                sig.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: Signature<$curve_param> = Signature::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(de, sig);
             };
         }

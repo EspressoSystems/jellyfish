@@ -235,7 +235,7 @@ mod tests {
     };
     use ark_bls12_377::Bls12_377;
     use ark_ec::{AffineRepr, CurveGroup};
-    use ark_std::{format, test_rng, UniformRand};
+    use ark_std::{format, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::Point;
     use jf_utils::{bytes_to_field_elements, field_switching};

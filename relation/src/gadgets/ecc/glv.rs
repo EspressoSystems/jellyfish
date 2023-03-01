@@ -591,7 +591,7 @@ mod tests {
         F: PrimeField,
         P: Config<BaseField = F>,
     {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
 
         for _ in 0..100 {
             {

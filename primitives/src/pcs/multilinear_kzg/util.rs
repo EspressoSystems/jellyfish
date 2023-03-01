@@ -12,7 +12,7 @@ use ark_poly::{
     univariate::DensePolynomial, DenseMultilinearExtension, EvaluationDomain, Evaluations,
     MultilinearExtension, Polynomial, Radix2EvaluationDomain,
 };
-use ark_std::{end_timer, format, log2, sync::Arc, start_timer, string::ToString, vec, vec::Vec};
+use ark_std::{end_timer, format, log2, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 /// Evaluate eq polynomial. use the public one later
 pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {

@@ -218,7 +218,7 @@ mod tests {
         F: RescueParameter,
         P: Config<BaseField = F>,
     {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
         let keypair = KeyPair::<P>::generate(&mut rng);
         let vk = keypair.ver_key_ref();
         let vk_bad: VerKey<P> = KeyPair::<P>::generate(&mut rng).ver_key_ref().clone();

@@ -124,6 +124,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::test_rng;
+
     use super::*;
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
@@ -132,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_bn254_scalar_conversion() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = test_rng();
         for _ in 0..6 {
             let jj = Fr254::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param254>(&jj);
@@ -142,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_jubjub_bls_scalar_conversion_377() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = test_rng();
         for _ in 0..6 {
             let jj = Fr377::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param377>(&jj);
@@ -152,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_jubjub_bls_scalar_conversion_381() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = test_rng();
         for _ in 0..6 {
             let jj = Fr381::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param381>(&jj);

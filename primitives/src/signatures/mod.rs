@@ -96,7 +96,8 @@ pub trait AggregateableSignatureSchemes<H>: SignatureScheme {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_std::{rand::prelude::StdRng, test_rng};
+    use ark_std::{rand::prelude::StdRng};
+    use jf_utils::test_rng;
 
     pub(crate) fn sign_and_verify<S: SignatureScheme>(message: &[S::MessageUnit]) {
         let rng = &mut test_rng();

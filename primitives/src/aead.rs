@@ -362,7 +362,7 @@ mod test {
 
     #[test]
     fn test_conversion() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
         let mut rand_bytes = [0u8; 32];
         rng.fill_bytes(&mut rand_bytes[..]);
         let enc_key = EncKey::from(rand_bytes);
@@ -381,7 +381,7 @@ mod test {
 
     #[test]
     fn test_serde() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
         let keypair = KeyPair::generate(&mut rng);
         let msg = b"The quick brown fox jumps over the lazy dog".to_vec();
         let aad = b"my associated data".to_vec();
@@ -389,34 +389,34 @@ mod test {
 
         // serde for Keypair
         let mut keypair_bytes = Vec::new();
-        keypair.serialize(&mut keypair_bytes).unwrap();
-        let keypair_de = KeyPair::deserialize(&keypair_bytes[..]).unwrap();
+        keypair.serialize_compressed(&mut keypair_bytes).unwrap();
+        let keypair_de = KeyPair::deserialize_compressed(&keypair_bytes[..]).unwrap();
         assert_eq!(keypair, keypair_de);
         // wrong byte length
-        assert!(KeyPair::deserialize(&keypair_bytes[1..]).is_err());
+        assert!(KeyPair::deserialize_compressed(&keypair_bytes[1..]).is_err());
 
         // serde for EncKey
         let mut enc_key_bytes = Vec::new();
-        keypair.enc_key.serialize(&mut enc_key_bytes).unwrap();
-        let enc_key_de = EncKey::deserialize(&enc_key_bytes[..]).unwrap();
+        keypair.enc_key.serialize_compressed(&mut enc_key_bytes).unwrap();
+        let enc_key_de = EncKey::deserialize_compressed(&enc_key_bytes[..]).unwrap();
         assert_eq!(enc_key_de, keypair.enc_key);
         // wrong byte length
-        assert!(EncKey::deserialize(&enc_key_bytes[1..]).is_err());
+        assert!(EncKey::deserialize_compressed(&enc_key_bytes[1..]).is_err());
 
         // serde for DecKey
         let mut dec_key_bytes = Vec::new();
-        keypair.dec_key.serialize(&mut dec_key_bytes).unwrap();
-        let dec_key_de = DecKey::deserialize(&dec_key_bytes[..]).unwrap();
+        keypair.dec_key.serialize_compressed(&mut dec_key_bytes).unwrap();
+        let dec_key_de = DecKey::deserialize_compressed(&dec_key_bytes[..]).unwrap();
         assert_eq!(dec_key_de.0.as_bytes(), keypair.dec_key.0.as_bytes());
         // wrong byte length
-        assert!(DecKey::deserialize(&dec_key_bytes[1..]).is_err());
+        assert!(DecKey::deserialize_compressed(&dec_key_bytes[1..]).is_err());
 
         // serde for Ciphertext
         let mut ciphertext_bytes = Vec::new();
-        ciphertext.serialize(&mut ciphertext_bytes).unwrap();
-        let ciphertext_de = Ciphertext::deserialize(&ciphertext_bytes[..]).unwrap();
+        ciphertext.serialize_compressed(&mut ciphertext_bytes).unwrap();
+        let ciphertext_de = Ciphertext::deserialize_compressed(&ciphertext_bytes[..]).unwrap();
         assert_eq!(ciphertext_de, ciphertext);
         // wrong byte length
-        assert!(Ciphertext::deserialize(&ciphertext_bytes[1..]).is_err());
+        assert!(Ciphertext::deserialize_compressed(&ciphertext_bytes[1..]).is_err());
     }
 }

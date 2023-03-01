@@ -311,8 +311,9 @@ mod tests {
     use ark_bls12_381::Bls12_381 as E;
     use ark_ec::pairing::Pairing;
     use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    use ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
-    type Fr = <E as Pairing>::Fr;
+    use ark_std::{log2, rand::RngCore, vec::Vec, UniformRand};
+    use jf_utils::test_rng;
+    type Fr = <E as Pairing>::ScalarField;
 
     fn test_batch_commit_helper<R: RngCore + CryptoRng>(
         uni_params: &UnivariateUniversalParams<E>,

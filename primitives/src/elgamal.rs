@@ -374,7 +374,7 @@ mod test {
 
     macro_rules! test_enc_and_dec {
         ($param: tt, $base_field:tt, $scalar_field: tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
             let keypair: KeyPair<$param> = KeyPair::generate(&mut rng);
             let mut data = vec![];
             let mut i = 0;
@@ -412,29 +412,29 @@ mod test {
 
     macro_rules! test_serdes {
         ($param: tt, $base_field:tt, $scalar_field: tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
             let keypair = KeyPair::<$param>::generate(&mut rng);
             let msg = vec![$base_field::rand(&mut rng)];
             let ct = keypair.enc_key().encrypt(&mut rng, &msg[..]);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            keypair.serialize(&mut ser_bytes).unwrap();
-            let de: KeyPair<$param> = KeyPair::deserialize(&ser_bytes[..]).unwrap();
+            keypair.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: KeyPair<$param> = KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(de, keypair);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            keypair.enc.serialize(&mut ser_bytes).unwrap();
-            let de: EncKey<$param> = EncKey::deserialize(&ser_bytes[..]).unwrap();
+            keypair.enc.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: EncKey<$param> = EncKey::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(keypair.enc, de);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            keypair.dec.serialize(&mut ser_bytes).unwrap();
-            let de: DecKey<$param> = DecKey::deserialize(&ser_bytes[..]).unwrap();
+            keypair.dec.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: DecKey<$param> = DecKey::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(keypair.dec, de);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            ct.serialize(&mut ser_bytes).unwrap();
-            let de: Ciphertext<$param> = Ciphertext::deserialize(&ser_bytes[..]).unwrap();
+            ct.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: Ciphertext<$param> = Ciphertext::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(ct, de);
         };
     }

@@ -1097,7 +1097,7 @@ mod test {
     use ark_bls12_381::Bls12_381;
     use ark_bn254::Bn254;
     use ark_bw6_761::BW6_761;
-    use ark_std::test_rng;
+    use jf_utils::test_rng;
 
     #[test]
     fn test_split_quotient_polynomial_wrong_degree() -> Result<(), PlonkError> {

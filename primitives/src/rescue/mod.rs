@@ -761,7 +761,7 @@ mod test_permutation {
 
     fn test_sponge_helper<F: RescueParameter>() {
         let rescue_prp = PRP::default();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let e0 = F::rand(&mut prng);
         let e1 = F::rand(&mut prng);
         let e2 = F::rand(&mut prng);
@@ -843,7 +843,7 @@ mod test_permutation {
         test_fsks_no_padding_errors_helper::<Fq377>();
     }
     fn test_fsks_no_padding_errors_helper<F: RescueParameter>() {
-        let key = F::rand(&mut ark_std::test_rng());
+        let key = F::rand(&mut jf_utils::test_rng());
         let input = vec![F::from(9u64); 4];
         assert!(
             RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
@@ -890,7 +890,7 @@ mod test_permutation {
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 3).unwrap().len(), 3);
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 10).unwrap().len(), 10);
 
-        let key = F::rand(&mut ark_std::test_rng());
+        let key = F::rand(&mut jf_utils::test_rng());
         let input = [F::zero(), F::one(), F::zero(), F::zero()];
         assert_eq!(
             RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 0)

@@ -45,7 +45,7 @@ mod tests {
     macro_rules! test_prf_circuit {
         ($base_field:tt) => {
             let mut circuit: PlonkCircuit<$base_field> = PlonkCircuit::new_turbo_plonk();
-            let mut prng = ark_std::test_rng();
+            let mut prng = jf_utils::test_rng();
             let rand_scalar = $base_field::rand(&mut prng);
             let key_var = circuit.create_variable(rand_scalar).unwrap();
             let input_len = 10;

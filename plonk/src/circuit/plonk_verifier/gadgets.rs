@@ -461,10 +461,10 @@ mod test {
     };
     use ark_bls12_377::{g1::Config as Param377, Bls12_377};
     use ark_ec::{SWCurveConfig, TECurveConfig};
-    use ark_std::{test_rng, vec, UniformRand};
+    use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{Circuit, MergeableCircuitType};
-    use jf_utils::field_switching;
+    use jf_utils::{field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     #[test]

@@ -439,7 +439,8 @@ mod tests {
     use ark_bls12_381::Bls12_381;
     use ark_ec::pairing::Pairing;
     use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    use ark_std::{rand::RngCore, test_rng, vec::Vec, UniformRand};
+    use ark_std::{rand::RngCore, vec::Vec, UniformRand};
+    use jf_utils::test_rng;
     type E = Bls12_381;
     type Fr = <E as Pairing>::ScalarField;
 

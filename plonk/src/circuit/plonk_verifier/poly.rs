@@ -736,9 +736,9 @@ mod test {
     use ark_bls12_377::Bls12_377;
     use ark_ff::Field;
     use ark_poly::Radix2EvaluationDomain;
-    use ark_std::{test_rng, One, UniformRand};
+    use ark_std::{One, UniformRand};
     use jf_relation::Circuit;
-    use jf_utils::field_switching;
+    use jf_utils::{field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
 

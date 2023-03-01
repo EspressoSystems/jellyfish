@@ -1687,7 +1687,8 @@ pub(crate) mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
     use ark_poly::{domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain};
-    use ark_std::{test_rng, vec, vec::Vec};
+    use ark_std::{vec, vec::Vec};
+    use jf_utils::test_rng;
 
     #[test]
     fn test_circuit_trait() -> Result<(), CircuitError> {

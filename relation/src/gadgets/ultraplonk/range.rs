@@ -90,7 +90,8 @@ mod test {
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_std::{rand::Rng, test_rng};
+    use ark_std::{rand::Rng};
+    use jf_utils::test_rng;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 8;
     const RANGE_SIZE_FOR_TEST: usize = 256;

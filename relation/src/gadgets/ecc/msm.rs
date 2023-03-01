@@ -407,7 +407,7 @@ mod tests {
         F: PrimeField,
         P: Config<BaseField = F>,
     {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
 
         for dim in [1, 2, 4, 8, 16, 32, 64, 128] {
             let mut circuit: PlonkCircuit<F> = match plonk_type {
