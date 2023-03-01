@@ -11,7 +11,7 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ec::{
-    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
+    short_weierstrass::{Affine, SWCurveConfig as SWParam}, pairing::Pairing
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -460,7 +460,7 @@ mod test {
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::{g1::Config as Param377, Bls12_377};
-    use ark_ec::{SWCurveConfig, TECurveConfig};
+    use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
     use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{Circuit, MergeableCircuitType};

@@ -7,8 +7,9 @@
 //! Circuits for Plonk verifiers.
 use crate::proof_system::{structs::VerifyingKey, verifier::Verifier};
 use ark_ec::{
-    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
-    TECurveConfig as TEParam,
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig as SWParam},
+    twisted_edwards::TECurveConfig as TEParam,
 };
 use ark_ff::{BigInteger, FpConfig, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
@@ -329,7 +330,8 @@ mod test {
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::{g1::Config as Param377, Bls12_377, Fq as Fq377};
-    use ark_ec::{CurveGroup, SWCurveConfig, TECurveConfig};
+    use ark_ec::CurveGroup;
+    use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
     use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{

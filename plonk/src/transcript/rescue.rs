@@ -11,7 +11,8 @@ use crate::{
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
-    short_weierstrass::Affine, pairing::Pairing, SWCurveConfig as SWParam,
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig as SWParam},
 };
 use ark_std::vec::Vec;
 use jf_primitives::{

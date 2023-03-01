@@ -13,7 +13,10 @@ use crate::{
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::*,
 };
-use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::{Field, One, Zero};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec, vec::Vec};

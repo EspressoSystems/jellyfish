@@ -20,7 +20,10 @@ use crate::{
     proof_system::structs::UniversalSrs,
     transcript::*,
 };
-use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::{Field, One};
 use ark_std::{
     format,
@@ -600,11 +603,14 @@ pub mod test {
     use ark_bls12_381::{Bls12_381, Fq as Fq381};
     use ark_bn254::{Bn254, Fq as Fq254};
     use ark_bw6_761::{Fq as Fq761, BW6_761};
-    use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
+    use ark_ec::{
+        pairing::Pairing,
+        short_weierstrass::{Affine, SWCurveConfig},
+    };
     use ark_ff::{One, PrimeField, Zero};
     use ark_poly::{
-        univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
-        DenseUVPolynomial,
+        univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, Polynomial,
+        Radix2EvaluationDomain,
     };
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{

@@ -7,7 +7,10 @@
 //! Implementing *native* circuit for rescue transcript
 
 use super::plonk_verifier::*;
-use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
@@ -238,7 +241,7 @@ mod tests {
     use ark_std::{format, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::Point;
-    use jf_utils::{bytes_to_field_elements, field_switching};
+    use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     #[test]
@@ -344,7 +347,8 @@ mod tests {
 
         for _ in 0..10 {
             // inputs
-            let input: Vec<E::ScalarField> = (0..16).map(|_| E::ScalarField::rand(&mut rng)).collect();
+            let input: Vec<E::ScalarField> =
+                (0..16).map(|_| E::ScalarField::rand(&mut rng)).collect();
 
             // sigma commitments
             let sigma_comms: Vec<Commitment<E>> = (0..42)

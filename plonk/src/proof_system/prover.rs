@@ -16,7 +16,7 @@ use crate::{
     proof_system::structs::CommitKey,
 };
 use ark_ec::pairing::Pairing;
-use ark_ff::{FftField, Field, One, UniformRand, Zero};
+use ark_ff::{Field, One, UniformRand, Zero};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, DenseUVPolynomial,

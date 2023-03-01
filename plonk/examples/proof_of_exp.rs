@@ -13,8 +13,9 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    twisted_edwards::Affine as TEAffine, AffineRepr, CurveConfig, pairing::Pairing,
-    CurveGroup, TECurveConfig,
+    pairing::Pairing,
+    twisted_edwards::{Affine as TEAffine, TECurveConfig},
+    AffineRepr, CurveConfig, CurveGroup,
 };
 use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsConfig, Fr};
 use ark_ff::PrimeField;

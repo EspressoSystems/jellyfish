@@ -14,7 +14,10 @@ use crate::{
     },
     transcript::PlonkTranscript,
 };
-use ark_ec::{short_weierstrass::Affine, pairing::Pairing, SWCurveConfig};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::One;
 use ark_std::{
     format,
