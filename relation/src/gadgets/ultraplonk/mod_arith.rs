@@ -890,7 +890,7 @@ mod test {
     use ark_ed_on_bls12_377::{Fq as FqEd377, Fr as FrEd377};
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::{Fq as FqEd254, Fr as FrEd254};
-    use ark_ff::{BigInteger, FpConfig};
+    use ark_ff::BigInteger;
     use ark_std::{rand::Rng, vec::Vec};
     use jf_utils::{field_switching, test_rng};
 

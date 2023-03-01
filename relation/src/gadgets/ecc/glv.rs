@@ -572,13 +572,9 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{
-        twisted_edwards::{Affine, TECurveConfig as Config},
-        AffineRepr,
-    };
+    use ark_ec::twisted_edwards::{Affine, TECurveConfig as Config};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
     use ark_ff::{BigInteger, MontFp, One, PrimeField, UniformRand};
-    use ark_std::str::FromStr;
     use jf_utils::{field_switching, fr_to_fq, test_rng};
 
     #[test]
@@ -680,8 +676,7 @@ mod tests {
 
         let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_turbo_plonk();
         let point_var = circuit.create_point_variable(base_point).unwrap();
-        let endo_var =
-            endomorphism_circuit::<_, EdwardsConfig>(&mut circuit, &point_var).unwrap();
+        let endo_var = endomorphism_circuit::<_, EdwardsConfig>(&mut circuit, &point_var).unwrap();
         let endo_point_rec = circuit.point_witness(&endo_var).unwrap();
         assert_eq!(endo_point_rec, endo_point);
     }
