@@ -16,7 +16,7 @@ use crate::{
     proof_system::structs::CommitKey,
 };
 use ark_ec::pairing::Pairing;
-use ark_ff::{Field, One, UniformRand, Zero};
+use ark_ff::{Field, One, UniformRand, Zero, FftField};
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
     Radix2EvaluationDomain, DenseUVPolynomial,
@@ -493,7 +493,7 @@ impl<E: Pairing> Prover<E> {
         // Compute 1/Z_H(w^i).
         let z_h_inv: Vec<E::ScalarField> = (0..domain_size_ratio)
             .map(|i| {
-                ((E::ScalarField::multiplicative_generator() * self.quot_domain.element(i)).pow([n as u64])
+                ((E::ScalarField::GENERATOR * self.quot_domain.element(i)).pow([n as u64])
                     - E::ScalarField::one())
                 .inverse()
                 .unwrap()
@@ -589,7 +589,7 @@ impl<E: Pairing> Prover<E> {
                         let (t_perm_1, t_perm_2) =
                             Self::compute_quotient_copy_constraint_contribution(
                                 i,
-                                self.quot_domain.element(i) * E::ScalarField::multiplicative_generator(),
+                                self.quot_domain.element(i) * E::ScalarField::GENERATOR,
                                 pk,
                                 &w,
                                 &prod_perm_poly_coset_fft[i],
@@ -605,7 +605,7 @@ impl<E: Pairing> Prover<E> {
                             let (t_lookup_1, t_lookup_2) = self
                                 .compute_quotient_plookup_contribution(
                                     i,
-                                    self.quot_domain.element(i) * E::ScalarField::multiplicative_generator(),
+                                    self.quot_domain.element(i) * E::ScalarField::GENERATOR,
                                     pk,
                                     &w,
                                     &w_next,
