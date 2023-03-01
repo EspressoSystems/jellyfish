@@ -779,7 +779,7 @@ mod test {
         let mut rng = jf_utils::test_rng();
         let p1 = Affine::<P>::rand(&mut rng);
         let p2 = Affine::<P>::rand(&mut rng);
-        let p3 = p1 + p2;
+        let p3 = (p1 + p2).into_affine();
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let p1_var = circuit.create_point_variable(Point::from(p1))?;
