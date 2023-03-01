@@ -421,7 +421,7 @@ mod tests {
                 (0..dim).map(|_| P::ScalarField::rand(&mut rng)).collect();
             let scalar_reprs: Vec<<P::ScalarField as PrimeField>::BigInt> =
                 scalars.iter().map(|x| x.into_bigint()).collect();
-            let res = VariableBaseMSM::msm_bigint(&bases, &scalar_reprs);
+            let res = Projective::<P>::msm_bigint(&bases, &scalar_reprs);
             let res_point: Point<F> = res.into();
 
             // corresponding wires
