@@ -49,7 +49,7 @@ pub struct PlonkKzgSnark<E: Pairing>(PhantomData<E>);
 
 impl<E, F, P> PlonkKzgSnark<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -422,7 +422,7 @@ where
 
 impl<E, F, P> UniversalSNARK<E> for PlonkKzgSnark<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -716,7 +716,7 @@ pub mod test {
     }
     fn test_preprocessing_helper<E, F, P>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -851,7 +851,7 @@ pub mod test {
 
     fn test_plonk_proof_system_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1066,7 +1066,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1161,7 +1161,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1424,8 +1424,8 @@ pub mod test {
     fn test_proof_from_to_fields_helper<E, P>() -> Result<(), PlonkError>
     where
         E: Pairing<G1Affine = Affine<P>>,
-        E::Fq: RescueParameter + SWToTEConParam,
-        P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
+        E::BaseField: RescueParameter + SWToTEConParam,
+        P: SWCurveConfig<BaseField = E::BaseField, ScalarField = E::ScalarField>,
     {
         let rng = &mut jf_utils::test_rng();
         let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
@@ -1436,7 +1436,7 @@ pub mod test {
         let proof =
             PlonkKzgSnark::<E>::prove::<_, _, StandardTranscript>(rng, &circuit, &pk, None)?;
 
-        let base_fields: Vec<E::Fq> = proof.clone().into();
+        let base_fields: Vec<E::BaseField> = proof.clone().into();
         let res: Proof<E> = base_fields.try_into()?;
         assert_eq!(res, proof);
 
@@ -1468,7 +1468,7 @@ pub mod test {
 
     fn test_serde_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1531,7 +1531,7 @@ pub mod test {
         plonk_type: PlonkType,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
@@ -1629,7 +1629,7 @@ pub mod test {
         vks_ref: &[&VerifyingKey<E>],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         R: CryptoRng + RngCore,

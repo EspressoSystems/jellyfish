@@ -62,7 +62,7 @@ where
         pub_input: &[E::ScalarField],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         // to enable a more efficient verifier circuit, we remove
@@ -112,7 +112,7 @@ where
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         // convert the SW form commitments into TE form
@@ -133,7 +133,7 @@ where
         challenge: &E::ScalarField,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F>,
+        E: Pairing<BaseField = F>,
     {
         self.transcript.push(field_switching(challenge));
         Ok(())
@@ -169,9 +169,12 @@ where
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript. `_label` is omitted for
     /// efficiency.
-    fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
+    fn get_and_append_challenge<E>(
+        &mut self,
+        _label: &'static [u8],
+    ) -> Result<E::ScalarField, PlonkError>
     where
-        E: Pairing<Fq = F>,
+        E: Pairing<BaseField = F>,
     {
         // 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr

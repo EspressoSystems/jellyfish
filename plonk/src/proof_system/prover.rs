@@ -38,7 +38,7 @@ use rayon::prelude::*;
 
 type CommitmentsAndPolys<E> = (
     Vec<Commitment<E>>,
-    Vec<DensePolynomial<<E as Pairing>::Fr>>,
+    Vec<DensePolynomial<<E as Pairing>::ScalarField>>,
 );
 
 /// A Plonk IOP prover.

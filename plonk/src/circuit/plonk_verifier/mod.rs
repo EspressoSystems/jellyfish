@@ -58,7 +58,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         verify_key: &VerifyingKey<E>,
     ) -> Result<Self, CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: PrimeField + SWToTEConParam,
         P: SWParam<BaseField = F>,
     {
@@ -157,7 +157,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         blinding_factor: Variable,
     ) -> Result<(PointVariable, PointVariable), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F> + TEParam,
     {
@@ -188,7 +188,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         let m = (m2 - 1) / range_bit_len * range_bit_len + range_bit_len;
 
         // constants
-        let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
+        let two_power_m = Some(E::BaseField::from(2u8).pow([m as u64]));
 
         let fr_modulus_bits = <E::ScalarField as PrimeField>::MODULUS.to_bytes_le();
         let modulus_in_f = F::from_le_bytes_mod_order(&fr_modulus_bits);
@@ -349,7 +349,7 @@ mod test {
 
     fn test_aggregate_vks_helper<E, F, P, Q>() -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: PrimeField + RescueParameter + SWToTEConParam,
         P: SWParam<BaseField = F>,
         Q: TEParam<BaseField = F>,
@@ -441,7 +441,7 @@ mod test {
         vk_var: &VerifyingKeyVar<E>,
         vk: &VerifyingKey<E>,
     ) where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: PrimeField + SWToTEConParam,
         P: SWParam<BaseField = F>,
     {
@@ -463,7 +463,7 @@ mod test {
 
     fn test_partial_verification_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
@@ -696,15 +696,15 @@ mod test {
         blinding_factor: &E::ScalarField,
     ) -> Result<(PlonkCircuit<F>, (PointVariable, PointVariable)), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
     {
-        let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let mut circuit = PlonkCircuit::<E::BaseField>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // constants
         let m = 128;
-        let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
+        let two_power_m = Some(E::BaseField::from(2u8).pow([m as u64]));
 
         // public inputs
         let shared_public_input_var =
@@ -752,7 +752,7 @@ mod test {
     fn test_variable_independence_for_partial_verification_circuit_helper<E, F, P, Q, T>(
     ) -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,

@@ -51,7 +51,7 @@ pub(super) fn aggregate_poly_commitments_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<(ScalarsAndBasesVar<F>, Vec<FpElemVar<F>>), CircuitError>
 where
-    E: Pairing<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     if vks.len() != batch_proof.len() {
@@ -134,7 +134,7 @@ pub(super) fn aggregate_evaluations_circuit<E, F>(
     buffer_v_and_uv_basis: &[FpElemVar<F>],
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     let mut result = circuit.mod_negate(lin_poly_constant, &non_native_field_info.modulus_in_f)?;
@@ -193,7 +193,7 @@ pub(super) fn compute_challenges_vars<E, F, P>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<ChallengesFpElemVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -271,7 +271,7 @@ pub(super) fn prepare_pcs_info_var<E, F, P>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<PcsInfoVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -475,7 +475,7 @@ mod test {
 
     fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
@@ -544,11 +544,11 @@ mod test {
         // =======================================
         // begin challenge circuit
         // =======================================
-        let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let mut circuit = PlonkCircuit::<E::BaseField>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // constants
         let m = 128;
-        let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
+        let two_power_m = Some(E::BaseField::from(2u8).pow([m as u64]));
 
         let fr_modulus_bits = <E::ScalarField as PrimeField>::MODULUS.to_bytes_le();
         let modulus_in_f = F::from_le_bytes_mod_order(&fr_modulus_bits);

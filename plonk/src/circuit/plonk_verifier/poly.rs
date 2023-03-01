@@ -41,7 +41,7 @@ pub(super) fn evaluate_poly_helper<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<([FpElemVar<F>; 3]), CircuitError>
 where
-    E: Pairing<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     // constants
@@ -188,7 +188,7 @@ pub(super) fn evaluate_pi_poly_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     // the circuit is already merged
@@ -319,7 +319,7 @@ pub(super) fn compute_lin_poly_constant_term_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     if verify_keys.len() != batch_proof.len() || verify_keys.len() != public_inputs.len() {
@@ -491,7 +491,7 @@ pub(super) fn linearization_scalars_and_bases_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<ScalarsAndBasesVar<F>, CircuitError>
 where
-    E: Pairing<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     let beta_times_zeta_fp_elem_var = circuit.mod_mul(
@@ -750,7 +750,7 @@ mod test {
     fn test_evaluate_poly_helper<E: Pairing>() {
         let mut rng = test_rng();
 
-        let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let mut circuit = PlonkCircuit::<E::BaseField>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
         let zeta = E::ScalarField::rand(&mut rng);
         let zeta_var = circuit.create_variable(field_switching(&zeta)).unwrap();
 
@@ -765,13 +765,13 @@ mod test {
             // compute the variables
             let m = 128;
             // constants
-            let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
+            let two_power_m = Some(E::BaseField::from(2u8).pow([m as u64]));
 
             let fr_modulus_bits = <E::ScalarField as PrimeField>::MODULUS.to_bytes_le();
-            let modulus_in_f = E::Fq::from_le_bytes_mod_order(&fr_modulus_bits);
+            let modulus_in_f = E::BaseField::from_le_bytes_mod_order(&fr_modulus_bits);
             let modulus_fp_elem = FpElem::new(&modulus_in_f, m, two_power_m).unwrap();
 
-            let non_native_field_info = NonNativeFieldInfo::<E::Fq> {
+            let non_native_field_info = NonNativeFieldInfo::<E::BaseField> {
                 m,
                 two_power_m,
                 modulus_in_f,
@@ -791,19 +791,19 @@ mod test {
             // check the correctness
             let tmp = eval_results[0].convert_to_var(&mut circuit).unwrap();
             assert_eq!(
-                field_switching::<_, E::Fq>(&zeta_n),
+                field_switching::<_, E::BaseField>(&zeta_n),
                 circuit.witness(tmp).unwrap(),
             );
 
             let tmp = eval_results[1].convert_to_var(&mut circuit).unwrap();
             assert_eq!(
-                field_switching::<_, E::Fq>(&vanish_eval),
+                field_switching::<_, E::BaseField>(&vanish_eval),
                 circuit.witness(tmp).unwrap(),
             );
 
             let tmp = eval_results[2].convert_to_var(&mut circuit).unwrap();
             assert_eq!(
-                field_switching::<_, E::Fq>(&lagrange_1_eval),
+                field_switching::<_, E::BaseField>(&lagrange_1_eval),
                 circuit.witness(tmp).unwrap(),
             );
         }

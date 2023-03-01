@@ -50,7 +50,7 @@ where
     }
 
     // append the verification key and the public input
-    pub(crate) fn append_vk_and_pub_input_vars<E: Pairing<Fq = F>>(
+    pub(crate) fn append_vk_and_pub_input_vars<E: Pairing<BaseField = F>>(
         &mut self,
         circuit: &mut PlonkCircuit<F>,
         vk_var: &VerifyingKeyVar<E>,
@@ -196,7 +196,7 @@ where
             return Err(ParameterError("does not support range table".to_string()));
         }
 
-        if E::ScalarField::MODULUS_BIT_SIZE != 253 || E::Fq::MODULUS_BIT_SIZE != 377 {
+        if E::ScalarField::MODULUS_BIT_SIZE != 253 || E::BaseField::MODULUS_BIT_SIZE != 377 {
             return Err(ParameterError(
                 "Curve Parameter does not support for rescue transcript circuit".to_string(),
             ));
@@ -250,7 +250,7 @@ mod tests {
     }
     fn test_rescue_transcript_challenge_circuit_helper<E, F, P>()
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -296,7 +296,7 @@ mod tests {
     }
     fn test_rescue_transcript_append_vk_and_input_circuit_helper<E, F, P>()
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {

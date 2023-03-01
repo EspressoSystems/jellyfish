@@ -53,7 +53,7 @@ pub(crate) struct Verifier<E: Pairing> {
 
 impl<E, F, P> Verifier<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -784,7 +784,7 @@ where
 /// Private helper methods
 impl<E, F, P> Verifier<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {

@@ -58,7 +58,7 @@ impl<E: Pairing> Instance<E> {
 
 impl<E, F, P> BatchArgument<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {
@@ -245,7 +245,7 @@ pub fn build_batch_proof_and_vks_for_test<E, F, P, R, T>(
     shared_public_input: E::ScalarField,
 ) -> Result<(BatchProof<E>, Vec<VerifyingKey<E>>, Vec<VerifyingKey<E>>), PlonkError>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
     R: CryptoRng + RngCore,
@@ -295,7 +295,7 @@ mod test {
 
     fn test_batch_argument_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,

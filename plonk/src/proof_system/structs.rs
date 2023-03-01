@@ -81,14 +81,14 @@ pub struct Proof<E: Pairing> {
     pub(crate) plookup_proof: Option<PlookupProof<E>>,
 }
 
-impl<E, P> TryFrom<Vec<E::Fq>> for Proof<E>
+impl<E, P> TryFrom<Vec<E::BaseField>> for Proof<E>
 where
     E: Pairing<G1Affine = Affine<P>>,
-    P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
+    P: SWCurveConfig<BaseField = E::BaseField, ScalarField = E::ScalarField>,
 {
     type Error = SnarkError;
 
-    fn try_from(value: Vec<E::Fq>) -> Result<Self, Self::Error> {
+    fn try_from(value: Vec<E::BaseField>) -> Result<Self, Self::Error> {
         // both wires_poly_comms and split_quot_poly_comms are (GATE_WIDTH +1)
         // // Commitments, each point takes two base fields elements;
         // 3 individual commitment points;
@@ -135,7 +135,7 @@ where
 
             let poly_evals_scalars: Vec<E::ScalarField> = value[ptr..]
                 .iter()
-                .map(|f| fq_to_fr::<E::Fq, P>(f))
+                .map(|f| fq_to_fr::<E::BaseField, P>(f))
                 .collect();
             let poly_evals = poly_evals_scalars.try_into()?;
 
@@ -157,29 +157,29 @@ where
 }
 
 // helper function to convert a G1Affine or G2Affine into two base fields
-fn group1_to_fields<E, P>(p: Affine<P>) -> Vec<E::Fq>
+fn group1_to_fields<E, P>(p: Affine<P>) -> Vec<E::BaseField>
 where
     E: Pairing<G1Affine = Affine<P>>,
-    P: SWCurveConfig<BaseField = E::Fq>,
+    P: SWCurveConfig<BaseField = E::BaseField>,
 {
     // contains x, y, infinity_flag, only need the first 2 field elements
     vec![p.x, p.y]
 }
 
-fn group2_to_fields<E, F, P>(p: Affine<P>) -> Vec<E::Fq>
+fn group2_to_fields<E, F, P>(p: Affine<P>) -> Vec<E::BaseField>
 where
-    E: Pairing<G2Affine = Affine<P>, Fqe = Fp2<F>>,
-    F: Fp2Parameters<Fp = E::Fq>,
-    P: SWCurveConfig<BaseField = E::Fqe>,
+    E: Pairing<G2Affine = Affine<P>, TargetField = Fp2<F>>,
+    F: Fp2Config<Fp = E::BaseField>,
+    P: SWCurveConfig<BaseField = E::TargetField>,
 {
     // contains x, y, infinity_flag, only need the first 2 field elements
     vec![p.x.c0, p.x.c1, p.y.c0, p.y.c1]
 }
 
-impl<E, P> From<Proof<E>> for Vec<E::Fq>
+impl<E, P> From<Proof<E>> for Vec<E::BaseField>
 where
     E: Pairing<G1Affine = Affine<P>>,
-    P: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
+    P: SWCurveConfig<BaseField = E::BaseField, ScalarField = E::ScalarField>,
 {
     fn from(proof: Proof<E>) -> Self {
         if proof.plookup_proof.is_some() {
@@ -206,7 +206,7 @@ where
             group1_to_fields::<E, _>(proof.shifted_opening_proof.0),
             poly_evals_scalars
                 .iter()
-                .map(|s| fr_to_fq::<E::Fq, P>(s))
+                .map(|s| fr_to_fq::<E::BaseField, P>(s))
                 .collect::<Vec<_>>(),
         ]
         .concat()
@@ -351,7 +351,7 @@ impl<E: Pairing> BatchProof<E> {
         two_power_m: Option<F>,
     ) -> Result<BatchProofVar<F>, PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F>,
     {
@@ -681,12 +681,12 @@ pub struct VerifyingKey<E: Pairing> {
     pub(crate) plookup_vk: Option<PlookupVerifyingKey<E>>,
 }
 
-impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::Fq>
+impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::BaseField>
 where
-    E: Pairing<G1Affine = Affine<P1>, G2Affine = Affine<P2>, Fqe = Fp2<F>>,
-    F: Fp2Parameters<Fp = E::Fq>,
-    P1: SWCurveConfig<BaseField = E::Fq, ScalarField = E::ScalarField>,
-    P2: SWCurveConfig<BaseField = E::Fqe, ScalarField = E::ScalarField>,
+    E: Pairing<G1Affine = Affine<P1>, G2Affine = Affine<P2>, TargetField = Fp2<F>>,
+    F: Fp2Config<Fp = E::BaseField>,
+    P1: SWCurveConfig<BaseField = E::BaseField, ScalarField = E::ScalarField>,
+    P2: SWCurveConfig<BaseField = E::TargetField, ScalarField = E::ScalarField>,
 {
     fn from(vk: VerifyingKey<E>) -> Self {
         if vk.plookup_vk.is_some() {
@@ -694,8 +694,8 @@ where
         }
 
         [
-            vec![E::Fq::from(vk.domain_size as u64)],
-            vec![E::Fq::from(vk.num_inputs as u64)],
+            vec![E::BaseField::from(vk.domain_size as u64)],
+            vec![E::BaseField::from(vk.num_inputs as u64)],
             vk.sigma_comms
                 .iter()
                 .map(|cm| group1_to_fields::<E, _>(cm.0))
@@ -706,7 +706,7 @@ where
                 .map(|cm| group1_to_fields::<E, _>(cm.0))
                 .collect::<Vec<_>>()
                 .concat(),
-            vk.k.iter().map(|fr| fr_to_fq::<E::Fq, P1>(fr)).collect(),
+            vk.k.iter().map(|fr| fr_to_fq::<E::BaseField, P1>(fr)).collect(),
             // NOTE: only adding g, h, beta_h since only these are used.
             group1_to_fields::<E, P1>(vk.open_key.g),
             group2_to_fields::<E, F, P2>(vk.open_key.h),
@@ -718,7 +718,7 @@ where
 
 impl<E, F, P> VerifyingKey<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {

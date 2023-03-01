@@ -48,7 +48,7 @@ pub trait PlonkTranscript<F> {
         pub_input: &[E::ScalarField],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(
@@ -111,7 +111,7 @@ pub trait PlonkTranscript<F> {
         comms: &[Commitment<E>],
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         for comm in comms.iter() {
@@ -127,7 +127,7 @@ pub trait PlonkTranscript<F> {
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F, G1Affine = Affine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
@@ -140,7 +140,7 @@ pub trait PlonkTranscript<F> {
         challenge: &E::ScalarField,
     ) -> Result<(), PlonkError>
     where
-        E: Pairing<Fq = F>,
+        E: Pairing<BaseField = F>,
     {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(challenge)?)
     }
@@ -206,7 +206,10 @@ pub trait PlonkTranscript<F> {
 
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript.
-    fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
+    fn get_and_append_challenge<E>(
+        &mut self,
+        label: &'static [u8],
+    ) -> Result<E::ScalarField, PlonkError>
     where
-        E: Pairing<Fq = F>;
+        E: Pairing<BaseField = F>;
 }

@@ -77,13 +77,13 @@ pub trait UniversalSNARK<E: Pairing> {
     where
         C: Arithmetization<E::ScalarField>,
         R: CryptoRng + RngCore,
-        T: PlonkTranscript<E::Fq>;
+        T: PlonkTranscript<E::BaseField>;
 
     /// Verify a SNARK proof `proof` of the circuit `circuit`, with respect to
     /// the public input `pub_input`.
     ///
     /// `extra_transcript_init_msg`: refer to documentation of `prove`
-    fn verify<T: PlonkTranscript<E::Fq>>(
+    fn verify<T: PlonkTranscript<E::BaseField>>(
         verify_key: &Self::VerifyingKey,
         public_input: &[E::ScalarField],
         proof: &Self::Proof,
