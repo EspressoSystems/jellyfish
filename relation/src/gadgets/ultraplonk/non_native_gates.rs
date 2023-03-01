@@ -217,7 +217,8 @@ mod test {
         let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -261,7 +262,8 @@ mod test {
         let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -305,7 +307,8 @@ mod test {
         let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
         let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -350,7 +353,8 @@ mod test {
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        let m = (T::MODULUS_BIT_SIZE / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let mut rng = test_rng();
 

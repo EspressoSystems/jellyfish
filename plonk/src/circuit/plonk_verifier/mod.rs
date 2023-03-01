@@ -183,7 +183,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         }
 
         let range_bit_len = circuit.range_bit_len()?;
-        let m2 = (<E::ScalarField as PrimeField>::MODULUS_BIT_SIZE + 1) >> 1;
+        let m2 = (<E::ScalarField as PrimeField>::MODULUS_BIT_SIZE as usize + 1) >> 1;
         // m should be a multiple of `range_bit_len`
         let m = (m2 - 1) / range_bit_len * range_bit_len + range_bit_len;
 

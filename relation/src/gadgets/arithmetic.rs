@@ -882,7 +882,7 @@ mod test {
 
         // more tests
         for minus_len in 1..=16 {
-            let len = F::MODULUS_BIT_SIZE - minus_len;
+            let len = F::MODULUS_BIT_SIZE as usize - minus_len;
             let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
             let x_var = circuit.create_variable(x)?;
             let modulus = F::from(2u8).pow([len as u64]);
@@ -924,7 +924,7 @@ mod test {
             let y = F::one();
             let y_var = circuit.create_variable(y)?;
             assert!(circuit
-                .truncate_gate(x_var, y_var, F::MODULUS_BIT_SIZE)
+                .truncate_gate(x_var, y_var, F::MODULUS_BIT_SIZE as usize)
                 .is_err());
         }
 

@@ -198,7 +198,7 @@ mod test {
         assert!(circuit.enforce_in_range(a, 0).is_err());
         // bit length bigger than that of a field element (bit length takes 256 or 381
         // bits)
-        let bit_len = (F::MODULUS_BIT_SIZE / 8 + 1) * 8;
+        let bit_len = (F::MODULUS_BIT_SIZE as usize / 8 + 1) * 8;
         assert!(circuit.enforce_in_range(a, bit_len + 1).is_err());
         // if mess up the wire value, should fail
         *circuit.witness_mut(b) = F::from(1024u32);

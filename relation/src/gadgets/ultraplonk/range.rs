@@ -104,7 +104,7 @@ mod test {
         test_decompose_le_helper::<Fq377>();
     }
     fn test_decompose_le_helper<F: PrimeField>() {
-        let len = F::MODULUS_BIT_SIZE / RANGE_BIT_LEN_FOR_TEST + 1;
+        let len = F::MODULUS_BIT_SIZE as usize / RANGE_BIT_LEN_FOR_TEST + 1;
         let mut rng = test_rng();
         for _ in 0..10 {
             let val = F::rand(&mut rng);

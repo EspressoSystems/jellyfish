@@ -910,7 +910,7 @@ mod test {
         let p = int_div(&F::rand(&mut rng), &F::from(4u8));
 
         // case 1: m = len(|F|) / 2
-        let m = F::MODULUS_BIT_SIZE / 2;
+        let m = F::MODULUS_BIT_SIZE as usize / 2;
         let two_power_m = F::from(2u8).pow([m as u64]);
         let fp_elem = FpElem::new(&p, m, Some(two_power_m))?;
         assert!(fp_elem.p.0 < two_power_m, "p0 larger than 2^m");
@@ -924,7 +924,7 @@ mod test {
         assert_eq!(p, q, "FpElem conversion failure when m = 0");
 
         // case 3: m > len(|F|) / 2
-        let m = F::MODULUS_BIT_SIZE / 2 + 1;
+        let m = F::MODULUS_BIT_SIZE as usize / 2 + 1;
         assert!(FpElem::new(&p, m, Some(two_power_m)).is_err());
 
         Ok(())
@@ -940,7 +940,7 @@ mod test {
     // Test FpElemVar variables creation and conversion
     fn test_fp_elem_var_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        let m = F::MODULUS_BIT_SIZE / 2;
+        let m = F::MODULUS_BIT_SIZE as usize / 2;
         let mut rng = test_rng();
 
         // Good path
