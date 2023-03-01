@@ -11,7 +11,7 @@ use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Vari
 use ark_ec::{
     short_weierstrass::{Affine as SWGroupAffine, SWCurveConfig},
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-    AffineRepr, CurveConfig, CurveGroup, Group,
+    AffineRepr, CurveConfig, CurveGroup, Group, ScalarMul,
 };
 use ark_ff::PrimeField;
 use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
@@ -425,7 +425,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // `num_bits` needs to be an even number
         num_bits += num_bits & 1;
         let scalar_bits_le = self.unpack(scalar, num_bits)?;
-        let fixed_bases = compute_base_points(base, num_bits / 2)?;
+        let fixed_bases = compute_base_points(&base.into_group(), num_bits / 2)?;
         let mut accum = self.neutral_point_variable();
         for i in 0..num_bits / 2 {
             let b0 = scalar_bits_le.get(2 * i).ok_or_else(|| {
@@ -524,16 +524,16 @@ impl<F: PrimeField> PlonkCircuit<F> {
 // The function computes:
 // {4^i * [G]}_{i=0..n-1}, {2 * 4^i * [G]}_{i=0..n-1}, and {3 * 4^i *
 // [G]}_{i=0..n-1}
-fn compute_base_points<E: AffineRepr + Group>(
-    base: &E,
-    len: usize,
-) -> Result<[Vec<E>; 3], CircuitError> {
+// TODO (tessico): this used to operate on Affine points, but now it takes in Projective points.
+// There are some known issues with outputting projectives, we should make sure that the usage
+// here is safe.
+fn compute_base_points<E: ScalarMul>(base: &E, len: usize) -> Result<[Vec<E>; 3], CircuitError> {
     if len == 0 {
         return Err(CircuitError::InternalError(
             "compute base points length input parameter must be positive".to_string(),
         ));
     }
-    fn next_base<E: AffineRepr + Group>(bases: &[E]) -> Result<E, CircuitError> {
+    fn next_base<E: ScalarMul>(bases: &[E]) -> Result<E, CircuitError> {
         let last = *bases.last().ok_or_else(|| {
             CircuitError::InternalError(
                 "Initialize the fixed base vector before calling this function".to_string(),
@@ -541,10 +541,7 @@ fn compute_base_points<E: AffineRepr + Group>(
         })?;
         Ok(last.double().double())
     }
-    fn fill_bases<E: AffineRepr + Group>(
-        bases: &mut Vec<E>,
-        len: usize,
-    ) -> Result<(), CircuitError> {
+    fn fill_bases<E: ScalarMul>(bases: &mut Vec<E>, len: usize) -> Result<(), CircuitError> {
         for _ in 1..len {
             bases.push(next_base(bases)?);
         }
@@ -1050,7 +1047,7 @@ mod test {
         F: PrimeField,
         P: Config<BaseField = F>,
     {
-        fn check_base_list<F, P>(bases: &[Affine<P>])
+        fn check_base_list<F, P>(bases: &[Projective<P>])
         where
             F: PrimeField,
             P: Config<BaseField = F>,
@@ -1059,18 +1056,19 @@ mod test {
                 .windows(2)
                 .for_each(|neighbors| assert!(neighbors[1] == neighbors[0].double().double()));
         }
+
         let mut rng = jf_utils::test_rng();
 
         let base = Affine::<P>::rand(&mut rng);
-        let base2 = base.double();
+        let base2 = base.into_group().double();
         let base3 = base + base2;
 
         assert_eq!(
-            compute_base_points(&base, 1)?,
-            [vec![base], vec![base2], vec![base3]]
+            compute_base_points(&base.into_group(), 1)?,
+            [vec![base.into_group()], vec![base2], vec![base3]]
         );
         let size = 10;
-        let result = compute_base_points(&base, size)?;
+        let result = compute_base_points(&base.into_group(), size)?;
         let bases1 = &result[0];
         assert_eq!(bases1.len(), size);
         let bases2 = &result[1];
