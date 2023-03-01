@@ -36,7 +36,7 @@ fn main() -> Result<(), PlonkError> {
     let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
     let x = Fr::rand(&mut rng);
     let G = EdwardsAffine::generator();
-    let X = G.mul(x).into_affine();
+    let X = (G * x).into_affine();
 
     // Our first step is to build a circuit for the following statements.
     // - secret input `x`;
@@ -101,7 +101,7 @@ where
 {
     // Let's check that the inputs are indeed correct before we build a circuit.
     let G = TEAffine::<EmbedCurve>::generator();
-    assert_eq!(X, G.mul(x), "the inputs are incorrect: X != xG");
+    assert_eq!(X, G * x, "the inputs are incorrect: X != xG");
 
     // Step 1:
     // We instantiate a turbo plonk circuit.
