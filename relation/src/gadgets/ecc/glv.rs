@@ -601,7 +601,7 @@ mod tests {
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -615,7 +615,7 @@ mod tests {
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -630,7 +630,7 @@ mod tests {
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -645,7 +645,7 @@ mod tests {
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 

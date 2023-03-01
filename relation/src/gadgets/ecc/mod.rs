@@ -1114,7 +1114,7 @@ mod test {
             let s = P::ScalarField::rand(&mut rng);
             let scalar = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
             let result = circuit.fixed_base_scalar_mul(scalar, &base)?;
-            base *= s;
+            base = (base * s).into();
             assert_eq!(Point::from(base), circuit.point_witness(&result)?);
         }
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -1241,7 +1241,7 @@ mod test {
             let s = P::ScalarField::rand(&mut rng);
             let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
             let base_var = circuit.create_point_variable(Point::from(base))?;
-            base *= s;
+            base = (base * s).into();
             let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
             assert_eq!(Point::from(base), circuit.point_witness(&result)?);
         }
