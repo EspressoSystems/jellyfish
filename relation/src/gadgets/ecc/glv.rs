@@ -572,11 +572,14 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{twisted_edwards::Affine, TECurveConfig as Config};
+    use ark_ec::{
+        twisted_edwards::{Affine, TECurveConfig as Config},
+        AffineRepr,
+    };
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
-    use ark_ff::{BigInteger, One, PrimeField, UniformRand};
-    use ark_std::{str::FromStr, test_rng};
-    use jf_utils::{field_switching, fr_to_fq};
+    use ark_ff::{BigInteger, MontFp, One, PrimeField, UniformRand};
+    use ark_std::str::FromStr;
+    use jf_utils::{field_switching, fr_to_fq, test_rng};
 
     #[test]
     fn test_glv() -> Result<(), CircuitError> {
@@ -655,16 +658,20 @@ mod tests {
 
     #[test]
     fn test_endomorphism() {
-        let base_point = EdwardsAffine::from_str(
-            "(29627151942733444043031429156003786749302466371339015363120350521834195802525, \
-        27488387519748396681411951718153463804682561779047093991696427532072116857978)",
-        )
-        .unwrap();
-        let endo_point = EdwardsAffine::from_str(
-            "(3995099504672814451457646880854530097687530507181962222512229786736061793535, \
-         33370049900732270411777328808452912493896532385897059012214433666611661340894)",
-        )
-        .unwrap();
+        let base_point = EdwardsAffine::new_unchecked(
+            MontFp!(
+                "29627151942733444043031429156003786749302466371339015363120350521834195802525"
+            ),
+            MontFp!(
+                "27488387519748396681411951718153463804682561779047093991696427532072116857978"
+            ),
+        );
+        let endo_point = EdwardsAffine::new_unchecked(
+            MontFp!("3995099504672814451457646880854530097687530507181962222512229786736061793535"),
+            MontFp!(
+                "33370049900732270411777328808452912493896532385897059012214433666611661340894"
+            ),
+        );
         let base_point: Point<Fq> = base_point.into();
         let endo_point: Point<Fq> = endo_point.into();
 
