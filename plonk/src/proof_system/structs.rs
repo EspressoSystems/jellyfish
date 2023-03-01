@@ -169,9 +169,9 @@ where
 
 fn group2_to_fields<E, F, P>(p: Affine<P>) -> Vec<E::BaseField>
 where
-    E: Pairing<G2Affine = Affine<P>, TargetField = Fp2<F>>,
+    E: Pairing<G2Affine = Affine<P>>,
     F: Fp2Config<Fp = E::BaseField>,
-    P: SWCurveConfig<BaseField = E::TargetField>,
+    P: SWCurveConfig<BaseField = Fp2<F>>,
 {
     // contains x, y, infinity_flag, only need the first 2 field elements
     vec![p.x.c0, p.x.c1, p.y.c0, p.y.c1]
