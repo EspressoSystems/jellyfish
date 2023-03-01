@@ -16,6 +16,7 @@ use ark_ec::{
     pairing::Pairing,
     scalar_mul::variable_base::VariableBaseMSM,
     short_weierstrass::{Affine, SWCurveConfig},
+    CurveGroup,
 };
 use ark_ff::{FftField, Field, Fp2, Fp2Config, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
@@ -805,13 +806,13 @@ impl<E: Pairing> VerifyingKey<E> {
             .sigma_comms
             .iter()
             .zip(other_vk.sigma_comms.iter())
-            .map(|(com1, com2)| Commitment(com1.0 + com2.0))
+            .map(|(com1, com2)| Commitment((com1.0 + com2.0).into_affine()))
             .collect();
         let selector_comms: Vec<Commitment<E>> = self
             .selector_comms
             .iter()
             .zip(other_vk.selector_comms.iter())
-            .map(|(com1, com2)| Commitment(com1.0 + com2.0))
+            .map(|(com1, com2)| Commitment((com1.0 + com2.0).into_affine()))
             .collect();
 
         Ok(Self {
