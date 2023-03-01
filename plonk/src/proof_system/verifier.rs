@@ -251,7 +251,7 @@ where
         g1_elems.push(-inner.into());
         g2_elems.push(open_key.h);
         // Check e(A, [x]2) ?= e(B, [1]2)
-        Ok(multi_pairing::<E>(&g1_elems, &g2_elems) == E::TargetField::one())
+        Ok(multi_pairing::<E>(&g1_elems, &g2_elems).0 == E::TargetField::one())
     }
 
     /// Compute verifier challenges `tau`, `beta`, `gamma`, `alpha`, `zeta`,
