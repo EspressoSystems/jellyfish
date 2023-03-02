@@ -11,7 +11,7 @@ use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Vari
 use ark_ec::{
     short_weierstrass::{Affine as SWGroupAffine, SWCurveConfig},
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-    AffineRepr, CurveConfig, CurveGroup, Group, ScalarMul,
+    AffineRepr, CurveConfig, CurveGroup, ScalarMul,
 };
 use ark_ff::PrimeField;
 use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
@@ -594,7 +594,7 @@ mod test {
     use super::*;
     use crate::{gadgets::test_utils::test_variable_independence_for_circuit, Circuit};
     use ark_bls12_377::{g1::Config as Param761, Fq as Fq377};
-    use ark_ec::twisted_edwards::TECurveConfig as Config;
+    use ark_ec::{twisted_edwards::TECurveConfig as Config, Group};
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as FqEd381};
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsConfig as Param381b, Fq as FqEd381b};

@@ -11,7 +11,7 @@ use ark_ec::{
     short_weierstrass::{Affine, SWCurveConfig as SWParam},
     twisted_edwards::TECurveConfig as TEParam,
 };
-use ark_ff::{BigInteger, FpConfig, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
