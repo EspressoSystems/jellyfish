@@ -505,6 +505,7 @@ impl<E: Pairing> Prover<E> {
         let mut alpha_base = E::ScalarField::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
+        // TODO: figure out if the unwrap is safe/map error?
         let coset = self
             .quot_domain
             .get_coset(E::ScalarField::GENERATOR)
