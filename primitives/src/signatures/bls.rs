@@ -202,8 +202,8 @@ impl CanonicalDeserialize for BLSVerKey {
             validate,
         )?;
         // length validation is always performed
-        if !(len == BLS_SIG_COMPRESSED_PK_SIZE && compress == Compress::Yes)
-            && !(len == BLS_SIG_PK_SIZE && compress == Compress::No)
+        if !(len == BLS_SIG_COMPRESSED_PK_SIZE && compress == Compress::Yes
+            || len == BLS_SIG_PK_SIZE && compress == Compress::No)
         {
             return Err(SerializationError::InvalidData);
         }
@@ -283,8 +283,8 @@ impl CanonicalDeserialize for BLSSignature {
             Compress::Yes,
             Validate::Yes,
         )?;
-        if !(len == BLS_SIG_COMPRESSED_SIGNATURE_SIZE && compress == Compress::Yes)
-            && !(len == BLS_SIG_SIGNATURE_SIZE && compress == Compress::No)
+        if !(len == BLS_SIG_COMPRESSED_SIGNATURE_SIZE && compress == Compress::Yes
+            || len == BLS_SIG_SIGNATURE_SIZE && compress == Compress::No)
         {
             return Err(SerializationError::InvalidData);
         }
