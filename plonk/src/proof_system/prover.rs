@@ -505,29 +505,32 @@ impl<E: Pairing> Prover<E> {
         let mut alpha_base = E::ScalarField::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
+        let coset = self
+            .quot_domain
+            .get_coset(E::ScalarField::GENERATOR)
+            .unwrap();
         // enumerate proving instances
         for (oracles, pk) in online_oracles.iter().zip(pks.iter()) {
             // lookup_flag = 1 if support Plookup argument.
             let lookup_flag = pk.plookup_pk.is_some();
 
             // Compute coset evaluations.
-            let selectors_coset_fft: Vec<Vec<E::ScalarField>> = parallelizable_slice_iter(&pk.selectors)
-                .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
-                .collect();
+            let selectors_coset_fft: Vec<Vec<E::ScalarField>> =
+                parallelizable_slice_iter(&pk.selectors)
+                    .map(|poly| coset.fft(poly.coeffs()))
+                    .collect();
             let sigmas_coset_fft: Vec<Vec<E::ScalarField>> = parallelizable_slice_iter(&pk.sigmas)
-                .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                .map(|poly| coset.fft(poly.coeffs()))
                 .collect();
             let wire_polys_coset_fft: Vec<Vec<E::ScalarField>> =
                 parallelizable_slice_iter(&oracles.wire_polys)
-                    .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                    .map(|poly| coset.fft(poly.coeffs()))
                     .collect();
 
             // TODO: (binyi) we can also compute below in parallel with
             // `wire_polys_coset_fft`.
-            let prod_perm_poly_coset_fft =
-                self.quot_domain.coset_fft(oracles.prod_perm_poly.coeffs());
-            let pub_input_poly_coset_fft =
-                self.quot_domain.coset_fft(oracles.pub_inp_poly.coeffs());
+            let prod_perm_poly_coset_fft = coset.fft(oracles.prod_perm_poly.coeffs());
+            let pub_input_poly_coset_fft = coset.fft(oracles.pub_inp_poly.coeffs());
 
             // Compute coset evaluations of Plookup online oracles.
             let (
@@ -538,25 +541,20 @@ impl<E: Pairing> Prover<E> {
                 h_coset_ffts,
                 prod_lookup_poly_coset_fft,
             ) = if lookup_flag {
-                let table_dom_sep_coset_fft = self
-                    .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
-                let q_dom_sep_coset_fft = self
-                    .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
-                let range_table_coset_fft = self
-                    .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().range_table_poly.coeffs()); // safe unwrap
-                let key_table_coset_fft = self
-                    .quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
+                let table_dom_sep_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
+                let q_dom_sep_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
+                let range_table_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().range_table_poly.coeffs()); // safe unwrap
+                let key_table_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); // safe unwrap
                 let h_coset_ffts: Vec<Vec<E::ScalarField>> =
                     parallelizable_slice_iter(&oracles.plookup_oracles.h_polys)
-                        .map(|poly| self.quot_domain.coset_fft(poly.coeffs()))
+                        .map(|poly| coset.fft(poly.coeffs()))
                         .collect();
-                let prod_lookup_poly_coset_fft = self
-                    .quot_domain
-                    .coset_fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
+                let prod_lookup_poly_coset_fft =
+                    coset.fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
                 (
                     Some(table_dom_sep_coset_fft),
                     Some(q_dom_sep_coset_fft),
@@ -642,7 +640,7 @@ impl<E: Pairing> Prover<E> {
         }
         // Compute the coefficient form of the quotient polynomial
         Ok(DensePolynomial::from_coefficients_vec(
-            self.quot_domain.coset_ifft(&quot_poly_coset_evals_sum),
+            coset.ifft(&quot_poly_coset_evals_sum),
         ))
     }
 
