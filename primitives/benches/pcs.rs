@@ -6,6 +6,7 @@ use jf_primitives::pcs::{
     prelude::{MultilinearKzgPCS, PCSError, PolynomialCommitmentScheme},
     StructuredReferenceString,
 };
+use jf_utils::test_rng;
 use std::time::Instant;
 
 fn main() -> Result<(), PCSError> {
