@@ -68,7 +68,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE <
+        // F::MODULUS_BIT_SIZE
         let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
@@ -106,7 +107,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE <
+        // F::MODULUS_BIT_SIZE
         let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
@@ -173,7 +175,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE <
+        // F::MODULUS_BIT_SIZE
         let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem

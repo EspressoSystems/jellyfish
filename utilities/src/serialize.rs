@@ -65,7 +65,8 @@ pub mod canonical {
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
         let mut bytes = Vec::new();
-        T::serialize_compressed(elem, &mut bytes).map_err(|e| S::Error::custom(format!("{e:?}")))?;
+        T::serialize_compressed(elem, &mut bytes)
+            .map_err(|e| S::Error::custom(format!("{e:?}")))?;
         Serialize::serialize(&TaggedBase64::new("FIELD", &bytes).unwrap(), serializer)
     }
 
@@ -74,7 +75,8 @@ pub mod canonical {
     ) -> Result<T, D::Error> {
         let tb64 = <TaggedBase64 as Deserialize>::deserialize(deserializer)?;
         if tb64.tag() == "FIELD" {
-            T::deserialize_compressed_unchecked(tb64.as_ref()).map_err(|e| D::Error::custom(format!("{e:?}")))
+            T::deserialize_compressed_unchecked(tb64.as_ref())
+                .map_err(|e| D::Error::custom(format!("{e:?}")))
         } else {
             Err(D::Error::custom(format!(
                 "incorrect tag (expected FIELD, got {})",

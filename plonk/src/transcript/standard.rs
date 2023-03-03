@@ -30,7 +30,10 @@ impl<F> PlonkTranscript<F> for StandardTranscript {
 
     // generate the challenge for the current transcript
     // and append it to the transcript
-    fn get_and_append_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
+    fn get_and_append_challenge<E>(
+        &mut self,
+        label: &'static [u8],
+    ) -> Result<E::ScalarField, PlonkError>
     where
         E: Pairing,
     {

@@ -92,8 +92,9 @@ where
 
     // zeta^n = zeta_n_minus_1 + 1
     let zeta_n = zeta_n_fp_elem_var.witness(circuit)?;
-    let zeta_n_minus_one =
-        field_switching::<_, F>(&(field_switching::<_, E::ScalarField>(&zeta_n) - E::ScalarField::one()));
+    let zeta_n_minus_one = field_switching::<_, F>(
+        &(field_switching::<_, E::ScalarField>(&zeta_n) - E::ScalarField::one()),
+    );
     let zeta_n_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
         &zeta_n_minus_one,
@@ -201,7 +202,8 @@ where
 
     // constants
     let zeta = field_switching::<_, E::ScalarField>(&zeta_fp_elem_var.witness(circuit)?);
-    let vanish_eval = field_switching::<_, E::ScalarField>(&vanish_eval_fp_elem_var.witness(circuit)?);
+    let vanish_eval =
+        field_switching::<_, E::ScalarField>(&vanish_eval_fp_elem_var.witness(circuit)?);
 
     // compute v_i = g^i / n in the clear
     let domain = Radix2EvaluationDomain::<E::ScalarField>::new(domain_size).unwrap();

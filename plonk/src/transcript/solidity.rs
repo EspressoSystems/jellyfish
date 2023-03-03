@@ -53,7 +53,10 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript. `_label` is omitted for
     /// efficiency.
-    fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
+    fn get_and_append_challenge<E>(
+        &mut self,
+        _label: &'static [u8],
+    ) -> Result<E::ScalarField, PlonkError>
     where
         E: Pairing,
     {

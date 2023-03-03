@@ -12,7 +12,8 @@ use crate::{
 };
 use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{
-    domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, DenseUVPolynomial,
+    domain::Radix2EvaluationDomain, univariate::DensePolynomial, DenseUVPolynomial,
+    EvaluationDomain,
 };
 use ark_std::{boxed::Box, cmp::max, format, string::ToString, vec, vec::Vec};
 use hashbrown::{HashMap, HashSet};

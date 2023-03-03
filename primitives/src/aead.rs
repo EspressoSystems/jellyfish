@@ -65,8 +65,8 @@ impl CanonicalSerialize for EncKey {
 }
 
 impl CanonicalDeserialize for EncKey {
-    /// Currently no checking is done on the public key. This is unimplemented upstream, see
-    /// https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338
+    /// Currently no checking is done on the public key. This is unimplemented
+    /// upstream, see https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338
     fn deserialize_with_mode<R>(
         mut reader: R,
         _compress: Compress,
@@ -84,7 +84,8 @@ impl CanonicalDeserialize for EncKey {
         reader.read_exact(&mut key)?;
         let enc_key = Self(crypto_box::PublicKey::from(key));
         if validate == Validate::Yes {
-            // TODO (tessico): Currently this is a no-op. Should we fail if user asks to validate?
+            // TODO (tessico): Currently this is a no-op. Should we fail if user asks to
+            // validate?
             enc_key.check()?;
         }
 
@@ -183,7 +184,8 @@ impl CanonicalDeserialize for DecKey {
         let dec_key = Self(crypto_box::SecretKey::from(k));
 
         if validate == Validate::Yes {
-            // TODO (tessico): Currently this is a no-op. Should we fail if user asks to validate?
+            // TODO (tessico): Currently this is a no-op. Should we fail if user asks to
+            // validate?
             dec_key.check()?;
         }
 
@@ -306,8 +308,9 @@ impl CanonicalDeserialize for Ciphertext {
         let mut ct = vec![0u8; len as usize];
         reader.read_exact(&mut ct)?;
 
-        // Note: since EncKey validation check is a no-op, it will propagate here and validation will also be a no-op.
-        // Keeping the validation flag for potential future use when some EncKey validation is implemented.
+        // Note: since EncKey validation check is a no-op, it will propagate here and
+        // validation will also be a no-op. Keeping the validation flag for
+        // potential future use when some EncKey validation is implemented.
         let ephemeral_pk = EncKey::deserialize_with_mode(&mut reader, Compress::Yes, validate)?;
         Ok(Self {
             nonce,

@@ -434,7 +434,8 @@ mod test {
 
             let mut ser_bytes: Vec<u8> = Vec::new();
             ct.serialize_compressed(&mut ser_bytes).unwrap();
-            let de: Ciphertext<$param> = Ciphertext::deserialize_compressed(&ser_bytes[..]).unwrap();
+            let de: Ciphertext<$param> =
+                Ciphertext::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(ct, de);
         };
     }

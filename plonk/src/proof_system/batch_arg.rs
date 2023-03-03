@@ -201,11 +201,7 @@ where
     }
 
     /// Perform the final pairing to verify the proof.
-    pub fn decide(
-        open_key: &OpenKey<E>,
-        inner1: E::G1,
-        inner2: E::G1,
-    ) -> Result<bool, PlonkError> {
+    pub fn decide(open_key: &OpenKey<E>, inner1: E::G1, inner2: E::G1) -> Result<bool, PlonkError> {
         // check e(elem1, [beta]2) ?= e(elem2, [1]2)
         let g1_elems: Vec<<E as Pairing>::G1Affine> = vec![inner1.into(), (-inner2).into()];
         let g2_elems = vec![open_key.beta_h, open_key.h];

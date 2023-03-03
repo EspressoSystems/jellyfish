@@ -131,12 +131,8 @@ impl<E: Pairing> StructuredReferenceString<E> for UnivariateUniversalParams<E> {
         let g_time = start_timer!(|| "Generating powers of G");
         // TODO: parallelization
         let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
-        let powers_of_g = FixedBase::msm::<E::G1>(
-            scalar_bits,
-            window_size,
-            &g_table,
-            &powers_of_beta,
-        );
+        let powers_of_g =
+            FixedBase::msm::<E::G1>(scalar_bits, window_size, &g_table, &powers_of_beta);
         end_timer!(g_time);
 
         let powers_of_g = E::G1::normalize_batch(&powers_of_g);

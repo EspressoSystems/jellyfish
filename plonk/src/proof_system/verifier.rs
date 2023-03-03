@@ -404,7 +404,8 @@ where
             );
 
             if let Some(proof_lk) = plookup_proof {
-                let gamma_mul_beta_plus_one = challenges.gamma * (E::ScalarField::one() + challenges.beta);
+                let gamma_mul_beta_plus_one =
+                    challenges.gamma * (E::ScalarField::one() + challenges.beta);
                 let evals = &proof_lk.poly_evals;
 
                 let plookup_constant = *lagrange_n_eval
@@ -687,7 +688,8 @@ where
         }
 
         // Add splitted quotient commitments
-        let zeta_to_n_plus_2 = (E::ScalarField::one() + vanish_eval) * challenges.zeta * challenges.zeta;
+        let zeta_to_n_plus_2 =
+            (E::ScalarField::one() + vanish_eval) * challenges.zeta * challenges.zeta;
         let mut coeff = vanish_eval.neg();
         scalars_and_bases.push(
             coeff,
@@ -804,7 +806,11 @@ where
     /// Add a polynomial commitment evaluation value to the aggregated
     /// polynomial evaluation, update the random combiner afterward.
     #[inline]
-    fn add_pcs_eval(result: &mut E::ScalarField, random_combiner: &E::ScalarField, eval: E::ScalarField) {
+    fn add_pcs_eval(
+        result: &mut E::ScalarField,
+        random_combiner: &E::ScalarField,
+        eval: E::ScalarField,
+    ) {
         *result += eval * (*random_combiner);
     }
 
@@ -817,10 +823,16 @@ where
     /// Evaluate the first and the last lagrange polynomial at point `zeta`
     /// given the vanishing polynomial evaluation `vanish_eval`.
     #[inline]
-    fn evaluate_lagrange_1_and_n(&self, zeta: &E::ScalarField, vanish_eval: &E::ScalarField) -> (E::ScalarField, E::ScalarField) {
-        let divisor = E::ScalarField::from(self.domain.size() as u32) * (*zeta - E::ScalarField::one());
+    fn evaluate_lagrange_1_and_n(
+        &self,
+        zeta: &E::ScalarField,
+        vanish_eval: &E::ScalarField,
+    ) -> (E::ScalarField, E::ScalarField) {
+        let divisor =
+            E::ScalarField::from(self.domain.size() as u32) * (*zeta - E::ScalarField::one());
         let lagrange_1_eval = *vanish_eval / divisor;
-        let divisor = E::ScalarField::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
+        let divisor =
+            E::ScalarField::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
         let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
         (lagrange_1_eval, lagrange_n_eval)
     }

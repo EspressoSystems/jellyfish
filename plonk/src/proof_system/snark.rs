@@ -167,7 +167,14 @@ where
         circuits: &[&C],
         prove_keys: &[&ProvingKey<E>],
         extra_transcript_init_msg: Option<Vec<u8>>,
-    ) -> Result<(BatchProof<E>, Vec<Oracles<E::ScalarField>>, Challenges<E::ScalarField>), PlonkError>
+    ) -> Result<
+        (
+            BatchProof<E>,
+            Vec<Oracles<E::ScalarField>>,
+            Challenges<E::ScalarField>,
+        ),
+        PlonkError,
+    >
     where
         C: Arithmetization<E::ScalarField>,
         R: CryptoRng + RngCore,
@@ -893,7 +900,8 @@ pub mod test {
         let public_inputs: Vec<Vec<E::ScalarField>> = circuits
             .iter()
             .map(|cs| cs.public_input())
-            .collect::<Result<Vec<Vec<E::ScalarField>>, _>>()?;
+            .collect::<Result<Vec<Vec<E::ScalarField>>, _>>(
+        )?;
         for (i, proof) in proofs.iter().enumerate() {
             let vk_ref = if i < 3 { &vk1 } else { &vk2 };
             assert!(PlonkKzgSnark::<E>::verify::<T>(
@@ -1101,10 +1109,14 @@ pub mod test {
         let proof2 = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &cs2, &pk2, None)?;
 
         // 5. Verification
-        assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[E::ScalarField::from(1u8)], &proof2, None,).is_ok());
+        assert!(
+            PlonkKzgSnark::<E>::verify::<T>(&vk2, &[E::ScalarField::from(1u8)], &proof2, None,)
+                .is_ok()
+        );
         // wrong verification key
         assert!(
-            PlonkKzgSnark::<E>::verify::<T>(&vk1, &[E::ScalarField::from(1u8)], &proof2, None,).is_err()
+            PlonkKzgSnark::<E>::verify::<T>(&vk1, &[E::ScalarField::from(1u8)], &proof2, None,)
+                .is_err()
         );
         // wrong public input
         assert!(PlonkKzgSnark::<E>::verify::<T>(&vk2, &[], &proof2, None).is_err());
@@ -1267,7 +1279,10 @@ pub mod test {
         let domain = Radix2EvaluationDomain::<E::ScalarField>::new(pk.domain_size())
             .ok_or(PlonkError::DomainCreationError)?;
         for i in 0..domain.size() {
-            assert_eq!(circuit_poly.evaluate(&domain.element(i)), E::ScalarField::zero());
+            assert_eq!(
+                circuit_poly.evaluate(&domain.element(i)),
+                E::ScalarField::zero()
+            );
         }
 
         Ok(())
@@ -1332,16 +1347,22 @@ pub mod test {
         let beta = challenges.beta;
         let gamma = challenges.gamma;
         let n = pk.domain_size();
-        let domain =
-            Radix2EvaluationDomain::<E::ScalarField>::new(n).ok_or(PlonkError::DomainCreationError)?;
+        let domain = Radix2EvaluationDomain::<E::ScalarField>::new(n)
+            .ok_or(PlonkError::DomainCreationError)?;
         let prod_poly = &oracles.plookup_oracles.prod_lookup_poly;
         let h_polys = &oracles.plookup_oracles.h_polys;
 
         // check z(X) = 1 at point 1
-        assert_eq!(prod_poly.evaluate(&domain.element(0)), E::ScalarField::one());
+        assert_eq!(
+            prod_poly.evaluate(&domain.element(0)),
+            E::ScalarField::one()
+        );
 
         // check z(X) = 1 at point w^{n-1}
-        assert_eq!(prod_poly.evaluate(&domain.element(n - 1)), E::ScalarField::one());
+        assert_eq!(
+            prod_poly.evaluate(&domain.element(n - 1)),
+            E::ScalarField::one()
+        );
 
         // check h1(X) = h2(w * X) at point w^{n-1}
         assert_eq!(
@@ -1642,7 +1663,8 @@ pub mod test {
         let public_inputs: Vec<Vec<E::ScalarField>> = cs_ref
             .iter()
             .map(|&cs| cs.public_input())
-            .collect::<Result<Vec<Vec<E::ScalarField>>, _>>()?;
+            .collect::<Result<Vec<Vec<E::ScalarField>>, _>>(
+        )?;
         let pi_ref: Vec<&[E::ScalarField]> = public_inputs
             .iter()
             .map(|pub_input| &pub_input[..])

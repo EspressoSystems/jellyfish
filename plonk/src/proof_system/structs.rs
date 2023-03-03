@@ -123,15 +123,13 @@ where
                 .collect();
             ptr += (GATE_WIDTH + 1) * 2;
 
-            let prod_perm_poly_comm =
-                Commitment(Affine::new(value[ptr], value[ptr + 1]));
+            let prod_perm_poly_comm = Commitment(Affine::new(value[ptr], value[ptr + 1]));
             ptr += 2;
 
             let opening_proof = Commitment(Affine::new(value[ptr], value[ptr + 1]));
             ptr += 2;
 
-            let shifted_opening_proof =
-                Commitment(Affine::new(value[ptr], value[ptr + 1]));
+            let shifted_opening_proof = Commitment(Affine::new(value[ptr], value[ptr + 1]));
             ptr += 2;
 
             let poly_evals_scalars: Vec<E::ScalarField> = value[ptr..]
@@ -707,7 +705,9 @@ where
                 .map(|cm| group1_to_fields::<E, _>(cm.0))
                 .collect::<Vec<_>>()
                 .concat(),
-            vk.k.iter().map(|fr| fr_to_fq::<E::BaseField, P1>(fr)).collect(),
+            vk.k.iter()
+                .map(|fr| fr_to_fq::<E::BaseField, P1>(fr))
+                .collect(),
             // NOTE: only adding g, h, beta_h since only these are used.
             group1_to_fields::<E, P1>(vk.open_key.g),
             group2_to_fields::<E, F, P2>(vk.open_key.h),
@@ -878,7 +878,10 @@ impl<E: Pairing> ScalarsAndBases<E> {
     }
     /// Insert a base point and the corresponding scalar.
     pub(crate) fn push(&mut self, scalar: E::ScalarField, base: E::G1Affine) {
-        let entry_scalar = self.base_scalar_map.entry(base).or_insert_with(E::ScalarField::zero);
+        let entry_scalar = self
+            .base_scalar_map
+            .entry(base)
+            .or_insert_with(E::ScalarField::zero);
         *entry_scalar += scalar;
     }
 

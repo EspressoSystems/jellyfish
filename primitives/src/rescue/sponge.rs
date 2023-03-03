@@ -247,7 +247,9 @@ impl<T: RescueParameter, const RATE: usize> FieldBasedCryptographicSponge<T>
 mod test {
     use super::*;
     use ark_bls12_381::Fr;
-    use ark_crypto_primitives::{sponge::AbsorbWithLength, collect_sponge_bytes, absorb, collect_sponge_field_elements};
+    use ark_crypto_primitives::{
+        absorb, collect_sponge_bytes, collect_sponge_field_elements, sponge::AbsorbWithLength,
+    };
     use ark_ff::{One, UniformRand};
     use jf_utils::test_rng;
 

@@ -19,7 +19,7 @@ use crate::pcs::{
 };
 use ark_ec::pairing::Pairing;
 use ark_poly::{DenseMultilinearExtension, EvaluationDomain, MultilinearExtension, Polynomial};
-use ark_std::{end_timer, format, sync::Arc, start_timer, string::ToString, vec, vec::Vec};
+use ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 /// Input
 /// - the prover parameters for univariate KZG,

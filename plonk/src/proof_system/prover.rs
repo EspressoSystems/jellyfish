@@ -16,10 +16,10 @@ use crate::{
     proof_system::structs::CommitKey,
 };
 use ark_ec::pairing::Pairing;
-use ark_ff::{Field, One, UniformRand, Zero, FftField};
+use ark_ff::{FftField, Field, One, UniformRand, Zero};
 use ark_poly::{
-    univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
-    Radix2EvaluationDomain, DenseUVPolynomial,
+    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, GeneralEvaluationDomain,
+    Polynomial, Radix2EvaluationDomain,
 };
 use ark_std::{
     rand::{CryptoRng, RngCore},
@@ -93,13 +93,23 @@ impl<E: Pairing> Prover<E> {
     /// polynomials and their commitments, as well as the merged lookup table.
     /// `cs` is guaranteed to support lookup.
     #[allow(clippy::type_complexity)]
-    pub(crate) fn run_plookup_1st_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_plookup_1st_round<
+        C: Arithmetization<E::ScalarField>,
+        R: CryptoRng + RngCore,
+    >(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
         cs: &C,
         tau: E::ScalarField,
-    ) -> Result<(CommitmentsAndPolys<E>, Vec<E::ScalarField>, Vec<E::ScalarField>), PlonkError> {
+    ) -> Result<
+        (
+            CommitmentsAndPolys<E>,
+            Vec<E::ScalarField>,
+            Vec<E::ScalarField>,
+        ),
+        PlonkError,
+    > {
         let merged_lookup_table = cs.compute_merged_lookup_table(tau)?;
         let (sorted_vec, h_1_poly, h_2_poly) =
             cs.compute_lookup_sorted_vec_polynomials(tau, &merged_lookup_table)?;
@@ -131,7 +141,10 @@ impl<E: Pairing> Prover<E> {
     /// Round 2.5 (Plookup): Compute and commit the Plookup grand product
     /// polynomial. Return the grand product polynomial and its commitment.
     /// `cs` is guaranteed to support lookup
-    pub(crate) fn run_plookup_2nd_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
+    pub(crate) fn run_plookup_2nd_round<
+        C: Arithmetization<E::ScalarField>,
+        R: CryptoRng + RngCore,
+    >(
         &self,
         prng: &mut R,
         ck: &CommitKey<E>,
@@ -193,9 +206,10 @@ impl<E: Pairing> Prover<E> {
         online_oracles: &Oracles<E::ScalarField>,
         num_wire_types: usize,
     ) -> ProofEvaluations<E::ScalarField> {
-        let wires_evals: Vec<E::ScalarField> = parallelizable_slice_iter(&online_oracles.wire_polys)
-            .map(|poly| poly.evaluate(&challenges.zeta))
-            .collect();
+        let wires_evals: Vec<E::ScalarField> =
+            parallelizable_slice_iter(&online_oracles.wire_polys)
+                .map(|poly| poly.evaluate(&challenges.zeta))
+                .collect();
         let wire_sigma_evals: Vec<E::ScalarField> = parallelizable_slice_iter(&pk.sigmas)
             .take(num_wire_types - 1)
             .map(|poly| poly.evaluate(&challenges.zeta))
@@ -466,7 +480,8 @@ impl<E: Pairing> Prover<E> {
         );
 
         // Compute opening witness polynomial and its commitment
-        let divisor = DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::ScalarField::one()]);
+        let divisor =
+            DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::ScalarField::one()]);
         let witness_poly = &batch_poly / &divisor;
 
         UnivariateKzgPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
@@ -656,7 +671,8 @@ impl<E: Pairing> Prover<E> {
         // Selectors
         // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
         // TODO: (binyi) get the order from a function.
-        let q_lc: Vec<E::ScalarField> = (0..GATE_WIDTH).map(|j| selectors_coset_fft[j][i]).collect();
+        let q_lc: Vec<E::ScalarField> =
+            (0..GATE_WIDTH).map(|j| selectors_coset_fft[j][i]).collect();
         let q_mul: Vec<E::ScalarField> = (GATE_WIDTH..GATE_WIDTH + 2)
             .map(|j| selectors_coset_fft[j][i])
             .collect();
@@ -772,7 +788,8 @@ impl<E: Pairing> Prover<E> {
         let n_field = E::ScalarField::from(n as u64);
         let lagrange_n_coeff =
             self.domain.group_gen_inv / (n_field * (eval_point - self.domain.group_gen_inv));
-        let lagrange_1_coeff = E::ScalarField::one() / (n_field * (eval_point - E::ScalarField::one()));
+        let lagrange_1_coeff =
+            E::ScalarField::one() / (n_field * (eval_point - E::ScalarField::one()));
         let mut alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
         // extract polynomial evaluations
@@ -966,7 +983,8 @@ impl<E: Pairing> Prover<E> {
         prod_perm_poly: &DensePolynomial<E::ScalarField>,
     ) -> DensePolynomial<E::ScalarField> {
         let dividend = challenges.zeta.pow([pk.domain_size() as u64]) - E::ScalarField::one();
-        let divisor = E::ScalarField::from(pk.domain_size() as u32) * (challenges.zeta - E::ScalarField::one());
+        let divisor = E::ScalarField::from(pk.domain_size() as u32)
+            * (challenges.zeta - E::ScalarField::one());
         let lagrange_1_eval = dividend / divisor;
 
         // Compute the coefficient of z(X)
@@ -1017,7 +1035,8 @@ impl<E: Pairing> Prover<E> {
         // compute lagrange_1 and lagrange_n
         let divisor = E::ScalarField::from(n as u32) * (challenges.zeta - one);
         let lagrange_1_eval = vanish_eval / divisor;
-        let divisor = E::ScalarField::from(n as u32) * (challenges.zeta - self.domain.group_gen_inv);
+        let divisor =
+            E::ScalarField::from(n as u32) * (challenges.zeta - self.domain.group_gen_inv);
         let lagrange_n_eval = vanish_eval * self.domain.group_gen_inv / divisor;
 
         // compute the coefficient for polynomial `prod_lookup_poly`
@@ -1075,7 +1094,10 @@ impl<E: Pairing> Prover<E> {
     }
 
     #[inline]
-    fn mul_poly(poly: &DensePolynomial<E::ScalarField>, coeff: &E::ScalarField) -> DensePolynomial<E::ScalarField> {
+    fn mul_poly(
+        poly: &DensePolynomial<E::ScalarField>,
+        coeff: &E::ScalarField,
+    ) -> DensePolynomial<E::ScalarField> {
         DensePolynomial::<E::ScalarField>::from_coefficients_vec(
             parallelizable_slice_iter(&poly.coeffs)
                 .map(|c| *coeff * c)
@@ -1106,8 +1128,7 @@ mod test {
         test_split_quotient_polynomial_wrong_degree_helper::<BW6_761>()
     }
 
-    fn test_split_quotient_polynomial_wrong_degree_helper<E: Pairing>(
-    ) -> Result<(), PlonkError> {
+    fn test_split_quotient_polynomial_wrong_degree_helper<E: Pairing>() -> Result<(), PlonkError> {
         let prover = Prover::<E>::new(4, GATE_WIDTH + 1)?;
         let rng = &mut test_rng();
         let bad_quot_poly = DensePolynomial::<E::ScalarField>::rand(25, rng);
