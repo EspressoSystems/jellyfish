@@ -66,7 +66,7 @@ impl CanonicalSerialize for EncKey {
 
 impl CanonicalDeserialize for EncKey {
     /// Currently no checking is done on the public key. This is unimplemented
-    /// upstream, see https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338
+    /// upstream, see <https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338>
     fn deserialize_with_mode<R>(
         mut reader: R,
         _compress: Compress,
