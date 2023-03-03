@@ -420,8 +420,8 @@ mod test {
 
         MerkleTreeGadget::<SparseMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
-            elem_idx_var.clone(),
-            path_vars.clone(),
+            elem_idx_var,
+            path_vars,
             root_var,
         )
         .unwrap();
@@ -497,8 +497,8 @@ mod test {
 
         UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
             &mut circuit,
-            elem_idx_var.clone(),
-            path_vars.clone(),
+            elem_idx_var,
+            path_vars,
             root_var,
         )
         .unwrap();

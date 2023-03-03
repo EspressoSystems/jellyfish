@@ -296,7 +296,7 @@ where
 
         let r =
             fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
-        let R = Projective::<P>::generator() * &r;
+        let R = Projective::<P>::generator() * r;
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
@@ -327,7 +327,7 @@ where
     F: PrimeField,
 {
     fn from(sk: &SignKey<F>) -> Self {
-        VerKey(Projective::<P>::generator() * &sk.0)
+        VerKey(Projective::<P>::generator() * sk.0)
     }
 }
 
@@ -350,7 +350,7 @@ where
         csid: B,
     ) -> Result<(), PrimitivesError> {
         // Reject if public key is of small order
-        if (self.0 * &P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
+        if (self.0 * P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
             return Err(PrimitivesError::VerificationError(
                 "public key is not valid: not in the correct subgroup".to_string(),
             ));
@@ -360,8 +360,8 @@ where
         let c = self.challenge(&sig.R, msg, csid);
 
         let base = Projective::<P>::generator();
-        let x = base * &sig.s;
-        let y = sig.R + self.0 * &c;
+        let x = base * sig.s;
+        let y = sig.R + self.0 * c;
 
         if y == x {
             Ok(())

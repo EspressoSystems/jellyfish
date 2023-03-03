@@ -129,7 +129,7 @@ mod test {
     use jf_utils::test_rng;
 
     use super::*;
-    use ark_std::{rand::Rng};
+    use ark_std::rand::Rng;
 
     pub(crate) fn sign_and_verify<H: Digest>(
         vrf: &mut BLSVRFScheme,
@@ -148,7 +148,7 @@ mod test {
         assert!(output.is_some());
 
         // check that proof_to_hash(proof) == evaluate(sk, message)
-        let out = vrf.evaluate(&parameters, &sk, &message, rng).unwrap();
+        let out = vrf.evaluate(&parameters, &sk, message, rng).unwrap();
         assert_eq!(out, vrf_output);
 
         // check the VRF output vs. hashing the proof directly

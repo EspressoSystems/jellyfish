@@ -351,8 +351,8 @@ mod test {
         assert!(msg != plaintext2);
 
         // rng or nounce shouldn't affect decryption
-        let mut rng = ChaCha20Rng::from_seed([1u8; 32]);
-        let ct3 = keypair1.enc_key.encrypt(&mut rng, &msg, &aad)?;
+        let rng = ChaCha20Rng::from_seed([1u8; 32]);
+        let ct3 = keypair1.enc_key.encrypt(rng, &msg, &aad)?;
         assert!(keypair1.decrypt(&ct3, &aad).is_ok());
         let plaintext3 = keypair1.decrypt(&ct3, &aad)?;
         assert!(msg == plaintext3);
@@ -397,7 +397,10 @@ mod test {
 
         // serde for EncKey
         let mut enc_key_bytes = Vec::new();
-        keypair.enc_key.serialize_compressed(&mut enc_key_bytes).unwrap();
+        keypair
+            .enc_key
+            .serialize_compressed(&mut enc_key_bytes)
+            .unwrap();
         let enc_key_de = EncKey::deserialize_compressed(&enc_key_bytes[..]).unwrap();
         assert_eq!(enc_key_de, keypair.enc_key);
         // wrong byte length
@@ -405,7 +408,10 @@ mod test {
 
         // serde for DecKey
         let mut dec_key_bytes = Vec::new();
-        keypair.dec_key.serialize_compressed(&mut dec_key_bytes).unwrap();
+        keypair
+            .dec_key
+            .serialize_compressed(&mut dec_key_bytes)
+            .unwrap();
         let dec_key_de = DecKey::deserialize_compressed(&dec_key_bytes[..]).unwrap();
         assert_eq!(dec_key_de.0.as_bytes(), keypair.dec_key.0.as_bytes());
         // wrong byte length
@@ -413,7 +419,9 @@ mod test {
 
         // serde for Ciphertext
         let mut ciphertext_bytes = Vec::new();
-        ciphertext.serialize_compressed(&mut ciphertext_bytes).unwrap();
+        ciphertext
+            .serialize_compressed(&mut ciphertext_bytes)
+            .unwrap();
         let ciphertext_de = Ciphertext::deserialize_compressed(&ciphertext_bytes[..]).unwrap();
         assert_eq!(ciphertext_de, ciphertext);
         // wrong byte length

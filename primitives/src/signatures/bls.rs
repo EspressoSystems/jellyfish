@@ -208,21 +208,20 @@ impl CanonicalDeserialize for BLSVerKey {
             return Err(SerializationError::InvalidData);
         }
 
-        let pk;
-        if compress == Compress::Yes {
+        let pk = if compress == Compress::Yes {
             let mut pk_bytes = [0u8; BLS_SIG_COMPRESSED_PK_SIZE];
             reader.read_exact(&mut pk_bytes)?;
 
-            pk = PublicKey::uncompress(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
+            PublicKey::uncompress(&pk_bytes).map_err(|_| SerializationError::InvalidData)?
         } else {
             let mut pk_bytes = [0u8; BLS_SIG_PK_SIZE];
             reader.read_exact(&mut pk_bytes)?;
 
-            pk = PublicKey::deserialize(&pk_bytes).map_err(|_| SerializationError::InvalidData)?;
-        }
+            PublicKey::deserialize(&pk_bytes).map_err(|_| SerializationError::InvalidData)?
+        };
 
         let ver_key = Self(pk);
-        if validate == Validate::Yes && !ver_key.check().is_ok() {
+        if validate == Validate::Yes && ver_key.check().is_err() {
             return Err(SerializationError::InvalidData);
         }
 
@@ -290,21 +289,20 @@ impl CanonicalDeserialize for BLSSignature {
             return Err(SerializationError::InvalidData);
         }
 
-        let sig;
-        if compress == Compress::Yes {
+        let sig = if compress == Compress::Yes {
             let mut sig_bytes = [0u8; BLS_SIG_COMPRESSED_SIGNATURE_SIZE];
             reader.read_exact(&mut sig_bytes)?;
-            sig = Signature::uncompress(&sig_bytes).map_err(|_| SerializationError::InvalidData)?;
+            Signature::uncompress(&sig_bytes).map_err(|_| SerializationError::InvalidData)?
         } else {
             let mut sig_bytes = [0u8; BLS_SIG_SIGNATURE_SIZE];
             reader.read_exact(&mut sig_bytes)?;
-            sig =
-                Signature::deserialize(&sig_bytes).map_err(|_| SerializationError::InvalidData)?;
-        }
+
+            Signature::deserialize(&sig_bytes).map_err(|_| SerializationError::InvalidData)?
+        };
 
         let bls_sig = Self(sig);
 
-        if validate == Validate::Yes && !bls_sig.check().is_ok() {
+        if validate == Validate::Yes && bls_sig.check().is_err() {
             return Err(SerializationError::InvalidData);
         }
 
@@ -444,7 +442,7 @@ mod test {
         let pp = BLSSignatureScheme::param_gen::<StdRng>(None).unwrap();
         let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut rng).unwrap();
         let msg = "The quick brown fox jumps over the lazy dog";
-        let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, &mut rng).unwrap();
+        let sig = BLSSignatureScheme::sign(&pp, &sk, msg, &mut rng).unwrap();
 
         test_canonical_serde_helper(sk);
         test_canonical_serde_helper(pk);

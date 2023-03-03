@@ -323,8 +323,8 @@ mod test {
 
         MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
-            elem_idx_var.clone(),
-            path_vars.clone(),
+            elem_idx_var,
+            path_vars,
             root_var,
         )
         .unwrap();

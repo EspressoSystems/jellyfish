@@ -351,7 +351,7 @@ where
 {
     let curve_point: Projective<P> = circuit.point_witness(base_var)?.into();
     let scalar = fq_to_fr::<F, P>(&circuit.witness(scalar_var)?);
-    let res = curve_point * &scalar;
+    let res = curve_point * scalar;
     Ok(res.into())
 }
 
