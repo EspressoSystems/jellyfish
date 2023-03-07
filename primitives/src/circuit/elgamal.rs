@@ -307,7 +307,7 @@ mod tests {
             .apply_counter_mode_stream_no_padding(&key_var, data_vars.as_slice())
             .unwrap();
 
-        let encrypted_data = apply_counter_mode_stream::<F, P>(&key, &data, &F::zero(), Encrypt);
+        let encrypted_data = apply_counter_mode_stream::<F>(&key, &data, &F::zero(), Encrypt);
 
         let mut blocks = vec![];
 

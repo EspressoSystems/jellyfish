@@ -426,7 +426,7 @@ impl BLSSignatureScheme {
 mod test {
     use super::*;
     use crate::signatures::tests::{failed_verification, sign_and_verify};
-    use ark_std::{fmt::Debug, rand::rngs::StdRng, vec};
+    use ark_std::{fmt::Debug, vec};
 
     #[test]
     fn test_bls_sig() {
@@ -439,10 +439,9 @@ mod test {
     #[test]
     fn test_canonical_serde() {
         let mut rng = jf_utils::test_rng();
-        let pp = BLSSignatureScheme::param_gen::<StdRng>(None).unwrap();
-        let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut rng).unwrap();
+        let (sk, pk) = BLSSignatureScheme::key_gen(&(), &mut rng).unwrap();
         let msg = "The quick brown fox jumps over the lazy dog";
-        let sig = BLSSignatureScheme::sign(&pp, &sk, msg, &mut rng).unwrap();
+        let sig = BLSSignatureScheme::sign(&(), &sk, msg, &mut rng).unwrap();
 
         test_canonical_serde_helper(sk);
         test_canonical_serde_helper(pk);

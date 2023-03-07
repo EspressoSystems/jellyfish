@@ -138,17 +138,16 @@ mod test {
     ) {
         let rng = &mut test_rng();
 
-        let parameters = vrf.param_gen(Some(rng)).unwrap();
-        let (sk, pk) = vrf.key_gen(&parameters, rng).unwrap();
-        let vrf_proof = vrf.prove(&parameters, &sk, message, rng).unwrap();
-        let vrf_output = vrf.proof_to_hash(&parameters, &vrf_proof).unwrap();
-        let (is_correct, output) = vrf.verify(&parameters, &vrf_proof, &pk, message).unwrap();
+        let (sk, pk) = vrf.key_gen(&(), rng).unwrap();
+        let vrf_proof = vrf.prove(&(), &sk, message, rng).unwrap();
+        let vrf_output = vrf.proof_to_hash(&(), &vrf_proof).unwrap();
+        let (is_correct, output) = vrf.verify(&(), &vrf_proof, &pk, message).unwrap();
         assert!(is_correct);
         // need to use the result
         assert!(output.is_some());
 
         // check that proof_to_hash(proof) == evaluate(sk, message)
-        let out = vrf.evaluate(&parameters, &sk, message, rng).unwrap();
+        let out = vrf.evaluate(&(), &sk, message, rng).unwrap();
         assert_eq!(out, vrf_output);
 
         // check the VRF output vs. hashing the proof directly
@@ -159,9 +158,7 @@ mod test {
 
         // now test for bad message. User can choose to ignore the output if they really
         // want to.
-        let (is_correct, _) = vrf
-            .verify(&parameters, &vrf_proof, &pk, bad_message)
-            .unwrap();
+        let (is_correct, _) = vrf.verify(&(), &vrf_proof, &pk, bad_message).unwrap();
         assert!(!is_correct);
     }
 

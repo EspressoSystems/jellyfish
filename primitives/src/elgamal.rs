@@ -236,7 +236,7 @@ where
         // since key was just sampled and to be used only once, we can allow NONCE = 0
         Ciphertext {
             ephemeral: ephemeral_key_pair.enc_key(),
-            data: apply_counter_mode_stream::<F, P>(&key, msg, &F::zero(), Encrypt),
+            data: apply_counter_mode_stream::<F>(&key, msg, &F::zero(), Encrypt),
         }
     }
 
@@ -276,7 +276,7 @@ where
             F::zero(),
         ]));
         // since key was just samples and to be used only once, we can have NONCE = 0
-        apply_counter_mode_stream::<F, P>(&key, ctext.data.as_slice(), &F::zero(), Decrypt)
+        apply_counter_mode_stream::<F>(&key, ctext.data.as_slice(), &F::zero(), Decrypt)
     }
 }
 
@@ -307,7 +307,7 @@ pub(crate) enum Direction {
     Decrypt,
 }
 
-pub(crate) fn apply_counter_mode_stream<F, P>(
+pub(crate) fn apply_counter_mode_stream<F>(
     key: &RescueVector<F>,
     data: &[F],
     nonce: &F,
@@ -315,7 +315,6 @@ pub(crate) fn apply_counter_mode_stream<F, P>(
 ) -> Vec<F>
 where
     F: RescueParameter,
-    P: Config<BaseField = F>,
 {
     let prp = PRP::default();
     let round_keys = prp.key_schedule(key);

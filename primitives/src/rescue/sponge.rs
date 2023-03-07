@@ -165,13 +165,10 @@ impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
         let input_field_elements = input.to_sponge_field_elements_as_vec();
 
         // Absorb input.
-        input_field_elements
-            .chunks(RATE)
-            .into_iter()
-            .for_each(|chunk| {
-                self.state.add_assign_elems(chunk);
-                self.state = self.permutation.eval(&self.state)
-            });
+        input_field_elements.chunks(RATE).for_each(|chunk| {
+            self.state.add_assign_elems(chunk);
+            self.state = self.permutation.eval(&self.state)
+        });
     }
 
     /// WARNING! This trait method is unimplemented and should not be used.
