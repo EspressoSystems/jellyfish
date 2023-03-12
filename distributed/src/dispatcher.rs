@@ -296,10 +296,10 @@ impl Plonk {
         }))
         .await;
 
-        join!(
-            async {
-                join_all(workers.iter_mut().enumerate().filter(|(i, _)| *i == 0 || *i == 2).map(
-                    |(_, worker)| async move {
+        join_all(workers.iter_mut().enumerate().filter(|&(i, _)| i == 0 || i == 2 || i == 4).map(
+            |(i, worker)| async move {
+                match i {
+                    0 | 2 => {
                         worker.write_u8(Method::ProveRound3ExchangeW1 as u8).await.unwrap();
                         worker.flush().await.unwrap();
 
@@ -307,10 +307,35 @@ impl Plonk {
                             Status::Ok => {}
                             _ => panic!(),
                         }
-                    },
-                ))
-                .await;
+                    }
+                    4 => {
+                        worker.write_u8(Method::ProveRound3ComputeW3 as u8).await.unwrap();
+                        worker.flush().await.unwrap();
 
+                        match worker.read_u8().await.unwrap().try_into().unwrap() {
+                            Status::Ok => {
+                                Self::receive_and_store_poly(
+                                    worker,
+                                    Method::ProveRound3GetW3,
+                                    n + 2,
+                                    &SliceStorage::new(
+                                        DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin")),
+                                    ),
+                                )
+                                .await
+                                .unwrap();
+                            }
+                            _ => panic!(),
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            },
+        ))
+        .await;
+
+        join!(
+            async {
                 workers[4]
                     .write_u8(Method::ProveRound3ComputeAndExchangeTPart1Type3AndPart2 as u8)
                     .await
@@ -330,33 +355,30 @@ impl Plonk {
                 }))
                 .await;
 
-                join_all(peers.iter_mut().map(|peer| async move {
+                join_all(peers.iter_mut().take(NUM_WIRE_TYPES - 1).enumerate().map(|(i, peer)| async move {
                     peer.write_u8(Method::ProveRound3ComputeW3 as u8).await.unwrap();
                     peer.flush().await.unwrap();
 
                     match peer.read_u8().await.unwrap().try_into().unwrap() {
-                        Status::Ok => {}
+                        Status::Ok => {
+                            Self::receive_and_store_poly(
+                                peer,
+                                Method::ProveRound3GetW3,
+                                n + 2,
+                                &SliceStorage::new(DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin"))),
+                            )
+                            .await
+                            .unwrap()
+                        }
                         _ => panic!(),
                     }
                 }))
                 .await;
-                join_all(peers.iter_mut().enumerate().rev().map(|(i, peer)| async move {
-                    Self::receive_and_store_poly(
-                        peer,
-                        Method::ProveRound3GetW3,
-                        n + 2,
-                        &SliceStorage::new(DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin"))),
-                    )
-                    .await
-                    .unwrap();
-                }))
-                .await;
                 let mut w = vec![];
-                for i in 0..peers.len() {
+                for i in 0..NUM_WIRE_TYPES {
                     timer!(format!("FFT on (w{0} + β * σ{0} + γ)", i), {
-                        let storage = SliceStorage::new(
-                            DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin")),
-                        );
+                        let storage =
+                            SliceStorage::new(DATA_DIR.join(format!("dispatcher/w3_poly_{i}.bin")));
                         let mut w3 = storage.load().unwrap();
                         quot_domain.fft_io(&mut w3);
                         w.push(storage.store_and_mmap(&w3).unwrap())
