@@ -39,7 +39,7 @@ pub(super) fn evaluate_poly_helper<E, F>(
     zeta_fp_elem_var: &FpElemVar<F>,
     domain_size: usize,
     non_native_field_info: NonNativeFieldInfo<F>,
-) -> Result<([FpElemVar<F>; 3]), CircuitError>
+) -> Result<[FpElemVar<F>; 3], CircuitError>
 where
     E: Pairing<BaseField = F>,
     F: PrimeField,
@@ -215,9 +215,7 @@ where
     // where Z_H(z) is the vanishing evaluation
     // compute for both i in [0, len) and [domain_size-len, domain_size)
     let mut lagrange_eval_fp_elem_var: Vec<FpElemVar<F>> = Vec::new();
-    let range = (0..len)
-        .into_iter()
-        .chain((domain_size - len..domain_size).into_iter());
+    let range = (0..len).chain(domain_size - len..domain_size);
 
     for i in range {
         // compute L_{i,H}(zeta) and related values in the clear

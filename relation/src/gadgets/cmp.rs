@@ -289,8 +289,7 @@ mod test {
             [Ordering::Less, Ordering::Greater],
             [false, true],
             [false, true],
-        )).into_iter()
-            .try_for_each(
+        )).try_for_each(
                 |((a, b), ordering, should_also_check_equality,
                  is_b_constant)|
                  -> Result<(), CircuitError> {
