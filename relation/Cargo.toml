@@ -12,7 +12,7 @@ ark-bls12-377 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae7
 ark-bls12-381 = "0.3.0"
 ark-bn254 = "0.3.0"
 ark-bw6-761 = { git = "https://github.com/arkworks-rs/curves", rev = "677b4ae751a274037880ede86e9b6f30f62635af" }
-ark-ec = "0.3.0"
+ark-ec = "0.4.2"
 ark-ff = { version = "0.3.0", features = [ "asm" ] }
 ark-poly = "0.3.0"
 ark-serialize = "0.3.0"
