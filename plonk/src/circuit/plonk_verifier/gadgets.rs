@@ -127,7 +127,7 @@ where
 /// Combine the polynomial evaluations into a single evaluation. Useful in
 /// batch opening.
 /// The returned value is the scalar in `[E]1` described in Sec 8.3, step 11 of https://eprint.iacr.org/2019/953.pdf
-pub(super) fn aggregate_evaluations_circuit<E, F>(
+pub(super) fn aggregate_evaluations_circuit<F>(
     circuit: &mut PlonkCircuit<F>,
     lin_poly_constant: &FpElemVar<F>,
     poly_evals_vec: &[ProofEvaluationsVar<F>],
@@ -135,7 +135,6 @@ pub(super) fn aggregate_evaluations_circuit<E, F>(
     buffer_v_and_uv_basis: &[FpElemVar<F>],
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     let mut result = circuit.mod_negate(lin_poly_constant, &non_native_field_info.modulus_in_f)?;
@@ -219,28 +218,28 @@ where
         transcript_var.append_vk_and_pub_input_vars::<E>(circuit, vk, pi)?;
     }
     for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
-        transcript_var.append_commitments_vars::<E, P>(b"witness_poly_comms", wires_poly_comms)?;
+        transcript_var.append_commitments_vars(b"witness_poly_comms", wires_poly_comms)?;
     }
     let tau = transcript_var.get_and_append_challenge_var::<E>(b"tau", circuit)?;
 
     let beta = transcript_var.get_and_append_challenge_var::<E>(b"beta", circuit)?;
     let gamma = transcript_var.get_and_append_challenge_var::<E>(b"gamma", circuit)?;
     for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
-        transcript_var.append_commitment_var::<E, P>(b"perm_poly_comms", prod_perm_poly_comm)?;
+        transcript_var.append_commitment_var(b"perm_poly_comms", prod_perm_poly_comm)?;
     }
 
     let alpha = transcript_var.get_and_append_challenge_var::<E>(b"alpha", circuit)?;
     transcript_var
-        .append_commitments_vars::<E, P>(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
+        .append_commitments_vars(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
     let zeta = transcript_var.get_and_append_challenge_var::<E>(b"zeta", circuit)?;
     for poly_evals in batch_proof.poly_evals_vec.iter() {
-        transcript_var.append_proof_evaluations_vars::<E>(circuit, poly_evals)?;
+        transcript_var.append_proof_evaluations_vars(circuit, poly_evals)?;
     }
 
     let v = transcript_var.get_and_append_challenge_var::<E>(b"v", circuit)?;
-    transcript_var.append_commitment_var::<E, P>(b"open_proof", &batch_proof.opening_proof)?;
+    transcript_var.append_commitment_var(b"open_proof", &batch_proof.opening_proof)?;
     transcript_var
-        .append_commitment_var::<E, P>(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
+        .append_commitment_var(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
     let u = transcript_var.get_and_append_challenge_var::<E>(b"u", circuit)?;
 
     // convert challenge vars into FpElemVars
@@ -354,7 +353,7 @@ where
         &alpha_bases,
         non_native_field_info,
     )?;
-    let eval = aggregate_evaluations_circuit::<E, _>(
+    let eval = aggregate_evaluations_circuit::<_>(
         circuit,
         &lin_poly_constant,
         &batch_proof.poly_evals_vec,

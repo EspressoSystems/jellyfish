@@ -7,10 +7,7 @@
 //! Implementing *native* circuit for rescue transcript
 
 use super::plonk_verifier::*;
-use ark_ec::{
-    pairing::Pairing,
-    short_weierstrass::{Affine, SWCurveConfig},
-};
+use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
@@ -113,15 +110,11 @@ where
     // transcript. The caller needs to make sure that the commitment is
     // already converted to TE form before generating the variables.
     // For efficiency purpose, label is not used for rescue FS.
-    pub(crate) fn append_commitment_var<E, P>(
+    pub(crate) fn append_commitment_var(
         &mut self,
         _label: &'static [u8],
         poly_comm_var: &PointVariable,
-    ) -> Result<(), CircuitError>
-    where
-        E: Pairing<G1Affine = Affine<P>>,
-        P: SWCurveConfig<BaseField = F>,
-    {
+    ) -> Result<(), CircuitError> {
         // push the x and y coordinate of comm to the transcript
         self.transcript_var.push(poly_comm_var.get_x());
         self.transcript_var.push(poly_comm_var.get_y());
@@ -133,15 +126,11 @@ where
     // The caller needs to make sure that the commitment is
     // already converted to TE form before generating the variables.
     // transcript For efficiency purpose, label is not used for rescue FS.
-    pub(crate) fn append_commitments_vars<E, P>(
+    pub(crate) fn append_commitments_vars(
         &mut self,
         _label: &'static [u8],
         poly_comm_vars: &[PointVariable],
-    ) -> Result<(), CircuitError>
-    where
-        E: Pairing<G1Affine = Affine<P>>,
-        P: SWCurveConfig<BaseField = F>,
-    {
+    ) -> Result<(), CircuitError> {
         for poly_comm_var in poly_comm_vars.iter() {
             // push the x and y coordinate of comm to the transcript
             self.transcript_var.push(poly_comm_var.get_x());
@@ -161,7 +150,7 @@ where
     }
 
     // Append the proof evaluation to the transcript
-    pub(crate) fn append_proof_evaluations_vars<E: Pairing>(
+    pub(crate) fn append_proof_evaluations_vars(
         &mut self,
         circuit: &mut PlonkCircuit<F>,
         evals: &ProofEvaluationsVar<F>,
@@ -237,7 +226,10 @@ mod tests {
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::Bls12_377;
-    use ark_ec::{AffineRepr, CurveGroup};
+    use ark_ec::{
+        short_weierstrass::{Affine, SWCurveConfig},
+        AffineRepr, CurveGroup,
+    };
     use ark_std::{format, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::Point;
