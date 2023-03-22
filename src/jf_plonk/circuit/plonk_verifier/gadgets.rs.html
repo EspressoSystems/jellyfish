@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/plonk_verifier/gadgets.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gadgets.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_plonk/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/plonk_verifier/gadgets.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gadgets.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_plonk/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -612,7 +612,8 @@
     errors::PlonkError,
 };
 <span class="kw">use </span>ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters <span class="kw">as </span>SWParam,
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig <span class="kw">as </span>SWParam},
 };
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -652,7 +653,7 @@
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(ScalarsAndBasesVar&lt;F&gt;, Vec&lt;FpElemVar&lt;F&gt;&gt;), CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F&gt;,
+    </span>E: Pairing&lt;BaseField = F&gt;,
     F: PrimeField,
 {
     <span class="kw">if </span>vks.len() != batch_proof.len() {
@@ -727,7 +728,7 @@
 <span class="doccomment">/// Combine the polynomial evaluations into a single evaluation. Useful in
 /// batch opening.
 /// The returned value is the scalar in `[E]1` described in Sec 8.3, step 11 of https://eprint.iacr.org/2019/953.pdf
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>aggregate_evaluations_circuit&lt;E, F&gt;(
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>aggregate_evaluations_circuit&lt;F&gt;(
     circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
     lin_poly_constant: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
     poly_evals_vec: <span class="kw-2">&amp;</span>[ProofEvaluationsVar&lt;F&gt;],
@@ -735,8 +736,7 @@
     buffer_v_and_uv_basis: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F&gt;,
-    F: PrimeField,
+    </span>F: PrimeField,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>result = circuit.mod_negate(lin_poly_constant, <span class="kw-2">&amp;</span>non_native_field_info.modulus_in_f)<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>v_and_uv_basis = buffer_v_and_uv_basis.iter();
@@ -794,7 +794,7 @@
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ChallengesFpElemVar&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
     P: SWParam&lt;BaseField = F&gt;,
 {
@@ -819,28 +819,28 @@
         transcript_var.append_vk_and_pub_input_vars::&lt;E&gt;(circuit, vk, pi)<span class="question-mark">?</span>;
     }
     <span class="kw">for </span>wires_poly_comms <span class="kw">in </span>batch_proof.wires_poly_comms_vec.iter() {
-        transcript_var.append_commitments_vars::&lt;E, P&gt;(<span class="string">b&quot;witness_poly_comms&quot;</span>, wires_poly_comms)<span class="question-mark">?</span>;
+        transcript_var.append_commitments_vars(<span class="string">b&quot;witness_poly_comms&quot;</span>, wires_poly_comms)<span class="question-mark">?</span>;
     }
     <span class="kw">let </span>tau = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;tau&quot;</span>, circuit)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>beta = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;beta&quot;</span>, circuit)<span class="question-mark">?</span>;
     <span class="kw">let </span>gamma = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;gamma&quot;</span>, circuit)<span class="question-mark">?</span>;
     <span class="kw">for </span>prod_perm_poly_comm <span class="kw">in </span>batch_proof.prod_perm_poly_comms_vec.iter() {
-        transcript_var.append_commitment_var::&lt;E, P&gt;(<span class="string">b&quot;perm_poly_comms&quot;</span>, prod_perm_poly_comm)<span class="question-mark">?</span>;
+        transcript_var.append_commitment_var(<span class="string">b&quot;perm_poly_comms&quot;</span>, prod_perm_poly_comm)<span class="question-mark">?</span>;
     }
 
     <span class="kw">let </span>alpha = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;alpha&quot;</span>, circuit)<span class="question-mark">?</span>;
     transcript_var
-        .append_commitments_vars::&lt;E, P&gt;(<span class="string">b&quot;quot_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.split_quot_poly_comms)<span class="question-mark">?</span>;
+        .append_commitments_vars(<span class="string">b&quot;quot_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.split_quot_poly_comms)<span class="question-mark">?</span>;
     <span class="kw">let </span>zeta = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;zeta&quot;</span>, circuit)<span class="question-mark">?</span>;
     <span class="kw">for </span>poly_evals <span class="kw">in </span>batch_proof.poly_evals_vec.iter() {
-        transcript_var.append_proof_evaluations_vars::&lt;E&gt;(circuit, poly_evals)<span class="question-mark">?</span>;
+        transcript_var.append_proof_evaluations_vars(circuit, poly_evals)<span class="question-mark">?</span>;
     }
 
     <span class="kw">let </span>v = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;v&quot;</span>, circuit)<span class="question-mark">?</span>;
-    transcript_var.append_commitment_var::&lt;E, P&gt;(<span class="string">b&quot;open_proof&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.opening_proof)<span class="question-mark">?</span>;
+    transcript_var.append_commitment_var(<span class="string">b&quot;open_proof&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.opening_proof)<span class="question-mark">?</span>;
     transcript_var
-        .append_commitment_var::&lt;E, P&gt;(<span class="string">b&quot;shifted_open_proof&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.shifted_opening_proof)<span class="question-mark">?</span>;
+        .append_commitment_var(<span class="string">b&quot;shifted_open_proof&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.shifted_opening_proof)<span class="question-mark">?</span>;
     <span class="kw">let </span>u = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b&quot;u&quot;</span>, circuit)<span class="question-mark">?</span>;
 
     <span class="comment">// convert challenge vars into FpElemVars
@@ -868,11 +868,11 @@
     batch_proof: <span class="kw-2">&amp;</span>BatchProofVar&lt;F&gt;,
     extra_transcript_init_msg: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
 
-    domain: Radix2EvaluationDomain&lt;E::Fr&gt;,
+    domain: Radix2EvaluationDomain&lt;E::ScalarField&gt;,
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;PcsInfoVar&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
     P: SWParam&lt;BaseField = F&gt;,
 {
@@ -954,7 +954,7 @@
         <span class="kw-2">&amp;</span>alpha_bases,
         non_native_field_info,
     )<span class="question-mark">?</span>;
-    <span class="kw">let </span>eval = aggregate_evaluations_circuit::&lt;E, <span class="kw">_</span>&gt;(
+    <span class="kw">let </span>eval = aggregate_evaluations_circuit::&lt;<span class="kw">_</span>&gt;(
         circuit,
         <span class="kw-2">&amp;</span>lin_poly_constant,
         <span class="kw-2">&amp;</span>batch_proof.poly_evals_vec,
@@ -1060,12 +1060,12 @@
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
-    <span class="kw">use </span>ark_bls12_377::{g1::Parameters <span class="kw">as </span>Param377, Bls12_377};
-    <span class="kw">use </span>ark_ec::{SWModelParameters, TEModelParameters};
-    <span class="kw">use </span>ark_std::{test_rng, vec, UniformRand};
+    <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param377, Bls12_377};
+    <span class="kw">use </span>ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
+    <span class="kw">use </span>ark_std::{vec, UniformRand};
     <span class="kw">use </span>jf_primitives::rescue::RescueParameter;
     <span class="kw">use </span>jf_relation::{Circuit, MergeableCircuitType};
-    <span class="kw">use </span>jf_utils::field_switching;
+    <span class="kw">use </span>jf_utils::{field_switching, test_rng};
 
     <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
     <span class="attr">#[test]
@@ -1076,9 +1076,9 @@
 
     <span class="kw">fn </span>test_compute_challenges_vars_circuit_helper&lt;E, F, P, Q, T&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt; + TEModelParameters,
+        P: SWCurveConfig&lt;BaseField = F&gt; + TECurveConfig,
         Q: TEParam&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
@@ -1089,7 +1089,7 @@
         <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Setup instances
-        </span><span class="kw">let </span>shared_public_input = E::Fr::rand(rng);
+        </span><span class="kw">let </span>shared_public_input = E::ScalarField::rand(rng);
         <span class="kw">let </span><span class="kw-2">mut </span>instances_type_a = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>instances_type_b = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">32</span>..<span class="number">50 </span>{
@@ -1131,7 +1131,7 @@
         <span class="comment">// 5. Verification
         </span><span class="kw">let </span>open_key_ref = <span class="kw-2">&amp;</span>vks_type_a[<span class="number">0</span>].open_key;
         <span class="kw">let </span>beta_g_ref = <span class="kw-2">&amp;</span>srs.powers_of_g[<span class="number">1</span>];
-        <span class="kw">let </span>blinding_factor = E::Fr::rand(rng);
+        <span class="kw">let </span>blinding_factor = E::ScalarField::rand(rng);
         <span class="kw">let </span>(inner1, inner2) = BatchArgument::partial_verify::&lt;T&gt;(
             beta_g_ref,
             <span class="kw-2">&amp;</span>open_key_ref.g,
@@ -1145,13 +1145,13 @@
         <span class="comment">// =======================================
         // begin challenge circuit
         // =======================================
-        </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;E::Fq&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;E::BaseField&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         <span class="comment">// constants
         </span><span class="kw">let </span>m = <span class="number">128</span>;
-        <span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(E::Fq::from(<span class="number">2u8</span>).pow([m <span class="kw">as </span>u64]));
+        <span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(E::BaseField::from(<span class="number">2u8</span>).pow([m <span class="kw">as </span>u64]));
 
-        <span class="kw">let </span>fr_modulus_bits = &lt;E::Fr <span class="kw">as </span>PrimeField&gt;::Params::MODULUS.to_bytes_le();
+        <span class="kw">let </span>fr_modulus_bits = &lt;E::ScalarField <span class="kw">as </span>PrimeField&gt;::MODULUS.to_bytes_le();
         <span class="kw">let </span>modulus_in_f = F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>fr_modulus_bits);
         <span class="kw">let </span>modulus_fp_elem = FpElem::new(<span class="kw-2">&amp;</span>modulus_in_f, m, two_power_m)<span class="question-mark">?</span>;
         <span class="kw">let </span>non_native_field_info = NonNativeFieldInfo::&lt;F&gt; {
@@ -1201,4 +1201,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

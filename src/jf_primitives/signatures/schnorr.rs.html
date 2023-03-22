@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/signatures/schnorr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>schnorr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/signatures/schnorr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>schnorr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -600,14 +600,6 @@
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -626,9 +618,8 @@
     utils::curve_cofactor,
 };
 <span class="kw">use </span>ark_ec::{
-    group::Group,
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ModelParameters, ProjectiveCurve, TEModelParameters <span class="kw">as </span>Parameters,
+    twisted_edwards::{Affine, Projective, TECurveConfig <span class="kw">as </span>Config},
+    AffineRepr, CurveConfig, CurveGroup, Group,
 };
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
@@ -638,8 +629,8 @@
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec,
+    vec::Vec,
 };
-<span class="kw">use </span>core::convert::TryInto;
 <span class="kw">use </span>espresso_systems_common::jellyfish::tag;
 <span class="kw">use </span>jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 <span class="kw">use </span>tagged_base64::tagged;
@@ -653,7 +644,7 @@
 <span class="kw">impl</span>&lt;F, P&gt; SignatureScheme <span class="kw">for </span>SchnorrSignatureScheme&lt;P&gt;
 <span class="kw">where
     </span>F: RescueParameter,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = CS_ID_SCHNORR;
 
@@ -742,35 +733,30 @@
 </span><span class="attr">#[tagged(tag::SCHNORR_VER_KEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Default(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Eq(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+    Debug(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Default(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Eq(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Config&quot;</span>)
 )]
-</span><span class="kw">pub struct </span>VerKey&lt;P&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) GroupProjective&lt;P&gt;)
+</span><span class="kw">pub struct </span>VerKey&lt;P&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) Projective&lt;P&gt;)
 <span class="kw">where
-    </span>P: Parameters;
+    </span>P: Config;
 
-<span class="kw">impl</span>&lt;P: Parameters&gt; VerKey&lt;P&gt; {
+<span class="kw">impl</span>&lt;P: Config&gt; VerKey&lt;P&gt; {
     <span class="doccomment">/// Return a randomized verification key.
     </span><span class="kw">pub fn </span>randomize_with&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, randomizer: <span class="kw-2">&amp;</span>F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;ScalarField = F&gt;,
+        P: Config&lt;ScalarField = F&gt;,
     {
         <span class="comment">// VK = g^k, VK&#39; = g^(k+r) = g^k * g^r
-        </span><span class="self">Self</span>(
-            Group::mul(
-                <span class="kw-2">&amp;</span>GroupProjective::&lt;P&gt;::prime_subgroup_generator(),
-                randomizer,
-            ) + <span class="self">self</span>.<span class="number">0</span>,
-        )
+        </span><span class="self">Self</span>(Projective::&lt;P&gt;::generator() * randomizer + <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span>&lt;P&gt; Hash <span class="kw">for </span>VerKey&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
     <span class="kw">fn </span>hash&lt;H: Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
         Hash::hash(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.into_affine(), state)
@@ -779,25 +765,25 @@
 
 <span class="kw">impl</span>&lt;P&gt; PartialEq <span class="kw">for </span>VerKey&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="self">self</span>.<span class="number">0</span>.into_affine().eq(<span class="kw-2">&amp;</span>other.<span class="number">0</span>.into_affine())
     }
 }
 
-<span class="kw">impl</span>&lt;P&gt; From&lt;GroupAffine&lt;P&gt;&gt; <span class="kw">for </span>VerKey&lt;P&gt;
+<span class="kw">impl</span>&lt;P&gt; From&lt;Affine&lt;P&gt;&gt; <span class="kw">for </span>VerKey&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
-    <span class="kw">fn </span>from(point: GroupAffine&lt;P&gt;) -&gt; <span class="self">Self </span>{
-        VerKey(point.into_projective())
+    <span class="kw">fn </span>from(point: Affine&lt;P&gt;) -&gt; <span class="self">Self </span>{
+        VerKey(point.into_group())
     }
 }
 
-<span class="kw">impl</span>&lt;P: Parameters&gt; VerKey&lt;P&gt; {
+<span class="kw">impl</span>&lt;P: Config&gt; VerKey&lt;P&gt; {
     <span class="doccomment">/// Convert the verification key into the affine form.
-    </span><span class="kw">pub fn </span>to_affine(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; GroupAffine&lt;P&gt; {
+    </span><span class="kw">pub fn </span>to_affine(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Affine&lt;P&gt; {
         <span class="self">self</span>.<span class="number">0</span>.into_affine()
     }
 }
@@ -811,14 +797,14 @@
 </span><span class="attr">#[tagged(tag::SCHNORR_KEY_PAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Default(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    PartialEq(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+    Debug(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Default(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Config&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;P: Config&quot;</span>)
 )]
 </span><span class="kw">pub struct </span>KeyPair&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
     sk: SignKey&lt;P::ScalarField&gt;,
     vk: VerKey&lt;P&gt;,
@@ -832,23 +818,23 @@
 </span><span class="attr">#[tagged(tag::SCHNORR_SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Default(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Eq(bound = <span class="string">&quot;P: Parameters&quot;</span>),
-    Clone(bound = <span class="string">&quot;P: Parameters&quot;</span>)
+    Debug(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Default(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Eq(bound = <span class="string">&quot;P: Config&quot;</span>),
+    Clone(bound = <span class="string">&quot;P: Config&quot;</span>)
 )]
 #[allow(non_snake_case)]
 </span><span class="kw">pub struct </span>Signature&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) s: P::ScalarField,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) R: GroupProjective&lt;P&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) R: Projective&lt;P&gt;,
 }
 
 <span class="kw">impl</span>&lt;P&gt; Hash <span class="kw">for </span>Signature&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
     <span class="kw">fn </span>hash&lt;H: Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
         Hash::hash(<span class="kw-2">&amp;</span><span class="self">self</span>.s, state);
@@ -858,7 +844,7 @@
 
 <span class="kw">impl</span>&lt;P&gt; PartialEq <span class="kw">for </span>Signature&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters,
+    </span>P: Config,
 {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="self">self</span>.s == other.s &amp;&amp; <span class="self">self</span>.R.into_affine() == other.R.into_affine()
@@ -871,7 +857,7 @@
 </span><span class="kw">impl</span>&lt;F, P&gt; KeyPair&lt;P&gt;
 <span class="kw">where
     </span>F: RescueParameter,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="doccomment">/// Key-pair generation algorithm
     </span><span class="kw">pub fn </span>generate&lt;R: Rng&gt;(prng: <span class="kw-2">&amp;mut </span>R) -&gt; KeyPair&lt;P&gt; {
@@ -912,7 +898,7 @@
 
         <span class="kw">let </span>r =
             fq_to_fr::&lt;F, P&gt;(<span class="kw-2">&amp;</span>VariableLengthRescueCRHF::&lt;F, <span class="number">1</span>&gt;::evaluate(<span class="kw-2">&amp;</span>msg_input).unwrap()[<span class="number">0</span>]); <span class="comment">// safe unwrap
-        </span><span class="kw">let </span>R = Group::mul(<span class="kw-2">&amp;</span>GroupProjective::&lt;P&gt;::prime_subgroup_generator(), <span class="kw-2">&amp;</span>r);
+        </span><span class="kw">let </span>R = Projective::&lt;P&gt;::generator() * r;
         <span class="kw">let </span>c = <span class="self">self</span>.vk.challenge(<span class="kw-2">&amp;</span>R, msg, csid);
         <span class="kw">let </span>s = c * <span class="self">self</span>.sk.<span class="number">0 </span>+ r;
 
@@ -921,7 +907,7 @@
 
     <span class="doccomment">/// Randomize the key pair with the `randomizer`, return the randomized key
     /// pair.
-    </span><span class="kw">pub fn </span>randomize_with(<span class="kw-2">&amp;</span><span class="self">self</span>, randomizer: <span class="kw-2">&amp;</span>&lt;P <span class="kw">as </span>ModelParameters&gt;::ScalarField) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>randomize_with(<span class="kw-2">&amp;</span><span class="self">self</span>, randomizer: <span class="kw-2">&amp;</span>&lt;P <span class="kw">as </span>CurveConfig&gt;::ScalarField) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>randomized_sk = <span class="self">self</span>.sk.randomize_with(randomizer);
         <span class="kw">let </span>randomized_vk = <span class="self">self</span>.vk.randomize_with(randomizer);
         <span class="self">Self </span>{
@@ -939,24 +925,21 @@
 
 <span class="kw">impl</span>&lt;P, F&gt; From&lt;<span class="kw-2">&amp;</span>SignKey&lt;F&gt;&gt; <span class="kw">for </span>VerKey&lt;P&gt;
 <span class="kw">where
-    </span>P: Parameters&lt;ScalarField = F&gt;,
+    </span>P: Config&lt;ScalarField = F&gt;,
     F: PrimeField,
 {
     <span class="kw">fn </span>from(sk: <span class="kw-2">&amp;</span>SignKey&lt;F&gt;) -&gt; <span class="self">Self </span>{
-        VerKey(Group::mul(
-            <span class="kw-2">&amp;</span>GroupProjective::&lt;P&gt;::prime_subgroup_generator(),
-            <span class="kw-2">&amp;</span>sk.<span class="number">0</span>,
-        ))
+        VerKey(Projective::&lt;P&gt;::generator() * sk.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span>&lt;F, P&gt; VerKey&lt;P&gt;
 <span class="kw">where
     </span>F: RescueParameter,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="doccomment">/// Get the internal of verifying key, namely a curve Point
-    </span><span class="kw">pub fn </span>internal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>GroupProjective&lt;P&gt; {
+    </span><span class="kw">pub fn </span>internal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Projective&lt;P&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
     </span>}
 
@@ -969,9 +952,7 @@
         csid: B,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
         <span class="comment">// Reject if public key is of small order
-        </span><span class="kw">if </span>Group::mul(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span>P::ScalarField::from(curve_cofactor::&lt;P&gt;()))
-            == GroupProjective::&lt;P&gt;::default()
-        {
+        </span><span class="kw">if </span>(<span class="self">self</span>.<span class="number">0 </span>* P::ScalarField::from(curve_cofactor::&lt;P&gt;())) == Projective::&lt;P&gt;::default() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::VerificationError(
                 <span class="string">&quot;public key is not valid: not in the correct subgroup&quot;</span>.to_string(),
             ));
@@ -980,9 +961,9 @@
         <span class="comment">// restrictive cofactorless verification
         </span><span class="kw">let </span>c = <span class="self">self</span>.challenge(<span class="kw-2">&amp;</span>sig.R, msg, csid);
 
-        <span class="kw">let </span>base = GroupProjective::&lt;P&gt;::prime_subgroup_generator();
-        <span class="kw">let </span>x = Group::mul(<span class="kw-2">&amp;</span>base, <span class="kw-2">&amp;</span>sig.s);
-        <span class="kw">let </span>y = sig.R + Group::mul(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span>c);
+        <span class="kw">let </span>base = Projective::&lt;P&gt;::generator();
+        <span class="kw">let </span>x = base * sig.s;
+        <span class="kw">let </span>y = sig.R + <span class="self">self</span>.<span class="number">0 </span>* c;
 
         <span class="kw">if </span>y == x {
             <span class="prelude-val">Ok</span>(())
@@ -997,17 +978,12 @@
 <span class="kw">impl</span>&lt;F, P&gt; VerKey&lt;P&gt;
 <span class="kw">where
     </span>F: RescueParameter,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="comment">// TODO: this function should be generic w.r.t. hash functions
     // Fixme after the hash-api PR is merged.
     </span><span class="attr">#[allow(non_snake_case)]
-    </span><span class="kw">fn </span>challenge&lt;B: AsRef&lt;[u8]&gt;&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        R: <span class="kw-2">&amp;</span>GroupProjective&lt;P&gt;,
-        msg: <span class="kw-2">&amp;</span>[F],
-        csid: B,
-    ) -&gt; P::ScalarField {
+    </span><span class="kw">fn </span>challenge&lt;B: AsRef&lt;[u8]&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, R: <span class="kw-2">&amp;</span>Projective&lt;P&gt;, msg: <span class="kw-2">&amp;</span>[F], csid: B) -&gt; P::ScalarField {
         <span class="comment">// is the domain separator always an Fr? If so how about using Fr as domain
         // separator rather than bytes?
         </span><span class="kw">let </span>instance_description = F::from_be_bytes_mod_order(csid.as_ref());
@@ -1038,21 +1014,21 @@
         constants::CS_ID_SCHNORR,
         signatures::tests::{failed_verification, sign_and_verify},
     };
-    <span class="kw">use </span>ark_ed_on_bls12_377::EdwardsParameters <span class="kw">as </span>Param377;
-    <span class="kw">use </span>ark_ed_on_bls12_381::EdwardsParameters <span class="kw">as </span>Param381;
-    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::EdwardsParameters <span class="kw">as </span>Param381b;
-    <span class="kw">use </span>ark_ed_on_bn254::EdwardsParameters <span class="kw">as </span>Param254;
+    <span class="kw">use </span>ark_ed_on_bls12_377::EdwardsConfig <span class="kw">as </span>Param377;
+    <span class="kw">use </span>ark_ed_on_bls12_381::EdwardsConfig <span class="kw">as </span>Param381;
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::EdwardsConfig <span class="kw">as </span>Param381b;
+    <span class="kw">use </span>ark_ed_on_bn254::EdwardsConfig <span class="kw">as </span>Param254;
     <span class="kw">use </span>ark_std::UniformRand;
 
     <span class="macro">macro_rules! </span>test_signature {
         (<span class="macro-nonterminal">$curve_param</span>:tt) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
 
             <span class="kw">let </span>keypair1 = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
             <span class="comment">// test randomized key pair
-            </span><span class="kw">let </span>randomizer2 = &lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>ModelParameters&gt;::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
+            </span><span class="kw">let </span>randomizer2 = &lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>CurveConfig&gt;::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>keypair2 = keypair1.randomize_with(<span class="kw-2">&amp;</span>randomizer2);
-            <span class="kw">let </span>randomizer3 = &lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>ModelParameters&gt;::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>randomizer3 = &lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>CurveConfig&gt;::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>keypair3 = keypair2.randomize_with(<span class="kw-2">&amp;</span>randomizer3);
             <span class="kw">let </span>keypairs = <span class="macro">vec!</span>[keypair1, keypair2, keypair3];
 
@@ -1069,16 +1045,16 @@
                     <span class="comment">// wrong public key
                     </span><span class="macro">assert!</span>(pk_bad.verify(<span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig, CS_ID_SCHNORR).is_err());
                     <span class="comment">// wrong message
-                    </span>msg.push(&lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>ModelParameters&gt;::BaseField::from(i <span class="kw">as </span>u64));
+                    </span>msg.push(&lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>CurveConfig&gt;::BaseField::from(i <span class="kw">as </span>u64));
                     <span class="macro">assert!</span>(pk.verify(<span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig, CS_ID_SCHNORR).is_err());
                 }
             }
 
-            <span class="kw">let </span>message = &lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>ModelParameters&gt;::BaseField::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>message = &lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>CurveConfig&gt;::BaseField::rand(<span class="kw-2">&amp;mut </span>rng);
             sign_and_verify::&lt;SchnorrSignatureScheme&lt;<span class="macro-nonterminal">$curve_param</span>&gt;&gt;(<span class="kw-2">&amp;</span>[message]);
             failed_verification::&lt;SchnorrSignatureScheme&lt;<span class="macro-nonterminal">$curve_param</span>&gt;&gt;(
                 <span class="kw-2">&amp;</span>[message],
-                <span class="kw-2">&amp;</span>[&lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>ModelParameters&gt;::BaseField::rand(<span class="kw-2">&amp;mut </span>rng)],
+                <span class="kw-2">&amp;</span>[&lt;<span class="macro-nonterminal">$curve_param </span><span class="kw">as </span>CurveConfig&gt;::BaseField::rand(<span class="kw-2">&amp;mut </span>rng)],
             );
         };
     }
@@ -1094,20 +1070,20 @@
     <span class="kw">mod </span>serde {
         <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{KeyPair, SignKey, Signature, VerKey};
         <span class="kw">use </span><span class="kw">crate</span>::constants::CS_ID_SCHNORR;
-        <span class="kw">use </span>ark_ec::twisted_edwards_extended::GroupProjective;
-        <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsParameters <span class="kw">as </span>Param377, Fq <span class="kw">as </span>FqEd377, Fr <span class="kw">as </span>FrEd377};
-        <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsParameters <span class="kw">as </span>Param381, Fq <span class="kw">as </span>FqEd381, Fr <span class="kw">as </span>FrEd381};
+        <span class="kw">use </span>ark_ec::twisted_edwards::Projective;
+        <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsConfig <span class="kw">as </span>Param377, Fq <span class="kw">as </span>FqEd377, Fr <span class="kw">as </span>FrEd377};
+        <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsConfig <span class="kw">as </span>Param381, Fq <span class="kw">as </span>FqEd381, Fr <span class="kw">as </span>FrEd381};
         <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{
-            EdwardsParameters <span class="kw">as </span>Param381b, Fq <span class="kw">as </span>FqEd381b, Fr <span class="kw">as </span>FrEd381b,
+            EdwardsConfig <span class="kw">as </span>Param381b, Fq <span class="kw">as </span>FqEd381b, Fr <span class="kw">as </span>FrEd381b,
         };
-        <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>Param254, Fq <span class="kw">as </span>FqEd254, Fr <span class="kw">as </span>FrEd254};
+        <span class="kw">use </span>ark_ed_on_bn254::{EdwardsConfig <span class="kw">as </span>Param254, Fq <span class="kw">as </span>FqEd254, Fr <span class="kw">as </span>FrEd254};
         <span class="kw">use </span>ark_ff::Zero;
         <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
         <span class="kw">use </span>ark_std::{vec, vec::Vec, UniformRand};
 
         <span class="macro">macro_rules! </span>test_ver_key {
             (<span class="macro-nonterminal">$curve_param</span>:tt, <span class="macro-nonterminal">$scalar_field</span>:tt) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+                <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
 
                 <span class="comment">// happy path
                 </span><span class="kw">let </span>keypair: KeyPair&lt;<span class="macro-nonterminal">$curve_param</span>&gt; = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
@@ -1116,7 +1092,7 @@
                 <span class="macro">assert!</span>(<span class="kw-2">&amp;</span>vk.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>sig, CS_ID_SCHNORR).is_ok());
 
                 <span class="comment">// Bad path
-                </span><span class="kw">let </span>bad_ver_key = VerKey(GroupProjective::&lt;<span class="macro-nonterminal">$curve_param</span>&gt;::zero());
+                </span><span class="kw">let </span>bad_ver_key = VerKey(Projective::&lt;<span class="macro-nonterminal">$curve_param</span>&gt;::zero());
                 <span class="kw">let </span>bad_keypair = KeyPair {
                     sk: SignKey(<span class="macro-nonterminal">$scalar_field::zero</span>()),
                     vk: bad_ver_key.clone(),
@@ -1129,8 +1105,9 @@
 
                 <span class="comment">// test serialization
                 </span><span class="kw">let </span><span class="kw-2">mut </span>vk_bytes = <span class="macro">vec!</span>[];
-                vk.serialize(<span class="kw-2">&amp;mut </span>vk_bytes).unwrap();
-                <span class="kw">let </span>vk_de: VerKey&lt;<span class="macro-nonterminal">$curve_param</span>&gt; = VerKey::deserialize(vk_bytes.as_slice()).unwrap();
+                vk.serialize_compressed(<span class="kw-2">&amp;mut </span>vk_bytes).unwrap();
+                <span class="kw">let </span>vk_de: VerKey&lt;<span class="macro-nonterminal">$curve_param</span>&gt; =
+                    VerKey::deserialize_compressed(vk_bytes.as_slice()).unwrap();
                 <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>vk, vk_de, <span class="string">&quot;normal ser/de should pass&quot;</span>);
             };
         }
@@ -1144,7 +1121,7 @@
 
         <span class="macro">macro_rules! </span>test_signature {
             (<span class="macro-nonterminal">$curve_param</span>:tt, <span class="macro-nonterminal">$base_field</span>:tt) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+                <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
                 <span class="kw">let </span>keypair: KeyPair&lt;<span class="macro-nonterminal">$curve_param</span>&gt; = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
 
                 <span class="comment">// Happy path
@@ -1153,19 +1130,22 @@
                 <span class="macro">assert!</span>(keypair.vk.verify(<span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig, CS_ID_SCHNORR).is_ok());
                 <span class="macro">assert!</span>(keypair.vk.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>sig, CS_ID_SCHNORR).is_err());
                 <span class="kw">let </span><span class="kw-2">mut </span>bytes_sig = <span class="macro">vec!</span>[];
-                sig.serialize(<span class="kw-2">&amp;mut </span>bytes_sig).unwrap();
+                sig.serialize_compressed(<span class="kw-2">&amp;mut </span>bytes_sig).unwrap();
                 <span class="kw">let </span>sig_de: Signature&lt;<span class="macro-nonterminal">$curve_param</span>&gt; =
-                    Signature::deserialize(bytes_sig.as_slice()).unwrap();
+                    Signature::deserialize_compressed(bytes_sig.as_slice()).unwrap();
                 <span class="macro">assert_eq!</span>(sig, sig_de);
 
                 <span class="comment">// Bad path 1: when s bytes overflow
                 </span><span class="kw">let </span><span class="kw-2">mut </span>bad_bytes_sig = bytes_sig.clone();
                 <span class="kw">let </span><span class="kw-2">mut </span>q_minus_one_bytes = <span class="macro">vec!</span>[];
                 (-<span class="macro-nonterminal">$base_field::from</span>(<span class="number">1u32</span>))
-                    .serialize(<span class="kw-2">&amp;mut </span>q_minus_one_bytes)
+                    .serialize_compressed(<span class="kw-2">&amp;mut </span>q_minus_one_bytes)
                     .unwrap();
                 bad_bytes_sig.splice(.., q_minus_one_bytes.iter().cloned());
-                <span class="macro">assert!</span>(Signature::&lt;<span class="macro-nonterminal">$curve_param</span>&gt;::deserialize(bad_bytes_sig.as_slice()).is_err());
+                <span class="macro">assert!</span>(Signature::&lt;<span class="macro-nonterminal">$curve_param</span>&gt;::deserialize_compressed(
+                    bad_bytes_sig.as_slice()
+                )
+                .is_err());
             };
         }
 
@@ -1179,7 +1159,7 @@
 
         <span class="macro">macro_rules! </span>test_serde {
             (<span class="macro-nonterminal">$curve_param</span>:tt, <span class="macro-nonterminal">$scalar_field</span>:tt, <span class="macro-nonterminal">$base_field</span>:tt) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+                <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
                 <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
                 <span class="kw">let </span>sk = SignKey::&lt;<span class="macro-nonterminal">$scalar_field</span>&gt;::generate(<span class="kw-2">&amp;mut </span>rng);
                 <span class="kw">let </span>vk = keypair.ver_key();
@@ -1187,24 +1167,28 @@
                 <span class="kw">let </span>sig = keypair.sign(<span class="kw-2">&amp;</span>msg, CS_ID_SCHNORR);
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
-                keypair.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
-                <span class="kw">let </span>de: KeyPair&lt;<span class="macro-nonterminal">$curve_param</span>&gt; = KeyPair::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+                keypair.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+                <span class="kw">let </span>de: KeyPair&lt;<span class="macro-nonterminal">$curve_param</span>&gt; =
+                    KeyPair::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
                 <span class="macro">assert_eq!</span>(de.ver_key_ref(), keypair.ver_key_ref());
                 <span class="macro">assert_eq!</span>(de.ver_key_ref(), <span class="kw-2">&amp;</span>VerKey::from(<span class="kw-2">&amp;</span>de.sk));
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
-                sk.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
-                <span class="kw">let </span>de: SignKey&lt;<span class="macro-nonterminal">$scalar_field</span>&gt; = SignKey::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+                sk.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+                <span class="kw">let </span>de: SignKey&lt;<span class="macro-nonterminal">$scalar_field</span>&gt; =
+                    SignKey::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
                 <span class="macro">assert_eq!</span>(VerKey::&lt;<span class="macro-nonterminal">$curve_param</span>&gt;::from(<span class="kw-2">&amp;</span>de), VerKey::from(<span class="kw-2">&amp;</span>sk));
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
-                vk.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
-                <span class="kw">let </span>de: VerKey&lt;<span class="macro-nonterminal">$curve_param</span>&gt; = VerKey::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+                vk.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+                <span class="kw">let </span>de: VerKey&lt;<span class="macro-nonterminal">$curve_param</span>&gt; =
+                    VerKey::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
                 <span class="macro">assert_eq!</span>(de, vk);
 
                 <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes: Vec&lt;u8&gt; = Vec::new();
-                sig.serialize(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
-                <span class="kw">let </span>de: Signature&lt;<span class="macro-nonterminal">$curve_param</span>&gt; = Signature::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
+                sig.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes).unwrap();
+                <span class="kw">let </span>de: Signature&lt;<span class="macro-nonterminal">$curve_param</span>&gt; =
+                    Signature::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..]).unwrap();
                 <span class="macro">assert_eq!</span>(de, sig);
             };
         }
@@ -1219,4 +1203,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ultraplonk/mod_arith.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod_arith.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ultraplonk/mod_arith.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod_arith.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1599,7 +1599,7 @@
 
 <span class="macro">macro_rules! </span>to_big_int {
     (<span class="macro-nonterminal">$x</span>:expr) =&gt; {
-        (<span class="macro-nonterminal">$x</span>).into_repr().into()
+        (<span class="macro-nonterminal">$x</span>).into_bigint().into()
     };
 }
 
@@ -1622,13 +1622,13 @@
     </span>F: PrimeField,
 {
     <span class="doccomment">/// Create a FpElem struct from field element `p` and split parameter `m`,
-    /// where `m` &lt;= F::size_in_bits() / 2
+    /// where `m` &lt;= F::MODULUS_BIT_SIZE / 2
     </span><span class="kw">pub fn </span>new(p: <span class="kw-2">&amp;</span>F, m: usize, two_power_m: <span class="prelude-ty">Option</span>&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CircuitError&gt; {
-        <span class="kw">if </span>m &gt; F::size_in_bits() / <span class="number">2 </span>{
+        <span class="kw">if </span>m &gt; F::MODULUS_BIT_SIZE <span class="kw">as </span>usize / <span class="number">2 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;field split parameter ({}) larger than half of the field size ({}) in bits&quot;</span>,
                 m,
-                F::size_in_bits() / <span class="number">2
+                F::MODULUS_BIT_SIZE / <span class="number">2
             </span>)));
         }
         <span class="kw">let </span>two_power_m = <span class="kw">match </span>two_power_m {
@@ -2452,7 +2452,7 @@
 <span class="attr">#[inline]
 </span><span class="comment">// Integer division: c = a / b
 </span><span class="kw">fn </span>int_div&lt;F: PrimeField&gt;(a: <span class="kw-2">&amp;</span>F, b: <span class="kw-2">&amp;</span>F) -&gt; F {
-    <span class="kw">let </span>c_big_int: BigUint = a.into_repr().into() / b.into_repr().into();
+    <span class="kw">let </span>c_big_int: BigUint = a.into_bigint().into() / b.into_bigint().into();
     F::from(c_big_int)
 }
 
@@ -2472,9 +2472,9 @@
     <span class="kw">use </span>ark_ed_on_bls12_377::{Fq <span class="kw">as </span>FqEd377, Fr <span class="kw">as </span>FrEd377};
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;
     <span class="kw">use </span>ark_ed_on_bn254::{Fq <span class="kw">as </span>FqEd254, Fr <span class="kw">as </span>FrEd254};
-    <span class="kw">use </span>ark_ff::{BigInteger, FpParameters};
-    <span class="kw">use </span>ark_std::{rand::Rng, test_rng, vec::Vec};
-    <span class="kw">use </span>jf_utils::field_switching;
+    <span class="kw">use </span>ark_ff::BigInteger;
+    <span class="kw">use </span>ark_std::{rand::Rng, vec::Vec};
+    <span class="kw">use </span>jf_utils::{field_switching, test_rng};
 
     <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
     <span class="kw">const </span>RANGE_SIZE_FOR_TEST: usize = <span class="number">65536</span>;
@@ -2492,7 +2492,7 @@
         <span class="kw">let </span>p = int_div(<span class="kw-2">&amp;</span>F::rand(<span class="kw-2">&amp;mut </span>rng), <span class="kw-2">&amp;</span>F::from(<span class="number">4u8</span>));
 
         <span class="comment">// case 1: m = len(|F|) / 2
-        </span><span class="kw">let </span>m = F::size_in_bits() / <span class="number">2</span>;
+        </span><span class="kw">let </span>m = F::MODULUS_BIT_SIZE <span class="kw">as </span>usize / <span class="number">2</span>;
         <span class="kw">let </span>two_power_m = F::from(<span class="number">2u8</span>).pow([m <span class="kw">as </span>u64]);
         <span class="kw">let </span>fp_elem = FpElem::new(<span class="kw-2">&amp;</span>p, m, <span class="prelude-val">Some</span>(two_power_m))<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(fp_elem.p.<span class="number">0 </span>&lt; two_power_m, <span class="string">&quot;p0 larger than 2^m&quot;</span>);
@@ -2506,7 +2506,7 @@
         <span class="macro">assert_eq!</span>(p, q, <span class="string">&quot;FpElem conversion failure when m = 0&quot;</span>);
 
         <span class="comment">// case 3: m &gt; len(|F|) / 2
-        </span><span class="kw">let </span>m = F::size_in_bits() / <span class="number">2 </span>+ <span class="number">1</span>;
+        </span><span class="kw">let </span>m = F::MODULUS_BIT_SIZE <span class="kw">as </span>usize / <span class="number">2 </span>+ <span class="number">1</span>;
         <span class="macro">assert!</span>(FpElem::new(<span class="kw-2">&amp;</span>p, m, <span class="prelude-val">Some</span>(two_power_m)).is_err());
 
         <span class="prelude-val">Ok</span>(())
@@ -2522,7 +2522,7 @@
     <span class="comment">// Test FpElemVar variables creation and conversion
     </span><span class="kw">fn </span>test_fp_elem_var_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        <span class="kw">let </span>m = F::size_in_bits() / <span class="number">2</span>;
+        <span class="kw">let </span>m = F::MODULUS_BIT_SIZE <span class="kw">as </span>usize / <span class="number">2</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
         <span class="comment">// Good path
@@ -3129,7 +3129,7 @@
         m: usize,
         range_bit_len: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        <span class="kw">let </span>p = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        <span class="kw">let </span>p = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         <span class="kw">let </span>p_split = FpElem::new(<span class="kw-2">&amp;</span>p, m, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(range_bit_len);
@@ -3163,4 +3163,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

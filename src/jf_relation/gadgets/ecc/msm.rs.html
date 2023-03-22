@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/msm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>msm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/msm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>msm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -478,7 +478,6 @@
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
 <a href="#480" id="480">480</a>
-<a href="#481" id="481">481</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -490,8 +489,8 @@
 </span><span class="kw">use super</span>::{Point, PointVariable};
 <span class="kw">use crate</span>::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 <span class="kw">use </span>ark_ec::{
-    group::Group, twisted_edwards_extended::GroupProjective, ModelParameters,
-    TEModelParameters <span class="kw">as </span>Parameters,
+    twisted_edwards::{Projective, TECurveConfig <span class="kw">as </span>Config},
+    CurveConfig,
 };
 <span class="kw">use </span>ark_ff::{BigInteger, PrimeField};
 <span class="kw">use </span>ark_std::{format, vec, vec::Vec};
@@ -501,7 +500,7 @@
 </span><span class="kw">pub trait </span>MultiScalarMultiplicationCircuit&lt;F, P&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="doccomment">/// Compute the multi-scalar-multiplications.
     /// Use pippenger when the circuit supports lookup;
@@ -526,14 +525,14 @@
 <span class="kw">impl</span>&lt;F, P&gt; MultiScalarMultiplicationCircuit&lt;F, P&gt; <span class="kw">for </span>PlonkCircuit&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="kw">fn </span>msm(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bases: <span class="kw-2">&amp;</span>[PointVariable],
         scalars: <span class="kw-2">&amp;</span>[Variable],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
-        <span class="kw">let </span>scalar_bit_length = &lt;P <span class="kw">as </span>ModelParameters&gt;::ScalarField::size_in_bits();
+        <span class="kw">let </span>scalar_bit_length = &lt;P <span class="kw">as </span>CurveConfig&gt;::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
         MultiScalarMultiplicationCircuit::&lt;F, P&gt;::msm_with_var_scalar_length(
             <span class="self">self</span>,
             bases,
@@ -611,7 +610,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     circuit.check_vars_bound(scalars)<span class="question-mark">?</span>;
     <span class="kw">for </span>base <span class="kw">in </span>bases.iter() {
@@ -675,7 +674,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="comment">// ================================================
     // check inputs
@@ -799,7 +798,7 @@
 {
     <span class="comment">// create witness
     </span><span class="kw">let </span>m = (scalar_bit_length - <span class="number">1</span>) / c + <span class="number">1</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>scalar_val = circuit.witness(scalar_var)<span class="question-mark">?</span>.into_repr();
+    <span class="kw">let </span><span class="kw-2">mut </span>scalar_val = circuit.witness(scalar_var)<span class="question-mark">?</span>.into_bigint();
     <span class="kw">let </span>decomposed_scalar_vars = (<span class="number">0</span>..m)
         .map(|<span class="kw">_</span>| {
             <span class="comment">// We mod the remaining bits by 2^{window size}, thus taking `c` bits.
@@ -828,11 +827,11 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Point&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
-    <span class="kw">let </span>curve_point: GroupProjective&lt;P&gt; = circuit.point_witness(base_var)<span class="question-mark">?</span>.into();
+    <span class="kw">let </span>curve_point: Projective&lt;P&gt; = circuit.point_witness(base_var)<span class="question-mark">?</span>.into();
     <span class="kw">let </span>scalar = fq_to_fr::&lt;F, P&gt;(<span class="kw-2">&amp;</span>circuit.witness(scalar_var)<span class="question-mark">?</span>);
-    <span class="kw">let </span>res = Group::mul(<span class="kw-2">&amp;</span>curve_point, <span class="kw-2">&amp;</span>scalar);
+    <span class="kw">let </span>res = curve_point * scalar;
     <span class="prelude-val">Ok</span>(res.into())
 }
 
@@ -850,14 +849,14 @@
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{gadgets::ecc::Point, Circuit, PlonkType};
-    <span class="kw">use </span>ark_bls12_377::{g1::Parameters <span class="kw">as </span>Param377, Fq <span class="kw">as </span>Fq377};
+    <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param377, Fq <span class="kw">as </span>Fq377};
     <span class="kw">use </span>ark_ec::{
-        msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
-        TEModelParameters <span class="kw">as </span>Parameters,
+        scalar_mul::variable_base::VariableBaseMSM,
+        twisted_edwards::{Affine, TECurveConfig <span class="kw">as </span>Config},
     };
-    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsParameters <span class="kw">as </span>ParamEd377, Fq <span class="kw">as </span>FqEd377};
-    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsParameters <span class="kw">as </span>ParamEd381, Fq <span class="kw">as </span>FqEd381};
-    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>ParamEd254, Fq <span class="kw">as </span>FqEd254};
+    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsConfig <span class="kw">as </span>ParamEd377, Fq <span class="kw">as </span>FqEd377};
+    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsConfig <span class="kw">as </span>ParamEd381, Fq <span class="kw">as </span>FqEd381};
+    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsConfig <span class="kw">as </span>ParamEd254, Fq <span class="kw">as </span>FqEd254};
     <span class="kw">use </span>ark_ff::UniformRand;
     <span class="kw">use </span>ark_std::vec::Vec;
     <span class="kw">use </span>jf_utils::fr_to_fq;
@@ -886,9 +885,9 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
 
         <span class="kw">for </span>dim <span class="kw">in </span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">16</span>, <span class="number">32</span>, <span class="number">64</span>, <span class="number">128</span>] {
             <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = <span class="kw">match </span>plonk_type {
@@ -897,13 +896,12 @@
             };
 
             <span class="comment">// bases and scalars
-            </span><span class="kw">let </span>bases: Vec&lt;GroupAffine&lt;P&gt;&gt; =
-                (<span class="number">0</span>..dim).map(|<span class="kw">_</span>| GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
+            </span><span class="kw">let </span>bases: Vec&lt;Affine&lt;P&gt;&gt; = (<span class="number">0</span>..dim).map(|<span class="kw">_</span>| Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
             <span class="kw">let </span>scalars: Vec&lt;P::ScalarField&gt; =
                 (<span class="number">0</span>..dim).map(|<span class="kw">_</span>| P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
             <span class="kw">let </span>scalar_reprs: Vec&lt;&lt;P::ScalarField <span class="kw">as </span>PrimeField&gt;::BigInt&gt; =
-                scalars.iter().map(|x| x.into_repr()).collect();
-            <span class="kw">let </span>res = VariableBaseMSM::multi_scalar_mul(<span class="kw-2">&amp;</span>bases, <span class="kw-2">&amp;</span>scalar_reprs);
+                scalars.iter().map(|x| x.into_bigint()).collect();
+            <span class="kw">let </span>res = Projective::&lt;P&gt;::msm_bigint(<span class="kw-2">&amp;</span>bases, <span class="kw-2">&amp;</span>scalar_reprs);
             <span class="kw">let </span>res_point: Point&lt;F&gt; = res.into();
 
             <span class="comment">// corresponding wires
@@ -961,4 +959,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

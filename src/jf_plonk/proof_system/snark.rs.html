@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/snark.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>snark.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/snark.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>snark.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1690,6 +1690,35 @@
 <a href="#1690" id="1690">1690</a>
 <a href="#1691" id="1691">1691</a>
 <a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1712,7 +1741,10 @@
     proof_system::structs::UniversalSrs,
     transcript::<span class="kw-2">*</span>,
 };
-<span class="kw">use </span>ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+<span class="kw">use </span>ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 <span class="kw">use </span>ark_ff::{Field, One};
 <span class="kw">use </span>ark_std::{
     format,
@@ -1734,13 +1766,13 @@
 </span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// A Plonk instantiated with KZG PCS
-</span><span class="kw">pub struct </span>PlonkKzgSnark&lt;E: PairingEngine&gt;(PhantomData&lt;E&gt;);
+</span><span class="kw">pub struct </span>PlonkKzgSnark&lt;E: Pairing&gt;(PhantomData&lt;E&gt;);
 
 <span class="kw">impl</span>&lt;E, F, P&gt; PlonkKzgSnark&lt;E&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
 {
     <span class="attr">#[allow(clippy::new_without_default)]
     </span><span class="doccomment">/// A new Plonk KZG SNARK
@@ -1755,7 +1787,7 @@
         prove_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BatchProof&lt;E&gt;, PlonkError&gt;
     <span class="kw">where
-        </span>C: Arithmetization&lt;E::Fr&gt;,
+        </span>C: Arithmetization&lt;E::ScalarField&gt;,
         R: CryptoRng + RngCore,
         T: PlonkTranscript&lt;F&gt;,
     {
@@ -1767,7 +1799,7 @@
     <span class="doccomment">/// Verify a single aggregated Plonk proof.
     </span><span class="kw">pub fn </span>verify_batch_proof&lt;T&gt;(
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::Fr]],
+        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::ScalarField]],
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
@@ -1791,7 +1823,7 @@
     <span class="doccomment">/// Batch verify multiple SNARK proofs (w.r.t. different verifying keys).
     </span><span class="kw">pub fn </span>batch_verify&lt;T&gt;(
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::Fr]],
+        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::ScalarField]],
         proofs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>Proof&lt;E&gt;],
         extra_transcript_init_msgs: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
@@ -1856,9 +1888,16 @@
         circuits: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>C],
         prove_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;],
         extra_transcript_init_msg: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(BatchProof&lt;E&gt;, Vec&lt;Oracles&lt;E::Fr&gt;&gt;, Challenges&lt;E::Fr&gt;), PlonkError&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;
+        (
+            BatchProof&lt;E&gt;,
+            Vec&lt;Oracles&lt;E::ScalarField&gt;&gt;,
+            Challenges&lt;E::ScalarField&gt;,
+        ),
+        PlonkError,
+    &gt;
     <span class="kw">where
-        </span>C: Arithmetization&lt;E::Fr&gt;,
+        </span>C: Arithmetization&lt;E::ScalarField&gt;,
         R: CryptoRng + RngCore,
         T: PlonkTranscript&lt;F&gt;,
     {
@@ -2045,7 +2084,7 @@
             challenges.zeta,
             <span class="kw-2">&amp;</span>split_quot_polys,
         )<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>alpha_base = E::Fr::one();
+        <span class="kw">let </span><span class="kw-2">mut </span>alpha_base = E::ScalarField::one();
         <span class="kw">let </span>alpha_3 = challenges.alpha.square() * challenges.alpha;
         <span class="kw">let </span>alpha_7 = alpha_3.square() * challenges.alpha;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..circuits.len() {
@@ -2111,9 +2150,9 @@
 
 <span class="kw">impl</span>&lt;E, F, P&gt; UniversalSNARK&lt;E&gt; <span class="kw">for </span>PlonkKzgSnark&lt;E&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
 {
     <span class="kw">type </span>Proof = Proof&lt;E&gt;;
     <span class="kw">type </span>ProvingKey = ProvingKey&lt;E&gt;;
@@ -2130,7 +2169,7 @@
 
     <span class="doccomment">/// Input a circuit and the SRS, precompute the proving key and verification
     /// key.
-    </span><span class="kw">fn </span>preprocess&lt;C: Arithmetization&lt;E::Fr&gt;&gt;(
+    </span><span class="kw">fn </span>preprocess&lt;C: Arithmetization&lt;E::ScalarField&gt;&gt;(
         srs: <span class="kw-2">&amp;</span><span class="self">Self</span>::UniversalSRS,
         circuit: <span class="kw-2">&amp;</span>C,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProvingKey, <span class="self">Self</span>::VerifyingKey), <span class="self">Self</span>::Error&gt; {
@@ -2232,7 +2271,7 @@
         extra_transcript_init_msg: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Proof, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>C: Arithmetization&lt;E::Fr&gt;,
+        </span>C: Arithmetization&lt;E::ScalarField&gt;,
         R: CryptoRng + RngCore,
         T: PlonkTranscript&lt;F&gt;,
     {
@@ -2255,7 +2294,7 @@
 
     <span class="kw">fn </span>verify&lt;T&gt;(
         verify_key: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifyingKey,
-        public_input: <span class="kw-2">&amp;</span>[E::Fr],
+        public_input: <span class="kw-2">&amp;</span>[E::ScalarField],
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
         extra_transcript_init_msg: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
@@ -2292,11 +2331,14 @@
     <span class="kw">use </span>ark_bls12_381::{Bls12_381, Fq <span class="kw">as </span>Fq381};
     <span class="kw">use </span>ark_bn254::{Bn254, Fq <span class="kw">as </span>Fq254};
     <span class="kw">use </span>ark_bw6_761::{Fq <span class="kw">as </span>Fq761, BW6_761};
-    <span class="kw">use </span>ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+    <span class="kw">use </span>ark_ec::{
+        pairing::Pairing,
+        short_weierstrass::{Affine, SWCurveConfig},
+    };
     <span class="kw">use </span>ark_ff::{One, PrimeField, Zero};
     <span class="kw">use </span>ark_poly::{
-        univariate::DensePolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
-        UVPolynomial,
+        univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, Polynomial,
+        Radix2EvaluationDomain,
     };
     <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     <span class="kw">use </span>ark_std::{
@@ -2304,7 +2346,7 @@
         format,
         rand::{CryptoRng, RngCore},
         string::ToString,
-        test_rng, vec,
+        vec,
         vec::Vec,
     };
     <span class="kw">use </span>core::ops::{Mul, Neg};
@@ -2319,6 +2361,7 @@
         constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
         MergeableCircuitType, PlonkCircuit,
     };
+    <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="comment">// Different `m`s lead to different circuits.
     // Different `a0`s lead to different witness values.
@@ -2401,11 +2444,11 @@
     }
     <span class="kw">fn </span>test_preprocessing_helper&lt;E, F, P&gt;(plonk_type: PlonkType) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>ark_std::test_rng();
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>jf_utils::test_rng();
         <span class="kw">let </span>circuit = gen_circuit_for_test(<span class="number">5</span>, <span class="number">6</span>, plonk_type)<span class="question-mark">?</span>;
         <span class="kw">let </span>domain_size = circuit.eval_domain_size()<span class="question-mark">?</span>;
         <span class="kw">let </span>num_inputs = circuit.num_inputs();
@@ -2536,9 +2579,9 @@
 
     <span class="kw">fn </span>test_plonk_proof_system_helper&lt;E, F, P, T&gt;(plonk_type: PlonkType) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="comment">// 1. Simulate universal setup
@@ -2575,10 +2618,11 @@
         }
 
         <span class="comment">// 5. Verification
-        </span><span class="kw">let </span>public_inputs: Vec&lt;Vec&lt;E::Fr&gt;&gt; = circuits
+        </span><span class="kw">let </span>public_inputs: Vec&lt;Vec&lt;E::ScalarField&gt;&gt; = circuits
             .iter()
             .map(|cs| cs.public_input())
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;E::Fr&gt;&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;E::ScalarField&gt;&gt;, <span class="kw">_</span>&gt;&gt;(
+        )<span class="question-mark">?</span>;
         <span class="kw">for </span>(i, proof) <span class="kw">in </span>proofs.iter().enumerate() {
             <span class="kw">let </span>vk_ref = <span class="kw">if </span>i &lt; <span class="number">3 </span>{ <span class="kw-2">&amp;</span>vk1 } <span class="kw">else </span>{ <span class="kw-2">&amp;</span>vk2 };
             <span class="macro">assert!</span>(PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(
@@ -2590,7 +2634,7 @@
             .is_ok());
             <span class="comment">// Inconsistent proof should fail the verification.
             </span><span class="kw">let </span><span class="kw-2">mut </span>bad_pub_input = public_inputs[i].clone();
-            bad_pub_input[<span class="number">0</span>] = E::Fr::from(<span class="number">0u8</span>);
+            bad_pub_input[<span class="number">0</span>] = E::ScalarField::from(<span class="number">0u8</span>);
             <span class="macro">assert!</span>(PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(
                 vk_ref,
                 <span class="kw-2">&amp;</span>bad_pub_input,
@@ -2624,7 +2668,7 @@
 
         <span class="comment">// 6. Batch verification
         </span><span class="kw">let </span>vks = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>vk1, <span class="kw-2">&amp;</span>vk1, <span class="kw-2">&amp;</span>vk1, <span class="kw-2">&amp;</span>vk2, <span class="kw-2">&amp;</span>vk2, <span class="kw-2">&amp;</span>vk2];
-        <span class="kw">let </span><span class="kw-2">mut </span>public_inputs_ref: Vec&lt;<span class="kw-2">&amp;</span>[E::Fr]&gt; = public_inputs
+        <span class="kw">let </span><span class="kw-2">mut </span>public_inputs_ref: Vec&lt;<span class="kw-2">&amp;</span>[E::ScalarField]&gt; = public_inputs
             .iter()
             .map(|pub_input| <span class="kw-2">&amp;</span>pub_input[..])
             .collect();
@@ -2751,9 +2795,9 @@
         plonk_type: PlonkType,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="comment">// 1. Simulate universal setup
@@ -2763,18 +2807,18 @@
         <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Create circuits
-        </span><span class="kw">let </span><span class="kw-2">mut </span>cs1: PlonkCircuit&lt;E::Fr&gt; = <span class="kw">match </span>plonk_type {
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cs1: PlonkCircuit&lt;E::ScalarField&gt; = <span class="kw">match </span>plonk_type {
             PlonkType::TurboPlonk =&gt; PlonkCircuit::new_turbo_plonk(),
             PlonkType::UltraPlonk =&gt; PlonkCircuit::new_ultra_plonk(<span class="number">2</span>),
         };
-        <span class="kw">let </span>var = cs1.create_variable(E::Fr::from(<span class="number">1u8</span>))<span class="question-mark">?</span>;
-        cs1.enforce_constant(var, E::Fr::from(<span class="number">1u8</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>var = cs1.create_variable(E::ScalarField::from(<span class="number">1u8</span>))<span class="question-mark">?</span>;
+        cs1.enforce_constant(var, E::ScalarField::from(<span class="number">1u8</span>))<span class="question-mark">?</span>;
         cs1.finalize_for_arithmetization()<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>cs2: PlonkCircuit&lt;E::Fr&gt; = <span class="kw">match </span>plonk_type {
+        <span class="kw">let </span><span class="kw-2">mut </span>cs2: PlonkCircuit&lt;E::ScalarField&gt; = <span class="kw">match </span>plonk_type {
             PlonkType::TurboPlonk =&gt; PlonkCircuit::new_turbo_plonk(),
             PlonkType::UltraPlonk =&gt; PlonkCircuit::new_ultra_plonk(<span class="number">2</span>),
         };
-        cs2.create_public_variable(E::Fr::from(<span class="number">1u8</span>))<span class="question-mark">?</span>;
+        cs2.create_public_variable(E::ScalarField::from(<span class="number">1u8</span>))<span class="question-mark">?</span>;
         cs2.finalize_for_arithmetization()<span class="question-mark">?</span>;
 
         <span class="comment">// 3. Preprocessing
@@ -2786,10 +2830,14 @@
         <span class="kw">let </span>proof2 = PlonkKzgSnark::&lt;E&gt;::prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(rng, <span class="kw-2">&amp;</span>cs2, <span class="kw-2">&amp;</span>pk2, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// 5. Verification
-        </span><span class="macro">assert!</span>(PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(<span class="kw-2">&amp;</span>vk2, <span class="kw-2">&amp;</span>[E::Fr::from(<span class="number">1u8</span>)], <span class="kw-2">&amp;</span>proof2, <span class="prelude-val">None</span>,).is_ok());
+        </span><span class="macro">assert!</span>(
+            PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(<span class="kw-2">&amp;</span>vk2, <span class="kw-2">&amp;</span>[E::ScalarField::from(<span class="number">1u8</span>)], <span class="kw-2">&amp;</span>proof2, <span class="prelude-val">None</span>,)
+                .is_ok()
+        );
         <span class="comment">// wrong verification key
         </span><span class="macro">assert!</span>(
-            PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(<span class="kw-2">&amp;</span>vk1, <span class="kw-2">&amp;</span>[E::Fr::from(<span class="number">1u8</span>)], <span class="kw-2">&amp;</span>proof2, <span class="prelude-val">None</span>,).is_err()
+            PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(<span class="kw-2">&amp;</span>vk1, <span class="kw-2">&amp;</span>[E::ScalarField::from(<span class="number">1u8</span>)], <span class="kw-2">&amp;</span>proof2, <span class="prelude-val">None</span>,)
+                .is_err()
         );
         <span class="comment">// wrong public input
         </span><span class="macro">assert!</span>(PlonkKzgSnark::&lt;E&gt;::verify::&lt;T&gt;(<span class="kw-2">&amp;</span>vk2, <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>proof2, <span class="prelude-val">None</span>).is_err());
@@ -2846,9 +2894,9 @@
         plonk_type: PlonkType,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="comment">// 1. Simulate universal setup
@@ -2874,11 +2922,11 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>check_plonk_prover_polynomials&lt;E: PairingEngine&gt;(
+    <span class="kw">fn </span>check_plonk_prover_polynomials&lt;E: Pairing&gt;(
         plonk_type: PlonkType,
-        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
+        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
         check_circuit_polynomial_on_vanishing_set(oracles, pk)<span class="question-mark">?</span>;
         check_perm_polynomials_on_vanishing_set(oracles, pk, challenges)<span class="question-mark">?</span>;
@@ -2889,16 +2937,16 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>check_circuit_polynomial_on_vanishing_set&lt;E: PairingEngine&gt;(
-        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
+    <span class="kw">fn </span>check_circuit_polynomial_on_vanishing_set&lt;E: Pairing&gt;(
+        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
-        <span class="kw">let </span>q_lc: Vec&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;&gt; =
+        <span class="kw">let </span>q_lc: Vec&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;&gt; =
             (<span class="number">0</span>..GATE_WIDTH).map(|j| <span class="kw-2">&amp;</span>pk.selectors[j]).collect();
-        <span class="kw">let </span>q_mul: Vec&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;&gt; = (GATE_WIDTH..GATE_WIDTH + <span class="number">2</span>)
+        <span class="kw">let </span>q_mul: Vec&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;&gt; = (GATE_WIDTH..GATE_WIDTH + <span class="number">2</span>)
             .map(|j| <span class="kw-2">&amp;</span>pk.selectors[j])
             .collect();
-        <span class="kw">let </span>q_hash: Vec&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;&gt; = (GATE_WIDTH + <span class="number">2</span>..<span class="number">2 </span>* GATE_WIDTH + <span class="number">2</span>)
+        <span class="kw">let </span>q_hash: Vec&lt;<span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;&gt; = (GATE_WIDTH + <span class="number">2</span>..<span class="number">2 </span>* GATE_WIDTH + <span class="number">2</span>)
             .map(|j| <span class="kw-2">&amp;</span>pk.selectors[j])
             .collect();
         <span class="kw">let </span>q_o = <span class="kw-2">&amp;</span>pk.selectors[<span class="number">2 </span>* GATE_WIDTH + <span class="number">2</span>];
@@ -2949,26 +2997,29 @@
             + oracles.wire_polys[<span class="number">4</span>].mul(q_o).neg();
 
         <span class="comment">// check that the polynomial evaluates to zero on the vanishing set
-        </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(pk.domain_size())
+        </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(pk.domain_size())
             .ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..domain.size() {
-            <span class="macro">assert_eq!</span>(circuit_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(i)), E::Fr::zero());
+            <span class="macro">assert_eq!</span>(
+                circuit_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(i)),
+                E::ScalarField::zero()
+            );
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>check_perm_polynomials_on_vanishing_set&lt;E: PairingEngine&gt;(
-        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
+    <span class="kw">fn </span>check_perm_polynomials_on_vanishing_set&lt;E: Pairing&gt;(
+        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
         <span class="kw">let </span>beta = challenges.beta;
         <span class="kw">let </span>gamma = challenges.gamma;
 
         <span class="comment">// check that \prod_i [w_i(X) + beta * k_i * X + gamma] * z(X) = \prod_i [w_i(X)
         // + beta * sigma_i(X) + gamma] * z(wX) on the vanishing set
-        </span><span class="kw">let </span>one_poly = DensePolynomial::from_coefficients_vec(<span class="macro">vec!</span>[E::Fr::one()]);
+        </span><span class="kw">let </span>one_poly = DensePolynomial::from_coefficients_vec(<span class="macro">vec!</span>[E::ScalarField::one()]);
         <span class="kw">let </span>poly_1 = oracles
             .wire_polys
             .iter()
@@ -2990,7 +3041,7 @@
                     acc.mul(<span class="kw-2">&amp;</span>poly)
                 });
 
-        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(pk.domain_size())
+        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(pk.domain_size())
             .ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..domain.size() {
             <span class="kw">let </span>point = domain.element(i);
@@ -3003,30 +3054,36 @@
         <span class="comment">// check z(X) = 1 at point 1
         </span><span class="macro">assert_eq!</span>(
             oracles.prod_perm_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(<span class="number">0</span>)),
-            E::Fr::one()
+            E::ScalarField::one()
         );
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>check_lookup_polynomials_on_vanishing_set&lt;E: PairingEngine&gt;(
-        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
+    <span class="kw">fn </span>check_lookup_polynomials_on_vanishing_set&lt;E: Pairing&gt;(
+        oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
         <span class="kw">let </span>beta = challenges.beta;
         <span class="kw">let </span>gamma = challenges.gamma;
         <span class="kw">let </span>n = pk.domain_size();
-        <span class="kw">let </span>domain =
-            Radix2EvaluationDomain::&lt;E::Fr&gt;::new(n).ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
+        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(n)
+            .ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
         <span class="kw">let </span>prod_poly = <span class="kw-2">&amp;</span>oracles.plookup_oracles.prod_lookup_poly;
         <span class="kw">let </span>h_polys = <span class="kw-2">&amp;</span>oracles.plookup_oracles.h_polys;
 
         <span class="comment">// check z(X) = 1 at point 1
-        </span><span class="macro">assert_eq!</span>(prod_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(<span class="number">0</span>)), E::Fr::one());
+        </span><span class="macro">assert_eq!</span>(
+            prod_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(<span class="number">0</span>)),
+            E::ScalarField::one()
+        );
 
         <span class="comment">// check z(X) = 1 at point w^{n-1}
-        </span><span class="macro">assert_eq!</span>(prod_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(n - <span class="number">1</span>)), E::Fr::one());
+        </span><span class="macro">assert_eq!</span>(
+            prod_poly.evaluate(<span class="kw-2">&amp;</span>domain.element(n - <span class="number">1</span>)),
+            E::ScalarField::one()
+        );
 
         <span class="comment">// check h1(X) = h2(w * X) at point w^{n-1}
         </span><span class="macro">assert_eq!</span>(
@@ -3041,7 +3098,7 @@
         //      (gamma(1+beta) + h1(X) + beta * h1(Xw)) *
         //      (gamma(1+beta) + h2(x) + beta * h2(Xw))
         // on the vanishing set excluding point w^{n-1}
-        </span><span class="kw">let </span>beta_plus_one = E::Fr::one() + beta;
+        </span><span class="kw">let </span>beta_plus_one = E::ScalarField::one() + beta;
         <span class="kw">let </span>gamma_mul_beta_plus_one = gamma * beta_plus_one;
 
         <span class="kw">let </span>range_table_poly_ref = <span class="kw-2">&amp;</span>pk.plookup_pk.as_ref().unwrap().range_table_poly;
@@ -3108,11 +3165,11 @@
 
     <span class="kw">fn </span>test_proof_from_to_fields_helper&lt;E, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;G1Affine = GroupAffine&lt;P&gt;&gt;,
-        E::Fq: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = E::Fq, ScalarField = E::Fr&gt;,
+        </span>E: Pairing&lt;G1Affine = Affine&lt;P&gt;&gt;,
+        E::BaseField: RescueParameter + SWToTEConParam,
+        P: SWCurveConfig&lt;BaseField = E::BaseField, ScalarField = E::ScalarField&gt;,
     {
-        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>ark_std::test_rng();
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>jf_utils::test_rng();
         <span class="kw">let </span>circuit = gen_circuit_for_test(<span class="number">3</span>, <span class="number">4</span>, PlonkType::TurboPlonk)<span class="question-mark">?</span>;
         <span class="kw">let </span>max_degree = <span class="number">80</span>;
         <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
@@ -3121,7 +3178,7 @@
         <span class="kw">let </span>proof =
             PlonkKzgSnark::&lt;E&gt;::prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, StandardTranscript&gt;(rng, <span class="kw-2">&amp;</span>circuit, <span class="kw-2">&amp;</span>pk, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>base_fields: Vec&lt;E::Fq&gt; = proof.clone().into();
+        <span class="kw">let </span>base_fields: Vec&lt;E::BaseField&gt; = proof.clone().into();
         <span class="kw">let </span>res: Proof&lt;E&gt; = base_fields.try_into()<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(res, proof);
 
@@ -3153,12 +3210,12 @@
 
     <span class="kw">fn </span>test_serde_helper&lt;E, F, P, T&gt;(plonk_type: PlonkType) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
-        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>ark_std::test_rng();
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>jf_utils::test_rng();
         <span class="kw">let </span>circuit = gen_circuit_for_test(<span class="number">3</span>, <span class="number">4</span>, plonk_type)<span class="question-mark">?</span>;
         <span class="kw">let </span>max_degree = <span class="number">80</span>;
         <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
@@ -3167,23 +3224,23 @@
         <span class="kw">let </span>proof = PlonkKzgSnark::&lt;E&gt;::prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(rng, <span class="kw-2">&amp;</span>circuit, <span class="kw-2">&amp;</span>pk, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes = Vec::new();
-        srs.serialize(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
-        <span class="kw">let </span>de = UniversalSrs::&lt;E&gt;::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
+        srs.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>de = UniversalSrs::&lt;E&gt;::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(de, srs);
 
         <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes = Vec::new();
-        pk.serialize(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
-        <span class="kw">let </span>de = ProvingKey::&lt;E&gt;::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
+        pk.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>de = ProvingKey::&lt;E&gt;::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(de, pk);
 
         <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes = Vec::new();
-        vk.serialize(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
-        <span class="kw">let </span>de = VerifyingKey::&lt;E&gt;::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
+        vk.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>de = VerifyingKey::&lt;E&gt;::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(de, vk);
 
         <span class="kw">let </span><span class="kw-2">mut </span>ser_bytes = Vec::new();
-        proof.serialize(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
-        <span class="kw">let </span>de = Proof::&lt;E&gt;::deserialize(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
+        proof.serialize_compressed(<span class="kw-2">&amp;mut </span>ser_bytes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>de = Proof::&lt;E&gt;::deserialize_compressed(<span class="kw-2">&amp;</span>ser_bytes[..])<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(de, proof);
 
         <span class="prelude-val">Ok</span>(())
@@ -3216,9 +3273,9 @@
         plonk_type: PlonkType,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="comment">// 1. Simulate universal setup
@@ -3229,9 +3286,9 @@
 
         <span class="comment">// 2. Create many circuits with same domain size
         </span><span class="kw">let </span>circuits = (<span class="number">6</span>..<span class="number">13</span>)
-            .map(|i| gen_circuit_for_test::&lt;E::Fr&gt;(i, i, plonk_type))
+            .map(|i| gen_circuit_for_test::&lt;E::ScalarField&gt;(i, i, plonk_type))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PlonkError&gt;&gt;()<span class="question-mark">?</span>; <span class="comment">// the number of gates = 4m + 11
-        </span><span class="kw">let </span>cs_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::Fr&gt;&gt; = circuits.iter().collect();
+        </span><span class="kw">let </span>cs_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::ScalarField&gt;&gt; = circuits.iter().collect();
 
         <span class="comment">// 3. Preprocessing
         </span><span class="kw">let </span><span class="kw-2">mut </span>prove_keys = <span class="macro">vec!</span>[];
@@ -3250,7 +3307,7 @@
         <span class="comment">// Batch proving with circuit/key aggregation
         //
         // 2. Create circuits
-        </span><span class="kw">let </span>type_a_circuits: Vec&lt;PlonkCircuit&lt;E::Fr&gt;&gt; = (<span class="number">6</span>..<span class="number">13</span>)
+        </span><span class="kw">let </span>type_a_circuits: Vec&lt;PlonkCircuit&lt;E::ScalarField&gt;&gt; = (<span class="number">6</span>..<span class="number">13</span>)
             .map(|i| gen_mergeable_circuit(i, i, MergeableCircuitType::TypeA))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PlonkError&gt;&gt;()<span class="question-mark">?</span>; <span class="comment">// the number of gates = 4m + 11
         </span><span class="kw">let </span>type_b_circuits = (<span class="number">6</span>..<span class="number">13</span>)
@@ -3262,7 +3319,7 @@
             .zip(type_b_circuits.iter())
             .map(|(cs_a, cs_b)| cs_a.merge(cs_b))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
-        <span class="kw">let </span>cs_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::Fr&gt;&gt; = circuits.iter().collect();
+        <span class="kw">let </span>cs_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::ScalarField&gt;&gt; = circuits.iter().collect();
 
         <span class="comment">// 3. Preprocessing
         </span><span class="kw">let </span><span class="kw-2">mut </span>pks_type_a = <span class="macro">vec!</span>[];
@@ -3309,14 +3366,14 @@
 
     <span class="kw">fn </span>check_batch_prove_and_verify&lt;E, F, P, R, T&gt;(
         rng: <span class="kw-2">&amp;mut </span>R,
-        cs_ref: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::Fr&gt;],
+        cs_ref: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::ScalarField&gt;],
         pks_ref: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;],
         vks_ref: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         R: CryptoRng + RngCore,
         T: PlonkTranscript&lt;F&gt;,
     {
@@ -3324,11 +3381,12 @@
         </span><span class="kw">let </span>batch_proof = PlonkKzgSnark::&lt;E&gt;::batch_prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(rng, cs_ref, pks_ref)<span class="question-mark">?</span>;
 
         <span class="comment">// Verification
-        </span><span class="kw">let </span>public_inputs: Vec&lt;Vec&lt;E::Fr&gt;&gt; = cs_ref
+        </span><span class="kw">let </span>public_inputs: Vec&lt;Vec&lt;E::ScalarField&gt;&gt; = cs_ref
             .iter()
             .map(|<span class="kw-2">&amp;</span>cs| cs.public_input())
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;E::Fr&gt;&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
-        <span class="kw">let </span>pi_ref: Vec&lt;<span class="kw-2">&amp;</span>[E::Fr]&gt; = public_inputs
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;E::ScalarField&gt;&gt;, <span class="kw">_</span>&gt;&gt;(
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>pi_ref: Vec&lt;<span class="kw-2">&amp;</span>[E::ScalarField]&gt; = public_inputs
             .iter()
             .map(|pub_input| <span class="kw-2">&amp;</span>pub_input[..])
             .collect();
@@ -3383,4 +3441,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

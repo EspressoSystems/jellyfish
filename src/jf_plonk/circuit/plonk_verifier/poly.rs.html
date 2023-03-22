@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/plonk_verifier/poly.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>poly.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_plonk/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/circuit/plonk_verifier/poly.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>poly.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_plonk/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -817,7 +817,7 @@
 
 </span><span class="doccomment">//! Circuits for the polynomial evaluations within Plonk verifiers.
 </span><span class="kw">use crate</span>::{circuit::plonk_verifier::<span class="kw-2">*</span>, errors::PlonkError};
-<span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_ec::pairing::Pairing;
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 <span class="kw">use </span>ark_std::{format, string::ToString, vec, vec::Vec, One};
@@ -850,9 +850,9 @@
     zeta_fp_elem_var: <span class="kw-2">&amp;</span>FpElemVar&lt;F&gt;,
     domain_size: usize,
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;([FpElemVar&lt;F&gt;; <span class="number">3</span>]), CircuitError&gt;
+) -&gt; <span class="prelude-ty">Result</span>&lt;[FpElemVar&lt;F&gt;; <span class="number">3</span>], CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F&gt;,
+    </span>E: Pairing&lt;BaseField = F&gt;,
     F: PrimeField,
 {
     <span class="comment">// constants
@@ -864,7 +864,7 @@
 
     <span class="comment">// zeta
     </span><span class="kw">let </span>zeta = zeta_fp_elem_var.witness(circuit)<span class="question-mark">?</span>;
-    <span class="kw">let </span>zeta_fr = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta);
+    <span class="kw">let </span>zeta_fr = field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>zeta);
 
     <span class="comment">// ================================
     // compute zeta^n - 1
@@ -903,8 +903,9 @@
 
     // zeta^n = zeta_n_minus_1 + 1
     </span><span class="kw">let </span>zeta_n = zeta_n_fp_elem_var.witness(circuit)<span class="question-mark">?</span>;
-    <span class="kw">let </span>zeta_n_minus_one =
-        field_switching::&lt;<span class="kw">_</span>, F&gt;(<span class="kw-2">&amp;</span>(field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta_n) - E::Fr::one()));
+    <span class="kw">let </span>zeta_n_minus_one = field_switching::&lt;<span class="kw">_</span>, F&gt;(
+        <span class="kw-2">&amp;</span>(field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>zeta_n) - E::ScalarField::one()),
+    );
     <span class="kw">let </span>zeta_n_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
         <span class="kw-2">&amp;</span>zeta_n_minus_one,
@@ -932,8 +933,8 @@
     // ================================
 
     // lagrange_1_eval
-    </span><span class="kw">let </span>zeta_n_minus_one = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta_n_minus_one);
-    <span class="kw">let </span>divisor = E::Fr::from(domain_size <span class="kw">as </span>u64) * (zeta_fr - E::Fr::one());
+    </span><span class="kw">let </span>zeta_n_minus_one = field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>zeta_n_minus_one);
+    <span class="kw">let </span>divisor = E::ScalarField::from(domain_size <span class="kw">as </span>u64) * (zeta_fr - E::ScalarField::one());
     <span class="kw">let </span>lagrange_1_eval = zeta_n_minus_one / divisor;
     <span class="kw">let </span>lagrange_1_eval_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
@@ -943,7 +944,7 @@
     )<span class="question-mark">?</span>;
 
     <span class="comment">// zeta - 1
-    </span><span class="kw">let </span>zeta_minus_one_fr = zeta_fr - E::Fr::one();
+    </span><span class="kw">let </span>zeta_minus_one_fr = zeta_fr - E::ScalarField::one();
     <span class="kw">let </span>zeta_minus_one_fp_elem_var = FpElemVar::new_from_field_element(
         circuit,
         <span class="kw-2">&amp;</span>field_switching(<span class="kw-2">&amp;</span>zeta_minus_one_fr),
@@ -999,7 +1000,7 @@
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F&gt;,
+    </span>E: Pairing&lt;BaseField = F&gt;,
     F: PrimeField,
 {
     <span class="comment">// the circuit is already merged
@@ -1011,22 +1012,21 @@
     <span class="kw">let </span>len = pub_inputs_fp_elem_var.len() &gt;&gt; <span class="number">1</span>;
 
     <span class="comment">// constants
-    </span><span class="kw">let </span>zeta = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>zeta_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
-    <span class="kw">let </span>vanish_eval = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>vanish_eval_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
+    </span><span class="kw">let </span>zeta = field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>zeta_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
+    <span class="kw">let </span>vanish_eval =
+        field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>vanish_eval_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
 
     <span class="comment">// compute v_i = g^i / n in the clear
-    </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(domain_size).unwrap();
-    <span class="kw">let </span>v_i: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..domain_size)
-        .map(|x| domain.element(x) / E::Fr::from(domain_size <span class="kw">as </span>u64))
+    </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(domain_size).unwrap();
+    <span class="kw">let </span>v_i: Vec&lt;E::ScalarField&gt; = (<span class="number">0</span>..domain_size)
+        .map(|x| domain.element(x) / E::ScalarField::from(domain_size <span class="kw">as </span>u64))
         .collect();
 
     <span class="comment">// compute L_{i,H}(zeta) = Z_H(zeta) * v_i / (zeta - g^i)
     // where Z_H(z) is the vanishing evaluation
     // compute for both i in [0, len) and [domain_size-len, domain_size)
     </span><span class="kw">let </span><span class="kw-2">mut </span>lagrange_eval_fp_elem_var: Vec&lt;FpElemVar&lt;F&gt;&gt; = Vec::new();
-    <span class="kw">let </span>range = (<span class="number">0</span>..len)
-        .into_iter()
-        .chain((domain_size - len..domain_size).into_iter());
+    <span class="kw">let </span>range = (<span class="number">0</span>..len).chain(domain_size - len..domain_size);
 
     <span class="kw">for </span>i <span class="kw">in </span>range {
         <span class="comment">// compute L_{i,H}(zeta) and related values in the clear
@@ -1130,7 +1130,7 @@
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;FpElemVar&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F&gt;,
+    </span>E: Pairing&lt;BaseField = F&gt;,
     F: PrimeField,
 {
     <span class="kw">if </span>verify_keys.len() != batch_proof.len() || verify_keys.len() != public_inputs.len() {
@@ -1165,7 +1165,7 @@
         <span class="bool-val">true</span>,
         non_native_field_info,
     )<span class="question-mark">?</span>;
-    <span class="kw">let </span>pi_fr = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>pi_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
+    <span class="kw">let </span>pi_fr = field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>pi_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
 
     <span class="comment">// L1(x)*alpha_2
     </span><span class="kw">let </span>l1_mul_alpha_2_fp_elem_var = circuit.mod_mul(
@@ -1175,7 +1175,7 @@
     )<span class="question-mark">?</span>;
 
     <span class="kw">let </span>l1_mul_alpha_2_fr =
-        field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>l1_mul_alpha_2_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
+        field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>l1_mul_alpha_2_fp_elem_var.witness(circuit)<span class="question-mark">?</span>);
 
     <span class="comment">// the big loop to compute r_0[j]
     //
@@ -1240,7 +1240,7 @@
             <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>;
         tmp = circuit.mod_mul(<span class="kw-2">&amp;</span>tmp, <span class="kw-2">&amp;</span>prod, <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem)<span class="question-mark">?</span>;
-        <span class="kw">let </span>tmp_fr = field_switching::&lt;<span class="kw">_</span>, E::Fr&gt;(<span class="kw-2">&amp;</span>tmp.witness(circuit)<span class="question-mark">?</span>);
+        <span class="kw">let </span>tmp_fr = field_switching::&lt;<span class="kw">_</span>, E::ScalarField&gt;(<span class="kw-2">&amp;</span>tmp.witness(circuit)<span class="question-mark">?</span>);
 
         <span class="comment">// r_plonk_j
         </span><span class="kw">let </span>r_plonk_j_fr = pi_fr - l1_mul_alpha_2_fr - tmp_fr;
@@ -1302,7 +1302,7 @@
     non_native_field_info: NonNativeFieldInfo&lt;F&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ScalarsAndBasesVar&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F&gt;,
+    </span>E: Pairing&lt;BaseField = F&gt;,
     F: PrimeField,
 {
     <span class="kw">let </span>beta_times_zeta_fp_elem_var = circuit.mod_mul(
@@ -1448,17 +1448,17 @@
             <span class="kw-2">&amp;</span>non_native_field_info.modulus_fp_elem,
         )<span class="question-mark">?</span>);
         <span class="comment">// q_scalars[6] = w_evals[0].pow([5]);
-        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">0</span>])<span class="question-mark">?</span>);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::ScalarField&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">0</span>])<span class="question-mark">?</span>);
         <span class="comment">// q_scalars[7] = w_evals[1].pow([5]);
-        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">1</span>])<span class="question-mark">?</span>);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::ScalarField&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">1</span>])<span class="question-mark">?</span>);
         <span class="comment">// q_scalars[8] = w_evals[2].pow([5]);
-        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">2</span>])<span class="question-mark">?</span>);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::ScalarField&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">2</span>])<span class="question-mark">?</span>);
         <span class="comment">// q_scalars[9] = w_evals[3].pow([5]);
-        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::Fr&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">3</span>])<span class="question-mark">?</span>);
+        </span>q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::&lt;E::ScalarField&gt;(<span class="kw-2">&amp;</span>w_evals[<span class="number">3</span>])<span class="question-mark">?</span>);
         <span class="comment">// q_scalars[10] = -w_evals[4];
         // note that we push w_eval to the buffer, so we will need to inverse the basis
         </span>q_scalars_fp_elem_vars.push(w_evals[<span class="number">4</span>]);
-        <span class="comment">// q_scalars[11] = E::Fr::one();
+        <span class="comment">// q_scalars[11] = E::ScalarField::one();
         // TODO(optimization): public wire?
         </span>q_scalars_fp_elem_vars.push(FpElemVar::one(
             circuit,
@@ -1547,9 +1547,9 @@
     <span class="kw">use </span>ark_bls12_377::Bls12_377;
     <span class="kw">use </span>ark_ff::Field;
     <span class="kw">use </span>ark_poly::Radix2EvaluationDomain;
-    <span class="kw">use </span>ark_std::{test_rng, One, UniformRand};
+    <span class="kw">use </span>ark_std::{One, UniformRand};
     <span class="kw">use </span>jf_relation::Circuit;
-    <span class="kw">use </span>jf_utils::field_switching;
+    <span class="kw">use </span>jf_utils::{field_switching, test_rng};
 
     <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
 
@@ -1558,31 +1558,31 @@
         test_evaluate_poly_helper::&lt;Bls12_377&gt;();
     }
 
-    <span class="kw">fn </span>test_evaluate_poly_helper&lt;E: PairingEngine&gt;() {
+    <span class="kw">fn </span>test_evaluate_poly_helper&lt;E: Pairing&gt;() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;E::Fq&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        <span class="kw">let </span>zeta = E::Fr::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;E::BaseField&gt;::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        <span class="kw">let </span>zeta = E::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>zeta_var = circuit.create_variable(field_switching(<span class="kw-2">&amp;</span>zeta)).unwrap();
 
         <span class="kw">for </span>domain_size <span class="kw">in </span>[<span class="number">64</span>, <span class="number">128</span>, <span class="number">256</span>, <span class="number">512</span>, <span class="number">1024</span>] {
             <span class="comment">// compute the result in the clear
-            </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(domain_size).unwrap();
+            </span><span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(domain_size).unwrap();
             <span class="kw">let </span>vanish_eval = domain.evaluate_vanishing_polynomial(zeta);
-            <span class="kw">let </span>zeta_n = vanish_eval + E::Fr::one();
-            <span class="kw">let </span>divisor = E::Fr::from(domain_size <span class="kw">as </span>u32) * (zeta - E::Fr::one());
+            <span class="kw">let </span>zeta_n = vanish_eval + E::ScalarField::one();
+            <span class="kw">let </span>divisor = E::ScalarField::from(domain_size <span class="kw">as </span>u32) * (zeta - E::ScalarField::one());
             <span class="kw">let </span>lagrange_1_eval = vanish_eval / divisor;
 
             <span class="comment">// compute the variables
             </span><span class="kw">let </span>m = <span class="number">128</span>;
             <span class="comment">// constants
-            </span><span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(E::Fq::from(<span class="number">2u8</span>).pow([m <span class="kw">as </span>u64]));
+            </span><span class="kw">let </span>two_power_m = <span class="prelude-val">Some</span>(E::BaseField::from(<span class="number">2u8</span>).pow([m <span class="kw">as </span>u64]));
 
-            <span class="kw">let </span>fr_modulus_bits = &lt;E::Fr <span class="kw">as </span>PrimeField&gt;::Params::MODULUS.to_bytes_le();
-            <span class="kw">let </span>modulus_in_f = E::Fq::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>fr_modulus_bits);
+            <span class="kw">let </span>fr_modulus_bits = &lt;E::ScalarField <span class="kw">as </span>PrimeField&gt;::MODULUS.to_bytes_le();
+            <span class="kw">let </span>modulus_in_f = E::BaseField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>fr_modulus_bits);
             <span class="kw">let </span>modulus_fp_elem = FpElem::new(<span class="kw-2">&amp;</span>modulus_in_f, m, two_power_m).unwrap();
 
-            <span class="kw">let </span>non_native_field_info = NonNativeFieldInfo::&lt;E::Fq&gt; {
+            <span class="kw">let </span>non_native_field_info = NonNativeFieldInfo::&lt;E::BaseField&gt; {
                 m,
                 two_power_m,
                 modulus_in_f,
@@ -1602,23 +1602,23 @@
             <span class="comment">// check the correctness
             </span><span class="kw">let </span>tmp = eval_results[<span class="number">0</span>].convert_to_var(<span class="kw-2">&amp;mut </span>circuit).unwrap();
             <span class="macro">assert_eq!</span>(
-                field_switching::&lt;<span class="kw">_</span>, E::Fq&gt;(<span class="kw-2">&amp;</span>zeta_n),
+                field_switching::&lt;<span class="kw">_</span>, E::BaseField&gt;(<span class="kw-2">&amp;</span>zeta_n),
                 circuit.witness(tmp).unwrap(),
             );
 
             <span class="kw">let </span>tmp = eval_results[<span class="number">1</span>].convert_to_var(<span class="kw-2">&amp;mut </span>circuit).unwrap();
             <span class="macro">assert_eq!</span>(
-                field_switching::&lt;<span class="kw">_</span>, E::Fq&gt;(<span class="kw-2">&amp;</span>vanish_eval),
+                field_switching::&lt;<span class="kw">_</span>, E::BaseField&gt;(<span class="kw-2">&amp;</span>vanish_eval),
                 circuit.witness(tmp).unwrap(),
             );
 
             <span class="kw">let </span>tmp = eval_results[<span class="number">2</span>].convert_to_var(<span class="kw-2">&amp;mut </span>circuit).unwrap();
             <span class="macro">assert_eq!</span>(
-                field_switching::&lt;<span class="kw">_</span>, E::Fq&gt;(<span class="kw-2">&amp;</span>lagrange_1_eval),
+                field_switching::&lt;<span class="kw">_</span>, E::BaseField&gt;(<span class="kw-2">&amp;</span>lagrange_1_eval),
                 circuit.witness(tmp).unwrap(),
             );
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

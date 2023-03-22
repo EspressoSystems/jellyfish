@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_relation/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1290,10 +1290,6 @@
 <a href="#1290" id="1290">1290</a>
 <a href="#1291" id="1291">1291</a>
 <a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1305,13 +1301,11 @@
 
 </span><span class="kw">use crate</span>::{errors::CircuitError, gates::<span class="kw-2">*</span>, BoolVar, Circuit, PlonkCircuit, Variable};
 <span class="kw">use </span>ark_ec::{
-    group::Group,
-    short_weierstrass_jacobian::GroupAffine <span class="kw">as </span>SWGroupAffine,
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ModelParameters, ProjectiveCurve, SWModelParameters,
-    TEModelParameters <span class="kw">as </span>Parameters,
+    short_weierstrass::{Affine <span class="kw">as </span>SWGroupAffine, SWCurveConfig},
+    twisted_edwards::{Affine, Projective, TECurveConfig <span class="kw">as </span>Config},
+    AffineRepr, CurveConfig, CurveGroup, ScalarMul,
 };
-<span class="kw">use </span>ark_ff::{PrimeField, Zero};
+<span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
 <span class="kw">use </span>core::marker::PhantomData;
 
@@ -1325,18 +1319,18 @@
 </span><span class="doccomment">/// An elliptic curve point in twisted Edwards affine form (x, y).
 </span><span class="kw">pub struct </span>Point&lt;F: PrimeField&gt;(F, F);
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;GroupAffine&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;Affine&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn </span>from(p: GroupAffine&lt;P&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(p: Affine&lt;P&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">if </span>p.is_zero() {
-            <span class="comment">// separately treat point of infinity since maliciously constructed GroupAffine
+            <span class="comment">// separately treat point of infinity since maliciously constructed Affine
             // could be (0,0,true) which is still a valid infinity point but would result in
             // `Point(0, 0)` which might lead to problems as seen in precedence:
             // https://cryptosubtlety.medium.com/00-8d4adcf4d255
-            </span><span class="kw">let </span>inf = GroupAffine::&lt;P&gt;::zero();
+            </span><span class="kw">let </span>inf = Affine::&lt;P&gt;::zero();
             Point(inf.x, inf.y)
         } <span class="kw">else </span>{
             Point(p.x, p.y)
@@ -1347,7 +1341,7 @@
 <span class="kw">impl</span>&lt;F, P&gt; From&lt;SWGroupAffine&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
 {
     <span class="kw">fn </span>from(p: SWGroupAffine&lt;P&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">if </span>p.is_zero() {
@@ -1376,35 +1370,35 @@
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;GroupProjective&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;Projective&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn </span>from(p: GroupProjective&lt;P&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(p: Projective&lt;P&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>affine_repr = p.into_affine();
         Point(affine_repr.x, affine_repr.y)
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;Point&lt;F&gt;&gt; <span class="kw">for </span>GroupAffine&lt;P&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;Point&lt;F&gt;&gt; <span class="kw">for </span>Affine&lt;P&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="kw">fn </span>from(p: Point&lt;F&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(p.<span class="number">0</span>, p.<span class="number">1</span>)
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;Point&lt;F&gt;&gt; <span class="kw">for </span>GroupProjective&lt;P&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;Point&lt;F&gt;&gt; <span class="kw">for </span>Projective&lt;P&gt;
 <span class="kw">where
     </span>F: PrimeField,
-    P: Parameters&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt;,
 {
     <span class="kw">fn </span>from(p: Point&lt;F&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>affine_point: GroupAffine&lt;P&gt; = p.into();
-        affine_point.into_projective()
+        <span class="kw">let </span>affine_point: Affine&lt;P&gt; = p.into();
+        affine_point.into_group()
     }
 }
 
@@ -1470,7 +1464,7 @@
     /// parameters.
     /// A bad PointVariable would be returned if (b0, b1) are not boolean
     /// variables, that would ultimately failed to build a correct circuit.
-    </span><span class="kw">fn </span>quaternary_point_select&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    </span><span class="kw">fn </span>quaternary_point_select&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         b0: BoolVar,
         b1: BoolVar,
@@ -1486,7 +1480,7 @@
                 <span class="self">self</span>.witness(b0.into())<span class="question-mark">? </span>== F::one(),
                 <span class="self">self</span>.witness(b1.into())<span class="question-mark">? </span>== F::one(),
             ) {
-                (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; Point::from(GroupAffine::&lt;P&gt;::zero()),
+                (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; Point::from(Affine::&lt;P&gt;::zero()),
                 (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; point1.to_owned(),
                 (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; point2.to_owned(),
                 (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; point3.to_owned(),
@@ -1610,12 +1604,12 @@
         point_var: <span class="kw-2">&amp;</span>PointVariable,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt;
     <span class="kw">where
-        </span>P: Parameters&lt;BaseField = F&gt;,
+        </span>P: Config&lt;BaseField = F&gt;,
     {
         <span class="self">self</span>.check_point_var_bound(point_var)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>b = {
-            <span class="kw">if </span><span class="self">self</span>.point_witness(point_var)<span class="question-mark">? </span>== Point::from(GroupAffine::&lt;P&gt;::zero()) {
+            <span class="kw">if </span><span class="self">self</span>.point_witness(point_var)<span class="question-mark">? </span>== Point::from(Affine::&lt;P&gt;::zero()) {
                 <span class="self">self</span>.create_boolean_variable(<span class="bool-val">true</span>)<span class="question-mark">?
             </span>} <span class="kw">else </span>{
                 <span class="self">self</span>.create_boolean_variable(<span class="bool-val">false</span>)<span class="question-mark">?
@@ -1627,11 +1621,11 @@
     }
     <span class="doccomment">/// Constrain a point to be on certain curve, namely its coordinates satisfy
     /// the curve equation, which is curve-dependent. Currently we only support
-    /// checks of a `GroupAffine::&lt;P&gt;` over a base field which is the bls12-381
+    /// checks of a `Affine::&lt;P&gt;` over a base field which is the bls12-381
     /// scalar field
     ///
     /// Returns error if input variables are invalid
-    </span><span class="kw">pub fn </span>enforce_on_curve&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    </span><span class="kw">pub fn </span>enforce_on_curve&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         point_var: <span class="kw-2">&amp;</span>PointVariable,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
@@ -1650,10 +1644,10 @@
 
     <span class="doccomment">/// Constrain variable `point_c` to be the point addition of `point_a` and
     /// `point_b` over an elliptic curve.
-    /// Currently only supports GroupAffine::&lt;P&gt; addition.
+    /// Currently only supports Affine::&lt;P&gt; addition.
     ///
     /// Returns error if the input variables are invalid.
-    </span><span class="kw">fn </span>ecc_add_gate&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    </span><span class="kw">fn </span>ecc_add_gate&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         point_a: <span class="kw-2">&amp;</span>PointVariable,
         point_b: <span class="kw-2">&amp;</span>PointVariable,
@@ -1686,10 +1680,10 @@
 
     <span class="doccomment">/// Obtain a variable to the point addition result of `point_a` + `point_b`
     /// where &quot;+&quot; is the group operation over an elliptic curve.
-    /// Currently only supports `GroupAffine::&lt;P&gt;` addition.
+    /// Currently only supports `Affine::&lt;P&gt;` addition.
     ///
     /// Returns error if inputs are invalid
-    </span><span class="kw">pub fn </span>ecc_add&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    </span><span class="kw">pub fn </span>ecc_add&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         point_a: <span class="kw-2">&amp;</span>PointVariable,
         point_b: <span class="kw-2">&amp;</span>PointVariable,
@@ -1711,19 +1705,19 @@
     }
 
     <span class="doccomment">/// Obtain the fixed-based scalar multiplication result of `scalar` * `Base`
-    /// Currently only supports `GroupAffine::&lt;P&gt;` scalar multiplication.
-    </span><span class="kw">pub fn </span>fixed_base_scalar_mul&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    /// Currently only supports `Affine::&lt;P&gt;` scalar multiplication.
+    </span><span class="kw">pub fn </span>fixed_base_scalar_mul&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scalar: Variable,
-        base: <span class="kw-2">&amp;</span>GroupAffine&lt;P&gt;,
+        base: <span class="kw-2">&amp;</span>Affine&lt;P&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
         <span class="self">self</span>.check_var_bound(scalar)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>num_bits = &lt;P <span class="kw">as </span>ModelParameters&gt;::ScalarField::size_in_bits();
+        <span class="kw">let </span><span class="kw-2">mut </span>num_bits = &lt;P <span class="kw">as </span>CurveConfig&gt;::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
         <span class="comment">// `num_bits` needs to be an even number
         </span>num_bits += num_bits &amp; <span class="number">1</span>;
         <span class="kw">let </span>scalar_bits_le = <span class="self">self</span>.unpack(scalar, num_bits)<span class="question-mark">?</span>;
-        <span class="kw">let </span>fixed_bases = compute_base_points(base, num_bits / <span class="number">2</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>fixed_bases = compute_base_points(<span class="kw-2">&amp;</span>base.into_group(), num_bits / <span class="number">2</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>accum = <span class="self">self</span>.neutral_point_variable();
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_bits / <span class="number">2 </span>{
             <span class="kw">let </span>b0 = scalar_bits_le.get(<span class="number">2 </span>* i).ok_or_else(|| {
@@ -1759,9 +1753,9 @@
 
     <span class="doccomment">/// Obtain a variable of the result of a variable base scalar
     /// multiplication. both `scalar` and `base` are variables.
-    /// Currently only supports `GroupAffine::&lt;P&gt;`.
+    /// Currently only supports `Affine::&lt;P&gt;`.
     /// If the parameter is bandersnatch, we will use GLV multiplication.
-    </span><span class="kw">pub fn </span>variable_base_scalar_mul&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    </span><span class="kw">pub fn </span>variable_base_scalar_mul&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scalar: Variable,
         base: <span class="kw-2">&amp;</span>PointVariable,
@@ -1770,8 +1764,8 @@
         <span class="self">self</span>.check_point_var_bound(base)<span class="question-mark">?</span>;
 
         <span class="kw">if </span><span class="self">self</span>.support_lookup()
-            &amp;&amp; P::ScalarField::size_in_bits() == <span class="number">253
-            </span>&amp;&amp; P::BaseField::size_in_bits() == <span class="number">255
+            &amp;&amp; P::ScalarField::MODULUS_BIT_SIZE == <span class="number">253
+            </span>&amp;&amp; P::BaseField::MODULUS_BIT_SIZE == <span class="number">255
         </span>{
             <span class="comment">// bandersnatch glv multiplication
             // FIXME: we do not have an easier flag to tell if a parameter
@@ -1786,8 +1780,8 @@
     <span class="doccomment">/// Obtain a variable of the result of a variable base scalar
     /// multiplication. Both `scalar_bits_le` and `base` are variables,
     /// where `scalar_bits_le` is the little-endian form of the scalar.
-    /// Currently only supports `GroupAffine::&lt;P&gt;`.
-    </span><span class="kw">pub fn </span>variable_base_binary_scalar_mul&lt;P: Parameters&lt;BaseField = F&gt;&gt;(
+    /// Currently only supports `Affine::&lt;P&gt;`.
+    </span><span class="kw">pub fn </span>variable_base_binary_scalar_mul&lt;P: Config&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         scalar_bits_le: <span class="kw-2">&amp;</span>[BoolVar],
         base: <span class="kw-2">&amp;</span>PointVariable,
@@ -1822,16 +1816,16 @@
 // The function computes:
 // {4^i * [G]}_{i=0..n-1}, {2 * 4^i * [G]}_{i=0..n-1}, and {3 * 4^i *
 // [G]}_{i=0..n-1}
-</span><span class="kw">fn </span>compute_base_points&lt;E: AffineCurve + Group&gt;(
-    base: <span class="kw-2">&amp;</span>E,
-    len: usize,
-) -&gt; <span class="prelude-ty">Result</span>&lt;[Vec&lt;E&gt;; <span class="number">3</span>], CircuitError&gt; {
+// TODO (tessico): this used to operate on Affine points, but now it takes in
+// Projective points. There are some known issues with outputting projectives,
+// we should make sure that the usage here is safe.
+</span><span class="kw">fn </span>compute_base_points&lt;E: ScalarMul&gt;(base: <span class="kw-2">&amp;</span>E, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;[Vec&lt;E&gt;; <span class="number">3</span>], CircuitError&gt; {
     <span class="kw">if </span>len == <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::InternalError(
             <span class="string">&quot;compute base points length input parameter must be positive&quot;</span>.to_string(),
         ));
     }
-    <span class="kw">fn </span>next_base&lt;E: AffineCurve + Group&gt;(bases: <span class="kw-2">&amp;</span>[E]) -&gt; <span class="prelude-ty">Result</span>&lt;E, CircuitError&gt; {
+    <span class="kw">fn </span>next_base&lt;E: ScalarMul&gt;(bases: <span class="kw-2">&amp;</span>[E]) -&gt; <span class="prelude-ty">Result</span>&lt;E, CircuitError&gt; {
         <span class="kw">let </span>last = <span class="kw-2">*</span>bases.last().ok_or_else(|| {
             CircuitError::InternalError(
                 <span class="string">&quot;Initialize the fixed base vector before calling this function&quot;</span>.to_string(),
@@ -1839,10 +1833,7 @@
         })<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(last.double().double())
     }
-    <span class="kw">fn </span>fill_bases&lt;E: AffineCurve + Group&gt;(
-        bases: <span class="kw-2">&amp;mut </span>Vec&lt;E&gt;,
-        len: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+    <span class="kw">fn </span>fill_bases&lt;E: ScalarMul&gt;(bases: <span class="kw-2">&amp;mut </span>Vec&lt;E&gt;, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
         <span class="kw">for _ in </span><span class="number">1</span>..len {
             bases.push(next_base(bases)<span class="question-mark">?</span>);
         }
@@ -1879,10 +1870,10 @@
         fill_bases(<span class="kw-2">&amp;mut </span>bases3, len).ok();
     }
 
-    <span class="comment">// converting GroupAffine -&gt; Points here.
+    <span class="comment">// converting Affine -&gt; Points here.
     // Cannot do it earlier: in `fill_bases` we need to do `double`
     // todo(ZZ): consider removing `Point&lt;T&gt;` completely and directly use
-    // `GroupAffine&lt;P&gt;` let bases1 =
+    // `Affine&lt;P&gt;` let bases1 =
     // bases1.iter().map(|e|Point::&lt;F&gt;::from(*e)).collect(); let bases2 =
     // bases2.iter().map(|e|Point::&lt;F&gt;::from(*e)).collect(); let bases3 =
     // bases3.iter().map(|e|Point::&lt;F&gt;::from(*e)).collect();
@@ -1894,12 +1885,12 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{gadgets::test_utils::test_variable_independence_for_circuit, Circuit};
-    <span class="kw">use </span>ark_bls12_377::{g1::Parameters <span class="kw">as </span>Param761, Fq <span class="kw">as </span>Fq377};
-    <span class="kw">use </span>ark_ec::TEModelParameters <span class="kw">as </span>Parameters;
-    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsParameters <span class="kw">as </span>Param377, Fq <span class="kw">as </span>FqEd377};
-    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsParameters <span class="kw">as </span>Param381, Fq <span class="kw">as </span>FqEd381};
-    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters <span class="kw">as </span>Param381b, Fq <span class="kw">as </span>FqEd381b};
-    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsParameters <span class="kw">as </span>Param254, Fq <span class="kw">as </span>FqEd354};
+    <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param761, Fq <span class="kw">as </span>Fq377};
+    <span class="kw">use </span>ark_ec::{twisted_edwards::TECurveConfig <span class="kw">as </span>Config, Group};
+    <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsConfig <span class="kw">as </span>Param377, Fq <span class="kw">as </span>FqEd377};
+    <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsConfig <span class="kw">as </span>Param381, Fq <span class="kw">as </span>FqEd381};
+    <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::{EdwardsConfig <span class="kw">as </span>Param381b, Fq <span class="kw">as </span>FqEd381b};
+    <span class="kw">use </span>ark_ed_on_bn254::{EdwardsConfig <span class="kw">as </span>Param254, Fq <span class="kw">as </span>FqEd354};
     <span class="kw">use </span>ark_ff::{One, UniformRand, Zero};
     <span class="kw">use </span>ark_std::str::FromStr;
     <span class="kw">use </span>jf_utils::fr_to_fq;
@@ -1916,7 +1907,7 @@
     <span class="kw">fn </span>test_is_neutral_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField + <span class="question-mark">?</span>Sized,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p1 = circuit.create_point_variable(Point(F::zero(), F::one()))<span class="question-mark">?</span>;
@@ -1944,7 +1935,7 @@
     <span class="kw">fn </span>build_is_neutral_circuit&lt;F, P&gt;(point: Point&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p = circuit.create_point_variable(point)<span class="question-mark">?</span>;
@@ -2054,7 +2045,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p = circuit.create_point_variable(point)<span class="question-mark">?</span>;
@@ -2075,12 +2066,12 @@
     <span class="kw">fn </span>test_curve_point_addition_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
-        <span class="kw">let </span>p1 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p2 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p3 = p1 + p2;
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>p1 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p2 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p3 = (p1 + p2).into_affine();
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p1))<span class="question-mark">?</span>;
@@ -2097,10 +2088,10 @@
             .ecc_add::&lt;P&gt;(<span class="kw-2">&amp;</span>PointVariable(<span class="number">0</span>, <span class="number">0</span>), <span class="kw-2">&amp;</span>PointVariable(<span class="number">1</span>, circuit.num_vars()))
             .is_err());
 
-        <span class="kw">let </span>p1 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p2 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p3 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p4 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p1 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p2 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p3 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p4 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>circuit_1 =
             build_curve_point_addition_circuit::&lt;F, P&gt;(Point::from(p1), Point::from(p2))<span class="question-mark">?</span>;
         <span class="kw">let </span>circuit_2 =
@@ -2116,7 +2107,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p1_var = circuit.create_point_variable(p1)<span class="question-mark">?</span>;
@@ -2138,12 +2129,12 @@
     <span class="kw">fn </span>test_quaternary_point_select_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
-        <span class="kw">let </span>p1 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p2 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p3 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>p1 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p2 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p3 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>false_var = circuit.false_var();
@@ -2203,16 +2194,16 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>b0_var = circuit.create_boolean_variable(b0)<span class="question-mark">?</span>;
         <span class="kw">let </span>b1_var = circuit.create_boolean_variable(b1)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
-        <span class="kw">let </span>p1 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p2 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p3 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>p1 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p2 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p3 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         circuit.quaternary_point_select::&lt;P&gt;(
             b0_var,
             b1_var,
@@ -2236,10 +2227,10 @@
     <span class="kw">fn </span>test_point_equal_gate_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
-        <span class="kw">let </span>p = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>p = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
         <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p))<span class="question-mark">?</span>;
@@ -2254,7 +2245,7 @@
             .enforce_point_equal(<span class="kw-2">&amp;</span>PointVariable(<span class="number">0</span>, <span class="number">0</span>), <span class="kw-2">&amp;</span>PointVariable(<span class="number">1</span>, circuit.num_vars()))
             .is_err());
 
-        <span class="kw">let </span>new_p = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>new_p = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>circuit_1 = build_point_equal_circuit(Point::from(p), Point::from(p))<span class="question-mark">?</span>;
         <span class="kw">let </span>circuit_2 = build_point_equal_circuit(Point::from(new_p), Point::from(new_p))<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
@@ -2286,12 +2277,12 @@
     <span class="kw">fn </span>test_is_equal_point_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
-        <span class="kw">let </span>p1 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>p1 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>p2 = p1;
-        <span class="kw">let </span>p3 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p3 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p1))<span class="question-mark">?</span>;
@@ -2346,29 +2337,30 @@
     <span class="kw">fn </span>test_compute_fixed_bases_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">fn </span>check_base_list&lt;F, P&gt;(bases: <span class="kw-2">&amp;</span>[GroupAffine&lt;P&gt;])
+        <span class="kw">fn </span>check_base_list&lt;F, P&gt;(bases: <span class="kw-2">&amp;</span>[Projective&lt;P&gt;])
         <span class="kw">where
             </span>F: PrimeField,
-            P: Parameters&lt;BaseField = F&gt;,
+            P: Config&lt;BaseField = F&gt;,
         {
             bases
                 .windows(<span class="number">2</span>)
                 .for_each(|neighbors| <span class="macro">assert!</span>(neighbors[<span class="number">1</span>] == neighbors[<span class="number">0</span>].double().double()));
         }
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
 
-        <span class="kw">let </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>base2 = base.double();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+
+        <span class="kw">let </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>base2 = base.into_group().double();
         <span class="kw">let </span>base3 = base + base2;
 
         <span class="macro">assert_eq!</span>(
-            compute_base_points(<span class="kw-2">&amp;</span>base, <span class="number">1</span>)<span class="question-mark">?</span>,
-            [<span class="macro">vec!</span>[base], <span class="macro">vec!</span>[base2], <span class="macro">vec!</span>[base3]]
+            compute_base_points(<span class="kw-2">&amp;</span>base.into_group(), <span class="number">1</span>)<span class="question-mark">?</span>,
+            [<span class="macro">vec!</span>[base.into_group()], <span class="macro">vec!</span>[base2], <span class="macro">vec!</span>[base3]]
         );
         <span class="kw">let </span>size = <span class="number">10</span>;
-        <span class="kw">let </span>result = compute_base_points(<span class="kw-2">&amp;</span>base, size)<span class="question-mark">?</span>;
+        <span class="kw">let </span>result = compute_base_points(<span class="kw-2">&amp;</span>base.into_group(), size)<span class="question-mark">?</span>;
         <span class="kw">let </span>bases1 = <span class="kw-2">&amp;</span>result[<span class="number">0</span>];
         <span class="macro">assert_eq!</span>(bases1.len(), size);
         <span class="kw">let </span>bases2 = <span class="kw-2">&amp;</span>result[<span class="number">1</span>];
@@ -2402,17 +2394,17 @@
     <span class="kw">fn </span>test_fixed_based_scalar_mul_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
 
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span><span class="kw-2">mut </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>scalar = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
             <span class="kw">let </span>result = circuit.fixed_base_scalar_mul(scalar, <span class="kw-2">&amp;</span>base)<span class="question-mark">?</span>;
-            base <span class="kw-2">*</span>= s;
+            base = (base * s).into();
             <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
         }
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
@@ -2422,7 +2414,7 @@
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
         <span class="comment">// Check variable out of bound error.
         </span><span class="macro">assert!</span>(circuit
-            .fixed_base_scalar_mul(circuit.num_vars(), <span class="kw-2">&amp;</span>GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng))
+            .fixed_base_scalar_mul(circuit.num_vars(), <span class="kw-2">&amp;</span>Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng))
             .is_err());
 
         <span class="kw">let </span>circuit_1 = build_fixed_based_scalar_mul_circuit::&lt;F, P&gt;(F::from(<span class="number">87u32</span>))<span class="question-mark">?</span>;
@@ -2436,11 +2428,11 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
-        <span class="kw">let </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>scalar_var = circuit.create_variable(scalar)<span class="question-mark">?</span>;
         circuit.fixed_base_scalar_mul(scalar_var, <span class="kw-2">&amp;</span>base)<span class="question-mark">?</span>;
         circuit.finalize_for_arithmetization()<span class="question-mark">?</span>;
@@ -2458,12 +2450,12 @@
     <span class="kw">fn </span>test_binary_point_vars_select_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
-        <span class="kw">let </span>p0 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p1 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>p2 = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>p0 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p1 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>p2 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p0_var = circuit.create_point_variable(Point::from(p0))<span class="question-mark">?</span>;
@@ -2507,7 +2499,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>b_var = circuit.create_boolean_variable(b)<span class="question-mark">?</span>;
@@ -2529,23 +2521,23 @@
     <span class="kw">fn </span>test_variable_base_scalar_mul_helper&lt;F, P&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = ark_std::test_rng();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
 
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span><span class="kw-2">mut </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
             <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
-            base <span class="kw-2">*</span>= s;
+            base = (base * s).into();
             <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
             <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
         }
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-        <span class="kw">let </span>base = GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
         <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
@@ -2567,7 +2559,7 @@
             build_variable_base_scalar_mul_circuit::&lt;F, P&gt;(F::zero(), Point::from(base))<span class="question-mark">?</span>;
         <span class="kw">let </span>circuit_2 = build_variable_base_scalar_mul_circuit::&lt;F, P&gt;(
             F::from(<span class="number">314u32</span>),
-            Point::from(GroupAffine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng)),
+            Point::from(Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng)),
         )<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
@@ -2580,7 +2572,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Parameters&lt;BaseField = F&gt;,
+        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>scalar_var = circuit.create_variable(scalar)<span class="question-mark">?</span>;
@@ -2591,4 +2583,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

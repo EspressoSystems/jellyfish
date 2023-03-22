@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/batch_arg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batch_arg.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/batch_arg.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batch_arg.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -415,7 +415,10 @@
     },
     transcript::PlonkTranscript,
 };
-<span class="kw">use </span>ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+<span class="kw">use </span>ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 <span class="kw">use </span>ark_ff::One;
 <span class="kw">use </span>ark_std::{
     format,
@@ -430,40 +433,40 @@
 <span class="kw">use </span>jf_utils::multi_pairing;
 
 <span class="doccomment">/// A batching argument.
-</span><span class="kw">pub struct </span>BatchArgument&lt;E: PairingEngine&gt;(PhantomData&lt;E&gt;);
+</span><span class="kw">pub struct </span>BatchArgument&lt;E: Pairing&gt;(PhantomData&lt;E&gt;);
 
 <span class="doccomment">/// A circuit instance that consists of the corresponding proving
 /// key/verification key/circuit.
 </span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>Instance&lt;E: PairingEngine&gt; {
+</span><span class="kw">pub struct </span>Instance&lt;E: Pairing&gt; {
     <span class="comment">// TODO: considering giving instance an ID
     </span>prove_key: ProvingKey&lt;E&gt;, <span class="comment">// the verification key can be obtained inside the proving key.
-    </span>circuit: PlonkCircuit&lt;E::Fr&gt;,
+    </span>circuit: PlonkCircuit&lt;E::ScalarField&gt;,
     _circuit_type: MergeableCircuitType,
 }
 
-<span class="kw">impl</span>&lt;E: PairingEngine&gt; Instance&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Pairing&gt; Instance&lt;E&gt; {
     <span class="doccomment">/// Get verification key by reference.
     </span><span class="kw">pub fn </span>verify_key_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.prove_key.vk
     }
 
     <span class="doccomment">/// Get mutable circuit by reference.
-    </span><span class="kw">pub fn </span>circuit_mut_ref(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;E::Fr&gt; {
+    </span><span class="kw">pub fn </span>circuit_mut_ref(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;E::ScalarField&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.circuit
     }
 }
 
 <span class="kw">impl</span>&lt;E, F, P&gt; BatchArgument&lt;E&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
 {
     <span class="doccomment">/// Setup the circuit and the proving key for a (mergeable) instance.
     </span><span class="kw">pub fn </span>setup_instance(
         srs: <span class="kw-2">&amp;</span>UniversalSrs&lt;E&gt;,
-        <span class="kw-2">mut </span>circuit: PlonkCircuit&lt;E::Fr&gt;,
+        <span class="kw-2">mut </span>circuit: PlonkCircuit&lt;E::ScalarField&gt;,
         circuit_type: MergeableCircuitType,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Instance&lt;E&gt;, PlonkError&gt; {
         circuit.finalize_for_mergeable_circuit(circuit_type)<span class="question-mark">?</span>;
@@ -504,7 +507,7 @@
             .map(|(pred_a, pred_b)| pred_a.circuit.merge(<span class="kw-2">&amp;</span>pred_b.circuit))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
         <span class="kw">let </span>pks_ref: Vec&lt;<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;&gt; = pks.iter().collect();
-        <span class="kw">let </span>circuits_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::Fr&gt;&gt; = circuits.iter().collect();
+        <span class="kw">let </span>circuits_ref: Vec&lt;<span class="kw-2">&amp;</span>PlonkCircuit&lt;E::ScalarField&gt;&gt; = circuits.iter().collect();
 
         PlonkKzgSnark::batch_prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(prng, <span class="kw-2">&amp;</span>circuits_ref, <span class="kw-2">&amp;</span>pks_ref)
     }
@@ -515,10 +518,10 @@
         beta_g: <span class="kw-2">&amp;</span>E::G1Affine,
         generator_g: <span class="kw-2">&amp;</span>E::G1Affine,
         merged_vks: <span class="kw-2">&amp;</span>[VerifyingKey&lt;E&gt;],
-        shared_public_input: <span class="kw-2">&amp;</span>[E::Fr],
+        shared_public_input: <span class="kw-2">&amp;</span>[E::ScalarField],
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
-        blinding_factor: E::Fr,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(E::G1Projective, E::G1Projective), PlonkError&gt;
+        blinding_factor: E::ScalarField,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(E::G1, E::G1), PlonkError&gt;
     <span class="kw">where
         </span>T: PlonkTranscript&lt;F&gt;,
     {
@@ -553,7 +556,7 @@
 
         <span class="comment">// inner1 = [open_proof] + u * [shifted_open_proof] + blinding_factor * [1]1
         </span><span class="kw">let </span><span class="kw-2">mut </span>scalars_and_bases = ScalarsAndBases::&lt;E&gt;::new();
-        scalars_and_bases.push(E::Fr::one(), pcs_info.opening_proof.<span class="number">0</span>);
+        scalars_and_bases.push(E::ScalarField::one(), pcs_info.opening_proof.<span class="number">0</span>);
         scalars_and_bases.push(pcs_info.u, pcs_info.shifted_opening_proof.<span class="number">0</span>);
         scalars_and_bases.push(blinding_factor, <span class="kw-2">*</span>generator_g);
         <span class="kw">let </span>inner1 = scalars_and_bases.multi_scalar_mul();
@@ -577,7 +580,7 @@
 
 <span class="kw">impl</span>&lt;E&gt; BatchArgument&lt;E&gt;
 <span class="kw">where
-    </span>E: PairingEngine,
+    </span>E: Pairing,
 {
     <span class="doccomment">/// Aggregate verification keys
     </span><span class="kw">pub fn </span>aggregate_verify_keys(
@@ -599,23 +602,19 @@
     }
 
     <span class="doccomment">/// Perform the final pairing to verify the proof.
-    </span><span class="kw">pub fn </span>decide(
-        open_key: <span class="kw-2">&amp;</span>OpenKey&lt;E&gt;,
-        inner1: E::G1Projective,
-        inner2: E::G1Projective,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PlonkError&gt; {
+    </span><span class="kw">pub fn </span>decide(open_key: <span class="kw-2">&amp;</span>OpenKey&lt;E&gt;, inner1: E::G1, inner2: E::G1) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PlonkError&gt; {
         <span class="comment">// check e(elem1, [beta]2) ?= e(elem2, [1]2)
-        </span><span class="kw">let </span>g1_elems: Vec&lt;&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine&gt; = <span class="macro">vec!</span>[inner1.into(), -inner2.into()];
+        </span><span class="kw">let </span>g1_elems: Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::G1Affine&gt; = <span class="macro">vec!</span>[inner1.into(), (-inner2).into()];
         <span class="kw">let </span>g2_elems = <span class="macro">vec!</span>[open_key.beta_h, open_key.h];
-        <span class="prelude-val">Ok</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>g1_elems, <span class="kw-2">&amp;</span>g2_elems) == E::Fqk::one())
+        <span class="prelude-val">Ok</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>g1_elems, <span class="kw-2">&amp;</span>g2_elems).<span class="number">0 </span>== E::TargetField::one())
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_mergeable_circuit_for_test&lt;E: PairingEngine&gt;(
-    shared_public_input: E::Fr,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_mergeable_circuit_for_test&lt;E: Pairing&gt;(
+    shared_public_input: E::ScalarField,
     i: usize,
     circuit_type: MergeableCircuitType,
-) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;E::Fr&gt;, PlonkError&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;E::ScalarField&gt;, PlonkError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
     <span class="kw">let </span>shared_pub_var = circuit.create_public_variable(shared_public_input)<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>var = shared_pub_var;
@@ -640,12 +639,12 @@
     rng: <span class="kw-2">&amp;mut </span>R,
     srs: <span class="kw-2">&amp;</span>UniversalSrs&lt;E&gt;,
     num_instances: usize,
-    shared_public_input: E::Fr,
+    shared_public_input: E::ScalarField,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(BatchProof&lt;E&gt;, Vec&lt;VerifyingKey&lt;E&gt;&gt;, Vec&lt;VerifyingKey&lt;E&gt;&gt;), PlonkError&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
     R: CryptoRng + RngCore,
     T: PlonkTranscript&lt;F&gt;,
 {
@@ -683,7 +682,8 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::transcript::RescueTranscript;
     <span class="kw">use </span>ark_bls12_377::{Bls12_377, Fq <span class="kw">as </span>Fq377};
-    <span class="kw">use </span>ark_std::{test_rng, UniformRand};
+    <span class="kw">use </span>ark_std::UniformRand;
+    <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_batch_argument() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
@@ -692,9 +692,9 @@
 
     <span class="kw">fn </span>test_batch_argument_helper&lt;E, F, P, T&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
-        </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+        </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters&lt;BaseField = F&gt;,
+        P: SWCurveConfig&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="comment">// 1. Simulate universal setup
@@ -704,7 +704,7 @@
         <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Setup instances
-        </span><span class="kw">let </span>shared_public_input = E::Fr::rand(rng);
+        </span><span class="kw">let </span>shared_public_input = E::ScalarField::rand(rng);
         <span class="kw">let </span><span class="kw-2">mut </span>instances_type_a = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>instances_type_b = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">32</span>..<span class="number">50 </span>{
@@ -753,7 +753,7 @@
         <span class="comment">// 5. Verification
         </span><span class="kw">let </span>open_key_ref = <span class="kw-2">&amp;</span>vks_type_a[<span class="number">0</span>].open_key;
         <span class="kw">let </span>beta_g_ref = <span class="kw-2">&amp;</span>srs.powers_of_g[<span class="number">1</span>];
-        <span class="kw">let </span>blinding_factor = E::Fr::rand(rng);
+        <span class="kw">let </span>blinding_factor = E::ScalarField::rand(rng);
         <span class="kw">let </span>(inner1, inner2) = BatchArgument::partial_verify::&lt;T&gt;(
             beta_g_ref,
             <span class="kw-2">&amp;</span>open_key_ref.g,
@@ -801,4 +801,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

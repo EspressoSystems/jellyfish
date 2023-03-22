@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/srs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>srs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/srs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>srs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -279,8 +279,6 @@
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -289,10 +287,10 @@
 
 </span><span class="doccomment">//! Implementing Structured Reference Strings for multilinear polynomial KZG
 </span><span class="kw">use </span><span class="kw">crate</span>::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-<span class="kw">use </span>ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+<span class="kw">use </span>ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
 <span class="kw">use </span>ark_ff::{Field, PrimeField, Zero};
 <span class="kw">use </span>ark_poly::DenseMultilinearExtension;
-<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     collections::LinkedList,
     end_timer, format,
@@ -307,23 +305,23 @@
 
 <span class="doccomment">/// Evaluations over {0,1}^n for G1 or G2
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-</span><span class="kw">pub struct </span>Evaluations&lt;C: AffineCurve&gt; {
+</span><span class="kw">pub struct </span>Evaluations&lt;C: AffineRepr&gt; {
     <span class="doccomment">/// The evaluations.
     </span><span class="kw">pub </span>evals: Vec&lt;C&gt;,
 }
 
 <span class="doccomment">/// Universal Parameter
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-</span><span class="kw">pub struct </span>MultilinearUniversalParams&lt;E: PairingEngine&gt; {
+</span><span class="kw">pub struct </span>MultilinearUniversalParams&lt;E: Pairing&gt; {
     <span class="doccomment">/// prover parameters
     </span><span class="kw">pub </span>prover_param: MultilinearProverParam&lt;E&gt;,
     <span class="doccomment">/// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**
     </span><span class="kw">pub </span>h_mask: Vec&lt;E::G2Affine&gt;,
 }
 
-<span class="doccomment">/// Prover Parameters
+<span class="doccomment">/// Prover Config
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-</span><span class="kw">pub struct </span>MultilinearProverParam&lt;E: PairingEngine&gt; {
+</span><span class="kw">pub struct </span>MultilinearProverParam&lt;E: Pairing&gt; {
     <span class="doccomment">/// number of variables
     </span><span class="kw">pub </span>num_vars: usize,
     <span class="doccomment">/// `pp_{0}`, `pp_{1}`, ...,pp_{nu_vars} defined
@@ -336,9 +334,9 @@
     </span><span class="kw">pub </span>h: E::G2Affine,
 }
 
-<span class="doccomment">/// Verifier Parameters
+<span class="doccomment">/// Verifier Config
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-</span><span class="kw">pub struct </span>MultilinearVerifierParam&lt;E: PairingEngine&gt; {
+</span><span class="kw">pub struct </span>MultilinearVerifierParam&lt;E: Pairing&gt; {
     <span class="doccomment">/// number of variables
     </span><span class="kw">pub </span>num_vars: usize,
     <span class="doccomment">/// generator of G1
@@ -349,7 +347,7 @@
     </span><span class="kw">pub </span>h_mask: Vec&lt;E::G2Affine&gt;,
 }
 
-<span class="kw">impl</span>&lt;E: PairingEngine&gt; StructuredReferenceString&lt;E&gt; <span class="kw">for </span>MultilinearUniversalParams&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Pairing&gt; StructuredReferenceString&lt;E&gt; <span class="kw">for </span>MultilinearUniversalParams&lt;E&gt; {
     <span class="kw">type </span>ProverParam = MultilinearProverParam&lt;E&gt;;
     <span class="kw">type </span>VerifierParam = MultilinearVerifierParam&lt;E&gt;;
 
@@ -423,15 +421,15 @@
 
         <span class="kw">let </span>pp_generation_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Prover Param generation&quot;</span>);
 
-        <span class="kw">let </span>g = E::G1Projective::rand(rng);
-        <span class="kw">let </span>h = E::G2Projective::rand(rng);
+        <span class="kw">let </span>g = E::G1::rand(rng);
+        <span class="kw">let </span>h = E::G2::rand(rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>powers_of_g = Vec::new();
 
-        <span class="kw">let </span>t: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..num_vars).map(|<span class="kw">_</span>| E::Fr::rand(rng)).collect();
-        <span class="kw">let </span>scalar_bits = E::Fr::size_in_bits();
+        <span class="kw">let </span>t: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..num_vars).map(|<span class="kw">_</span>| E::ScalarField::rand(rng)).collect();
+        <span class="kw">let </span>scalar_bits = E::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>eq: LinkedList&lt;DenseMultilinearExtension&lt;E::Fr&gt;&gt; =
+        <span class="kw">let </span><span class="kw-2">mut </span>eq: LinkedList&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt; =
             LinkedList::from_iter(eq_extension(<span class="kw-2">&amp;</span>t).into_iter());
         <span class="kw">let </span><span class="kw-2">mut </span>eq_arr = LinkedList::new();
         <span class="kw">let </span><span class="kw-2">mut </span>base = eq.pop_back().unwrap().evaluations;
@@ -456,12 +454,15 @@
             pp_powers.extend(pp_k_powers);
             total_scalars += <span class="number">1 </span>&lt;&lt; (num_vars - i);
         }
-        <span class="kw">let </span>window_size = FixedBaseMSM::get_mul_window_size(total_scalars);
-        <span class="kw">let </span>g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
+        <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(total_scalars);
+        <span class="kw">let </span>g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
 
-        <span class="kw">let </span>pp_g = E::G1Projective::batch_normalization_into_affine(
-            <span class="kw-2">&amp;</span>FixedBaseMSM::multi_scalar_mul(scalar_bits, window_size, <span class="kw-2">&amp;</span>g_table, <span class="kw-2">&amp;</span>pp_powers),
-        );
+        <span class="kw">let </span>pp_g = E::G1::normalize_batch(<span class="kw-2">&amp;</span>FixedBase::msm(
+            scalar_bits,
+            window_size,
+            <span class="kw-2">&amp;</span>g_table,
+            <span class="kw-2">&amp;</span>pp_powers,
+        ));
 
         <span class="kw">let </span><span class="kw-2">mut </span>start = <span class="number">0</span>;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_vars {
@@ -470,8 +471,8 @@
                 evals: pp_g[start..(start + size)].to_vec(),
             };
             <span class="comment">// check correctness of pp_k_g
-            </span><span class="kw">let </span>t_eval_0 = eq_eval(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[E::Fr::zero(); num_vars - i], <span class="kw-2">&amp;</span>t[i..num_vars])<span class="question-mark">?</span>;
-            <span class="macro">assert_eq!</span>(g.mul(t_eval_0.into_repr()).into_affine(), pp_k_g.evals[<span class="number">0</span>]);
+            </span><span class="kw">let </span>t_eval_0 = eq_eval(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[E::ScalarField::zero(); num_vars - i], <span class="kw-2">&amp;</span>t[i..num_vars])<span class="question-mark">?</span>;
+            <span class="macro">assert_eq!</span>((g * t_eval_0).into_affine(), pp_k_g.evals[<span class="number">0</span>]);
 
             powers_of_g.push(pp_k_g);
             start += size;
@@ -492,14 +493,9 @@
 
         <span class="kw">let </span>vp_generation_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;VP generation&quot;</span>);
         <span class="kw">let </span>h_mask = {
-            <span class="kw">let </span>window_size = FixedBaseMSM::get_mul_window_size(num_vars);
-            <span class="kw">let </span>h_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, h);
-            E::G2Projective::batch_normalization_into_affine(<span class="kw-2">&amp;</span>FixedBaseMSM::multi_scalar_mul(
-                scalar_bits,
-                window_size,
-                <span class="kw-2">&amp;</span>h_table,
-                <span class="kw-2">&amp;</span>t,
-            ))
+            <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(num_vars);
+            <span class="kw">let </span>h_table = FixedBase::get_window_table(scalar_bits, window_size, h);
+            E::G2::normalize_batch(<span class="kw-2">&amp;</span>FixedBase::msm(scalar_bits, window_size, <span class="kw-2">&amp;</span>h_table, <span class="kw-2">&amp;</span>t))
         };
         <span class="macro">end_timer!</span>(vp_generation_timer);
         <span class="macro">end_timer!</span>(total_timer);
@@ -551,7 +547,7 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
-    <span class="kw">use </span>ark_std::test_rng;
+    <span class="kw">use </span>jf_utils::test_rng;
     <span class="kw">type </span>E = Bls12_381;
 
     <span class="attr">#[test]
@@ -565,4 +561,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

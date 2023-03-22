@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/prover.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prover.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/prover.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>prover.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1118,6 +1118,26 @@
 <a href="#1118" id="1118">1118</a>
 <a href="#1119" id="1119">1119</a>
 <a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1135,11 +1155,11 @@
     errors::{PlonkError, SnarkError::<span class="kw-2">*</span>},
     proof_system::structs::CommitKey,
 };
-<span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_ec::pairing::Pairing;
 <span class="kw">use </span>ark_ff::{FftField, Field, One, UniformRand, Zero};
 <span class="kw">use </span>ark_poly::{
-    univariate::DensePolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
-    Radix2EvaluationDomain, UVPolynomial,
+    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, GeneralEvaluationDomain,
+    Polynomial, Radix2EvaluationDomain,
 };
 <span class="kw">use </span>ark_std::{
     rand::{CryptoRng, RngCore},
@@ -1158,25 +1178,25 @@
 
 <span class="kw">type </span>CommitmentsAndPolys&lt;E&gt; = (
     Vec&lt;Commitment&lt;E&gt;&gt;,
-    Vec&lt;DensePolynomial&lt;&lt;E <span class="kw">as </span>PairingEngine&gt;::Fr&gt;&gt;,
+    Vec&lt;DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;,
 );
 
 <span class="doccomment">/// A Plonk IOP prover.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Prover&lt;E: PairingEngine&gt; {
-    domain: Radix2EvaluationDomain&lt;E::Fr&gt;,
-    quot_domain: GeneralEvaluationDomain&lt;E::Fr&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Prover&lt;E: Pairing&gt; {
+    domain: Radix2EvaluationDomain&lt;E::ScalarField&gt;,
+    quot_domain: GeneralEvaluationDomain&lt;E::ScalarField&gt;,
 }
 
-<span class="kw">impl</span>&lt;E: PairingEngine&gt; Prover&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Pairing&gt; Prover&lt;E&gt; {
     <span class="doccomment">/// Construct a Plonk prover that uses a domain with size `domain_size` and
     /// quotient polynomial domain with a size that is larger than the degree of
     /// the quotient polynomial.
     /// * `num_wire_types` - number of wire types in the corresponding
     ///   constraint system.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(domain_size: usize, num_wire_types: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PlonkError&gt; {
-        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(domain_size)
+        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(domain_size)
             .ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
-        <span class="kw">let </span>quot_domain = GeneralEvaluationDomain::&lt;E::Fr&gt;::new(
+        <span class="kw">let </span>quot_domain = GeneralEvaluationDomain::&lt;E::ScalarField&gt;::new(
             domain_size * domain_size_ratio(domain_size, num_wire_types),
         )
         .ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
@@ -1191,13 +1211,13 @@
     /// 2. Compute public input polynomial.
     /// Return the wire witness polynomials and their commitments,
     /// also return the public input polynomial.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_1st_round&lt;C: Arithmetization&lt;E::Fr&gt;, R: CryptoRng + RngCore&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_1st_round&lt;C: Arithmetization&lt;E::ScalarField&gt;, R: CryptoRng + RngCore&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="kw-2">&amp;mut </span>R,
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
         cs: <span class="kw-2">&amp;</span>C,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(CommitmentsAndPolys&lt;E&gt;, DensePolynomial&lt;E::Fr&gt;), PlonkError&gt; {
-        <span class="kw">let </span>wire_polys: Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt; = cs
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(CommitmentsAndPolys&lt;E&gt;, DensePolynomial&lt;E::ScalarField&gt;), PlonkError&gt; {
+        <span class="kw">let </span>wire_polys: Vec&lt;DensePolynomial&lt;E::ScalarField&gt;&gt; = cs
             .compute_wire_polynomials()<span class="question-mark">?
             </span>.into_iter()
             .map(|poly| <span class="self">self</span>.mask_polynomial(prng, poly, <span class="number">1</span>))
@@ -1213,13 +1233,23 @@
     /// polynomials and their commitments, as well as the merged lookup table.
     /// `cs` is guaranteed to support lookup.
     </span><span class="attr">#[allow(clippy::type_complexity)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_plookup_1st_round&lt;C: Arithmetization&lt;E::Fr&gt;, R: CryptoRng + RngCore&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_plookup_1st_round&lt;
+        C: Arithmetization&lt;E::ScalarField&gt;,
+        R: CryptoRng + RngCore,
+    &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="kw-2">&amp;mut </span>R,
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
         cs: <span class="kw-2">&amp;</span>C,
-        tau: E::Fr,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(CommitmentsAndPolys&lt;E&gt;, Vec&lt;E::Fr&gt;, Vec&lt;E::Fr&gt;), PlonkError&gt; {
+        tau: E::ScalarField,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;
+        (
+            CommitmentsAndPolys&lt;E&gt;,
+            Vec&lt;E::ScalarField&gt;,
+            Vec&lt;E::ScalarField&gt;,
+        ),
+        PlonkError,
+    &gt; {
         <span class="kw">let </span>merged_lookup_table = cs.compute_merged_lookup_table(tau)<span class="question-mark">?</span>;
         <span class="kw">let </span>(sorted_vec, h_1_poly, h_2_poly) =
             cs.compute_lookup_sorted_vec_polynomials(tau, <span class="kw-2">&amp;</span>merged_lookup_table)<span class="question-mark">?</span>;
@@ -1232,13 +1262,13 @@
 
     <span class="doccomment">/// Round 2: Compute and commit the permutation grand product polynomial.
     /// Return the grand product polynomial and its commitment.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_2nd_round&lt;C: Arithmetization&lt;E::Fr&gt;, R: CryptoRng + RngCore&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_2nd_round&lt;C: Arithmetization&lt;E::ScalarField&gt;, R: CryptoRng + RngCore&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="kw-2">&amp;mut </span>R,
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
         cs: <span class="kw-2">&amp;</span>C,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Commitment&lt;E&gt;, DensePolynomial&lt;E::Fr&gt;), PlonkError&gt; {
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Commitment&lt;E&gt;, DensePolynomial&lt;E::ScalarField&gt;), PlonkError&gt; {
         <span class="kw">let </span>prod_perm_poly = <span class="self">self</span>.mask_polynomial(
             prng,
             cs.compute_prod_permutation_polynomial(<span class="kw-2">&amp;</span>challenges.beta, <span class="kw-2">&amp;</span>challenges.gamma)<span class="question-mark">?</span>,
@@ -1251,15 +1281,18 @@
     <span class="doccomment">/// Round 2.5 (Plookup): Compute and commit the Plookup grand product
     /// polynomial. Return the grand product polynomial and its commitment.
     /// `cs` is guaranteed to support lookup
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_plookup_2nd_round&lt;C: Arithmetization&lt;E::Fr&gt;, R: CryptoRng + RngCore&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_plookup_2nd_round&lt;
+        C: Arithmetization&lt;E::ScalarField&gt;,
+        R: CryptoRng + RngCore,
+    &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="kw-2">&amp;mut </span>R,
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
         cs: <span class="kw-2">&amp;</span>C,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        merged_lookup_table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;E::Fr&gt;&gt;,
-        sorted_vec: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;E::Fr&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Commitment&lt;E&gt;, DensePolynomial&lt;E::Fr&gt;), PlonkError&gt; {
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        merged_lookup_table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;E::ScalarField&gt;&gt;,
+        sorted_vec: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;E::ScalarField&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Commitment&lt;E&gt;, DensePolynomial&lt;E::ScalarField&gt;), PlonkError&gt; {
         <span class="kw">if </span>sorted_vec.is_none() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
                 ParameterError(<span class="string">&quot;Run Plookup with empty sorted lookup vectors&quot;</span>.to_string()).into(),
@@ -1289,8 +1322,8 @@
         prng: <span class="kw-2">&amp;mut </span>R,
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
         pks: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;],
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        online_oracles: <span class="kw-2">&amp;</span>[Oracles&lt;E::Fr&gt;],
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        online_oracles: <span class="kw-2">&amp;</span>[Oracles&lt;E::ScalarField&gt;],
         num_wire_types: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;CommitmentsAndPolys&lt;E&gt;, PlonkError&gt; {
         <span class="kw">let </span>quot_poly =
@@ -1309,14 +1342,15 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_evaluations(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        online_oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        online_oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
         num_wire_types: usize,
-    ) -&gt; ProofEvaluations&lt;E::Fr&gt; {
-        <span class="kw">let </span>wires_evals: Vec&lt;E::Fr&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>online_oracles.wire_polys)
-            .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>challenges.zeta))
-            .collect();
-        <span class="kw">let </span>wire_sigma_evals: Vec&lt;E::Fr&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>pk.sigmas)
+    ) -&gt; ProofEvaluations&lt;E::ScalarField&gt; {
+        <span class="kw">let </span>wires_evals: Vec&lt;E::ScalarField&gt; =
+            parallelizable_slice_iter(<span class="kw-2">&amp;</span>online_oracles.wire_polys)
+                .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>challenges.zeta))
+                .collect();
+        <span class="kw">let </span>wire_sigma_evals: Vec&lt;E::ScalarField&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>pk.sigmas)
             .take(num_wire_types - <span class="number">1</span>)
             .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>challenges.zeta))
             .collect();
@@ -1336,9 +1370,9 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_plookup_evaluations(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        online_oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;PlookupEvaluations&lt;E::Fr&gt;, PlonkError&gt; {
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        online_oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PlookupEvaluations&lt;E::ScalarField&gt;, PlonkError&gt; {
         <span class="kw">if </span>pk.plookup_pk.is_none() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
                 <span class="string">&quot;Evaluate Plookup polynomials without supporting lookup&quot;</span>.to_string(),
@@ -1401,13 +1435,13 @@
     <span class="doccomment">/// Compute linearization polynomial (excluding the quotient part)
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_non_quotient_component_for_lin_poly(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        alpha_base: E::Fr,
+        alpha_base: E::ScalarField,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        online_oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::Fr&gt;,
-        poly_evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::Fr&gt;,
-        plookup_evals: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::Fr&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::Fr&gt;, PlonkError&gt; {
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        online_oracles: <span class="kw-2">&amp;</span>Oracles&lt;E::ScalarField&gt;,
+        poly_evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::ScalarField&gt;,
+        plookup_evals: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::ScalarField&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::ScalarField&gt;, PlonkError&gt; {
         <span class="kw">let </span>r_circ = <span class="self">Self</span>::compute_lin_poly_circuit_contribution(pk, <span class="kw-2">&amp;</span>poly_evals.wires_evals);
         <span class="kw">let </span>r_perm = <span class="self">Self</span>::compute_lin_poly_copy_constraint_contribution(
             pk,
@@ -1442,13 +1476,13 @@
     // t_{num_wire_types}(X)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_quotient_component_for_lin_poly(
         domain_size: usize,
-        zeta: E::Fr,
-        quot_polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::Fr&gt;],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::Fr&gt;, PlonkError&gt; {
-        <span class="kw">let </span>vanish_eval = zeta.pow([domain_size <span class="kw">as </span>u64]) - E::Fr::one();
-        <span class="kw">let </span>zeta_to_n_plus_2 = (vanish_eval + E::Fr::one()) * zeta * zeta;
+        zeta: E::ScalarField,
+        quot_polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::ScalarField&gt;, PlonkError&gt; {
+        <span class="kw">let </span>vanish_eval = zeta.pow([domain_size <span class="kw">as </span>u64]) - E::ScalarField::one();
+        <span class="kw">let </span>zeta_to_n_plus_2 = (vanish_eval + E::ScalarField::one()) * zeta * zeta;
         <span class="kw">let </span><span class="kw-2">mut </span>r_quot = quot_polys.first().ok_or(PlonkError::IndexError)<span class="question-mark">?</span>.clone();
-        <span class="kw">let </span><span class="kw-2">mut </span>coeff = E::Fr::one();
+        <span class="kw">let </span><span class="kw-2">mut </span>coeff = E::ScalarField::one();
         <span class="kw">for </span>poly <span class="kw">in </span>quot_polys.iter().skip(<span class="number">1</span>) {
             coeff <span class="kw-2">*</span>= zeta_to_n_plus_2;
             r_quot = r_quot + <span class="self">Self</span>::mul_poly(poly, <span class="kw-2">&amp;</span>coeff);
@@ -1463,10 +1497,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
         pks: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;],
-        zeta: <span class="kw-2">&amp;</span>E::Fr,
-        v: <span class="kw-2">&amp;</span>E::Fr,
-        online_oracles: <span class="kw-2">&amp;</span>[Oracles&lt;E::Fr&gt;],
-        lin_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;,
+        zeta: <span class="kw-2">&amp;</span>E::ScalarField,
+        v: <span class="kw-2">&amp;</span>E::ScalarField,
+        online_oracles: <span class="kw-2">&amp;</span>[Oracles&lt;E::ScalarField&gt;],
+        lin_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Commitment&lt;E&gt;, Commitment&lt;E&gt;), PlonkError&gt; {
         <span class="kw">if </span>pks.is_empty() || pks.len() != online_oracles.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
@@ -1520,14 +1554,14 @@
 }
 
 <span class="doccomment">/// Private helper methods
-</span><span class="kw">impl</span>&lt;E: PairingEngine&gt; Prover&lt;E&gt; {
+</span><span class="kw">impl</span>&lt;E: Pairing&gt; Prover&lt;E&gt; {
     <span class="doccomment">/// Return the list of plookup polynomials to be opened at point `zeta`
     /// The order should be consistent with the verifier side.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>plookup_open_polys_ref&lt;<span class="lifetime">&#39;a</span>&gt;(
-        oracles: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Oracles&lt;E::Fr&gt;,
+        oracles: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Oracles&lt;E::ScalarField&gt;,
         pk: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ProvingKey&lt;E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DensePolynomial&lt;E::Fr&gt;&gt;, PlonkError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DensePolynomial&lt;E::ScalarField&gt;&gt;, PlonkError&gt; {
         <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[
             <span class="kw-2">&amp;</span>pk.plookup_pk.as_ref().unwrap().range_table_poly,
             <span class="kw-2">&amp;</span>pk.plookup_pk.as_ref().unwrap().key_table_poly,
@@ -1542,9 +1576,9 @@
     /// The order should be consistent with the verifier side.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>plookup_shifted_open_polys_ref&lt;<span class="lifetime">&#39;a</span>&gt;(
-        oracles: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Oracles&lt;E::Fr&gt;,
+        oracles: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Oracles&lt;E::ScalarField&gt;,
         pk: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ProvingKey&lt;E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DensePolynomial&lt;E::Fr&gt;&gt;, PlonkError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>DensePolynomial&lt;E::ScalarField&gt;&gt;, PlonkError&gt; {
         <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[
             <span class="kw-2">&amp;</span>oracles.plookup_oracles.prod_lookup_poly,
             <span class="kw-2">&amp;</span>pk.plookup_pk.as_ref().unwrap().range_table_poly,
@@ -1563,9 +1597,9 @@
     </span><span class="kw">fn </span>mask_polynomial&lt;R: CryptoRng + RngCore&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="kw-2">&amp;mut </span>R,
-        poly: DensePolynomial&lt;E::Fr&gt;,
+        poly: DensePolynomial&lt;E::ScalarField&gt;,
         hiding_bound: usize,
-    ) -&gt; DensePolynomial&lt;E::Fr&gt; {
+    ) -&gt; DensePolynomial&lt;E::ScalarField&gt; {
         <span class="kw">let </span>mask_poly =
             DensePolynomial::rand(hiding_bound, prng).mul_by_vanishing_poly(<span class="self">self</span>.domain);
         mask_poly + poly
@@ -1575,18 +1609,19 @@
     /// evaluation point `eval_point`, and randomized combiner `r`.
     </span><span class="kw">fn </span>compute_batched_witness_polynomial_commitment(
         ck: <span class="kw-2">&amp;</span>CommitKey&lt;E&gt;,
-        polys_ref: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;],
-        r: <span class="kw-2">&amp;</span>E::Fr,
-        eval_point: <span class="kw-2">&amp;</span>E::Fr,
+        polys_ref: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;],
+        r: <span class="kw-2">&amp;</span>E::ScalarField,
+        eval_point: <span class="kw-2">&amp;</span>E::ScalarField,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Commitment&lt;E&gt;, PlonkError&gt; {
         <span class="comment">// Compute the aggregated polynomial
         </span><span class="kw">let </span>(batch_poly, <span class="kw">_</span>) = polys_ref.iter().fold(
-            (DensePolynomial::zero(), E::Fr::one()),
+            (DensePolynomial::zero(), E::ScalarField::one()),
             |(acc, coeff), <span class="kw-2">&amp;</span>poly| (acc + <span class="self">Self</span>::mul_poly(poly, <span class="kw-2">&amp;</span>coeff), coeff * r),
         );
 
         <span class="comment">// Compute opening witness polynomial and its commitment
-        </span><span class="kw">let </span>divisor = DensePolynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>eval_point, E::Fr::one()]);
+        </span><span class="kw">let </span>divisor =
+            DensePolynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>eval_point, E::ScalarField::one()]);
         <span class="kw">let </span>witness_poly = <span class="kw-2">&amp;</span>batch_poly / <span class="kw-2">&amp;</span>divisor;
 
         UnivariateKzgPCS::commit(ck, <span class="kw-2">&amp;</span>witness_poly).map_err(PlonkError::PCSError)
@@ -1595,11 +1630,11 @@
     <span class="doccomment">/// Compute the quotient polynomial via (i)FFTs.
     </span><span class="kw">fn </span>compute_quotient_polynomial(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
         pks: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;],
-        online_oracles: <span class="kw-2">&amp;</span>[Oracles&lt;E::Fr&gt;],
+        online_oracles: <span class="kw-2">&amp;</span>[Oracles&lt;E::ScalarField&gt;],
         num_wire_types: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::Fr&gt;, PlonkError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::ScalarField&gt;, PlonkError&gt; {
         <span class="kw">if </span>pks.is_empty() || pks.len() != online_oracles.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
                 <span class="string">&quot;inconsistent pks/online oracles when computing quotient polys&quot;</span>.to_string(),
@@ -1611,43 +1646,47 @@
         <span class="kw">let </span>m = <span class="self">self</span>.quot_domain.size();
         <span class="kw">let </span>domain_size_ratio = m / n;
         <span class="comment">// Compute 1/Z_H(w^i).
-        </span><span class="kw">let </span>z_h_inv: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..domain_size_ratio)
+        </span><span class="kw">let </span>z_h_inv: Vec&lt;E::ScalarField&gt; = (<span class="number">0</span>..domain_size_ratio)
             .map(|i| {
-                ((E::Fr::multiplicative_generator() * <span class="self">self</span>.quot_domain.element(i)).pow([n <span class="kw">as </span>u64])
-                    - E::Fr::one())
+                ((E::ScalarField::GENERATOR * <span class="self">self</span>.quot_domain.element(i)).pow([n <span class="kw">as </span>u64])
+                    - E::ScalarField::one())
                 .inverse()
                 .unwrap()
             })
             .collect();
 
         <span class="comment">// Compute coset evaluations of the quotient polynomial.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>quot_poly_coset_evals_sum = <span class="macro">vec!</span>[E::Fr::zero(); m];
-        <span class="kw">let </span><span class="kw-2">mut </span>alpha_base = E::Fr::one();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>quot_poly_coset_evals_sum = <span class="macro">vec!</span>[E::ScalarField::zero(); m];
+        <span class="kw">let </span><span class="kw-2">mut </span>alpha_base = E::ScalarField::one();
         <span class="kw">let </span>alpha_3 = challenges.alpha.square() * challenges.alpha;
         <span class="kw">let </span>alpha_7 = alpha_3.square() * challenges.alpha;
+        <span class="comment">// TODO: figure out if the unwrap is safe/map error?
+        </span><span class="kw">let </span>coset = <span class="self">self
+            </span>.quot_domain
+            .get_coset(E::ScalarField::GENERATOR)
+            .unwrap();
         <span class="comment">// enumerate proving instances
         </span><span class="kw">for </span>(oracles, pk) <span class="kw">in </span>online_oracles.iter().zip(pks.iter()) {
             <span class="comment">// lookup_flag = 1 if support Plookup argument.
             </span><span class="kw">let </span>lookup_flag = pk.plookup_pk.is_some();
 
             <span class="comment">// Compute coset evaluations.
-            </span><span class="kw">let </span>selectors_coset_fft: Vec&lt;Vec&lt;E::Fr&gt;&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>pk.selectors)
-                .map(|poly| <span class="self">self</span>.quot_domain.coset_fft(poly.coeffs()))
+            </span><span class="kw">let </span>selectors_coset_fft: Vec&lt;Vec&lt;E::ScalarField&gt;&gt; =
+                parallelizable_slice_iter(<span class="kw-2">&amp;</span>pk.selectors)
+                    .map(|poly| coset.fft(poly.coeffs()))
+                    .collect();
+            <span class="kw">let </span>sigmas_coset_fft: Vec&lt;Vec&lt;E::ScalarField&gt;&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>pk.sigmas)
+                .map(|poly| coset.fft(poly.coeffs()))
                 .collect();
-            <span class="kw">let </span>sigmas_coset_fft: Vec&lt;Vec&lt;E::Fr&gt;&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>pk.sigmas)
-                .map(|poly| <span class="self">self</span>.quot_domain.coset_fft(poly.coeffs()))
-                .collect();
-            <span class="kw">let </span>wire_polys_coset_fft: Vec&lt;Vec&lt;E::Fr&gt;&gt; =
+            <span class="kw">let </span>wire_polys_coset_fft: Vec&lt;Vec&lt;E::ScalarField&gt;&gt; =
                 parallelizable_slice_iter(<span class="kw-2">&amp;</span>oracles.wire_polys)
-                    .map(|poly| <span class="self">self</span>.quot_domain.coset_fft(poly.coeffs()))
+                    .map(|poly| coset.fft(poly.coeffs()))
                     .collect();
 
             <span class="comment">// TODO: (binyi) we can also compute below in parallel with
             // `wire_polys_coset_fft`.
-            </span><span class="kw">let </span>prod_perm_poly_coset_fft =
-                <span class="self">self</span>.quot_domain.coset_fft(oracles.prod_perm_poly.coeffs());
-            <span class="kw">let </span>pub_input_poly_coset_fft =
-                <span class="self">self</span>.quot_domain.coset_fft(oracles.pub_inp_poly.coeffs());
+            </span><span class="kw">let </span>prod_perm_poly_coset_fft = coset.fft(oracles.prod_perm_poly.coeffs());
+            <span class="kw">let </span>pub_input_poly_coset_fft = coset.fft(oracles.pub_inp_poly.coeffs());
 
             <span class="comment">// Compute coset evaluations of Plookup online oracles.
             </span><span class="kw">let </span>(
@@ -1658,25 +1697,20 @@
                 h_coset_ffts,
                 prod_lookup_poly_coset_fft,
             ) = <span class="kw">if </span>lookup_flag {
-                <span class="kw">let </span>table_dom_sep_coset_fft = <span class="self">self
-                    </span>.quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
-                <span class="kw">let </span>q_dom_sep_coset_fft = <span class="self">self
-                    </span>.quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
-                <span class="kw">let </span>range_table_coset_fft = <span class="self">self
-                    </span>.quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().range_table_poly.coeffs()); <span class="comment">// safe unwrap
-                </span><span class="kw">let </span>key_table_coset_fft = <span class="self">self
-                    </span>.quot_domain
-                    .coset_fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); <span class="comment">// safe unwrap
-                </span><span class="kw">let </span>h_coset_ffts: Vec&lt;Vec&lt;E::Fr&gt;&gt; =
+                <span class="kw">let </span>table_dom_sep_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().table_dom_sep_poly.coeffs());
+                <span class="kw">let </span>q_dom_sep_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().q_dom_sep_poly.coeffs());
+                <span class="kw">let </span>range_table_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().range_table_poly.coeffs()); <span class="comment">// safe unwrap
+                </span><span class="kw">let </span>key_table_coset_fft =
+                    coset.fft(pk.plookup_pk.as_ref().unwrap().key_table_poly.coeffs()); <span class="comment">// safe unwrap
+                </span><span class="kw">let </span>h_coset_ffts: Vec&lt;Vec&lt;E::ScalarField&gt;&gt; =
                     parallelizable_slice_iter(<span class="kw-2">&amp;</span>oracles.plookup_oracles.h_polys)
-                        .map(|poly| <span class="self">self</span>.quot_domain.coset_fft(poly.coeffs()))
+                        .map(|poly| coset.fft(poly.coeffs()))
                         .collect();
-                <span class="kw">let </span>prod_lookup_poly_coset_fft = <span class="self">self
-                    </span>.quot_domain
-                    .coset_fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
+                <span class="kw">let </span>prod_lookup_poly_coset_fft =
+                    coset.fft(oracles.plookup_oracles.prod_lookup_poly.coeffs());
                 (
                     <span class="prelude-val">Some</span>(table_dom_sep_coset_fft),
                     <span class="prelude-val">Some</span>(q_dom_sep_coset_fft),
@@ -1690,13 +1724,13 @@
             };
 
             <span class="comment">// Compute coset evaluations of the quotient polynomial.
-            </span><span class="kw">let </span>quot_poly_coset_evals: Vec&lt;E::Fr&gt; =
+            </span><span class="kw">let </span>quot_poly_coset_evals: Vec&lt;E::ScalarField&gt; =
                 parallelizable_slice_iter(<span class="kw-2">&amp;</span>(<span class="number">0</span>..m).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;())
                     .map(|<span class="kw-2">&amp;</span>i| {
-                        <span class="kw">let </span>w: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..num_wire_types)
+                        <span class="kw">let </span>w: Vec&lt;E::ScalarField&gt; = (<span class="number">0</span>..num_wire_types)
                             .map(|j| wire_polys_coset_fft[j][i])
                             .collect();
-                        <span class="kw">let </span>w_next: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..num_wire_types)
+                        <span class="kw">let </span>w_next: Vec&lt;E::ScalarField&gt; = (<span class="number">0</span>..num_wire_types)
                             .map(|j| wire_polys_coset_fft[j][(i + domain_size_ratio) % m])
                             .collect();
 
@@ -1709,7 +1743,7 @@
                         <span class="kw">let </span>(t_perm_1, t_perm_2) =
                             <span class="self">Self</span>::compute_quotient_copy_constraint_contribution(
                                 i,
-                                <span class="self">self</span>.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                                <span class="self">self</span>.quot_domain.element(i) * E::ScalarField::GENERATOR,
                                 pk,
                                 <span class="kw-2">&amp;</span>w,
                                 <span class="kw-2">&amp;</span>prod_perm_poly_coset_fft[i],
@@ -1725,7 +1759,7 @@
                             <span class="kw">let </span>(t_lookup_1, t_lookup_2) = <span class="self">self
                                 </span>.compute_quotient_plookup_contribution(
                                     i,
-                                    <span class="self">self</span>.quot_domain.element(i) * E::Fr::multiplicative_generator(),
+                                    <span class="self">self</span>.quot_domain.element(i) * E::ScalarField::GENERATOR,
                                     pk,
                                     <span class="kw-2">&amp;</span>w,
                                     <span class="kw-2">&amp;</span>w_next,
@@ -1762,7 +1796,7 @@
         }
         <span class="comment">// Compute the coefficient form of the quotient polynomial
         </span><span class="prelude-val">Ok</span>(DensePolynomial::from_coefficients_vec(
-            <span class="self">self</span>.quot_domain.coset_ifft(<span class="kw-2">&amp;</span>quot_poly_coset_evals_sum),
+            coset.ifft(<span class="kw-2">&amp;</span>quot_poly_coset_evals_sum),
         ))
     }
 
@@ -1770,18 +1804,19 @@
     // polynomial.
     </span><span class="kw">fn </span>compute_quotient_circuit_contribution(
         i: usize,
-        w: <span class="kw-2">&amp;</span>[E::Fr],
-        pi: <span class="kw-2">&amp;</span>E::Fr,
-        selectors_coset_fft: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
-    ) -&gt; E::Fr {
+        w: <span class="kw-2">&amp;</span>[E::ScalarField],
+        pi: <span class="kw-2">&amp;</span>E::ScalarField,
+        selectors_coset_fft: <span class="kw-2">&amp;</span>[Vec&lt;E::ScalarField&gt;],
+    ) -&gt; E::ScalarField {
         <span class="comment">// Selectors
         // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
         // TODO: (binyi) get the order from a function.
-        </span><span class="kw">let </span>q_lc: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..GATE_WIDTH).map(|j| selectors_coset_fft[j][i]).collect();
-        <span class="kw">let </span>q_mul: Vec&lt;E::Fr&gt; = (GATE_WIDTH..GATE_WIDTH + <span class="number">2</span>)
+        </span><span class="kw">let </span>q_lc: Vec&lt;E::ScalarField&gt; =
+            (<span class="number">0</span>..GATE_WIDTH).map(|j| selectors_coset_fft[j][i]).collect();
+        <span class="kw">let </span>q_mul: Vec&lt;E::ScalarField&gt; = (GATE_WIDTH..GATE_WIDTH + <span class="number">2</span>)
             .map(|j| selectors_coset_fft[j][i])
             .collect();
-        <span class="kw">let </span>q_hash: Vec&lt;E::Fr&gt; = (GATE_WIDTH + <span class="number">2</span>..<span class="number">2 </span>* GATE_WIDTH + <span class="number">2</span>)
+        <span class="kw">let </span>q_hash: Vec&lt;E::ScalarField&gt; = (GATE_WIDTH + <span class="number">2</span>..<span class="number">2 </span>* GATE_WIDTH + <span class="number">2</span>)
             .map(|j| selectors_coset_fft[j][i])
             .collect();
         <span class="kw">let </span>q_o = selectors_coset_fft[<span class="number">2 </span>* GATE_WIDTH + <span class="number">2</span>][i];
@@ -1813,14 +1848,14 @@
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
     </span><span class="kw">fn </span>compute_quotient_copy_constraint_contribution(
         i: usize,
-        eval_point: E::Fr,
+        eval_point: E::ScalarField,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        w: <span class="kw-2">&amp;</span>[E::Fr],
-        z_x: <span class="kw-2">&amp;</span>E::Fr,
-        z_xw: <span class="kw-2">&amp;</span>E::Fr,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        sigmas_coset_fft: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
-    ) -&gt; (E::Fr, E::Fr) {
+        w: <span class="kw-2">&amp;</span>[E::ScalarField],
+        z_x: <span class="kw-2">&amp;</span>E::ScalarField,
+        z_xw: <span class="kw-2">&amp;</span>E::ScalarField,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        sigmas_coset_fft: <span class="kw-2">&amp;</span>[Vec&lt;E::ScalarField&gt;],
+    ) -&gt; (E::ScalarField, E::ScalarField) {
         <span class="kw">let </span>num_wire_types = w.len();
         <span class="kw">let </span>n = pk.domain_size();
 
@@ -1831,7 +1866,7 @@
         // Delay the division of Z_H(X).
         //
         // Extended permutation values
-        </span><span class="kw">let </span>sigmas: Vec&lt;E::Fr&gt; = (<span class="number">0</span>..num_wire_types)
+        </span><span class="kw">let </span>sigmas: Vec&lt;E::ScalarField&gt; = (<span class="number">0</span>..num_wire_types)
             .map(|j| sigmas_coset_fft[j][i])
             .collect();
 
@@ -1850,8 +1885,8 @@
 
         <span class="comment">// The check that z(x) = 1 at point 1.
         // (z(x)-1) * L1(x) * alpha^2 / Z_H(x) = (z(x)-1) * alpha^2 / (n * (x - 1))
-        </span><span class="kw">let </span>result_2 = challenges.alpha.square() * (<span class="kw-2">*</span>z_x - E::Fr::one())
-            / (E::Fr::from(n <span class="kw">as </span>u64) * (eval_point - E::Fr::one()));
+        </span><span class="kw">let </span>result_2 = challenges.alpha.square() * (<span class="kw-2">*</span>z_x - E::ScalarField::one())
+            / (E::ScalarField::from(n <span class="kw">as </span>u64) * (eval_point - E::ScalarField::one()));
 
         (result_1, result_2)
     }
@@ -1871,29 +1906,30 @@
     </span><span class="kw">fn </span>compute_quotient_plookup_contribution(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         i: usize,
-        eval_point: E::Fr,
+        eval_point: E::ScalarField,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        w: <span class="kw-2">&amp;</span>[E::Fr],
-        w_next: <span class="kw-2">&amp;</span>[E::Fr],
-        h_coset_ffts: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
-        prod_lookup_coset_fft: <span class="kw-2">&amp;</span>[E::Fr],
-        range_table_coset_fft: <span class="kw-2">&amp;</span>[E::Fr],
-        key_table_coset_fft: <span class="kw-2">&amp;</span>[E::Fr],
-        q_lookup_coset_fft: <span class="kw-2">&amp;</span>[E::Fr],
-        table_dom_sep_coset_fft: <span class="kw-2">&amp;</span>[E::Fr],
-        q_dom_sep_coset_fft: <span class="kw-2">&amp;</span>[E::Fr],
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-    ) -&gt; (E::Fr, E::Fr) {
+        w: <span class="kw-2">&amp;</span>[E::ScalarField],
+        w_next: <span class="kw-2">&amp;</span>[E::ScalarField],
+        h_coset_ffts: <span class="kw-2">&amp;</span>[Vec&lt;E::ScalarField&gt;],
+        prod_lookup_coset_fft: <span class="kw-2">&amp;</span>[E::ScalarField],
+        range_table_coset_fft: <span class="kw-2">&amp;</span>[E::ScalarField],
+        key_table_coset_fft: <span class="kw-2">&amp;</span>[E::ScalarField],
+        q_lookup_coset_fft: <span class="kw-2">&amp;</span>[E::ScalarField],
+        table_dom_sep_coset_fft: <span class="kw-2">&amp;</span>[E::ScalarField],
+        q_dom_sep_coset_fft: <span class="kw-2">&amp;</span>[E::ScalarField],
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+    ) -&gt; (E::ScalarField, E::ScalarField) {
         <span class="macro">assert!</span>(pk.plookup_pk.is_some());
         <span class="macro">assert_eq!</span>(h_coset_ffts.len(), <span class="number">2</span>);
 
         <span class="kw">let </span>n = pk.domain_size();
         <span class="kw">let </span>m = <span class="self">self</span>.quot_domain.size();
         <span class="kw">let </span>domain_size_ratio = m / n;
-        <span class="kw">let </span>n_field = E::Fr::from(n <span class="kw">as </span>u64);
+        <span class="kw">let </span>n_field = E::ScalarField::from(n <span class="kw">as </span>u64);
         <span class="kw">let </span>lagrange_n_coeff =
             <span class="self">self</span>.domain.group_gen_inv / (n_field * (eval_point - <span class="self">self</span>.domain.group_gen_inv));
-        <span class="kw">let </span>lagrange_1_coeff = E::Fr::one() / (n_field * (eval_point - E::Fr::one()));
+        <span class="kw">let </span>lagrange_1_coeff =
+            E::ScalarField::one() / (n_field * (eval_point - E::ScalarField::one()));
         <span class="kw">let </span><span class="kw-2">mut </span>alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
         <span class="comment">// extract polynomial evaluations
@@ -1950,7 +1986,7 @@
         <span class="comment">// The check that p(X) = 1 at point 1.
         //
         // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X - 1))
-        </span><span class="kw">let </span>term_p_1 = (p_x - E::Fr::one()) * lagrange_1_coeff;
+        </span><span class="kw">let </span>term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff;
         result_2 += alpha_power * term_p_1;
         alpha_power <span class="kw-2">*</span>= challenges.alpha;
 
@@ -1958,7 +1994,7 @@
         //
         // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1} / (n *
         // (X - w^{n-1}))
-        </span><span class="kw">let </span>term_p_2 = (p_x - E::Fr::one()) * lagrange_n_coeff;
+        </span><span class="kw">let </span>term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff;
         result_2 += alpha_power * term_p_2;
         alpha_power <span class="kw-2">*</span>= challenges.alpha;
 
@@ -1969,7 +2005,7 @@
         // [gamma*(1+beta) + merged_table(X) + beta * merged_table(Xw)]
         //        - (X - w^{n-1}) * p(Xw) * [gamma(1+beta) + h_1(X) + beta * h_1(Xw)] *
         //          [gamma(1+beta) + h_2(X) + beta * h_2(Xw)]
-        </span><span class="kw">let </span>beta_plus_one = E::Fr::one() + challenges.beta;
+        </span><span class="kw">let </span>beta_plus_one = E::ScalarField::one() + challenges.beta;
         <span class="kw">let </span>gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
         <span class="kw">let </span>term_p_3 = (eval_point - <span class="self">self</span>.domain.group_gen_inv)
             * (p_x
@@ -1997,9 +2033,9 @@
     </span><span class="kw">fn </span>split_quotient_polynomial&lt;R: CryptoRng + RngCore&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prng: <span class="kw-2">&amp;mut </span>R,
-        quot_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;,
+        quot_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
         num_wire_types: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt;, PlonkError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;DensePolynomial&lt;E::ScalarField&gt;&gt;, PlonkError&gt; {
         <span class="kw">let </span>expected_degree = quotient_polynomial_degree(<span class="self">self</span>.domain.size(), num_wire_types);
         <span class="kw">if </span>quot_poly.degree() != expected_degree {
             <span class="kw">return </span><span class="prelude-val">Err</span>(WrongQuotientPolyDegree(quot_poly.degree(), expected_degree).into());
@@ -2007,7 +2043,7 @@
         <span class="kw">let </span>n = <span class="self">self</span>.domain.size();
         <span class="comment">// compute the splitting polynomials t&#39;_i(X) s.t. t(X) =
         // \sum_{i=0}^{num_wire_types} X^{i*(n+2)} * t&#39;_i(X)
-        </span><span class="kw">let </span><span class="kw-2">mut </span>split_quot_polys: Vec&lt;DensePolynomial&lt;E::Fr&gt;&gt; =
+        </span><span class="kw">let </span><span class="kw-2">mut </span>split_quot_polys: Vec&lt;DensePolynomial&lt;E::ScalarField&gt;&gt; =
             parallelizable_slice_iter(<span class="kw-2">&amp;</span>(<span class="number">0</span>..num_wire_types).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;())
                 .map(|<span class="kw-2">&amp;</span>i| {
                     <span class="kw">let </span>end = <span class="kw">if </span>i &lt; num_wire_types - <span class="number">1 </span>{
@@ -2016,7 +2052,7 @@
                         quot_poly.degree() + <span class="number">1
                     </span>};
                     <span class="comment">// Degree-(n+1) polynomial has n + 2 coefficients.
-                    </span>DensePolynomial::&lt;E::Fr&gt;::from_coefficients_slice(
+                    </span>DensePolynomial::&lt;E::ScalarField&gt;::from_coefficients_slice(
                         <span class="kw-2">&amp;</span>quot_poly.coeffs[i * (n + <span class="number">2</span>)..end],
                     )
                 })
@@ -2026,12 +2062,12 @@
         // t_i(X) = t&#39;_i(X) - b_last_i + b_now_i * X^(n+2)
         // with t_lowest_i(X) = t_lowest_i(X) - 0 + b_now_i * X^(n+2)
         // and t_highest_i(X) = t_highest_i(X) - b_last_i
-        </span><span class="kw">let </span><span class="kw-2">mut </span>last_randomizer = E::Fr::zero();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>last_randomizer = E::ScalarField::zero();
         split_quot_polys
             .iter_mut()
             .take(num_wire_types - <span class="number">1</span>)
             .for_each(|poly| {
-                <span class="kw">let </span>now_randomizer = E::Fr::rand(prng);
+                <span class="kw">let </span>now_randomizer = E::ScalarField::rand(prng);
 
                 poly.coeffs[<span class="number">0</span>] -= last_randomizer;
                 <span class="macro">assert_eq!</span>(poly.degree(), n + <span class="number">1</span>);
@@ -2048,8 +2084,8 @@
     <span class="comment">// Compute the circuit part of the linearization polynomial
     </span><span class="kw">fn </span>compute_lin_poly_circuit_contribution(
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        w_evals: <span class="kw-2">&amp;</span>[E::Fr],
-    ) -&gt; DensePolynomial&lt;E::Fr&gt; {
+        w_evals: <span class="kw-2">&amp;</span>[E::ScalarField],
+    ) -&gt; DensePolynomial&lt;E::ScalarField&gt; {
         <span class="comment">// The selectors order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
         // TODO: (binyi) get the order from a function.
         </span><span class="kw">let </span>q_lc = <span class="kw-2">&amp;</span>pk.selectors[..GATE_WIDTH];
@@ -2082,12 +2118,13 @@
     <span class="comment">// Compute the wire permutation part of the linearization polynomial
     </span><span class="kw">fn </span>compute_lin_poly_copy_constraint_contribution(
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        poly_evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::Fr&gt;,
-        prod_perm_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;,
-    ) -&gt; DensePolynomial&lt;E::Fr&gt; {
-        <span class="kw">let </span>dividend = challenges.zeta.pow([pk.domain_size() <span class="kw">as </span>u64]) - E::Fr::one();
-        <span class="kw">let </span>divisor = E::Fr::from(pk.domain_size() <span class="kw">as </span>u32) * (challenges.zeta - E::Fr::one());
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        poly_evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::ScalarField&gt;,
+        prod_perm_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
+    ) -&gt; DensePolynomial&lt;E::ScalarField&gt; {
+        <span class="kw">let </span>dividend = challenges.zeta.pow([pk.domain_size() <span class="kw">as </span>u64]) - E::ScalarField::one();
+        <span class="kw">let </span>divisor = E::ScalarField::from(pk.domain_size() <span class="kw">as </span>u32)
+            * (challenges.zeta - E::ScalarField::one());
         <span class="kw">let </span>lagrange_1_eval = dividend / divisor;
 
         <span class="comment">// Compute the coefficient of z(X)
@@ -2122,23 +2159,24 @@
     </span><span class="kw">fn </span>compute_lin_poly_plookup_contribution(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        w_evals: <span class="kw-2">&amp;</span>[E::Fr],
-        plookup_evals: <span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::Fr&gt;,
-        oracles: <span class="kw-2">&amp;</span>PlookupOracles&lt;E::Fr&gt;,
-    ) -&gt; DensePolynomial&lt;E::Fr&gt; {
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        w_evals: <span class="kw-2">&amp;</span>[E::ScalarField],
+        plookup_evals: <span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::ScalarField&gt;,
+        oracles: <span class="kw-2">&amp;</span>PlookupOracles&lt;E::ScalarField&gt;,
+    ) -&gt; DensePolynomial&lt;E::ScalarField&gt; {
         <span class="kw">let </span>alpha_2 = challenges.alpha.square();
         <span class="kw">let </span>alpha_4 = alpha_2.square();
         <span class="kw">let </span>alpha_5 = alpha_4 * challenges.alpha;
         <span class="kw">let </span>alpha_6 = alpha_4 * alpha_2;
         <span class="kw">let </span>n = pk.domain_size();
-        <span class="kw">let </span>one = E::Fr::one();
+        <span class="kw">let </span>one = E::ScalarField::one();
         <span class="kw">let </span>vanish_eval = challenges.zeta.pow([n <span class="kw">as </span>u64]) - one;
 
         <span class="comment">// compute lagrange_1 and lagrange_n
-        </span><span class="kw">let </span>divisor = E::Fr::from(n <span class="kw">as </span>u32) * (challenges.zeta - one);
+        </span><span class="kw">let </span>divisor = E::ScalarField::from(n <span class="kw">as </span>u32) * (challenges.zeta - one);
         <span class="kw">let </span>lagrange_1_eval = vanish_eval / divisor;
-        <span class="kw">let </span>divisor = E::Fr::from(n <span class="kw">as </span>u32) * (challenges.zeta - <span class="self">self</span>.domain.group_gen_inv);
+        <span class="kw">let </span>divisor =
+            E::ScalarField::from(n <span class="kw">as </span>u32) * (challenges.zeta - <span class="self">self</span>.domain.group_gen_inv);
         <span class="kw">let </span>lagrange_n_eval = vanish_eval * <span class="self">self</span>.domain.group_gen_inv / divisor;
 
         <span class="comment">// compute the coefficient for polynomial `prod_lookup_poly`
@@ -2196,8 +2234,11 @@
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>mul_poly(poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::Fr&gt;, coeff: <span class="kw-2">&amp;</span>E::Fr) -&gt; DensePolynomial&lt;E::Fr&gt; {
-        DensePolynomial::&lt;E::Fr&gt;::from_coefficients_vec(
+    </span><span class="kw">fn </span>mul_poly(
+        poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
+        coeff: <span class="kw-2">&amp;</span>E::ScalarField,
+    ) -&gt; DensePolynomial&lt;E::ScalarField&gt; {
+        DensePolynomial::&lt;E::ScalarField&gt;::from_coefficients_vec(
             parallelizable_slice_iter(<span class="kw-2">&amp;</span>poly.coeffs)
                 .map(|c| <span class="kw-2">*</span>coeff * c)
                 .collect(),
@@ -2217,7 +2258,7 @@
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
     <span class="kw">use </span>ark_bn254::Bn254;
     <span class="kw">use </span>ark_bw6_761::BW6_761;
-    <span class="kw">use </span>ark_std::test_rng;
+    <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_split_quotient_polynomial_wrong_degree() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
@@ -2227,11 +2268,10 @@
         test_split_quotient_polynomial_wrong_degree_helper::&lt;BW6_761&gt;()
     }
 
-    <span class="kw">fn </span>test_split_quotient_polynomial_wrong_degree_helper&lt;E: PairingEngine&gt;(
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
+    <span class="kw">fn </span>test_split_quotient_polynomial_wrong_degree_helper&lt;E: Pairing&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
         <span class="kw">let </span>prover = Prover::&lt;E&gt;::new(<span class="number">4</span>, GATE_WIDTH + <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
-        <span class="kw">let </span>bad_quot_poly = DensePolynomial::&lt;E::Fr&gt;::rand(<span class="number">25</span>, rng);
+        <span class="kw">let </span>bad_quot_poly = DensePolynomial::&lt;E::ScalarField&gt;::rand(<span class="number">25</span>, rng);
         <span class="macro">assert!</span>(prover
             .split_quotient_polynomial(rng, <span class="kw-2">&amp;</span>bad_quot_poly, GATE_WIDTH + <span class="number">1</span>)
             .is_err());
@@ -2239,4 +2279,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/batching.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batching.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/batching.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>batching.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -434,6 +434,7 @@
 <a href="#434" id="434">434</a>
 <a href="#435" id="435">435</a>
 <a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -453,9 +454,9 @@
     univariate_kzg::UnivariateKzgPCS,
     PCSError, PolynomialCommitmentScheme,
 };
-<span class="kw">use </span>ark_ec::PairingEngine;
+<span class="kw">use </span>ark_ec::pairing::Pairing;
 <span class="kw">use </span>ark_poly::{DenseMultilinearExtension, EvaluationDomain, MultilinearExtension, Polynomial};
-<span class="kw">use </span>ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
+<span class="kw">use </span>ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 <span class="doccomment">/// Input
 /// - the prover parameters for univariate KZG,
@@ -490,13 +491,13 @@
 /// 9. output `w(p)`
 ///
 /// TODO: Migrate the batching algorithm in HyperPlonk repo
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_open_internal&lt;E: PairingEngine&gt;(
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_open_internal&lt;E: Pairing&gt;(
     uni_prover_param: <span class="kw-2">&amp;</span>UnivariateProverParam&lt;E::G1Affine&gt;,
     ml_prover_param: <span class="kw-2">&amp;</span>MultilinearProverParam&lt;E&gt;,
-    polynomials: <span class="kw-2">&amp;</span>[Rc&lt;DenseMultilinearExtension&lt;E::Fr&gt;&gt;],
+    polynomials: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt;],
     batch_commitment: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,
-    points: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
-) -&gt; <span class="prelude-ty">Result</span>&lt;(MultilinearKzgBatchProof&lt;E&gt;, Vec&lt;E::Fr&gt;), PCSError&gt; {
+    points: <span class="kw-2">&amp;</span>[Vec&lt;E::ScalarField&gt;],
+) -&gt; <span class="prelude-ty">Result</span>&lt;(MultilinearKzgBatchProof&lt;E&gt;, Vec&lt;E::ScalarField&gt;), PCSError&gt; {
     <span class="kw">let </span>open_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;batch open&quot;</span>);
 
     <span class="comment">// ===================================
@@ -529,7 +530,7 @@
         }
     }
 
-    <span class="kw">let </span>domain = get_uni_domain::&lt;E::Fr&gt;(points_len)<span class="question-mark">?</span>;
+    <span class="kw">let </span>domain = get_uni_domain::&lt;E::ScalarField&gt;(points_len)<span class="question-mark">?</span>;
 
     <span class="comment">// 1. build `l(points)` which is a list of univariate polynomials that goes
     // through the points
@@ -563,7 +564,7 @@
         q_x_evals.push(q_x_eval);
 
         <span class="comment">// sanity check
-        </span><span class="kw">let </span>point: Vec&lt;E::Fr&gt; = uni_polys
+        </span><span class="kw">let </span>point: Vec&lt;E::ScalarField&gt; = uni_polys
             .iter()
             .rev()
             .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>domain.element(i)))
@@ -582,7 +583,7 @@
     q_x_evals.push(q_r_value);
 
     <span class="comment">// 7. get a point `p := l(r)`
-    </span><span class="kw">let </span>point: Vec&lt;E::Fr&gt; = uni_polys
+    </span><span class="kw">let </span>point: Vec&lt;E::ScalarField&gt; = uni_polys
         .iter()
         .rev()
         .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>r))
@@ -623,12 +624,12 @@
 /// polynomials that goes through the points
 /// 5. get a point `p := l(r)`
 /// 6. verifies `p` is valid against multilinear KZG proof
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_verify_internal&lt;E: PairingEngine&gt;(
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_verify_internal&lt;E: Pairing&gt;(
     uni_verifier_param: <span class="kw-2">&amp;</span>UnivariateVerifierParam&lt;E&gt;,
     ml_verifier_param: <span class="kw-2">&amp;</span>MultilinearVerifierParam&lt;E&gt;,
     batch_commitment: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,
-    points: <span class="kw-2">&amp;</span>[Vec&lt;E::Fr&gt;],
-    values: <span class="kw-2">&amp;</span>[E::Fr],
+    points: <span class="kw-2">&amp;</span>[Vec&lt;E::ScalarField&gt;],
+    values: <span class="kw-2">&amp;</span>[E::ScalarField],
     batch_proof: <span class="kw-2">&amp;</span>MultilinearKzgBatchProof&lt;E&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
     <span class="kw">let </span>verify_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;batch verify&quot;</span>);
@@ -665,7 +666,7 @@
         }
     }
 
-    <span class="kw">let </span>domain = get_uni_domain::&lt;E::Fr&gt;(points_len)<span class="question-mark">?</span>;
+    <span class="kw">let </span>domain = get_uni_domain::&lt;E::ScalarField&gt;(points_len)<span class="question-mark">?</span>;
 
     <span class="comment">// 1. push w, points and q_com into transcript
     </span><span class="kw">let </span><span class="kw-2">mut </span>transcript = IOPTranscript::new(<span class="string">b&quot;ml kzg&quot;</span>);
@@ -712,7 +713,7 @@
     </span><span class="kw">let </span>uni_polys = build_l(num_var, points, <span class="kw-2">&amp;</span>domain)<span class="question-mark">?</span>;
 
     <span class="comment">// 5. get a point `p := l(r)`
-    </span><span class="kw">let </span>point: Vec&lt;E::Fr&gt; = uni_polys.iter().rev().map(|x| x.evaluate(<span class="kw-2">&amp;</span>r)).collect();
+    </span><span class="kw">let </span>point: Vec&lt;E::ScalarField&gt; = uni_polys.iter().rev().map(|x| x.evaluate(<span class="kw-2">&amp;</span>r)).collect();
 
     <span class="comment">// 6. verifies `p` is valid against multilinear KZG proof
     </span><span class="kw">let </span>res = verify_internal(
@@ -745,15 +746,16 @@
         StructuredReferenceString,
     };
     <span class="kw">use </span>ark_bls12_381::Bls12_381 <span class="kw">as </span>E;
-    <span class="kw">use </span>ark_ec::PairingEngine;
+    <span class="kw">use </span>ark_ec::pairing::Pairing;
     <span class="kw">use </span>ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    <span class="kw">use </span>ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
-    <span class="kw">type </span>Fr = &lt;E <span class="kw">as </span>PairingEngine&gt;::Fr;
+    <span class="kw">use </span>ark_std::{log2, rand::RngCore, vec::Vec, UniformRand};
+    <span class="kw">use </span>jf_utils::test_rng;
+    <span class="kw">type </span>Fr = &lt;E <span class="kw">as </span>Pairing&gt;::ScalarField;
 
     <span class="kw">fn </span>test_batch_commit_helper&lt;R: RngCore + CryptoRng&gt;(
         uni_params: <span class="kw-2">&amp;</span>UnivariateUniversalParams&lt;E&gt;,
         ml_params: <span class="kw-2">&amp;</span>MultilinearUniversalParams&lt;E&gt;,
-        polys: <span class="kw-2">&amp;</span>[Rc&lt;DenseMultilinearExtension&lt;Fr&gt;&gt;],
+        polys: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;Fr&gt;&gt;],
         rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
         <span class="kw">let </span>merged_nv = get_batched_nv(polys[<span class="number">0</span>].num_vars(), polys.len());
@@ -795,7 +797,7 @@
         </span><span class="macro">assert!</span>(!batch_verify_internal(
             <span class="kw-2">&amp;</span>uni_vk,
             <span class="kw-2">&amp;</span>ml_vk,
-            <span class="kw-2">&amp;</span>Commitment(&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine::default()),
+            <span class="kw-2">&amp;</span>Commitment(&lt;E <span class="kw">as </span>Pairing&gt;::G1Affine::default()),
             <span class="kw-2">&amp;</span>points,
             <span class="kw-2">&amp;</span>evaluations,
             <span class="kw-2">&amp;</span>batch_proof,
@@ -815,7 +817,7 @@
             <span class="kw-2">&amp;</span>evaluations,
             <span class="kw-2">&amp;</span>MultilinearKzgBatchProof {
                 proof: MultilinearKzgProof { proofs: Vec::new() },
-                q_x_commit: Commitment(&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine::default()),
+                q_x_commit: Commitment(&lt;E <span class="kw">as </span>Pairing&gt;::G1Affine::default()),
                 q_x_opens: <span class="macro">vec!</span>[],
             },
         )
@@ -835,7 +837,7 @@
 
         <span class="comment">// bad q(x) commit
         </span><span class="kw">let </span><span class="kw-2">mut </span>wrong_proof = batch_proof;
-        wrong_proof.q_x_commit = Commitment(&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine::default());
+        wrong_proof.q_x_commit = Commitment(&lt;E <span class="kw">as </span>Pairing&gt;::G1Affine::default());
         <span class="macro">assert!</span>(!batch_verify_internal(
             <span class="kw-2">&amp;</span>uni_vk,
             <span class="kw-2">&amp;</span>ml_vk,
@@ -857,13 +859,13 @@
 
         <span class="comment">// normal polynomials
         </span><span class="kw">let </span>polys1: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..<span class="number">5</span>)
-            .map(|<span class="kw">_</span>| Rc::new(DenseMultilinearExtension::rand(<span class="number">4</span>, <span class="kw-2">&amp;mut </span>rng)))
+            .map(|<span class="kw">_</span>| Arc::new(DenseMultilinearExtension::rand(<span class="number">4</span>, <span class="kw-2">&amp;mut </span>rng)))
             .collect();
         test_batch_commit_helper(<span class="kw-2">&amp;</span>uni_params, <span class="kw-2">&amp;</span>ml_params, <span class="kw-2">&amp;</span>polys1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
         <span class="comment">// single-variate polynomials
         </span><span class="kw">let </span>polys1: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..<span class="number">5</span>)
-            .map(|<span class="kw">_</span>| Rc::new(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng)))
+            .map(|<span class="kw">_</span>| Arc::new(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng)))
             .collect();
         test_batch_commit_helper(<span class="kw-2">&amp;</span>uni_params, <span class="kw-2">&amp;</span>ml_params, <span class="kw-2">&amp;</span>polys1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
@@ -871,4 +873,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

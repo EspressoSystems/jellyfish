@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../jf_primitives/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -414,6 +414,18 @@
 <a href="#414" id="414">414</a>
 <a href="#415" id="415">415</a>
 <a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -422,13 +434,17 @@
 
 </span><span class="doccomment">//! Main module for univariate KZG commitment scheme
 
-</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{
+</span><span class="kw">use </span>core::ops::Mul;
+
+<span class="kw">use </span><span class="kw">crate</span>::pcs::{
     prelude::Commitment, PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
-<span class="kw">use </span>ark_ec::{msm::VariableBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+<span class="kw">use </span>ark_ec::{
+    pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
+};
 <span class="kw">use </span>ark_ff::PrimeField;
-<span class="kw">use </span>ark_poly::{univariate::DensePolynomial, Polynomial, UVPolynomial};
-<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+<span class="kw">use </span>ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow,
     end_timer, format,
@@ -448,29 +464,29 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>srs;
 
 <span class="doccomment">/// KZG Polynomial Commitment Scheme on univariate polynomial.
-</span><span class="kw">pub struct </span>UnivariateKzgPCS&lt;E: PairingEngine&gt; {
+</span><span class="kw">pub struct </span>UnivariateKzgPCS&lt;E: Pairing&gt; {
     <span class="attr">#[doc(hidden)]
     </span>phantom: PhantomData&lt;E&gt;,
 }
 
 <span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
 </span><span class="doccomment">/// proof of opening
-</span><span class="kw">pub struct </span>UnivariateKzgProof&lt;E: PairingEngine&gt; {
+</span><span class="kw">pub struct </span>UnivariateKzgProof&lt;E: Pairing&gt; {
     <span class="doccomment">/// Evaluation of quotients
     </span><span class="kw">pub </span>proof: E::G1Affine,
 }
 <span class="doccomment">/// batch proof
 </span><span class="kw">pub type </span>UnivariateKzgBatchProof&lt;E&gt; = Vec&lt;UnivariateKzgProof&lt;E&gt;&gt;;
 
-<span class="kw">impl</span>&lt;E: PairingEngine&gt; PolynomialCommitmentScheme&lt;E&gt; <span class="kw">for </span>UnivariateKzgPCS&lt;E&gt; {
-    <span class="comment">// Parameters
+<span class="kw">impl</span>&lt;E: Pairing&gt; PolynomialCommitmentScheme&lt;E&gt; <span class="kw">for </span>UnivariateKzgPCS&lt;E&gt; {
+    <span class="comment">// Config
     </span><span class="kw">type </span>ProverParam = UnivariateProverParam&lt;E::G1Affine&gt;;
     <span class="kw">type </span>VerifierParam = UnivariateVerifierParam&lt;E&gt;;
     <span class="kw">type </span>SRS = UnivariateUniversalParams&lt;E&gt;;
     <span class="comment">// Polynomial and its associated types
-    </span><span class="kw">type </span>Polynomial = DensePolynomial&lt;E::Fr&gt;;
-    <span class="kw">type </span>Point = E::Fr;
-    <span class="kw">type </span>Evaluation = E::Fr;
+    </span><span class="kw">type </span>Polynomial = DensePolynomial&lt;E::ScalarField&gt;;
+    <span class="kw">type </span>Point = E::ScalarField;
+    <span class="kw">type </span>Evaluation = E::ScalarField;
     <span class="comment">// Polynomial and its associated types
     </span><span class="kw">type </span>Commitment = Commitment&lt;E&gt;;
     <span class="kw">type </span>BatchCommitment = Vec&lt;<span class="self">Self</span>::Commitment&gt;;
@@ -527,7 +543,7 @@
         <span class="kw">let </span>(num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
         <span class="kw">let </span>msm_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;MSM to compute commitment to plaintext poly&quot;</span>);
-        <span class="kw">let </span>commitment = VariableBaseMSM::multi_scalar_mul(
+        <span class="kw">let </span>commitment = E::G1::msm_bigint(
             <span class="kw-2">&amp;</span>prover_param.powers_of_g[num_leading_zeros..],
             <span class="kw-2">&amp;</span>plain_coeffs,
         )
@@ -562,7 +578,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Proof, <span class="self">Self</span>::Evaluation), PCSError&gt; {
         <span class="kw">let </span>open_time =
             <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Opening polynomial of degree {}&quot;</span>, polynomial.degree()));
-        <span class="kw">let </span>divisor = <span class="self">Self</span>::Polynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>point, E::Fr::one()]);
+        <span class="kw">let </span>divisor = <span class="self">Self</span>::Polynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>point, E::ScalarField::one()]);
 
         <span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing witness polynomial&quot;</span>);
         <span class="kw">let </span>witness_polynomial = polynomial / <span class="kw-2">&amp;</span>divisor;
@@ -571,7 +587,7 @@
         <span class="kw">let </span>(num_leading_zeros, witness_coeffs) =
             skip_leading_zeros_and_convert_to_bigints(<span class="kw-2">&amp;</span>witness_polynomial);
 
-        <span class="kw">let </span>proof = VariableBaseMSM::multi_scalar_mul(
+        <span class="kw">let </span>proof: E::G1Affine = E::G1::msm_bigint(
             <span class="kw-2">&amp;</span>prover_param.borrow().powers_of_g[num_leading_zeros..],
             <span class="kw-2">&amp;</span>witness_coeffs,
         )
@@ -619,23 +635,22 @@
         verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
         commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::Commitment,
         point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
-        value: <span class="kw-2">&amp;</span>E::Fr,
+        value: <span class="kw-2">&amp;</span>E::ScalarField,
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
         <span class="kw">let </span>check_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Checking evaluation&quot;</span>);
-        <span class="kw">let </span>pairing_inputs: Vec&lt;(E::G1Prepared, E::G2Prepared)&gt; = <span class="macro">vec!</span>[
-            (
-                (verifier_param.g.mul(value.into_repr())
-                    - proof.proof.mul(point.into_repr())
-                    - commitment.<span class="number">0</span>.into_projective())
+        <span class="kw">let </span>pairing_inputs_l: Vec&lt;E::G1Prepared&gt; = <span class="macro">vec!</span>[
+            (verifier_param.g * value - proof.proof * point - commitment.<span class="number">0</span>.into_group())
                 .into_affine()
                 .into(),
-                verifier_param.h.into(),
-            ),
-            (proof.proof.into(), verifier_param.beta_h.into()),
+            proof.proof.into(),
         ];
+        <span class="kw">let </span>pairing_inputs_r: Vec&lt;E::G2Prepared&gt; =
+            <span class="macro">vec!</span>[verifier_param.h.into(), verifier_param.beta_h.into()];
 
-        <span class="kw">let </span>res = E::product_of_pairings(pairing_inputs.iter()).is_one();
+        <span class="kw">let </span>res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
+            .<span class="number">0
+            </span>.is_one();
 
         <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {res}&quot;</span>));
         <span class="prelude-val">Ok</span>(res)
@@ -650,21 +665,21 @@
         verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
         multi_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
         points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
-        values: <span class="kw-2">&amp;</span>[E::Fr],
+        values: <span class="kw-2">&amp;</span>[E::ScalarField],
         batch_proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchProof,
         rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
         <span class="kw">let </span>check_time =
             <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Checking {} evaluation proofs&quot;</span>, multi_commitment.len()));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>total_c = &lt;E::G1Projective&gt;::zero();
-        <span class="kw">let </span><span class="kw-2">mut </span>total_w = &lt;E::G1Projective&gt;::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_c = &lt;E::G1&gt;::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>total_w = &lt;E::G1&gt;::zero();
 
         <span class="kw">let </span>combination_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Combining commitments and proofs&quot;</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>randomizer = E::Fr::one();
+        <span class="kw">let </span><span class="kw-2">mut </span>randomizer = E::ScalarField::one();
         <span class="comment">// Instead of multiplying g and gamma_g in each turn, we simply accumulate
         // their coefficients and perform a final multiplication at the end.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>g_multiplier = E::Fr::zero();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>g_multiplier = E::ScalarField::zero();
         <span class="kw">for </span>(((c, z), v), proof) <span class="kw">in </span>multi_commitment
             .iter()
             .zip(points)
@@ -673,11 +688,11 @@
         {
             <span class="kw">let </span>w = proof.proof;
             <span class="kw">let </span><span class="kw-2">mut </span>temp = w.mul(<span class="kw-2">*</span>z);
-            temp.add_assign_mixed(<span class="kw-2">&amp;</span>c.<span class="number">0</span>);
+            temp += <span class="kw-2">&amp;</span>c.<span class="number">0</span>;
             <span class="kw">let </span>c = temp;
             g_multiplier += <span class="kw-2">&amp;</span>(randomizer * v);
-            total_c += <span class="kw-2">&amp;</span>c.mul(randomizer.into_repr());
-            total_w += <span class="kw-2">&amp;</span>w.mul(randomizer.into_repr());
+            total_c += c * randomizer;
+            total_w += w * randomizer;
             <span class="comment">// We don&#39;t need to sample randomizers from the full field,
             // only from 128-bit strings.
             </span>randomizer = u128::rand(rng).into();
@@ -686,23 +701,24 @@
         <span class="macro">end_timer!</span>(combination_time);
 
         <span class="kw">let </span>to_affine_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting results to affine for pairing&quot;</span>);
-        <span class="kw">let </span>affine_points = E::G1Projective::batch_normalization_into_affine(<span class="kw-2">&amp;</span>[-total_w, total_c]);
+        <span class="kw">let </span>affine_points = E::G1::normalize_batch(<span class="kw-2">&amp;</span>[-total_w, total_c]);
         <span class="kw">let </span>(total_w, total_c) = (affine_points[<span class="number">0</span>], affine_points[<span class="number">1</span>]);
         <span class="macro">end_timer!</span>(to_affine_time);
 
         <span class="kw">let </span>pairing_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Performing product of pairings&quot;</span>);
-        <span class="kw">let </span>result = E::product_of_pairings(<span class="kw-2">&amp;</span>[
-            (total_w.into(), verifier_param.beta_h.into()),
-            (total_c.into(), verifier_param.h.into()),
-        ])
-        .is_one();
+        <span class="kw">let </span>result = E::multi_pairing(
+            [total_w, total_c],
+            [verifier_param.beta_h, verifier_param.h],
+        )
+        .<span class="number">0
+        </span>.is_one();
         <span class="macro">end_timer!</span>(pairing_time);
         <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {result}&quot;</span>));
         <span class="prelude-val">Ok</span>(result)
     }
 }
 
-<span class="kw">fn </span>skip_leading_zeros_and_convert_to_bigints&lt;F: PrimeField, P: UVPolynomial&lt;F&gt;&gt;(
+<span class="kw">fn </span>skip_leading_zeros_and_convert_to_bigints&lt;F: PrimeField, P: DenseUVPolynomial&lt;F&gt;&gt;(
     p: <span class="kw-2">&amp;</span>P,
 ) -&gt; (usize, Vec&lt;F::BigInt&gt;) {
     <span class="kw">let </span><span class="kw-2">mut </span>num_leading_zeros = <span class="number">0</span>;
@@ -715,7 +731,7 @@
 
 <span class="kw">fn </span>convert_to_bigints&lt;F: PrimeField&gt;(p: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;F::BigInt&gt; {
     <span class="kw">let </span>to_bigint_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting polynomial coeffs to bigints&quot;</span>);
-    <span class="kw">let </span>coeffs = p.iter().map(|s| s.into_repr()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+    <span class="kw">let </span>coeffs = p.iter().map(|s| s.into_bigint()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
     <span class="macro">end_timer!</span>(to_bigint_time);
     coeffs
 }
@@ -725,13 +741,14 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::pcs::StructuredReferenceString;
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
-    <span class="kw">use </span>ark_ec::PairingEngine;
+    <span class="kw">use </span>ark_ec::pairing::Pairing;
     <span class="kw">use </span>ark_poly::univariate::DensePolynomial;
-    <span class="kw">use </span>ark_std::{test_rng, UniformRand};
+    <span class="kw">use </span>ark_std::UniformRand;
+    <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="kw">fn </span>end_to_end_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
     <span class="kw">where
-        </span>E: PairingEngine,
+        </span>E: Pairing,
     {
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
@@ -741,9 +758,11 @@
             }
             <span class="kw">let </span>pp = UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, degree)<span class="question-mark">?</span>;
             <span class="kw">let </span>(ck, vk) = pp.trim(degree)<span class="question-mark">?</span>;
-            <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::Fr&gt; <span class="kw">as </span>UVPolynomial&lt;E::Fr&gt;&gt;::rand(degree, rng);
+            <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;E::ScalarField&gt;&gt;::rand(
+                degree, rng,
+            );
             <span class="kw">let </span>comm = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
-            <span class="kw">let </span>point = E::Fr::rand(rng);
+            <span class="kw">let </span>point = E::ScalarField::rand(rng);
             <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
                 UnivariateKzgPCS::&lt;E&gt;::verify(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof)<span class="question-mark">?</span>,
@@ -757,7 +776,7 @@
 
     <span class="kw">fn </span>linear_polynomial_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
     <span class="kw">where
-        </span>E: PairingEngine,
+        </span>E: Pairing,
     {
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
@@ -765,9 +784,11 @@
 
             <span class="kw">let </span>pp = UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, degree)<span class="question-mark">?</span>;
             <span class="kw">let </span>(ck, vk) = pp.trim(degree)<span class="question-mark">?</span>;
-            <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::Fr&gt; <span class="kw">as </span>UVPolynomial&lt;E::Fr&gt;&gt;::rand(degree, rng);
+            <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;E::ScalarField&gt;&gt;::rand(
+                degree, rng,
+            );
             <span class="kw">let </span>comm = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
-            <span class="kw">let </span>point = E::Fr::rand(rng);
+            <span class="kw">let </span>point = E::ScalarField::rand(rng);
             <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
                 UnivariateKzgPCS::&lt;E&gt;::verify(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof)<span class="question-mark">?</span>,
@@ -781,7 +802,7 @@
 
     <span class="kw">fn </span>batch_check_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
     <span class="kw">where
-        </span>E: PairingEngine,
+        </span>E: Pairing,
     {
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
@@ -796,9 +817,12 @@
             <span class="kw">let </span><span class="kw-2">mut </span>points = Vec::new();
             <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::new();
             <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
-                <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::Fr&gt; <span class="kw">as </span>UVPolynomial&lt;E::Fr&gt;&gt;::rand(degree, rng);
+                <span class="kw">let </span>p =
+                    &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;E::ScalarField&gt;&gt;::rand(
+                        degree, rng,
+                    );
                 <span class="kw">let </span>comm = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
-                <span class="kw">let </span>point = E::Fr::rand(rng);
+                <span class="kw">let </span>point = E::ScalarField::rand(rng);
                 <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
 
                 <span class="macro">assert!</span>(UnivariateKzgPCS::&lt;E&gt;::verify(
@@ -831,4 +855,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>

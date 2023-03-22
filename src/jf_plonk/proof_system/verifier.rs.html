@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/verifier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>verifier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/verifier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>verifier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-93196c7a1c3542a8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-3367e395607fafc1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_plonk/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -914,6 +914,21 @@
 <a href="#914" id="914">914</a>
 <a href="#915" id="915">915</a>
 <a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -929,7 +944,10 @@
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::<span class="kw-2">*</span>,
 };
-<span class="kw">use </span>ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+<span class="kw">use </span>ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 <span class="kw">use </span>ark_ff::{Field, One, Zero};
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 <span class="kw">use </span>ark_std::{format, vec, vec::Vec};
@@ -950,29 +968,29 @@
 /// * `shifted_opening_proof` - (aggregated) proof of evaluations at point
 ///   `next_eval_point`.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PcsInfo&lt;E: PairingEngine&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) u: E::Fr,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) eval_point: E::Fr,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) next_eval_point: E::Fr,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) eval: E::Fr,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PcsInfo&lt;E: Pairing&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) u: E::ScalarField,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) eval_point: E::ScalarField,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) next_eval_point: E::ScalarField,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) eval: E::ScalarField,
     <span class="kw">pub</span>(<span class="kw">crate</span>) comm_scalars_and_bases: ScalarsAndBases&lt;E&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) opening_proof: Commitment&lt;E&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) shifted_opening_proof: Commitment&lt;E&gt;,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Verifier&lt;E: PairingEngine&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) domain: Radix2EvaluationDomain&lt;E::Fr&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Verifier&lt;E: Pairing&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) domain: Radix2EvaluationDomain&lt;E::ScalarField&gt;,
 }
 
 <span class="kw">impl</span>&lt;E, F, P&gt; Verifier&lt;E&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
 {
     <span class="doccomment">/// Construct a Plonk verifier that uses a domain with size `domain_size`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(domain_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PlonkError&gt; {
-        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::Fr&gt;::new(domain_size)
+        <span class="kw">let </span>domain = Radix2EvaluationDomain::&lt;E::ScalarField&gt;::new(domain_size)
             .ok_or(PlonkError::DomainCreationError)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ domain })
     }
@@ -981,7 +999,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare_pcs_info&lt;T&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::Fr]],
+        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::ScalarField]],
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
         extra_transcript_init_msg: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PcsInfo&lt;E&gt;, PlonkError&gt;
@@ -1040,7 +1058,7 @@
         <span class="kw">let </span>alpha_6 = alpha_4 * alpha_2;
         <span class="kw">let </span>alpha_7 = alpha_3 * alpha_4;
         <span class="kw">let </span>alpha_powers = <span class="macro">vec!</span>[alpha_2, alpha_3, alpha_4, alpha_5, alpha_6];
-        <span class="kw">let </span><span class="kw-2">mut </span>alpha_bases = <span class="macro">vec!</span>[E::Fr::one()];
+        <span class="kw">let </span><span class="kw-2">mut </span>alpha_bases = <span class="macro">vec!</span>[E::ScalarField::one()];
 
         <span class="kw">let </span><span class="kw-2">mut </span>tmp = <span class="kw">if </span>verify_keys[<span class="number">0</span>].plookup_vk.is_some() {
             alpha_7
@@ -1119,7 +1137,7 @@
         <span class="comment">// Compute a pseudorandom challenge from the instances
         </span><span class="kw">let </span>r = <span class="kw">if </span>pcs_infos.len() == <span class="number">1 </span>{
             <span class="comment">// No need to use `r` when there is only a single proof.
-            </span>E::Fr::one()
+            </span>E::ScalarField::one()
         } <span class="kw">else </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b&quot;batch verify&quot;</span>);
             <span class="comment">// r := hash(u1||u2||...||u_m), where u_i is the hash output of the i-th Plonk
@@ -1133,7 +1151,7 @@
 
         <span class="comment">// Compute A := A0 + r * A1 + ... + r^{m-1} * Am
         </span><span class="kw">let </span><span class="kw-2">mut </span>inners = ScalarsAndBases::&lt;E&gt;::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>r_base = E::Fr::one();
+        <span class="kw">let </span><span class="kw-2">mut </span>r_base = E::ScalarField::one();
         <span class="kw">for </span>pcs_info <span class="kw">in </span>pcs_infos.iter() {
             inners.push(r_base, pcs_info.opening_proof.<span class="number">0</span>);
             inners.push(r_base * pcs_info.u, pcs_info.shifted_opening_proof.<span class="number">0</span>);
@@ -1141,13 +1159,13 @@
         }
         <span class="kw">let </span>inner = inners.multi_scalar_mul();
         <span class="comment">// Add (A, [x]2) to the product pairing list
-        </span><span class="kw">let </span><span class="kw-2">mut </span>g1_elems: Vec&lt;&lt;E <span class="kw">as </span>PairingEngine&gt;::G1Affine&gt; = <span class="macro">vec!</span>[inner.into()];
+        </span><span class="kw">let </span><span class="kw-2">mut </span>g1_elems: Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::G1Affine&gt; = <span class="macro">vec!</span>[inner.into()];
         <span class="kw">let </span><span class="kw-2">mut </span>g2_elems = <span class="macro">vec!</span>[open_key.beta_h];
 
         <span class="comment">// Compute B := B0 + r * B1 + ... + r^{m-1} * Bm
         </span><span class="kw">let </span><span class="kw-2">mut </span>inners = ScalarsAndBases::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>r_base = E::Fr::one();
-        <span class="kw">let </span><span class="kw-2">mut </span>sum_evals = E::Fr::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>r_base = E::ScalarField::one();
+        <span class="kw">let </span><span class="kw-2">mut </span>sum_evals = E::ScalarField::zero();
         <span class="kw">for </span>pcs_info <span class="kw">in </span>pcs_infos.iter() {
             inners.merge(r_base, <span class="kw-2">&amp;</span>pcs_info.comm_scalars_and_bases);
             inners.push(r_base * pcs_info.eval_point, pcs_info.opening_proof.<span class="number">0</span>);
@@ -1164,7 +1182,7 @@
         </span>g1_elems.push(-inner.into());
         g2_elems.push(open_key.h);
         <span class="comment">// Check e(A, [x]2) ?= e(B, [1]2)
-        </span><span class="prelude-val">Ok</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>g1_elems, <span class="kw-2">&amp;</span>g2_elems) == E::Fqk::one())
+        </span><span class="prelude-val">Ok</span>(multi_pairing::&lt;E&gt;(<span class="kw-2">&amp;</span>g1_elems, <span class="kw-2">&amp;</span>g2_elems).<span class="number">0 </span>== E::TargetField::one())
     }
 
     <span class="doccomment">/// Compute verifier challenges `tau`, `beta`, `gamma`, `alpha`, `zeta`,
@@ -1172,10 +1190,10 @@
     </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_challenges&lt;T&gt;(
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::Fr]],
+        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::ScalarField]],
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
         extra_transcript_init_msg: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Challenges&lt;E::Fr&gt;, PlonkError&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Challenges&lt;E::ScalarField&gt;, PlonkError&gt;
     <span class="kw">where
         </span>T: PlonkTranscript&lt;F&gt;,
     {
@@ -1264,16 +1282,16 @@
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_lin_poly_constant_term(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::Fr]],
+        public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::ScalarField]],
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
-        vanish_eval: <span class="kw-2">&amp;</span>E::Fr,
-        lagrange_1_eval: <span class="kw-2">&amp;</span>E::Fr,
-        lagrange_n_eval: <span class="kw-2">&amp;</span>E::Fr,
-        alpha_powers: <span class="kw-2">&amp;</span>[E::Fr],
-        alpha_bases: <span class="kw-2">&amp;</span>[E::Fr],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt; {
+        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        lagrange_1_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        lagrange_n_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        alpha_powers: <span class="kw-2">&amp;</span>[E::ScalarField],
+        alpha_bases: <span class="kw-2">&amp;</span>[E::ScalarField],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt; {
         <span class="kw">if </span>verify_keys.len() != batch_proof.len()
             || verify_keys.len() != public_inputs.len()
             || verify_keys.len() != alpha_bases.len()
@@ -1288,7 +1306,7 @@
             .into());
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>result = E::Fr::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = E::ScalarField::zero();
         <span class="kw">for </span>(poly_evals, (plookup_proof, (<span class="kw-2">&amp;</span>pi, (<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>current_alpha_bases)))) <span class="kw">in
             </span>batch_proof.poly_evals_vec.iter().zip(
                 batch_proof.plookup_proofs_vec.iter().zip(
@@ -1317,7 +1335,8 @@
             );
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(proof_lk) = plookup_proof {
-                <span class="kw">let </span>gamma_mul_beta_plus_one = challenges.gamma * (E::Fr::one() + challenges.beta);
+                <span class="kw">let </span>gamma_mul_beta_plus_one =
+                    challenges.gamma * (E::ScalarField::one() + challenges.beta);
                 <span class="kw">let </span>evals = <span class="kw-2">&amp;</span>proof_lk.poly_evals;
 
                 <span class="kw">let </span>plookup_constant = <span class="kw-2">*</span>lagrange_n_eval
@@ -1346,14 +1365,14 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>aggregate_poly_commitments(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         vks: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        vanish_eval: <span class="kw-2">&amp;</span>E::Fr,
-        lagrange_1_eval: <span class="kw-2">&amp;</span>E::Fr,
-        lagrange_n_eval: <span class="kw-2">&amp;</span>E::Fr,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        lagrange_1_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        lagrange_n_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
-        alpha_powers: <span class="kw-2">&amp;</span>[E::Fr],
-        alpha_bases: <span class="kw-2">&amp;</span>[E::Fr],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(ScalarsAndBases&lt;E&gt;, Vec&lt;E::Fr&gt;), PlonkError&gt; {
+        alpha_powers: <span class="kw-2">&amp;</span>[E::ScalarField],
+        alpha_bases: <span class="kw-2">&amp;</span>[E::ScalarField],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(ScalarsAndBases&lt;E&gt;, Vec&lt;E::ScalarField&gt;), PlonkError&gt; {
         <span class="kw">if </span>vks.len() != batch_proof.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;the number of verification keys {} != the number of instances {}&quot;</span>,
@@ -1448,13 +1467,13 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>linearization_scalars_and_bases(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         vks: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
-        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::Fr&gt;,
-        vanish_eval: <span class="kw-2">&amp;</span>E::Fr,
-        lagrange_1_eval: <span class="kw-2">&amp;</span>E::Fr,
-        lagrange_n_eval: <span class="kw-2">&amp;</span>E::Fr,
+        challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
+        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        lagrange_1_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+        lagrange_n_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
-        alpha_powers: <span class="kw-2">&amp;</span>[E::Fr],
-        alpha_bases: <span class="kw-2">&amp;</span>[E::Fr],
+        alpha_powers: <span class="kw-2">&amp;</span>[E::ScalarField],
+        alpha_bases: <span class="kw-2">&amp;</span>[E::ScalarField],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ScalarsAndBases&lt;E&gt;, PlonkError&gt; {
         <span class="kw">if </span>vks.len() != batch_proof.len() || alpha_bases.len() != vks.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
@@ -1467,7 +1486,7 @@
         }
 
         <span class="comment">// compute constants that are being reused
-        </span><span class="kw">let </span>beta_plus_one = E::Fr::one() + challenges.beta;
+        </span><span class="kw">let </span>beta_plus_one = E::ScalarField::one() + challenges.beta;
         <span class="kw">let </span>gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
 
         <span class="kw">let </span><span class="kw-2">mut </span>scalars_and_bases = ScalarsAndBases::new();
@@ -1518,7 +1537,7 @@
             // Compute coefficients for selector polynomial commitments.
             // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
             // TODO(binyi): get the order from a function.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>q_scalars = <span class="macro">vec!</span>[E::Fr::zero(); <span class="number">2 </span>* GATE_WIDTH + <span class="number">5</span>];
+            </span><span class="kw">let </span><span class="kw-2">mut </span>q_scalars = <span class="macro">vec!</span>[E::ScalarField::zero(); <span class="number">2 </span>* GATE_WIDTH + <span class="number">5</span>];
             q_scalars[<span class="number">0</span>] = w_evals[<span class="number">0</span>];
             q_scalars[<span class="number">1</span>] = w_evals[<span class="number">1</span>];
             q_scalars[<span class="number">2</span>] = w_evals[<span class="number">2</span>];
@@ -1530,7 +1549,7 @@
             q_scalars[<span class="number">8</span>] = w_evals[<span class="number">2</span>].pow([<span class="number">5</span>]);
             q_scalars[<span class="number">9</span>] = w_evals[<span class="number">3</span>].pow([<span class="number">5</span>]);
             q_scalars[<span class="number">10</span>] = -w_evals[<span class="number">4</span>];
-            q_scalars[<span class="number">11</span>] = E::Fr::one();
+            q_scalars[<span class="number">11</span>] = E::ScalarField::one();
             q_scalars[<span class="number">12</span>] = w_evals[<span class="number">0</span>] * w_evals[<span class="number">1</span>] * w_evals[<span class="number">2</span>] * w_evals[<span class="number">3</span>] * w_evals[<span class="number">4</span>];
             <span class="kw">for </span>(<span class="kw-2">&amp;</span>s, poly) <span class="kw">in </span>q_scalars.iter().zip(vk.selector_comms.iter()) {
                 scalars_and_bases.push(s * current_alpha_bases, poly.<span class="number">0</span>);
@@ -1600,7 +1619,8 @@
         }
 
         <span class="comment">// Add splitted quotient commitments
-        </span><span class="kw">let </span>zeta_to_n_plus_2 = (E::Fr::one() + vanish_eval) * challenges.zeta * challenges.zeta;
+        </span><span class="kw">let </span>zeta_to_n_plus_2 =
+            (E::ScalarField::one() + vanish_eval) * challenges.zeta * challenges.zeta;
         <span class="kw">let </span><span class="kw-2">mut </span>coeff = vanish_eval.neg();
         scalars_and_bases.push(
             coeff,
@@ -1622,14 +1642,14 @@
     /// batch opening.
     /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>aggregate_evaluations(
-        lin_poly_constant: <span class="kw-2">&amp;</span>E::Fr,
-        poly_evals_vec: <span class="kw-2">&amp;</span>[ProofEvaluations&lt;E::Fr&gt;],
+        lin_poly_constant: <span class="kw-2">&amp;</span>E::ScalarField,
+        poly_evals_vec: <span class="kw-2">&amp;</span>[ProofEvaluations&lt;E::ScalarField&gt;],
         plookup_proofs_vec: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;PlookupProof&lt;E&gt;&gt;],
-        buffer_v_and_uv_basis: <span class="kw-2">&amp;</span>[E::Fr],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt; {
+        buffer_v_and_uv_basis: <span class="kw-2">&amp;</span>[E::ScalarField],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt; {
         <span class="macro">assert_eq!</span>(poly_evals_vec.len(), plookup_proofs_vec.len());
 
-        <span class="kw">let </span><span class="kw-2">mut </span>result: E::Fr = lin_poly_constant.neg();
+        <span class="kw">let </span><span class="kw-2">mut </span>result: E::ScalarField = lin_poly_constant.neg();
         <span class="kw">let </span><span class="kw-2">mut </span>v_and_uv_basis = buffer_v_and_uv_basis.iter();
 
         <span class="kw">for </span>(poly_evals, plookup_proof) <span class="kw">in </span>poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
@@ -1697,18 +1717,18 @@
 <span class="doccomment">/// Private helper methods
 </span><span class="kw">impl</span>&lt;E, F, P&gt; Verifier&lt;E&gt;
 <span class="kw">where
-    </span>E: PairingEngine&lt;Fq = F, G1Affine = GroupAffine&lt;P&gt;&gt;,
+    </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters&lt;BaseField = F&gt;,
+    P: SWCurveConfig&lt;BaseField = F&gt;,
 {
     <span class="doccomment">/// Merge a polynomial commitment into the aggregated polynomial commitment
     /// (in the ScalarAndBases form), update the random combiner afterward.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>add_poly_comm(
         scalar_and_bases: <span class="kw-2">&amp;mut </span>ScalarsAndBases&lt;E&gt;,
-        random_combiner: <span class="kw-2">&amp;mut </span>E::Fr,
+        random_combiner: <span class="kw-2">&amp;mut </span>E::ScalarField,
         comm: E::G1Affine,
-        r: E::Fr,
+        r: E::ScalarField,
     ) {
         scalar_and_bases.push(<span class="kw-2">*</span>random_combiner, comm);
         <span class="kw-2">*</span>random_combiner <span class="kw-2">*</span>= r;
@@ -1717,23 +1737,33 @@
     <span class="doccomment">/// Add a polynomial commitment evaluation value to the aggregated
     /// polynomial evaluation, update the random combiner afterward.
     </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>add_pcs_eval(result: <span class="kw-2">&amp;mut </span>E::Fr, random_combiner: <span class="kw-2">&amp;</span>E::Fr, eval: E::Fr) {
+    </span><span class="kw">fn </span>add_pcs_eval(
+        result: <span class="kw-2">&amp;mut </span>E::ScalarField,
+        random_combiner: <span class="kw-2">&amp;</span>E::ScalarField,
+        eval: E::ScalarField,
+    ) {
         <span class="kw-2">*</span>result += eval * (<span class="kw-2">*</span>random_combiner);
     }
 
     <span class="doccomment">/// Evaluate vanishing polynomial at point `zeta`
     </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>evaluate_vanishing_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, zeta: <span class="kw-2">&amp;</span>E::Fr) -&gt; E::Fr {
+    </span><span class="kw">fn </span>evaluate_vanishing_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, zeta: <span class="kw-2">&amp;</span>E::ScalarField) -&gt; E::ScalarField {
         <span class="self">self</span>.domain.evaluate_vanishing_polynomial(<span class="kw-2">*</span>zeta)
     }
 
     <span class="doccomment">/// Evaluate the first and the last lagrange polynomial at point `zeta`
     /// given the vanishing polynomial evaluation `vanish_eval`.
     </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>evaluate_lagrange_1_and_n(<span class="kw-2">&amp;</span><span class="self">self</span>, zeta: <span class="kw-2">&amp;</span>E::Fr, vanish_eval: <span class="kw-2">&amp;</span>E::Fr) -&gt; (E::Fr, E::Fr) {
-        <span class="kw">let </span>divisor = E::Fr::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32) * (<span class="kw-2">*</span>zeta - E::Fr::one());
+    </span><span class="kw">fn </span>evaluate_lagrange_1_and_n(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        zeta: <span class="kw-2">&amp;</span>E::ScalarField,
+        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
+    ) -&gt; (E::ScalarField, E::ScalarField) {
+        <span class="kw">let </span>divisor =
+            E::ScalarField::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32) * (<span class="kw-2">*</span>zeta - E::ScalarField::one());
         <span class="kw">let </span>lagrange_1_eval = <span class="kw-2">*</span>vanish_eval / divisor;
-        <span class="kw">let </span>divisor = E::Fr::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32) * (<span class="kw-2">*</span>zeta - <span class="self">self</span>.domain.group_gen_inv);
+        <span class="kw">let </span>divisor =
+            E::ScalarField::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32) * (<span class="kw-2">*</span>zeta - <span class="self">self</span>.domain.group_gen_inv);
         <span class="kw">let </span>lagrange_n_eval = <span class="kw-2">*</span>vanish_eval * <span class="self">self</span>.domain.group_gen_inv / divisor;
         (lagrange_1_eval, lagrange_n_eval)
     }
@@ -1795,25 +1825,25 @@
     /// TODO: reuse the lagrange values
     </span><span class="kw">fn </span>evaluate_pi_poly(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        pub_input: <span class="kw-2">&amp;</span>[E::Fr],
-        z: <span class="kw-2">&amp;</span>E::Fr,
-        vanish_eval: <span class="kw-2">&amp;</span>E::Fr,
+        pub_input: <span class="kw-2">&amp;</span>[E::ScalarField],
+        z: <span class="kw-2">&amp;</span>E::ScalarField,
+        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         circuit_is_merged: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::Fr, PlonkError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt; {
         <span class="comment">// If z is a root of the vanishing polynomial, directly return zero.
         </span><span class="kw">if </span>vanish_eval.is_zero() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(E::Fr::zero());
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(E::ScalarField::zero());
         }
         <span class="kw">let </span>len = <span class="kw">match </span>circuit_is_merged {
             <span class="bool-val">false </span>=&gt; pub_input.len(),
             <span class="bool-val">true </span>=&gt; pub_input.len() / <span class="number">2</span>,
         };
 
-        <span class="kw">let </span>vanish_eval_div_n = E::Fr::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32)
+        <span class="kw">let </span>vanish_eval_div_n = E::ScalarField::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32)
             .inverse()
             .ok_or(PlonkError::DivisionError)<span class="question-mark">?
             </span>* (<span class="kw-2">*</span>vanish_eval);
-        <span class="kw">let </span><span class="kw-2">mut </span>result = E::Fr::zero();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = E::ScalarField::zero();
         <span class="kw">for </span>(i, val) <span class="kw">in </span>pub_input.iter().take(len).enumerate() {
             <span class="kw">let </span>lagrange_i =
                 vanish_eval_div_n * <span class="self">self</span>.domain.element(i) / (<span class="kw-2">*</span>z - <span class="self">self</span>.domain.element(i));
@@ -1831,4 +1861,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0 (2c8cc3432 2023-03-06)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
