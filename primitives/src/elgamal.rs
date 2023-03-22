@@ -143,11 +143,6 @@ where
             ));
         }
         let key = Affine::new(scalars[0], scalars[1]);
-        if !key.is_on_curve() {
-            return Err(PrimitivesError::ParameterError(
-                "ephemeral pk should be a point on curve".to_string(),
-            ));
-        }
 
         let ephemeral = EncKey {
             key: key.into_group(),
