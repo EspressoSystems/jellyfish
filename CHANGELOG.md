@@ -6,7 +6,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 **Breaking Changes** and **Fixed** contain backward incompatible changes, bug fixes, and security patches;
 **Added, Changed, Removed, Deprecated** contain backward compatible improvements or new features.
 
-## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.2.0...main)
+## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.3.0...main)
 
 ### Breaking Changes
 
@@ -19,6 +19,11 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 ### Removed
 
 ### Deprecated
+
+## [v0.3.0](https://github.com/EspressoSystems/jellyfish/compare/0.2.0...0.3.0) - 2023-03-22
+
+### Breaking Changes
+- [#207](https://github.com/EspressoSystems/jellyfish/pull/207) Update arkworks dependency to v0.4.0
 
 ## [v0.2.0](https://github.com/EspressoSystems/jellyfish/compare/0.1.2...0.2.0) - 2023-01-20
 
