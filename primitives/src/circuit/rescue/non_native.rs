@@ -12,7 +12,7 @@
 use crate::rescue::{
     Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE,
 };
-use ark_ff::{BigInteger, FpParameters, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
 use jf_relation::{
@@ -119,7 +119,7 @@ where
         // TODO(ZZ): hmmm think of a way to pre-compute modulus in FpELem
         // Doesn't save #constraints though
         // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let modulus = FpElem::new(&t_modulus, m, two_power_m)?;
 
         // ABSORB PHASE
@@ -207,7 +207,7 @@ where
         // TODO(ZZ): hmmm think of a way to pre-compute modulus in FpELem
         // Doesn't save #constraints though
         // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let modulus = FpElem::new(&t_modulus, m, two_power_m)?;
 
         // set key
@@ -237,10 +237,11 @@ where
         state: &RescueVector<T>,
     ) -> Result<RescueNonNativeStateVar<F>, CircuitError> {
         // parameter m
-        let m = (T::size_in_bits() / 2 / self.range_bit_len()? + 1) * self.range_bit_len()?;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / self.range_bit_len()? + 1)
+            * self.range_bit_len()?;
 
         // move the modulus to the right field
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let t = FpElem::new(&t_modulus, m, None)?;
 
         // move rescue state to the plonk field
@@ -947,7 +948,7 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         let prp = PRP::<T>::default();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let key_vec = RescueVector::from(&[
             T::rand(&mut prng),
             T::rand(&mut prng),
@@ -1000,9 +1001,10 @@ mod tests {
 
         let max_output_len = if ignored { 3 } else { 10 };
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
 
         // setup the inputs
         let data_t: Vec<T> = (0..2 * CRHF_RATE).map(|_| T::rand(&mut prng)).collect_vec();
@@ -1085,9 +1087,10 @@ mod tests {
     }
     fn test_rescue_sponge_with_padding_helper<T: RescueParameter, F: PrimeField>(ignored: bool) {
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let max_input_len = if ignored { 3 } else { 10 };
         let max_output_len = max_input_len;
 
@@ -1157,7 +1160,8 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let rate = 3;
 
@@ -1202,9 +1206,10 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // parameter m
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
 
         // keys
         let key_t = T::rand(&mut prng);

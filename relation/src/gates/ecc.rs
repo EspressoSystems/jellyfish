@@ -12,26 +12,26 @@ use crate::{
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
     gates::Gate,
 };
-use ark_ec::TEModelParameters as Parameters;
+use ark_ec::twisted_edwards::TECurveConfig as Config;
 use ark_ff::PrimeField;
 use derivative::Derivative;
 
 #[inline]
-fn edwards_coeff_d<P: Parameters>() -> P::BaseField {
+fn edwards_coeff_d<P: Config>() -> P::BaseField {
     P::COEFF_D
 }
 
 /// A gate for checking a point conforming the twisted Edwards curve equation
 #[derive(Derivative)]
-#[derivative(Clone(bound = "P: Parameters"))]
-pub struct EdwardsCurveEquationGate<P: Parameters> {
+#[derivative(Clone(bound = "P: Config"))]
+pub struct EdwardsCurveEquationGate<P: Config> {
     pub(crate) _phantom: PhantomData<P>,
 }
 
 impl<F, P> Gate<F> for EdwardsCurveEquationGate<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn name(&self) -> &'static str {
         "Curve Equation Gate"
@@ -52,15 +52,15 @@ where
 
 /// A gate for point addition on x-coordinate between two Curve Points
 #[derive(Derivative)]
-#[derivative(Clone(bound = "P: Parameters"))]
-pub struct CurvePointXAdditionGate<P: Parameters> {
+#[derivative(Clone(bound = "P: Config"))]
+pub struct CurvePointXAdditionGate<P: Config> {
     pub(crate) _phantom: PhantomData<P>,
 }
 
 impl<F, P> Gate<F> for CurvePointXAdditionGate<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn name(&self) -> &'static str {
         "Point Addition X-coordinate Gate"
@@ -79,15 +79,15 @@ where
 
 /// A gate for point addition on y-coordinate between two Curve Points
 #[derive(Derivative)]
-#[derivative(Clone(bound = "P: Parameters"))]
-pub struct CurvePointYAdditionGate<P: Parameters> {
+#[derivative(Clone(bound = "P: Config"))]
+pub struct CurvePointYAdditionGate<P: Config> {
     pub(crate) _phantom: PhantomData<P>,
 }
 
 impl<F, P> Gate<F> for CurvePointYAdditionGate<P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn name(&self) -> &'static str {
         "Point Addition Y-coordinate Gate"

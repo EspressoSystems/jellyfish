@@ -13,6 +13,7 @@ pub mod par_utils;
 mod serialize;
 
 use ark_ff::Field;
+use ark_std::rand::{self, rngs::StdRng};
 pub use ark_std::vec::Vec;
 
 pub use conversion::*;
@@ -35,4 +36,14 @@ pub fn pad_with_zeros<F: Field>(vec: &mut Vec<F>, multiple: usize) {
     let len = vec.len();
     let new_len = compute_len_to_next_multiple(len, multiple);
     vec.resize(new_len, F::zero())
+}
+
+pub fn test_rng() -> StdRng {
+    use rand::SeedableRng;
+    // arbitrary seed
+    let seed = [
+        1, 0, 0, 0, 23, 0, 0, 0, 200, 1, 0, 0, 210, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0,
+    ];
+    StdRng::from_seed(seed)
 }

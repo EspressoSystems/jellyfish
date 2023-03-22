@@ -12,7 +12,8 @@ use crate::{
     rescue::{RescueParameter, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine, AffineCurve, ProjectiveCurve, TEModelParameters,
+    twisted_edwards::{Affine, TECurveConfig},
+    AffineRepr, CurveGroup,
 };
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
@@ -165,7 +166,7 @@ where
 pub trait ElGamalEncryptionGadget<F, P>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     /// Compute the gadget that check a correct Elgamal encryption
     /// * `pk_vars` - variables corresponding to the encryption public key
@@ -195,7 +196,7 @@ where
 impl<F, P> ElGamalEncryptionGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     fn elgamal_encrypt(
         &mut self,
@@ -214,7 +215,7 @@ where
         let symm_key_vars = self.rescue_permutation(key_perm_input_var)?;
 
         let symm_ctxts = self.apply_counter_mode_stream(&symm_key_vars, data_vars)?;
-        let base = GroupAffine::<P>::prime_subgroup_generator();
+        let base = Affine::<P>::generator();
         let ephemeral = self.fixed_base_scalar_mul(r, &base)?;
         Ok(ElGamalHybridCtxtVars {
             ephemeral,
@@ -256,11 +257,11 @@ mod tests {
         elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
         rescue::{RescueParameter, RescueVector, STATE_SIZE},
     };
-    use ark_ec::{ProjectiveCurve, TEModelParameters};
-    use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};
-    use ark_ed_on_bls12_381_bandersnatch::{EdwardsParameters as ParamEd381b, Fq as FqEd381b};
-    use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254};
+    use ark_ec::{twisted_edwards::TECurveConfig, CurveGroup};
+    use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
+    use ark_ed_on_bls12_381_bandersnatch::{EdwardsConfig as ParamEd381b, Fq as FqEd381b};
+    use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::{vec, vec::Vec};
     use jf_relation::{gadgets::ecc::Point, Circuit, PlonkCircuit, Variable};
@@ -277,10 +278,10 @@ mod tests {
     fn apply_counter_mode_stream_no_padding_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F>,
+        P: TECurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let key = RescueVector::from(&[
             F::rand(&mut prng),
             F::rand(&mut prng),
@@ -306,7 +307,7 @@ mod tests {
             .apply_counter_mode_stream_no_padding(&key_var, data_vars.as_slice())
             .unwrap();
 
-        let encrypted_data = apply_counter_mode_stream::<F, P>(&key, &data, &F::zero(), Encrypt);
+        let encrypted_data = apply_counter_mode_stream::<F>(&key, &data, &F::zero(), Encrypt);
 
         let mut blocks = vec![];
 
@@ -340,11 +341,11 @@ mod tests {
     fn test_elgamal_hybrid_encrypt_circuit_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F>,
+        P: TECurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
 
         // Prepare data and keys
         let keypair = KeyPair::<P>::generate(&mut prng);
@@ -420,10 +421,10 @@ mod tests {
     fn test_create_ciphertext_variable_helper<F, P>()
     where
         F: RescueParameter,
-        P: TEModelParameters<BaseField = F>,
+        P: TECurveConfig<BaseField = F>,
     {
         // Prepare ciphertext
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let data: Vec<F> = (0..5 * STATE_SIZE + 1).map(|i| F::from(i as u32)).collect();
         let ctxts = KeyPair::<P>::generate(rng)
             .enc_key_ref()

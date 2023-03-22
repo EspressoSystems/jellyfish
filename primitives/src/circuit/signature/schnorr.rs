@@ -13,7 +13,10 @@ use crate::{
     signatures::schnorr::{Signature, VerKey},
     utils::{challenge_bit_len, field_bit_len},
 };
-use ark_ec::{twisted_edwards_extended::GroupAffine, AffineCurve, TEModelParameters as Parameters};
+use ark_ec::{
+    twisted_edwards::{Affine, TECurveConfig as Config},
+    AffineRepr,
+};
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
@@ -43,7 +46,7 @@ pub struct SignatureVar {
 pub trait SignatureGadget<F, P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Signature verification circuit
     /// * `vk` - signature verification key variable.
@@ -90,7 +93,7 @@ where
 impl<F, P> SignatureGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn verify_signature(
         &mut self,
@@ -138,7 +141,7 @@ where
     ) -> Result<(PointVariable, PointVariable), CircuitError> {
         let c_bits_le =
             <Self as SignatureHelperGadget<F, P>>::challenge_bits(self, vk, &sig.R, msg)?;
-        let base = GroupAffine::<P>::prime_subgroup_generator();
+        let base = Affine::<P>::generator();
         let x = self.fixed_base_scalar_mul(sig.s, &base)?;
         let z = self.variable_base_binary_scalar_mul::<P>(&c_bits_le, &vk.0)?;
         let y = self.ecc_add::<P>(&sig.R, &z)?;
@@ -149,7 +152,7 @@ where
 trait SignatureHelperGadget<F, P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     // Return signature hash challenge in little-endian binary form.
     fn challenge_bits(
@@ -163,7 +166,7 @@ where
 impl<F, P> SignatureHelperGadget<F, P> for PlonkCircuit<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn challenge_bits(
         &mut self,
@@ -196,10 +199,10 @@ where
 mod tests {
     use super::*;
     use crate::signatures::schnorr::{KeyPair, Signature, VerKey};
-    use ark_ed_on_bls12_377::EdwardsParameters as Param377;
-    use ark_ed_on_bls12_381::EdwardsParameters as Param381;
-    use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
-    use ark_ed_on_bn254::EdwardsParameters as Param254;
+    use ark_ed_on_bls12_377::EdwardsConfig as Param377;
+    use ark_ed_on_bls12_381::EdwardsConfig as Param381;
+    use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;
+    use ark_ed_on_bn254::EdwardsConfig as Param254;
     use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
     #[test]
@@ -213,9 +216,9 @@ mod tests {
     fn test_dsa_circuit_helper<F, P>() -> Result<(), CircuitError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
         let keypair = KeyPair::<P>::generate(&mut rng);
         let vk = keypair.ver_key_ref();
         let vk_bad: VerKey<P> = KeyPair::<P>::generate(&mut rng).ver_key_ref().clone();
@@ -277,7 +280,7 @@ mod tests {
     ) -> Result<PlonkCircuit<F>, CircuitError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let vk_var = circuit.create_signature_vk_variable(vk)?;
@@ -297,7 +300,7 @@ mod tests {
     ) -> Result<(PlonkCircuit<F>, Variable), CircuitError>
     where
         F: RescueParameter,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
         let vk_var = circuit.create_signature_vk_variable(vk)?;

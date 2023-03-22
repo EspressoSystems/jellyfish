@@ -6,10 +6,10 @@
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
 use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-use ark_ec::{msm::FixedBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
 use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     collections::LinkedList,
     end_timer, format,
@@ -24,23 +24,23 @@ use core::iter::FromIterator;
 
 /// Evaluations over {0,1}^n for G1 or G2
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct Evaluations<C: AffineCurve> {
+pub struct Evaluations<C: AffineRepr> {
     /// The evaluations.
     pub evals: Vec<C>,
 }
 
 /// Universal Parameter
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct MultilinearUniversalParams<E: PairingEngine> {
+pub struct MultilinearUniversalParams<E: Pairing> {
     /// prover parameters
     pub prover_param: MultilinearProverParam<E>,
     /// h^randomness: h^t1, h^t2, ..., **h^{t_nv}**
     pub h_mask: Vec<E::G2Affine>,
 }
 
-/// Prover Parameters
+/// Prover Config
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct MultilinearProverParam<E: PairingEngine> {
+pub struct MultilinearProverParam<E: Pairing> {
     /// number of variables
     pub num_vars: usize,
     /// `pp_{0}`, `pp_{1}`, ...,pp_{nu_vars} defined
@@ -53,9 +53,9 @@ pub struct MultilinearProverParam<E: PairingEngine> {
     pub h: E::G2Affine,
 }
 
-/// Verifier Parameters
+/// Verifier Config
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
-pub struct MultilinearVerifierParam<E: PairingEngine> {
+pub struct MultilinearVerifierParam<E: Pairing> {
     /// number of variables
     pub num_vars: usize,
     /// generator of G1
@@ -66,7 +66,7 @@ pub struct MultilinearVerifierParam<E: PairingEngine> {
     pub h_mask: Vec<E::G2Affine>,
 }
 
-impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalParams<E> {
+impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> {
     type ProverParam = MultilinearProverParam<E>;
     type VerifierParam = MultilinearVerifierParam<E>;
 
@@ -140,15 +140,15 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
 
         let pp_generation_timer = start_timer!(|| "Prover Param generation");
 
-        let g = E::G1Projective::rand(rng);
-        let h = E::G2Projective::rand(rng);
+        let g = E::G1::rand(rng);
+        let h = E::G2::rand(rng);
 
         let mut powers_of_g = Vec::new();
 
-        let t: Vec<_> = (0..num_vars).map(|_| E::Fr::rand(rng)).collect();
-        let scalar_bits = E::Fr::size_in_bits();
+        let t: Vec<_> = (0..num_vars).map(|_| E::ScalarField::rand(rng)).collect();
+        let scalar_bits = E::ScalarField::MODULUS_BIT_SIZE as usize;
 
-        let mut eq: LinkedList<DenseMultilinearExtension<E::Fr>> =
+        let mut eq: LinkedList<DenseMultilinearExtension<E::ScalarField>> =
             LinkedList::from_iter(eq_extension(&t).into_iter());
         let mut eq_arr = LinkedList::new();
         let mut base = eq.pop_back().unwrap().evaluations;
@@ -173,12 +173,15 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
             pp_powers.extend(pp_k_powers);
             total_scalars += 1 << (num_vars - i);
         }
-        let window_size = FixedBaseMSM::get_mul_window_size(total_scalars);
-        let g_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, g);
+        let window_size = FixedBase::get_mul_window_size(total_scalars);
+        let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
 
-        let pp_g = E::G1Projective::batch_normalization_into_affine(
-            &FixedBaseMSM::multi_scalar_mul(scalar_bits, window_size, &g_table, &pp_powers),
-        );
+        let pp_g = E::G1::normalize_batch(&FixedBase::msm(
+            scalar_bits,
+            window_size,
+            &g_table,
+            &pp_powers,
+        ));
 
         let mut start = 0;
         for i in 0..num_vars {
@@ -187,8 +190,8 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
                 evals: pp_g[start..(start + size)].to_vec(),
             };
             // check correctness of pp_k_g
-            let t_eval_0 = eq_eval(&vec![E::Fr::zero(); num_vars - i], &t[i..num_vars])?;
-            assert_eq!(g.mul(t_eval_0.into_repr()).into_affine(), pp_k_g.evals[0]);
+            let t_eval_0 = eq_eval(&vec![E::ScalarField::zero(); num_vars - i], &t[i..num_vars])?;
+            assert_eq!((g * t_eval_0).into_affine(), pp_k_g.evals[0]);
 
             powers_of_g.push(pp_k_g);
             start += size;
@@ -209,14 +212,9 @@ impl<E: PairingEngine> StructuredReferenceString<E> for MultilinearUniversalPara
 
         let vp_generation_timer = start_timer!(|| "VP generation");
         let h_mask = {
-            let window_size = FixedBaseMSM::get_mul_window_size(num_vars);
-            let h_table = FixedBaseMSM::get_window_table(scalar_bits, window_size, h);
-            E::G2Projective::batch_normalization_into_affine(&FixedBaseMSM::multi_scalar_mul(
-                scalar_bits,
-                window_size,
-                &h_table,
-                &t,
-            ))
+            let window_size = FixedBase::get_mul_window_size(num_vars);
+            let h_table = FixedBase::get_window_table(scalar_bits, window_size, h);
+            E::G2::normalize_batch(&FixedBase::msm(scalar_bits, window_size, &h_table, &t))
         };
         end_timer!(vp_generation_timer);
         end_timer!(total_timer);
@@ -268,7 +266,7 @@ fn eq_extension<F: PrimeField>(t: &[F]) -> Vec<DenseMultilinearExtension<F>> {
 mod tests {
     use super::*;
     use ark_bls12_381::Bls12_381;
-    use ark_std::test_rng;
+    use jf_utils::test_rng;
     type E = Bls12_381;
 
     #[test]

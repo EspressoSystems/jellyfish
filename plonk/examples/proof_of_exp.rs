@@ -13,10 +13,11 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    twisted_edwards_extended::GroupAffine as TEAffine, AffineCurve, ModelParameters, PairingEngine,
-    ProjectiveCurve, TEModelParameters,
+    pairing::Pairing,
+    twisted_edwards::{Affine as TEAffine, TECurveConfig},
+    AffineRepr, CurveConfig, CurveGroup,
 };
-use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsParameters, Fr};
+use ark_ed_on_bls12_381::{EdwardsAffine, EdwardsConfig, Fr};
 use ark_ff::PrimeField;
 use ark_std::{rand::SeedableRng, UniformRand};
 use jf_plonk::{
@@ -34,8 +35,8 @@ fn main() -> Result<(), PlonkError> {
     // set up the inputs and parameters
     let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
     let x = Fr::rand(&mut rng);
-    let G = EdwardsAffine::prime_subgroup_generator();
-    let X = G.mul(x).into_affine();
+    let G = EdwardsAffine::generator();
+    let X = (G * x).into_affine();
 
     // Our first step is to build a circuit for the following statements.
     // - secret input `x`;
@@ -43,7 +44,7 @@ fn main() -> Result<(), PlonkError> {
     // - public group element `X := xG`
     // This circuit does not need to have real inputs.
     // We can simply use a dummy data set.
-    let circuit = proof_of_exponent_circuit::<EdwardsParameters, Bls12_381>(x, X)?;
+    let circuit = proof_of_exponent_circuit::<EdwardsConfig, Bls12_381>(x, X)?;
 
     // Knowing the circuit size, we are able to simulate the universal
     // setup and obtain the structured reference string (SRS).
@@ -94,13 +95,13 @@ fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
     X: TEAffine<EmbedCurve>,
 ) -> Result<PlonkCircuit<EmbedCurve::BaseField>, PlonkError>
 where
-    EmbedCurve: TEModelParameters,
-    <EmbedCurve as ModelParameters>::BaseField: PrimeField,
-    PairingCurve: PairingEngine,
+    EmbedCurve: TECurveConfig,
+    <EmbedCurve as CurveConfig>::BaseField: PrimeField,
+    PairingCurve: Pairing,
 {
     // Let's check that the inputs are indeed correct before we build a circuit.
-    let G = TEAffine::<EmbedCurve>::prime_subgroup_generator();
-    assert_eq!(X, G.mul(x), "the inputs are incorrect: X != xG");
+    let G = TEAffine::<EmbedCurve>::generator();
+    assert_eq!(X, G * x, "the inputs are incorrect: X != xG");
 
     // Step 1:
     // We instantiate a turbo plonk circuit.

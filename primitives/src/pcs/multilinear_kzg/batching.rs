@@ -17,9 +17,9 @@ use crate::pcs::{
     univariate_kzg::UnivariateKzgPCS,
     PCSError, PolynomialCommitmentScheme,
 };
-use ark_ec::PairingEngine;
+use ark_ec::pairing::Pairing;
 use ark_poly::{DenseMultilinearExtension, EvaluationDomain, MultilinearExtension, Polynomial};
-use ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
+use ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 /// Input
 /// - the prover parameters for univariate KZG,
@@ -54,13 +54,13 @@ use ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec
 /// 9. output `w(p)`
 ///
 /// TODO: Migrate the batching algorithm in HyperPlonk repo
-pub(super) fn batch_open_internal<E: PairingEngine>(
+pub(super) fn batch_open_internal<E: Pairing>(
     uni_prover_param: &UnivariateProverParam<E::G1Affine>,
     ml_prover_param: &MultilinearProverParam<E>,
-    polynomials: &[Rc<DenseMultilinearExtension<E::Fr>>],
+    polynomials: &[Arc<DenseMultilinearExtension<E::ScalarField>>],
     batch_commitment: &Commitment<E>,
-    points: &[Vec<E::Fr>],
-) -> Result<(MultilinearKzgBatchProof<E>, Vec<E::Fr>), PCSError> {
+    points: &[Vec<E::ScalarField>],
+) -> Result<(MultilinearKzgBatchProof<E>, Vec<E::ScalarField>), PCSError> {
     let open_timer = start_timer!(|| "batch open");
 
     // ===================================
@@ -93,7 +93,7 @@ pub(super) fn batch_open_internal<E: PairingEngine>(
         }
     }
 
-    let domain = get_uni_domain::<E::Fr>(points_len)?;
+    let domain = get_uni_domain::<E::ScalarField>(points_len)?;
 
     // 1. build `l(points)` which is a list of univariate polynomials that goes
     // through the points
@@ -127,7 +127,7 @@ pub(super) fn batch_open_internal<E: PairingEngine>(
         q_x_evals.push(q_x_eval);
 
         // sanity check
-        let point: Vec<E::Fr> = uni_polys
+        let point: Vec<E::ScalarField> = uni_polys
             .iter()
             .rev()
             .map(|poly| poly.evaluate(&domain.element(i)))
@@ -146,7 +146,7 @@ pub(super) fn batch_open_internal<E: PairingEngine>(
     q_x_evals.push(q_r_value);
 
     // 7. get a point `p := l(r)`
-    let point: Vec<E::Fr> = uni_polys
+    let point: Vec<E::ScalarField> = uni_polys
         .iter()
         .rev()
         .map(|poly| poly.evaluate(&r))
@@ -187,12 +187,12 @@ pub(super) fn batch_open_internal<E: PairingEngine>(
 /// polynomials that goes through the points
 /// 5. get a point `p := l(r)`
 /// 6. verifies `p` is valid against multilinear KZG proof
-pub(super) fn batch_verify_internal<E: PairingEngine>(
+pub(super) fn batch_verify_internal<E: Pairing>(
     uni_verifier_param: &UnivariateVerifierParam<E>,
     ml_verifier_param: &MultilinearVerifierParam<E>,
     batch_commitment: &Commitment<E>,
-    points: &[Vec<E::Fr>],
-    values: &[E::Fr],
+    points: &[Vec<E::ScalarField>],
+    values: &[E::ScalarField],
     batch_proof: &MultilinearKzgBatchProof<E>,
 ) -> Result<bool, PCSError> {
     let verify_timer = start_timer!(|| "batch verify");
@@ -229,7 +229,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
         }
     }
 
-    let domain = get_uni_domain::<E::Fr>(points_len)?;
+    let domain = get_uni_domain::<E::ScalarField>(points_len)?;
 
     // 1. push w, points and q_com into transcript
     let mut transcript = IOPTranscript::new(b"ml kzg");
@@ -276,7 +276,7 @@ pub(super) fn batch_verify_internal<E: PairingEngine>(
     let uni_polys = build_l(num_var, points, &domain)?;
 
     // 5. get a point `p := l(r)`
-    let point: Vec<E::Fr> = uni_polys.iter().rev().map(|x| x.evaluate(&r)).collect();
+    let point: Vec<E::ScalarField> = uni_polys.iter().rev().map(|x| x.evaluate(&r)).collect();
 
     // 6. verifies `p` is valid against multilinear KZG proof
     let res = verify_internal(
@@ -309,15 +309,16 @@ mod tests {
         StructuredReferenceString,
     };
     use ark_bls12_381::Bls12_381 as E;
-    use ark_ec::PairingEngine;
+    use ark_ec::pairing::Pairing;
     use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    use ark_std::{log2, rand::RngCore, test_rng, vec::Vec, UniformRand};
-    type Fr = <E as PairingEngine>::Fr;
+    use ark_std::{log2, rand::RngCore, vec::Vec, UniformRand};
+    use jf_utils::test_rng;
+    type Fr = <E as Pairing>::ScalarField;
 
     fn test_batch_commit_helper<R: RngCore + CryptoRng>(
         uni_params: &UnivariateUniversalParams<E>,
         ml_params: &MultilinearUniversalParams<E>,
-        polys: &[Rc<DenseMultilinearExtension<Fr>>],
+        polys: &[Arc<DenseMultilinearExtension<Fr>>],
         rng: &mut R,
     ) -> Result<(), PCSError> {
         let merged_nv = get_batched_nv(polys[0].num_vars(), polys.len());
@@ -359,7 +360,7 @@ mod tests {
         assert!(!batch_verify_internal(
             &uni_vk,
             &ml_vk,
-            &Commitment(<E as PairingEngine>::G1Affine::default()),
+            &Commitment(<E as Pairing>::G1Affine::default()),
             &points,
             &evaluations,
             &batch_proof,
@@ -379,7 +380,7 @@ mod tests {
             &evaluations,
             &MultilinearKzgBatchProof {
                 proof: MultilinearKzgProof { proofs: Vec::new() },
-                q_x_commit: Commitment(<E as PairingEngine>::G1Affine::default()),
+                q_x_commit: Commitment(<E as Pairing>::G1Affine::default()),
                 q_x_opens: vec![],
             },
         )
@@ -399,7 +400,7 @@ mod tests {
 
         // bad q(x) commit
         let mut wrong_proof = batch_proof;
-        wrong_proof.q_x_commit = Commitment(<E as PairingEngine>::G1Affine::default());
+        wrong_proof.q_x_commit = Commitment(<E as Pairing>::G1Affine::default());
         assert!(!batch_verify_internal(
             &uni_vk,
             &ml_vk,
@@ -421,13 +422,13 @@ mod tests {
 
         // normal polynomials
         let polys1: Vec<_> = (0..5)
-            .map(|_| Rc::new(DenseMultilinearExtension::rand(4, &mut rng)))
+            .map(|_| Arc::new(DenseMultilinearExtension::rand(4, &mut rng)))
             .collect();
         test_batch_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
 
         // single-variate polynomials
         let polys1: Vec<_> = (0..5)
-            .map(|_| Rc::new(DenseMultilinearExtension::rand(1, &mut rng)))
+            .map(|_| Arc::new(DenseMultilinearExtension::rand(1, &mut rng)))
             .collect();
         test_batch_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
 

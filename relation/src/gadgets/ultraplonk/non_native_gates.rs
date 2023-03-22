@@ -9,7 +9,7 @@
 
 use super::mod_arith::{FpElem, FpElemVar};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit};
-use ark_ff::{BigInteger, FpParameters, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, vec::Vec};
 
 impl<F: PrimeField> PlonkCircuit<F> {
@@ -31,11 +31,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.check_var_bound(x_to_11.components().0)?;
         self.check_var_bound(x_to_11.components().1)?;
 
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(CircuitError::NotSupported(format!(
                 "Target field size ({}) is greater than evaluation field size (P{})",
-                T::size_in_bits(),
-                F::size_in_bits()
+                T::MODULUS_BIT_SIZE,
+                F::MODULUS_BIT_SIZE
             )));
         }
 
@@ -58,18 +58,19 @@ impl<F: PrimeField> PlonkCircuit<F> {
         x: &FpElemVar<F>,
     ) -> Result<FpElemVar<F>, CircuitError> {
         // // checks already done by the caller
-        // if T::size_in_bits() >= F::size_in_bits() {
+        // if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
         //     return Err(CircuitError::NotSupported(format!(
         //         "Target field size ({}) is greater than evaluation field size (P{})",
-        //         T::size_in_bits(),
-        //         F::size_in_bits()
+        //         T::MODULUS_BIT_SIZE,
+        //         F::MODULUS_BIT_SIZE
         //     ))
         //     .into());
         // }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::size_in_bits() < F::size_in_bits()
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE <
+        // F::MODULUS_BIT_SIZE
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
         let m = x.param_m();
@@ -97,17 +98,18 @@ impl<F: PrimeField> PlonkCircuit<F> {
         x: &FpElemVar<F>,
     ) -> Result<FpElemVar<F>, CircuitError> {
         // checks already done by the caller
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(CircuitError::NotSupported(format!(
                 "Target field size ({}) is greater than evaluation field size (P{})",
-                T::size_in_bits(),
-                F::size_in_bits()
+                T::MODULUS_BIT_SIZE,
+                F::MODULUS_BIT_SIZE
             )));
         }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::size_in_bits() < F::size_in_bits()
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE <
+        // F::MODULUS_BIT_SIZE
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
         let m = x.param_m();
@@ -138,11 +140,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let two_power_m = Some(c.two_power_m());
 
         // check the correctness of parameters
-        if T::size_in_bits() >= F::size_in_bits() {
+        if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
             return Err(CircuitError::NotSupported(format!(
                 "Target field size ({}) is greater than evaluation field size ({})",
-                T::size_in_bits(),
-                F::size_in_bits()
+                T::MODULUS_BIT_SIZE,
+                F::MODULUS_BIT_SIZE
             )));
         }
 
@@ -173,8 +175,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         // convert T::MODULUS into an element in F
-        // Guaranteed without mod reduction since T::size_in_bits() < F::size_in_bits()
-        let t_modulus = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        // Guaranteed without mod reduction since T::MODULUS_BIT_SIZE <
+        // F::MODULUS_BIT_SIZE
+        let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
 
         // convert t_modulus into FpElem
         let p = FpElem::new(&t_modulus, m, two_power_m)?;
@@ -197,7 +200,7 @@ mod test {
     use crate::{Circuit, Variable};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
-    use ark_std::test_rng;
+    use jf_utils::test_rng;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 8;
 
@@ -214,10 +217,11 @@ mod test {
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
         let y_t = x_t.pow([11]);
-        let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
-        let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
+        let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
+        let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -258,10 +262,11 @@ mod test {
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
         let y_t = x_t.pow([5]);
-        let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
-        let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
+        let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
+        let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -302,10 +307,11 @@ mod test {
         let mut rng = test_rng();
         let x_t = T::rand(&mut rng);
         let y_t = x_t.pow([11]);
-        let x_p = F::from_le_bytes_mod_order(x_t.into_repr().to_bytes_le().as_ref());
-        let y_p = F::from_le_bytes_mod_order(y_t.into_repr().to_bytes_le().as_ref());
+        let x_p = F::from_le_bytes_mod_order(x_t.into_bigint().to_bytes_le().as_ref());
+        let y_p = F::from_le_bytes_mod_order(y_t.into_bigint().to_bytes_le().as_ref());
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let x_var = circuit.create_variable(x_p)?;
         let y_var = circuit.create_variable(y_p)?;
@@ -350,7 +356,8 @@ mod test {
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
-        let m = (T::size_in_bits() / 2 / RANGE_BIT_LEN_FOR_TEST + 1) * RANGE_BIT_LEN_FOR_TEST;
+        let m = (T::MODULUS_BIT_SIZE as usize / 2 / RANGE_BIT_LEN_FOR_TEST + 1)
+            * RANGE_BIT_LEN_FOR_TEST;
 
         let mut rng = test_rng();
 
@@ -361,17 +368,17 @@ mod test {
         for (&xi, &yi) in x_t.iter().zip(y_t.iter()) {
             res_t += xi * yi;
         }
-        let res_p = F::from_le_bytes_mod_order(res_t.into_repr().to_bytes_le().as_ref());
+        let res_p = F::from_le_bytes_mod_order(res_t.into_bigint().to_bytes_le().as_ref());
 
         let x_p: Vec<F> = x_t
             .iter()
-            .map(|x| F::from_le_bytes_mod_order(x.into_repr().to_bytes_le().as_ref()))
+            .map(|x| F::from_le_bytes_mod_order(x.into_bigint().to_bytes_le().as_ref()))
             .collect();
         let y_p: Vec<F> = y_t
             .iter()
-            .map(|y| F::from_le_bytes_mod_order(y.into_repr().to_bytes_le().as_ref()))
+            .map(|y| F::from_le_bytes_mod_order(y.into_bigint().to_bytes_le().as_ref()))
             .collect();
-        let c_p = F::from_le_bytes_mod_order(c_t.into_repr().to_bytes_le().as_ref());
+        let c_p = F::from_le_bytes_mod_order(c_t.into_bigint().to_bytes_le().as_ref());
 
         let x_vars: Vec<Variable> = x_p
             .iter()

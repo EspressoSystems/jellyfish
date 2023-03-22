@@ -47,7 +47,7 @@ fn gen_circuit_for_bench<F: PrimeField>(
 
 macro_rules! plonk_prove_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr) => {
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
         let max_degree = $num_gates + 2;
@@ -86,7 +86,7 @@ fn bench_prove() {
 
 macro_rules! plonk_verify_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_gates:expr) => {
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
         let max_degree = $num_gates + 2;
@@ -128,7 +128,7 @@ fn bench_verify() {
 
 macro_rules! plonk_batch_verify_bench {
     ($bench_curve:ty, $bench_field:ty, $bench_plonk_type:expr, $num_proofs:expr) => {
-        let rng = &mut ark_std::test_rng();
+        let rng = &mut jf_utils::test_rng();
         let cs = gen_circuit_for_bench::<$bench_field>(1024, $bench_plonk_type).unwrap();
 
         let max_degree = 1026;

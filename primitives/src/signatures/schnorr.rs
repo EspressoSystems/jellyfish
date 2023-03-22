@@ -16,9 +16,8 @@ use crate::{
     utils::curve_cofactor,
 };
 use ark_ec::{
-    group::Group,
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ModelParameters, ProjectiveCurve, TEModelParameters as Parameters,
+    twisted_edwards::{Affine, Projective, TECurveConfig as Config},
+    AffineRepr, CurveConfig, CurveGroup, Group,
 };
 use ark_ff::PrimeField;
 use ark_serialize::*;
@@ -28,8 +27,8 @@ use ark_std::{
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec,
+    vec::Vec,
 };
-use core::convert::TryInto;
 use espresso_systems_common::jellyfish::tag;
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;
@@ -43,7 +42,7 @@ pub struct SchnorrSignatureScheme<P> {
 impl<F, P> SignatureScheme for SchnorrSignatureScheme<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     const CS_ID: &'static str = CS_ID_SCHNORR;
 
@@ -132,35 +131,30 @@ impl<F: PrimeField> SignKey<F> {
 #[tagged(tag::SCHNORR_VER_KEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Default(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Default(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Clone(bound = "P: Config")
 )]
-pub struct VerKey<P>(pub(crate) GroupProjective<P>)
+pub struct VerKey<P>(pub(crate) Projective<P>)
 where
-    P: Parameters;
+    P: Config;
 
-impl<P: Parameters> VerKey<P> {
+impl<P: Config> VerKey<P> {
     /// Return a randomized verification key.
     pub fn randomize_with<F>(&self, randomizer: &F) -> Self
     where
         F: PrimeField,
-        P: Parameters<ScalarField = F>,
+        P: Config<ScalarField = F>,
     {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
-        Self(
-            Group::mul(
-                &GroupProjective::<P>::prime_subgroup_generator(),
-                randomizer,
-            ) + self.0,
-        )
+        Self(Projective::<P>::generator() * randomizer + self.0)
     }
 }
 
 impl<P> Hash for VerKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.0.into_affine(), state)
@@ -169,25 +163,25 @@ where
 
 impl<P> PartialEq for VerKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0.into_affine().eq(&other.0.into_affine())
     }
 }
 
-impl<P> From<GroupAffine<P>> for VerKey<P>
+impl<P> From<Affine<P>> for VerKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
-    fn from(point: GroupAffine<P>) -> Self {
-        VerKey(point.into_projective())
+    fn from(point: Affine<P>) -> Self {
+        VerKey(point.into_group())
     }
 }
 
-impl<P: Parameters> VerKey<P> {
+impl<P: Config> VerKey<P> {
     /// Convert the verification key into the affine form.
-    pub fn to_affine(&self) -> GroupAffine<P> {
+    pub fn to_affine(&self) -> Affine<P> {
         self.0.into_affine()
     }
 }
@@ -201,14 +195,14 @@ impl<P: Parameters> VerKey<P> {
 #[tagged(tag::SCHNORR_KEY_PAIR)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Default(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Default(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config")
 )]
 pub struct KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     sk: SignKey<P::ScalarField>,
     vk: VerKey<P>,
@@ -222,23 +216,23 @@ where
 #[tagged(tag::SCHNORR_SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Default(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Default(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Clone(bound = "P: Config")
 )]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) s: P::ScalarField,
-    pub(crate) R: GroupProjective<P>,
+    pub(crate) R: Projective<P>,
 }
 
 impl<P> Hash for Signature<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.s, state);
@@ -248,7 +242,7 @@ where
 
 impl<P> PartialEq for Signature<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn eq(&self, other: &Self) -> bool {
         self.s == other.s && self.R.into_affine() == other.R.into_affine()
@@ -261,7 +255,7 @@ where
 impl<F, P> KeyPair<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Key-pair generation algorithm
     pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
@@ -302,7 +296,7 @@ where
 
         let r =
             fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
-        let R = Group::mul(&GroupProjective::<P>::prime_subgroup_generator(), &r);
+        let R = Projective::<P>::generator() * r;
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
@@ -311,7 +305,7 @@ where
 
     /// Randomize the key pair with the `randomizer`, return the randomized key
     /// pair.
-    pub fn randomize_with(&self, randomizer: &<P as ModelParameters>::ScalarField) -> Self {
+    pub fn randomize_with(&self, randomizer: &<P as CurveConfig>::ScalarField) -> Self {
         let randomized_sk = self.sk.randomize_with(randomizer);
         let randomized_vk = self.vk.randomize_with(randomizer);
         Self {
@@ -329,24 +323,21 @@ impl<F: PrimeField> SignKey<F> {
 
 impl<P, F> From<&SignKey<F>> for VerKey<P>
 where
-    P: Parameters<ScalarField = F>,
+    P: Config<ScalarField = F>,
     F: PrimeField,
 {
     fn from(sk: &SignKey<F>) -> Self {
-        VerKey(Group::mul(
-            &GroupProjective::<P>::prime_subgroup_generator(),
-            &sk.0,
-        ))
+        VerKey(Projective::<P>::generator() * sk.0)
     }
 }
 
 impl<F, P> VerKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Get the internal of verifying key, namely a curve Point
-    pub fn internal(&self) -> &GroupProjective<P> {
+    pub fn internal(&self) -> &Projective<P> {
         &self.0
     }
 
@@ -359,9 +350,7 @@ where
         csid: B,
     ) -> Result<(), PrimitivesError> {
         // Reject if public key is of small order
-        if Group::mul(&self.0, &P::ScalarField::from(curve_cofactor::<P>()))
-            == GroupProjective::<P>::default()
-        {
+        if (self.0 * P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
             return Err(PrimitivesError::VerificationError(
                 "public key is not valid: not in the correct subgroup".to_string(),
             ));
@@ -370,9 +359,9 @@ where
         // restrictive cofactorless verification
         let c = self.challenge(&sig.R, msg, csid);
 
-        let base = GroupProjective::<P>::prime_subgroup_generator();
-        let x = Group::mul(&base, &sig.s);
-        let y = sig.R + Group::mul(&self.0, &c);
+        let base = Projective::<P>::generator();
+        let x = base * sig.s;
+        let y = sig.R + self.0 * c;
 
         if y == x {
             Ok(())
@@ -387,17 +376,12 @@ where
 impl<F, P> VerKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     // TODO: this function should be generic w.r.t. hash functions
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
-    fn challenge<B: AsRef<[u8]>>(
-        &self,
-        R: &GroupProjective<P>,
-        msg: &[F],
-        csid: B,
-    ) -> P::ScalarField {
+    fn challenge<B: AsRef<[u8]>>(&self, R: &Projective<P>, msg: &[F], csid: B) -> P::ScalarField {
         // is the domain separator always an Fr? If so how about using Fr as domain
         // separator rather than bytes?
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
@@ -428,21 +412,21 @@ mod tests {
         constants::CS_ID_SCHNORR,
         signatures::tests::{failed_verification, sign_and_verify},
     };
-    use ark_ed_on_bls12_377::EdwardsParameters as Param377;
-    use ark_ed_on_bls12_381::EdwardsParameters as Param381;
-    use ark_ed_on_bls12_381_bandersnatch::EdwardsParameters as Param381b;
-    use ark_ed_on_bn254::EdwardsParameters as Param254;
+    use ark_ed_on_bls12_377::EdwardsConfig as Param377;
+    use ark_ed_on_bls12_381::EdwardsConfig as Param381;
+    use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;
+    use ark_ed_on_bn254::EdwardsConfig as Param254;
     use ark_std::UniformRand;
 
     macro_rules! test_signature {
         ($curve_param:tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
 
             let keypair1 = KeyPair::generate(&mut rng);
             // test randomized key pair
-            let randomizer2 = <$curve_param as ModelParameters>::ScalarField::rand(&mut rng);
+            let randomizer2 = <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
             let keypair2 = keypair1.randomize_with(&randomizer2);
-            let randomizer3 = <$curve_param as ModelParameters>::ScalarField::rand(&mut rng);
+            let randomizer3 = <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
             let keypair3 = keypair2.randomize_with(&randomizer3);
             let keypairs = vec![keypair1, keypair2, keypair3];
 
@@ -459,16 +443,16 @@ mod tests {
                     // wrong public key
                     assert!(pk_bad.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
                     // wrong message
-                    msg.push(<$curve_param as ModelParameters>::BaseField::from(i as u64));
+                    msg.push(<$curve_param as CurveConfig>::BaseField::from(i as u64));
                     assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
                 }
             }
 
-            let message = <$curve_param as ModelParameters>::BaseField::rand(&mut rng);
+            let message = <$curve_param as CurveConfig>::BaseField::rand(&mut rng);
             sign_and_verify::<SchnorrSignatureScheme<$curve_param>>(&[message]);
             failed_verification::<SchnorrSignatureScheme<$curve_param>>(
                 &[message],
-                &[<$curve_param as ModelParameters>::BaseField::rand(&mut rng)],
+                &[<$curve_param as CurveConfig>::BaseField::rand(&mut rng)],
             );
         };
     }
@@ -484,20 +468,20 @@ mod tests {
     mod serde {
         use super::super::{KeyPair, SignKey, Signature, VerKey};
         use crate::constants::CS_ID_SCHNORR;
-        use ark_ec::twisted_edwards_extended::GroupProjective;
-        use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fq as FqEd377, Fr as FrEd377};
-        use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fq as FqEd381, Fr as FrEd381};
+        use ark_ec::twisted_edwards::Projective;
+        use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377, Fr as FrEd377};
+        use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as FqEd381, Fr as FrEd381};
         use ark_ed_on_bls12_381_bandersnatch::{
-            EdwardsParameters as Param381b, Fq as FqEd381b, Fr as FrEd381b,
+            EdwardsConfig as Param381b, Fq as FqEd381b, Fr as FrEd381b,
         };
-        use ark_ed_on_bn254::{EdwardsParameters as Param254, Fq as FqEd254, Fr as FrEd254};
+        use ark_ed_on_bn254::{EdwardsConfig as Param254, Fq as FqEd254, Fr as FrEd254};
         use ark_ff::Zero;
         use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
         use ark_std::{vec, vec::Vec, UniformRand};
 
         macro_rules! test_ver_key {
             ($curve_param:tt, $scalar_field:tt) => {
-                let mut rng = ark_std::test_rng();
+                let mut rng = jf_utils::test_rng();
 
                 // happy path
                 let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
@@ -506,7 +490,7 @@ mod tests {
                 assert!(&vk.verify(&[], &sig, CS_ID_SCHNORR).is_ok());
 
                 // Bad path
-                let bad_ver_key = VerKey(GroupProjective::<$curve_param>::zero());
+                let bad_ver_key = VerKey(Projective::<$curve_param>::zero());
                 let bad_keypair = KeyPair {
                     sk: SignKey($scalar_field::zero()),
                     vk: bad_ver_key.clone(),
@@ -519,8 +503,9 @@ mod tests {
 
                 // test serialization
                 let mut vk_bytes = vec![];
-                vk.serialize(&mut vk_bytes).unwrap();
-                let vk_de: VerKey<$curve_param> = VerKey::deserialize(vk_bytes.as_slice()).unwrap();
+                vk.serialize_compressed(&mut vk_bytes).unwrap();
+                let vk_de: VerKey<$curve_param> =
+                    VerKey::deserialize_compressed(vk_bytes.as_slice()).unwrap();
                 assert_eq!(*vk, vk_de, "normal ser/de should pass");
             };
         }
@@ -534,7 +519,7 @@ mod tests {
 
         macro_rules! test_signature {
             ($curve_param:tt, $base_field:tt) => {
-                let mut rng = ark_std::test_rng();
+                let mut rng = jf_utils::test_rng();
                 let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
 
                 // Happy path
@@ -543,19 +528,22 @@ mod tests {
                 assert!(keypair.vk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
                 assert!(keypair.vk.verify(&[], &sig, CS_ID_SCHNORR).is_err());
                 let mut bytes_sig = vec![];
-                sig.serialize(&mut bytes_sig).unwrap();
+                sig.serialize_compressed(&mut bytes_sig).unwrap();
                 let sig_de: Signature<$curve_param> =
-                    Signature::deserialize(bytes_sig.as_slice()).unwrap();
+                    Signature::deserialize_compressed(bytes_sig.as_slice()).unwrap();
                 assert_eq!(sig, sig_de);
 
                 // Bad path 1: when s bytes overflow
                 let mut bad_bytes_sig = bytes_sig.clone();
                 let mut q_minus_one_bytes = vec![];
                 (-$base_field::from(1u32))
-                    .serialize(&mut q_minus_one_bytes)
+                    .serialize_compressed(&mut q_minus_one_bytes)
                     .unwrap();
                 bad_bytes_sig.splice(.., q_minus_one_bytes.iter().cloned());
-                assert!(Signature::<$curve_param>::deserialize(bad_bytes_sig.as_slice()).is_err());
+                assert!(Signature::<$curve_param>::deserialize_compressed(
+                    bad_bytes_sig.as_slice()
+                )
+                .is_err());
             };
         }
 
@@ -569,7 +557,7 @@ mod tests {
 
         macro_rules! test_serde {
             ($curve_param:tt, $scalar_field:tt, $base_field:tt) => {
-                let mut rng = ark_std::test_rng();
+                let mut rng = jf_utils::test_rng();
                 let keypair = KeyPair::generate(&mut rng);
                 let sk = SignKey::<$scalar_field>::generate(&mut rng);
                 let vk = keypair.ver_key();
@@ -577,24 +565,28 @@ mod tests {
                 let sig = keypair.sign(&msg, CS_ID_SCHNORR);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                keypair.serialize(&mut ser_bytes).unwrap();
-                let de: KeyPair<$curve_param> = KeyPair::deserialize(&ser_bytes[..]).unwrap();
+                keypair.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: KeyPair<$curve_param> =
+                    KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(de.ver_key_ref(), keypair.ver_key_ref());
                 assert_eq!(de.ver_key_ref(), &VerKey::from(&de.sk));
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                sk.serialize(&mut ser_bytes).unwrap();
-                let de: SignKey<$scalar_field> = SignKey::deserialize(&ser_bytes[..]).unwrap();
+                sk.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: SignKey<$scalar_field> =
+                    SignKey::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                vk.serialize(&mut ser_bytes).unwrap();
-                let de: VerKey<$curve_param> = VerKey::deserialize(&ser_bytes[..]).unwrap();
+                vk.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: VerKey<$curve_param> =
+                    VerKey::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(de, vk);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
-                sig.serialize(&mut ser_bytes).unwrap();
-                let de: Signature<$curve_param> = Signature::deserialize(&ser_bytes[..]).unwrap();
+                sig.serialize_compressed(&mut ser_bytes).unwrap();
+                let de: Signature<$curve_param> =
+                    Signature::deserialize_compressed(&ser_bytes[..]).unwrap();
                 assert_eq!(de, sig);
             };
         }

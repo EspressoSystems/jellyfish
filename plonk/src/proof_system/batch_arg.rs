@@ -14,7 +14,10 @@ use crate::{
     },
     transcript::PlonkTranscript,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::One;
 use ark_std::{
     format,
@@ -29,40 +32,40 @@ use jf_relation::{gadgets::ecc::SWToTEConParam, Circuit, MergeableCircuitType, P
 use jf_utils::multi_pairing;
 
 /// A batching argument.
-pub struct BatchArgument<E: PairingEngine>(PhantomData<E>);
+pub struct BatchArgument<E: Pairing>(PhantomData<E>);
 
 /// A circuit instance that consists of the corresponding proving
 /// key/verification key/circuit.
 #[derive(Clone)]
-pub struct Instance<E: PairingEngine> {
+pub struct Instance<E: Pairing> {
     // TODO: considering giving instance an ID
     prove_key: ProvingKey<E>, // the verification key can be obtained inside the proving key.
-    circuit: PlonkCircuit<E::Fr>,
+    circuit: PlonkCircuit<E::ScalarField>,
     _circuit_type: MergeableCircuitType,
 }
 
-impl<E: PairingEngine> Instance<E> {
+impl<E: Pairing> Instance<E> {
     /// Get verification key by reference.
     pub fn verify_key_ref(&self) -> &VerifyingKey<E> {
         &self.prove_key.vk
     }
 
     /// Get mutable circuit by reference.
-    pub fn circuit_mut_ref(&mut self) -> &mut PlonkCircuit<E::Fr> {
+    pub fn circuit_mut_ref(&mut self) -> &mut PlonkCircuit<E::ScalarField> {
         &mut self.circuit
     }
 }
 
 impl<E, F, P> BatchArgument<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     /// Setup the circuit and the proving key for a (mergeable) instance.
     pub fn setup_instance(
         srs: &UniversalSrs<E>,
-        mut circuit: PlonkCircuit<E::Fr>,
+        mut circuit: PlonkCircuit<E::ScalarField>,
         circuit_type: MergeableCircuitType,
     ) -> Result<Instance<E>, PlonkError> {
         circuit.finalize_for_mergeable_circuit(circuit_type)?;
@@ -103,7 +106,7 @@ where
             .map(|(pred_a, pred_b)| pred_a.circuit.merge(&pred_b.circuit))
             .collect::<Result<Vec<_>, _>>()?;
         let pks_ref: Vec<&ProvingKey<E>> = pks.iter().collect();
-        let circuits_ref: Vec<&PlonkCircuit<E::Fr>> = circuits.iter().collect();
+        let circuits_ref: Vec<&PlonkCircuit<E::ScalarField>> = circuits.iter().collect();
 
         PlonkKzgSnark::batch_prove::<_, _, T>(prng, &circuits_ref, &pks_ref)
     }
@@ -114,10 +117,10 @@ where
         beta_g: &E::G1Affine,
         generator_g: &E::G1Affine,
         merged_vks: &[VerifyingKey<E>],
-        shared_public_input: &[E::Fr],
+        shared_public_input: &[E::ScalarField],
         batch_proof: &BatchProof<E>,
-        blinding_factor: E::Fr,
-    ) -> Result<(E::G1Projective, E::G1Projective), PlonkError>
+        blinding_factor: E::ScalarField,
+    ) -> Result<(E::G1, E::G1), PlonkError>
     where
         T: PlonkTranscript<F>,
     {
@@ -152,7 +155,7 @@ where
 
         // inner1 = [open_proof] + u * [shifted_open_proof] + blinding_factor * [1]1
         let mut scalars_and_bases = ScalarsAndBases::<E>::new();
-        scalars_and_bases.push(E::Fr::one(), pcs_info.opening_proof.0);
+        scalars_and_bases.push(E::ScalarField::one(), pcs_info.opening_proof.0);
         scalars_and_bases.push(pcs_info.u, pcs_info.shifted_opening_proof.0);
         scalars_and_bases.push(blinding_factor, *generator_g);
         let inner1 = scalars_and_bases.multi_scalar_mul();
@@ -176,7 +179,7 @@ where
 
 impl<E> BatchArgument<E>
 where
-    E: PairingEngine,
+    E: Pairing,
 {
     /// Aggregate verification keys
     pub fn aggregate_verify_keys(
@@ -198,23 +201,19 @@ where
     }
 
     /// Perform the final pairing to verify the proof.
-    pub fn decide(
-        open_key: &OpenKey<E>,
-        inner1: E::G1Projective,
-        inner2: E::G1Projective,
-    ) -> Result<bool, PlonkError> {
+    pub fn decide(open_key: &OpenKey<E>, inner1: E::G1, inner2: E::G1) -> Result<bool, PlonkError> {
         // check e(elem1, [beta]2) ?= e(elem2, [1]2)
-        let g1_elems: Vec<<E as PairingEngine>::G1Affine> = vec![inner1.into(), -inner2.into()];
+        let g1_elems: Vec<<E as Pairing>::G1Affine> = vec![inner1.into(), (-inner2).into()];
         let g2_elems = vec![open_key.beta_h, open_key.h];
-        Ok(multi_pairing::<E>(&g1_elems, &g2_elems) == E::Fqk::one())
+        Ok(multi_pairing::<E>(&g1_elems, &g2_elems).0 == E::TargetField::one())
     }
 }
 
-pub(crate) fn new_mergeable_circuit_for_test<E: PairingEngine>(
-    shared_public_input: E::Fr,
+pub(crate) fn new_mergeable_circuit_for_test<E: Pairing>(
+    shared_public_input: E::ScalarField,
     i: usize,
     circuit_type: MergeableCircuitType,
-) -> Result<PlonkCircuit<E::Fr>, PlonkError> {
+) -> Result<PlonkCircuit<E::ScalarField>, PlonkError> {
     let mut circuit = PlonkCircuit::new_turbo_plonk();
     let shared_pub_var = circuit.create_public_variable(shared_public_input)?;
     let mut var = shared_pub_var;
@@ -239,12 +238,12 @@ pub fn build_batch_proof_and_vks_for_test<E, F, P, R, T>(
     rng: &mut R,
     srs: &UniversalSrs<E>,
     num_instances: usize,
-    shared_public_input: E::Fr,
+    shared_public_input: E::ScalarField,
 ) -> Result<(BatchProof<E>, Vec<VerifyingKey<E>>, Vec<VerifyingKey<E>>), PlonkError>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
     R: CryptoRng + RngCore,
     T: PlonkTranscript<F>,
 {
@@ -282,7 +281,8 @@ mod test {
     use super::*;
     use crate::transcript::RescueTranscript;
     use ark_bls12_377::{Bls12_377, Fq as Fq377};
-    use ark_std::{test_rng, UniformRand};
+    use ark_std::UniformRand;
+    use jf_utils::test_rng;
 
     #[test]
     fn test_batch_argument() -> Result<(), PlonkError> {
@@ -291,9 +291,9 @@ mod test {
 
     fn test_batch_argument_helper<E, F, P, T>() -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F>,
+        P: SWCurveConfig<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup
@@ -303,7 +303,7 @@ mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         // 2. Setup instances
-        let shared_public_input = E::Fr::rand(rng);
+        let shared_public_input = E::ScalarField::rand(rng);
         let mut instances_type_a = vec![];
         let mut instances_type_b = vec![];
         for i in 32..50 {
@@ -352,7 +352,7 @@ mod test {
         // 5. Verification
         let open_key_ref = &vks_type_a[0].open_key;
         let beta_g_ref = &srs.powers_of_g[1];
-        let blinding_factor = E::Fr::rand(rng);
+        let blinding_factor = E::ScalarField::rand(rng);
         let (inner1, inner2) = BatchArgument::partial_verify::<T>(
             beta_g_ref,
             &open_key_ref.g,

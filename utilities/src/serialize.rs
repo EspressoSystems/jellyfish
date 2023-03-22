@@ -18,7 +18,7 @@ pub struct CanonicalBytes(pub Vec<u8>);
 impl<T: ark_serialize::CanonicalSerialize> From<T> for CanonicalBytes {
     fn from(obj: T) -> CanonicalBytes {
         let mut bytes = Vec::new();
-        obj.serialize(&mut bytes)
+        obj.serialize_compressed(&mut bytes)
             .expect("fail to serialize to canonical bytes");
         CanonicalBytes(bytes)
     }
@@ -34,7 +34,7 @@ macro_rules! deserialize_canonical_bytes {
     ($t:ident < $( $lt:lifetime ),* $( $T:ident : $trait:ident ),* >) => {
         impl<$($lt),* $( $T: $trait ),*> From<CanonicalBytes> for $t<$($lt),* $( $T ),*> {
             fn from(bytes: CanonicalBytes) -> Self {
-                ark_serialize::CanonicalDeserialize::deserialize(bytes.0.as_slice())
+                ark_serialize::CanonicalDeserialize::deserialize_compressed(bytes.0.as_slice())
                     .expect("fail to deserialize canonical bytes")
             }
         }
@@ -65,7 +65,8 @@ pub mod canonical {
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
         let mut bytes = Vec::new();
-        T::serialize(elem, &mut bytes).map_err(|e| S::Error::custom(format!("{e:?}")))?;
+        T::serialize_compressed(elem, &mut bytes)
+            .map_err(|e| S::Error::custom(format!("{e:?}")))?;
         Serialize::serialize(&TaggedBase64::new("FIELD", &bytes).unwrap(), serializer)
     }
 
@@ -74,7 +75,8 @@ pub mod canonical {
     ) -> Result<T, D::Error> {
         let tb64 = <TaggedBase64 as Deserialize>::deserialize(deserializer)?;
         if tb64.tag() == "FIELD" {
-            T::deserialize(tb64.as_ref()).map_err(|e| D::Error::custom(format!("{e:?}")))
+            T::deserialize_compressed_unchecked(tb64.as_ref())
+                .map_err(|e| D::Error::custom(format!("{e:?}")))
         } else {
             Err(D::Error::custom(format!(
                 "incorrect tag (expected FIELD, got {})",
@@ -92,7 +94,7 @@ macro_rules! test_serde_default {
         let data = $struct::default();
         let mut ser_bytes: $crate::Vec<u8> = $crate::Vec::new();
         data.serialize(&mut ser_bytes).unwrap();
-        let de: $struct = $struct::deserialize(&ser_bytes[..]).unwrap();
+        let de: $struct = $struct::deserialize_compressed(&ser_bytes[..]).unwrap();
         assert_eq!(de, data);
     };
 }

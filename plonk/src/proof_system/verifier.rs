@@ -13,7 +13,10 @@ use crate::{
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::*,
 };
-use ark_ec::{short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::{Field, One, Zero};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec, vec::Vec};
@@ -34,29 +37,29 @@ use jf_utils::multi_pairing;
 /// * `shifted_opening_proof` - (aggregated) proof of evaluations at point
 ///   `next_eval_point`.
 #[derive(Debug)]
-pub(crate) struct PcsInfo<E: PairingEngine> {
-    pub(crate) u: E::Fr,
-    pub(crate) eval_point: E::Fr,
-    pub(crate) next_eval_point: E::Fr,
-    pub(crate) eval: E::Fr,
+pub(crate) struct PcsInfo<E: Pairing> {
+    pub(crate) u: E::ScalarField,
+    pub(crate) eval_point: E::ScalarField,
+    pub(crate) next_eval_point: E::ScalarField,
+    pub(crate) eval: E::ScalarField,
     pub(crate) comm_scalars_and_bases: ScalarsAndBases<E>,
     pub(crate) opening_proof: Commitment<E>,
     pub(crate) shifted_opening_proof: Commitment<E>,
 }
 
-pub(crate) struct Verifier<E: PairingEngine> {
-    pub(crate) domain: Radix2EvaluationDomain<E::Fr>,
+pub(crate) struct Verifier<E: Pairing> {
+    pub(crate) domain: Radix2EvaluationDomain<E::ScalarField>,
 }
 
 impl<E, F, P> Verifier<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     /// Construct a Plonk verifier that uses a domain with size `domain_size`.
     pub(crate) fn new(domain_size: usize) -> Result<Self, PlonkError> {
-        let domain = Radix2EvaluationDomain::<E::Fr>::new(domain_size)
+        let domain = Radix2EvaluationDomain::<E::ScalarField>::new(domain_size)
             .ok_or(PlonkError::DomainCreationError)?;
         Ok(Self { domain })
     }
@@ -65,7 +68,7 @@ where
     pub(crate) fn prepare_pcs_info<T>(
         &self,
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
         extra_transcript_init_msg: &Option<Vec<u8>>,
     ) -> Result<PcsInfo<E>, PlonkError>
@@ -124,7 +127,7 @@ where
         let alpha_6 = alpha_4 * alpha_2;
         let alpha_7 = alpha_3 * alpha_4;
         let alpha_powers = vec![alpha_2, alpha_3, alpha_4, alpha_5, alpha_6];
-        let mut alpha_bases = vec![E::Fr::one()];
+        let mut alpha_bases = vec![E::ScalarField::one()];
 
         let mut tmp = if verify_keys[0].plookup_vk.is_some() {
             alpha_7
@@ -203,7 +206,7 @@ where
         // Compute a pseudorandom challenge from the instances
         let r = if pcs_infos.len() == 1 {
             // No need to use `r` when there is only a single proof.
-            E::Fr::one()
+            E::ScalarField::one()
         } else {
             let mut transcript = T::new(b"batch verify");
             // r := hash(u1||u2||...||u_m), where u_i is the hash output of the i-th Plonk
@@ -217,7 +220,7 @@ where
 
         // Compute A := A0 + r * A1 + ... + r^{m-1} * Am
         let mut inners = ScalarsAndBases::<E>::new();
-        let mut r_base = E::Fr::one();
+        let mut r_base = E::ScalarField::one();
         for pcs_info in pcs_infos.iter() {
             inners.push(r_base, pcs_info.opening_proof.0);
             inners.push(r_base * pcs_info.u, pcs_info.shifted_opening_proof.0);
@@ -225,13 +228,13 @@ where
         }
         let inner = inners.multi_scalar_mul();
         // Add (A, [x]2) to the product pairing list
-        let mut g1_elems: Vec<<E as PairingEngine>::G1Affine> = vec![inner.into()];
+        let mut g1_elems: Vec<<E as Pairing>::G1Affine> = vec![inner.into()];
         let mut g2_elems = vec![open_key.beta_h];
 
         // Compute B := B0 + r * B1 + ... + r^{m-1} * Bm
         let mut inners = ScalarsAndBases::new();
-        let mut r_base = E::Fr::one();
-        let mut sum_evals = E::Fr::zero();
+        let mut r_base = E::ScalarField::one();
+        let mut sum_evals = E::ScalarField::zero();
         for pcs_info in pcs_infos.iter() {
             inners.merge(r_base, &pcs_info.comm_scalars_and_bases);
             inners.push(r_base * pcs_info.eval_point, pcs_info.opening_proof.0);
@@ -248,7 +251,7 @@ where
         g1_elems.push(-inner.into());
         g2_elems.push(open_key.h);
         // Check e(A, [x]2) ?= e(B, [1]2)
-        Ok(multi_pairing::<E>(&g1_elems, &g2_elems) == E::Fqk::one())
+        Ok(multi_pairing::<E>(&g1_elems, &g2_elems).0 == E::TargetField::one())
     }
 
     /// Compute verifier challenges `tau`, `beta`, `gamma`, `alpha`, `zeta`,
@@ -256,10 +259,10 @@ where
     #[inline]
     pub(crate) fn compute_challenges<T>(
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
         extra_transcript_init_msg: &Option<Vec<u8>>,
-    ) -> Result<Challenges<E::Fr>, PlonkError>
+    ) -> Result<Challenges<E::ScalarField>, PlonkError>
     where
         T: PlonkTranscript<F>,
     {
@@ -348,16 +351,16 @@ where
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn compute_lin_poly_constant_term(
         &self,
-        challenges: &Challenges<E::Fr>,
+        challenges: &Challenges<E::ScalarField>,
         verify_keys: &[&VerifyingKey<E>],
-        public_inputs: &[&[E::Fr]],
+        public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
-    ) -> Result<E::Fr, PlonkError> {
+        vanish_eval: &E::ScalarField,
+        lagrange_1_eval: &E::ScalarField,
+        lagrange_n_eval: &E::ScalarField,
+        alpha_powers: &[E::ScalarField],
+        alpha_bases: &[E::ScalarField],
+    ) -> Result<E::ScalarField, PlonkError> {
         if verify_keys.len() != batch_proof.len()
             || verify_keys.len() != public_inputs.len()
             || verify_keys.len() != alpha_bases.len()
@@ -372,7 +375,7 @@ where
             .into());
         }
 
-        let mut result = E::Fr::zero();
+        let mut result = E::ScalarField::zero();
         for (poly_evals, (plookup_proof, (&pi, (&vk, &current_alpha_bases)))) in
             batch_proof.poly_evals_vec.iter().zip(
                 batch_proof.plookup_proofs_vec.iter().zip(
@@ -401,7 +404,8 @@ where
             );
 
             if let Some(proof_lk) = plookup_proof {
-                let gamma_mul_beta_plus_one = challenges.gamma * (E::Fr::one() + challenges.beta);
+                let gamma_mul_beta_plus_one =
+                    challenges.gamma * (E::ScalarField::one() + challenges.beta);
                 let evals = &proof_lk.poly_evals;
 
                 let plookup_constant = *lagrange_n_eval
@@ -430,14 +434,14 @@ where
     pub(crate) fn aggregate_poly_commitments(
         &self,
         vks: &[&VerifyingKey<E>],
-        challenges: &Challenges<E::Fr>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
+        challenges: &Challenges<E::ScalarField>,
+        vanish_eval: &E::ScalarField,
+        lagrange_1_eval: &E::ScalarField,
+        lagrange_n_eval: &E::ScalarField,
         batch_proof: &BatchProof<E>,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
-    ) -> Result<(ScalarsAndBases<E>, Vec<E::Fr>), PlonkError> {
+        alpha_powers: &[E::ScalarField],
+        alpha_bases: &[E::ScalarField],
+    ) -> Result<(ScalarsAndBases<E>, Vec<E::ScalarField>), PlonkError> {
         if vks.len() != batch_proof.len() {
             return Err(ParameterError(format!(
                 "the number of verification keys {} != the number of instances {}",
@@ -532,13 +536,13 @@ where
     pub(crate) fn linearization_scalars_and_bases(
         &self,
         vks: &[&VerifyingKey<E>],
-        challenges: &Challenges<E::Fr>,
-        vanish_eval: &E::Fr,
-        lagrange_1_eval: &E::Fr,
-        lagrange_n_eval: &E::Fr,
+        challenges: &Challenges<E::ScalarField>,
+        vanish_eval: &E::ScalarField,
+        lagrange_1_eval: &E::ScalarField,
+        lagrange_n_eval: &E::ScalarField,
         batch_proof: &BatchProof<E>,
-        alpha_powers: &[E::Fr],
-        alpha_bases: &[E::Fr],
+        alpha_powers: &[E::ScalarField],
+        alpha_bases: &[E::ScalarField],
     ) -> Result<ScalarsAndBases<E>, PlonkError> {
         if vks.len() != batch_proof.len() || alpha_bases.len() != vks.len() {
             return Err(ParameterError(format!(
@@ -551,7 +555,7 @@ where
         }
 
         // compute constants that are being reused
-        let beta_plus_one = E::Fr::one() + challenges.beta;
+        let beta_plus_one = E::ScalarField::one() + challenges.beta;
         let gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
 
         let mut scalars_and_bases = ScalarsAndBases::new();
@@ -602,7 +606,7 @@ where
             // Compute coefficients for selector polynomial commitments.
             // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
             // TODO(binyi): get the order from a function.
-            let mut q_scalars = vec![E::Fr::zero(); 2 * GATE_WIDTH + 5];
+            let mut q_scalars = vec![E::ScalarField::zero(); 2 * GATE_WIDTH + 5];
             q_scalars[0] = w_evals[0];
             q_scalars[1] = w_evals[1];
             q_scalars[2] = w_evals[2];
@@ -614,7 +618,7 @@ where
             q_scalars[8] = w_evals[2].pow([5]);
             q_scalars[9] = w_evals[3].pow([5]);
             q_scalars[10] = -w_evals[4];
-            q_scalars[11] = E::Fr::one();
+            q_scalars[11] = E::ScalarField::one();
             q_scalars[12] = w_evals[0] * w_evals[1] * w_evals[2] * w_evals[3] * w_evals[4];
             for (&s, poly) in q_scalars.iter().zip(vk.selector_comms.iter()) {
                 scalars_and_bases.push(s * current_alpha_bases, poly.0);
@@ -684,7 +688,8 @@ where
         }
 
         // Add splitted quotient commitments
-        let zeta_to_n_plus_2 = (E::Fr::one() + vanish_eval) * challenges.zeta * challenges.zeta;
+        let zeta_to_n_plus_2 =
+            (E::ScalarField::one() + vanish_eval) * challenges.zeta * challenges.zeta;
         let mut coeff = vanish_eval.neg();
         scalars_and_bases.push(
             coeff,
@@ -706,14 +711,14 @@ where
     /// batch opening.
     /// The returned value is the scalar in `[E]1` described in Sec 8.4, step 11 of https://eprint.iacr.org/2019/953.pdf
     pub(crate) fn aggregate_evaluations(
-        lin_poly_constant: &E::Fr,
-        poly_evals_vec: &[ProofEvaluations<E::Fr>],
+        lin_poly_constant: &E::ScalarField,
+        poly_evals_vec: &[ProofEvaluations<E::ScalarField>],
         plookup_proofs_vec: &[Option<PlookupProof<E>>],
-        buffer_v_and_uv_basis: &[E::Fr],
-    ) -> Result<E::Fr, PlonkError> {
+        buffer_v_and_uv_basis: &[E::ScalarField],
+    ) -> Result<E::ScalarField, PlonkError> {
         assert_eq!(poly_evals_vec.len(), plookup_proofs_vec.len());
 
-        let mut result: E::Fr = lin_poly_constant.neg();
+        let mut result: E::ScalarField = lin_poly_constant.neg();
         let mut v_and_uv_basis = buffer_v_and_uv_basis.iter();
 
         for (poly_evals, plookup_proof) in poly_evals_vec.iter().zip(plookup_proofs_vec.iter()) {
@@ -781,18 +786,18 @@ where
 /// Private helper methods
 impl<E, F, P> Verifier<E>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
-    P: SWModelParameters<BaseField = F>,
+    P: SWCurveConfig<BaseField = F>,
 {
     /// Merge a polynomial commitment into the aggregated polynomial commitment
     /// (in the ScalarAndBases form), update the random combiner afterward.
     #[inline]
     fn add_poly_comm(
         scalar_and_bases: &mut ScalarsAndBases<E>,
-        random_combiner: &mut E::Fr,
+        random_combiner: &mut E::ScalarField,
         comm: E::G1Affine,
-        r: E::Fr,
+        r: E::ScalarField,
     ) {
         scalar_and_bases.push(*random_combiner, comm);
         *random_combiner *= r;
@@ -801,23 +806,33 @@ where
     /// Add a polynomial commitment evaluation value to the aggregated
     /// polynomial evaluation, update the random combiner afterward.
     #[inline]
-    fn add_pcs_eval(result: &mut E::Fr, random_combiner: &E::Fr, eval: E::Fr) {
+    fn add_pcs_eval(
+        result: &mut E::ScalarField,
+        random_combiner: &E::ScalarField,
+        eval: E::ScalarField,
+    ) {
         *result += eval * (*random_combiner);
     }
 
     /// Evaluate vanishing polynomial at point `zeta`
     #[inline]
-    fn evaluate_vanishing_poly(&self, zeta: &E::Fr) -> E::Fr {
+    fn evaluate_vanishing_poly(&self, zeta: &E::ScalarField) -> E::ScalarField {
         self.domain.evaluate_vanishing_polynomial(*zeta)
     }
 
     /// Evaluate the first and the last lagrange polynomial at point `zeta`
     /// given the vanishing polynomial evaluation `vanish_eval`.
     #[inline]
-    fn evaluate_lagrange_1_and_n(&self, zeta: &E::Fr, vanish_eval: &E::Fr) -> (E::Fr, E::Fr) {
-        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - E::Fr::one());
+    fn evaluate_lagrange_1_and_n(
+        &self,
+        zeta: &E::ScalarField,
+        vanish_eval: &E::ScalarField,
+    ) -> (E::ScalarField, E::ScalarField) {
+        let divisor =
+            E::ScalarField::from(self.domain.size() as u32) * (*zeta - E::ScalarField::one());
         let lagrange_1_eval = *vanish_eval / divisor;
-        let divisor = E::Fr::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
+        let divisor =
+            E::ScalarField::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
         let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
         (lagrange_1_eval, lagrange_n_eval)
     }
@@ -879,25 +894,25 @@ where
     /// TODO: reuse the lagrange values
     fn evaluate_pi_poly(
         &self,
-        pub_input: &[E::Fr],
-        z: &E::Fr,
-        vanish_eval: &E::Fr,
+        pub_input: &[E::ScalarField],
+        z: &E::ScalarField,
+        vanish_eval: &E::ScalarField,
         circuit_is_merged: bool,
-    ) -> Result<E::Fr, PlonkError> {
+    ) -> Result<E::ScalarField, PlonkError> {
         // If z is a root of the vanishing polynomial, directly return zero.
         if vanish_eval.is_zero() {
-            return Ok(E::Fr::zero());
+            return Ok(E::ScalarField::zero());
         }
         let len = match circuit_is_merged {
             false => pub_input.len(),
             true => pub_input.len() / 2,
         };
 
-        let vanish_eval_div_n = E::Fr::from(self.domain.size() as u32)
+        let vanish_eval_div_n = E::ScalarField::from(self.domain.size() as u32)
             .inverse()
             .ok_or(PlonkError::DivisionError)?
             * (*vanish_eval);
-        let mut result = E::Fr::zero();
+        let mut result = E::ScalarField::zero();
         for (i, val) in pub_input.iter().take(len).enumerate() {
             let lagrange_i =
                 vanish_eval_div_n * self.domain.element(i) / (*z - self.domain.element(i));

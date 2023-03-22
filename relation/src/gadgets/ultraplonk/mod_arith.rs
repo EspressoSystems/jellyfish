@@ -17,7 +17,7 @@ use num_bigint::BigUint;
 
 macro_rules! to_big_int {
     ($x:expr) => {
-        ($x).into_repr().into()
+        ($x).into_bigint().into()
     };
 }
 
@@ -40,13 +40,13 @@ where
     F: PrimeField,
 {
     /// Create a FpElem struct from field element `p` and split parameter `m`,
-    /// where `m` <= F::size_in_bits() / 2
+    /// where `m` <= F::MODULUS_BIT_SIZE / 2
     pub fn new(p: &F, m: usize, two_power_m: Option<F>) -> Result<Self, CircuitError> {
-        if m > F::size_in_bits() / 2 {
+        if m > F::MODULUS_BIT_SIZE as usize / 2 {
             return Err(ParameterError(format!(
                 "field split parameter ({}) larger than half of the field size ({}) in bits",
                 m,
-                F::size_in_bits() / 2
+                F::MODULUS_BIT_SIZE / 2
             )));
         }
         let two_power_m = match two_power_m {
@@ -870,7 +870,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 #[inline]
 // Integer division: c = a / b
 fn int_div<F: PrimeField>(a: &F, b: &F) -> F {
-    let c_big_int: BigUint = a.into_repr().into() / b.into_repr().into();
+    let c_big_int: BigUint = a.into_bigint().into() / b.into_bigint().into();
     F::from(c_big_int)
 }
 
@@ -890,9 +890,9 @@ mod test {
     use ark_ed_on_bls12_377::{Fq as FqEd377, Fr as FrEd377};
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::{Fq as FqEd254, Fr as FrEd254};
-    use ark_ff::{BigInteger, FpParameters};
-    use ark_std::{rand::Rng, test_rng, vec::Vec};
-    use jf_utils::field_switching;
+    use ark_ff::BigInteger;
+    use ark_std::{rand::Rng, vec::Vec};
+    use jf_utils::{field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     const RANGE_SIZE_FOR_TEST: usize = 65536;
@@ -910,7 +910,7 @@ mod test {
         let p = int_div(&F::rand(&mut rng), &F::from(4u8));
 
         // case 1: m = len(|F|) / 2
-        let m = F::size_in_bits() / 2;
+        let m = F::MODULUS_BIT_SIZE as usize / 2;
         let two_power_m = F::from(2u8).pow([m as u64]);
         let fp_elem = FpElem::new(&p, m, Some(two_power_m))?;
         assert!(fp_elem.p.0 < two_power_m, "p0 larger than 2^m");
@@ -924,7 +924,7 @@ mod test {
         assert_eq!(p, q, "FpElem conversion failure when m = 0");
 
         // case 3: m > len(|F|) / 2
-        let m = F::size_in_bits() / 2 + 1;
+        let m = F::MODULUS_BIT_SIZE as usize / 2 + 1;
         assert!(FpElem::new(&p, m, Some(two_power_m)).is_err());
 
         Ok(())
@@ -940,7 +940,7 @@ mod test {
     // Test FpElemVar variables creation and conversion
     fn test_fp_elem_var_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        let m = F::size_in_bits() / 2;
+        let m = F::MODULUS_BIT_SIZE as usize / 2;
         let mut rng = test_rng();
 
         // Good path
@@ -1547,7 +1547,7 @@ mod test {
         m: usize,
         range_bit_len: usize,
     ) -> Result<(), CircuitError> {
-        let p = F::from_le_bytes_mod_order(T::Params::MODULUS.to_bytes_le().as_ref());
+        let p = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let p_split = FpElem::new(&p, m, None)?;
         let mut rng = test_rng();
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(range_bit_len);

@@ -9,8 +9,11 @@ use crate::{
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use ark_ec::{twisted_edwards_extended::GroupProjective, ProjectiveCurve, TEModelParameters};
-use ark_ff::{FpParameters, PrimeField, Zero};
+use ark_ec::{
+    twisted_edwards::{Projective, TECurveConfig},
+    CurveGroup,
+};
+use ark_ff::{PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};
 
@@ -83,7 +86,7 @@ where
 {
     /// Perform GLV multiplication in circuit (which costs a few less
     /// constraints).
-    pub fn glv_mul<P: TEModelParameters<BaseField = F>>(
+    pub fn glv_mul<P: TECurveConfig<BaseField = F>>(
         &mut self,
         scalar: Variable,
         base: &PointVariable,
@@ -109,7 +112,7 @@ fn multi_scalar_mul_circuit<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     let endo_base_neg = circuit.inverse_point(endo_base)?;
     let endo_base =
@@ -127,7 +130,7 @@ where
 fn endomorphism<F, P>(base: &Point<F>) -> Point<F>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     let x = base.get_x();
     let y = base.get_y();
@@ -140,7 +143,7 @@ where
     let g_y = b * (y_square + b);
     let h_y = y_square - b;
 
-    GroupProjective::<P>::new(f_y * h_y, g_y * xy, F::one(), h_y * xy)
+    Projective::<P>::new(f_y * h_y, g_y * xy, F::one(), h_y * xy)
         .into_affine()
         .into()
 }
@@ -152,7 +155,7 @@ fn endomorphism_circuit<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F>,
+    P: TECurveConfig<BaseField = F>,
 {
     let base = circuit.point_witness(point_var)?;
     let endo_point = endomorphism::<_, P>(&base);
@@ -216,7 +219,7 @@ fn scalar_decomposition<F: PrimeField>(scalar: &F) -> (F, F, bool) {
     let tmp = F::from_le_bytes_mod_order(COEFF_N22.as_ref());
     let n22: BigUint = tmp.into();
 
-    let r: BigUint = <F::Params as FpParameters>::MODULUS.into();
+    let r: BigUint = F::MODULUS.into();
     let r_over_2 = &r / BigUint::from(2u8);
 
     // beta = vector([n,0]) * self.curve.N_inv
@@ -240,7 +243,7 @@ fn scalar_decomposition<F: PrimeField>(scalar: &F) -> (F, F, bool) {
 
 macro_rules! fq_to_big_int {
     ($fq: expr) => {
-        <BigInt as From<BigUint>>::from($fq.into_repr().into())
+        <BigInt as From<BigUint>>::from($fq.into_bigint().into())
     };
 }
 
@@ -267,7 +270,7 @@ fn scalar_decomposition_gate<F, P, S>(
 ) -> Result<(Variable, Variable, BoolVar), CircuitError>
 where
     F: PrimeField,
-    P: TEModelParameters<BaseField = F, ScalarField = S>,
+    P: TECurveConfig<BaseField = F, ScalarField = S>,
     S: PrimeField,
 {
     // the order of scalar field
@@ -358,7 +361,7 @@ where
     let k2_with_sign = &k2_int * &k2_sign;
 
     // fr_order = r1 + 2^128 r2
-    let fr_order_uint: BigUint = S::Params::MODULUS.into();
+    let fr_order_uint: BigUint = S::MODULUS.into();
     let fr_order_int: BigInt = fr_order_uint.into();
     let r1 = F::from_le_bytes_mod_order(R1.as_ref());
     let r1_int = fq_to_big_int!(r1);
@@ -382,7 +385,7 @@ where
     {
         use ark_ff::BigInteger;
 
-        let fq_uint: BigUint = F::Params::MODULUS.into();
+        let fq_uint: BigUint = F::MODULUS.into();
         let fq_int: BigInt = fq_uint.into();
 
         let tmp1_int = &tmp_int % &two_to_128;
@@ -408,8 +411,8 @@ where
 
         //  (a) k1 < 2^128
         //  (b) k2 < 2^128
-        let k1_bits = get_bits(&k1.into_repr().to_bits_le());
-        let k2_bits = get_bits(&k1.into_repr().to_bits_le());
+        let k1_bits = get_bits(&k1.into_bigint().to_bits_le());
+        let k2_bits = get_bits(&k1.into_bigint().to_bits_le());
 
         assert!(k1_bits < 128, "k1 bits {}", k1_bits);
         assert!(k2_bits < 128, "k2 bits {}", k1_bits);
@@ -419,7 +422,7 @@ where
         //  (e) tmp = tmp1 + 2^128 tmp2
         assert!(tmp1_int == BigInt::from(0));
         let tmp2_fq = F::from_le_bytes_mod_order(&tmp2_int.to_bytes_le().1);
-        let tmp2_bits = get_bits(&tmp2_fq.into_repr().to_bits_le());
+        let tmp2_bits = get_bits(&tmp2_fq.into_bigint().to_bits_le());
         assert!(tmp1_int == BigInt::from(0));
         assert!(tmp2_bits < 128, "tmp2 bits {}", tmp2_bits);
 
@@ -569,33 +572,32 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::{twisted_edwards_extended::GroupAffine, TEModelParameters as Parameters};
-    use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsParameters, Fq, Fr};
-    use ark_ff::{BigInteger, One, PrimeField, UniformRand};
-    use ark_std::{str::FromStr, test_rng};
-    use jf_utils::{field_switching, fr_to_fq};
+    use ark_ec::twisted_edwards::{Affine, TECurveConfig as Config};
+    use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
+    use ark_ff::{BigInteger, MontFp, One, PrimeField, UniformRand};
+    use jf_utils::{field_switching, fr_to_fq, test_rng};
 
     #[test]
     fn test_glv() -> Result<(), CircuitError> {
-        test_glv_helper::<Fq, EdwardsParameters>()
+        test_glv_helper::<Fq, EdwardsConfig>()
     }
 
     fn test_glv_helper<F, P>() -> Result<(), CircuitError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
 
         for _ in 0..100 {
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -603,13 +605,13 @@ mod tests {
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -618,13 +620,13 @@ mod tests {
             }
 
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -633,13 +635,13 @@ mod tests {
             }
 
             {
-                let mut base = GroupAffine::<P>::rand(&mut rng);
+                let mut base = Affine::<P>::rand(&mut rng);
                 let s = P::ScalarField::rand(&mut rng);
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
                 let base_var = circuit.create_point_variable(Point::from(base))?;
-                base *= s;
+                base = (base * s).into();
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(Point::from(base), circuit.point_witness(&result)?);
 
@@ -652,26 +654,29 @@ mod tests {
 
     #[test]
     fn test_endomorphism() {
-        let base_point = EdwardsAffine::from_str(
-            "(29627151942733444043031429156003786749302466371339015363120350521834195802525, \
-        27488387519748396681411951718153463804682561779047093991696427532072116857978)",
-        )
-        .unwrap();
-        let endo_point = EdwardsAffine::from_str(
-            "(3995099504672814451457646880854530097687530507181962222512229786736061793535, \
-         33370049900732270411777328808452912493896532385897059012214433666611661340894)",
-        )
-        .unwrap();
+        let base_point = EdwardsAffine::new_unchecked(
+            MontFp!(
+                "29627151942733444043031429156003786749302466371339015363120350521834195802525"
+            ),
+            MontFp!(
+                "27488387519748396681411951718153463804682561779047093991696427532072116857978"
+            ),
+        );
+        let endo_point = EdwardsAffine::new_unchecked(
+            MontFp!("3995099504672814451457646880854530097687530507181962222512229786736061793535"),
+            MontFp!(
+                "33370049900732270411777328808452912493896532385897059012214433666611661340894"
+            ),
+        );
         let base_point: Point<Fq> = base_point.into();
         let endo_point: Point<Fq> = endo_point.into();
 
-        let t = endomorphism::<_, EdwardsParameters>(&base_point);
+        let t = endomorphism::<_, EdwardsConfig>(&base_point);
         assert_eq!(t, endo_point);
 
         let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_turbo_plonk();
         let point_var = circuit.create_point_variable(base_point).unwrap();
-        let endo_var =
-            endomorphism_circuit::<_, EdwardsParameters>(&mut circuit, &point_var).unwrap();
+        let endo_var = endomorphism_circuit::<_, EdwardsConfig>(&mut circuit, &point_var).unwrap();
         let endo_point_rec = circuit.point_witness(&endo_var).unwrap();
         assert_eq!(endo_point_rec, endo_point);
     }
@@ -684,8 +689,8 @@ mod tests {
         for _ in 0..100 {
             let scalar = Fr::rand(&mut rng);
             let (k1, k2, is_k2_pos) = scalar_decomposition(&scalar);
-            assert!(get_bits(&k1.into_repr().to_bits_le()) <= 128);
-            assert!(get_bits(&k2.into_repr().to_bits_le()) <= 128);
+            assert!(get_bits(&k1.into_bigint().to_bits_le()) <= 128);
+            assert!(get_bits(&k2.into_bigint().to_bits_le()) <= 128);
             let k2 = if is_k2_pos { k2 } else { -k2 };
 
             assert_eq!(k1 - k2 * lambda, scalar,);
@@ -693,7 +698,7 @@ mod tests {
             let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_ultra_plonk(16);
             let scalar_var = circuit.create_variable(field_switching(&scalar)).unwrap();
             let (k1_var, k2_var, k2_sign_var) =
-                scalar_decomposition_gate::<_, EdwardsParameters, _>(&mut circuit, &scalar_var)
+                scalar_decomposition_gate::<_, EdwardsConfig, _>(&mut circuit, &scalar_var)
                     .unwrap();
 
             let k1_rec = circuit.witness(k1_var).unwrap();

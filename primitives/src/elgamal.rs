@@ -12,9 +12,8 @@ use crate::{
     rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
 };
 use ark_ec::{
-    group::Group,
-    twisted_edwards_extended::{GroupAffine, GroupProjective},
-    AffineCurve, ProjectiveCurve, TEModelParameters as Parameters,
+    twisted_edwards::{Affine, Projective, TECurveConfig as Config},
+    AffineRepr, CurveGroup, Group,
 };
 use ark_ff::UniformRand;
 use ark_serialize::*;
@@ -36,25 +35,25 @@ use zeroize::Zeroize;
 /// Encryption key for encryption scheme
 #[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Default(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Default(bound = "P: Config")
 )]
 pub struct EncKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
-    pub(crate) key: GroupProjective<P>,
+    pub(crate) key: Projective<P>,
 }
 
-impl<P: Parameters> Hash for EncKey<P> {
+impl<P: Config> Hash for EncKey<P> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.key.into_affine(), state)
     }
 }
 
-impl<P: Parameters> PartialEq for EncKey<P> {
+impl<P: Config> PartialEq for EncKey<P> {
     fn eq(&self, other: &Self) -> bool {
         self.key.into_affine() == other.key.into_affine()
     }
@@ -66,18 +65,18 @@ impl<P: Parameters> PartialEq for EncKey<P> {
 /// Decryption key for encryption scheme
 #[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config")
 )]
 pub(crate) struct DecKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     key: P::ScalarField,
 }
 
-impl<P: Parameters> Drop for DecKey<P> {
+impl<P: Config> Drop for DecKey<P> {
     fn drop(&mut self) {
         self.key.zeroize();
     }
@@ -89,14 +88,14 @@ impl<P: Parameters> Drop for DecKey<P> {
 
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config")
 )]
 /// KeyPair structure for encryption scheme
 pub struct KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) enc: EncKey<P>,
     dec: DecKey<P>,
@@ -108,15 +107,15 @@ where
 /// Public encryption cipher text
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Parameters"),
-    Clone(bound = "P: Parameters"),
-    PartialEq(bound = "P: Parameters"),
-    Eq(bound = "P: Parameters"),
-    Hash(bound = "P: Parameters")
+    Debug(bound = "P: Config"),
+    Clone(bound = "P: Config"),
+    PartialEq(bound = "P: Config"),
+    Eq(bound = "P: Config"),
+    Hash(bound = "P: Config")
 )]
 pub struct Ciphertext<P>
 where
-    P: Parameters,
+    P: Config,
 {
     pub(crate) ephemeral: EncKey<P>,
     pub(crate) data: Vec<P::BaseField>,
@@ -124,7 +123,7 @@ where
 
 impl<P> Ciphertext<P>
 where
-    P: Parameters,
+    P: Config,
 {
     /// Flatten out the ciphertext into a vector of scalars
     pub fn to_scalars(&self) -> Vec<P::BaseField> {
@@ -143,15 +142,10 @@ where
                 "At least 2 scalars in length for ciphertext".to_string(),
             ));
         }
-        let key = GroupAffine::new(scalars[0], scalars[1]);
-        if !key.is_on_curve() {
-            return Err(PrimitivesError::ParameterError(
-                "ephemeral pk should be a point on curve".to_string(),
-            ));
-        }
+        let key = Affine::new(scalars[0], scalars[1]);
 
         let ephemeral = EncKey {
-            key: key.into_projective(),
+            key: key.into_group(),
         };
         let mut data = vec![];
         data.extend_from_slice(&scalars[2..]);
@@ -165,7 +159,7 @@ where
 
 impl<P> KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     /// Key generation algorithm for public key encryption scheme
     pub fn generate<R: CryptoRng + RngCore>(rng: &mut R) -> KeyPair<P> {
@@ -194,7 +188,7 @@ where
 
 impl<P> From<DecKey<P>> for KeyPair<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn from(dec: DecKey<P>) -> Self {
         let enc = EncKey::from(&dec);
@@ -203,13 +197,13 @@ where
 }
 
 /// Sample a random public key with unknown associated secret key
-impl<P: Parameters> UniformRand for EncKey<P> {
+impl<P: Config> UniformRand for EncKey<P> {
     fn rand<R>(rng: &mut R) -> Self
     where
         R: Rng + RngCore + ?Sized,
     {
         EncKey {
-            key: GroupProjective::<P>::rand(rng),
+            key: Projective::<P>::rand(rng),
         }
     }
 }
@@ -217,14 +211,14 @@ impl<P: Parameters> UniformRand for EncKey<P> {
 impl<F, P> EncKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn compute_cipher_text_from_ephemeral_key_pair(
         &self,
         ephemeral_key_pair: KeyPair<P>,
         msg: &[F],
     ) -> Ciphertext<P> {
-        let shared_key = Group::mul(&self.key, &ephemeral_key_pair.dec_key_ref().key).into_affine();
+        let shared_key = (self.key * ephemeral_key_pair.dec_key_ref().key).into_affine();
         let perm = Permutation::default();
         // TODO check if ok to use (x,y,0,0) as a key, since
         // key = perm(x,y,0,0) doesn't buy us anything.
@@ -237,7 +231,7 @@ where
         // since key was just sampled and to be used only once, we can allow NONCE = 0
         Ciphertext {
             ephemeral: ephemeral_key_pair.enc_key(),
-            data: apply_counter_mode_stream::<F, P>(&key, msg, &F::zero(), Encrypt),
+            data: apply_counter_mode_stream::<F>(&key, msg, &F::zero(), Encrypt),
         }
     }
 
@@ -264,12 +258,12 @@ where
 impl<F, P> DecKey<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Decryption function
     fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<P::BaseField> {
         let perm = Permutation::default();
-        let shared_key = Group::mul(&ctext.ephemeral.key, &self.key).into_affine();
+        let shared_key = (ctext.ephemeral.key * self.key).into_affine();
         let key = perm.eval(&RescueVector::from(&[
             shared_key.x,
             shared_key.y,
@@ -277,16 +271,16 @@ where
             F::zero(),
         ]));
         // since key was just samples and to be used only once, we can have NONCE = 0
-        apply_counter_mode_stream::<F, P>(&key, ctext.data.as_slice(), &F::zero(), Decrypt)
+        apply_counter_mode_stream::<F>(&key, ctext.data.as_slice(), &F::zero(), Decrypt)
     }
 }
 
 impl<P> From<&DecKey<P>> for EncKey<P>
 where
-    P: Parameters,
+    P: Config,
 {
     fn from(dec_key: &DecKey<P>) -> Self {
-        let mut point = GroupProjective::<P>::prime_subgroup_generator();
+        let mut point = Projective::<P>::generator();
         point *= dec_key.key;
         Self { key: point }
     }
@@ -295,7 +289,7 @@ where
 impl<F, P> KeyPair<P>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Decryption function
     pub fn decrypt(&self, ctext: &Ciphertext<P>) -> Vec<F> {
@@ -308,7 +302,7 @@ pub(crate) enum Direction {
     Decrypt,
 }
 
-pub(crate) fn apply_counter_mode_stream<F, P>(
+pub(crate) fn apply_counter_mode_stream<F>(
     key: &RescueVector<F>,
     data: &[F],
     nonce: &F,
@@ -316,7 +310,6 @@ pub(crate) fn apply_counter_mode_stream<F, P>(
 ) -> Vec<F>
 where
     F: RescueParameter,
-    P: Parameters<BaseField = F>,
 {
     let prp = PRP::default();
     let round_keys = prp.key_schedule(key);
@@ -364,18 +357,18 @@ where
 #[cfg(test)]
 mod test {
     use super::{Ciphertext, DecKey, EncKey, KeyPair, UniformRand};
-    use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377, Fr as FrEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381, Fr as FrEd381};
+    use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377, Fr as FrEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381, Fr as FrEd381};
     use ark_ed_on_bls12_381_bandersnatch::{
-        EdwardsParameters as ParamEd381b, Fq as FqEd381b, Fr as FrEd381b,
+        EdwardsConfig as ParamEd381b, Fq as FqEd381b, Fr as FrEd381b,
     };
-    use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254, Fr as FrEd254};
+    use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254, Fr as FrEd254};
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{vec, vec::Vec};
 
     macro_rules! test_enc_and_dec {
         ($param: tt, $base_field:tt, $scalar_field: tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
             let keypair: KeyPair<$param> = KeyPair::generate(&mut rng);
             let mut data = vec![];
             let mut i = 0;
@@ -413,29 +406,30 @@ mod test {
 
     macro_rules! test_serdes {
         ($param: tt, $base_field:tt, $scalar_field: tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
             let keypair = KeyPair::<$param>::generate(&mut rng);
             let msg = vec![$base_field::rand(&mut rng)];
             let ct = keypair.enc_key().encrypt(&mut rng, &msg[..]);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            keypair.serialize(&mut ser_bytes).unwrap();
-            let de: KeyPair<$param> = KeyPair::deserialize(&ser_bytes[..]).unwrap();
+            keypair.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: KeyPair<$param> = KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(de, keypair);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            keypair.enc.serialize(&mut ser_bytes).unwrap();
-            let de: EncKey<$param> = EncKey::deserialize(&ser_bytes[..]).unwrap();
+            keypair.enc.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: EncKey<$param> = EncKey::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(keypair.enc, de);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            keypair.dec.serialize(&mut ser_bytes).unwrap();
-            let de: DecKey<$param> = DecKey::deserialize(&ser_bytes[..]).unwrap();
+            keypair.dec.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: DecKey<$param> = DecKey::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(keypair.dec, de);
 
             let mut ser_bytes: Vec<u8> = Vec::new();
-            ct.serialize(&mut ser_bytes).unwrap();
-            let de: Ciphertext<$param> = Ciphertext::deserialize(&ser_bytes[..]).unwrap();
+            ct.serialize_compressed(&mut ser_bytes).unwrap();
+            let de: Ciphertext<$param> =
+                Ciphertext::deserialize_compressed(&ser_bytes[..]).unwrap();
             assert_eq!(ct, de);
         };
     }

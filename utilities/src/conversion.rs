@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use ark_ec::ModelParameters;
+use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{cmp::min, vec::Vec};
 use sha2::{Digest, Sha512};
@@ -15,7 +15,7 @@ use sha2::{Digest, Sha512};
 pub fn fr_to_fq<F, P>(scalar: &P::ScalarField) -> F
 where
     F: PrimeField,
-    P: ModelParameters<BaseField = F>,
+    P: CurveConfig<BaseField = F>,
 {
     // sanity checks:
     // ensure | jubjub scalar field | <= | BLS Scalar field |
@@ -27,7 +27,7 @@ where
     // 2111115437357092606062206234695386632838870926408408195193685246394721360383
     // BLS12-377 scalar field:
     // 8444461749428370424248824938781546531375899335154063827935233455917409239041
-    F::from_le_bytes_mod_order(&scalar.into_repr().to_bytes_le())
+    F::from_le_bytes_mod_order(&scalar.into_bigint().to_bytes_le())
 }
 
 /// Convert a base field element to a scalar field element.
@@ -36,23 +36,23 @@ where
 pub fn fq_to_fr<F, P>(base: &F) -> P::ScalarField
 where
     F: PrimeField,
-    P: ModelParameters<BaseField = F>,
+    P: CurveConfig<BaseField = F>,
 {
-    P::ScalarField::from_le_bytes_mod_order(&base.into_repr().to_bytes_le())
+    P::ScalarField::from_le_bytes_mod_order(&base.into_bigint().to_bytes_le())
 }
 
 /// Convert a field element in F(rom) to a field element in T(o),
 /// with |T| < |F|; truncating the element via masking the top
-/// F::size_in_bits() - T::size_in_bits() with 0s
+/// F::MODULUS_BIT_SIZE - T::MODULUS_BIT_SIZE with 0s
 pub fn fq_to_fr_with_mask<F, T>(base: &F) -> T
 where
     F: PrimeField,
     T: PrimeField,
 {
-    assert!(T::size_in_bits() < F::size_in_bits());
-    let length = T::size_in_bits() >> 3;
+    assert!(T::MODULUS_BIT_SIZE < F::MODULUS_BIT_SIZE);
+    let length = (T::MODULUS_BIT_SIZE >> 3) as usize;
     // ensure that no mod reduction happened
-    T::from_le_bytes_mod_order(&base.into_repr().to_bytes_le()[0..length])
+    T::from_le_bytes_mod_order(&base.into_bigint().to_bytes_le()[0..length])
 }
 
 // convert a field element in F(rom)
@@ -64,12 +64,12 @@ where
     F: PrimeField,
     T: PrimeField,
 {
-    let bytes = base.into_repr().to_bytes_le();
+    let bytes = base.into_bigint().to_bytes_le();
     let t = T::from_le_bytes_mod_order(&bytes);
 
     // check t == base
     // i.e., t did not overflow the target field
-    let bytes_rec = t.into_repr().to_bytes_le();
+    let bytes_rec = t.into_bigint().to_bytes_le();
     let length = min(bytes.len(), bytes_rec.len());
     assert_eq!(bytes_rec[0..length], bytes[0..length],);
     t
@@ -85,7 +85,7 @@ where
     // we extract a random `rand_byte_len` bytes from the hash
     // the compute res = OS2IP(output) mod p
     // which is less than 2^-128 from uniform
-    let rand_byte_len = (F::size_in_bits() + 7) / 8 + 128 / 8;
+    let rand_byte_len = (F::MODULUS_BIT_SIZE + 7) as usize / 8 + 128 / 8;
     let mut hasher = Sha512::default();
     hasher.update(bytes.as_ref());
     let output = &hasher.finalize()[0..rand_byte_len];
@@ -107,7 +107,7 @@ where
     // note that mod_reduction is guaranteed to not occur
 
     // Field order is never a multiple of 8
-    let chunk_length = F::size_in_bits() / 8;
+    let chunk_length = (F::MODULUS_BIT_SIZE / 8) as usize;
 
     // pad the input to a multiple of chunk_length
     let padded_length = (bytes.as_ref().len() + chunk_length - 1) / chunk_length * chunk_length;
@@ -124,39 +124,41 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::test_rng;
+
     use super::*;
-    use ark_ed_on_bls12_377::{EdwardsParameters as Param377, Fr as Fr377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as Param381, Fr as Fr381};
-    use ark_ed_on_bn254::{EdwardsParameters as Param254, Fr as Fr254};
+    use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
+    use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
     use ark_std::UniformRand;
 
     #[test]
     fn test_bn254_scalar_conversion() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = test_rng();
         for _ in 0..6 {
             let jj = Fr254::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param254>(&jj);
-            assert!(jj.into_repr() == jj_bls.into_repr());
+            assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
     }
 
     #[test]
     fn test_jubjub_bls_scalar_conversion_377() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = test_rng();
         for _ in 0..6 {
             let jj = Fr377::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param377>(&jj);
-            assert!(jj.into_repr() == jj_bls.into_repr());
+            assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
     }
 
     #[test]
     fn test_jubjub_bls_scalar_conversion_381() {
-        let mut rng = ark_std::test_rng();
+        let mut rng = test_rng();
         for _ in 0..6 {
             let jj = Fr381::rand(&mut rng);
             let jj_bls = fr_to_fq::<_, Param381>(&jj);
-            assert!(jj.into_repr() == jj_bls.into_repr());
+            assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
     }
 }

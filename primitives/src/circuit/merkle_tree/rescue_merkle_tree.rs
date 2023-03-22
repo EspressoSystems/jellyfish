@@ -207,7 +207,7 @@ mod test {
         fn gen_permutation_circuit_and_vars<F: RescueParameter>(
         ) -> (PlonkCircuit<F>, Variable, Variable, Variable) {
             let mut circuit = PlonkCircuit::new_turbo_plonk();
-            let mut prng = ark_std::test_rng();
+            let mut prng = jf_utils::test_rng();
             let node = circuit.create_variable(F::rand(&mut prng)).unwrap();
             let sib1 = circuit.create_variable(F::rand(&mut prng)).unwrap();
             let sib2 = circuit.create_variable(F::rand(&mut prng)).unwrap();
@@ -323,8 +323,8 @@ mod test {
 
         MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
             &mut circuit,
-            elem_idx_var.clone(),
-            path_vars.clone(),
+            elem_idx_var,
+            path_vars,
             root_var,
         )
         .unwrap();

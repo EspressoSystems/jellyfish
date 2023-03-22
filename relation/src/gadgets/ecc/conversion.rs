@@ -16,7 +16,7 @@
 //! points to the TE form and work on the TE form inside the circuits.
 
 use super::Point;
-use ark_ec::{short_weierstrass_jacobian::GroupAffine as SWAffine, SWModelParameters as SWParam};
+use ark_ec::short_weierstrass::{Affine as SWAffine, SWCurveConfig as SWParam};
 use ark_ff::{BigInteger256, BigInteger384, BigInteger768, PrimeField};
 
 impl<F, P> From<&SWAffine<P>> for Point<F>
@@ -38,9 +38,9 @@ where
         // TE form, and then build the point
 
         // safe unwrap
-        let s = F::from_repr(F::S).unwrap();
-        let neg_alpha = F::from_repr(F::NEG_ALPHA).unwrap();
-        let beta = F::from_repr(F::BETA).unwrap();
+        let s = F::from(F::S);
+        let neg_alpha = F::from(F::NEG_ALPHA);
+        let beta = F::from(F::BETA);
 
         // we first transform the Weierstrass point (px, py) to Montgomery point (mx,
         // my) where mx = s * (px - alpha)
@@ -74,7 +74,7 @@ pub trait SWToTEConParam: PrimeField {
 use ark_bls12_377::Fq as Fq377;
 impl SWToTEConParam for Fq377 {
     // s = 10189023633222963290707194929886294091415157242906428298294512798502806398782149227503530278436336312243746741931
-    const S: Self::BigInt = BigInteger384([
+    const S: Self::BigInt = BigInteger384::new([
         0x3401d618f0339eab,
         0x0f793b8504b428d4,
         0x0ff643cca95ccc0d,
@@ -84,10 +84,10 @@ impl SWToTEConParam for Fq377 {
     ]);
 
     // alpha = -1
-    const NEG_ALPHA: Self::BigInt = BigInteger384([1, 0, 0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger384::new([1, 0, 0, 0, 0, 0]);
 
     // beta = 23560188534917577818843641916571445935985386319233886518929971599490231428764380923487987729215299304184915158756
-    const BETA: Self::BigInt = BigInteger384([
+    const BETA: Self::BigInt = BigInteger384::new([
         0x450ae9206343e6e4,
         0x7af39509df5027b6,
         0xab82b31405cf8a30,
@@ -103,9 +103,9 @@ impl SWToTEConParam for Fq377 {
 use ark_bn254::Fq as Fq254;
 /// Dummy implementation for trait bounds
 impl SWToTEConParam for Fq254 {
-    const S: Self::BigInt = BigInteger256([0, 0, 0, 0]);
-    const NEG_ALPHA: Self::BigInt = BigInteger256([0, 0, 0, 0]);
-    const BETA: Self::BigInt = BigInteger256([0, 0, 0, 0]);
+    const S: Self::BigInt = BigInteger256::new([0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger256::new([0, 0, 0, 0]);
+    const BETA: Self::BigInt = BigInteger256::new([0, 0, 0, 0]);
 }
 
 // ================================================
@@ -114,9 +114,9 @@ impl SWToTEConParam for Fq254 {
 use ark_bls12_381::Fq as Fq381;
 /// Dummy implementation for trait bounds
 impl SWToTEConParam for Fq381 {
-    const S: Self::BigInt = BigInteger384([0, 0, 0, 0, 0, 0]);
-    const NEG_ALPHA: Self::BigInt = BigInteger384([0, 0, 0, 0, 0, 0]);
-    const BETA: Self::BigInt = BigInteger384([0, 0, 0, 0, 0, 0]);
+    const S: Self::BigInt = BigInteger384::new([0, 0, 0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger384::new([0, 0, 0, 0, 0, 0]);
+    const BETA: Self::BigInt = BigInteger384::new([0, 0, 0, 0, 0, 0]);
 }
 
 // ================================================
@@ -125,25 +125,26 @@ impl SWToTEConParam for Fq381 {
 use ark_bw6_761::Fq as Fq761;
 /// Dummy implementation for trait bounds
 impl SWToTEConParam for Fq761 {
-    const S: Self::BigInt = BigInteger768([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const NEG_ALPHA: Self::BigInt = BigInteger768([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const BETA: Self::BigInt = BigInteger768([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const S: Self::BigInt = BigInteger768::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const NEG_ALPHA: Self::BigInt = BigInteger768::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const BETA: Self::BigInt = BigInteger768::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
     use ark_bls12_377::{G1Affine, G1Projective};
-    use ark_ec::{AffineCurve, ProjectiveCurve};
-    use ark_ff::{field_new, One};
-    use ark_std::{test_rng, UniformRand, Zero};
+    use ark_ec::{AffineRepr, CurveGroup};
+    use ark_ff::{MontFp, One};
+    use ark_std::{UniformRand, Zero};
+    use jf_utils::test_rng;
 
     // a helper function to check if a point is on the ed curve
     // of bls12-377 G1
     fn is_on_bls12_377_ed_curve(p: &Point<Fq377>) -> bool {
         // Twisted Edwards curve 2: a * x² + y² = 1 + d * x² * y²
-        let a = field_new!(Fq377, "-1");
-        let d = field_new!(Fq377, "122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
+        let a = MontFp!("-1");
+        let d = MontFp!("122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
 
         let x2 = p.0 * p.0;
         let y2 = p.1 * p.1;
@@ -160,7 +161,7 @@ mod test {
         let mut rng = test_rng();
 
         // test generator
-        let g1 = &G1Affine::prime_subgroup_generator();
+        let g1 = &G1Affine::generator();
         let p: Point<Fq377> = g1.into();
         assert!(is_on_bls12_377_ed_curve(&p));
 

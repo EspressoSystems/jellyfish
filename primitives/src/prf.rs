@@ -89,7 +89,7 @@ mod tests {
     use ark_std::UniformRand;
     macro_rules! test_prf {
         ($tr:tt) => {
-            let mut rng = ark_std::test_rng();
+            let mut rng = jf_utils::test_rng();
             let seed = $tr::rand(&mut rng);
             let input = [$tr::from(1u8)];
 

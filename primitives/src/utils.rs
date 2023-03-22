@@ -5,15 +5,15 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::{elgamal, signatures::schnorr};
-use ark_ec::{models::TEModelParameters, ProjectiveCurve, TEModelParameters as Parameters};
-use ark_ff::{FpParameters, PrimeField};
+use ark_ec::{twisted_edwards::TECurveConfig as Config, CurveGroup};
+use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use jf_relation::Variable;
 
 impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn from(vk: &schnorr::VerKey<P>) -> Self {
         let point = vk.0.into_affine();
@@ -23,7 +23,7 @@ where
 
 impl<P> From<&elgamal::EncKey<P>> for (P::BaseField, P::BaseField)
 where
-    P: Parameters,
+    P: Config,
 {
     fn from(pk: &elgamal::EncKey<P>) -> Self {
         let point = pk.key.into_affine();
@@ -44,12 +44,12 @@ pub(crate) fn pad_with(vec: &mut Vec<Variable>, multiple: usize, var: Variable) 
 
 #[inline]
 pub(crate) fn field_byte_len<F: PrimeField>() -> usize {
-    ((F::Params::MODULUS_BITS + 7) / 8) as usize
+    ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
 }
 
 #[inline]
 pub(crate) fn field_bit_len<F: PrimeField>() -> usize {
-    F::Params::MODULUS_BITS as usize
+    F::MODULUS_BIT_SIZE as usize
 }
 
 #[inline]
@@ -60,6 +60,6 @@ pub(crate) fn challenge_bit_len<F: PrimeField>() -> usize {
 }
 
 #[inline]
-pub(crate) fn curve_cofactor<P: TEModelParameters>() -> u64 {
+pub(crate) fn curve_cofactor<P: Config>() -> u64 {
     P::COFACTOR[0]
 }

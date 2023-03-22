@@ -56,14 +56,14 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// RANGE_SIZE^NUM_RANGES >= p,
     #[inline]
     pub fn num_range_blocks(&self) -> Result<usize, CircuitError> {
-        Ok(F::size_in_bits() / self.range_bit_len()? + 1)
+        Ok(F::MODULUS_BIT_SIZE as usize / self.range_bit_len()? + 1)
     }
 }
 
 /// Decompose `val` into `a_0`, ..., `a_{len-1}` s.t.
 /// val = a_0 + RANGE_SIZE * a_1 + ... + RANGE_SIZE^{len-1} * a_{len-1}
 fn decompose_le<F: PrimeField>(val: F, len: usize, range_bit_len: usize) -> Vec<F> {
-    let repr_le = val.into_repr().to_bits_le();
+    let repr_le = val.into_bigint().to_bits_le();
     let mut res: Vec<F> = repr_le
         .chunks(range_bit_len)
         .map(|vec| {
@@ -90,7 +90,8 @@ mod test {
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_std::{rand::Rng, test_rng};
+    use ark_std::rand::Rng;
+    use jf_utils::test_rng;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 8;
     const RANGE_SIZE_FOR_TEST: usize = 256;
@@ -103,7 +104,7 @@ mod test {
         test_decompose_le_helper::<Fq377>();
     }
     fn test_decompose_le_helper<F: PrimeField>() {
-        let len = F::size_in_bits() / RANGE_BIT_LEN_FOR_TEST + 1;
+        let len = F::MODULUS_BIT_SIZE as usize / RANGE_BIT_LEN_FOR_TEST + 1;
         let mut rng = test_rng();
         for _ in 0..10 {
             let val = F::rand(&mut rng);

@@ -20,7 +20,7 @@ fn twenty_hashes(c: &mut Criterion) {
     benchmark_group.sample_size(10);
     benchmark_group.measurement_time(Duration::new(10, 0));
 
-    let mut rng = ark_std::test_rng();
+    let mut rng = jf_utils::test_rng();
 
     let leaf: Fq381 = rng.gen();
 

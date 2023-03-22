@@ -6,7 +6,7 @@
 
 //! Crate wide constants.
 
-use ark_ff::{FftParameters, PrimeField};
+use ark_ff::{FftField, PrimeField};
 use ark_std::{rand::SeedableRng, vec, vec::Vec};
 use rand_chacha::ChaChaRng;
 
@@ -61,7 +61,7 @@ pub fn compute_coset_representatives<F: PrimeField>(
             // let `2^s * t` be the size of the multiplicative group defined by the field
             // `F`, for some odd integer `t`, `s` is the 2-adicity of `F*`.
             // `2^s` is a guaranteed to be multiple of |H|.
-            2usize.pow(<F::FftParams as FftParameters>::TWO_ADICITY)
+            2usize.pow(<F as FftField>::TWO_ADICITY)
         },
     };
     for i in 0..num_wire_types {

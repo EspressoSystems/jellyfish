@@ -1,11 +1,12 @@
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-use ark_std::{rc::Rc, test_rng};
+use ark_std::sync::Arc;
 use jf_primitives::pcs::{
     prelude::{MultilinearKzgPCS, PCSError, PolynomialCommitmentScheme},
     StructuredReferenceString,
 };
+use jf_utils::test_rng;
 use std::time::Instant;
 
 fn main() -> Result<(), PCSError> {
@@ -27,7 +28,7 @@ fn bench_pcs() -> Result<(), PCSError> {
             10
         };
 
-        let poly = Rc::new(DenseMultilinearExtension::rand(nv, &mut rng));
+        let poly = Arc::new(DenseMultilinearExtension::rand(nv, &mut rng));
         let (ml_ck, ml_vk) = uni_params.0.trim(nv)?;
         let (uni_ck, uni_vk) = uni_params.1.trim(nv)?;
         let ck = (ml_ck, uni_ck);

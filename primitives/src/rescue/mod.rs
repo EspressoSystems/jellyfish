@@ -23,8 +23,8 @@ pub mod errors;
 mod rescue_constants;
 pub mod sponge;
 
+use ark_crypto_primitives::sponge::Absorb;
 use ark_ff::{PrimeField, Zero};
-use ark_sponge::Absorb;
 use ark_std::{vec, vec::Vec};
 
 /// The state size of rescue hash.
@@ -617,7 +617,7 @@ mod test_prp {
     // let keys = rescue_hash.key_schedule(&RescueBls4Vector::zero());
     // for key in keys {
     // for elem in key.vec.iter() {
-    // let str: Vec<String> = elem.into_repr().to_bytes_le().iter().map(|b|
+    // let str: Vec<String> = elem.into_bigint().to_bytes_le().iter().map(|b|
     // format!("0x{:02X},", b)) .collect();
     // println!("{:?}", str.join(" "));
     // }
@@ -658,7 +658,7 @@ mod test_permutation {
         // for e in keys2.iter() {
         //     for f in e.vec.iter() {
         //         ark_std::println!("permutation_round_key.append(0x{})",
-        // f.into_repr());     }
+        // f.into_bigint());     }
         // }
         // assert!(false);
 
@@ -761,7 +761,7 @@ mod test_permutation {
 
     fn test_sponge_helper<F: RescueParameter>() {
         let rescue_prp = PRP::default();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let e0 = F::rand(&mut prng);
         let e1 = F::rand(&mut prng);
         let e2 = F::rand(&mut prng);
@@ -843,7 +843,7 @@ mod test_permutation {
         test_fsks_no_padding_errors_helper::<Fq377>();
     }
     fn test_fsks_no_padding_errors_helper<F: RescueParameter>() {
-        let key = F::rand(&mut ark_std::test_rng());
+        let key = F::rand(&mut jf_utils::test_rng());
         let input = vec![F::from(9u64); 4];
         assert!(
             RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
@@ -890,7 +890,7 @@ mod test_permutation {
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 3).unwrap().len(), 3);
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 10).unwrap().len(), 10);
 
-        let key = F::rand(&mut ark_std::test_rng());
+        let key = F::rand(&mut jf_utils::test_rng());
         let input = [F::zero(), F::one(), F::zero(), F::zero()];
         assert_eq!(
             RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 0)

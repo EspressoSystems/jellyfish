@@ -11,7 +11,8 @@ use crate::{
     errors::PlonkError,
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig as SWParam},
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -51,7 +52,7 @@ pub(super) fn aggregate_poly_commitments_circuit<E, F>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<(ScalarsAndBasesVar<F>, Vec<FpElemVar<F>>), CircuitError>
 where
-    E: PairingEngine<Fq = F>,
+    E: Pairing<BaseField = F>,
     F: PrimeField,
 {
     if vks.len() != batch_proof.len() {
@@ -126,7 +127,7 @@ where
 /// Combine the polynomial evaluations into a single evaluation. Useful in
 /// batch opening.
 /// The returned value is the scalar in `[E]1` described in Sec 8.3, step 11 of https://eprint.iacr.org/2019/953.pdf
-pub(super) fn aggregate_evaluations_circuit<E, F>(
+pub(super) fn aggregate_evaluations_circuit<F>(
     circuit: &mut PlonkCircuit<F>,
     lin_poly_constant: &FpElemVar<F>,
     poly_evals_vec: &[ProofEvaluationsVar<F>],
@@ -134,7 +135,6 @@ pub(super) fn aggregate_evaluations_circuit<E, F>(
     buffer_v_and_uv_basis: &[FpElemVar<F>],
 ) -> Result<FpElemVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F>,
     F: PrimeField,
 {
     let mut result = circuit.mod_negate(lin_poly_constant, &non_native_field_info.modulus_in_f)?;
@@ -193,7 +193,7 @@ pub(super) fn compute_challenges_vars<E, F, P>(
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<ChallengesFpElemVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -218,28 +218,28 @@ where
         transcript_var.append_vk_and_pub_input_vars::<E>(circuit, vk, pi)?;
     }
     for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
-        transcript_var.append_commitments_vars::<E, P>(b"witness_poly_comms", wires_poly_comms)?;
+        transcript_var.append_commitments_vars(b"witness_poly_comms", wires_poly_comms)?;
     }
     let tau = transcript_var.get_and_append_challenge_var::<E>(b"tau", circuit)?;
 
     let beta = transcript_var.get_and_append_challenge_var::<E>(b"beta", circuit)?;
     let gamma = transcript_var.get_and_append_challenge_var::<E>(b"gamma", circuit)?;
     for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
-        transcript_var.append_commitment_var::<E, P>(b"perm_poly_comms", prod_perm_poly_comm)?;
+        transcript_var.append_commitment_var(b"perm_poly_comms", prod_perm_poly_comm)?;
     }
 
     let alpha = transcript_var.get_and_append_challenge_var::<E>(b"alpha", circuit)?;
     transcript_var
-        .append_commitments_vars::<E, P>(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
+        .append_commitments_vars(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
     let zeta = transcript_var.get_and_append_challenge_var::<E>(b"zeta", circuit)?;
     for poly_evals in batch_proof.poly_evals_vec.iter() {
-        transcript_var.append_proof_evaluations_vars::<E>(circuit, poly_evals)?;
+        transcript_var.append_proof_evaluations_vars(circuit, poly_evals)?;
     }
 
     let v = transcript_var.get_and_append_challenge_var::<E>(b"v", circuit)?;
-    transcript_var.append_commitment_var::<E, P>(b"open_proof", &batch_proof.opening_proof)?;
+    transcript_var.append_commitment_var(b"open_proof", &batch_proof.opening_proof)?;
     transcript_var
-        .append_commitment_var::<E, P>(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
+        .append_commitment_var(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
     let u = transcript_var.get_and_append_challenge_var::<E>(b"u", circuit)?;
 
     // convert challenge vars into FpElemVars
@@ -267,11 +267,11 @@ pub(super) fn prepare_pcs_info_var<E, F, P>(
     batch_proof: &BatchProofVar<F>,
     extra_transcript_init_msg: &Option<Vec<u8>>,
 
-    domain: Radix2EvaluationDomain<E::Fr>,
+    domain: Radix2EvaluationDomain<E::ScalarField>,
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<PcsInfoVar<F>, CircuitError>
 where
-    E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
@@ -353,7 +353,7 @@ where
         &alpha_bases,
         non_native_field_info,
     )?;
-    let eval = aggregate_evaluations_circuit::<E, _>(
+    let eval = aggregate_evaluations_circuit::<_>(
         circuit,
         &lin_poly_constant,
         &batch_proof.poly_evals_vec,
@@ -459,12 +459,12 @@ mod test {
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
-    use ark_bls12_377::{g1::Parameters as Param377, Bls12_377};
-    use ark_ec::{SWModelParameters, TEModelParameters};
-    use ark_std::{test_rng, vec, UniformRand};
+    use ark_bls12_377::{g1::Config as Param377, Bls12_377};
+    use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
+    use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{Circuit, MergeableCircuitType};
-    use jf_utils::field_switching;
+    use jf_utils::{field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     #[test]
@@ -475,9 +475,9 @@ mod test {
 
     fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
-        P: SWModelParameters<BaseField = F> + TEModelParameters,
+        P: SWCurveConfig<BaseField = F> + TECurveConfig,
         Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
@@ -488,7 +488,7 @@ mod test {
         let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
 
         // 2. Setup instances
-        let shared_public_input = E::Fr::rand(rng);
+        let shared_public_input = E::ScalarField::rand(rng);
         let mut instances_type_a = vec![];
         let mut instances_type_b = vec![];
         for i in 32..50 {
@@ -530,7 +530,7 @@ mod test {
         // 5. Verification
         let open_key_ref = &vks_type_a[0].open_key;
         let beta_g_ref = &srs.powers_of_g[1];
-        let blinding_factor = E::Fr::rand(rng);
+        let blinding_factor = E::ScalarField::rand(rng);
         let (inner1, inner2) = BatchArgument::partial_verify::<T>(
             beta_g_ref,
             &open_key_ref.g,
@@ -544,13 +544,13 @@ mod test {
         // =======================================
         // begin challenge circuit
         // =======================================
-        let mut circuit = PlonkCircuit::<E::Fq>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let mut circuit = PlonkCircuit::<E::BaseField>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // constants
         let m = 128;
-        let two_power_m = Some(E::Fq::from(2u8).pow([m as u64]));
+        let two_power_m = Some(E::BaseField::from(2u8).pow([m as u64]));
 
-        let fr_modulus_bits = <E::Fr as PrimeField>::Params::MODULUS.to_bytes_le();
+        let fr_modulus_bits = <E::ScalarField as PrimeField>::MODULUS.to_bytes_le();
         let modulus_in_f = F::from_le_bytes_mod_order(&fr_modulus_bits);
         let modulus_fp_elem = FpElem::new(&modulus_in_f, m, two_power_m)?;
         let non_native_field_info = NonNativeFieldInfo::<F> {

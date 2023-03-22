@@ -11,7 +11,8 @@ use crate::{
     proof_system::structs::{PlookupEvaluations, ProofEvaluations, VerifyingKey},
 };
 use ark_ec::{
-    short_weierstrass_jacobian::GroupAffine, PairingEngine, SWModelParameters as SWParam,
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig as SWParam},
 };
 use ark_std::vec::Vec;
 use jf_primitives::{
@@ -58,10 +59,10 @@ where
     fn append_vk_and_pub_input<E, P>(
         &mut self,
         vk: &VerifyingKey<E>,
-        pub_input: &[E::Fr],
+        pub_input: &[E::ScalarField],
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         // to enable a more efficient verifier circuit, we remove
@@ -111,7 +112,7 @@ where
         comm: &Commitment<E>,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F, G1Affine = GroupAffine<P>>,
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
         // convert the SW form commitments into TE form
@@ -129,18 +130,18 @@ where
     fn append_challenge<E>(
         &mut self,
         _label: &'static [u8],
-        challenge: &E::Fr,
+        challenge: &E::ScalarField,
     ) -> Result<(), PlonkError>
     where
-        E: PairingEngine<Fq = F>,
+        E: Pairing<BaseField = F>,
     {
         self.transcript.push(field_switching(challenge));
         Ok(())
     }
 
-    fn append_proof_evaluations<E: PairingEngine>(
+    fn append_proof_evaluations<E: Pairing>(
         &mut self,
-        evals: &ProofEvaluations<E::Fr>,
+        evals: &ProofEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         for e in &evals.wires_evals {
             self.transcript.push(field_switching(e))
@@ -152,9 +153,9 @@ where
         Ok(())
     }
 
-    fn append_plookup_evaluations<E: PairingEngine>(
+    fn append_plookup_evaluations<E: Pairing>(
         &mut self,
-        evals: &PlookupEvaluations<E::Fr>,
+        evals: &PlookupEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
         for eval in evals.evals_vec().iter() {
             self.transcript.push(field_switching(eval));
@@ -168,9 +169,12 @@ where
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript. `_label` is omitted for
     /// efficiency.
-    fn get_and_append_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::Fr, PlonkError>
+    fn get_and_append_challenge<E>(
+        &mut self,
+        _label: &'static [u8],
+    ) -> Result<E::ScalarField, PlonkError>
     where
-        E: PairingEngine<Fq = F>,
+        E: Pairing<BaseField = F>,
     {
         // 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr
@@ -178,7 +182,7 @@ where
 
         let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
         let tmp: [F; STATE_SIZE] = VariableLengthRescueCRHF::evaluate(&input)?;
-        let challenge = fq_to_fr_with_mask::<F, E::Fr>(&tmp[0]);
+        let challenge = fq_to_fr_with_mask::<F, E::ScalarField>(&tmp[0]);
         self.state.copy_from_slice(&tmp);
         self.transcript = Vec::new();
         self.transcript.push(field_switching(&challenge));

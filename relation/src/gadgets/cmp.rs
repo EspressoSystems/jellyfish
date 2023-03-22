@@ -185,10 +185,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         a: Variable,
         b: Variable,
     ) -> Result<(BoolVar, BoolVar), CircuitError> {
-        let a_gt_const =
-            self.is_gt_constant_internal(a, &F::from(F::modulus_minus_one_div_two()))?;
-        let b_gt_const =
-            self.is_gt_constant_internal(b, &F::from(F::modulus_minus_one_div_two()))?;
+        let a_gt_const = self.is_gt_constant_internal(a, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
+        let b_gt_const = self.is_gt_constant_internal(b, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let a_leq_const = self.logic_neg(a_gt_const)?;
         // Check whether `a` <= (q-1)/2 and `b` > (q-1)/2
         let msb_check = self.logic_and(a_leq_const, b_gt_const)?;
@@ -203,8 +201,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let (msb_check, msb_eq) = self.msb_check_internal(a, b)?;
         // check whether (a-b) > (q-1)/2
         let c = self.sub(a, b)?;
-        let cmp_result =
-            self.is_gt_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+        let cmp_result = self.is_gt_constant_internal(c, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
         self.logic_or(msb_check, cmp_result)
@@ -215,23 +212,22 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let (msb_check, msb_eq) = self.msb_check_internal(a, b)?;
         // check whether (a-b) <= (q-1)/2
         let c = self.sub(a, b)?;
-        let cmp_result =
-            self.is_gt_constant_internal(c, &F::from(F::modulus_minus_one_div_two()))?;
+        let cmp_result = self.is_gt_constant_internal(c, &F::from(F::MODULUS_MINUS_ONE_DIV_TWO))?;
         let cmp_result = self.logic_and(msb_eq, cmp_result)?;
 
         self.logic_or_gate(msb_check, cmp_result)
     }
 
     /// Helper function to check whether `a` is greater than a given
-    /// constant. Let N = F::size_in_bits(), it assumes that the
+    /// constant. Let N = F::MODULUS_BIT_SIZE, it assumes that the
     /// constant < 2^N. And it uses at most N AND/OR gates.
     fn is_gt_constant_internal(
         &mut self,
         a: Variable,
         constant: &F,
     ) -> Result<BoolVar, CircuitError> {
-        let a_bits_le = self.unpack(a, F::size_in_bits())?;
-        let const_bits_le = constant.into_repr().to_bits_le();
+        let a_bits_le = self.unpack(a, F::MODULUS_BIT_SIZE as usize)?;
+        let const_bits_le = constant.into_bigint().to_bits_le();
 
         // Iterating from LSB to MSB. Skip the front consecutive 1's.
         // Put an OR gate for bit 0 and an AND gate for bit 1.
@@ -280,12 +276,12 @@ mod test {
             (F::from(5u32), F::from(5u32)),
             (F::from(1u32), F::from(2u32)),
             (
-                F::from(F::modulus_minus_one_div_two()).add(F::one()),
+                F::from(F::MODULUS_MINUS_ONE_DIV_TWO).add(F::one()),
                 F::from(2u32),
             ),
             (
-                F::from(F::modulus_minus_one_div_two()).add(F::one()),
-                F::from(F::modulus_minus_one_div_two()).mul(F::from(2u32)),
+                F::from(F::MODULUS_MINUS_ONE_DIV_TWO).add(F::one()),
+                F::from(F::MODULUS_MINUS_ONE_DIV_TWO).mul(F::from(2u32)),
             ),
         ];
         multizip((
@@ -293,8 +289,7 @@ mod test {
             [Ordering::Less, Ordering::Greater],
             [false, true],
             [false, true],
-        )).into_iter()
-            .try_for_each(
+        )).try_for_each(
                 |((a, b), ordering, should_also_check_equality,
                  is_b_constant)|
                  -> Result<(), CircuitError> {

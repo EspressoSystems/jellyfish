@@ -9,8 +9,8 @@
 use super::{Point, PointVariable};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
-    group::Group, twisted_edwards_extended::GroupProjective, ModelParameters,
-    TEModelParameters as Parameters,
+    twisted_edwards::{Projective, TECurveConfig as Config},
+    CurveConfig,
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, vec, vec::Vec};
@@ -20,7 +20,7 @@ use jf_utils::fq_to_fr;
 pub trait MultiScalarMultiplicationCircuit<F, P>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     /// Compute the multi-scalar-multiplications.
     /// Use pippenger when the circuit supports lookup;
@@ -45,14 +45,14 @@ where
 impl<F, P> MultiScalarMultiplicationCircuit<F, P> for PlonkCircuit<F>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     fn msm(
         &mut self,
         bases: &[PointVariable],
         scalars: &[Variable],
     ) -> Result<PointVariable, CircuitError> {
-        let scalar_bit_length = <P as ModelParameters>::ScalarField::size_in_bits();
+        let scalar_bit_length = <P as CurveConfig>::ScalarField::MODULUS_BIT_SIZE as usize;
         MultiScalarMultiplicationCircuit::<F, P>::msm_with_var_scalar_length(
             self,
             bases,
@@ -130,7 +130,7 @@ fn msm_naive<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     circuit.check_vars_bound(scalars)?;
     for base in bases.iter() {
@@ -194,7 +194,7 @@ fn msm_pippenger<F, P>(
 ) -> Result<PointVariable, CircuitError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
     // ================================================
     // check inputs
@@ -318,7 +318,7 @@ where
 {
     // create witness
     let m = (scalar_bit_length - 1) / c + 1;
-    let mut scalar_val = circuit.witness(scalar_var)?.into_repr();
+    let mut scalar_val = circuit.witness(scalar_var)?.into_bigint();
     let decomposed_scalar_vars = (0..m)
         .map(|_| {
             // We mod the remaining bits by 2^{window size}, thus taking `c` bits.
@@ -347,11 +347,11 @@ fn compute_scalar_mul_value<F, P>(
 ) -> Result<Point<F>, CircuitError>
 where
     F: PrimeField,
-    P: Parameters<BaseField = F>,
+    P: Config<BaseField = F>,
 {
-    let curve_point: GroupProjective<P> = circuit.point_witness(base_var)?.into();
+    let curve_point: Projective<P> = circuit.point_witness(base_var)?.into();
     let scalar = fq_to_fr::<F, P>(&circuit.witness(scalar_var)?);
-    let res = Group::mul(&curve_point, &scalar);
+    let res = curve_point * scalar;
     Ok(res.into())
 }
 
@@ -369,14 +369,14 @@ mod tests {
 
     use super::*;
     use crate::{gadgets::ecc::Point, Circuit, PlonkType};
-    use ark_bls12_377::{g1::Parameters as Param377, Fq as Fq377};
+    use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
     use ark_ec::{
-        msm::VariableBaseMSM, twisted_edwards_extended::GroupAffine,
-        TEModelParameters as Parameters,
+        scalar_mul::variable_base::VariableBaseMSM,
+        twisted_edwards::{Affine, TECurveConfig as Config},
     };
-    use ark_ed_on_bls12_377::{EdwardsParameters as ParamEd377, Fq as FqEd377};
-    use ark_ed_on_bls12_381::{EdwardsParameters as ParamEd381, Fq as FqEd381};
-    use ark_ed_on_bn254::{EdwardsParameters as ParamEd254, Fq as FqEd254};
+    use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
+    use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
+    use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
     use jf_utils::fr_to_fq;
@@ -405,9 +405,9 @@ mod tests {
     ) -> Result<(), CircuitError>
     where
         F: PrimeField,
-        P: Parameters<BaseField = F>,
+        P: Config<BaseField = F>,
     {
-        let mut rng = ark_std::test_rng();
+        let mut rng = jf_utils::test_rng();
 
         for dim in [1, 2, 4, 8, 16, 32, 64, 128] {
             let mut circuit: PlonkCircuit<F> = match plonk_type {
@@ -416,13 +416,12 @@ mod tests {
             };
 
             // bases and scalars
-            let bases: Vec<GroupAffine<P>> =
-                (0..dim).map(|_| GroupAffine::<P>::rand(&mut rng)).collect();
+            let bases: Vec<Affine<P>> = (0..dim).map(|_| Affine::<P>::rand(&mut rng)).collect();
             let scalars: Vec<P::ScalarField> =
                 (0..dim).map(|_| P::ScalarField::rand(&mut rng)).collect();
             let scalar_reprs: Vec<<P::ScalarField as PrimeField>::BigInt> =
-                scalars.iter().map(|x| x.into_repr()).collect();
-            let res = VariableBaseMSM::multi_scalar_mul(&bases, &scalar_reprs);
+                scalars.iter().map(|x| x.into_bigint()).collect();
+            let res = Projective::<P>::msm_bigint(&bases, &scalar_reprs);
             let res_point: Point<F> = res.into();
 
             // corresponding wires

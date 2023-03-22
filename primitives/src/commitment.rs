@@ -111,7 +111,7 @@ mod test {
 
     macro_rules! test_commit {
         ($tr:tt) => {
-            let mut prng = ark_std::test_rng();
+            let mut prng = jf_utils::test_rng();
 
             let input = [$tr::from(1u64), $tr::from(2u64), $tr::from(3u64)];
             let blind = $tr::rand(&mut prng);

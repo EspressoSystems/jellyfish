@@ -800,7 +800,7 @@ mod tests {
     fn test_prp_helper<F: RescueParameter>() {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
         let prp = PRP::default();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let key_vec = RescueVector::from(&[
             F::rand(&mut prng),
             F::rand(&mut prng),
@@ -846,7 +846,7 @@ mod tests {
     fn test_rescue_sponge_no_padding_single_output_helper<F: RescueParameter>() {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
 
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let data = (0..2 * CRHF_RATE).map(|_| F::rand(&mut prng)).collect_vec();
         let data_vars = data
             .iter()
@@ -1010,7 +1010,7 @@ mod tests {
     }
     fn test_fsks_helper<F: RescueParameter>() {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let mut prng = ark_std::test_rng();
+        let mut prng = jf_utils::test_rng();
         let key = F::rand(&mut prng);
         let key_var = circuit.create_variable(key).unwrap();
         let input_len = 8;

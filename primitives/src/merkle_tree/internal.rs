@@ -10,10 +10,9 @@ use super::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
 };
 use crate::errors::PrimitivesError;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
-    borrow::Borrow, boxed::Box, convert::TryInto, format, iter::Peekable, string::ToString, vec,
-    vec::Vec,
+    borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
 };
 use itertools::Itertools;
 use jf_utils::canonical;

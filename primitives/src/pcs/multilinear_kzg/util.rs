@@ -12,7 +12,7 @@ use ark_poly::{
     univariate::DensePolynomial, DenseMultilinearExtension, EvaluationDomain, Evaluations,
     MultilinearExtension, Polynomial, Radix2EvaluationDomain,
 };
-use ark_std::{end_timer, format, log2, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
+use ark_std::{end_timer, format, log2, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 /// Evaluate eq polynomial. use the public one later
 pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {
@@ -130,7 +130,7 @@ pub fn get_batched_nv(num_var: usize, polynomials_len: usize) -> usize {
 /// merge a set of polynomials. Returns an error if the
 /// polynomials do not share a same number of nvs.
 pub fn merge_polynomials<F: PrimeField>(
-    polynomials: &[Rc<DenseMultilinearExtension<F>>],
+    polynomials: &[Arc<DenseMultilinearExtension<F>>],
 ) -> Result<DenseMultilinearExtension<F>, PCSError> {
     let nv = polynomials[0].num_vars();
     for poly in polynomials.iter() {
@@ -192,7 +192,7 @@ pub(crate) fn build_l<F: PrimeField>(
 // are included in the `batch_proof`.
 #[cfg(test)]
 pub(crate) fn generate_evaluations<F: PrimeField>(
-    polynomials: &[Rc<DenseMultilinearExtension<F>>],
+    polynomials: &[Arc<DenseMultilinearExtension<F>>],
     points: &[Vec<F>],
 ) -> Result<Vec<F>, PCSError> {
     if polynomials.len() != points.len() {
@@ -226,8 +226,8 @@ pub(crate) fn generate_evaluations<F: PrimeField>(
 mod test {
     use super::*;
     use ark_bls12_381::Fr;
-    use ark_ff::field_new;
-    use ark_poly::UVPolynomial;
+    use ark_ff::MontFp;
+    use ark_poly::DenseUVPolynomial;
     use ark_std::{One, Zero};
 
     #[test]
@@ -316,7 +316,7 @@ mod test {
         // 1, 0 |-> 0
         // 1, 1 |-> 5
         let w_eval = vec![F::zero(), F::from(2u64), F::zero(), F::from(5u64)];
-        let w1 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w1 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W2 = x1x2 + x1 whose evaluations are
         // 0, 0 |-> 0
@@ -324,7 +324,7 @@ mod test {
         // 1, 0 |-> 1
         // 1, 1 |-> 2
         let w_eval = vec![F::zero(), F::zero(), F::from(1u64), F::from(2u64)];
-        let w2 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w2 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W3 = x1 + x2 whose evaluations are
         // 0, 0 |-> 0
@@ -332,7 +332,7 @@ mod test {
         // 1, 0 |-> 1
         // 1, 1 |-> 2
         let w_eval = vec![F::zero(), F::one(), F::from(1u64), F::from(2u64)];
-        let w3 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w3 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         {
             // W = (3x1x2 + 2x2)(1-x0) + (x1x2 + x1)x0
@@ -476,20 +476,16 @@ mod test {
             // 13108968793781547619861935127046491459422638125131909455650914674984645296128*x +
             // 39326906381344642859585805381139474378267914375395728366952744024953935888385
             let l0 = DensePolynomial::from_coefficients_vec(vec![
-                field_new!(
-                    Fr,
+                MontFp!(
                     "39326906381344642859585805381139474378267914375395728366952744024953935888385"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "13108968793781547619861935127046491459422638125131909455650914674984645296128"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "39326906381344642859585805381139474378267914375395728366952744024953935888385"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "13108968793781547619861935127046491459422638125131909455650914674984645296128"
                 ),
             ]);
@@ -504,22 +500,16 @@ mod test {
             // 52435875175126190478581454301667552757996485117855702128036095582747240693761*x +
             // 39326906381344642859585805381139474378267914375395728366952744024953935888385
             let l1 = DensePolynomial::from_coefficients_vec(vec![
-                field_new!(
-                    Fr,
+                MontFp!(
                     "39326906381344642859585805381139474378267914375395728366952744024953935888385"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "52435875175126190478581454301667552757996485117855702128036095582747240693761"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "13108968793781547619861935127046491459422638125131909455650914674984645296128"
                 ),
-                field_new!(
-                    Fr,
-                    "866286206518413079694067382671935694567563117191340490752"
-                ),
+                MontFp!("866286206518413079694067382671935694567563117191340490752"),
             ]);
 
             // ========================
@@ -532,22 +522,16 @@ mod test {
             // 52435875175126190476848881888630726598608350352511830738900969348364559712256*x +
             // 39326906381344642859585805381139474378267914375395728366952744024953935888387
             let l2 = DensePolynomial::from_coefficients_vec(vec![
-                field_new!(
-                    Fr,
+                MontFp!(
                     "39326906381344642859585805381139474378267914375395728366952744024953935888387"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "52435875175126190476848881888630726598608350352511830738900969348364559712256"
                 ),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "13108968793781547619861935127046491459422638125131909455650914674984645296129"
                 ),
-                field_new!(
-                    Fr,
-                    "2598858619555239239082202148015807083702689351574021472255"
-                ),
+                MontFp!("2598858619555239239082202148015807083702689351574021472255"),
             ]);
 
             // ========================
@@ -561,15 +545,11 @@ mod test {
             // 3
             let l3 = DensePolynomial::from_coefficients_vec(vec![
                 Fr::from(3u64),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "52435875175126190475982595682112313518914282969839895044333406231173219221504"
                 ),
                 Fr::one(),
-                field_new!(
-                    Fr,
-                    "3465144826073652318776269530687742778270252468765361963007"
-                ),
+                MontFp!("3465144826073652318776269530687742778270252468765361963007"),
             ]);
 
             assert_eq!(l0, l[0], "l0 not equal");
@@ -585,15 +565,15 @@ mod test {
         // Example from page 53:
         // W1 = 3x1x2 + 2x2
         let w_eval = vec![Fr::zero(), Fr::from(2u64), Fr::zero(), Fr::from(5u64)];
-        let w1 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w1 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W2 = x1x2 + x1
         let w_eval = vec![Fr::zero(), Fr::zero(), Fr::from(1u64), Fr::from(2u64)];
-        let w2 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w2 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         // W3 = x1 + x2
         let w_eval = vec![Fr::zero(), Fr::one(), Fr::from(1u64), Fr::from(2u64)];
-        let w3 = Rc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
+        let w3 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(2, w_eval));
 
         let r = Fr::from(42u64);
 
@@ -682,8 +662,7 @@ mod test {
 
             assert_eq!(
                 q_x.evaluate(&r),
-                field_new!(
-                    Fr,
+                MontFp!(
                     "42675783400755005965526147011103024780845819057955866345013183657072368533932"
                 ),
             );

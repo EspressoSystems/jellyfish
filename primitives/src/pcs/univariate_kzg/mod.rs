@@ -6,13 +6,17 @@
 
 //! Main module for univariate KZG commitment scheme
 
+use core::ops::Mul;
+
 use crate::pcs::{
     prelude::Commitment, PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
-use ark_ec::{msm::VariableBaseMSM, AffineCurve, PairingEngine, ProjectiveCurve};
+use ark_ec::{
+    pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
+};
 use ark_ff::PrimeField;
-use ark_poly::{univariate::DensePolynomial, Polynomial, UVPolynomial};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Read, SerializationError, Write};
+use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
     end_timer, format,
@@ -32,29 +36,29 @@ use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierPa
 pub(crate) mod srs;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
-pub struct UnivariateKzgPCS<E: PairingEngine> {
+pub struct UnivariateKzgPCS<E: Pairing> {
     #[doc(hidden)]
     phantom: PhantomData<E>,
 }
 
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
 /// proof of opening
-pub struct UnivariateKzgProof<E: PairingEngine> {
+pub struct UnivariateKzgProof<E: Pairing> {
     /// Evaluation of quotients
     pub proof: E::G1Affine,
 }
 /// batch proof
 pub type UnivariateKzgBatchProof<E> = Vec<UnivariateKzgProof<E>>;
 
-impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
-    // Parameters
+impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
+    // Config
     type ProverParam = UnivariateProverParam<E::G1Affine>;
     type VerifierParam = UnivariateVerifierParam<E>;
     type SRS = UnivariateUniversalParams<E>;
     // Polynomial and its associated types
-    type Polynomial = DensePolynomial<E::Fr>;
-    type Point = E::Fr;
-    type Evaluation = E::Fr;
+    type Polynomial = DensePolynomial<E::ScalarField>;
+    type Point = E::ScalarField;
+    type Evaluation = E::ScalarField;
     // Polynomial and its associated types
     type Commitment = Commitment<E>;
     type BatchCommitment = Vec<Self::Commitment>;
@@ -111,7 +115,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         let (num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
         let msm_time = start_timer!(|| "MSM to compute commitment to plaintext poly");
-        let commitment = VariableBaseMSM::multi_scalar_mul(
+        let commitment = E::G1::msm_bigint(
             &prover_param.powers_of_g[num_leading_zeros..],
             &plain_coeffs,
         )
@@ -146,7 +150,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError> {
         let open_time =
             start_timer!(|| format!("Opening polynomial of degree {}", polynomial.degree()));
-        let divisor = Self::Polynomial::from_coefficients_vec(vec![-*point, E::Fr::one()]);
+        let divisor = Self::Polynomial::from_coefficients_vec(vec![-*point, E::ScalarField::one()]);
 
         let witness_time = start_timer!(|| "Computing witness polynomial");
         let witness_polynomial = polynomial / &divisor;
@@ -155,7 +159,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         let (num_leading_zeros, witness_coeffs) =
             skip_leading_zeros_and_convert_to_bigints(&witness_polynomial);
 
-        let proof = VariableBaseMSM::multi_scalar_mul(
+        let proof: E::G1Affine = E::G1::msm_bigint(
             &prover_param.borrow().powers_of_g[num_leading_zeros..],
             &witness_coeffs,
         )
@@ -203,23 +207,22 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         verifier_param: &Self::VerifierParam,
         commitment: &Self::Commitment,
         point: &Self::Point,
-        value: &E::Fr,
+        value: &E::ScalarField,
         proof: &Self::Proof,
     ) -> Result<bool, PCSError> {
         let check_time = start_timer!(|| "Checking evaluation");
-        let pairing_inputs: Vec<(E::G1Prepared, E::G2Prepared)> = vec![
-            (
-                (verifier_param.g.mul(value.into_repr())
-                    - proof.proof.mul(point.into_repr())
-                    - commitment.0.into_projective())
+        let pairing_inputs_l: Vec<E::G1Prepared> = vec![
+            (verifier_param.g * value - proof.proof * point - commitment.0.into_group())
                 .into_affine()
                 .into(),
-                verifier_param.h.into(),
-            ),
-            (proof.proof.into(), verifier_param.beta_h.into()),
+            proof.proof.into(),
         ];
+        let pairing_inputs_r: Vec<E::G2Prepared> =
+            vec![verifier_param.h.into(), verifier_param.beta_h.into()];
 
-        let res = E::product_of_pairings(pairing_inputs.iter()).is_one();
+        let res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
+            .0
+            .is_one();
 
         end_timer!(check_time, || format!("Result: {res}"));
         Ok(res)
@@ -234,21 +237,21 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         verifier_param: &Self::VerifierParam,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
-        values: &[E::Fr],
+        values: &[E::ScalarField],
         batch_proof: &Self::BatchProof,
         rng: &mut R,
     ) -> Result<bool, PCSError> {
         let check_time =
             start_timer!(|| format!("Checking {} evaluation proofs", multi_commitment.len()));
 
-        let mut total_c = <E::G1Projective>::zero();
-        let mut total_w = <E::G1Projective>::zero();
+        let mut total_c = <E::G1>::zero();
+        let mut total_w = <E::G1>::zero();
 
         let combination_time = start_timer!(|| "Combining commitments and proofs");
-        let mut randomizer = E::Fr::one();
+        let mut randomizer = E::ScalarField::one();
         // Instead of multiplying g and gamma_g in each turn, we simply accumulate
         // their coefficients and perform a final multiplication at the end.
-        let mut g_multiplier = E::Fr::zero();
+        let mut g_multiplier = E::ScalarField::zero();
         for (((c, z), v), proof) in multi_commitment
             .iter()
             .zip(points)
@@ -257,11 +260,11 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         {
             let w = proof.proof;
             let mut temp = w.mul(*z);
-            temp.add_assign_mixed(&c.0);
+            temp += &c.0;
             let c = temp;
             g_multiplier += &(randomizer * v);
-            total_c += &c.mul(randomizer.into_repr());
-            total_w += &w.mul(randomizer.into_repr());
+            total_c += c * randomizer;
+            total_w += w * randomizer;
             // We don't need to sample randomizers from the full field,
             // only from 128-bit strings.
             randomizer = u128::rand(rng).into();
@@ -270,15 +273,16 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
         end_timer!(combination_time);
 
         let to_affine_time = start_timer!(|| "Converting results to affine for pairing");
-        let affine_points = E::G1Projective::batch_normalization_into_affine(&[-total_w, total_c]);
+        let affine_points = E::G1::normalize_batch(&[-total_w, total_c]);
         let (total_w, total_c) = (affine_points[0], affine_points[1]);
         end_timer!(to_affine_time);
 
         let pairing_time = start_timer!(|| "Performing product of pairings");
-        let result = E::product_of_pairings(&[
-            (total_w.into(), verifier_param.beta_h.into()),
-            (total_c.into(), verifier_param.h.into()),
-        ])
+        let result = E::multi_pairing(
+            [total_w, total_c],
+            [verifier_param.beta_h, verifier_param.h],
+        )
+        .0
         .is_one();
         end_timer!(pairing_time);
         end_timer!(check_time, || format!("Result: {result}"));
@@ -286,7 +290,7 @@ impl<E: PairingEngine> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
     }
 }
 
-fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: UVPolynomial<F>>(
+fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial<F>>(
     p: &P,
 ) -> (usize, Vec<F::BigInt>) {
     let mut num_leading_zeros = 0;
@@ -299,7 +303,7 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: UVPolynomial<F>>(
 
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
     let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to bigints");
-    let coeffs = p.iter().map(|s| s.into_repr()).collect::<Vec<_>>();
+    let coeffs = p.iter().map(|s| s.into_bigint()).collect::<Vec<_>>();
     end_timer!(to_bigint_time);
     coeffs
 }
@@ -309,13 +313,14 @@ mod tests {
     use super::*;
     use crate::pcs::StructuredReferenceString;
     use ark_bls12_381::Bls12_381;
-    use ark_ec::PairingEngine;
+    use ark_ec::pairing::Pairing;
     use ark_poly::univariate::DensePolynomial;
-    use ark_std::{test_rng, UniformRand};
+    use ark_std::UniformRand;
+    use jf_utils::test_rng;
 
     fn end_to_end_test_template<E>() -> Result<(), PCSError>
     where
-        E: PairingEngine,
+        E: Pairing,
     {
         let rng = &mut test_rng();
         for _ in 0..100 {
@@ -325,9 +330,11 @@ mod tests {
             }
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
-            let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                degree, rng,
+            );
             let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
-            let point = E::Fr::rand(rng);
+            let point = E::ScalarField::rand(rng);
             let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
             assert!(
                 UnivariateKzgPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
@@ -341,7 +348,7 @@ mod tests {
 
     fn linear_polynomial_test_template<E>() -> Result<(), PCSError>
     where
-        E: PairingEngine,
+        E: Pairing,
     {
         let rng = &mut test_rng();
         for _ in 0..100 {
@@ -349,9 +356,11 @@ mod tests {
 
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
-            let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                degree, rng,
+            );
             let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
-            let point = E::Fr::rand(rng);
+            let point = E::ScalarField::rand(rng);
             let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
             assert!(
                 UnivariateKzgPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
@@ -365,7 +374,7 @@ mod tests {
 
     fn batch_check_test_template<E>() -> Result<(), PCSError>
     where
-        E: PairingEngine,
+        E: Pairing,
     {
         let rng = &mut test_rng();
         for _ in 0..10 {
@@ -380,9 +389,12 @@ mod tests {
             let mut points = Vec::new();
             let mut proofs = Vec::new();
             for _ in 0..10 {
-                let p = <DensePolynomial<E::Fr> as UVPolynomial<E::Fr>>::rand(degree, rng);
+                let p =
+                    <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                        degree, rng,
+                    );
                 let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
-                let point = E::Fr::rand(rng);
+                let point = E::ScalarField::rand(rng);
                 let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
 
                 assert!(UnivariateKzgPCS::<E>::verify(

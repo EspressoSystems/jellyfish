@@ -8,7 +8,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_docs)]
-#![allow(clippy::derive_hash_xor_eq)]
 pub mod constants;
 pub mod errors;
 pub mod gadgets;

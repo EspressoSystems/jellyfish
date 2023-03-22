@@ -12,7 +12,8 @@ use crate::{
 };
 use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{
-    domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain, UVPolynomial,
+    domain::Radix2EvaluationDomain, univariate::DensePolynomial, DenseUVPolynomial,
+    EvaluationDomain,
 };
 use ark_std::{boxed::Box, cmp::max, format, string::ToString, vec, vec::Vec};
 use hashbrown::{HashMap, HashSet};
@@ -1687,7 +1688,8 @@ pub(crate) mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
     use ark_poly::{domain::Radix2EvaluationDomain, univariate::DensePolynomial, EvaluationDomain};
-    use ark_std::{test_rng, vec, vec::Vec};
+    use ark_std::{vec, vec::Vec};
+    use jf_utils::test_rng;
 
     #[test]
     fn test_circuit_trait() -> Result<(), CircuitError> {
