@@ -214,6 +214,7 @@ pub struct KeyPair<P>
 where
     P: Pairing,
 {
+    phantom: PhantomData<P>,
     sk: SignKey<P>,
     vk: VerKey<P>,
 }
@@ -274,20 +275,28 @@ where
 
 impl<P> KeyPair<P>
 where
-    P: Pairing + Default,
+    P: Pairing,
 {
     /// Key-pair generation algorithm
     pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
         let sk = SignKey::generate(prng);
         let vk = VerKey::from(&sk);
-        KeyPair { sk, vk }
+        KeyPair {
+            phantom: Default::default(),
+            sk,
+            vk,
+        }
     }
 
     /// Key pair generation using a particular sign key secret `sk`
     pub fn generate_with_sign_key(sk: P::ScalarField) -> Self {
         let sk = SignKey(sk);
         let vk = VerKey::from(&sk);
-        KeyPair { sk, vk }
+        KeyPair {
+            phantom: Default::default(),
+            sk,
+            vk,
+        }
     }
 
     /// Get reference to verification key
@@ -321,18 +330,6 @@ impl<P: Pairing> SignKey<P> {
     }
 }
 
-// impl<P> From<&SignKey<P::Fp>> for VerKey<P>
-// where
-//     P: Config,
-// {
-//     fn from(
-//         sk: &SignKey<P::Fp>) -> Self {
-//         // TODO
-//         // VerKey(G2Projective::<P>::generator().clone() * sk.0.clone())
-//         VerKey(G2Projective::<P>::generator() * sk.0)
-//     }
-// }
-
 impl<P> From<&SignKey<P>> for VerKey<P>
 where
     P: Pairing,
@@ -364,44 +361,15 @@ where
     }
 }
 
-// impl<P> VerKey<P>
-//     where
-//         P: Config<BaseField = F>,
-// {
-//     // TODO: this function should be generic w.r.t. hash functions
-//     // Fixme after the hash-api PR is merged.
-//     #[allow(non_snake_case)]
-//     fn challenge<B: AsRef<[u8]>>(&self, R: &Projective<P>, msg: &[F], csid:
-// B) -> P::ScalarField {         // is the domain separator always an Fr? If so
-// how about using Fr as domain         // separator rather than bytes?
-//         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
-//         let mut challenge_input = {
-//             let vk_affine = self.0.into_affine();
-//             let R_affine = R.into_affine();
-//             vec![
-//                 instance_description,
-//                 vk_affine.x,
-//                 vk_affine.y,
-//                 R_affine.x,
-//                 R_affine.y,
-//             ]
-//         };
-//         challenge_input.extend(msg);
-//         let challenge_fq = VariableLengthRescueCRHF::<F,
-// 1>::evaluate(challenge_input).unwrap()[0]; // safe unwrap
-//
-//         // this masking will drop the last byte, and the resulting
-//         // challenge will be 248 bits
-//         fq_to_fr_with_mask(&challenge_fq)
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
+    use crate::signatures::bls_arkwors::KeyPair;
+    use ark_bn254::Bn254;
 
     #[test]
-    fn test() {
-        assert!(true);
+    fn test_bls_signature() {
+        let mut rng = jf_utils::test_rng();
+        let _key_pair = KeyPair::<Bn254>::generate(&mut rng);
     }
 
     // use super::*;
