@@ -4,8 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! This module implements the Schnorr signature over the various Edwards
-//! curves.
+//! This module implements the BLS signature over BN curves.
 
 use super::SignatureScheme;
 use crate::{
@@ -51,14 +50,15 @@ pub struct BLSOverBNCurveSignatureScheme<P> {
     curve_param: PhantomData<P>, // TODO what is this?
 }
 
-impl<P> SignatureScheme for BLSOverBNCurveSignatureScheme<P>
+impl<F, P> SignatureScheme for BLSOverBNCurveSignatureScheme<P>
 where
-    P: Config<Fp = P> + PrimeField,
+    P: Config<Fp = F>,
+    F: PrimeField,
 {
     const CS_ID: &'static str = CS_ID_BLS_MIN_SIG; // TODO change this
 
     /// Signing key.
-    type SigningKey = SignKey<P>;
+    type SigningKey = SignKey<F>;
 
     /// Verification key
     type VerificationKey = VerKey<P>;
@@ -70,7 +70,7 @@ where
     type Signature = Signature<P>;
 
     /// A message is &\[MessageUnit\]
-    type MessageUnit = P; // TODO Is that correct?
+    type MessageUnit = F; // TODO Is that correct?
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
@@ -84,7 +84,7 @@ where
         _pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        let kp = KeyPair::<P>::generate(prng);
+        let kp = KeyPair::<F, P>::generate(prng);
         Ok((kp.sk, kp.vk))
     }
 
@@ -214,11 +214,12 @@ impl<P: Config> VerKey<P> {
     Clone(bound = "P: Config"),
     PartialEq(bound = "P: Config")
 )]
-pub struct KeyPair<P>
+pub struct KeyPair<F, P>
 where
-    P: Config + PrimeField,
+    P: Config<Fp = F>,
+    F: PrimeField,
 {
-    sk: SignKey<P>,
+    sk: SignKey<F>,
     vk: VerKey<P>,
 }
 
@@ -264,19 +265,20 @@ where
 // end of definitions
 // =====================================================
 
-impl<P> KeyPair<P>
+impl<F, P> KeyPair<F, P>
 where
-    P: Config<Fp = P> + PrimeField,
+    P: Config<Fp = F>,
+    F: PrimeField,
 {
     /// Key-pair generation algorithm
-    pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
+    pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<F, P> {
         let sk = SignKey::generate(prng);
         let vk = VerKey::from(&sk);
         KeyPair { sk, vk }
     }
 
     /// Key pair generation using a particular sign key secret `sk`
-    pub fn generate_with_sign_key(sk: P) -> Self {
+    pub fn generate_with_sign_key(sk: F) -> Self {
         let sk = SignKey(sk);
         let vk = VerKey::from(&sk);
         KeyPair { sk, vk }
@@ -293,7 +295,7 @@ where
     }
 
     /// Get the internal of the signing key, namely a P::ScalarField element
-    pub fn sign_key_internal(&self) -> &P {
+    pub fn sign_key_internal(&self) -> &F {
         &self.sk.0
     }
 
@@ -313,21 +315,32 @@ impl<F: PrimeField> SignKey<F> {
     }
 }
 
-impl<P, F> From<&SignKey<F>> for VerKey<P>
+// impl<P> From<&SignKey<P::Fp>> for VerKey<P>
+// where
+//     P: Config,
+// {
+//     fn from(
+//         sk: &SignKey<P::Fp>) -> Self {
+//         // TODO
+//         // VerKey(G2Projective::<P>::generator().clone() * sk.0.clone())
+//         VerKey(G2Projective::<P>::generator() * sk.0)
+//     }
+// }
+
+impl<F, P> From<&SignKey<F>> for VerKey<P>
 where
     P: Config<Fp = F>,
     F: PrimeField,
 {
     fn from(_sk: &SignKey<F>) -> Self {
-        // TODO
-        // VerKey(G2Projective::<P>::generator().clone() * sk.0.clone())
         VerKey(G2Projective::<P>::generator())
     }
 }
 
-impl<P> VerKey<P>
+impl<F, P> VerKey<P>
 where
-    P: Config<Fp = P>,
+    P: Config<Fp = F>,
+    F: PrimeField,
 {
     /// Get the internal of verifying key, namely a curve Point
     pub fn internal(&self) -> &G2Projective<P> {
@@ -338,7 +351,7 @@ where
     #[allow(non_snake_case)]
     pub fn verify<B: AsRef<[u8]>>(
         &self,
-        _msg: &[P],
+        _msg: &[F],
         _sig: &Signature<P>,
         _csid: B,
     ) -> Result<(), PrimitivesError> {
