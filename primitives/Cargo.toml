@@ -19,7 +19,7 @@ ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
 ark-ff = "0.4.0"
 ark-poly = "0.4.0"
-ark-serialize = { version = "0.4.0", features = ["derive"] }
+ark-serialize = "0.4.0"
 ark-std = { version = "0.4.0", default-features = false }
 blst = "0.3.10"
 crypto_box = "0.8.1"
