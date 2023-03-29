@@ -1012,8 +1012,8 @@
 
 <span class="doccomment">/// A Plonk SNARK proof.
 </span><span class="attr">#[tagged(tag::PROOF)]
-#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
+#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(PartialEq, Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
 </span><span class="kw">pub struct </span>Proof&lt;E: Pairing&gt; {
     <span class="doccomment">/// Wire witness polynomials commitments.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
@@ -1169,8 +1169,8 @@
 }
 
 <span class="doccomment">/// A Plookup argument proof.
-</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
+</span><span class="attr">#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(PartialEq, Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
 </span><span class="kw">pub struct </span>PlookupProof&lt;E: Pairing&gt; {
     <span class="doccomment">/// The commitments for the polynomials that interpolate the sorted
     /// concatenation of the lookup table and the witnesses in the lookup gates.
@@ -1185,8 +1185,8 @@
 
 <span class="doccomment">/// An aggregated SNARK proof that batchly proving multiple instances.
 </span><span class="attr">#[tagged(tag::BATCHPROOF)]
-#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
+#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(PartialEq, Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
 </span><span class="kw">pub struct </span>BatchProof&lt;E: Pairing&gt; {
     <span class="doccomment">/// The list of wire witness polynomials commitments.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_poly_comms_vec: Vec&lt;Vec&lt;Commitment&lt;E&gt;&gt;&gt;,
@@ -1911,4 +1911,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.1 (8460ca823 2023-03-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.2 (9eb3afe9e 2023-03-27)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-08ddfdda51b8ee2e.css" ></div></body></html>
