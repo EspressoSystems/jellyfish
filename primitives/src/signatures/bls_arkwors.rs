@@ -19,27 +19,16 @@ use crate::{
 //     AffineRepr, CurveConfig, CurveGroup, Group,
 // };
 
-use ark_ec::{
-    bn::{
-        BnConfig as Config,
-        // G1Affine,
-        G1Projective,
-        G2Affine,
-        G2Projective,
-    },
-    AffineRepr, CurveGroup, Group,
-};
-
-use ark_ff::PrimeField;
+use ark_ec::{pairing::Pairing, CurveGroup, Group};
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
     marker::PhantomData,
     rand::{CryptoRng, Rng, RngCore},
-    // string::ToString,
-    // vec,
     vec::Vec,
+    UniformRand,
 };
+
 use espresso_systems_common::jellyfish::tag;
 // use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;
@@ -50,15 +39,14 @@ pub struct BLSOverBNCurveSignatureScheme<P> {
     curve_param: PhantomData<P>, // TODO what is this?
 }
 
-impl<F, P> SignatureScheme for BLSOverBNCurveSignatureScheme<P>
+impl<P> SignatureScheme for BLSOverBNCurveSignatureScheme<P>
 where
-    P: Config<Fp = F>,
-    F: PrimeField,
+    P: Pairing + Zeroize + Default,
 {
     const CS_ID: &'static str = CS_ID_BLS_MIN_SIG; // TODO change this
 
     /// Signing key.
-    type SigningKey = SignKey<F>;
+    type SigningKey = SignKey<P>;
 
     /// Verification key
     type VerificationKey = VerKey<P>;
@@ -70,7 +58,7 @@ where
     type Signature = Signature<P>;
 
     /// A message is &\[MessageUnit\]
-    type MessageUnit = F; // TODO Is that correct?
+    type MessageUnit = P::ScalarField; // TODO Is that correct?
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
@@ -84,7 +72,7 @@ where
         _pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
-        let kp = KeyPair::<F, P>::generate(prng);
+        let kp = KeyPair::<P>::generate(prng);
         Ok((kp.sk, kp.vk))
     }
 
@@ -97,7 +85,7 @@ where
     ) -> Result<Self::Signature, PrimitivesError> {
         // TODO
         Ok(Signature {
-            sigma: G1Projective::<P>::generator(),
+            sigma: P::G1::generator(),
         })
     }
 
@@ -115,20 +103,20 @@ where
 // =====================================================
 // Signing key
 // =====================================================
-#[tagged(tag::SCHNORR_SIGNING_KEY)]
+#[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(
     Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
 /// Signing key for BLS signature.
-pub struct SignKey<F: PrimeField>(pub(crate) F);
+pub struct SignKey<P: Pairing>(pub(crate) P::ScalarField);
 
-impl<F: PrimeField> Drop for SignKey<F> {
+impl<P: Pairing> Drop for SignKey<P> {
     fn drop(&mut self) {
         self.0.zeroize();
     }
 }
 
-impl<F: PrimeField> SignKey<F> {
+impl<P: Pairing> SignKey<P> {
     // returns the randomized key
     // fn randomize_with(&self, randomizer: &F) -> Self {
     //     Self(self.0 + randomizer)
@@ -144,16 +132,16 @@ impl<F: PrimeField> SignKey<F> {
 #[tagged(tag::BLS_VER_KEY)] // TODO how does this work???
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Clone(bound = "P: Config")
+    Debug(bound = "P: Pairing"),
+    Default(bound = "P: Pairing"),
+    Eq(bound = "P: Pairing"),
+    Clone(bound = "P: Pairing")
 )]
-pub struct VerKey<P>(pub(crate) G2Projective<P>)
+pub struct VerKey<P>(pub(crate) P::G2)
 where
-    P: Config;
+    P: Pairing;
 
-impl<P: Config> VerKey<P> {
+impl<P: Pairing> VerKey<P> {
     // TODO is this needed?
     // Return a randomized verification key.
     // pub fn randomize_with<F>(&self, randomizer: &F) -> Self
@@ -168,7 +156,7 @@ impl<P: Config> VerKey<P> {
 
 impl<P> Hash for VerKey<P>
 where
-    P: Config,
+    P: Pairing,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.0.into_affine(), state)
@@ -177,25 +165,34 @@ where
 
 impl<P> PartialEq for VerKey<P>
 where
-    P: Config,
+    P: Pairing,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0.into_affine().eq(&other.0.into_affine())
     }
 }
 
-impl<P> From<G2Affine<P>> for VerKey<P>
-where
-    P: Config,
-{
-    fn from(point: G2Affine<P>) -> Self {
-        VerKey(point.into_group())
-    }
-}
+// impl<P> Default for VerKey<P>
+// where
+//     P: Pairing,
+// {
+//     fn default() -> Self {
+//         P::G2::generator()
+//     }
+// }
 
-impl<P: Config> VerKey<P> {
+// impl<P> From<P::G2> for VerKey<P>
+// where
+//     P: Pairing,
+// {
+//     fn from(point: P::G2) -> Self {
+//         VerKey(point)
+//     }
+// }
+
+impl<P: Pairing> VerKey<P> {
     /// Convert the verification key into the affine form.
-    pub fn to_affine(&self) -> G2Affine<P> {
+    pub fn to_affine(&self) -> P::G2Affine {
         self.0.into_affine()
     }
 }
@@ -209,19 +206,29 @@ impl<P: Config> VerKey<P> {
 #[tagged(tag::SCHNORR_KEY_PAIR)] // TODO what is this tag for?
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    PartialEq(bound = "P: Config")
+    Debug(bound = "P: Pairing"),
+    Clone(bound = "P: Pairing"),
+    PartialEq(bound = "P: Pairing")
 )]
-pub struct KeyPair<F, P>
+pub struct KeyPair<P>
 where
-    P: Config<Fp = F>,
-    F: PrimeField,
+    P: Pairing,
 {
-    sk: SignKey<F>,
+    sk: SignKey<P>,
     vk: VerKey<P>,
 }
+
+// impl<P> Default for KeyPair<P>
+// where
+//     P: Pairing,
+// {
+//     fn default() -> Self {
+//         KeyPair {
+//             sk: SignKey::<P>::default(),
+//             vk: VerKey::<P>::default(),
+//         }
+//     }
+// }
 
 // =====================================================
 // Signature
@@ -231,22 +238,22 @@ where
 #[tagged(tag::SCHNORR_SIG)] // TODO what is this tag for?
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Clone(bound = "P: Config")
+    Debug(bound = "P: Pairing"),
+    Default(bound = "P: Pairing"),
+    Eq(bound = "P: Pairing"),
+    Clone(bound = "P: Pairing")
 )]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
-    P: Config,
+    P: Pairing,
 {
-    pub(crate) sigma: G1Projective<P>,
+    pub(crate) sigma: P::G1,
 }
 
 impl<P> Hash for Signature<P>
 where
-    P: Config,
+    P: Pairing,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&self.sigma, state);
@@ -255,7 +262,7 @@ where
 
 impl<P> PartialEq for Signature<P>
 where
-    P: Config,
+    P: Pairing,
 {
     fn eq(&self, other: &Self) -> bool {
         self.sigma == other.sigma
@@ -265,20 +272,19 @@ where
 // end of definitions
 // =====================================================
 
-impl<F, P> KeyPair<F, P>
+impl<P> KeyPair<P>
 where
-    P: Config<Fp = F>,
-    F: PrimeField,
+    P: Pairing + Default,
 {
     /// Key-pair generation algorithm
-    pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<F, P> {
+    pub fn generate<R: Rng>(prng: &mut R) -> KeyPair<P> {
         let sk = SignKey::generate(prng);
         let vk = VerKey::from(&sk);
         KeyPair { sk, vk }
     }
 
     /// Key pair generation using a particular sign key secret `sk`
-    pub fn generate_with_sign_key(sk: F) -> Self {
+    pub fn generate_with_sign_key(sk: P::ScalarField) -> Self {
         let sk = SignKey(sk);
         let vk = VerKey::from(&sk);
         KeyPair { sk, vk }
@@ -295,7 +301,7 @@ where
     }
 
     /// Get the internal of the signing key, namely a P::ScalarField element
-    pub fn sign_key_internal(&self) -> &F {
+    pub fn sign_key_internal(&self) -> &P::ScalarField {
         &self.sk.0
     }
 
@@ -304,14 +310,14 @@ where
     pub fn sign<B: AsRef<[u8]>>(&self, _msg: &[P], _csid: B) -> Signature<P> {
         // TODO
 
-        let sigma = G1Projective::<P>::generator();
+        let sigma = P::G1::generator();
         Signature { sigma }
     }
 }
 
-impl<F: PrimeField> SignKey<F> {
-    fn generate<R: Rng>(prng: &mut R) -> SignKey<F> {
-        SignKey(F::rand(prng))
+impl<P: Pairing> SignKey<P> {
+    fn generate<R: Rng>(prng: &mut R) -> SignKey<P> {
+        SignKey(P::ScalarField::rand(prng))
     }
 }
 
@@ -327,31 +333,29 @@ impl<F: PrimeField> SignKey<F> {
 //     }
 // }
 
-impl<F, P> From<&SignKey<F>> for VerKey<P>
+impl<P> From<&SignKey<P>> for VerKey<P>
 where
-    P: Config<Fp = F>,
-    F: PrimeField,
+    P: Pairing,
 {
-    fn from(_sk: &SignKey<F>) -> Self {
-        VerKey(G2Projective::<P>::generator())
+    fn from(sk: &SignKey<P>) -> Self {
+        VerKey(P::G2::generator() * sk.0)
     }
 }
 
-impl<F, P> VerKey<P>
+impl<P> VerKey<P>
 where
-    P: Config<Fp = F>,
-    F: PrimeField,
+    P: Pairing,
 {
     /// Get the internal of verifying key, namely a curve Point
-    pub fn internal(&self) -> &G2Projective<P> {
-        &self.0
+    pub fn internal(&self) -> P::G2 {
+        self.0
     }
 
     /// Signature verification function
     #[allow(non_snake_case)]
     pub fn verify<B: AsRef<[u8]>>(
         &self,
-        _msg: &[F],
+        _msg: &[P::ScalarField],
         _sig: &Signature<P>,
         _csid: B,
     ) -> Result<(), PrimitivesError> {
