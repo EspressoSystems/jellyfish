@@ -7,30 +7,27 @@
 //! This module implements the BLS signature over BN curves.
 
 use super::SignatureScheme;
+
 use crate::{
     constants::CS_ID_BLS_MIN_SIG, // TODO update this as we are using the BN128 curve
-    // crhf::{VariableLengthRescueCRHF, CRHF},
     errors::PrimitivesError,
-    // rescue::RescueParameter,
-    // utils::curve_cofactor,
 };
-// use ark_ec::{
-//     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-//     AffineRepr, CurveConfig, CurveGroup, Group,
-// };
-
 use ark_ec::{pairing::Pairing, CurveGroup, Group};
+use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
     marker::PhantomData,
     rand::{CryptoRng, Rng, RngCore},
+    string::ToString,
     vec::Vec,
     UniformRand,
 };
 
 use espresso_systems_common::jellyfish::tag;
+use sha2::Sha256;
 // use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
+use crate::errors::PrimitivesError::VerificationError;
 use tagged_base64::tagged;
 use zeroize::Zeroize;
 
@@ -58,7 +55,7 @@ where
     type Signature = Signature<P>;
 
     /// A message is &\[MessageUnit\]
-    type MessageUnit = P::ScalarField; // TODO Is that correct?
+    type MessageUnit = u8;
 
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
@@ -273,6 +270,15 @@ where
 // end of definitions
 // =====================================================
 
+// TODO insecure!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//
+fn hash_to_curve<P: Pairing>(msg: &[u8]) -> P::G1 {
+    let hasher_init = &[1u8];
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<P::ScalarField>>::new(hasher_init);
+    let field_elems: jf_utils::Vec<P::ScalarField> = hasher.hash_to_field(msg, 1);
+    P::G1::generator() * field_elems[0]
+}
+
 impl<P> KeyPair<P>
 where
     P: Pairing,
@@ -316,10 +322,11 @@ where
 
     /// Signature function
     #[allow(non_snake_case)]
-    pub fn sign<B: AsRef<[u8]>>(&self, _msg: &[P], _csid: B) -> Signature<P> {
-        // TODO
+    pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], _csid: B) -> Signature<P> {
+        // TODO take into account csid
 
-        let sigma = P::G1::generator();
+        let hash_value: P::G1 = hash_to_curve::<P>(msg);
+        let sigma = hash_value * self.sk.0;
         Signature { sigma }
     }
 }
@@ -352,222 +359,48 @@ where
     #[allow(non_snake_case)]
     pub fn verify<B: AsRef<[u8]>>(
         &self,
-        _msg: &[P::ScalarField],
-        _sig: &Signature<P>,
+        msg: &[u8],
+        sig: &Signature<P>,
         _csid: B,
     ) -> Result<(), PrimitivesError> {
-        // Reject if public key is of small order
-        Ok(())
+        // TODO Check public key
+        // TODO take into account csid
+
+        let group_elem = hash_to_curve::<P>(msg);
+        let g2 = P::G2::generator();
+        let is_sig_valid = P::pairing(sig.sigma, g2) == P::pairing(group_elem, self.0);
+        if is_sig_valid {
+            Ok(())
+        } else {
+            Err(VerificationError("Pairing check failed".to_string()))
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::signatures::bls_arkwors::KeyPair;
+    use crate::{constants::CS_ID_BLS_MIN_SIG, signatures::bls_arkwors::KeyPair};
     use ark_bn254::Bn254;
+    use ark_ff::vec; // TODO new constant
 
     #[test]
     fn test_bls_signature() {
+        // TODO use SignatureScheme instead
+
         let mut rng = jf_utils::test_rng();
-        let _key_pair = KeyPair::<Bn254>::generate(&mut rng);
+        let key_pair = KeyPair::<Bn254>::generate(&mut rng);
+        let msg = vec![15u8, 44u8];
+        let sig = key_pair.sign(&msg, CS_ID_BLS_MIN_SIG);
+
+        let ver_key = key_pair.vk;
+
+        assert!(ver_key.verify(&msg, &sig, CS_ID_BLS_MIN_SIG).is_ok());
+
+        let wrong_message = vec![0u8, 0u8];
+        assert!(ver_key
+            .verify(&wrong_message, &sig, CS_ID_BLS_MIN_SIG)
+            .is_err());
     }
 
-    // use super::*;
-    // use crate::{
-    //     constants::CS_ID_SCHNORR,
-    //     signatures::tests::{failed_verification, sign_and_verify},
-    // };
-    // use ark_ed_on_bls12_377::EdwardsConfig as Param377;
-    // use ark_ed_on_bls12_381::EdwardsConfig as Param381;
-    // use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;
-    // use ark_ed_on_bn254::EdwardsConfig as Param254;
-    // use ark_std::UniformRand;
-    //
-    // macro_rules! test_signature {
-    //     ($curve_param:tt) => {
-    //         let mut rng = jf_utils::test_rng();
-    //
-    //         let keypair1 = KeyPair::generate(&mut rng);
-    //         // test randomized key pair
-    //         let randomizer2 = <$curve_param as
-    // CurveConfig>::ScalarField::rand(&mut rng);         let keypair2 =
-    // keypair1.randomize_with(&randomizer2);         let randomizer3 =
-    // <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
-    //         let keypair3 = keypair2.randomize_with(&randomizer3);
-    //         let keypairs = vec![keypair1, keypair2, keypair3];
-    //
-    //         let pk_bad: VerKey<$curve_param> = KeyPair::generate(&mut
-    // rng).ver_key_ref().clone();
-    //
-    //         let mut msg = vec![];
-    //         for i in 0..20 {
-    //             for keypair in &keypairs {
-    //                 assert_eq!(keypair.vk, VerKey::from(&keypair.sk));
-    //
-    //                 let sig = keypair.sign(&msg, CS_ID_SCHNORR);
-    //                 let pk = keypair.ver_key_ref();
-    //                 assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
-    //                 // wrong public key
-    //                 assert!(pk_bad.verify(&msg, &sig,
-    // CS_ID_SCHNORR).is_err());                 // wrong message
-    //                 msg.push(<$curve_param as CurveConfig>::BaseField::from(i
-    // as u64));                 assert!(pk.verify(&msg, &sig,
-    // CS_ID_SCHNORR).is_err());             }
-    //         }
-    //
-    //         let message = <$curve_param as CurveConfig>::BaseField::rand(&mut
-    // rng);
-    //         sign_and_verify::<SchnorrSignatureScheme<$curve_param>>(&
-    // [message]);
-    //         failed_verification::<SchnorrSignatureScheme<$curve_param>>(
-    //             &[message],
-    //             &[<$curve_param as CurveConfig>::BaseField::rand(&mut rng)],
-    //         );
-    //     };
-    // }
-    //
-    // #[test]
-    // fn test_signature() {
-    //     test_signature!(Param254);
-    //     test_signature!(Param377);
-    //     test_signature!(Param381);
-    //     test_signature!(Param381b);
-    // }
-
-    // mod serde {
-
-    // use super::super::{KeyPair, SignKey, Signature, VerKey};
-    // use crate::constants::CS_ID_SCHNORR;
-    // use ark_ec::twisted_edwards::Projective;
-    // use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fq as FqEd377, Fr as
-    // FrEd377}; use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fq as
-    // FqEd381, Fr as FrEd381}; use ark_ed_on_bls12_381_bandersnatch::{
-    //     EdwardsConfig as Param381b, Fq as FqEd381b, Fr as FrEd381b,
-    // };
-    // use ark_ed_on_bn254::{EdwardsConfig as Param254, Fq as FqEd254, Fr as
-    // FrEd254}; use ark_ff::Zero;
-    // use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    // use ark_std::{vec, vec::Vec, UniformRand};
-    //
-    // macro_rules! test_ver_key {
-    //     ($curve_param:tt, $scalar_field:tt) => {
-    //         let mut rng = jf_utils::test_rng();
-    //
-    //         // happy path
-    //         let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
-    //         let vk = keypair.ver_key_ref();
-    //         let sig = keypair.sign(&[], CS_ID_SCHNORR);
-    //         assert!(&vk.verify(&[], &sig, CS_ID_SCHNORR).is_ok());
-    //
-    //         // Bad path
-    //         let bad_ver_key = VerKey(Projective::<$curve_param>::zero());
-    //         let bad_keypair = KeyPair {
-    //             sk: SignKey($scalar_field::zero()),
-    //             vk: bad_ver_key.clone(),
-    //         };
-    //
-    //         let sig_on_bad_key = bad_keypair.sign(&[], CS_ID_SCHNORR);
-    //         assert!(&bad_ver_key
-    //             .verify(&[], &sig_on_bad_key, CS_ID_SCHNORR)
-    //             .is_err());
-    //
-    //         // test serialization
-    //         let mut vk_bytes = vec![];
-    //         vk.serialize_compressed(&mut vk_bytes).unwrap();
-    //         let vk_de: VerKey<$curve_param> =
-    //             VerKey::deserialize_compressed(vk_bytes.as_slice()).unwrap();
-    //         assert_eq!(*vk, vk_de, "normal ser/de should pass");
-    //     };
-    // }
-    // #[test]
-    // fn test_ver_key() {
-    //     test_ver_key!(Param254, FrEd254);
-    //     test_ver_key!(Param377, FrEd377);
-    //     test_ver_key!(Param381, FrEd381);
-    //     test_ver_key!(Param381b, FrEd381b);
-    // }
-    //
-    // macro_rules! test_signature {
-    //     ($curve_param:tt, $base_field:tt) => {
-    //         let mut rng = jf_utils::test_rng();
-    //         let keypair: KeyPair<$curve_param> = KeyPair::generate(&mut rng);
-    //
-    //         // Happy path
-    //         let msg = vec![$base_field::from(8u8), $base_field::from(10u8)];
-    //         let sig = keypair.sign(&msg, CS_ID_SCHNORR);
-    //         assert!(keypair.vk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
-    //         assert!(keypair.vk.verify(&[], &sig, CS_ID_SCHNORR).is_err());
-    //         let mut bytes_sig = vec![];
-    //         sig.serialize_compressed(&mut bytes_sig).unwrap();
-    //         let sig_de: Signature<$curve_param> =
-    //
-    // Signature::deserialize_compressed(bytes_sig.as_slice()).unwrap();
-    //         assert_eq!(sig, sig_de);
-    //
-    //         // Bad path 1: when s bytes overflow
-    //         let mut bad_bytes_sig = bytes_sig.clone();
-    //         let mut q_minus_one_bytes = vec![];
-    //         (-$base_field::from(1u32))
-    //             .serialize_compressed(&mut q_minus_one_bytes)
-    //             .unwrap();
-    //         bad_bytes_sig.splice(.., q_minus_one_bytes.iter().cloned());
-    //         assert!(Signature::<$curve_param>::deserialize_compressed(
-    //             bad_bytes_sig.as_slice()
-    //         )
-    //         .is_err());
-    //     };
-    // }
-    //
-    // #[test]
-    // fn test_signature() {
-    //     test_signature!(Param254, FqEd254);
-    //     test_signature!(Param377, FqEd377);
-    //     test_signature!(Param381, FqEd381);
-    //     test_signature!(Param381b, FqEd381b);
-    // }
-    //
-    // macro_rules! test_serde {
-    //     ($curve_param:tt, $scalar_field:tt, $base_field:tt) => {
-    //         let mut rng = jf_utils::test_rng();
-    //         let keypair = KeyPair::generate(&mut rng);
-    //         let sk = SignKey::<$scalar_field>::generate(&mut rng);
-    //         let vk = keypair.ver_key();
-    //         let msg = vec![$base_field::rand(&mut rng)];
-    //         let sig = keypair.sign(&msg, CS_ID_SCHNORR);
-    //
-    //         let mut ser_bytes: Vec<u8> = Vec::new();
-    //         keypair.serialize_compressed(&mut ser_bytes).unwrap();
-    //         let de: KeyPair<$curve_param> =
-    //             KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
-    //         assert_eq!(de.ver_key_ref(), keypair.ver_key_ref());
-    //         assert_eq!(de.ver_key_ref(), &VerKey::from(&de.sk));
-    //
-    //         let mut ser_bytes: Vec<u8> = Vec::new();
-    //         sk.serialize_compressed(&mut ser_bytes).unwrap();
-    //         let de: SignKey<$scalar_field> =
-    //             SignKey::deserialize_compressed(&ser_bytes[..]).unwrap();
-    //         assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
-    //
-    //         let mut ser_bytes: Vec<u8> = Vec::new();
-    //         vk.serialize_compressed(&mut ser_bytes).unwrap();
-    //         let de: VerKey<$curve_param> =
-    //             VerKey::deserialize_compressed(&ser_bytes[..]).unwrap();
-    //         assert_eq!(de, vk);
-    //
-    //         let mut ser_bytes: Vec<u8> = Vec::new();
-    //         sig.serialize_compressed(&mut ser_bytes).unwrap();
-    //         let de: Signature<$curve_param> =
-    //             Signature::deserialize_compressed(&ser_bytes[..]).unwrap();
-    //         assert_eq!(de, sig);
-    //     };
-    // }
-    //
-    // #[test]
-    // fn test_serde() {
-    //     test_serde!(Param254, FrEd254, FqEd254);
-    //     test_serde!(Param377, FrEd377, FqEd377);
-    //     test_serde!(Param381, FrEd381, FqEd381);
-    //     test_serde!(Param381b, FrEd381b, FqEd381b);
-    // }
-    //  }
+    // TODO check tests of Schnorr signature
 }
