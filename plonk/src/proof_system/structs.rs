@@ -56,8 +56,8 @@ pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
 #[tagged(tag::PROOF)]
-#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:Pairing"))]
+#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(PartialEq, Hash(bound = "E:Pairing"))]
 pub struct Proof<E: Pairing> {
     /// Wire witness polynomials commitments.
     pub(crate) wires_poly_comms: Vec<Commitment<E>>,
@@ -213,8 +213,8 @@ where
 }
 
 /// A Plookup argument proof.
-#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:Pairing"))]
+#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(PartialEq, Hash(bound = "E:Pairing"))]
 pub struct PlookupProof<E: Pairing> {
     /// The commitments for the polynomials that interpolate the sorted
     /// concatenation of the lookup table and the witnesses in the lookup gates.
@@ -229,8 +229,8 @@ pub struct PlookupProof<E: Pairing> {
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
 #[tagged(tag::BATCHPROOF)]
-#[derive(Debug, Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(Hash(bound = "E:Pairing"))]
+#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
+#[derivative(PartialEq, Hash(bound = "E:Pairing"))]
 pub struct BatchProof<E: Pairing> {
     /// The list of wire witness polynomials commitments.
     pub(crate) wires_poly_comms_vec: Vec<Vec<Commitment<E>>>,
