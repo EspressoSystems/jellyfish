@@ -4,7 +4,9 @@ use crate::errors::PrimitivesError;
 use ark_std::rand::{CryptoRng, RngCore};
 
 pub mod bls;
+mod bls_arkwors;
 pub mod schnorr;
+
 pub use bls::BLSSignatureScheme;
 use core::fmt::Debug;
 pub use schnorr::SchnorrSignatureScheme;
