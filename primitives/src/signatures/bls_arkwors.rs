@@ -7,13 +7,30 @@
 //! This module implements the BLS signature over BN curves.
 
 use super::SignatureScheme;
+use ark_bn254::{
+    g1::{G1_GENERATOR_X, G1_GENERATOR_Y},
+    Fq, Fr, G1Affine,
+};
 
 use crate::{
     constants::CS_ID_BLS_MIN_SIG, // TODO update this as we are using the BN128 curve
     errors::PrimitivesError,
 };
-use ark_ec::{pairing::Pairing, CurveGroup, Group};
-use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
+
+use ark_ec::{
+    hashing::{
+        curve_maps::swu::{SWUConfig, SWUMap},
+        map_to_curve_hasher::MapToCurve,
+        HashToCurveError,
+    },
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+    CurveConfig, CurveGroup, Group,
+};
+use ark_ff::{
+    field_hashers::{DefaultFieldHasher, HashToField},
+    Field, MontFp,
+};
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
@@ -25,6 +42,7 @@ use ark_std::{
 };
 
 use espresso_systems_common::jellyfish::tag;
+use num_traits::Zero;
 use sha2::Sha256;
 // use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use crate::errors::PrimitivesError::VerificationError;
@@ -375,6 +393,55 @@ where
             Err(VerificationError("Pairing check failed".to_string()))
         }
     }
+}
+#[allow(warnings)]
+fn hash_to_curve_bn254(_msg: &[u8]) -> Result<G1Affine, HashToCurveError> {
+    // TODO how to avoid copy pasting this info from ark-bn254-0.4.0/src/g1.rs ?
+    // Only implement the missing trait SWUConfig?
+    struct Bn254CurveConfig;
+
+    impl CurveConfig for Bn254CurveConfig {
+        type BaseField = Fq;
+        type ScalarField = Fr;
+
+        /// COFACTOR = 1
+        const COFACTOR: &'static [u64] = &[0x1];
+
+        /// COFACTOR_INV = COFACTOR^{-1} mod r = 1
+        const COFACTOR_INV: Fr = Fr::ONE;
+    }
+
+    impl SWCurveConfig for Bn254CurveConfig {
+        /// COEFF_A = 0
+        const COEFF_A: Fq = Fq::ZERO;
+
+        /// COEFF_B = 3
+        const COEFF_B: Fq = MontFp!("3");
+
+        /// AFFINE_GENERATOR_COEFFS = (G1_GENERATOR_X, G1_GENERATOR_Y)
+        const GENERATOR: Affine<Self> = Affine::new_unchecked(G1_GENERATOR_X, G1_GENERATOR_Y);
+
+        #[inline(always)]
+        fn mul_by_a(_: Self::BaseField) -> Self::BaseField {
+            Self::BaseField::zero()
+        }
+    }
+
+    impl SWUConfig for Bn254CurveConfig {
+        // TODO not clear about this... Copy pasting the documentation of the SWUConfig
+        // trait here
+        /// An element of the base field that is not a square root see \[WB2019,
+        /// Section 4\]. It is also convenient to have $g(b/ZETA * a)$
+        /// to be square. In general we use a `ZETA` with low absolute
+        /// value coefficients when they are represented as integers.
+
+        const ZETA: Fq = MontFp!("-1");
+    }
+
+    // TODO hash msg to field element
+    let test_map_to_curve = SWUMap::<Bn254CurveConfig>::new().unwrap();
+    let p = test_map_to_curve.map_to_curve(Fq::from(1)).unwrap();
+    Ok(G1Affine::new(p.x, p.y))
 }
 
 #[cfg(test)]
