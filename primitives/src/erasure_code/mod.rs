@@ -18,7 +18,7 @@ pub trait ErasureCode: Sized {
     /// Associated field of the erasure code
     type Field: Field;
     /// Type for each data shards
-    type Shards: Debug
+    type Shard: Debug
         + Clone
         + Eq
         + PartialEq
@@ -28,14 +28,14 @@ pub trait ErasureCode: Sized {
         + CanonicalDeserialize;
 
     /// Create a new instance
-    ///  * data_len: the message length, and the minimum number of shards
-    ///    required for reconstruction
-    ///  * num_shards: the block (codeword) length
-    fn new(data_len: usize, num_shards: usize) -> Result<Self, PrimitivesError>;
+    ///  * `reconstruction_size`: and the minimum number of shards required for
+    ///    reconstruction
+    ///  * `num_shards`: the block (codeword) length
+    fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError>;
 
     /// Encoding
-    fn encode(&self, data: &[Self::Field]) -> Result<Vec<Self::Shards>, PrimitivesError>;
+    fn encode(&self, data: &[Self::Field]) -> Result<Vec<Self::Shard>, PrimitivesError>;
 
     /// Decoding
-    fn decode(&self, shards: &[Self::Shards]) -> Result<Vec<Self::Field>, PrimitivesError>;
+    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<Self::Field>, PrimitivesError>;
 }
