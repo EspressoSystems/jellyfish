@@ -11,10 +11,7 @@ use ark_bn254::{
     Bn254, Fq as BaseField, Fr as ScalarField, G1Affine, G1Projective, G2Affine, G2Projective,
 };
 
-use crate::{
-    constants::CS_ID_BLS_MIN_SIG, // TODO update this as we are using the BN254 curve
-    errors::PrimitivesError,
-};
+use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
 
 use ark_ec::{pairing::Pairing, CurveGroup, Group};
 use ark_ff::{
@@ -41,7 +38,7 @@ use zeroize::Zeroize;
 pub struct BLSOverBNCurveSignatureScheme;
 
 impl SignatureScheme for BLSOverBNCurveSignatureScheme {
-    const CS_ID: &'static str = CS_ID_BLS_MIN_SIG; // TODO change this
+    const CS_ID: &'static str = CS_ID_BLS_BN254;
 
     /// Signing key.
     type SigningKey = SignKey;
@@ -298,13 +295,12 @@ impl VerKey {
 
 #[cfg(test)]
 mod tests {
-    use crate::signatures::{
-        bls_arkwors::{BLSOverBNCurveSignatureScheme, VerKey},
-        tests::{failed_verification, sign_and_verify},
-    };
     use crate::{
-        constants::CS_ID_BLS_MIN_SIG, // TODO change constant
-        signatures::bls_arkwors::KeyPair,
+        constants::CS_ID_BLS_BN254,
+        signatures::{
+            bls_arkwors::{BLSOverBNCurveSignatureScheme, KeyPair, VerKey},
+            tests::{failed_verification, sign_and_verify},
+        },
     };
     use ark_ff::vec;
 
@@ -321,14 +317,14 @@ mod tests {
         for i in 0..10 {
             for key_pair in &key_pairs {
                 assert_eq!(key_pair.vk, VerKey::from(&key_pair.sk));
-                let sig = key_pair.sign(&msg, CS_ID_BLS_MIN_SIG);
+                let sig = key_pair.sign(&msg, CS_ID_BLS_BN254);
                 let pk = key_pair.ver_key_ref();
-                assert!(pk.verify(&msg, &sig, CS_ID_BLS_MIN_SIG).is_ok());
+                assert!(pk.verify(&msg, &sig, CS_ID_BLS_BN254).is_ok());
                 // wrong public key
-                assert!(pk_bad.verify(&msg, &sig, CS_ID_BLS_MIN_SIG).is_err());
+                assert!(pk_bad.verify(&msg, &sig, CS_ID_BLS_BN254).is_err());
                 // wrong message
                 msg.push(i as u8);
-                assert!(pk.verify(&msg, &sig, CS_ID_BLS_MIN_SIG).is_err());
+                assert!(pk.verify(&msg, &sig, CS_ID_BLS_BN254).is_err());
             }
         }
     }

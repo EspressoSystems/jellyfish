@@ -73,11 +73,12 @@ use super::SignatureScheme;
 use crate::{
     constants::{
         BLS_SIG_COMPRESSED_PK_SIZE, BLS_SIG_COMPRESSED_SIGNATURE_SIZE, BLS_SIG_PK_SIZE,
-        BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE, CS_ID_BLS_MIN_SIG,
+        BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE,
     },
     errors::PrimitivesError,
 };
 
+use crate::constants::CS_ID_BLS_BN254;
 use ark_serialize::*;
 use ark_std::{
     format,
@@ -323,7 +324,7 @@ impl Valid for BLSSignature {
 pub struct BLSSignatureScheme;
 
 impl SignatureScheme for BLSSignatureScheme {
-    const CS_ID: &'static str = CS_ID_BLS_MIN_SIG;
+    const CS_ID: &'static str = CS_ID_BLS_BN254;
 
     /// Public parameter
     type PublicParameter = ();
