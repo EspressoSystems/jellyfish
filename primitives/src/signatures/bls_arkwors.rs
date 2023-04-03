@@ -34,6 +34,7 @@ use ark_ff::{
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
+    println,
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec::Vec,
@@ -247,13 +248,32 @@ impl PartialEq for Signature {
 // end of definitions
 // =====================================================
 
-// TODO insecure!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//
+/// Hash and pray algorithm
 fn hash_to_curve(msg: &[u8]) -> G1Projective {
     let hasher_init = &[1u8];
-    let hasher = <DefaultFieldHasher<Sha256> as HashToField<ScalarField>>::new(hasher_init);
-    let field_elems: Vec<ScalarField> = hasher.hash_to_field(msg, 1);
-    G1Projective::generator() * field_elems[0]
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<BaseField>>::new(hasher_init);
+    let field_elems: Vec<BaseField> = hasher.hash_to_field(msg, 1);
+
+    // Coefficients of the curve: y^2 = x^3 + ax + b
+    // For BN254 we have a=0 and b=3
+
+    let coeff_a = BaseField::from(0); // TODO cleaner, fetch from config?
+    let coeff_b = BaseField::from(3); // TODO cleaner, fetch from config? TODO is this correct?
+
+    let mut x_affine = field_elems[0];
+    let mut y_square_affine: BaseField =
+        x_affine * x_affine * x_affine + coeff_a * x_affine + coeff_b;
+
+    while y_square_affine.legendre().is_qnr() {
+        println!("point with x={} is off the curve!!", x_affine);
+        x_affine += BaseField::from(1);
+        y_square_affine = x_affine * x_affine * x_affine + coeff_a * x_affine + coeff_b;
+    }
+
+    let y_affine = y_square_affine.sqrt().unwrap(); // SAFE unwrap as y_square_affine is a quadratic residue
+
+    let g1_affine = G1Affine::new(x_affine, y_affine);
+    G1Projective::from(g1_affine)
 }
 
 impl KeyPair {
