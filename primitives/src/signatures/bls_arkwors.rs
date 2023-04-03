@@ -112,35 +112,15 @@ impl Drop for SignKey {
     }
 }
 
-impl SignKey {
-    // returns the randomized key
-    // fn randomize_with(&self, randomizer: &F) -> Self {
-    //     Self(self.0 + randomizer)
-    // }
-}
-
 // =====================================================
 // Verification key
 // =====================================================
 
 /// Signature public verification key
-// derive zeroize here so that keypair can be zeroized
+// Derive zeroize here so that keypair can be zeroized
 #[tagged(tag::BLS_VER_KEY)] // TODO how does this work???
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 pub struct VerKey(pub(crate) G2Projective);
-
-impl VerKey {
-    // TODO is this needed?
-    // Return a randomized verification key.
-    // pub fn randomize_with<F>(&self, randomizer: &F) -> Self
-    // where
-    //     F: PrimeField,
-    //     P: Config<Fp = F>,
-    // {
-    //
-    //     Self(G1Projective::<P>::generator() * randomizer + self.0)
-    // }
-}
 
 impl Hash for VerKey {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -153,24 +133,6 @@ impl PartialEq for VerKey {
         self.0.into_affine().eq(&other.0.into_affine())
     }
 }
-
-// impl<P> Default for VerKey<P>
-// where
-//     P: Pairing,
-// {
-//     fn default() -> Self {
-//         P::G2::generator()
-//     }
-// }
-
-// impl<P> From<P::G2> for VerKey<P>
-// where
-//     P: Pairing,
-// {
-//     fn from(point: P::G2) -> Self {
-//         VerKey(point)
-//     }
-// }
 
 impl VerKey {
     /// Convert the verification key into the affine form.
@@ -188,22 +150,9 @@ impl VerKey {
 #[tagged(tag::SCHNORR_KEY_PAIR)] // TODO what is this tag for?
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone)]
 pub struct KeyPair {
-    // phantom: PhantomData,
     sk: SignKey,
     vk: VerKey,
 }
-
-// impl<P> Default for KeyPair<P>
-// where
-//     P: Pairing,
-// {
-//     fn default() -> Self {
-//         KeyPair {
-//             sk: SignKey::<P>::default(),
-//             vk: VerKey::<P>::default(),
-//         }
-//     }
-// }
 
 // =====================================================
 // Signature
