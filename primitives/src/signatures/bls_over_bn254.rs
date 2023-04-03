@@ -275,7 +275,6 @@ impl VerKey {
         csid: B,
     ) -> Result<(), PrimitivesError> {
         // TODO Check public key
-        // TODO take into account csid
         // TODO comment: the signature of this function differs from the code of
         // schnorr.rs: the message is a vectory of bytes instead of field elements
 
@@ -295,14 +294,18 @@ impl VerKey {
 
 #[cfg(test)]
 mod tests {
+
+    // This tests are adapted from schnorr.rs
     use crate::{
         constants::CS_ID_BLS_BN254,
         signatures::{
-            bls_arkwors::{BLSOverBNCurveSignatureScheme, KeyPair, VerKey},
+            bls_over_bn254::{BLSOverBNCurveSignatureScheme, KeyPair, SignKey, Signature, VerKey},
             tests::{failed_verification, sign_and_verify},
         },
     };
     use ark_ff::vec;
+    use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+    use jf_utils::Vec;
 
     #[test]
     fn test_bls_signature_internals() {
@@ -340,5 +343,34 @@ mod tests {
         );
     }
 
-    // TODO check tests of Schnorr signature (serde)
+    #[test]
+    fn test_serde() {
+        let mut rng = jf_utils::test_rng();
+        let keypair = KeyPair::generate(&mut rng);
+        let sk = SignKey::generate(&mut rng);
+        let vk = keypair.ver_key();
+        let msg = vec![87u8];
+        let sig = keypair.sign(&msg, CS_ID_BLS_BN254);
+
+        let mut ser_bytes: Vec<u8> = Vec::new();
+        keypair.serialize_compressed(&mut ser_bytes).unwrap();
+        let de: KeyPair = KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
+        assert_eq!(de.ver_key_ref(), keypair.ver_key_ref());
+        assert_eq!(de.ver_key_ref(), &VerKey::from(&de.sk));
+
+        let mut ser_bytes: Vec<u8> = Vec::new();
+        sk.serialize_compressed(&mut ser_bytes).unwrap();
+        let de: SignKey = SignKey::deserialize_compressed(&ser_bytes[..]).unwrap();
+        assert_eq!(VerKey::from(&de), VerKey::from(&sk));
+
+        let mut ser_bytes: Vec<u8> = Vec::new();
+        vk.serialize_compressed(&mut ser_bytes).unwrap();
+        let de: VerKey = VerKey::deserialize_compressed(&ser_bytes[..]).unwrap();
+        assert_eq!(de, vk);
+
+        let mut ser_bytes: Vec<u8> = Vec::new();
+        sig.serialize_compressed(&mut ser_bytes).unwrap();
+        let de: Signature = Signature::deserialize_compressed(&ser_bytes[..]).unwrap();
+        assert_eq!(de, sig);
+    }
 }
