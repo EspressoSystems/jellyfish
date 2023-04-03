@@ -24,24 +24,21 @@ use ark_ff::{
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
-    println,
+    // println,
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec::Vec,
     UniformRand,
 };
 
+use crate::errors::PrimitivesError::VerificationError;
 use espresso_systems_common::jellyfish::tag;
 use sha2::Sha256;
-// use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
-use crate::errors::PrimitivesError::VerificationError;
 use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// BLS signature scheme.
-pub struct BLSOverBNCurveSignatureScheme {
-    // curve_param: PhantomData<P>, // TODO what is this?
-}
+pub struct BLSOverBNCurveSignatureScheme;
 
 impl SignatureScheme for BLSOverBNCurveSignatureScheme {
     const CS_ID: &'static str = CS_ID_BLS_MIN_SIG; // TODO change this
@@ -253,7 +250,7 @@ fn hash_to_curve(msg: &[u8]) -> G1Projective {
 
     // Loop until we find a quadratic residue
     while y_square_affine.legendre().is_qnr() {
-        println!("point with x={} is off the curve!!", x_affine);
+        // println!("point with x={} is off the curve!!", x_affine);
         x_affine += BaseField::from(1);
         y_square_affine = x_affine * x_affine * x_affine + coeff_a * x_affine + coeff_b;
     }
@@ -297,10 +294,9 @@ impl KeyPair {
 
     /// Signature function
     #[allow(non_snake_case)]
-    pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], _csid: B) -> Signature {
-        // TODO take into account csid
-
-        let hash_value: G1Projective = hash_to_curve(msg);
+    pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], csid: B) -> Signature {
+        let msg_input = [msg, csid.as_ref()].concat();
+        let hash_value: G1Projective = hash_to_curve(&msg_input);
         let sigma = hash_value * self.sk.0;
         Signature { sigma }
     }
@@ -330,15 +326,18 @@ impl VerKey {
         &self,
         msg: &[u8],
         sig: &Signature,
-        _csid: B,
+        csid: B,
     ) -> Result<(), PrimitivesError> {
         // TODO Check public key
         // TODO take into account csid
         // TODO comment: the signature of this function differs from the code of
         // schnorr.rs: the message is a vectory of bytes instead of field elements
 
-        let group_elem = hash_to_curve(msg);
+        let msg_input = [msg, csid.as_ref()].concat();
+        let group_elem = hash_to_curve(&msg_input);
         let g2 = G2Projective::generator();
+
+        // TODO write this in a more elegant way
         let is_sig_valid = Bn254::pairing(sig.sigma, g2) == Bn254::pairing(group_elem, self.0);
         if is_sig_valid {
             Ok(())
