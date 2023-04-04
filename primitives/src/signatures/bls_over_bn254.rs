@@ -14,7 +14,7 @@ use ark_bn254::{
 use ark_ec::{pairing::Pairing, CurveGroup, Group};
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    Field,
+    Field, MontFp,
 };
 use ark_serialize::*;
 use ark_std::{
@@ -177,35 +177,42 @@ impl PartialEq for Signature {
 // end of definitions
 // =====================================================
 
-/// Hash and pray algorithm
-// TODO comment
-// TODO make public?
-fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
+/// Non constant time hash to curve algorithm (a.k.a "hash-and-pray")
+/// The hashing algorithm consists of the following steps:
+///   1. Hash the bytes to a field element `x`.
+///   2. Compute `Y = x^3 + 3`.
+///   3. Check if `Y` is a quadratic residue (QR), in which case return
+/// `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a QR.
+///   4. Return `P=(x,y)`
+///
+///  In the future we may switch to a constant time algorithm such as Fouque-Tibouchi <https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf>
+/// * `H` - parameterizable hash function (e.g. SHA256, Keccak)
+/// * `msg` - input message
+/// * `returns` - A group element in G1
+#[allow(non_snake_case)]
+pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
     let hasher_init = &[1u8];
     let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
     let field_elems: Vec<BaseField> = hasher.hash_to_field(msg, 1);
 
     // Coefficients of the curve: y^2 = x^3 + ax + b
-    // For BN254 we have a=0 and b=3
+    // For BN254 we have a=0 and b=3 so we only use b
+    let coeff_b: BaseField = MontFp!("3");
 
-    let coeff_a = BaseField::from(0); // TODO cleaner, fetch from config?
-    let coeff_b = BaseField::from(3); // TODO cleaner, fetch from config? TODO is this correct?
-
-    let mut x_affine = field_elems[0];
-    let mut y_square_affine: BaseField =
-        x_affine * x_affine * x_affine + coeff_a * x_affine + coeff_b;
+    let mut x = field_elems[0];
+    let mut Y: BaseField = x * x * x + coeff_b;
 
     // Loop until we find a quadratic residue
-    while y_square_affine.legendre().is_qnr() {
+    while Y.legendre().is_qnr() {
         // println!("point with x={} is off the curve!!", x_affine);
-        x_affine += BaseField::from(1);
-        y_square_affine = x_affine * x_affine * x_affine + coeff_a * x_affine + coeff_b;
+        x += BaseField::from(1);
+        Y = x * x * x + coeff_b;
     }
 
-    // Safe unwrap as y_square_affine is a quadratic residue
-    let y_affine = y_square_affine.sqrt().unwrap();
+    // Safe unwrap as `y` is a quadratic residue
+    let y = Y.sqrt().unwrap();
 
-    let g1_affine = G1Affine::new(x_affine, y_affine);
+    let g1_affine = G1Affine::new(x, y);
     G1Projective::from(g1_affine)
 }
 
