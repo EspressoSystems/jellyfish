@@ -25,5 +25,5 @@ pub const BLS_SIG_PK_SIZE: usize = 192;
 pub const BLS_SIG_COMPRESSED_PK_SIZE: usize = 96;
 
 /// ciphersuite identifier for BLS signature over BN254
-/// TODO fit the format described in <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-ciphersuite-format>
+/// Note this does **not** follow <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-ciphersuite-format>
 pub const CS_ID_BLS_BN254: &str = "BLS_SIG_BN254";

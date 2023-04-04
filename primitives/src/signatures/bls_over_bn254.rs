@@ -4,8 +4,36 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! This module implements the BLS signature over the BN254 curve.ç
-// TODO more comments
+//! This module implements the BLS signature over the BN254 curve.
+//! The [BLS signature scheme][bls] relies on a bilinear map `e:G1 x G2 -> GT`
+//! and a hash function `H` from a message input space (e.g. bytes) to a group
+//! element `G1`. `H` must be such that for all `m`, the discrete logarithm
+//! `H(m)` w.r.t to the generator of `G1` is unknown.
+//!
+//! The scheme works as follows:
+//! Let `g1` and `g2` be generators of `G1` and `G2`.
+//!
+//! **KeyGen()**
+//!    * sample a random `s` in the scalar field `Fr` and return the key pair
+//!      `(sk,pk):=(s,g2^s)`
+//!
+//! **Sign(sk,m)**
+//!    * return `sigma=H(m)^{sk}`
+//!
+//! **Verify(pk,m,sigma)**
+//!    * Check that `e(sigma,g_2)=e(H(m),pk)`
+//!
+//! In this module:
+//! * `e` is the pairing over the curve [BN254][bn254] supported by the EVM
+//!   [EIP-196][eip196], [EIP197][eip197]
+//! * `H` is implemented using the "hash-and-pray" approach. See function
+//!   [`hash_to_curve`]
+//!
+//! [bls]: https://hovav.net/ucsd/dist/sigs.pdf
+//! [bn254]: https://eprint.iacr.org/2005/133.pdf
+//! [eip196]: https://eips.ethereum.org/EIPS/eip-196
+//! [eip197]: https://eips.ethereum.org/EIPS/eip-197
+
 use super::SignatureScheme;
 use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
 use ark_bn254::{
@@ -54,7 +82,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
     /// A message is &\[MessageUnit\]
     type MessageUnit = u8;
 
-    /// generate public parameters from RNG.
+    /// Generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
         _prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError> {
@@ -67,7 +95,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
         let kp = KeyPair::generate(prng);
-        Ok((kp.sk, kp.vk))
+        Ok((kp.sk.clone(), kp.vk.clone()))
     }
 
     /// Sign a message with the signing key
@@ -95,27 +123,21 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
 // =====================================================
 // Signing key
 // =====================================================
-#[tagged(tag::BLS_SIGNING_KEY)] // TODO what iis this tagging thing?
+#[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(
     Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
+#[zeroize(drop)]
 /// Signing key for BLS signature.
 pub struct SignKey(pub(crate) ScalarField);
-
-impl Drop for SignKey {
-    fn drop(&mut self) {
-        self.0.zeroize();
-    }
-}
 
 // =====================================================
 // Verification key
 // =====================================================
 
 /// Signature public verification key
-// Derive zeroize here so that keypair can be zeroized
-#[tagged(tag::BLS_VER_KEY)] // TODO how does this work???
-#[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
+#[tagged(tag::BLS_VER_KEY)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, Clone, Debug)]
 pub struct VerKey(pub(crate) G2Projective);
 
 impl Hash for VerKey {
@@ -142,9 +164,8 @@ impl VerKey {
 // =====================================================
 
 /// Signature secret key pair used to sign messages
-// Make sure sk can be zeroized // TODO
-#[tagged(tag::BLS_VER_KEY)] // TODO what is this tag for?
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Zeroize)]
+#[zeroize(drop)]
 pub struct KeyPair {
     sk: SignKey,
     vk: VerKey,
@@ -155,7 +176,7 @@ pub struct KeyPair {
 // =====================================================
 
 /// The signature of BLS signature scheme
-#[tagged(tag::BLS_SIG)] // TODO what is this tag for?
+#[tagged(tag::BLS_SIG)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct Signature {
@@ -180,9 +201,9 @@ impl PartialEq for Signature {
 /// Non constant time hash to curve algorithm (a.k.a "hash-and-pray")
 /// The hashing algorithm consists of the following steps:
 ///   1. Hash the bytes to a field element `x`.
-///   2. Compute `Y = x^3 + 3`.
-///   3. Check if `Y` is a quadratic residue (QR), in which case return
-/// `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a QR.
+///   2. Compute `Y = x^3 + 3`. (Note: the equation of the BN curve is
+/// y^2=x^3+3)   3. Check if `Y` is a quadratic residue (QR), in which case
+/// return `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a QR.
 ///   4. Return `P=(x,y)`
 ///
 ///  In the future we may switch to a constant time algorithm such as Fouque-Tibouchi <https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf>
@@ -195,7 +216,7 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
     let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
     let field_elems: Vec<BaseField> = hasher.hash_to_field(msg, 1);
 
-    // Coefficients of the curve: y^2 = x^3 + ax + b
+    // General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
     let coeff_b: BaseField = MontFp!("3");
 
@@ -280,8 +301,6 @@ impl VerKey {
         sig: &Signature,
         csid: B,
     ) -> Result<(), PrimitivesError> {
-        // TODO Check public key
-
         let msg_input = [msg, csid.as_ref()].concat();
         let group_elem = hash_to_curve::<Keccak256>(&msg_input);
         let g2 = G2Projective::generator();
