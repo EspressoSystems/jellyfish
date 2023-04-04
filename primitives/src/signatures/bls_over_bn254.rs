@@ -4,15 +4,13 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! This module implements the BLS signature over BN curves.
-
+//! This module implements the BLS signature over the BN254 curve.ç
+// TODO more comments
 use super::SignatureScheme;
 use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
 use ark_bn254::{
     Bn254, Fq as BaseField, Fr as ScalarField, G1Affine, G1Projective, G2Affine, G2Projective,
 };
-use sha3::Keccak256;
-
 use ark_ec::{pairing::Pairing, CurveGroup, Group};
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
@@ -21,13 +19,13 @@ use ark_ff::{
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
-    // println,
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec::Vec,
     UniformRand,
 };
 use digest::DynDigest;
+use sha3::Keccak256;
 
 use crate::errors::PrimitivesError::VerificationError;
 use espresso_systems_common::jellyfish::tag;
@@ -36,9 +34,9 @@ use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// BLS signature scheme.
-pub struct BLSOverBNCurveSignatureScheme;
+pub struct BLSOverBN254CurveSignatureScheme;
 
-impl SignatureScheme for BLSOverBNCurveSignatureScheme {
+impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
     const CS_ID: &'static str = CS_ID_BLS_BN254;
 
     /// Signing key.
@@ -97,7 +95,7 @@ impl SignatureScheme for BLSOverBNCurveSignatureScheme {
 // =====================================================
 // Signing key
 // =====================================================
-#[tagged(tag::BLS_SIGNING_KEY)]
+#[tagged(tag::BLS_SIGNING_KEY)] // TODO what iis this tagging thing?
 #[derive(
     Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
 )]
@@ -144,8 +142,8 @@ impl VerKey {
 // =====================================================
 
 /// Signature secret key pair used to sign messages
-// make sure sk can be zeroized
-#[tagged(tag::SCHNORR_KEY_PAIR)] // TODO what is this tag for?
+// Make sure sk can be zeroized // TODO
+#[tagged(tag::BLS_VER_KEY)] // TODO what is this tag for?
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone)]
 pub struct KeyPair {
     sk: SignKey,
@@ -157,7 +155,7 @@ pub struct KeyPair {
 // =====================================================
 
 /// The signature of BLS signature scheme
-#[tagged(tag::SCHNORR_SIG)] // TODO what is this tag for?
+#[tagged(tag::BLS_SIG)] // TODO what is this tag for?
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct Signature {
@@ -180,6 +178,8 @@ impl PartialEq for Signature {
 // =====================================================
 
 /// Hash and pray algorithm
+// TODO comment
+// TODO make public?
 fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
     let hasher_init = &[1u8];
     let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
@@ -240,7 +240,6 @@ impl KeyPair {
     }
 
     /// Signature function
-    #[allow(non_snake_case)]
     pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], csid: B) -> Signature {
         let msg_input = [msg, csid.as_ref()].concat();
         let hash_value: G1Projective = hash_to_curve::<Keccak256>(&msg_input);
@@ -268,7 +267,6 @@ impl VerKey {
     }
 
     /// Signature verification function
-    #[allow(non_snake_case)]
     pub fn verify<B: AsRef<[u8]>>(
         &self,
         msg: &[u8],
@@ -276,19 +274,15 @@ impl VerKey {
         csid: B,
     ) -> Result<(), PrimitivesError> {
         // TODO Check public key
-        // TODO comment: the signature of this function differs from the code of
-        // schnorr.rs: the message is a vectory of bytes instead of field elements
 
         let msg_input = [msg, csid.as_ref()].concat();
         let group_elem = hash_to_curve::<Keccak256>(&msg_input);
         let g2 = G2Projective::generator();
 
-        // TODO write this in a more elegant way
         let is_sig_valid = Bn254::pairing(sig.sigma, g2) == Bn254::pairing(group_elem, self.0);
-        if is_sig_valid {
-            Ok(())
-        } else {
-            Err(VerificationError("Pairing check failed".to_string()))
+        match is_sig_valid {
+            true => Ok(()),
+            false => Err(VerificationError("Pairing check failed".to_string())),
         }
     }
 }
@@ -300,7 +294,9 @@ mod tests {
     use crate::{
         constants::CS_ID_BLS_BN254,
         signatures::{
-            bls_over_bn254::{BLSOverBNCurveSignatureScheme, KeyPair, SignKey, Signature, VerKey},
+            bls_over_bn254::{
+                BLSOverBN254CurveSignatureScheme, KeyPair, SignKey, Signature, VerKey,
+            },
             tests::{failed_verification, sign_and_verify},
         },
     };
@@ -337,8 +333,8 @@ mod tests {
     fn test_sig_trait() {
         let message = vec![87u8, 32u8];
         let wrong_message = vec![255u8];
-        sign_and_verify::<BLSOverBNCurveSignatureScheme>(message.as_slice());
-        failed_verification::<BLSOverBNCurveSignatureScheme>(
+        sign_and_verify::<BLSOverBN254CurveSignatureScheme>(message.as_slice());
+        failed_verification::<BLSOverBN254CurveSignatureScheme>(
             message.as_slice(),
             wrong_message.as_slice(),
         );
