@@ -7,11 +7,11 @@
 //! This module implements the BLS signature over BN curves.
 
 use super::SignatureScheme;
+use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
 use ark_bn254::{
     Bn254, Fq as BaseField, Fr as ScalarField, G1Affine, G1Projective, G2Affine, G2Projective,
 };
-
-use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
+use sha3::Keccak256;
 
 use ark_ec::{pairing::Pairing, CurveGroup, Group};
 use ark_ff::{
@@ -27,10 +27,11 @@ use ark_std::{
     vec::Vec,
     UniformRand,
 };
+use digest::DynDigest;
 
 use crate::errors::PrimitivesError::VerificationError;
 use espresso_systems_common::jellyfish::tag;
-use sha2::Sha256;
+
 use tagged_base64::tagged;
 use zeroize::Zeroize;
 
@@ -179,9 +180,9 @@ impl PartialEq for Signature {
 // =====================================================
 
 /// Hash and pray algorithm
-fn hash_to_curve(msg: &[u8]) -> G1Projective {
+fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
     let hasher_init = &[1u8];
-    let hasher = <DefaultFieldHasher<Sha256> as HashToField<BaseField>>::new(hasher_init);
+    let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
     let field_elems: Vec<BaseField> = hasher.hash_to_field(msg, 1);
 
     // Coefficients of the curve: y^2 = x^3 + ax + b
@@ -242,7 +243,7 @@ impl KeyPair {
     #[allow(non_snake_case)]
     pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], csid: B) -> Signature {
         let msg_input = [msg, csid.as_ref()].concat();
-        let hash_value: G1Projective = hash_to_curve(&msg_input);
+        let hash_value: G1Projective = hash_to_curve::<Keccak256>(&msg_input);
         let sigma = hash_value * self.sk.0;
         Signature { sigma }
     }
@@ -279,7 +280,7 @@ impl VerKey {
         // schnorr.rs: the message is a vectory of bytes instead of field elements
 
         let msg_input = [msg, csid.as_ref()].concat();
-        let group_elem = hash_to_curve(&msg_input);
+        let group_elem = hash_to_curve::<Keccak256>(&msg_input);
         let g2 = G2Projective::generator();
 
         // TODO write this in a more elegant way
@@ -295,7 +296,7 @@ impl VerKey {
 #[cfg(test)]
 mod tests {
 
-    // This tests are adapted from schnorr.rs
+    // These tests are adapted from schnorr.rs
     use crate::{
         constants::CS_ID_BLS_BN254,
         signatures::{
