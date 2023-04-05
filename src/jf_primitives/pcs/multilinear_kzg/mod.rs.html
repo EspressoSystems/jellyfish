@@ -563,7 +563,7 @@
     </span><span class="kw">pub </span>q_x_opens: Vec&lt;UnivariateKzgProof&lt;E&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;E: Pairing&gt; PolynomialCommitmentScheme&lt;E&gt; <span class="kw">for </span>MultilinearKzgPCS&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Pairing&gt; PolynomialCommitmentScheme <span class="kw">for </span>MultilinearKzgPCS&lt;E&gt; {
     <span class="comment">// Config
     </span><span class="kw">type </span>ProverParam = (
         MultilinearProverParam&lt;E&gt;,

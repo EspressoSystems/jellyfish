@@ -347,7 +347,7 @@
     </span><span class="kw">pub </span>h_mask: Vec&lt;E::G2Affine&gt;,
 }
 
-<span class="kw">impl</span>&lt;E: Pairing&gt; StructuredReferenceString&lt;E&gt; <span class="kw">for </span>MultilinearUniversalParams&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Pairing&gt; StructuredReferenceString <span class="kw">for </span>MultilinearUniversalParams&lt;E&gt; {
     <span class="kw">type </span>ProverParam = MultilinearProverParam&lt;E&gt;;
     <span class="kw">type </span>VerifierParam = MultilinearVerifierParam&lt;E&gt;;
 
