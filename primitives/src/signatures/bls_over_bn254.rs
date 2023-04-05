@@ -214,13 +214,12 @@ impl PartialEq for Signature {
 pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
     let hasher_init = &[1u8];
     let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
-    let field_elems: Vec<BaseField> = hasher.hash_to_field(msg, 1);
 
     // General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
     let coeff_b: BaseField = MontFp!("3");
 
-    let mut x = field_elems[0];
+    let mut x: BaseField = hasher.hash_to_field(msg, 1)[0];
     let mut Y: BaseField = x * x * x + coeff_b;
 
     // Loop until we find a quadratic residue
