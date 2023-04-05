@@ -95,7 +95,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
         prng: &mut R,
     ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
         let kp = KeyPair::generate(prng);
-        Ok((kp.sk.clone(), kp.vk.clone()))
+        Ok((kp.sk.clone(), kp.vk))
     }
 
     /// Sign a message with the signing key
@@ -137,7 +137,7 @@ pub struct SignKey(pub(crate) ScalarField);
 
 /// Signature public verification key
 #[tagged(tag::BLS_VER_KEY)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, Clone, Debug)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, Clone, Debug, Copy)]
 pub struct VerKey(pub(crate) G2Projective);
 
 impl Hash for VerKey {
@@ -259,7 +259,7 @@ impl KeyPair {
 
     /// Get the verification key
     pub fn ver_key(&self) -> VerKey {
-        self.vk.clone()
+        self.vk
     }
 
     /// Get the internal of the signing key, namely a P::ScalarField element
