@@ -3,9 +3,11 @@
 use crate::errors::PrimitivesError;
 use ark_std::rand::{CryptoRng, RngCore};
 
-pub mod bls;
+pub mod bls_over_bls12381;
+pub mod bls_over_bn254;
 pub mod schnorr;
-pub use bls::BLSSignatureScheme;
+
+pub use bls_over_bls12381::BLSSignatureScheme;
 use core::fmt::Debug;
 pub use schnorr::SchnorrSignatureScheme;
 use serde::{Deserialize, Serialize};
@@ -60,7 +62,7 @@ pub trait SignatureScheme {
     // FIXME: the API looks a bit strange when the default generator is used.
     // For example:
     //   `S::param_gen::<StdRng>(None)`
-    // wheere `StdRng` is redundent.
+    // where `StdRng` is redundant.
     fn param_gen<R: CryptoRng + RngCore>(
         prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, PrimitivesError>;
