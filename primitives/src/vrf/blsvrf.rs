@@ -3,7 +3,7 @@ use super::Vrf;
 use crate::{
     errors::PrimitivesError,
     signatures::{
-        bls::{BLSSignKey, BLSSignature, BLSVerKey},
+        bls_over_bls12381::{BLSSignKey, BLSSignature, BLSVerKey},
         BLSSignatureScheme, SignatureScheme,
     },
 };

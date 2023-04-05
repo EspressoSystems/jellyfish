@@ -16,7 +16,7 @@
 //!
 //! ```
 //! use rand_core::{RngCore, OsRng};
-//! use jf_primitives::signatures::{SignatureScheme, bls::BLSSignatureScheme};
+//! use jf_primitives::signatures::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
 //!
 //! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
 //!
@@ -40,7 +40,7 @@
 //! ```
 //! use rand_core::{RngCore, OsRng};
 //! use sha2::{Sha256, Digest};
-//! use jf_primitives::signatures::{SignatureScheme, bls::BLSSignatureScheme};
+//! use jf_primitives::signatures::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
 //!
 //! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
 //!
@@ -73,11 +73,12 @@ use super::SignatureScheme;
 use crate::{
     constants::{
         BLS_SIG_COMPRESSED_PK_SIZE, BLS_SIG_COMPRESSED_SIGNATURE_SIZE, BLS_SIG_PK_SIZE,
-        BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE, CS_ID_BLS_MIN_SIG,
+        BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE,
     },
     errors::PrimitivesError,
 };
 
+use crate::constants::CS_ID_BLS_MIN_SIG;
 use ark_serialize::*;
 use ark_std::{
     format,
@@ -325,14 +326,14 @@ pub struct BLSSignatureScheme;
 impl SignatureScheme for BLSSignatureScheme {
     const CS_ID: &'static str = CS_ID_BLS_MIN_SIG;
 
-    /// Public parameter
-    type PublicParameter = ();
-
     /// Signing key
     type SigningKey = BLSSignKey;
 
     /// Verification key
     type VerificationKey = BLSVerKey;
+
+    /// Public parameter
+    type PublicParameter = ();
 
     /// Signature
     type Signature = BLSSignature;
