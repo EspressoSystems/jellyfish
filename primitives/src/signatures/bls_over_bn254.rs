@@ -352,6 +352,17 @@ mod tests {
                 assert!(pk.verify(&msg, &sig, CS_ID_BLS_BN254).is_err());
             }
         }
+
+        // Test for long messages
+        const SIZE: usize = 35; // Bigger than 32 which is the number of bytes needed to encode a field element
+        let key_pair = KeyPair::generate(&mut rng);
+        let msg = [33u8; SIZE];
+        let sig = key_pair.sign(&msg, CS_ID_BLS_BN254);
+        let pk = key_pair.ver_key_ref();
+        assert!(pk.verify(&msg, &sig, CS_ID_BLS_BN254).is_ok());
+
+        let wrong_msg = [33u8; SIZE + 1];
+        assert!(pk.verify(&wrong_msg, &sig, CS_ID_BLS_BN254).is_err());
     }
 
     #[test]
