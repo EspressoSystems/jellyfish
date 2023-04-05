@@ -50,7 +50,7 @@ pub struct UnivariateKzgProof<E: Pairing> {
 /// batch proof
 pub type UnivariateKzgBatchProof<E> = Vec<UnivariateKzgProof<E>>;
 
-impl<E: Pairing> PolynomialCommitmentScheme<E> for UnivariateKzgPCS<E> {
+impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     // Config
     type ProverParam = UnivariateProverParam<E::G1Affine>;
     type VerifierParam = UnivariateVerifierParam<E>;

@@ -67,7 +67,7 @@ pub struct MultilinearKzgBatchProof<E: Pairing> {
     pub q_x_opens: Vec<UnivariateKzgProof<E>>,
 }
 
-impl<E: Pairing> PolynomialCommitmentScheme<E> for MultilinearKzgPCS<E> {
+impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     // Config
     type ProverParam = (
         MultilinearProverParam<E>,

@@ -27,7 +27,7 @@ use errors::PCSError;
 /// This trait defines APIs for polynomial commitment schemes.
 /// Note that for our usage, this PCS is not hiding.
 /// TODO(#187): add hiding property.
-pub trait PolynomialCommitmentScheme<E: Pairing> {
+pub trait PolynomialCommitmentScheme {
     /// Prover parameters
     type ProverParam: Clone;
     /// Verifier parameters
@@ -128,7 +128,7 @@ pub trait PolynomialCommitmentScheme<E: Pairing> {
         verifier_param: &Self::VerifierParam,
         commitment: &Self::Commitment,
         point: &Self::Point,
-        value: &E::ScalarField,
+        value: &Self::Evaluation,
         proof: &Self::Proof,
     ) -> Result<bool, PCSError>;
 
@@ -138,7 +138,7 @@ pub trait PolynomialCommitmentScheme<E: Pairing> {
         verifier_param: &Self::VerifierParam,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
-        values: &[E::ScalarField],
+        values: &[Self::Evaluation],
         batch_proof: &Self::BatchProof,
         rng: &mut R,
     ) -> Result<bool, PCSError>;
