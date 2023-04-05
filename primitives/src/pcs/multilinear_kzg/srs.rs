@@ -66,7 +66,7 @@ pub struct MultilinearVerifierParam<E: Pairing> {
     pub h_mask: Vec<E::G2Affine>,
 }
 
-impl<E: Pairing> StructuredReferenceString<E> for MultilinearUniversalParams<E> {
+impl<E: Pairing> StructuredReferenceString for MultilinearUniversalParams<E> {
     type ProverParam = MultilinearProverParam<E>;
     type VerifierParam = MultilinearVerifierParam<E>;
 
