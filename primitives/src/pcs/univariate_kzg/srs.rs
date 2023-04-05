@@ -66,7 +66,7 @@ pub struct UnivariateVerifierParam<E: Pairing> {
     pub beta_h: E::G2Affine,
 }
 
-impl<E: Pairing> StructuredReferenceString<E> for UnivariateUniversalParams<E> {
+impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
     type ProverParam = UnivariateProverParam<E::G1Affine>;
     type VerifierParam = UnivariateVerifierParam<E>;
 

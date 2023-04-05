@@ -12,7 +12,6 @@ mod structs;
 mod transcript;
 mod univariate_kzg;
 
-use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
@@ -145,7 +144,7 @@ pub trait PolynomialCommitmentScheme {
 }
 
 /// API definitions for structured reference string
-pub trait StructuredReferenceString<E: Pairing>: Sized {
+pub trait StructuredReferenceString: Sized {
     /// Prover parameters
     type ProverParam;
     /// Verifier parameters
