@@ -25,5 +25,6 @@ pub const BLS_SIG_PK_SIZE: usize = 192;
 pub const BLS_SIG_COMPRESSED_PK_SIZE: usize = 96;
 
 /// ciphersuite identifier for BLS signature over BN254
-/// Note this does **not** follow <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-ciphersuite-format>
-pub const CS_ID_BLS_BN254: &str = "BLS_SIG_BN254";
+/// Note this is **adapted** from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-ciphersuite-format>.
+/// In particular the "hash-and-pray" method is not part of <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-16>, so the tag "NCTH" (non constant time hash) is not standard.
+pub const CS_ID_BLS_BN254: &str = "BLS_SIG_BN254G1_XMD:KECCAK_NCTH_NUL_";
