@@ -123,14 +123,18 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
 <span class="kw">use </span>ark_std::rand::{CryptoRng, RngCore};
 
-<span class="kw">pub mod </span>bls;
+<span class="kw">pub mod </span>bls_over_bls12381;
+<span class="kw">pub mod </span>bls_over_bn254;
 <span class="kw">pub mod </span>schnorr;
-<span class="kw">pub use </span>bls::BLSSignatureScheme;
+
+<span class="kw">pub use </span>bls_over_bls12381::BLSSignatureScheme;
 <span class="kw">use </span>core::fmt::Debug;
 <span class="kw">pub use </span>schnorr::SchnorrSignatureScheme;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -185,7 +189,7 @@
     </span><span class="comment">// FIXME: the API looks a bit strange when the default generator is used.
     // For example:
     //   `S::param_gen::&lt;StdRng&gt;(None)`
-    // wheere `StdRng` is redundent.
+    // where `StdRng` is redundant.
     </span><span class="kw">fn </span>param_gen&lt;R: CryptoRng + RngCore&gt;(
         prng: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>R&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::PublicParameter, PrimitivesError&gt;;
