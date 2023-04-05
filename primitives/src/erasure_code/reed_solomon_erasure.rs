@@ -7,7 +7,7 @@
 //! Module for Reed Solomon Erasure Code
 
 use crate::errors::PrimitivesError;
-use ark_ff::PrimeField;
+use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
@@ -21,7 +21,7 @@ use super::ErasureCode;
 /// The encoding of a message is the evaluation on (1..num_shards) of the
 /// polynomial whose coefficients are the message entries. Decoding is a naive
 /// Lagrange interpolation.
-pub struct ReedSolomonErasureCode<F: PrimeField> {
+pub struct ReedSolomonErasureCode<F: Field> {
     reconstruction_size: usize,
     num_shards: usize,
     phantom_f: PhantomData<F>,
@@ -29,22 +29,22 @@ pub struct ReedSolomonErasureCode<F: PrimeField> {
 
 /// Shards for Reed Solomon erasure code
 #[derive(Clone, Eq, Debug, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(PartialEq, Hash(bound = "F: PrimeField"))]
-pub struct ReedSolomonErasureCodeShard<F: PrimeField> {
+#[derivative(PartialEq, Hash(bound = "F: Field"))]
+pub struct ReedSolomonErasureCodeShard<F: Field> {
     /// Index of shard shard
     pub index: usize,
     /// Value of this shard
     pub values: Vec<F>,
 }
 
-impl<F: PrimeField> ReedSolomonErasureCodeShard<F> {
+impl<F: Field> ReedSolomonErasureCodeShard<F> {
     /// Create a new shard
     pub fn new(index: usize, values: Vec<F>) -> Self {
         Self { index, values }
     }
 }
 
-impl<F: PrimeField> ErasureCode for ReedSolomonErasureCode<F> {
+impl<F: Field> ErasureCode for ReedSolomonErasureCode<F> {
     type Field = F;
     type Shard = ReedSolomonErasureCodeShard<F>;
 
@@ -170,10 +170,10 @@ mod test {
     use ark_bls12_377::Fq as Fq377;
     use ark_bls12_381::Fq as Fq381;
     use ark_bn254::Fq as Fq254;
-    use ark_ff::PrimeField;
+    use ark_ff::Field;
     use ark_std::vec;
 
-    fn test_rs_code_helper<F: PrimeField>() {
+    fn test_rs_code_helper<F: Field>() {
         let rs = ReedSolomonErasureCode::<F>::new(2, 3).unwrap();
         // Encoded as a polynomial 2x + 1
         let data = vec![F::from(1u64), F::from(2u64)];
