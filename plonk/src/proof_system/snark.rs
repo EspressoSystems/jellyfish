@@ -443,7 +443,7 @@ where
         max_degree: usize,
         rng: &mut R,
     ) -> Result<Self::UniversalSRS, Self::Error> {
-        UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
+        UnivariateKzgPCS::<E>::setup_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
     }
 
     /// Input a circuit and the SRS, precompute the proving key and verification

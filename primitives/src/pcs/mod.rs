@@ -27,12 +27,8 @@ use errors::PCSError;
 /// Note that for our usage, this PCS is not hiding.
 /// TODO(#187): add hiding property.
 pub trait PolynomialCommitmentScheme {
-    /// Prover parameters
-    type ProverParam: Clone;
-    /// Verifier parameters
-    type VerifierParam: Clone + CanonicalSerialize + CanonicalDeserialize;
     /// Structured reference string
-    type SRS: Clone + Debug;
+    type SRS: Clone + Debug + StructuredReferenceString;
     /// Polynomial and its associated types
     type Polynomial: Clone
         + Debug
@@ -54,7 +50,7 @@ pub trait PolynomialCommitmentScheme {
     /// Batch proofs
     type BatchProof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
 
-    /// Build SRS for testing.
+    /// Setup for testing.
     ///
     /// - For univariate polynomials, `supported_size` is the maximum degree.
     /// - For multilinear polynomials, `supported_size` is the number of
@@ -62,10 +58,20 @@ pub trait PolynomialCommitmentScheme {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+    fn setup_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
-    ) -> Result<Self::SRS, PCSError>;
+    ) -> Result<Self::SRS, PCSError> {
+        Self::SRS::gen_srs_for_testing(rng, supported_size)
+    }
+
+    /// Setup public parameter in production environment.
+    /// These parameters are loaded from files with serialized `pp` bytes, and
+    /// the actual setup is usually carried out via MPC and should be
+    /// implemented else where. We only load them into memory here.
+    fn setup(_supported_size: usize) -> Result<Self::SRS, PCSError> {
+        unimplemented!("TODO: implement loading SRS from files");
+    }
 
     /// Trim the universal parameters to specialize the public parameters.
     /// Input both `supported_degree` for univariate and
@@ -77,11 +83,18 @@ pub trait PolynomialCommitmentScheme {
     /// allows for passing in any pointer type, e.g.: `trim(srs: &Self::SRS,
     /// ..)` or `trim(srs: Box<Self::SRS>, ..)` or `trim(srs: Arc<Self::SRS>,
     /// ..)` etc.
+    #[allow(clippy::type_complexity)]
     fn trim(
         srs: impl Borrow<Self::SRS>,
         supported_degree: usize,
         supported_num_vars: Option<usize>,
-    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
+    ) -> Result<
+        (
+            <Self::SRS as StructuredReferenceString>::ProverParam,
+            <Self::SRS as StructuredReferenceString>::VerifierParam,
+        ),
+        PCSError,
+    >;
 
     /// Generate a commitment for a polynomial
     /// ## Note on function signature
@@ -89,25 +102,26 @@ pub trait PolynomialCommitmentScheme {
     /// might wish to keep them in heap using different kinds of smart pointers
     /// (instead of only in stack) therefore our `impl Borrow<_>` interface
     /// allows for passing in any pointer type, e.g.: `commit(prover_param:
-    /// &Self::ProverParam, ..)` or `commit(prover_param:
-    /// Box<Self::ProverParam>, ..)` or `commit(prover_param:
-    /// Arc<Self::ProverParam>, ..)` etc.
+    /// &<Self::SRS as StructuredReferenceString>::ProverParam, ..)` or
+    /// `commit(prover_param: Box<<Self::SRS as
+    /// StructuredReferenceString>::ProverParam>, ..)` or `commit(prover_param:
+    /// Arc<<Self::SRS as StructuredReferenceString>::ProverParam>, ..)` etc.
     /// Also, the commitment is not hiding.
     fn commit(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError>;
 
     /// Batch commit a list of polynomials
     fn batch_commit(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError>;
 
     /// On input a polynomial `p` and a point `point`, outputs a proof for the
     /// same.
     fn open(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         polynomial: &Self::Polynomial,
         point: &Self::Point,
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError>;
@@ -115,7 +129,7 @@ pub trait PolynomialCommitmentScheme {
     /// Input a list of polynomials, and a same number of points,
     /// compute a batch opening for all the polynomials.
     fn batch_open(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         batch_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
@@ -124,7 +138,7 @@ pub trait PolynomialCommitmentScheme {
     /// Verifies that `value` is the evaluation at `x` of the polynomial
     /// committed inside `comm`.
     fn verify(
-        verifier_param: &Self::VerifierParam,
+        verifier_param: &<Self::SRS as StructuredReferenceString>::VerifierParam,
         commitment: &Self::Commitment,
         point: &Self::Point,
         value: &Self::Evaluation,
@@ -134,7 +148,7 @@ pub trait PolynomialCommitmentScheme {
     /// Verifies that `value_i` is the evaluation at `x_i` of the polynomial
     /// `poly_i` committed inside `comm`.
     fn batch_verify<R: RngCore + CryptoRng>(
-        verifier_param: &Self::VerifierParam,
+        verifier_param: &<Self::SRS as StructuredReferenceString>::VerifierParam,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
         values: &[Self::Evaluation],

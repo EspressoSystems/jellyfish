@@ -52,8 +52,6 @@ pub type UnivariateKzgBatchProof<E> = Vec<UnivariateKzgProof<E>>;
 
 impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     // Config
-    type ProverParam = UnivariateProverParam<E::G1Affine>;
-    type VerifierParam = UnivariateVerifierParam<E>;
     type SRS = UnivariateUniversalParams<E>;
     // Polynomial and its associated types
     type Polynomial = DensePolynomial<E::ScalarField>;
@@ -71,7 +69,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+    fn setup_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
     ) -> Result<Self::SRS, PCSError> {
@@ -85,7 +83,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         srs: impl Borrow<Self::SRS>,
         supported_degree: usize,
         supported_num_vars: Option<usize>,
-    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
+    ) -> Result<(UnivariateProverParam<E>, UnivariateVerifierParam<E>), PCSError> {
         if supported_num_vars.is_some() {
             return Err(PCSError::InvalidParameters(
                 "univariate should not receive a num_var param".to_string(),
@@ -97,7 +95,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     /// Generate a commitment for a polynomial
     /// Note that the scheme is not hidding
     fn commit(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError> {
         let prover_param = prover_param.borrow();
@@ -128,7 +126,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
     /// Generate a commitment for a list of polynomials
     fn batch_commit(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
         polys: &[Self::Polynomial],
     ) -> Result<Self::BatchCommitment, PCSError> {
         let prover_param = prover_param.borrow();
@@ -144,7 +142,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     /// On input a polynomial `p` and a point `point`, outputs a proof for the
     /// same.
     fn open(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
         polynomial: &Self::Polynomial,
         point: &Self::Point,
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError> {
@@ -177,7 +175,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     // TODO: to implement the more efficient batch opening algorithm
     // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
     fn batch_open(
-        prover_param: impl Borrow<Self::ProverParam>,
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
         _multi_commitment: &Self::BatchCommitment,
         polynomials: &[Self::Polynomial],
         points: &[Self::Point],
@@ -204,7 +202,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     /// Verifies that `value` is the evaluation at `x` of the polynomial
     /// committed inside `comm`.
     fn verify(
-        verifier_param: &Self::VerifierParam,
+        verifier_param: &UnivariateVerifierParam<E>,
         commitment: &Self::Commitment,
         point: &Self::Point,
         value: &E::ScalarField,
@@ -234,7 +232,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     // TODO: to implement the more efficient batch verification algorithm
     // (e.g., the appendix C.4 in https://eprint.iacr.org/2020/1536.pdf)
     fn batch_verify<R: RngCore + CryptoRng>(
-        verifier_param: &Self::VerifierParam,
+        verifier_param: &UnivariateVerifierParam<E>,
         multi_commitment: &Self::BatchCommitment,
         points: &[Self::Point],
         values: &[E::ScalarField],
@@ -328,7 +326,7 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::setup_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
@@ -354,7 +352,7 @@ mod tests {
         for _ in 0..100 {
             let degree = 50;
 
-            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::setup_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
@@ -382,7 +380,7 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::setup_for_testing(rng, degree)?;
             let (ck, vk) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
             let mut comms = Vec::new();
             let mut values = Vec::new();

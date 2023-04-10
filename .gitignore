@@ -4,6 +4,7 @@
 /target
 cargo-system-config.toml
 Cargo.lock
+*.org
 
 # Test coverage (grcov)
 default.profraw

@@ -5,7 +5,14 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
-use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
+use crate::pcs::{
+    multilinear_kzg::util::eq_eval,
+    prelude::PCSError,
+    univariate_kzg::srs::{
+        UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
+    },
+    StructuredReferenceString,
+};
 use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
 use ark_ff::{Field, PrimeField, Zero};
 use ark_poly::DenseMultilinearExtension;
@@ -260,6 +267,78 @@ fn eq_extension<F: PrimeField>(t: &[F]) -> Vec<DenseMultilinearExtension<F>> {
 
     end_timer!(start);
     result
+}
+
+// Implement `trait StructuredReferenceString` for (ML_pp, Uni_pp) to be used in
+// MLE PCS.
+impl<E: Pairing> StructuredReferenceString
+    for (MultilinearUniversalParams<E>, UnivariateUniversalParams<E>)
+{
+    type ProverParam = (MultilinearProverParam<E>, UnivariateProverParam<E>);
+    type VerifierParam = (MultilinearVerifierParam<E>, UnivariateVerifierParam<E>);
+
+    fn trim(
+        &self,
+        supported_size: usize,
+    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
+        let ml_pp = <MultilinearUniversalParams<E> as StructuredReferenceString>::trim(
+            &self.0,
+            supported_size,
+        )?;
+        let uni_pp = <UnivariateUniversalParams<E> as StructuredReferenceString>::trim(
+            &self.1,
+            supported_size,
+        )?;
+
+        Ok(((ml_pp.0, uni_pp.0), (ml_pp.1, uni_pp.1)))
+    }
+
+    fn extract_prover_param(&self, supported_size: usize) -> Self::ProverParam {
+        let ml_prover_param =
+            <MultilinearUniversalParams<E> as StructuredReferenceString>::extract_prover_param(
+                &self.0,
+                supported_size,
+            );
+        let uni_prover_param =
+            <UnivariateUniversalParams<E> as StructuredReferenceString>::extract_prover_param(
+                &self.1,
+                supported_size,
+            );
+
+        (ml_prover_param, uni_prover_param)
+    }
+
+    fn extract_verifier_param(&self, supported_size: usize) -> Self::VerifierParam {
+        let ml_verifier_param =
+            <MultilinearUniversalParams<E> as StructuredReferenceString>::extract_verifier_param(
+                &self.0,
+                supported_size,
+            );
+        let uni_verifier_param =
+            <UnivariateUniversalParams<E> as StructuredReferenceString>::extract_verifier_param(
+                &self.1,
+                supported_size,
+            );
+
+        (ml_verifier_param, uni_verifier_param)
+    }
+
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+        rng: &mut R,
+        supported_size: usize,
+    ) -> Result<Self, PCSError> {
+        let ml_pp =
+            <MultilinearUniversalParams<E> as StructuredReferenceString>::gen_srs_for_testing(
+                rng,
+                supported_size,
+            )?;
+        let uni_pp =
+            <UnivariateUniversalParams<E> as StructuredReferenceString>::gen_srs_for_testing(
+                rng,
+                supported_size,
+            )?;
+        Ok((ml_pp, uni_pp))
+    }
 }
 
 #[cfg(test)]

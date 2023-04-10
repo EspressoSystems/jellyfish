@@ -17,7 +17,7 @@ fn bench_pcs() -> Result<(), PCSError> {
     let mut rng = test_rng();
 
     // normal polynomials
-    let uni_params = MultilinearKzgPCS::<Bls12_381>::gen_srs_for_testing(&mut rng, 18)?;
+    let uni_params = MultilinearKzgPCS::<Bls12_381>::setup_for_testing(&mut rng, 18)?;
 
     for nv in 4..19 {
         let repetition = if nv < 10 {
