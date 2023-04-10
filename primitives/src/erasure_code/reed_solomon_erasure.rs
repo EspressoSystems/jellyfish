@@ -40,13 +40,15 @@ pub struct ReedSolomonErasureCodeShard<F: Field> {
     pub value: F,
 }
 
-impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
+impl<F> ReedSolomonErasureCode<F>
 where
     F: Field,
 {
-    type Shard = ReedSolomonErasureCodeShard<F>;
-
-    fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError> {
+    /// Create a new instance
+    ///  * `reconstruction_size`: and the minimum number of shards required for
+    ///    reconstruction
+    ///  * `num_shards`: the block (codeword) length
+    pub fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError> {
         if reconstruction_size > num_shards {
             Err(PrimitivesError::ParameterError(
                 "Number of shards must be at least the message length.".to_string(),
@@ -59,6 +61,13 @@ where
             })
         }
     }
+}
+
+impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
+where
+    F: Field,
+{
+    type Shard = ReedSolomonErasureCodeShard<F>;
 
     /// The encoding will split the data into chunks of length
     /// `reconstruction_size`. And represent each chunk as a polynomial. The

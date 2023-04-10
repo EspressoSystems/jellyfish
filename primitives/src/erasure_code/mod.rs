@@ -7,34 +7,19 @@
 //! Module for erasure code
 
 use crate::errors::PrimitivesError;
-use ark_ff::Field;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{fmt::Debug, vec::Vec};
+use ark_std::vec::Vec;
 
 pub mod reed_solomon_erasure;
 
 /// Erasure code trait
-pub trait ErasureCode<F: Field>: Sized {
+/// `T` is the input data type
+pub trait ErasureCode<T>: Sized {
     /// Type for each data shards
-    type Shard: Debug
-        + Clone
-        + Eq
-        + PartialEq
-        + Sync
-        + Send
-        + CanonicalSerialize
-        + CanonicalDeserialize;
-
-    /// Create a new instance
-    ///  * `reconstruction_size`: and the minimum number of shards required for
-    ///    reconstruction
-    ///  * `num_shards`: the block (codeword) length
-    /// TODO should we allow constructors at the trait level?
-    fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError>;
+    type Shard;
 
     /// Encoding
-    fn encode(&self, data: &[F]) -> Result<Vec<Self::Shard>, PrimitivesError>;
+    fn encode(&self, data: &[T]) -> Result<Vec<Self::Shard>, PrimitivesError>;
 
     /// Decoding
-    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<F>, PrimitivesError>;
+    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<T>, PrimitivesError>;
 }
