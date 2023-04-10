@@ -14,9 +14,7 @@ use ark_std::{fmt::Debug, vec::Vec};
 pub mod reed_solomon_erasure;
 
 /// Erasure code trait
-pub trait ErasureCode: Sized {
-    /// Associated field of the erasure code
-    type Field: Field;
+pub trait ErasureCode<F: Field>: Sized {
     /// Type for each data shards
     type Shard: Debug
         + Clone
@@ -31,11 +29,12 @@ pub trait ErasureCode: Sized {
     ///  * `reconstruction_size`: and the minimum number of shards required for
     ///    reconstruction
     ///  * `num_shards`: the block (codeword) length
+    /// TODO should we allow constructors at the trait level?
     fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError>;
 
     /// Encoding
-    fn encode(&self, data: &[Self::Field]) -> Result<Vec<Self::Shard>, PrimitivesError>;
+    fn encode(&self, data: &[F]) -> Result<Vec<Self::Shard>, PrimitivesError>;
 
     /// Decoding
-    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<Self::Field>, PrimitivesError>;
+    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<F>, PrimitivesError>;
 }

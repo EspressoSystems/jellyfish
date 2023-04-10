@@ -21,7 +21,10 @@ use super::ErasureCode;
 /// The encoding of a message is the evaluation on (1..num_shards) of the
 /// polynomial whose coefficients are the message entries. Decoding is a naive
 /// Lagrange interpolation.
-pub struct ReedSolomonErasureCode<F: Field> {
+pub struct ReedSolomonErasureCode<F>
+where
+    F: Field,
+{
     reconstruction_size: usize,
     num_shards: usize,
     phantom_f: PhantomData<F>,
@@ -34,18 +37,13 @@ pub struct ReedSolomonErasureCodeShard<F: Field> {
     /// Index of shard shard
     pub index: usize,
     /// Value of this shard
-    pub values: Vec<F>,
+    pub value: F,
 }
 
-impl<F: Field> ReedSolomonErasureCodeShard<F> {
-    /// Create a new shard
-    pub fn new(index: usize, values: Vec<F>) -> Self {
-        Self { index, values }
-    }
-}
-
-impl<F: Field> ErasureCode for ReedSolomonErasureCode<F> {
-    type Field = F;
+impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
+where
+    F: Field,
+{
     type Shard = ReedSolomonErasureCodeShard<F>;
 
     fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError> {
@@ -66,27 +64,18 @@ impl<F: Field> ErasureCode for ReedSolomonErasureCode<F> {
     /// `reconstruction_size`. And represent each chunk as a polynomial. The
     /// codeword composes of evaluations of those polynomials on
     /// (1..num_shards).
-    fn encode(&self, data: &[Self::Field]) -> Result<Vec<Self::Shard>, PrimitivesError> {
-        let result = (1..self.num_shards + 1)
-            .map(|i| {
-                let mut vals = vec![];
-                let mut val = F::zero();
+    fn encode(&self, data: &[F]) -> Result<Vec<Self::Shard>, PrimitivesError> {
+        assert_eq!(data.len(), self.reconstruction_size);
+
+        let result = (1..=self.num_shards)
+            .map(|index| {
+                let mut value = F::zero();
                 let mut x = F::one();
-                let mut cnt: usize = 0;
                 data.iter().for_each(|coef| {
-                    val += x * coef.borrow();
-                    x *= F::from(i as u64);
-                    cnt += 1;
-                    if cnt % self.reconstruction_size == 0 {
-                        vals.push(val);
-                        val = F::zero();
-                        x = F::one();
-                    }
+                    value += x * coef.borrow();
+                    x *= F::from(index as u64);
                 });
-                if cnt % self.reconstruction_size != 0 {
-                    vals.push(val);
-                }
-                ReedSolomonErasureCodeShard::new(i, vals)
+                ReedSolomonErasureCodeShard { index, value }
             })
             .collect::<Vec<_>>();
         Ok(result)
@@ -101,63 +90,57 @@ impl<F: Field> ErasureCode for ReedSolomonErasureCode<F> {
     ///  4. Return f(x) = \sum_i y_i * l_i(x)
     /// This function always returns a vector length multiple of
     /// `self.reconstuction_size`. It has a time complexity of O(n^2)
-    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<Self::Field>, PrimitivesError> {
+    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<F>, PrimitivesError>
+    where
+        F: Field,
+    {
         if shards.len() < self.reconstruction_size {
-            Err(PrimitivesError::ParameterError(
+            return Err(PrimitivesError::ParameterError(
                 "No sufficient data for decoding.".to_string(),
-            ))
-        } else {
-            let num_chunks = shards[0].borrow().values.len();
-            if !shards.iter().all(|shard| shard.values.len() == num_chunks) {
-                return Err(PrimitivesError::InconsistentStructureError(
-                    "Each shard should provide the same number of data".to_string(),
-                ));
-            }
-            let x = shards
-                .iter()
-                .take(self.reconstruction_size)
-                .map(|shard| F::from(shard.index as u64))
-                .collect::<Vec<_>>();
-            // Calculating l(x) = \prod (x - x_i)
-            let mut l = vec![F::zero(); self.reconstruction_size + 1];
-            l[0] = F::one();
-            for i in 1..self.reconstruction_size + 1 {
-                l[i] = F::one();
-                for j in (1..i).rev() {
-                    l[j] = l[j - 1] - x[i - 1] * l[j];
-                }
-                l[0] = -x[i - 1] * l[0];
-            }
-            // Calculate the barycentric weight w_i
-            let w = (0..self.reconstruction_size)
-                .map(|i| {
-                    let mut ret = F::one();
-                    (0..self.reconstruction_size).for_each(|j| {
-                        if i != j {
-                            ret /= x[i] - x[j];
-                        }
-                    });
-                    ret
-                })
-                .collect::<Vec<_>>();
-            // Calculate f(x) = \sum_i l_i(x)
-            let mut f = vec![F::zero(); num_chunks * self.reconstruction_size];
-            for k in 0..num_chunks {
-                let offset = k * self.reconstruction_size;
-                for i in 0..self.reconstruction_size {
-                    let mut li = vec![F::zero(); self.reconstruction_size];
-                    li[self.reconstruction_size - 1] = F::one();
-                    for j in (0..self.reconstruction_size - 1).rev() {
-                        li[j] = l[j + 1] + x[i] * li[j + 1];
-                    }
-                    let weight = w[i] * shards[i].borrow().values[k];
-                    for j in 0..self.reconstruction_size {
-                        f[offset + j] += weight * li[j];
-                    }
-                }
-            }
-            Ok(f)
+            ));
         }
+
+        let x = shards
+            .iter()
+            .take(self.reconstruction_size)
+            .map(|shard| F::from(shard.index as u64))
+            .collect::<Vec<_>>();
+        // Calculating l(x) = \prod (x - x_i)
+        let mut l = vec![F::zero(); self.reconstruction_size + 1];
+        l[0] = F::one();
+        for i in 1..self.reconstruction_size + 1 {
+            l[i] = F::one();
+            for j in (1..i).rev() {
+                l[j] = l[j - 1] - x[i - 1] * l[j];
+            }
+            l[0] = -x[i - 1] * l[0];
+        }
+        // Calculate the barycentric weight w_i
+        let w = (0..self.reconstruction_size)
+            .map(|i| {
+                let mut ret = F::one();
+                (0..self.reconstruction_size).for_each(|j| {
+                    if i != j {
+                        ret /= x[i] - x[j];
+                    }
+                });
+                ret
+            })
+            .collect::<Vec<_>>();
+        // Calculate f(x) = \sum_i l_i(x)
+        let mut f = vec![F::zero(); self.reconstruction_size];
+        for i in 0..self.reconstruction_size {
+            let mut li = vec![F::zero(); self.reconstruction_size];
+            li[self.reconstruction_size - 1] = F::one();
+            for j in (0..self.reconstruction_size - 1).rev() {
+                li[j] = l[j + 1] + x[i] * li[j + 1];
+            }
+            let weight = w[i] * shards[i].borrow().value;
+            for j in 0..self.reconstruction_size {
+                f[j] += weight * li[j];
+            }
+        }
+        Ok(f)
     }
 }
 
@@ -179,9 +162,18 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![
-            ReedSolomonErasureCodeShard::new(1, vec![F::from(3u64)]),
-            ReedSolomonErasureCodeShard::new(2, vec![F::from(5u64)]),
-            ReedSolomonErasureCodeShard::new(3, vec![F::from(7u64)]),
+            ReedSolomonErasureCodeShard {
+                index: 1,
+                value: F::from(3u64),
+            },
+            ReedSolomonErasureCodeShard {
+                index: 2,
+                value: F::from(5u64),
+            },
+            ReedSolomonErasureCodeShard {
+                index: 3,
+                value: F::from(7u64),
+            },
         ];
         let code = rs.encode(&data).unwrap();
         assert_eq!(code, expected);
@@ -192,21 +184,6 @@ mod test {
             let decode = rs.decode(&new_code).unwrap();
             assert_eq!(data, decode);
         }
-
-        // Test for extra long input
-        let data = vec![F::from(1u64); 10];
-        let code = rs.encode(&data).unwrap();
-        assert_eq!(code[0].values.len(), 5);
-        let decode = rs.decode(&code).unwrap();
-        assert_eq!(data, decode);
-
-        // Extra long input test 2
-        let mut data = vec![F::from(1u64); 11];
-        let code = rs.encode(&data).unwrap();
-        assert_eq!(code[0].values.len(), 6);
-        let decode = rs.decode(&code).unwrap();
-        data.push(F::zero());
-        assert_eq!(data, decode);
     }
 
     #[test]
