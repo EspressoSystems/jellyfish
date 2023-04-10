@@ -29,6 +29,7 @@ pub mod pcs;
 pub mod prf;
 pub mod rescue;
 pub mod signatures;
+pub mod toeplitz;
 pub mod vrf;
 
 pub(crate) mod utils;
