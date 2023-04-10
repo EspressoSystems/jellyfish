@@ -92,7 +92,31 @@ pub trait SignatureScheme {
 
 /// Trait for aggregatable signatures.
 pub trait AggregateableSignatureSchemes<H>: SignatureScheme {
-    // TODO: APIs for aggregateable signatures
+    /// Aggregate multiple signatures into a single signature
+    fn aggregate(
+        pp: &Self::PublicParameter,
+        sigs: &[Self::Signature],
+    ) -> Result<Self::Signature, PrimitivesError>;
+
+    /// Verify an aggregate signature w.r.t. a list of messages and public keys.
+    /// It is user's responsibility to ensure that the public keys are
+    /// validated.
+    fn aggregate_verify<M: AsRef<[Self::MessageUnit]>>(
+        pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msgs: &[M],
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError>;
+
+    /// Verify a multisignature w.r.t. a single message and a list of public
+    /// keys. It is user's responsibility to ensure that the public keys are
+    /// validated.
+    fn mutli_sig_verify<M: AsRef<[Self::MessageUnit]>>(
+        pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msg: M,
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError>;
 }
 
 #[cfg(test)]
