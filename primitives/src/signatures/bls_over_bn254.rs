@@ -327,7 +327,7 @@ mod tests {
     };
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    use jf_utils::Vec;
+    use ark_std::vec::Vec;
 
     #[test]
     fn test_bls_signature_internals() {
