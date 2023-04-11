@@ -6,7 +6,10 @@
 
 //! Module for erasure code
 
-use ark_std::vec::Vec;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::{fmt::Debug, vec::Vec};
+
+use crate::errors::PrimitivesError;
 
 pub mod reed_solomon_erasure;
 
@@ -14,11 +17,18 @@ pub mod reed_solomon_erasure;
 /// `T` is the input data type
 pub trait ErasureCode<T> {
     /// Type for each data shards (usually depends on `T`)
-    type Shard;
+    type Shard: Debug
+        + Clone
+        + Eq
+        + PartialEq
+        + Sync
+        + Send
+        + CanonicalSerialize
+        + CanonicalDeserialize;
 
     /// Encoding
-    fn encode(data: &[T], parity_size: usize) -> Vec<Self::Shard>;
+    fn encode(data: &[T], parity_size: usize) -> Result<Vec<Self::Shard>, PrimitivesError>;
 
     /// Decoding
-    fn decode(shards: &[Self::Shard]) -> Vec<T>;
+    fn decode(shards: &[Self::Shard]) -> Result<Vec<T>, PrimitivesError>;
 }

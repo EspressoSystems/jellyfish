@@ -11,6 +11,8 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, vec, vec::Vec};
 use core::marker::PhantomData;
 
+use crate::errors::PrimitivesError;
+
 use super::ErasureCode;
 
 /// Very naive implementation of Reed Solomon erasure code.
@@ -41,12 +43,12 @@ where
     type Shard = ReedSolomonErasureCodeShard<F>;
 
     /// Encode into `data.len() + parity_size` shards.
-    fn encode(data: &[F], parity_size: usize) -> Vec<Self::Shard> {
+    fn encode(data: &[F], parity_size: usize) -> Result<Vec<Self::Shard>, PrimitivesError> {
         let num_shards = data.len() + parity_size;
 
         // view `data` as coefficients of a polynomial
         // make shards by evaluating this polynomial at 1..=num_shards
-        (1..=num_shards)
+        Ok((1..=num_shards)
             .map(|index| {
                 let mut value = F::zero();
                 let mut x = F::one();
@@ -56,7 +58,7 @@ where
                 });
                 ReedSolomonErasureCodeShard { index, value }
             })
-            .collect()
+            .collect())
     }
 
     /// Decode into `shards.len()` data elements.
@@ -69,7 +71,7 @@ where
     ///  4. Return f(x) = \sum_i y_i * l_i(x)
     /// This function always returns a vector of length `shards.len()`
     /// It has a time complexity of O(n^2)
-    fn decode(shards: &[Self::Shard]) -> Vec<F> {
+    fn decode(shards: &[Self::Shard]) -> Result<Vec<F>, PrimitivesError> {
         let x = shards
             .iter()
             .map(|shard| F::from(shard.index as u64))
@@ -109,7 +111,7 @@ where
                 f[j] += weight * li[j];
             }
         }
-        f
+        Ok(f)
     }
 }
 
@@ -143,13 +145,13 @@ mod test {
                 value: F::from(7u64),
             },
         ];
-        let code = ReedSolomonErasureCode::encode(&data, 1);
+        let code = ReedSolomonErasureCode::encode(&data, 1).unwrap();
         assert_eq!(code, expected);
 
         for to_be_removed in 0..code.len() {
             let mut new_code = code.clone();
             new_code.remove(to_be_removed);
-            let decode = ReedSolomonErasureCode::decode(&new_code);
+            let decode = ReedSolomonErasureCode::decode(&new_code).unwrap();
             assert_eq!(data, decode);
         }
     }
