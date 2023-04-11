@@ -14,7 +14,7 @@ pub mod reed_solomon_erasure;
 /// Erasure code trait
 /// `T` is the input data type
 pub trait ErasureCode<T>: Sized {
-    /// Type for each data shards
+    /// Type for each data shards (usually depends on `T`)
     type Shard;
 
     /// Encoding

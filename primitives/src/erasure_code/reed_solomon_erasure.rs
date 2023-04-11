@@ -9,7 +9,7 @@
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, format, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
 
 use super::ErasureCode;
@@ -48,6 +48,8 @@ where
     ///  * `reconstruction_size`: and the minimum number of shards required for
     ///    reconstruction
     ///  * `num_shards`: the block (codeword) length
+    /// TODO instead use `data_size`, `parity_size` so that num_shards =
+    /// data_size + parity_size and all arguments are valid
     pub fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError> {
         if reconstruction_size > num_shards {
             Err(PrimitivesError::ParameterError(
@@ -69,13 +71,19 @@ where
 {
     type Shard = ReedSolomonErasureCodeShard<F>;
 
-    /// The encoding will split the data into chunks of length
-    /// `reconstruction_size`. And represent each chunk as a polynomial. The
-    /// codeword composes of evaluations of those polynomials on
-    /// (1..num_shards).
+    /// Encode into `num_shards` shards.
+    /// `data.len()` must equal `reconstruction_size`
     fn encode(&self, data: &[F]) -> Result<Vec<Self::Shard>, PrimitivesError> {
-        assert_eq!(data.len(), self.reconstruction_size);
+        if data.len() != self.reconstruction_size {
+            return Err(PrimitivesError::ParameterError(format!(
+                "data has length {}, expected {}",
+                data.len(),
+                self.reconstruction_size
+            )));
+        }
 
+        // view `data` as a polynomial
+        // evaluate this polynomial at 1..num_shards
         let result = (1..=self.num_shards)
             .map(|index| {
                 let mut value = F::zero();
@@ -104,9 +112,11 @@ where
         F: Field,
     {
         if shards.len() < self.reconstruction_size {
-            return Err(PrimitivesError::ParameterError(
-                "No sufficient data for decoding.".to_string(),
-            ));
+            return Err(PrimitivesError::ParameterError(format!(
+                "insufficient data for decoding, got {} but need at least {}",
+                shards.len(),
+                self.reconstruction_size
+            )));
         }
 
         let x = shards
