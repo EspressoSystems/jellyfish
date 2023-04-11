@@ -6,10 +6,9 @@
 
 //! Module for Reed Solomon Erasure Code
 
-use crate::errors::PrimitivesError;
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, format, vec, vec::Vec};
+use ark_std::{borrow::Borrow, vec, vec::Vec};
 use core::marker::PhantomData;
 
 use super::ErasureCode;
@@ -21,12 +20,7 @@ use super::ErasureCode;
 /// The encoding of a message is the evaluation on (1..num_shards) of the
 /// polynomial whose coefficients are the message entries. Decoding is a naive
 /// Lagrange interpolation.
-pub struct ReedSolomonErasureCode<F>
-where
-    F: Field,
-{
-    data_size: usize,
-    parity_size: usize,
+pub struct ReedSolomonErasureCode<F> {
     phantom_f: PhantomData<F>,
 }
 
@@ -40,44 +34,19 @@ pub struct ReedSolomonErasureCodeShard<F: Field> {
     pub value: F,
 }
 
-impl<F> ReedSolomonErasureCode<F>
-where
-    F: Field,
-{
-    /// Create a new instance
-    ///  * `reconstruction_size`: and the minimum number of shards required for
-    ///    reconstruction
-    ///  * `num_shards`: the block (codeword) length
-    pub fn new(data_size: usize, parity_size: usize) -> Self {
-        Self {
-            data_size,
-            parity_size,
-            phantom_f: PhantomData,
-        }
-    }
-}
-
 impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
 where
     F: Field,
 {
     type Shard = ReedSolomonErasureCodeShard<F>;
 
-    /// Encode into `num_shards` shards.
-    /// `data.len()` must equal `reconstruction_size`
-    fn encode(&self, data: &[F]) -> Result<Vec<Self::Shard>, PrimitivesError> {
-        if data.len() != self.data_size {
-            return Err(PrimitivesError::ParameterError(format!(
-                "data has length {}, expected {}",
-                data.len(),
-                self.data_size
-            )));
-        }
+    /// Encode into `data.len() + parity_size` shards.
+    fn encode(data: &[F], parity_size: usize) -> Vec<Self::Shard> {
+        let num_shards = data.len() + parity_size;
 
-        // view `data` as a polynomial
-        // evaluate this polynomial at 1..num_shards
-        let num_shards = self.data_size + self.parity_size;
-        let result = (1..=num_shards)
+        // view `data` as coefficients of a polynomial
+        // make shards by evaluating this polynomial at 1..=num_shards
+        (1..=num_shards)
             .map(|index| {
                 let mut value = F::zero();
                 let mut x = F::one();
@@ -87,10 +56,10 @@ where
                 });
                 ReedSolomonErasureCodeShard { index, value }
             })
-            .collect::<Vec<_>>();
-        Ok(result)
+            .collect()
     }
 
+    /// Decode into `shards.len()` data elements.
     /// Lagrange interpolation
     /// Given a list of points (x_1, y_1) ... (x_n, y_n)
     ///  1. Define l(x) = \prod (x - x_i)
@@ -98,29 +67,20 @@ where
     /// x_j)  
     ///  3. Calculate l_i(x) = w_i * l(x) / (x - x_i)
     ///  4. Return f(x) = \sum_i y_i * l_i(x)
-    /// This function always returns a vector length multiple of
-    /// `self.reconstuction_size`. It has a time complexity of O(n^2)
-    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<F>, PrimitivesError>
+    /// This function always returns a vector of length `shards.len()`
+    /// It has a time complexity of O(n^2)
+    fn decode(shards: &[Self::Shard]) -> Vec<F>
     where
         F: Field,
     {
-        if shards.len() < self.data_size {
-            return Err(PrimitivesError::ParameterError(format!(
-                "insufficient data for decoding, got {} but need at least {}",
-                shards.len(),
-                self.data_size
-            )));
-        }
-
         let x = shards
             .iter()
-            .take(self.data_size)
             .map(|shard| F::from(shard.index as u64))
             .collect::<Vec<_>>();
         // Calculating l(x) = \prod (x - x_i)
-        let mut l = vec![F::zero(); self.data_size + 1];
+        let mut l = vec![F::zero(); shards.len() + 1];
         l[0] = F::one();
-        for i in 1..self.data_size + 1 {
+        for i in 1..shards.len() + 1 {
             l[i] = F::one();
             for j in (1..i).rev() {
                 l[j] = l[j - 1] - x[i - 1] * l[j];
@@ -128,10 +88,10 @@ where
             l[0] = -x[i - 1] * l[0];
         }
         // Calculate the barycentric weight w_i
-        let w = (0..self.data_size)
+        let w = (0..shards.len())
             .map(|i| {
                 let mut ret = F::one();
-                (0..self.data_size).for_each(|j| {
+                (0..shards.len()).for_each(|j| {
                     if i != j {
                         ret /= x[i] - x[j];
                     }
@@ -140,19 +100,19 @@ where
             })
             .collect::<Vec<_>>();
         // Calculate f(x) = \sum_i l_i(x)
-        let mut f = vec![F::zero(); self.data_size];
-        for i in 0..self.data_size {
-            let mut li = vec![F::zero(); self.data_size];
-            li[self.data_size - 1] = F::one();
-            for j in (0..self.data_size - 1).rev() {
+        let mut f = vec![F::zero(); shards.len()];
+        for i in 0..shards.len() {
+            let mut li = vec![F::zero(); shards.len()];
+            li[shards.len() - 1] = F::one();
+            for j in (0..shards.len() - 1).rev() {
                 li[j] = l[j + 1] + x[i] * li[j + 1];
             }
             let weight = w[i] * shards[i].borrow().value;
-            for j in 0..self.data_size {
+            for j in 0..shards.len() {
                 f[j] += weight * li[j];
             }
         }
-        Ok(f)
+        f
     }
 }
 
@@ -169,7 +129,6 @@ mod test {
     use ark_std::vec;
 
     fn test_rs_code_helper<F: Field>() {
-        let rs = ReedSolomonErasureCode::<F>::new(2, 1);
         // Encoded as a polynomial 2x + 1
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
@@ -187,13 +146,13 @@ mod test {
                 value: F::from(7u64),
             },
         ];
-        let code = rs.encode(&data).unwrap();
+        let code = ReedSolomonErasureCode::encode(&data, 1);
         assert_eq!(code, expected);
 
         for to_be_removed in 0..code.len() {
             let mut new_code = code.clone();
             new_code.remove(to_be_removed);
-            let decode = rs.decode(&new_code).unwrap();
+            let decode = ReedSolomonErasureCode::decode(&new_code);
             assert_eq!(data, decode);
         }
     }

@@ -6,20 +6,19 @@
 
 //! Module for erasure code
 
-use crate::errors::PrimitivesError;
 use ark_std::vec::Vec;
 
 pub mod reed_solomon_erasure;
 
 /// Erasure code trait
 /// `T` is the input data type
-pub trait ErasureCode<T>: Sized {
+pub trait ErasureCode<T> {
     /// Type for each data shards (usually depends on `T`)
     type Shard;
 
     /// Encoding
-    fn encode(&self, data: &[T]) -> Result<Vec<Self::Shard>, PrimitivesError>;
+    fn encode(data: &[T], parity_size: usize) -> Vec<Self::Shard>;
 
     /// Decoding
-    fn decode(&self, shards: &[Self::Shard]) -> Result<Vec<T>, PrimitivesError>;
+    fn decode(shards: &[Self::Shard]) -> Vec<T>;
 }
