@@ -69,10 +69,7 @@ where
     ///  4. Return f(x) = \sum_i y_i * l_i(x)
     /// This function always returns a vector of length `shards.len()`
     /// It has a time complexity of O(n^2)
-    fn decode(shards: &[Self::Shard]) -> Vec<F>
-    where
-        F: Field,
-    {
+    fn decode(shards: &[Self::Shard]) -> Vec<F> {
         let x = shards
             .iter()
             .map(|shard| F::from(shard.index as u64))
