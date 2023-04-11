@@ -46,9 +46,9 @@ pub fn pad_with_zeros<F: Field>(vec: &mut Vec<F>, multiple: usize) {
 
 /// Compute the hadmard product of two vectors (of equal length).
 #[inline]
-pub fn hadamard_product<T>(a: impl AsRef<[T]>, b: impl AsRef<[T]>) -> Result<Vec<T>, String>
+pub fn hadamard_product<T, B>(a: impl AsRef<[T]>, b: impl AsRef<[B]>) -> Result<Vec<B>, String>
 where
-    T: Mul<T, Output = T> + Copy,
+    B: for<'a> Mul<&'a T, Output = B> + Copy,
 {
     let (a, b) = (a.as_ref(), b.as_ref());
     if a.len() != b.len() {
@@ -57,7 +57,7 @@ where
         );
     }
 
-    let res: Vec<T> = a.iter().zip(b.iter()).map(|(&ai, &bi)| ai * bi).collect();
+    let res: Vec<B> = a.iter().zip(b.iter()).map(|(ai, &bi)| bi * ai).collect();
     Ok(res)
 }
 
@@ -73,18 +73,22 @@ pub fn test_rng() -> StdRng {
 
 #[test]
 fn test_hadamard() {
-    use ark_bls12_381::Fq;
+    use ark_bls12_381::{Fr, G1Projective};
     use ark_std::UniformRand;
 
     let mut rng = test_rng();
     for _ in 0..10 {
-        let a: Vec<Fq> = (0..20).map(|_| Fq::rand(&mut rng)).collect();
-        let b: Vec<Fq> = (0..20).map(|_| Fq::rand(&mut rng)).collect();
+        let a: Vec<Fr> = (0..20).map(|_| Fr::rand(&mut rng)).collect();
+        let b: Vec<Fr> = (0..20).map(|_| Fr::rand(&mut rng)).collect();
 
         let product = hadamard_product(&a, &b).unwrap();
         assert!(product.iter().enumerate().all(|(i, &c)| c == a[i] * b[i]));
 
-        let c: Vec<Fq> = (0..21).map(|_| Fq::rand(&mut rng)).collect();
+        let c: Vec<Fr> = (0..21).map(|_| Fr::rand(&mut rng)).collect();
         assert!(hadamard_product(&a, &c).is_err());
+
+        let d: Vec<G1Projective> = (0..20).map(|_| G1Projective::rand(&mut rng)).collect();
+        let product = hadamard_product(&a, &d).unwrap();
+        assert!(product.iter().enumerate().all(|(i, &c)| c == d[i] * a[i]));
     }
 }
