@@ -16,8 +16,9 @@ pub mod reed_solomon_erasure;
 /// Erasure code trait
 /// `T` is the input data type
 pub trait ErasureCode<T> {
-    /// Type for each data shards (usually depends on `T`)
-    type Shard: Debug
+    /// Type for each data shares (usually depends on `T`)
+    /// Why so many trait bounds on `Share`? https://github.com/rust-lang/rust/issues/20671
+    type Share: Debug
         + Clone
         + Eq
         + PartialEq
@@ -27,8 +28,8 @@ pub trait ErasureCode<T> {
         + CanonicalDeserialize;
 
     /// Encoding
-    fn encode(data: &[T], parity_size: usize) -> Result<Vec<Self::Shard>, PrimitivesError>;
+    fn encode(data: &[T], parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError>;
 
     /// Decoding
-    fn decode(shards: &[Self::Shard]) -> Result<Vec<T>, PrimitivesError>;
+    fn decode(shares: &[Self::Share]) -> Result<Vec<T>, PrimitivesError>;
 }

@@ -16,17 +16,14 @@ use crate::errors::PrimitivesError;
 use super::ErasureCode;
 
 /// Very naive implementation of Reed Solomon erasure code.
-///  * `reconstruction_size`: and the minimum number of shards required for
-///    reconstruction
-///  * `num_shards`: the block (codeword) length
-/// The encoding of a message is the evaluation on (1..num_shards) of the
+/// The encoding of a message is the evaluation on (1..n) of the
 /// polynomial whose coefficients are the message entries. Decoding is a naive
 /// Lagrange interpolation.
 pub struct ReedSolomonErasureCode<F> {
     phantom_f: PhantomData<F>,
 }
 
-/// Shards for Reed Solomon erasure code
+/// Shares for Reed Solomon erasure code
 #[derive(Clone, Eq, Debug, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(PartialEq, Hash(bound = "F: Field"))]
 pub struct ReedSolomonErasureCodeShard<F: Field> {
@@ -40,15 +37,17 @@ impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
 where
     F: Field,
 {
-    type Shard = ReedSolomonErasureCodeShard<F>;
+    type Share = ReedSolomonErasureCodeShard<F>;
 
-    /// Encode into `data.len() + parity_size` shards.
-    fn encode(data: &[F], parity_size: usize) -> Result<Vec<Self::Shard>, PrimitivesError> {
-        let num_shards = data.len() + parity_size;
+    /// Encode into `data.len() + parity_size` shares via polynomial evaluation.
+    /// `data` is viewed as coefficients of a polynomial of degree
+    /// `data.len()-1`. Never returns `Result::Err`.
+    fn encode(data: &[F], parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError> {
+        let num_shares = data.len() + parity_size;
 
         // view `data` as coefficients of a polynomial
-        // make shards by evaluating this polynomial at 1..=num_shards
-        Ok((1..=num_shards)
+        // make shares by evaluating this polynomial at 1..=num_shares
+        Ok((1..=num_shares)
             .map(|index| {
                 let mut value = F::zero();
                 let mut x = F::one();
@@ -61,25 +60,27 @@ where
             .collect())
     }
 
-    /// Decode into `shards.len()` data elements.
-    /// Lagrange interpolation
-    /// Given a list of points (x_1, y_1) ... (x_n, y_n)
-    ///  1. Define l(x) = \prod (x - x_i)
-    ///  2. Calculate the barycentric weight w_i = \prod_{j \neq i} 1 / (x_i -
-    /// x_j)  
-    ///  3. Calculate l_i(x) = w_i * l(x) / (x - x_i)
-    ///  4. Return f(x) = \sum_i y_i * l_i(x)
-    /// This function always returns a vector of length `shards.len()`
-    /// It has a time complexity of O(n^2)
-    fn decode(shards: &[Self::Shard]) -> Result<Vec<F>, PrimitivesError> {
-        let x = shards
+    /// Decode into `shares.len()` data elements via polynomial interpolation.
+    /// The degree of the interpolated polynomial is `shares.len() - 1`.
+    /// Returns a data vector of length `shares.len()`.
+    /// Time complexity of O(n^2).
+    /// Never returns `Result::Err`
+    fn decode(shares: &[Self::Share]) -> Result<Vec<F>, PrimitivesError> {
+        // Lagrange interpolation:
+        // Given a list of points (x_1, y_1) ... (x_n, y_n)
+        //  1. Define l(x) = \prod (x - x_i)
+        //  2. Calculate the barycentric weight w_i = \prod_{j \neq i} 1 / (x_i -
+        // x_j)
+        //  3. Calculate l_i(x) = w_i * l(x) / (x - x_i)
+        //  4. Return f(x) = \sum_i y_i * l_i(x)
+        let x = shares
             .iter()
             .map(|shard| F::from(shard.index as u64))
             .collect::<Vec<_>>();
         // Calculating l(x) = \prod (x - x_i)
-        let mut l = vec![F::zero(); shards.len() + 1];
+        let mut l = vec![F::zero(); shares.len() + 1];
         l[0] = F::one();
-        for i in 1..shards.len() + 1 {
+        for i in 1..shares.len() + 1 {
             l[i] = F::one();
             for j in (1..i).rev() {
                 l[j] = l[j - 1] - x[i - 1] * l[j];
@@ -87,10 +88,10 @@ where
             l[0] = -x[i - 1] * l[0];
         }
         // Calculate the barycentric weight w_i
-        let w = (0..shards.len())
+        let w = (0..shares.len())
             .map(|i| {
                 let mut ret = F::one();
-                (0..shards.len()).for_each(|j| {
+                (0..shares.len()).for_each(|j| {
                     if i != j {
                         ret /= x[i] - x[j];
                     }
@@ -99,15 +100,15 @@ where
             })
             .collect::<Vec<_>>();
         // Calculate f(x) = \sum_i l_i(x)
-        let mut f = vec![F::zero(); shards.len()];
-        for i in 0..shards.len() {
-            let mut li = vec![F::zero(); shards.len()];
-            li[shards.len() - 1] = F::one();
-            for j in (0..shards.len() - 1).rev() {
+        let mut f = vec![F::zero(); shares.len()];
+        for i in 0..shares.len() {
+            let mut li = vec![F::zero(); shares.len()];
+            li[shares.len() - 1] = F::one();
+            for j in (0..shares.len() - 1).rev() {
                 li[j] = l[j + 1] + x[i] * li[j + 1];
             }
-            let weight = w[i] * shards[i].borrow().value;
-            for j in 0..shards.len() {
+            let weight = w[i] * shares[i].borrow().value;
+            for j in 0..shares.len() {
                 f[j] += weight * li[j];
             }
         }
