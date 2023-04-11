@@ -9,7 +9,7 @@
 use crate::errors::PrimitivesError;
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, format, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, format, vec, vec::Vec};
 use core::marker::PhantomData;
 
 use super::ErasureCode;
@@ -25,8 +25,8 @@ pub struct ReedSolomonErasureCode<F>
 where
     F: Field,
 {
-    reconstruction_size: usize,
-    num_shards: usize,
+    data_size: usize,
+    parity_size: usize,
     phantom_f: PhantomData<F>,
 }
 
@@ -48,19 +48,11 @@ where
     ///  * `reconstruction_size`: and the minimum number of shards required for
     ///    reconstruction
     ///  * `num_shards`: the block (codeword) length
-    /// TODO instead use `data_size`, `parity_size` so that num_shards =
-    /// data_size + parity_size and all arguments are valid
-    pub fn new(reconstruction_size: usize, num_shards: usize) -> Result<Self, PrimitivesError> {
-        if reconstruction_size > num_shards {
-            Err(PrimitivesError::ParameterError(
-                "Number of shards must be at least the message length.".to_string(),
-            ))
-        } else {
-            Ok(ReedSolomonErasureCode {
-                reconstruction_size,
-                num_shards,
-                phantom_f: PhantomData,
-            })
+    pub fn new(data_size: usize, parity_size: usize) -> Self {
+        Self {
+            data_size,
+            parity_size,
+            phantom_f: PhantomData,
         }
     }
 }
@@ -74,17 +66,18 @@ where
     /// Encode into `num_shards` shards.
     /// `data.len()` must equal `reconstruction_size`
     fn encode(&self, data: &[F]) -> Result<Vec<Self::Shard>, PrimitivesError> {
-        if data.len() != self.reconstruction_size {
+        if data.len() != self.data_size {
             return Err(PrimitivesError::ParameterError(format!(
                 "data has length {}, expected {}",
                 data.len(),
-                self.reconstruction_size
+                self.data_size
             )));
         }
 
         // view `data` as a polynomial
         // evaluate this polynomial at 1..num_shards
-        let result = (1..=self.num_shards)
+        let num_shards = self.data_size + self.parity_size;
+        let result = (1..=num_shards)
             .map(|index| {
                 let mut value = F::zero();
                 let mut x = F::one();
@@ -111,23 +104,23 @@ where
     where
         F: Field,
     {
-        if shards.len() < self.reconstruction_size {
+        if shards.len() < self.data_size {
             return Err(PrimitivesError::ParameterError(format!(
                 "insufficient data for decoding, got {} but need at least {}",
                 shards.len(),
-                self.reconstruction_size
+                self.data_size
             )));
         }
 
         let x = shards
             .iter()
-            .take(self.reconstruction_size)
+            .take(self.data_size)
             .map(|shard| F::from(shard.index as u64))
             .collect::<Vec<_>>();
         // Calculating l(x) = \prod (x - x_i)
-        let mut l = vec![F::zero(); self.reconstruction_size + 1];
+        let mut l = vec![F::zero(); self.data_size + 1];
         l[0] = F::one();
-        for i in 1..self.reconstruction_size + 1 {
+        for i in 1..self.data_size + 1 {
             l[i] = F::one();
             for j in (1..i).rev() {
                 l[j] = l[j - 1] - x[i - 1] * l[j];
@@ -135,10 +128,10 @@ where
             l[0] = -x[i - 1] * l[0];
         }
         // Calculate the barycentric weight w_i
-        let w = (0..self.reconstruction_size)
+        let w = (0..self.data_size)
             .map(|i| {
                 let mut ret = F::one();
-                (0..self.reconstruction_size).for_each(|j| {
+                (0..self.data_size).for_each(|j| {
                     if i != j {
                         ret /= x[i] - x[j];
                     }
@@ -147,15 +140,15 @@ where
             })
             .collect::<Vec<_>>();
         // Calculate f(x) = \sum_i l_i(x)
-        let mut f = vec![F::zero(); self.reconstruction_size];
-        for i in 0..self.reconstruction_size {
-            let mut li = vec![F::zero(); self.reconstruction_size];
-            li[self.reconstruction_size - 1] = F::one();
-            for j in (0..self.reconstruction_size - 1).rev() {
+        let mut f = vec![F::zero(); self.data_size];
+        for i in 0..self.data_size {
+            let mut li = vec![F::zero(); self.data_size];
+            li[self.data_size - 1] = F::one();
+            for j in (0..self.data_size - 1).rev() {
                 li[j] = l[j + 1] + x[i] * li[j + 1];
             }
             let weight = w[i] * shards[i].borrow().value;
-            for j in 0..self.reconstruction_size {
+            for j in 0..self.data_size {
                 f[j] += weight * li[j];
             }
         }
@@ -176,7 +169,7 @@ mod test {
     use ark_std::vec;
 
     fn test_rs_code_helper<F: Field>() {
-        let rs = ReedSolomonErasureCode::<F>::new(2, 3).unwrap();
+        let rs = ReedSolomonErasureCode::<F>::new(2, 1);
         // Encoded as a polynomial 2x + 1
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
