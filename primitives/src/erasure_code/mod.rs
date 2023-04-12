@@ -17,7 +17,7 @@ pub mod reed_solomon_erasure;
 /// `T` is the input data type
 pub trait ErasureCode<T> {
     /// Type for each data shares (usually depends on `T`)
-    /// Why so many trait bounds on `Share`? https://github.com/rust-lang/rust/issues/20671
+    /// Why so many trait bounds on `Share`? <https://github.com/rust-lang/rust/issues/20671>
     type Share: Debug
         + Clone
         + Eq
