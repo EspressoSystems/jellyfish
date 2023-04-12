@@ -6,7 +6,7 @@
 
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, PrimeField};
-use ark_std::{cmp::min, vec, vec::Vec};
+use ark_std::{cmp::min, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -140,13 +140,6 @@ where
     let elems = elems.as_ref();
     let elem_byte_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
 
-    // prepare a maximum field element for future comparison
-    let max_int = {
-        let max_bytes = vec![0xffu8; elem_byte_len];
-        let max = F::from_le_bytes_mod_order(&max_bytes); // TODO can I convert bytes directly to bigint?
-        max.into_bigint()
-    };
-
     // for each field element:
     // - convert to bytes
     // - drop the trailing byte, which must be zero
@@ -154,12 +147,12 @@ where
     let result_len = elems.len() * elem_byte_len;
     let mut result = Vec::with_capacity(result_len);
     for elem in elems {
-        let int = elem.into_bigint();
-        if matches!(int.cmp(&max_int), core::cmp::Ordering::Greater) {
+        let bytes = elem.into_bigint().to_bytes_le();
+        assert_eq!(bytes.len(), elem_byte_len + 1);
+        if *bytes.last().unwrap() != 0 {
             return Err(ConversionError);
         }
-        let bytes = int.to_bytes_le();
-        assert_eq!(bytes.len(), elem_byte_len + 1);
+
         result.extend_from_slice(&bytes[..bytes.len() - 1]);
     }
     assert_eq!(result.len(), result_len);
@@ -219,7 +212,7 @@ mod tests {
 
     fn bytes_field_elems<F: PrimeField>() {
         let mut rng = test_rng();
-        let lengths = [2, 16, 32, 48, 64, 100, 200, 255, 256];
+        let lengths = [2, 16, 32, 48, 63, 64, 65, 100, 200];
 
         for len in lengths {
             let mut random_bytes = vec![0u8; len];
