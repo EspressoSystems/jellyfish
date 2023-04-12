@@ -6,7 +6,7 @@
 
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, PrimeField};
-use ark_std::{cmp::min, vec::Vec};
+use ark_std::{cmp::min, vec, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -122,6 +122,61 @@ where
     result
 }
 
+/// TODO which error should I use?
+#[derive(Debug, displaydoc::Display)]
+pub struct ConversionError;
+impl ark_std::error::Error for ConversionError {}
+
+/// Inverse of `bytes_to_field_elements`.
+/// Each field element must fit into one fewer byte than the modulus.
+/// Otherwise `ConversionError` is returned.
+/// (Field elements are little-endian.)
+/// TODO `bytes_to_field_elements` should also trim all trailing zero bytes
+pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, ConversionError>
+where
+    T: AsRef<[F]>,
+    F: PrimeField,
+{
+    let elems = elems.as_ref();
+    let elem_byte_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
+
+    // prepare a maximum field element for future comparison
+    let max_int = {
+        let max_bytes = vec![0xffu8; elem_byte_len];
+        let max = F::from_le_bytes_mod_order(&max_bytes); // TODO can I convert bytes directly to bigint?
+        max.into_bigint()
+    };
+
+    // for each field element:
+    // - convert to bytes
+    // - drop the trailing byte, which must be zero
+    // - append to result
+    let result_len = elems.len() * elem_byte_len;
+    let mut result = Vec::with_capacity(result_len);
+    for elem in elems {
+        let int = elem.into_bigint();
+        if matches!(int.cmp(&max_int), core::cmp::Ordering::Greater) {
+            return Err(ConversionError);
+        }
+        let bytes = int.to_bytes_le();
+        assert_eq!(bytes.len(), elem_byte_len + 1);
+        result.extend_from_slice(&bytes[..bytes.len() - 1]);
+    }
+    assert_eq!(result.len(), result_len);
+
+    // trim trailing zeros from the final chunk
+    let start_of_final_chunk = result_len - elem_byte_len;
+    let new_len = start_of_final_chunk
+        + result[start_of_final_chunk..]
+            .iter()
+            .rposition(|x| *x != 0)
+            .map(|i| i + 1)
+            .unwrap_or(0);
+    result.truncate(new_len);
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::test_rng;
@@ -130,7 +185,7 @@ mod tests {
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
-    use ark_std::UniformRand;
+    use ark_std::{rand::RngCore, UniformRand};
 
     #[test]
     fn test_bn254_scalar_conversion() {
@@ -160,5 +215,24 @@ mod tests {
             let jj_bls = fr_to_fq::<_, Param381>(&jj);
             assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
+    }
+
+    fn bytes_field_elems<F: PrimeField>() {
+        let mut rng = test_rng();
+        let lengths = [2, 16, 32, 48, 64, 100, 200, 255, 256];
+
+        for len in lengths {
+            let mut random_bytes = vec![0u8; len];
+            rng.fill_bytes(&mut random_bytes);
+
+            let elems: Vec<F> = bytes_to_field_elements(&random_bytes);
+            let result = bytes_from_field_elements(elems).unwrap();
+            assert_eq!(result, random_bytes);
+        }
+    }
+
+    #[test]
+    fn test_bytes_field_elems() {
+        bytes_field_elems::<Fr381>()
     }
 }
