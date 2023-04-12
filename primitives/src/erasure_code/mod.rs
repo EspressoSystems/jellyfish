@@ -27,9 +27,10 @@ pub trait ErasureCode<T> {
         + CanonicalSerialize
         + CanonicalDeserialize;
 
-    /// Encoding
+    /// Encode `data` into `data.len() + parity_size` shares.
     fn encode(data: &[T], parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError>;
 
-    /// Decoding
-    fn decode(shares: &[Self::Share]) -> Result<Vec<T>, PrimitivesError>;
+    /// Decode `shares` into `data_size` data elements.
+    /// Return `Result::Err` if `shares.len() < data_size`.
+    fn decode(shares: &[Self::Share], data_size: usize) -> Result<Vec<T>, PrimitivesError>;
 }

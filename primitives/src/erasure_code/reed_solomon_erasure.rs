@@ -8,7 +8,7 @@
 
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, vec, vec::Vec};
+use ark_std::{borrow::Borrow, format, vec, vec::Vec};
 use core::marker::PhantomData;
 
 use crate::errors::PrimitivesError;
@@ -60,12 +60,20 @@ where
             .collect())
     }
 
-    /// Decode into `shares.len()` data elements via polynomial interpolation.
-    /// The degree of the interpolated polynomial is `shares.len() - 1`.
-    /// Returns a data vector of length `shares.len()`.
+    /// Decode into `data_size` data elements via polynomial interpolation.
+    /// The degree of the interpolated polynomial is `data_size - 1`.
+    /// Returns a data vector of length `data_size`.
     /// Time complexity of O(n^2).
-    /// Never returns `Result::Err`
-    fn decode(shares: &[Self::Share]) -> Result<Vec<F>, PrimitivesError> {
+    fn decode(shares: &[Self::Share], data_size: usize) -> Result<Vec<F>, PrimitivesError> {
+        if shares.len() < data_size {
+            return Err(PrimitivesError::ParameterError(format!(
+                "insufficient shares: got {} expected at least {}",
+                shares.len(),
+                data_size
+            )));
+        }
+        let shares = &shares[..data_size];
+
         // Lagrange interpolation:
         // Given a list of points (x_1, y_1) ... (x_n, y_n)
         //  1. Define l(x) = \prod (x - x_i)
@@ -152,7 +160,7 @@ mod test {
         for to_be_removed in 0..code.len() {
             let mut new_code = code.clone();
             new_code.remove(to_be_removed);
-            let decode = ReedSolomonErasureCode::decode(&new_code).unwrap();
+            let decode = ReedSolomonErasureCode::decode(&new_code, 2).unwrap();
             assert_eq!(data, decode);
         }
     }
