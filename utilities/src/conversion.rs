@@ -222,6 +222,12 @@ mod tests {
             let result = bytes_from_field_elements(elems).unwrap();
             assert_eq!(result, random_bytes);
         }
+
+        // trailing zeros
+        let bytes = [5, 4, 3, 2, 1, 0];
+        let elems: Vec<F> = bytes_to_field_elements(&bytes);
+        let result = bytes_from_field_elements(&elems).unwrap();
+        assert_eq!(result, bytes);
     }
 
     #[test]
