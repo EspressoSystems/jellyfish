@@ -10,7 +10,7 @@
 use crate::errors::PrimitivesError;
 use ark_ff::FftField;
 use ark_poly::{domain::DomainCoeff, EvaluationDomain, GeneralEvaluationDomain};
-use ark_std::{ops::Mul, string::ToString};
+use ark_std::{ops::Mul, string::ToString, vec::Vec};
 use jf_utils::hadamard_product;
 
 /// An `NxN` [Circulant Matrix](https://en.wikipedia.org/wiki/Circulant_matrix)
@@ -24,33 +24,42 @@ use jf_utils::hadamard_product;
 ///
 /// It is a special case of [`ToeplitzMatrix`].
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CirculantMatrix<F: FftField, const N: usize> {
-    col: [F; N],
+pub struct CirculantMatrix<F: FftField> {
+    col: Vec<F>,
 }
 
-impl<F: FftField, const N: usize> CirculantMatrix<F, N> {
+impl<F: FftField> CirculantMatrix<F> {
+    /// Construct a Circulant matrix by its first column vector
+    pub fn new(col: Vec<F>) -> Self {
+        Self { col }
+    }
+
     /// Fast multiplication of a Circulant matrix by a vector via FFT
     /// Details see Section 2.2.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     // TODO: (alex) think of ways to extend to arbitrary length vector (simply
     // truncate doesn't work).
-    pub fn fast_vec_mul<T>(&self, m: [T; N]) -> Result<[T; N], PrimitivesError>
+    pub fn fast_vec_mul<T>(&self, m: &[T]) -> Result<Vec<T>, PrimitivesError>
     where
         T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F> + Default,
     {
-        if !N.is_power_of_two() {
+        if !m.len().is_power_of_two() {
             return Err(PrimitivesError::ParameterError(
                 "Fast Circulant Matrix mul only supports vector size of power of two.".to_string(),
             ));
         }
+        if m.len() != self.col.len() {
+            return Err(PrimitivesError::ParameterError(
+                "Wrong input dimension for matrix mul.".to_string(),
+            ));
+        }
         let domain: GeneralEvaluationDomain<F> =
-            GeneralEvaluationDomain::new(N).expect("Should init an evaluation domain");
+            GeneralEvaluationDomain::new(m.len()).expect("Should init an evaluation domain");
 
-        let m_evals = domain.fft(&m); // DFT(m)
+        let m_evals = domain.fft(m); // DFT(m)
         let col_evals = domain.fft(&self.col); // DFT(c_N)
         let eval_prod = // DFT(c_N) * DFT(m)
             hadamard_product(col_evals, m_evals).expect("Hadmard product should succeed");
-        let mut res = [T::default(); N]; // iDFT(DFT(c_N) * DFT(m))
-        res.copy_from_slice(&domain.ifft(&eval_prod)[..N]);
+        let res = domain.ifft(&eval_prod); // iDFT(DFT(c_N) * DFT(m))
         Ok(res)
     }
 }
@@ -65,17 +74,17 @@ impl<F: FftField, const N: usize> CirculantMatrix<F, N> {
 /// [..    ..    ..    ...    ..    ]
 /// [a_N-1 a_N-2 ..    ...  a_0     ]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToeplitzMatrix<F: FftField, const N: usize> {
-    col: [F; N],
-    row: [F; N],
+pub struct ToeplitzMatrix<F: FftField> {
+    col: Vec<F>,
+    row: Vec<F>,
 }
 
-impl<F: FftField, const N: usize> ToeplitzMatrix<F, N> {
+impl<F: FftField> ToeplitzMatrix<F> {
     /// constructor for a new Toeplitz matrice.
-    pub fn new(col: [F; N], row: [F; N]) -> Result<Self, PrimitivesError> {
-        if N == 0 {
+    pub fn new(col: Vec<F>, row: Vec<F>) -> Result<Self, PrimitivesError> {
+        if col.is_empty() || col.len() != row.len() {
             return Err(PrimitivesError::ParameterError(
-                "Matrix dimension should be positive".to_string(),
+                "2-Dimension should be positive and equal".to_string(),
             ));
         }
         if col[0] != row[0] {
@@ -92,63 +101,63 @@ impl<F: FftField, const N: usize> ToeplitzMatrix<F, N> {
     ///
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     // TODO: (alex) turn this into concurrent code after: https://github.com/EspressoSystems/jellyfish/issues/111
-    pub fn circulant_embedding<const M: usize>(
-        &self,
-    ) -> Result<CirculantMatrix<F, M>, PrimitivesError> {
-        if M != 2 * N {
-            return Err(PrimitivesError::ParameterError(
-                "Circulant embedding should be twice the size".to_string(),
-            ));
-        }
-        let mut extended_col = [self.col[0]; M];
-        extended_col[..N].copy_from_slice(&self.col);
-        extended_col[N] = self.col[0];
-        for (i, v) in self.row.iter().enumerate().skip(1) {
-            extended_col[2 * N - i] = *v;
-        }
+    pub fn circulant_embedding(&self) -> Result<CirculantMatrix<F>, PrimitivesError> {
+        let mut extension_col = self.row.clone();
+        extension_col.rotate_left(1);
+        extension_col.reverse();
 
-        Ok(CirculantMatrix { col: extended_col })
+        Ok(CirculantMatrix {
+            col: [self.col.clone(), extension_col].concat(),
+        })
     }
 
     /// Fast multiplication of a Toeplitz matrix by embedding it into a
     /// circulant matrix and multiply there.
     ///
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
-    pub fn fast_vec_mul<T, const M: usize>(&self, v: [T; N]) -> Result<[T; N], PrimitivesError>
+    pub fn fast_vec_mul<T>(&self, v: &[T]) -> Result<Vec<T>, PrimitivesError>
     where
         T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F> + Default,
     {
-        if !N.is_power_of_two() {
+        if !v.len().is_power_of_two() {
             return Err(PrimitivesError::ParameterError(
                 "Fast Toeplitz Matrix mul only supports vector size of power of two.".to_string(),
             ));
         }
-        let cir_repr = self.circulant_embedding::<M>()?;
-        let mut padded_v = [T::default(); M];
-        padded_v[..N].copy_from_slice(&v);
+        if v.len() != self.col.len() {
+            return Err(PrimitivesError::ParameterError(
+                "Wrong input dimension for matrix mul.".to_string(),
+            ));
+        }
 
-        let out = cir_repr.fast_vec_mul(padded_v)?;
-        let mut res = [T::default(); N];
-        res.copy_from_slice(&out[..N]);
+        let cir_repr = self.circulant_embedding()?;
+        let mut padded_v = Vec::from(v);
+        padded_v.resize_with(2 * v.len(), T::default);
+
+        let mut res = cir_repr.fast_vec_mul(&padded_v)?;
+        res.truncate(v.len());
         Ok(res)
     }
 }
 
-impl<F: FftField, const N: usize> From<CirculantMatrix<F, N>> for ToeplitzMatrix<F, N> {
-    fn from(c: CirculantMatrix<F, N>) -> Self {
-        let mut row = [c.col[0]; N];
-        for (i, v) in c.col.iter().enumerate().skip(1) {
-            row[N - i] = *v;
-        }
+impl<F: FftField> From<CirculantMatrix<F>> for ToeplitzMatrix<F> {
+    fn from(c: CirculantMatrix<F>) -> Self {
+        let mut row = c.col.clone();
+        row.rotate_left(1);
+        row.reverse();
+
         Self { col: c.col, row }
     }
 }
 
-impl<F: FftField, const N: usize> TryFrom<ToeplitzMatrix<F, N>> for CirculantMatrix<F, N> {
+impl<F: FftField> TryFrom<ToeplitzMatrix<F>> for CirculantMatrix<F> {
     type Error = PrimitivesError;
 
-    fn try_from(t: ToeplitzMatrix<F, N>) -> Result<Self, Self::Error> {
-        if (1..N).any(|i| t.row[i] != t.col[N - i]) {
+    fn try_from(t: ToeplitzMatrix<F>) -> Result<Self, Self::Error> {
+        let mut expected_col = t.row;
+        expected_col.reverse();
+        expected_col.rotate_right(1);
+        if expected_col != t.col {
             return Err(PrimitivesError::ParameterError(
                 "Not a Circulant Matrix".to_string(),
             ));
@@ -189,11 +198,21 @@ mod tests {
         }
     }
 
-    impl<F: FftField, const N: usize> CirculantMatrix<F, N> {
-        fn full_matrix(self) -> Matrix<F, N, N> {
-            let t: ToeplitzMatrix<F, N> = self.into();
-            let mut row_vecs = [t.row; N];
-            let mut cur_row = t.row;
+    impl<T: Copy, const N: usize> From<Vector<T, N>> for Vec<T> {
+        fn from(v: Vector<T, N>) -> Self {
+            Vec::from(&v.0[..])
+        }
+    }
+
+    impl<F: FftField> CirculantMatrix<F> {
+        fn full_matrix<const N: usize>(self) -> Matrix<F, N, N> {
+            assert_eq!(self.col.len(), N);
+            let t: ToeplitzMatrix<F> = self.into();
+
+            let mut first_row = [F::default(); N];
+            first_row.copy_from_slice(&t.row);
+            let mut row_vecs = [first_row; N];
+            let mut cur_row = first_row;
 
             for i in 1..N {
                 cur_row.rotate_right(1);
@@ -208,8 +227,9 @@ mod tests {
         }
     }
 
-    impl<F: FftField, const N: usize> ToeplitzMatrix<F, N> {
-        fn full_matrix(self) -> Matrix<F, N, N> {
+    impl<F: FftField> ToeplitzMatrix<F> {
+        fn full_matrix<const N: usize>(self) -> Matrix<F, N, N> {
+            assert_eq!(self.col.len(), N);
             let mut matrix = [[F::zero(); N]; N];
             for i in 0..N {
                 matrix[i][0] = self.col[i];
@@ -249,11 +269,7 @@ mod tests {
         let mut rng = test_rng();
         const N: usize = 16;
 
-        let mut cir_col = [Fr::default(); N];
-        for f in cir_col.iter_mut() {
-            *f = Fr::rand(&mut rng);
-        }
-        let cir_matrix = CirculantMatrix { col: cir_col };
+        let cir_matrix = CirculantMatrix::new((0..N).map(|_| Fr::rand(&mut rng)).collect());
 
         let mut msgs = [G1Projective::default(); N];
         for m in msgs.iter_mut() {
@@ -265,8 +281,12 @@ mod tests {
             naive_matrix_mul(cir_matrix.clone().full_matrix(), msg_matrix.transpose())
                 .transpose()
                 .into();
-        let got: [G1Projective; N] = cir_matrix.fast_vec_mul(msgs).unwrap();
-        assert_eq!(expected.0, got, "Fast Circulant Matrix mul is incorrect.");
+        let got = cir_matrix.fast_vec_mul(&msgs)?;
+        assert_eq!(
+            <Vector<G1Projective, N> as Into<Vec<G1Projective>>>::into(expected),
+            got,
+            "Fast Circulant Matrix mul is incorrect."
+        );
         Ok(())
     }
 
@@ -274,16 +294,17 @@ mod tests {
     fn test_toeplitz_mul() -> Result<(), PrimitivesError> {
         let mut rng = test_rng();
         const N: usize = 16;
-        const M: usize = 32;
 
-        let mut rand_col = [Fr::default(); N];
-        for f in rand_col.iter_mut() {
-            *f = Fr::rand(&mut rng);
-        }
-        let mut rand_row = [rand_col[0]; N];
-        for f in rand_row.iter_mut().skip(1) {
-            *f = Fr::rand(&mut rng);
-        }
+        let rand_col: Vec<Fr> = (0..N).map(|_| Fr::rand(&mut rng)).collect();
+        let rand_row = (0..N)
+            .map(|i| {
+                if i == 0 {
+                    rand_col[0]
+                } else {
+                    Fr::rand(&mut rng)
+                }
+            })
+            .collect();
         let toep_matrix = ToeplitzMatrix::new(rand_col, rand_row)?;
 
         let mut msgs = [G1Projective::default(); N];
@@ -296,8 +317,12 @@ mod tests {
             naive_matrix_mul(toep_matrix.clone().full_matrix(), msg_matrix.transpose())
                 .transpose()
                 .into();
-        let got: [G1Projective; N] = toep_matrix.fast_vec_mul::<_, M>(msgs).unwrap();
-        assert_eq!(expected.0, got, "Fast Toeplitz Matrix mul is incorrect.");
+        let got = toep_matrix.fast_vec_mul(&msgs)?;
+        assert_eq!(
+            <Vector<G1Projective, N> as Into<Vec<G1Projective>>>::into(expected),
+            got,
+            "Fast Toeplitz Matrix mul is incorrect."
+        );
 
         Ok(())
     }
