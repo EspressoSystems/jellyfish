@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["reed_solomon_erasure","Module for Reed Solomon Erasure Code"]],"trait":[["ErasureCode","Erasure code trait `T` is the input data type"]]};
