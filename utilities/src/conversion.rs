@@ -8,7 +8,7 @@ use core::mem;
 
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, PrimeField};
-use ark_std::{cmp::min, vec::Vec};
+use ark_std::{cmp::min, format, string::String, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -120,29 +120,26 @@ where
     result
 }
 
-/// TODO add string description to error
-#[derive(Debug, displaydoc::Display)]
-pub struct ConversionError;
-impl ark_std::error::Error for ConversionError {}
-
 /// Inverse of `bytes_to_field_elements`.
 /// Preconditions:
 /// - Each field element must fit into one fewer byte than the modulus.
 /// - The first field element encodes the length of bytes to return as u64.
-pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, ConversionError>
+/// TODO String error?
+pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, String>
 where
     T: AsRef<[F]>,
     F: PrimeField,
 {
-    let (first_elem, elems) = elems.as_ref().split_first().ok_or(ConversionError)?;
+    let (first_elem, elems) = elems.as_ref().split_first().ok_or("empty elems")?;
 
     // the first element encodes the number of bytes to return
     let first_elem_bytes = first_elem.into_bigint().to_bytes_le();
     let first_elem_bytes = first_elem_bytes
         .get(..mem::size_of::<u64>())
-        .ok_or(ConversionError)?;
+        .ok_or("can't read result len from field element: not enough bytes")?;
     let result_len = u64::from_le_bytes(first_elem_bytes.try_into().unwrap());
-    let result_len = usize::try_from(result_len).map_err(|_| ConversionError)?;
+    let result_len =
+        usize::try_from(result_len).map_err(|_| "can't convert result len u64 to usize")?;
 
     let chunk_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
     let result_capacity = elems.len() * chunk_len;
@@ -150,7 +147,12 @@ where
     // the original bytes must end somewhere in the final field element
     // thus, result_len must be within elem_byte_len of result_capacity
     if result_len > result_capacity || result_len < result_capacity - chunk_len {
-        return Err(ConversionError);
+        return Err(format!(
+            "result len {} out of bounds {}..{}",
+            result_len,
+            result_capacity - chunk_len,
+            result_capacity
+        ));
     }
 
     // for each field element:
@@ -161,9 +163,9 @@ where
     for elem in elems {
         let bytes = elem.into_bigint().to_bytes_le();
         assert_eq!(bytes.len(), chunk_len + 1);
-        let (last_byte, bytes) = bytes.split_last().ok_or(ConversionError)?;
+        let (last_byte, bytes) = bytes.split_last().ok_or("elem bytes has 0 len")?;
         if *last_byte != 0 {
-            return Err(ConversionError);
+            return Err(format!("nonzero last byte {} in elem", *last_byte));
         }
         result.extend_from_slice(bytes);
     }
@@ -172,7 +174,7 @@ where
     // all bytes to truncate should be zero
     for byte in result.iter().skip(result_len) {
         if *byte != 0 {
-            return Err(ConversionError);
+            return Err("nonzero bytes beyond result len".into());
         }
     }
     result.truncate(result_len);
