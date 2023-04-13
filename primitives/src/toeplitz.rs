@@ -40,7 +40,7 @@ impl<F: FftField> CirculantMatrix<F> {
     // truncate doesn't work).
     pub fn fast_vec_mul<T>(&self, m: &[T]) -> Result<Vec<T>, PrimitivesError>
     where
-        T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F> + Default,
+        T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F>,
     {
         if !m.len().is_power_of_two() {
             return Err(PrimitivesError::ParameterError(
@@ -117,7 +117,7 @@ impl<F: FftField> ToeplitzMatrix<F> {
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     pub fn fast_vec_mul<T>(&self, v: &[T]) -> Result<Vec<T>, PrimitivesError>
     where
-        T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F> + Default,
+        T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F>,
     {
         if !v.len().is_power_of_two() {
             return Err(PrimitivesError::ParameterError(
@@ -132,7 +132,7 @@ impl<F: FftField> ToeplitzMatrix<F> {
 
         let cir_repr = self.circulant_embedding()?;
         let mut padded_v = Vec::from(v);
-        padded_v.resize_with(2 * v.len(), T::default);
+        padded_v.resize(2 * v.len(), T::zero());
 
         let mut res = cir_repr.fast_vec_mul(&padded_v)?;
         res.truncate(v.len());
