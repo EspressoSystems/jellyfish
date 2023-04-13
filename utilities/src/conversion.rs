@@ -104,9 +104,10 @@ where
 {
     // - partition bytes into chunks of length one fewer than the base prime field
     //   modulus byte length
-    // - convert each chunk into F via F::from_le_bytes_mod_order
+    // - convert each chunk into PrimeField via from_le_bytes_mod_order
     // - modular reduction is guaranteed not to occur because chunk byte length is
     //   sufficiently small
+    // - collect PrimeField elements into Field elements and append to result
     let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
     let extension_degree = F::extension_degree() as usize;
     let field_chunk_len = primefield_chunk_len * extension_degree;
@@ -179,7 +180,7 @@ where
     // for each base prime field element:
     // - convert to bytes
     // - drop the trailing byte, which must be zero
-    // collect prime field elements into field elements and append to result
+    // - append bytes to result
     let mut result = Vec::with_capacity(result_capacity);
     for elem in elems {
         for primefield_elem in elem.to_base_prime_field_elements() {
