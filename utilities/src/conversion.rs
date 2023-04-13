@@ -7,7 +7,7 @@
 use core::mem;
 
 use ark_ec::CurveConfig;
-use ark_ff::{BigInteger, PrimeField};
+use ark_ff::{BigInteger, Field, PrimeField};
 use ark_std::{cmp::min, format, string::String, vec::Vec};
 use sha2::{Digest, Sha512};
 
@@ -100,21 +100,35 @@ where
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
     B: AsRef<[u8]>,
-    F: PrimeField,
+    F: Field,
 {
-    // partition bytes into chunks of length one fewer than the modulus byte length
-    // convert each chunk into F via F::from_le_bytes_mod_order
-    // modular reduction is guaranteed not to occur because chunk byte length is
-    // sufficiently small
-    let chunk_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
-    let result_length = (bytes.as_ref().len() + chunk_len - 1) / chunk_len + 1;
+    // - partition bytes into chunks of length one fewer than the base prime field
+    //   modulus byte length
+    // - convert each chunk into F via F::from_le_bytes_mod_order
+    // - modular reduction is guaranteed not to occur because chunk byte length is
+    //   sufficiently small
+    let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let extension_degree = F::extension_degree() as usize;
+    let field_chunk_len = primefield_chunk_len * extension_degree;
+    let result_length = (bytes.as_ref().len() + field_chunk_len - 1) / field_chunk_len + 1;
     let mut result = Vec::with_capacity(result_length);
 
     // the first field element encodes the bytes length as u64
     result.push(F::from(bytes.as_ref().len() as u64));
 
-    for chunk in bytes.as_ref().chunks(chunk_len) {
-        result.push(F::from_le_bytes_mod_order(chunk));
+    for field_chunk in bytes.as_ref().chunks(field_chunk_len) {
+        let mut primefield_elems = Vec::with_capacity(extension_degree);
+        for primefield_chunk in field_chunk.chunks(primefield_chunk_len) {
+            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(primefield_chunk));
+        }
+        // not enough prime field elems? fill remaining elems with zero
+        if primefield_elems.len() < extension_degree {
+            for _ in 0..(extension_degree - primefield_elems.len()) {
+                primefield_elems.push(F::BasePrimeField::ZERO);
+            }
+        }
+        assert_eq!(primefield_elems.len(), extension_degree);
+        result.push(F::from_base_prime_field_elems(&primefield_elems).unwrap());
     }
     assert_eq!(result.len(), result_length);
     result
@@ -122,17 +136,22 @@ where
 
 /// Inverse of `bytes_to_field_elements`.
 /// Preconditions:
-/// - Each field element must fit into one fewer byte than the modulus.
+/// - Each base prime field element must fit into one fewer byte than the
+///   modulus.
 /// - The first field element encodes the length of bytes to return as u64.
 /// TODO String error?
 pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, String>
 where
     T: AsRef<[F]>,
-    F: PrimeField,
+    F: Field,
 {
     let (first_elem, elems) = elems.as_ref().split_first().ok_or("empty elems")?;
 
     // the first element encodes the number of bytes to return
+    let first_elem = first_elem
+        .to_base_prime_field_elements()
+        .next()
+        .ok_or("empty first elem")?;
     let first_elem_bytes = first_elem.into_bigint().to_bytes_le();
     let first_elem_bytes = first_elem_bytes
         .get(..mem::size_of::<u64>())
@@ -141,33 +160,42 @@ where
     let result_len =
         usize::try_from(result_len).map_err(|_| "can't convert result len u64 to usize")?;
 
-    let chunk_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
-    let result_capacity = elems.len() * chunk_len;
+    let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let extension_degree = F::extension_degree() as usize;
+    let field_chunk_len = primefield_chunk_len * extension_degree;
+    let result_capacity = elems.len() * field_chunk_len;
 
     // the original bytes must end somewhere in the final field element
     // thus, result_len must be within elem_byte_len of result_capacity
-    if result_len > result_capacity || result_len < result_capacity - chunk_len {
+    if result_len > result_capacity || result_len < result_capacity - field_chunk_len {
         return Err(format!(
             "result len {} out of bounds {}..{}",
             result_len,
-            result_capacity - chunk_len,
+            result_capacity - field_chunk_len,
             result_capacity
         ));
     }
 
-    // for each field element:
+    // for each base prime field element:
     // - convert to bytes
     // - drop the trailing byte, which must be zero
-    // - append to result
+    // collect prime field elements into field elements and append to result
     let mut result = Vec::with_capacity(result_capacity);
     for elem in elems {
-        let bytes = elem.into_bigint().to_bytes_le();
-        assert_eq!(bytes.len(), chunk_len + 1);
-        let (last_byte, bytes) = bytes.split_last().ok_or("elem bytes has 0 len")?;
-        if *last_byte != 0 {
-            return Err(format!("nonzero last byte {} in elem", *last_byte));
+        for primefield_elem in elem.to_base_prime_field_elements() {
+            let bytes = primefield_elem.into_bigint().to_bytes_le();
+            assert_eq!(bytes.len(), primefield_chunk_len + 1);
+            let (last_byte, bytes) = bytes
+                .split_last()
+                .ok_or("prime field elem bytes has 0 len")?;
+            if *last_byte != 0 {
+                return Err(format!(
+                    "nonzero last byte {} in prime field elem",
+                    *last_byte
+                ));
+            }
+            result.extend_from_slice(bytes);
         }
-        result.extend_from_slice(bytes);
     }
     assert_eq!(result.len(), result_capacity);
 
@@ -221,7 +249,7 @@ mod tests {
         }
     }
 
-    fn bytes_field_elems<F: PrimeField>() {
+    fn bytes_field_elems<F: Field>() {
         let mut rng = test_rng();
         let lengths = [2, 16, 32, 48, 63, 64, 65, 100, 200];
 
