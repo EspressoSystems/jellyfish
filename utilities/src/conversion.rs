@@ -99,7 +99,7 @@ where
 /// field elements.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
-    B: AsRef<[u8]> + Clone,
+    B: AsRef<[u8]>,
     F: PrimeField,
 {
     // partition bytes into chunks of length one fewer than the modulus byte length
