@@ -4,6 +4,8 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+use core::mem;
+
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{cmp::min, vec::Vec};
@@ -93,9 +95,8 @@ where
     F::from_le_bytes_mod_order(output)
 }
 
-/// One-way, deterministic, infallible conversion between arbitrary bytes (of
-/// unknown length and potentially non-canonical) to field elements.
-/// This function converts bytes to vector of BaseField.
+/// Invertible, deterministic, infallible conversion from arbitrary bytes to
+/// field elements.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
     B: AsRef<[u8]> + Clone,
@@ -116,57 +117,69 @@ where
     assert!(padded_bytes.len() % chunk_length == 0);
 
     let mut result = Vec::new();
+    result.push(F::from(bytes.as_ref().len() as u64)); // bytes length
     for chunk in padded_bytes.chunks(chunk_length) {
         result.push(F::from_le_bytes_mod_order(chunk));
     }
     result
 }
 
-/// TODO which error should I use?
+/// TODO add string description to error
 #[derive(Debug, displaydoc::Display)]
 pub struct ConversionError;
 impl ark_std::error::Error for ConversionError {}
 
 /// Inverse of `bytes_to_field_elements`.
-/// Each field element must fit into one fewer byte than the modulus.
-/// Otherwise `ConversionError` is returned.
-/// (Field elements are little-endian.)
-/// TODO `bytes_to_field_elements` should also trim all trailing zero bytes
+/// Preconditions:
+/// - Each field element must fit into one fewer byte than the modulus.
+/// - The first field element encodes the length of bytes to return as u64.
 pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, ConversionError>
 where
     T: AsRef<[F]>,
     F: PrimeField,
 {
-    let elems = elems.as_ref();
+    let (first_elem, elems) = elems.as_ref().split_first().ok_or(ConversionError)?;
+
+    // the first element encodes the number of bytes to return
+    let first_elem_bytes = first_elem.into_bigint().to_bytes_le();
+    let first_elem_bytes = first_elem_bytes
+        .get(..mem::size_of::<u64>())
+        .ok_or(ConversionError)?;
+    let result_len = u64::from_le_bytes(first_elem_bytes.try_into().unwrap());
+    let result_len = usize::try_from(result_len).map_err(|_| ConversionError)?;
+
     let elem_byte_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let result_capacity = elems.len() * elem_byte_len;
+
+    // the original bytes must end somewhere in the final field element
+    // thus, result_len must be within elem_byte_len of result_capacity
+    if result_len > result_capacity || result_len < result_capacity - elem_byte_len {
+        return Err(ConversionError);
+    }
 
     // for each field element:
     // - convert to bytes
     // - drop the trailing byte, which must be zero
     // - append to result
-    let result_len = elems.len() * elem_byte_len;
-    let mut result = Vec::with_capacity(result_len);
+    let mut result = Vec::with_capacity(result_capacity);
     for elem in elems {
         let bytes = elem.into_bigint().to_bytes_le();
         assert_eq!(bytes.len(), elem_byte_len + 1);
-        if *bytes.last().unwrap() != 0 {
+        let (last_byte, bytes) = bytes.split_last().ok_or(ConversionError)?;
+        if *last_byte != 0 {
             return Err(ConversionError);
         }
-
-        result.extend_from_slice(&bytes[..bytes.len() - 1]);
+        result.extend_from_slice(bytes);
     }
-    assert_eq!(result.len(), result_len);
+    assert_eq!(result.len(), result_capacity);
 
-    // trim trailing zeros from the final chunk
-    let start_of_final_chunk = result_len - elem_byte_len;
-    let new_len = start_of_final_chunk
-        + result[start_of_final_chunk..]
-            .iter()
-            .rposition(|x| *x != 0)
-            .map(|i| i + 1)
-            .unwrap_or(0);
-    result.truncate(new_len);
-
+    // all bytes to truncate should be zero
+    for byte in result.iter().skip(result_len) {
+        if *byte != 0 {
+            return Err(ConversionError);
+        }
+    }
+    result.truncate(result_len);
     Ok(result)
 }
 
