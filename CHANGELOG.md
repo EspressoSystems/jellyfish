@@ -13,7 +13,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 ### Fixed
 
 ### Added
-
+- [#233](https://github.com/EspressoSystems/jellyfish/pull/233) BLS aggregation APIs
 ### Changed
 
 ### Removed
