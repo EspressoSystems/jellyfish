@@ -194,7 +194,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Verify a multisignature w.r.t. a single message and a list of public
     /// keys. It is user's responsibility to ensure that the public keys are
     /// validated.
-    fn mutli_sig_verify(
+    fn multi_sig_verify(
         pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
         msg: &[Self::MessageUnit],

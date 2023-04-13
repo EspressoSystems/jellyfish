@@ -112,7 +112,7 @@ pub trait AggregateableSignatureSchemes: SignatureScheme {
     /// Verify a multisignature w.r.t. a single message and a list of public
     /// keys. It is user's responsibility to ensure that the public keys are
     /// validated.
-    fn mutli_sig_verify(
+    fn multi_sig_verify(
         pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
         msg: &[Self::MessageUnit],
@@ -145,7 +145,6 @@ mod tests {
     ) {
         let rng = &mut test_rng();
         let parameters = S::param_gen(Some(rng)).unwrap();
-        let mut sks = vec![];
         let mut pks = vec![];
         let mut sigs = vec![];
         let mut partial_sigs = vec![];
@@ -154,7 +153,6 @@ mod tests {
             let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
             let sig = S::sign(&parameters, &sk, message, rng).unwrap();
             let partial_sig = S::sign(&parameters, &sk, message_for_msig, rng).unwrap();
-            sks.push(sk);
             pks.push(pk);
             sigs.push(sig);
             partial_sigs.push(partial_sig);
@@ -163,17 +161,17 @@ mod tests {
         let agg_sig = S::aggregate(&parameters, &sigs).unwrap();
         let multi_sig = S::aggregate(&parameters, &partial_sigs).unwrap();
         assert!(S::aggregate_verify(&parameters, &pks, messages, &agg_sig).is_ok());
-        assert!(S::mutli_sig_verify(&parameters, &pks, message_for_msig, &multi_sig).is_ok());
+        assert!(S::multi_sig_verify(&parameters, &pks, message_for_msig, &multi_sig).is_ok());
         // wrong messages length
         assert!(S::aggregate_verify(&parameters, &pks, &messages[1..], &agg_sig).is_err());
         // empty pks
         assert!(S::aggregate_verify(&parameters, &[], messages, &agg_sig).is_err());
-        assert!(S::mutli_sig_verify(&parameters, &[], message_for_msig, &multi_sig).is_err());
+        assert!(S::multi_sig_verify(&parameters, &[], message_for_msig, &multi_sig).is_err());
         // wrong message
         let mut bad_messages: Vec<&[S::MessageUnit]> = messages.to_vec();
         bad_messages[0] = bad_message;
         assert!(S::aggregate_verify(&parameters, &pks, &bad_messages, &agg_sig).is_err());
-        assert!(S::mutli_sig_verify(&parameters, &pks, bad_message, &multi_sig).is_err());
+        assert!(S::multi_sig_verify(&parameters, &pks, bad_message, &multi_sig).is_err());
     }
 
     pub(crate) fn failed_verification<S: SignatureScheme>(
