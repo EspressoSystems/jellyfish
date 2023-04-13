@@ -125,6 +125,66 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
@@ -218,14 +278,39 @@
 }
 
 <span class="doccomment">/// Trait for aggregatable signatures.
-</span><span class="kw">pub trait </span>AggregateableSignatureSchemes&lt;H&gt;: SignatureScheme {
-    <span class="comment">// TODO: APIs for aggregateable signatures
-</span>}
+/// TODO: generic over hash functions
+</span><span class="kw">pub trait </span>AggregateableSignatureSchemes: SignatureScheme {
+    <span class="doccomment">/// Aggregate multiple signatures into a single signature
+    </span><span class="kw">fn </span>aggregate(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        sigs: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Signature],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Signature, PrimitivesError&gt;;
+
+    <span class="doccomment">/// Verify an aggregate signature w.r.t. a list of messages and public keys.
+    /// It is user&#39;s responsibility to ensure that the public keys are
+    /// validated.
+    </span><span class="kw">fn </span>aggregate_verify&lt;M: AsRef&lt;[<span class="self">Self</span>::MessageUnit]&gt;&gt;(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::VerificationKey],
+        msgs: <span class="kw-2">&amp;</span>[M],
+        sig: <span class="kw-2">&amp;</span><span class="self">Self</span>::Signature,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt;;
+
+    <span class="doccomment">/// Verify a multisignature w.r.t. a single message and a list of public
+    /// keys. It is user&#39;s responsibility to ensure that the public keys are
+    /// validated.
+    </span><span class="kw">fn </span>multi_sig_verify(
+        pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::VerificationKey],
+        msg: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::MessageUnit],
+        sig: <span class="kw-2">&amp;</span><span class="self">Self</span>::Signature,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt;;
+}
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span>ark_std::rand::prelude::StdRng;
+    <span class="kw">use </span>ark_std::{rand::prelude::StdRng, vec, vec::Vec};
     <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sign_and_verify&lt;S: SignatureScheme&gt;(message: <span class="kw-2">&amp;</span>[S::MessageUnit]) {
@@ -239,6 +324,41 @@
         <span class="kw">let </span>(sk, pk) = S::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
         <span class="kw">let </span>sig = S::sign(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
         <span class="macro">assert!</span>(S::verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pk, message, <span class="kw-2">&amp;</span>sig).is_ok());
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>agg_sign_and_verify&lt;S: AggregateableSignatureSchemes&gt;(
+        messages: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[S::MessageUnit]],
+        bad_message: <span class="kw-2">&amp;</span>[S::MessageUnit],
+    ) {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+        <span class="kw">let </span>parameters = S::param_gen(<span class="prelude-val">Some</span>(rng)).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>pks = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>sigs = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>partial_sigs = <span class="macro">vec!</span>[];
+        <span class="kw">let </span>message_for_msig = messages[<span class="number">0</span>];
+        <span class="kw">for </span>message <span class="kw">in </span>messages.iter() {
+            <span class="kw">let </span>(sk, pk) = S::key_gen(<span class="kw-2">&amp;</span>parameters, rng).unwrap();
+            <span class="kw">let </span>sig = S::sign(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message, rng).unwrap();
+            <span class="kw">let </span>partial_sig = S::sign(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sk, message_for_msig, rng).unwrap();
+            pks.push(pk);
+            sigs.push(sig);
+            partial_sigs.push(partial_sig);
+        }
+        <span class="comment">// happy paths
+        </span><span class="kw">let </span>agg_sig = S::aggregate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sigs).unwrap();
+        <span class="kw">let </span>multi_sig = S::aggregate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>partial_sigs).unwrap();
+        <span class="macro">assert!</span>(S::aggregate_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, messages, <span class="kw-2">&amp;</span>agg_sig).is_ok());
+        <span class="macro">assert!</span>(S::multi_sig_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, message_for_msig, <span class="kw-2">&amp;</span>multi_sig).is_ok());
+        <span class="comment">// wrong messages length
+        </span><span class="macro">assert!</span>(S::aggregate_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, <span class="kw-2">&amp;</span>messages[<span class="number">1</span>..], <span class="kw-2">&amp;</span>agg_sig).is_err());
+        <span class="comment">// empty pks
+        </span><span class="macro">assert!</span>(S::aggregate_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>[], messages, <span class="kw-2">&amp;</span>agg_sig).is_err());
+        <span class="macro">assert!</span>(S::multi_sig_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>[], message_for_msig, <span class="kw-2">&amp;</span>multi_sig).is_err());
+        <span class="comment">// wrong message
+        </span><span class="kw">let </span><span class="kw-2">mut </span>bad_messages: Vec&lt;<span class="kw-2">&amp;</span>[S::MessageUnit]&gt; = messages.to_vec();
+        bad_messages[<span class="number">0</span>] = bad_message;
+        <span class="macro">assert!</span>(S::aggregate_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, <span class="kw-2">&amp;</span>bad_messages, <span class="kw-2">&amp;</span>agg_sig).is_err());
+        <span class="macro">assert!</span>(S::multi_sig_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, bad_message, <span class="kw-2">&amp;</span>multi_sig).is_err());
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>failed_verification&lt;S: SignatureScheme&gt;(
