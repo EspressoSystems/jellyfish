@@ -22,6 +22,7 @@ pub mod commitment;
 pub mod constants;
 pub mod crhf;
 pub mod elgamal;
+pub mod erasure_code;
 pub mod errors;
 pub mod hash_to_group;
 pub mod merkle_tree;
