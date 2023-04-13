@@ -102,25 +102,21 @@ where
     B: AsRef<[u8]> + Clone,
     F: PrimeField,
 {
-    // segment the bytes into chunks of bytes, each chunk is of size
-    // that is floor(F::size_in_bits/8). then, cast each chunk
-    // into F via F::from_le_bytes_mod_order
-    // note that mod_reduction is guaranteed to not occur
+    // partition bytes into chunks of length one fewer than the modulus byte length
+    // convert each chunk into F via F::from_le_bytes_mod_order
+    // modular reduction is guaranteed not to occur because chunk byte length is
+    // sufficiently small
+    let chunk_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let result_length = (bytes.as_ref().len() + chunk_len - 1) / chunk_len + 1;
+    let mut result = Vec::with_capacity(result_length);
 
-    // Field order is never a multiple of 8
-    let chunk_length = (F::MODULUS_BIT_SIZE / 8) as usize;
+    // the first field element encodes the bytes length as u64
+    result.push(F::from(bytes.as_ref().len() as u64));
 
-    // pad the input to a multiple of chunk_length
-    let padded_length = (bytes.as_ref().len() + chunk_length - 1) / chunk_length * chunk_length;
-    let mut padded_bytes: Vec<u8> = bytes.as_ref().to_vec();
-    padded_bytes.resize(padded_length, 0u8);
-    assert!(padded_bytes.len() % chunk_length == 0);
-
-    let mut result = Vec::new();
-    result.push(F::from(bytes.as_ref().len() as u64)); // bytes length
-    for chunk in padded_bytes.chunks(chunk_length) {
+    for chunk in bytes.as_ref().chunks(chunk_len) {
         result.push(F::from_le_bytes_mod_order(chunk));
     }
+    assert_eq!(result.len(), result_length);
     result
 }
 
@@ -148,12 +144,12 @@ where
     let result_len = u64::from_le_bytes(first_elem_bytes.try_into().unwrap());
     let result_len = usize::try_from(result_len).map_err(|_| ConversionError)?;
 
-    let elem_byte_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
-    let result_capacity = elems.len() * elem_byte_len;
+    let chunk_len = ((F::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let result_capacity = elems.len() * chunk_len;
 
     // the original bytes must end somewhere in the final field element
     // thus, result_len must be within elem_byte_len of result_capacity
-    if result_len > result_capacity || result_len < result_capacity - elem_byte_len {
+    if result_len > result_capacity || result_len < result_capacity - chunk_len {
         return Err(ConversionError);
     }
 
@@ -164,7 +160,7 @@ where
     let mut result = Vec::with_capacity(result_capacity);
     for elem in elems {
         let bytes = elem.into_bigint().to_bytes_le();
-        assert_eq!(bytes.len(), elem_byte_len + 1);
+        assert_eq!(bytes.len(), chunk_len + 1);
         let (last_byte, bytes) = bytes.split_last().ok_or(ConversionError)?;
         if *last_byte != 0 {
             return Err(ConversionError);
