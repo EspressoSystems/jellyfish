@@ -99,7 +99,7 @@ where
     fn append_message(&mut self, _label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
         // We remove the labels for better efficiency
 
-        let mut f = bytes_to_field_elements(&msg);
+        let mut f = bytes_to_field_elements(msg);
         self.transcript.append(&mut f);
         Ok(())
     }
