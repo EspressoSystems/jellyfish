@@ -284,6 +284,7 @@ mod tests {
 
     #[test]
     fn test_bytes_field_elems() {
-        bytes_field_elems::<Fr381>()
+        bytes_field_elems::<Fr381>();
+        bytes_field_elems::<Fr254>();
     }
 }
