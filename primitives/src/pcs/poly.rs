@@ -8,8 +8,6 @@
 //! just field elemnts.
 //! Inspired by and natural extension of arkwork's `ark-poly` code.
 
-// FIXME: remove this
-#![allow(dead_code)]
 use ark_ff::{FftField, Field, Zero};
 use ark_poly::{domain::DomainCoeff, EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{
@@ -82,6 +80,7 @@ where
 
     /// Outputs a univariate polynomial of degree `d` where
     /// each coefficient is sampled uniformly at random.
+    #[allow(dead_code)]
     fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
         let mut random_coeffs = Vec::new();
         for _ in 0..=d {
@@ -91,6 +90,7 @@ where
     }
 
     /// Returns the total degree of the polynomial
+    #[allow(dead_code)]
     pub fn degree(&self) -> usize {
         if self.is_zero() {
             0

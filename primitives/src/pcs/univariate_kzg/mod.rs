@@ -6,21 +6,25 @@
 
 //! Main module for univariate KZG commitment scheme
 
-use core::ops::Mul;
-
-use crate::pcs::{
-    prelude::Commitment, PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
+use crate::{
+    pcs::{
+        poly::{BatchEvalPoints, GeneralDensePolynomial},
+        prelude::Commitment,
+        PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
+    },
+    toeplitz::ToeplitzMatrix,
 };
 use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
-use ark_ff::PrimeField;
+use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
     end_timer, format,
     marker::PhantomData,
+    ops::Mul,
     rand::{CryptoRng, RngCore},
     start_timer,
     string::ToString,
@@ -288,6 +292,89 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     }
 }
 
+impl<E, F> UnivariateKzgPCS<E>
+where
+    E: Pairing<ScalarField = F>,
+    F: FftField,
+{
+    /// Fast computation of batch opening for a single polynomial at multiple
+    /// points. Details see Sec 2.1~2.3 of [FK23](https://eprint.iacr.org/2023/033.pdf).
+    ///
+    /// Only accept `polynomial` with power-of-two degree, no constrain on the
+    /// size of `points`
+    #[allow(clippy::type_complexity)]
+    pub fn batch_open_fk23(
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
+        polynomial: &<Self as PolynomialCommitmentScheme>::Polynomial,
+        points: BatchEvalPoints<E::ScalarField>,
+    ) -> Result<
+        (
+            Vec<<Self as PolynomialCommitmentScheme>::Proof>,
+            Vec<<Self as PolynomialCommitmentScheme>::Evaluation>,
+        ),
+        PCSError,
+    > {
+        let d = polynomial.degree();
+        if !d.is_power_of_two() {
+            return Err(PCSError::InvalidParameters(
+                "FK23 only supports polynomial with power-of-two degree".to_string(),
+            ));
+        }
+
+        // Step 1. compute \vec{h} using fast Toeplitz matrix multiplication
+        // 1.1 Toeplitz matrix A (named `poly_coeff_matrix` here)
+        let mut toep_col = vec![*polynomial
+            .coeffs()
+            .last()
+            .ok_or_else(|| PCSError::InvalidParameters("poly degree should >= 1".to_string()))?];
+        toep_col.resize(d, <<E as Pairing>::ScalarField as Field>::ZERO);
+        let toep_row = polynomial.coeffs().iter().skip(1).rev().cloned().collect();
+        let poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)?;
+
+        // 1.2 vector s (named `srs_vec` here)
+        let srs_vec: Vec<E::G1> = prover_param
+            .borrow()
+            .powers_of_g
+            .iter()
+            .take(d)
+            .rev()
+            .cloned()
+            .map(|g| g.into_group())
+            .collect();
+
+        // 1.3 compute \vec{h}
+        let h_vec = poly_coeff_matrix.fast_vec_mul(&srs_vec)?;
+
+        // Step 2. evaluate h(X) with coeffs \vec{h} at `points` using FFT
+        let mut h_poly = GeneralDensePolynomial::from_coeff_vec(h_vec);
+        // NOTE!! this is the trickist subtle line in this function !!
+        // `polynomial` has a degree `d` which is guaranteed to be power-of-two to use
+        // Toeplitz fast mul algorithm. h(X) has a degree `d-1` which cause a plain
+        // domain instantiation on `h_poly` half the size of that for `polynomial`,
+        // which leads to different vector of roots of unity used, ultimately leading to
+        // wrong proofs. Thus, to make sure during FFT, the same vector of roots of
+        // unity are used, we need to manually resize the coefficients so that
+        // `GeneralDensePolynomial::batch_evaluate` are informed to use the domain of
+        // size (d+1).next_power_of_two().
+        h_poly.coeffs.resize(polynomial.coeffs.len(), E::G1::zero());
+
+        let proofs: Vec<_> = h_poly
+            .batch_evaluate(points)
+            .into_iter()
+            .map(|g| UnivariateKzgProof {
+                proof: g.into_affine(),
+            })
+            .collect();
+
+        // Evaluate at all points
+        ark_std::println!("!! during eval:");
+        let evals =
+            GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs).batch_evaluate(points);
+
+        Ok((proofs, evals))
+    }
+}
+
 fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial<F>>(
     p: &P,
 ) -> (usize, Vec<F::BigInt>) {
@@ -309,11 +396,11 @@ fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pcs::StructuredReferenceString;
+    use crate::pcs::{poly::tests::get_roots_of_unity, StructuredReferenceString};
     use ark_bls12_381::Bls12_381;
     use ark_ec::pairing::Pairing;
     use ark_poly::univariate::DensePolynomial;
-    use ark_std::UniformRand;
+    use ark_std::{rand::Rng, UniformRand};
     use jf_utils::test_rng;
 
     fn end_to_end_test_template<E>() -> Result<(), PCSError>
@@ -422,5 +509,57 @@ mod tests {
     #[test]
     fn batch_check_test() {
         batch_check_test_template::<Bls12_381>().expect("test failed for bls12-381");
+    }
+
+    #[test]
+    fn test_batch_open() -> Result<(), PCSError> {
+        type E = Bls12_381;
+        type Fr = ark_bls12_381::Fr;
+
+        let mut rng = test_rng();
+        let max_degree = 32;
+        let pp = UnivariateKzgPCS::<E>::setup_for_testing(&mut rng, max_degree)?;
+
+        for _ in 0..1 {
+            let degree = 32; // has to be power-of-two
+            let num_points = rng.gen_range(5..max_degree);
+
+            let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
+            let poly = <DensePolynomial<Fr> as DenseUVPolynomial<Fr>>::rand(degree, &mut rng);
+            let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
+
+            // First, test general points
+            let eval_points = BatchEvalPoints::General(&points);
+            let (proofs, evals) = UnivariateKzgPCS::<E>::batch_open_fk23(&ck, &poly, eval_points)?;
+            points
+                .iter()
+                .zip(proofs.into_iter())
+                .zip(evals.into_iter())
+                .for_each(|((point, proof), eval)| {
+                    assert_eq!(
+                        UnivariateKzgPCS::<E>::open(&ck, &poly, &point).unwrap(),
+                        (proof, eval)
+                    );
+                });
+
+            // Second, test roots-of-unity points
+            let eval_points = BatchEvalPoints::RootsOfUnity(num_points as u64);
+            let (proofs, evals) = UnivariateKzgPCS::<E>::batch_open_fk23(&ck, &poly, eval_points)?;
+
+            let roots_of_unity: Vec<Fr> = get_roots_of_unity(degree + 1);
+
+            roots_of_unity
+                .iter()
+                .zip(proofs.into_iter())
+                .zip(evals.into_iter())
+                .for_each(|((point, proof), eval)| {
+                    assert_eq!(
+                        UnivariateKzgPCS::<E>::open(&ck, &poly, &point).unwrap(),
+                        (proof, eval)
+                    );
+                });
+        }
+
+        Ok(())
     }
 }
