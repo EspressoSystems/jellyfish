@@ -102,6 +102,12 @@ where
     B: AsRef<[u8]>,
     F: Field,
 {
+    // Need to ensure that F::characteristic is large enough to hold a u64.
+    // This should be possible at compile time but I don't know how.
+    // Example: could use <https://docs.rs/static_assertions> but then you hit
+    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
+    assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
+
     // - partition bytes into chunks of length one fewer than the base prime field
     //   modulus byte length
     // - convert each chunk into PrimeField via from_le_bytes_mod_order
@@ -146,6 +152,12 @@ where
     T: AsRef<[F]>,
     F: Field,
 {
+    // Need to ensure that F::characteristic is large enough to hold a u64.
+    // This should be possible at compile time but I don't know how.
+    // Example: could use <https://docs.rs/static_assertions> but then you hit
+    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
+    assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
+
     let (first_elem, elems) = elems.as_ref().split_first().ok_or("empty elems")?;
 
     // the first element encodes the number of bytes to return
