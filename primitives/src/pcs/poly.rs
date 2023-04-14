@@ -10,11 +10,12 @@
 
 // FIXME: remove this
 #![allow(dead_code)]
-use ark_ff::{Field, Zero};
+use ark_ff::{FftField, Field, Zero};
+use ark_poly::{domain::DomainCoeff, EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{
     fmt,
     marker::PhantomData,
-    ops::{Add, MulAssign},
+    ops::{Add, Mul, MulAssign},
     rand::Rng,
     vec::Vec,
     UniformRand,
@@ -110,6 +111,56 @@ where
     }
 }
 
+/// An abstraction of a batch of evaluation points
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum BatchEvalPoints<'a, F: Field> {
+    /// First `m: u64` of n-th roots of unity, NOTE that the `n` is decided by
+    /// the num_coeffs of the polynomial, `m <= n =
+    /// next_power_of_two(num_coeffs)`.
+    RootsOfUnity(u64),
+    /// Any general evaluation points (references/slices).
+    General(&'a [F]),
+}
+
+impl<T, F> GeneralDensePolynomial<T, F>
+where
+    T: GeneralCoeff<F> + DomainCoeff<F> + for<'a> Mul<&'a F, Output = T>,
+    F: FftField,
+{
+    /// Evaluate `self` at a list of `points`.
+    ///
+    /// When there are only a few points, will use Horner's method to
+    /// individually evaluate each point.
+    /// Hwoever, when there are lots of points, will use FFT methods to get a
+    /// lower amortized cost.
+    pub fn batch_evaluate(&self, points: BatchEvalPoints<F>) -> Vec<T> {
+        // Horner: n * d
+        // FFT: ~ d*log^2(d)  (independent of n, as long as n<=d)
+        // naive cutoff-point, not taking parallelism into consideration:
+        let cutoff_size = <F as FftField>::TWO_ADICITY.pow(2);
+
+        match points {
+            BatchEvalPoints::General(points) => {
+                if points.is_empty() {
+                    Vec::new()
+                } else if points.len() < cutoff_size as usize {
+                    points.iter().map(|x| self.evaluate(x)).collect()
+                } else {
+                    unimplemented!("TODO: (alex) implements Appendix A of FK23");
+                }
+            },
+            BatchEvalPoints::RootsOfUnity(m) => {
+                let domain: Radix2EvaluationDomain<F> =
+                    Radix2EvaluationDomain::new(self.coeffs.len())
+                        .expect("Should init an eval domain");
+                let mut evals = domain.fft(&self.coeffs);
+                evals.truncate(m as usize);
+                evals
+            },
+        }
+    }
+}
+
 impl<T, F> GeneralDensePolynomial<T, F>
 where
     T: GeneralCoeff<F>,
@@ -202,13 +253,29 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use ark_bls12_381::{Fr, G1Projective};
     use ark_ec::{short_weierstrass::SWCurveConfig, CurveGroup};
     use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
     use ark_std::iter::successors;
     use jf_utils::test_rng;
+
+    // helper function to generate all roots of unity for evaluating polynomial with
+    // `num_coeffs` coeffs.
+    pub(crate) fn get_roots_of_unity<F: FftField>(num_coeffs: usize) -> Vec<F> {
+        let size = if num_coeffs.is_power_of_two() {
+            num_coeffs
+        } else {
+            num_coeffs.checked_next_power_of_two().unwrap()
+        } as u64;
+
+        let group_gen = F::get_root_of_unity(size)
+            .expect("Failed to get roots of unity, maybe wronge domain size");
+        successors(Some(F::from(1u32)), |&prev| Some(prev * group_gen))
+            .take(size as usize)
+            .collect()
+    }
 
     #[test]
     fn test_poly_eval_single_point() {
@@ -258,6 +325,53 @@ mod tests {
                 .collect();
             let g_3 = g_1 + g_2;
             assert_eq!(g_3.coeffs, expected_g_3);
+        }
+    }
+
+    #[test]
+    fn test_poly_eval_batch_points() {
+        let mut rng = test_rng();
+
+        for _ in 0..5 {
+            // TODO: (alex) change to a higher degree when need to test cutoff point and
+            // FFT-based eval
+            let degree = rng.gen_range(5..30);
+            let num_points = rng.gen_range(5..30);
+            let f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
+            let g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
+
+            let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
+            let eval_points = BatchEvalPoints::General(&points);
+            ark_std::println!("degree: {}, num_points: {}", degree, num_points);
+
+            // First, test general points
+            assert_eq!(
+                f.batch_evaluate(eval_points),
+                points.iter().map(|x| f.evaluate(x)).collect::<Vec<_>>()
+            );
+            assert_eq!(
+                g.batch_evaluate(eval_points),
+                points.iter().map(|x| g.evaluate(x)).collect::<Vec<_>>()
+            );
+
+            // Second, test points at roots-of-unity
+            let roots: Vec<Fr> = get_roots_of_unity(degree + 1);
+            assert_eq!(
+                f.batch_evaluate(BatchEvalPoints::RootsOfUnity(num_points)),
+                roots
+                    .iter()
+                    .take(num_points as usize)
+                    .map(|x| f.evaluate(x))
+                    .collect::<Vec<_>>()
+            );
+            assert_eq!(
+                g.batch_evaluate(BatchEvalPoints::RootsOfUnity(num_points)),
+                roots
+                    .iter()
+                    .take(num_points as usize)
+                    .map(|x| g.evaluate(x))
+                    .collect::<Vec<_>>()
+            );
         }
     }
 }
