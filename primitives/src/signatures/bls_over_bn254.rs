@@ -304,19 +304,17 @@ impl PartialEq for Signature {
 /// * `returns` - A group element in G1
 #[allow(non_snake_case)]
 pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
-    let hasher_init = &[1u8];
-    let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
-
     // General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
     let coeff_b: BaseField = MontFp!("3");
 
-    let mut x: BaseField = hasher.hash_to_field(msg, 1)[0];
+    let mut x = hash_to_field::<H>(msg);
+
     let mut Y: BaseField = x * x * x + coeff_b;
 
     // Loop until we find a quadratic residue
     while Y.legendre().is_qnr() {
-        // println!("point with x={} is off the curve!!", x_affine);
+        // println!("point with x={} is off the curve!!", x);
         x += BaseField::from(1);
         Y = x * x * x + coeff_b;
     }
@@ -326,6 +324,12 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
 
     let g1_affine = G1Affine::new(x, y);
     G1Projective::from(g1_affine)
+}
+/// Hash function where the output is a field element
+pub fn hash_to_field<H: Default + DynDigest + Clone>(msg: &[u8]) -> BaseField {
+    let hasher_init = &[1u8];
+    let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
+    hasher.hash_to_field(msg, 1)[0]
 }
 
 impl KeyPair {
