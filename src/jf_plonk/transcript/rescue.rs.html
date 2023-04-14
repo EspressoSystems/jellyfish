@@ -291,7 +291,7 @@
     </span><span class="kw">fn </span>append_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8], msg: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
         <span class="comment">// We remove the labels for better efficiency
 
-        </span><span class="kw">let </span><span class="kw-2">mut </span>f = bytes_to_field_elements(<span class="kw-2">&amp;</span>msg);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>f = bytes_to_field_elements(msg);
         <span class="self">self</span>.transcript.append(<span class="kw-2">&amp;mut </span>f);
         <span class="prelude-val">Ok</span>(())
     }
