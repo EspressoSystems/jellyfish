@@ -46,7 +46,7 @@ use ark_ec::{
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    Field, MontFp,
+    Field,
 };
 use ark_serialize::*;
 use ark_std::{
@@ -306,7 +306,7 @@ impl PartialEq for Signature {
 pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
     // General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
-    let coeff_b: BaseField = MontFp!("3");
+    let coeff_b = BaseField::from(3);
 
     let mut x = hash_to_field::<H>(msg);
 
