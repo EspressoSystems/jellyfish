@@ -91,14 +91,39 @@ pub trait SignatureScheme {
 }
 
 /// Trait for aggregatable signatures.
-pub trait AggregateableSignatureSchemes<H>: SignatureScheme {
-    // TODO: APIs for aggregateable signatures
+/// TODO: generic over hash functions
+pub trait AggregateableSignatureSchemes: SignatureScheme {
+    /// Aggregate multiple signatures into a single signature
+    fn aggregate(
+        pp: &Self::PublicParameter,
+        sigs: &[Self::Signature],
+    ) -> Result<Self::Signature, PrimitivesError>;
+
+    /// Verify an aggregate signature w.r.t. a list of messages and public keys.
+    /// It is user's responsibility to ensure that the public keys are
+    /// validated.
+    fn aggregate_verify<M: AsRef<[Self::MessageUnit]>>(
+        pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msgs: &[M],
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError>;
+
+    /// Verify a multisignature w.r.t. a single message and a list of public
+    /// keys. It is user's responsibility to ensure that the public keys are
+    /// validated.
+    fn multi_sig_verify(
+        pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msg: &[Self::MessageUnit],
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError>;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_std::rand::prelude::StdRng;
+    use ark_std::{rand::prelude::StdRng, vec, vec::Vec};
     use jf_utils::test_rng;
 
     pub(crate) fn sign_and_verify<S: SignatureScheme>(message: &[S::MessageUnit]) {
@@ -112,6 +137,41 @@ mod tests {
         let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
         let sig = S::sign(&parameters, &sk, message, rng).unwrap();
         assert!(S::verify(&parameters, &pk, message, &sig).is_ok());
+    }
+
+    pub(crate) fn agg_sign_and_verify<S: AggregateableSignatureSchemes>(
+        messages: &[&[S::MessageUnit]],
+        bad_message: &[S::MessageUnit],
+    ) {
+        let rng = &mut test_rng();
+        let parameters = S::param_gen(Some(rng)).unwrap();
+        let mut pks = vec![];
+        let mut sigs = vec![];
+        let mut partial_sigs = vec![];
+        let message_for_msig = messages[0];
+        for message in messages.iter() {
+            let (sk, pk) = S::key_gen(&parameters, rng).unwrap();
+            let sig = S::sign(&parameters, &sk, message, rng).unwrap();
+            let partial_sig = S::sign(&parameters, &sk, message_for_msig, rng).unwrap();
+            pks.push(pk);
+            sigs.push(sig);
+            partial_sigs.push(partial_sig);
+        }
+        // happy paths
+        let agg_sig = S::aggregate(&parameters, &sigs).unwrap();
+        let multi_sig = S::aggregate(&parameters, &partial_sigs).unwrap();
+        assert!(S::aggregate_verify(&parameters, &pks, messages, &agg_sig).is_ok());
+        assert!(S::multi_sig_verify(&parameters, &pks, message_for_msig, &multi_sig).is_ok());
+        // wrong messages length
+        assert!(S::aggregate_verify(&parameters, &pks, &messages[1..], &agg_sig).is_err());
+        // empty pks
+        assert!(S::aggregate_verify(&parameters, &[], messages, &agg_sig).is_err());
+        assert!(S::multi_sig_verify(&parameters, &[], message_for_msig, &multi_sig).is_err());
+        // wrong message
+        let mut bad_messages: Vec<&[S::MessageUnit]> = messages.to_vec();
+        bad_messages[0] = bad_message;
+        assert!(S::aggregate_verify(&parameters, &pks, &bad_messages, &agg_sig).is_err());
+        assert!(S::multi_sig_verify(&parameters, &pks, bad_message, &multi_sig).is_err());
     }
 
     pub(crate) fn failed_verification<S: SignatureScheme>(

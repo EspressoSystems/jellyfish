@@ -4,9 +4,11 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+use core::mem;
+
 use ark_ec::CurveConfig;
-use ark_ff::{BigInteger, PrimeField};
-use ark_std::{cmp::min, vec::Vec};
+use ark_ff::{BigInteger, Field, PrimeField};
+use ark_std::{cmp::min, format, string::String, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -93,33 +95,131 @@ where
     F::from_le_bytes_mod_order(output)
 }
 
-/// One-way, deterministic, infallible conversion between arbitrary bytes (of
-/// unknown length and potentially non-canonical) to field elements.
-/// This function converts bytes to vector of BaseField.
+/// Invertible, deterministic, infallible conversion from arbitrary bytes to
+/// field elements.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
-    B: AsRef<[u8]> + Clone,
-    F: PrimeField,
+    B: AsRef<[u8]>,
+    F: Field,
 {
-    // segment the bytes into chunks of bytes, each chunk is of size
-    // that is floor(F::size_in_bits/8). then, cast each chunk
-    // into F via F::from_le_bytes_mod_order
-    // note that mod_reduction is guaranteed to not occur
+    // Need to ensure that F::characteristic is large enough to hold a u64.
+    // This should be possible at compile time but I don't know how.
+    // Example: could use <https://docs.rs/static_assertions> but then you hit
+    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
+    assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
 
-    // Field order is never a multiple of 8
-    let chunk_length = (F::MODULUS_BIT_SIZE / 8) as usize;
+    // - partition bytes into chunks of length one fewer than the base prime field
+    //   modulus byte length
+    // - convert each chunk into PrimeField via from_le_bytes_mod_order
+    // - modular reduction is guaranteed not to occur because chunk byte length is
+    //   sufficiently small
+    // - collect PrimeField elements into Field elements and append to result
+    let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let extension_degree = F::extension_degree() as usize;
+    let field_chunk_len = primefield_chunk_len * extension_degree;
+    let result_length = (bytes.as_ref().len() + field_chunk_len - 1) / field_chunk_len + 1;
+    let mut result = Vec::with_capacity(result_length);
 
-    // pad the input to a multiple of chunk_length
-    let padded_length = (bytes.as_ref().len() + chunk_length - 1) / chunk_length * chunk_length;
-    let mut padded_bytes: Vec<u8> = bytes.as_ref().to_vec();
-    padded_bytes.resize(padded_length, 0u8);
-    assert!(padded_bytes.len() % chunk_length == 0);
+    // the first field element encodes the bytes length as u64
+    result.push(F::from(bytes.as_ref().len() as u64));
 
-    let mut result = Vec::new();
-    for chunk in padded_bytes.chunks(chunk_length) {
-        result.push(F::from_le_bytes_mod_order(chunk));
+    for field_chunk in bytes.as_ref().chunks(field_chunk_len) {
+        let mut primefield_elems = Vec::with_capacity(extension_degree);
+        for primefield_chunk in field_chunk.chunks(primefield_chunk_len) {
+            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(primefield_chunk));
+        }
+        // not enough prime field elems? fill remaining elems with zero
+        if primefield_elems.len() < extension_degree {
+            for _ in 0..(extension_degree - primefield_elems.len()) {
+                primefield_elems.push(F::BasePrimeField::ZERO);
+            }
+        }
+        assert_eq!(primefield_elems.len(), extension_degree);
+        result.push(F::from_base_prime_field_elems(&primefield_elems).unwrap());
     }
+    assert_eq!(result.len(), result_length);
     result
+}
+
+/// Inverse of `bytes_to_field_elements`.
+/// Preconditions:
+/// - Each base prime field element must fit into one fewer byte than the
+///   modulus.
+/// - The first field element encodes the length of bytes to return as u64.
+/// TODO String error?
+pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, String>
+where
+    T: AsRef<[F]>,
+    F: Field,
+{
+    // Need to ensure that F::characteristic is large enough to hold a u64.
+    // This should be possible at compile time but I don't know how.
+    // Example: could use <https://docs.rs/static_assertions> but then you hit
+    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
+    assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
+
+    let (first_elem, elems) = elems.as_ref().split_first().ok_or("empty elems")?;
+
+    // the first element encodes the number of bytes to return
+    let first_elem = first_elem
+        .to_base_prime_field_elements()
+        .next()
+        .ok_or("empty first elem")?;
+    let first_elem_bytes = first_elem.into_bigint().to_bytes_le();
+    let first_elem_bytes = first_elem_bytes
+        .get(..mem::size_of::<u64>())
+        .ok_or("can't read result len from field element: not enough bytes")?;
+    let result_len = u64::from_le_bytes(first_elem_bytes.try_into().unwrap());
+    let result_len =
+        usize::try_from(result_len).map_err(|_| "can't convert result len u64 to usize")?;
+
+    let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    let extension_degree = F::extension_degree() as usize;
+    let field_chunk_len = primefield_chunk_len * extension_degree;
+    let result_capacity = elems.len() * field_chunk_len;
+
+    // the original bytes must end somewhere in the final field element
+    // thus, result_len must be within elem_byte_len of result_capacity
+    if result_len > result_capacity || result_len < result_capacity - field_chunk_len {
+        return Err(format!(
+            "result len {} out of bounds {}..{}",
+            result_len,
+            result_capacity - field_chunk_len,
+            result_capacity
+        ));
+    }
+
+    // for each base prime field element:
+    // - convert to bytes
+    // - drop the trailing byte, which must be zero
+    // - append bytes to result
+    let mut result = Vec::with_capacity(result_capacity);
+    for elem in elems {
+        for primefield_elem in elem.to_base_prime_field_elements() {
+            let bytes = primefield_elem.into_bigint().to_bytes_le();
+            assert_eq!(bytes.len(), primefield_chunk_len + 1);
+            let (last_byte, bytes) = bytes
+                .split_last()
+                .ok_or("prime field elem bytes has 0 len")?;
+            if *last_byte != 0 {
+                return Err(format!(
+                    "nonzero last byte {} in prime field elem",
+                    *last_byte
+                ));
+            }
+            result.extend_from_slice(bytes);
+        }
+    }
+    assert_eq!(result.len(), result_capacity);
+
+    // all bytes to truncate should be zero
+    for byte in result.iter().skip(result_len) {
+        if *byte != 0 {
+            return Err("nonzero bytes beyond result len".into());
+        }
+    }
+    result.truncate(result_len);
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -130,7 +230,7 @@ mod tests {
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
-    use ark_std::UniformRand;
+    use ark_std::{rand::RngCore, UniformRand};
 
     #[test]
     fn test_bn254_scalar_conversion() {
@@ -160,5 +260,31 @@ mod tests {
             let jj_bls = fr_to_fq::<_, Param381>(&jj);
             assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
+    }
+
+    fn bytes_field_elems<F: Field>() {
+        let mut rng = test_rng();
+        let lengths = [2, 16, 32, 48, 63, 64, 65, 100, 200];
+
+        for len in lengths {
+            let mut random_bytes = vec![0u8; len];
+            rng.fill_bytes(&mut random_bytes);
+
+            let elems: Vec<F> = bytes_to_field_elements(&random_bytes);
+            let result = bytes_from_field_elements(elems).unwrap();
+            assert_eq!(result, random_bytes);
+        }
+
+        // trailing zeros
+        let bytes = [5, 4, 3, 2, 1, 0];
+        let elems: Vec<F> = bytes_to_field_elements(&bytes);
+        let result = bytes_from_field_elements(&elems).unwrap();
+        assert_eq!(result, bytes);
+    }
+
+    #[test]
+    fn test_bytes_field_elems() {
+        bytes_field_elems::<Fr381>();
+        bytes_field_elems::<Fr254>();
     }
 }
