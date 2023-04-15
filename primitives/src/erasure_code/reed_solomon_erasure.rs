@@ -26,10 +26,10 @@ pub struct ReedSolomonErasureCode<F> {
 /// Shares for Reed Solomon erasure code
 #[derive(Clone, Eq, Debug, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(PartialEq, Hash(bound = "F: Field"))]
-pub struct ReedSolomonErasureCodeShard<F: Field> {
-    /// Index of shard shard
+pub struct ReedSolomonErasureCodeShare<F: Field> {
+    /// Index of this share
     pub index: usize,
-    /// Value of this shard
+    /// Value of this share
     pub value: F,
 }
 
@@ -37,7 +37,7 @@ impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
 where
     F: Field,
 {
-    type Share = ReedSolomonErasureCodeShard<F>;
+    type Share = ReedSolomonErasureCodeShare<F>;
 
     /// Encode into `data.len() + parity_size` shares via polynomial evaluation.
     /// `data` is viewed as coefficients of a polynomial of degree
@@ -61,7 +61,7 @@ where
                     value += x * coef.borrow();
                     x *= F::from(index as u64);
                 });
-                ReedSolomonErasureCodeShard { index, value }
+                ReedSolomonErasureCodeShare { index, value }
             })
             .collect())
     }
@@ -95,7 +95,7 @@ where
         //  4. Return f(x) = \sum_i y_i * l_i(x)
         let x = shares_iter
             .clone()
-            .map(|shard| F::from(shard.borrow().index as u64))
+            .map(|share| F::from(share.borrow().index as u64))
             .collect::<Vec<_>>();
         // Calculating l(x) = \prod (x - x_i)
         let mut l = vec![F::zero(); data_size + 1];
@@ -140,7 +140,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::erasure_code::{
-        reed_solomon_erasure::{ReedSolomonErasureCode, ReedSolomonErasureCodeShard},
+        reed_solomon_erasure::{ReedSolomonErasureCode, ReedSolomonErasureCodeShare},
         ErasureCode,
     };
     use ark_bls12_377::Fq as Fq377;
@@ -154,15 +154,15 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: 1,
                 value: F::from(3u64),
             },
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: 2,
                 value: F::from(5u64),
             },
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: 3,
                 value: F::from(7u64),
             },
