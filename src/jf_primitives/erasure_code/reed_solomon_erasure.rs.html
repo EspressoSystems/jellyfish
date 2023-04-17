@@ -172,6 +172,19 @@
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
 <a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -200,10 +213,10 @@
 <span class="doccomment">/// Shares for Reed Solomon erasure code
 </span><span class="attr">#[derive(Clone, Eq, Debug, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(PartialEq, Hash(bound = <span class="string">&quot;F: Field&quot;</span>))]
-</span><span class="kw">pub struct </span>ReedSolomonErasureCodeShard&lt;F: Field&gt; {
-    <span class="doccomment">/// Index of shard shard
+</span><span class="kw">pub struct </span>ReedSolomonErasureCodeShare&lt;F: Field&gt; {
+    <span class="doccomment">/// Index of this share
     </span><span class="kw">pub </span>index: usize,
-    <span class="doccomment">/// Value of this shard
+    <span class="doccomment">/// Value of this share
     </span><span class="kw">pub </span>value: F,
 }
 
@@ -211,13 +224,19 @@
 <span class="kw">where
     </span>F: Field,
 {
-    <span class="kw">type </span>Share = ReedSolomonErasureCodeShard&lt;F&gt;;
+    <span class="kw">type </span>Share = ReedSolomonErasureCodeShare&lt;F&gt;;
 
     <span class="doccomment">/// Encode into `data.len() + parity_size` shares via polynomial evaluation.
     /// `data` is viewed as coefficients of a polynomial of degree
     /// `data.len()-1`. Never returns `Result::Err`.
-    </span><span class="kw">fn </span>encode(data: <span class="kw-2">&amp;</span>[F], parity_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Share&gt;, PrimitivesError&gt; {
-        <span class="kw">let </span>num_shares = data.len() + parity_size;
+    </span><span class="kw">fn </span>encode&lt;D&gt;(data: D, parity_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Share&gt;, PrimitivesError&gt;
+    <span class="kw">where
+        </span>D: IntoIterator,
+        D::Item: Borrow&lt;F&gt;,
+        D::IntoIter: ExactSizeIterator + Clone,
+    {
+        <span class="kw">let </span>data_iter = data.into_iter();
+        <span class="kw">let </span>num_shares = data_iter.len() + parity_size;
 
         <span class="comment">// view `data` as coefficients of a polynomial
         // make shares by evaluating this polynomial at 1..=num_shares
@@ -225,11 +244,11 @@
             .map(|index| {
                 <span class="kw">let </span><span class="kw-2">mut </span>value = F::zero();
                 <span class="kw">let </span><span class="kw-2">mut </span>x = F::one();
-                data.iter().for_each(|coef| {
+                data_iter.clone().for_each(|coef| {
                     value += x * coef.borrow();
                     x <span class="kw-2">*</span>= F::from(index <span class="kw">as </span>u64);
                 });
-                ReedSolomonErasureCodeShard { index, value }
+                ReedSolomonErasureCodeShare { index, value }
             })
             .collect())
     }
@@ -238,15 +257,21 @@
     /// The degree of the interpolated polynomial is `data_size - 1`.
     /// Returns a data vector of length `data_size`.
     /// Time complexity of O(n^2).
-    </span><span class="kw">fn </span>decode(shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], data_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PrimitivesError&gt; {
-        <span class="kw">if </span>shares.len() &lt; data_size {
+    </span><span class="kw">fn </span>decode&lt;S&gt;(shares: S, data_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PrimitivesError&gt;
+    <span class="kw">where
+        </span>S: IntoIterator,
+        S::Item: Borrow&lt;<span class="self">Self</span>::Share&gt;,
+        S::IntoIter: ExactSizeIterator + Clone,
+    {
+        <span class="kw">let </span>shares_iter = shares.into_iter();
+        <span class="kw">if </span>shares_iter.len() &lt; data_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
                 <span class="string">&quot;insufficient shares: got {} expected at least {}&quot;</span>,
-                shares.len(),
+                shares_iter.len(),
                 data_size
             )));
         }
-        <span class="kw">let </span>shares = <span class="kw-2">&amp;</span>shares[..data_size];
+        <span class="kw">let </span>shares_iter = shares_iter.take(data_size);
 
         <span class="comment">// Lagrange interpolation:
         // Given a list of points (x_1, y_1) ... (x_n, y_n)
@@ -255,14 +280,14 @@
         // x_j)
         //  3. Calculate l_i(x) = w_i * l(x) / (x - x_i)
         //  4. Return f(x) = \sum_i y_i * l_i(x)
-        </span><span class="kw">let </span>x = shares
-            .iter()
-            .map(|shard| F::from(shard.index <span class="kw">as </span>u64))
+        </span><span class="kw">let </span>x = shares_iter
+            .clone()
+            .map(|share| F::from(share.borrow().index <span class="kw">as </span>u64))
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="comment">// Calculating l(x) = \prod (x - x_i)
-        </span><span class="kw">let </span><span class="kw-2">mut </span>l = <span class="macro">vec!</span>[F::zero(); shares.len() + <span class="number">1</span>];
+        </span><span class="kw">let </span><span class="kw-2">mut </span>l = <span class="macro">vec!</span>[F::zero(); data_size + <span class="number">1</span>];
         l[<span class="number">0</span>] = F::one();
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..shares.len() + <span class="number">1 </span>{
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..data_size + <span class="number">1 </span>{
             l[i] = F::one();
             <span class="kw">for </span>j <span class="kw">in </span>(<span class="number">1</span>..i).rev() {
                 l[j] = l[j - <span class="number">1</span>] - x[i - <span class="number">1</span>] * l[j];
@@ -270,10 +295,10 @@
             l[<span class="number">0</span>] = -x[i - <span class="number">1</span>] * l[<span class="number">0</span>];
         }
         <span class="comment">// Calculate the barycentric weight w_i
-        </span><span class="kw">let </span>w = (<span class="number">0</span>..shares.len())
+        </span><span class="kw">let </span>w = (<span class="number">0</span>..data_size)
             .map(|i| {
                 <span class="kw">let </span><span class="kw-2">mut </span>ret = F::one();
-                (<span class="number">0</span>..shares.len()).for_each(|j| {
+                (<span class="number">0</span>..data_size).for_each(|j| {
                     <span class="kw">if </span>i != j {
                         ret /= x[i] - x[j];
                     }
@@ -282,15 +307,16 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="comment">// Calculate f(x) = \sum_i l_i(x)
-        </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="macro">vec!</span>[F::zero(); shares.len()];
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..shares.len() {
-            <span class="kw">let </span><span class="kw-2">mut </span>li = <span class="macro">vec!</span>[F::zero(); shares.len()];
-            li[shares.len() - <span class="number">1</span>] = F::one();
-            <span class="kw">for </span>j <span class="kw">in </span>(<span class="number">0</span>..shares.len() - <span class="number">1</span>).rev() {
+        </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="macro">vec!</span>[F::zero(); data_size];
+        <span class="comment">// for i in 0..shares.len() {
+        </span><span class="kw">for </span>(i, share) <span class="kw">in </span>shares_iter.enumerate() {
+            <span class="kw">let </span><span class="kw-2">mut </span>li = <span class="macro">vec!</span>[F::zero(); data_size];
+            li[data_size - <span class="number">1</span>] = F::one();
+            <span class="kw">for </span>j <span class="kw">in </span>(<span class="number">0</span>..data_size - <span class="number">1</span>).rev() {
                 li[j] = l[j + <span class="number">1</span>] + x[i] * li[j + <span class="number">1</span>];
             }
-            <span class="kw">let </span>weight = w[i] * shares[i].borrow().value;
-            <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..shares.len() {
+            <span class="kw">let </span>weight = w[i] * share.borrow().value;
+            <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..data_size {
                 f[j] += weight * li[j];
             }
         }
@@ -301,7 +327,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use </span><span class="kw">crate</span>::erasure_code::{
-        reed_solomon_erasure::{ReedSolomonErasureCode, ReedSolomonErasureCodeShard},
+        reed_solomon_erasure::{ReedSolomonErasureCode, ReedSolomonErasureCodeShare},
         ErasureCode,
     };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
@@ -315,15 +341,15 @@
         </span><span class="kw">let </span>data = <span class="macro">vec!</span>[F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>)];
         <span class="comment">// Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         </span><span class="kw">let </span>expected = <span class="macro">vec!</span>[
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: <span class="number">1</span>,
                 value: F::from(<span class="number">3u64</span>),
             },
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: <span class="number">2</span>,
                 value: F::from(<span class="number">5u64</span>),
             },
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: <span class="number">3</span>,
                 value: F::from(<span class="number">7u64</span>),
             },
