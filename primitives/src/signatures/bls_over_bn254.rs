@@ -272,7 +272,8 @@ pub struct KeyPair {
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct Signature {
-    pub(crate) sigma: G1Projective,
+    /// The signature is a G1 group element.
+    pub sigma: G1Projective,
 }
 
 impl Hash for Signature {
