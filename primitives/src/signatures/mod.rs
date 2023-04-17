@@ -94,8 +94,11 @@ pub trait SignatureScheme {
 /// TODO: generic over hash functions
 pub trait AggregateableSignatureSchemes: SignatureScheme {
     /// Aggregate multiple signatures into a single signature
+    /// The list of public keys is also in the input as some aggregate signature
+    /// schemes might also use pks for aggregation
     fn aggregate(
         pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
         sigs: &[Self::Signature],
     ) -> Result<Self::Signature, PrimitivesError>;
 
@@ -158,8 +161,8 @@ mod tests {
             partial_sigs.push(partial_sig);
         }
         // happy paths
-        let agg_sig = S::aggregate(&parameters, &sigs).unwrap();
-        let multi_sig = S::aggregate(&parameters, &partial_sigs).unwrap();
+        let agg_sig = S::aggregate(&parameters, &pks, &sigs).unwrap();
+        let multi_sig = S::aggregate(&parameters, &pks, &partial_sigs).unwrap();
         assert!(S::aggregate_verify(&parameters, &pks, messages, &agg_sig).is_ok());
         assert!(S::multi_sig_verify(&parameters, &pks, message_for_msig, &multi_sig).is_ok());
         // wrong messages length

@@ -127,8 +127,10 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
 
 impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Aggregate multiple signatures into a single signature
+    /// Follow the instantiation from https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-aggregate
     fn aggregate(
         _pp: &Self::PublicParameter,
+        _vks: &[Self::VerificationKey],
         sigs: &[Self::Signature],
     ) -> Result<Self::Signature, PrimitivesError> {
         if sigs.is_empty() {
@@ -144,6 +146,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Verify an aggregate signature w.r.t. a list of messages and public keys.
     /// It is user's responsibility to ensure that the public keys are
     /// validated.
+    /// Follow the instantiation from https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-coreaggregateverify
     fn aggregate_verify<M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
@@ -194,6 +197,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Verify a multisignature w.r.t. a single message and a list of public
     /// keys. It is user's responsibility to ensure that the public keys are
     /// validated.
+    /// Follow the instantiation from https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-fastaggregateverify
     fn multi_sig_verify(
         pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
