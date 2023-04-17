@@ -44,7 +44,7 @@ pub fn pad_with_zeros<F: Field>(vec: &mut Vec<F>, multiple: usize) {
     vec.resize(new_len, F::zero())
 }
 
-/// Compute the hadmard product of two vectors (of equal length).
+/// Compute the hadamard product of two vectors (of equal length).
 #[inline]
 pub fn hadamard_product<T, B>(a: impl AsRef<[T]>, b: impl AsRef<[B]>) -> Result<Vec<B>, String>
 where
@@ -71,24 +71,34 @@ pub fn test_rng() -> StdRng {
     StdRng::from_seed(seed)
 }
 
-#[test]
-fn test_hadamard() {
-    use ark_bls12_381::{Fr, G1Projective};
-    use ark_std::UniformRand;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_ec::CurveGroup;
+    use ark_ff::PrimeField;
 
-    let mut rng = test_rng();
-    for _ in 0..10 {
-        let a: Vec<Fr> = (0..20).map(|_| Fr::rand(&mut rng)).collect();
-        let b: Vec<Fr> = (0..20).map(|_| Fr::rand(&mut rng)).collect();
+    fn test_hadamard_template<Fr: PrimeField, G1: CurveGroup<ScalarField = Fr>>() {
+        let mut rng = test_rng();
+        for _ in 0..10 {
+            let a: Vec<Fr> = (0..20).map(|_| Fr::rand(&mut rng)).collect();
+            let b: Vec<Fr> = (0..20).map(|_| Fr::rand(&mut rng)).collect();
 
-        let product = hadamard_product(&a, &b).unwrap();
-        assert!(product.iter().enumerate().all(|(i, &c)| c == a[i] * b[i]));
+            let product = hadamard_product(&a, &b).unwrap();
+            assert!(product.iter().enumerate().all(|(i, &c)| c == a[i] * b[i]));
 
-        let c: Vec<Fr> = (0..21).map(|_| Fr::rand(&mut rng)).collect();
-        assert!(hadamard_product(&a, &c).is_err());
+            let c: Vec<Fr> = (0..21).map(|_| Fr::rand(&mut rng)).collect();
+            assert!(hadamard_product(&a, &c).is_err());
 
-        let d: Vec<G1Projective> = (0..20).map(|_| G1Projective::rand(&mut rng)).collect();
-        let product = hadamard_product(&a, &d).unwrap();
-        assert!(product.iter().enumerate().all(|(i, &c)| c == d[i] * a[i]));
+            let d: Vec<G1> = (0..20).map(|_| G1::rand(&mut rng)).collect();
+            let product = hadamard_product(&a, &d).unwrap();
+            assert!(product.iter().enumerate().all(|(i, &c)| c == d[i] * a[i]));
+        }
+    }
+
+    #[test]
+    fn test_hadamard() {
+        test_hadamard_template::<ark_bls12_381::Fr, ark_bls12_381::G1Projective>();
+        test_hadamard_template::<ark_bls12_377::Fr, ark_bls12_377::G1Projective>();
+        test_hadamard_template::<ark_bn254::Fr, ark_bn254::G1Projective>();
     }
 }

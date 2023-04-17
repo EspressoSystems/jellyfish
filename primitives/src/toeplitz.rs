@@ -58,7 +58,7 @@ impl<F: FftField> CirculantMatrix<F> {
         let m_evals = domain.fft(m); // DFT(m)
         let col_evals = domain.fft(&self.col); // DFT(c_N)
         let eval_prod = // DFT(c_N) * DFT(m)
-            hadamard_product(col_evals, m_evals).expect("Hadmard product should succeed");
+            hadamard_product(col_evals, m_evals).expect("Hadamard product should succeed");
         let res = domain.ifft(&eval_prod); // iDFT(DFT(c_N) * DFT(m))
         Ok(res)
     }
