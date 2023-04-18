@@ -185,6 +185,9 @@
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
@@ -281,8 +284,11 @@
 /// TODO: generic over hash functions
 </span><span class="kw">pub trait </span>AggregateableSignatureSchemes: SignatureScheme {
     <span class="doccomment">/// Aggregate multiple signatures into a single signature
+    /// The list of public keys is also in the input as some aggregate signature
+    /// schemes might also use pks for aggregation
     </span><span class="kw">fn </span>aggregate(
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::VerificationKey],
         sigs: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Signature],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Signature, PrimitivesError&gt;;
 
@@ -345,8 +351,8 @@
             partial_sigs.push(partial_sig);
         }
         <span class="comment">// happy paths
-        </span><span class="kw">let </span>agg_sig = S::aggregate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>sigs).unwrap();
-        <span class="kw">let </span>multi_sig = S::aggregate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>partial_sigs).unwrap();
+        </span><span class="kw">let </span>agg_sig = S::aggregate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, <span class="kw-2">&amp;</span>sigs).unwrap();
+        <span class="kw">let </span>multi_sig = S::aggregate(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, <span class="kw-2">&amp;</span>partial_sigs).unwrap();
         <span class="macro">assert!</span>(S::aggregate_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, messages, <span class="kw-2">&amp;</span>agg_sig).is_ok());
         <span class="macro">assert!</span>(S::multi_sig_verify(<span class="kw-2">&amp;</span>parameters, <span class="kw-2">&amp;</span>pks, message_for_msig, <span class="kw-2">&amp;</span>multi_sig).is_ok());
         <span class="comment">// wrong messages length

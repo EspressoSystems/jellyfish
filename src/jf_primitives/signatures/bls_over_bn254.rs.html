@@ -513,6 +513,10 @@
 <a href="#513" id="513">513</a>
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -642,8 +646,10 @@
 
 <span class="kw">impl </span>AggregateableSignatureSchemes <span class="kw">for </span>BLSOverBN254CurveSignatureScheme {
     <span class="doccomment">/// Aggregate multiple signatures into a single signature
+    /// Follow the instantiation from &lt;https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-aggregate&gt;
     </span><span class="kw">fn </span>aggregate(
         _pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
+        _vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::VerificationKey],
         sigs: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Signature],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Signature, PrimitivesError&gt; {
         <span class="kw">if </span>sigs.is_empty() {
@@ -659,6 +665,7 @@
     <span class="doccomment">/// Verify an aggregate signature w.r.t. a list of messages and public keys.
     /// It is user&#39;s responsibility to ensure that the public keys are
     /// validated.
+    /// Follow the instantiation from &lt;https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-coreaggregateverify&gt;
     </span><span class="kw">fn </span>aggregate_verify&lt;M: AsRef&lt;[<span class="self">Self</span>::MessageUnit]&gt;&gt;(
         _pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::VerificationKey],
@@ -709,6 +716,7 @@
     <span class="doccomment">/// Verify a multisignature w.r.t. a single message and a list of public
     /// keys. It is user&#39;s responsibility to ensure that the public keys are
     /// validated.
+    /// Follow the instantiation from &lt;https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-fastaggregateverify&gt;
     </span><span class="kw">fn </span>multi_sig_verify(
         pp: <span class="kw-2">&amp;</span><span class="self">Self</span>::PublicParameter,
         vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::VerificationKey],
