@@ -46,7 +46,7 @@ use ark_ec::{
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    Field, PrimeField,
+    BigInteger, Field, PrimeField,
 };
 use ark_serialize::*;
 use ark_std::{
@@ -333,8 +333,9 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
     let mut y = Y.sqrt().unwrap();
 
     // Ensure that y < p/2 where p is the modulus of Fq
-    let y_div_2 = y.into_bigint().const_shr();
-    if y_div_2 > BaseField::MODULUS {
+    let mut y_mul_2 = y.into_bigint();
+    y_mul_2.mul2();
+    if y_mul_2 > BaseField::MODULUS {
         y.neg_in_place();
     }
 
