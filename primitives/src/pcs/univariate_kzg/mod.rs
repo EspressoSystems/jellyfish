@@ -300,7 +300,7 @@ where
     /// Fast computation of batch opening for a single polynomial at multiple
     /// points. Details see Sec 2.1~2.3 of [FK23](https://eprint.iacr.org/2023/033.pdf).
     ///
-    /// Only accept `polynomial` with power-of-two degree, no constrain on the
+    /// Only accept `polynomial` with power-of-two degree, no constraint on the
     /// size of `points`
     #[allow(clippy::type_complexity)]
     pub fn batch_open_fk23(
@@ -367,7 +367,6 @@ where
             .collect();
 
         // Evaluate at all points
-        ark_std::println!("!! during eval:");
         let evals =
             GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs).batch_evaluate(points);
 

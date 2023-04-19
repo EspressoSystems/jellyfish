@@ -10,7 +10,7 @@
 use crate::errors::PrimitivesError;
 use ark_ff::FftField;
 use ark_poly::{domain::DomainCoeff, EvaluationDomain, GeneralEvaluationDomain};
-use ark_std::{ops::Mul, string::ToString, vec::Vec};
+use ark_std::{format, ops::Mul, string::ToString, vec::Vec};
 use jf_utils::hadamard_product;
 
 /// An `NxN` [Circulant Matrix](https://en.wikipedia.org/wiki/Circulant_matrix)
@@ -80,18 +80,20 @@ pub struct ToeplitzMatrix<F: FftField> {
 }
 
 impl<F: FftField> ToeplitzMatrix<F> {
-    /// constructor for a new Toeplitz matrice.
+    /// constructor for a new Toeplitz matrix.
     pub fn new(col: Vec<F>, row: Vec<F>) -> Result<Self, PrimitivesError> {
         if col.is_empty() || col.len() != row.len() {
-            return Err(PrimitivesError::ParameterError(
-                "2-Dimension should be positive and equal".to_string(),
-            ));
+            return Err(PrimitivesError::ParameterError(format!(
+                "row: {}, col: {} should be both positive and equal",
+                row.len(),
+                col.len()
+            )));
         }
         if col[0] != row[0] {
-            return Err(PrimitivesError::ParameterError(
-                "1st value in 1st column and 1st row of Toeplitz matrix should be the same"
-                    .to_string(),
-            ));
+            return Err(PrimitivesError::ParameterError(format!(
+                "1st value in 1st col: {:?} should be the same as that in 1st row: {:?}",
+                col[0], row[0]
+            )));
         }
 
         Ok(Self { col, row })

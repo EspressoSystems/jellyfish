@@ -97,17 +97,7 @@ pub trait PolynomialCommitmentScheme {
         PCSError,
     >;
 
-    /// Generate a commitment for a polynomial
-    /// ## Note on function signature
-    /// Usually, data structure like SRS and ProverParam are huge and users
-    /// might wish to keep them in heap using different kinds of smart pointers
-    /// (instead of only in stack) therefore our `impl Borrow<_>` interface
-    /// allows for passing in any pointer type, e.g.: `commit(prover_param:
-    /// &<Self::SRS as StructuredReferenceString>::ProverParam, ..)` or
-    /// `commit(prover_param: Box<<Self::SRS as
-    /// StructuredReferenceString>::ProverParam>, ..)` or `commit(prover_param:
-    /// Arc<<Self::SRS as StructuredReferenceString>::ProverParam>, ..)` etc.
-    /// Also, the commitment is not hiding.
+    /// Generate a binding (but not hiding) commitment for a polynomial
     fn commit(
         prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         poly: &Self::Polynomial,

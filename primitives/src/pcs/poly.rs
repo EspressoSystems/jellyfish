@@ -134,13 +134,13 @@ where
     /// Hwoever, when there are lots of points, will use FFT methods to get a
     /// lower amortized cost.
     pub fn batch_evaluate(&self, points: BatchEvalPoints<F>) -> Vec<T> {
-        // Horner: n * d
-        // FFT: ~ d*log^2(d)  (independent of n, as long as n<=d)
-        // naive cutoff-point, not taking parallelism into consideration:
-        let cutoff_size = <F as FftField>::TWO_ADICITY.pow(2);
-
         match points {
             BatchEvalPoints::General(points) => {
+                // Horner: n * d
+                // FFT: ~ d*log^2(d)  (independent of n, as long as n<=d)
+                // naive cutoff-point, not taking parallelism into consideration:
+                let cutoff_size = <F as FftField>::TWO_ADICITY.pow(2);
+
                 if points.is_empty() {
                     Vec::new()
                 } else if points.len() < cutoff_size as usize {
@@ -150,6 +150,7 @@ where
                 }
             },
             BatchEvalPoints::RootsOfUnity(m) => {
+                // using FFT, complexity: d*log(d) independent of m (<=d+1)
                 let domain: Radix2EvaluationDomain<F> =
                     Radix2EvaluationDomain::new(self.coeffs.len())
                         .expect("Should init an eval domain");
@@ -334,7 +335,7 @@ pub(crate) mod tests {
 
         for _ in 0..5 {
             // TODO: (alex) change to a higher degree when need to test cutoff point and
-            // FFT-based eval
+            // FFT-based eval on arbitrary points
             let degree = rng.gen_range(5..30);
             let num_points = rng.gen_range(5..30);
             let f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
