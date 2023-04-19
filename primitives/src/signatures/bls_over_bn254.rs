@@ -273,7 +273,7 @@ pub struct KeyPair {
 #[allow(non_snake_case)]
 pub struct Signature {
     /// The signature is a G1 group element.
-    pub sigma: G1Projective,
+    pub(crate) sigma: G1Projective,
 }
 
 impl Hash for Signature {
@@ -285,6 +285,13 @@ impl Hash for Signature {
 impl PartialEq for Signature {
     fn eq(&self, other: &Self) -> bool {
         self.sigma == other.sigma
+    }
+}
+
+impl Signature {
+    /// Getter function to obtain the signature value
+    pub fn get_sig_value(self) -> G1Projective {
+        self.sigma
     }
 }
 // =====================================================
