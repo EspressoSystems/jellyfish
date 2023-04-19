@@ -517,6 +517,21 @@
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -565,7 +580,7 @@
 };
 <span class="kw">use </span>ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    Field, MontFp,
+    BigInteger, Field, PrimeField,
 };
 <span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
 <span class="kw">use </span>ark_std::{
@@ -795,7 +810,8 @@
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 #[allow(non_snake_case)]
 </span><span class="kw">pub struct </span>Signature {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) sigma: G1Projective,
+    <span class="doccomment">/// The signature is a G1 group element.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) sigma: G1Projective,
 }
 
 <span class="kw">impl </span>Hash <span class="kw">for </span>Signature {
@@ -807,6 +823,13 @@
 <span class="kw">impl </span>PartialEq <span class="kw">for </span>Signature {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="self">self</span>.sigma == other.sigma
+    }
+}
+
+<span class="kw">impl </span>Signature {
+    <span class="doccomment">/// Getter function to obtain the signature value
+    </span><span class="kw">pub fn </span>get_sig_value(<span class="self">self</span>) -&gt; G1Projective {
+        <span class="self">self</span>.sigma
     }
 }
 <span class="comment">// =====================================================
@@ -832,7 +855,7 @@
 
     <span class="comment">// General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
-    </span><span class="kw">let </span>coeff_b: BaseField = <span class="macro">MontFp!</span>(<span class="string">&quot;3&quot;</span>);
+    </span><span class="kw">let </span>coeff_b: BaseField = BaseField::from(<span class="number">3</span>);
 
     <span class="kw">let </span><span class="kw-2">mut </span>x: BaseField = hasher.hash_to_field(msg, <span class="number">1</span>)[<span class="number">0</span>];
     <span class="kw">let </span><span class="kw-2">mut </span>Y: BaseField = x * x * x + coeff_b;
@@ -845,7 +868,14 @@
     }
 
     <span class="comment">// Safe unwrap as `y` is a quadratic residue
-    </span><span class="kw">let </span>y = Y.sqrt().unwrap();
+    </span><span class="kw">let </span><span class="kw-2">mut </span>y = Y.sqrt().unwrap();
+
+    <span class="comment">// Ensure that y &lt; p/2 where p is the modulus of Fq
+    </span><span class="kw">let </span><span class="kw-2">mut </span>y_mul_2 = y.into_bigint();
+    y_mul_2.mul2();
+    <span class="kw">if </span>y_mul_2 &gt; BaseField::MODULUS {
+        y.neg_in_place();
+    }
 
     <span class="kw">let </span>g1_affine = G1Affine::new(x, y);
     G1Projective::from(g1_affine)
