@@ -288,6 +288,7 @@
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -468,14 +469,15 @@
     <span class="kw">let </span>field_chunk_len = primefield_chunk_len * extension_degree;
     <span class="kw">let </span>result_capacity = elems.len() * field_chunk_len;
 
-    <span class="comment">// the original bytes must end somewhere in the final field element
-    // thus, result_len must be within elem_byte_len of result_capacity
-    </span><span class="kw">if </span>result_len &gt; result_capacity || result_len &lt; result_capacity - field_chunk_len {
+    <span class="comment">// the original bytes MUST end BEFORE the final field element
+    // thus, result_len &lt;= result_capacity
+    // the original bytes SHOULD end somewhere WITHIN the final field element
+    // however, we allow the user to pad elems with zeros so as to facilitate
+    // use cases such as polynomial interpolation
+    </span><span class="kw">if </span>result_len &gt; result_capacity {
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(
-            <span class="string">&quot;result len {} out of bounds {}..{}&quot;</span>,
-            result_len,
-            result_capacity - field_chunk_len,
-            result_capacity
+            <span class="string">&quot;result len {} exceeds elems capacity {}&quot;</span>,
+            result_len, result_capacity
         ));
     }
 
