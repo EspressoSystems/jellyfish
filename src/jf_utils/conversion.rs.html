@@ -567,8 +567,8 @@
 
         <span class="comment">// trailing zeros
         </span><span class="kw">let </span>bytes = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>];
-        <span class="kw">let </span>elems: Vec&lt;F&gt; = bytes_to_field_elements(<span class="kw-2">&amp;</span>bytes);
-        <span class="kw">let </span>result = bytes_from_field_elements(<span class="kw-2">&amp;</span>elems).unwrap();
+        <span class="kw">let </span>elems: Vec&lt;F&gt; = bytes_to_field_elements(bytes);
+        <span class="kw">let </span>result = bytes_from_field_elements(elems).unwrap();
         <span class="macro">assert_eq!</span>(result, bytes);
     }
 
