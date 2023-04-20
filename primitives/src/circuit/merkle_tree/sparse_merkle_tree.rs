@@ -14,18 +14,15 @@ use crate::{
     },
     rescue::RescueParameter,
 };
-use ark_std::{string::ToString, vec::Vec};
+use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
 type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;
-type NodeVal<F> = <SparseMerkleTree<F> as MerkleTreeScheme>::NodeValue;
-type MembershipProof<F> = <SparseMerkleTree<F> as MerkleTreeScheme>::MembershipProof;
 use num_bigint::BigUint;
 use typenum::U3;
 
 use super::{
-    constrain_sibling_order, Merkle3AryMembershipProofVar, Merkle3AryNodeVar,
-    Merkle3AryNonMembershipProofVar, MerkleTreeGadget, RescueDigestGadget,
+    constrain_sibling_order, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar,
     UniversalMerkleTreeGadget,
 };
 
@@ -116,117 +113,6 @@ where
             node_vars: nodes,
             pos_var: pos,
         })
-    }
-}
-
-impl<F> MerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
-where
-    F: RescueParameter,
-{
-    type MembershipProofVar = Merkle3AryMembershipProofVar;
-
-    type DigestGadget = RescueDigestGadget;
-
-    fn create_membership_proof_variable(
-        &mut self,
-        merkle_proof: &MembershipProof<F>,
-    ) -> Result<Self::MembershipProofVar, CircuitError> {
-        let path = <BigUint as ToTraversalPath<U3>>::to_traversal_path(
-            &merkle_proof.pos,
-            merkle_proof.tree_height() - 1,
-        );
-
-        let elem = match merkle_proof.elem() {
-            Some(elem) => elem,
-            None => {
-                return Err(CircuitError::ParameterError(
-                    "The proof doesn't contain a leaf element".to_string(),
-                ))
-            },
-        };
-
-        let elem_var = self.create_variable(*elem)?;
-
-        let nodes = path
-            .iter()
-            .zip(merkle_proof.proof.iter().skip(1))
-            .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => Some((children, branch)),
-                _ => None,
-            })
-            .map(|(children, branch)| {
-                Ok(Merkle3AryNodeVar {
-                    sibling1: self.create_variable(children[0].value())?,
-                    sibling2: self.create_variable(children[1].value())?,
-                    is_left_child: self.create_boolean_variable(branch == &0)?,
-                    is_right_child: self.create_boolean_variable(branch == &2)?,
-                })
-            })
-            .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
-
-        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
-        // boolean
-        for node in nodes.iter() {
-            // Boolean constrain `is_left_child + is_right_child` because a node
-            // can either be the left or the right child of its parent
-            let left_plus_right =
-                self.add(node.is_left_child.into(), node.is_right_child.into())?;
-            self.enforce_bool(left_plus_right)?;
-        }
-
-        Ok(Self::MembershipProofVar {
-            node_vars: nodes,
-            elem_var,
-        })
-    }
-
-    fn create_root_variable(&mut self, root: NodeVal<F>) -> Result<Variable, CircuitError> {
-        self.create_variable(root)
-    }
-
-    fn is_member(
-        &mut self,
-        elem_idx_var: Variable,
-        proof_var: Self::MembershipProofVar,
-        root_var: Variable,
-    ) -> Result<BoolVar, CircuitError> {
-        let computed_root_var = {
-            let proof_var = &proof_var;
-
-            // elem label = H(0, uid, elem)
-            let mut cur_label =
-                Self::DigestGadget::digest_leaf(self, elem_idx_var, proof_var.elem_var)?;
-            for cur_node in proof_var.node_vars.iter() {
-                let input_labels = constrain_sibling_order(
-                    self,
-                    cur_label,
-                    cur_node.sibling1,
-                    cur_node.sibling2,
-                    cur_node.is_left_child,
-                    cur_node.is_right_child,
-                )?;
-                // check that the left child's label is non-zero
-                self.non_zero_gate(input_labels[0])?;
-                cur_label = Self::DigestGadget::digest(self, &input_labels)?;
-            }
-            Ok(cur_label)
-        }?;
-        self.is_equal(root_var, computed_root_var)
-    }
-
-    fn enforce_membership_proof(
-        &mut self,
-        elem_idx_var: Variable,
-        proof_var: Self::MembershipProofVar,
-        expected_root_var: Variable,
-    ) -> Result<(), CircuitError> {
-        let bool_val = MerkleTreeGadget::<SparseMerkleTree<F>>::is_member(
-            self,
-            elem_idx_var,
-            proof_var,
-            expected_root_var,
-        )?;
-        self.enforce_true(bool_val.into())
     }
 }
 
