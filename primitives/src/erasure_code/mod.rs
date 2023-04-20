@@ -6,6 +6,8 @@
 
 //! Module for erasure code
 
+use core::borrow::Borrow;
+
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{fmt::Debug, vec::Vec};
 
@@ -28,9 +30,17 @@ pub trait ErasureCode<T> {
         + CanonicalDeserialize;
 
     /// Encode `data` into `data.len() + parity_size` shares.
-    fn encode(data: &[T], parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError>;
+    fn encode<D>(data: D, parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError>
+    where
+        D: IntoIterator,
+        D::Item: Borrow<T>,
+        D::IntoIter: ExactSizeIterator + Clone;
 
     /// Decode `shares` into `data_size` data elements.
     /// Return `Result::Err` if `shares.len() < data_size`.
-    fn decode(shares: &[Self::Share], data_size: usize) -> Result<Vec<T>, PrimitivesError>;
+    fn decode<S>(shares: S, data_size: usize) -> Result<Vec<T>, PrimitivesError>
+    where
+        S: IntoIterator,
+        S::Item: Borrow<Self::Share>,
+        S::IntoIter: ExactSizeIterator + Clone;
 }

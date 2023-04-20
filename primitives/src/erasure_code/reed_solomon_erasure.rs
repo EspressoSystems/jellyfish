@@ -26,10 +26,10 @@ pub struct ReedSolomonErasureCode<F> {
 /// Shares for Reed Solomon erasure code
 #[derive(Clone, Eq, Debug, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(PartialEq, Hash(bound = "F: Field"))]
-pub struct ReedSolomonErasureCodeShard<F: Field> {
-    /// Index of shard shard
+pub struct ReedSolomonErasureCodeShare<F: Field> {
+    /// Index of this share
     pub index: usize,
-    /// Value of this shard
+    /// Value of this share
     pub value: F,
 }
 
@@ -37,13 +37,19 @@ impl<F> ErasureCode<F> for ReedSolomonErasureCode<F>
 where
     F: Field,
 {
-    type Share = ReedSolomonErasureCodeShard<F>;
+    type Share = ReedSolomonErasureCodeShare<F>;
 
     /// Encode into `data.len() + parity_size` shares via polynomial evaluation.
     /// `data` is viewed as coefficients of a polynomial of degree
     /// `data.len()-1`. Never returns `Result::Err`.
-    fn encode(data: &[F], parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError> {
-        let num_shares = data.len() + parity_size;
+    fn encode<D>(data: D, parity_size: usize) -> Result<Vec<Self::Share>, PrimitivesError>
+    where
+        D: IntoIterator,
+        D::Item: Borrow<F>,
+        D::IntoIter: ExactSizeIterator + Clone,
+    {
+        let data_iter = data.into_iter();
+        let num_shares = data_iter.len() + parity_size;
 
         // view `data` as coefficients of a polynomial
         // make shares by evaluating this polynomial at 1..=num_shares
@@ -51,11 +57,11 @@ where
             .map(|index| {
                 let mut value = F::zero();
                 let mut x = F::one();
-                data.iter().for_each(|coef| {
+                data_iter.clone().for_each(|coef| {
                     value += x * coef.borrow();
                     x *= F::from(index as u64);
                 });
-                ReedSolomonErasureCodeShard { index, value }
+                ReedSolomonErasureCodeShare { index, value }
             })
             .collect())
     }
@@ -64,15 +70,21 @@ where
     /// The degree of the interpolated polynomial is `data_size - 1`.
     /// Returns a data vector of length `data_size`.
     /// Time complexity of O(n^2).
-    fn decode(shares: &[Self::Share], data_size: usize) -> Result<Vec<F>, PrimitivesError> {
-        if shares.len() < data_size {
+    fn decode<S>(shares: S, data_size: usize) -> Result<Vec<F>, PrimitivesError>
+    where
+        S: IntoIterator,
+        S::Item: Borrow<Self::Share>,
+        S::IntoIter: ExactSizeIterator + Clone,
+    {
+        let shares_iter = shares.into_iter();
+        if shares_iter.len() < data_size {
             return Err(PrimitivesError::ParameterError(format!(
                 "insufficient shares: got {} expected at least {}",
-                shares.len(),
+                shares_iter.len(),
                 data_size
             )));
         }
-        let shares = &shares[..data_size];
+        let shares_iter = shares_iter.take(data_size);
 
         // Lagrange interpolation:
         // Given a list of points (x_1, y_1) ... (x_n, y_n)
@@ -81,14 +93,14 @@ where
         // x_j)
         //  3. Calculate l_i(x) = w_i * l(x) / (x - x_i)
         //  4. Return f(x) = \sum_i y_i * l_i(x)
-        let x = shares
-            .iter()
-            .map(|shard| F::from(shard.index as u64))
+        let x = shares_iter
+            .clone()
+            .map(|share| F::from(share.borrow().index as u64))
             .collect::<Vec<_>>();
         // Calculating l(x) = \prod (x - x_i)
-        let mut l = vec![F::zero(); shares.len() + 1];
+        let mut l = vec![F::zero(); data_size + 1];
         l[0] = F::one();
-        for i in 1..shares.len() + 1 {
+        for i in 1..data_size + 1 {
             l[i] = F::one();
             for j in (1..i).rev() {
                 l[j] = l[j - 1] - x[i - 1] * l[j];
@@ -96,10 +108,10 @@ where
             l[0] = -x[i - 1] * l[0];
         }
         // Calculate the barycentric weight w_i
-        let w = (0..shares.len())
+        let w = (0..data_size)
             .map(|i| {
                 let mut ret = F::one();
-                (0..shares.len()).for_each(|j| {
+                (0..data_size).for_each(|j| {
                     if i != j {
                         ret /= x[i] - x[j];
                     }
@@ -108,15 +120,16 @@ where
             })
             .collect::<Vec<_>>();
         // Calculate f(x) = \sum_i l_i(x)
-        let mut f = vec![F::zero(); shares.len()];
-        for i in 0..shares.len() {
-            let mut li = vec![F::zero(); shares.len()];
-            li[shares.len() - 1] = F::one();
-            for j in (0..shares.len() - 1).rev() {
+        let mut f = vec![F::zero(); data_size];
+        // for i in 0..shares.len() {
+        for (i, share) in shares_iter.enumerate() {
+            let mut li = vec![F::zero(); data_size];
+            li[data_size - 1] = F::one();
+            for j in (0..data_size - 1).rev() {
                 li[j] = l[j + 1] + x[i] * li[j + 1];
             }
-            let weight = w[i] * shares[i].borrow().value;
-            for j in 0..shares.len() {
+            let weight = w[i] * share.borrow().value;
+            for j in 0..data_size {
                 f[j] += weight * li[j];
             }
         }
@@ -127,7 +140,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::erasure_code::{
-        reed_solomon_erasure::{ReedSolomonErasureCode, ReedSolomonErasureCodeShard},
+        reed_solomon_erasure::{ReedSolomonErasureCode, ReedSolomonErasureCodeShare},
         ErasureCode,
     };
     use ark_bls12_377::Fq as Fq377;
@@ -141,15 +154,15 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: 1,
                 value: F::from(3u64),
             },
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: 2,
                 value: F::from(5u64),
             },
-            ReedSolomonErasureCodeShard {
+            ReedSolomonErasureCodeShare {
                 index: 3,
                 value: F::from(7u64),
             },

@@ -178,14 +178,15 @@ where
     let field_chunk_len = primefield_chunk_len * extension_degree;
     let result_capacity = elems.len() * field_chunk_len;
 
-    // the original bytes must end somewhere in the final field element
-    // thus, result_len must be within elem_byte_len of result_capacity
-    if result_len > result_capacity || result_len < result_capacity - field_chunk_len {
+    // the original bytes MUST end BEFORE the final field element
+    // thus, result_len <= result_capacity
+    // the original bytes SHOULD end somewhere WITHIN the final field element
+    // however, we allow the user to pad elems with zeros so as to facilitate
+    // use cases such as polynomial interpolation
+    if result_len > result_capacity {
         return Err(format!(
-            "result len {} out of bounds {}..{}",
-            result_len,
-            result_capacity - field_chunk_len,
-            result_capacity
+            "result len {} exceeds elems capacity {}",
+            result_len, result_capacity
         ));
     }
 
@@ -277,8 +278,8 @@ mod tests {
 
         // trailing zeros
         let bytes = [5, 4, 3, 2, 1, 0];
-        let elems: Vec<F> = bytes_to_field_elements(&bytes);
-        let result = bytes_from_field_elements(&elems).unwrap();
+        let elems: Vec<F> = bytes_to_field_elements(bytes);
+        let result = bytes_from_field_elements(elems).unwrap();
         assert_eq!(result, bytes);
     }
 

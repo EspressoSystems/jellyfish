@@ -46,7 +46,7 @@ use ark_ec::{
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    Field, MontFp,
+    BigInteger, Field, PrimeField,
 };
 use ark_serialize::*;
 use ark_std::{
@@ -127,8 +127,10 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
 
 impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Aggregate multiple signatures into a single signature
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-aggregate>
     fn aggregate(
         _pp: &Self::PublicParameter,
+        _vks: &[Self::VerificationKey],
         sigs: &[Self::Signature],
     ) -> Result<Self::Signature, PrimitivesError> {
         if sigs.is_empty() {
@@ -144,6 +146,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Verify an aggregate signature w.r.t. a list of messages and public keys.
     /// It is user's responsibility to ensure that the public keys are
     /// validated.
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-coreaggregateverify>
     fn aggregate_verify<M: AsRef<[Self::MessageUnit]>>(
         _pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
@@ -194,6 +197,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     /// Verify a multisignature w.r.t. a single message and a list of public
     /// keys. It is user's responsibility to ensure that the public keys are
     /// validated.
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-fastaggregateverify>
     fn multi_sig_verify(
         pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
@@ -272,6 +276,7 @@ pub struct KeyPair {
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct Signature {
+    /// The signature is a G1 group element.
     pub(crate) sigma: G1Projective,
 }
 
@@ -284,6 +289,13 @@ impl Hash for Signature {
 impl PartialEq for Signature {
     fn eq(&self, other: &Self) -> bool {
         self.sigma == other.sigma
+    }
+}
+
+impl Signature {
+    /// Getter function to obtain the signature value
+    pub fn get_sig_value(self) -> G1Projective {
+        self.sigma
     }
 }
 // =====================================================
@@ -309,7 +321,7 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
 
     // General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
-    let coeff_b: BaseField = MontFp!("3");
+    let coeff_b: BaseField = BaseField::from(3);
 
     let mut x: BaseField = hasher.hash_to_field(msg, 1)[0];
     let mut Y: BaseField = x * x * x + coeff_b;
@@ -322,7 +334,14 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
     }
 
     // Safe unwrap as `y` is a quadratic residue
-    let y = Y.sqrt().unwrap();
+    let mut y = Y.sqrt().unwrap();
+
+    // Ensure that y < p/2 where p is the modulus of Fq
+    let mut y_mul_2 = y.into_bigint();
+    y_mul_2.mul2();
+    if y_mul_2 > BaseField::MODULUS {
+        y.neg_in_place();
+    }
 
     let g1_affine = G1Affine::new(x, y);
     G1Projective::from(g1_affine)
