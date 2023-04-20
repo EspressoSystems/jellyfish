@@ -28,12 +28,12 @@ use itertools::{
 /// A trait bound alias for generalized coefficient type used in
 /// `GeneralDensePolynomial`. Concrete instantiations can be both field or
 /// group elements.
-pub trait GeneralCoeff<F: Field>:
+pub trait GroupCoeff<F: Field>:
     Clone + fmt::Debug + Copy + Add<Self, Output = Self> + MulAssign<F> + Zero + UniformRand + Sized
 {
 }
 
-impl<T, F: Field> GeneralCoeff<F> for T where
+impl<T, F: Field> GroupCoeff<F> for T where
     T: Clone
         + fmt::Debug
         + Copy
@@ -47,7 +47,7 @@ impl<T, F: Field> GeneralCoeff<F> for T where
 
 /// Stores a polynomial in the coefficient form.
 #[derive(Clone, PartialEq, Eq, Default)]
-pub struct GeneralDensePolynomial<T: GeneralCoeff<F>, F: Field> {
+pub struct GeneralDensePolynomial<T: GroupCoeff<F>, F: Field> {
     /// The coefficient of `x^i` is stored at location `i` in `self.coeffs`.
     pub coeffs: Vec<T>,
     _phantom: PhantomData<F>,
@@ -59,7 +59,7 @@ pub struct GeneralDensePolynomial<T: GeneralCoeff<F>, F: Field> {
 // upstream PR.
 impl<T, F> GeneralDensePolynomial<T, F>
 where
-    T: GeneralCoeff<F>,
+    T: GroupCoeff<F>,
     F: Field,
 {
     /// Constructs a new polynomial from a list of coefficients
@@ -124,7 +124,7 @@ pub enum BatchEvalPoints<'a, F: Field> {
 
 impl<T, F> GeneralDensePolynomial<T, F>
 where
-    T: GeneralCoeff<F> + DomainCoeff<F> + for<'a> Mul<&'a F, Output = T>,
+    T: GroupCoeff<F> + DomainCoeff<F> + for<'a> Mul<&'a F, Output = T>,
     F: FftField,
 {
     /// Evaluate `self` at a list of `points`.
@@ -164,7 +164,7 @@ where
 
 impl<T, F> GeneralDensePolynomial<T, F>
 where
-    T: GeneralCoeff<F>,
+    T: GroupCoeff<F>,
     F: Field,
 {
     fn truncate_leading_zeros(&mut self) {
@@ -186,7 +186,7 @@ where
 
 impl<T, F> Zero for GeneralDensePolynomial<T, F>
 where
-    T: GeneralCoeff<F>,
+    T: GroupCoeff<F>,
     F: Field,
 {
     /// returns the zero polynomial
@@ -205,7 +205,7 @@ where
 
 impl<T, F> Add<Self> for GeneralDensePolynomial<T, F>
 where
-    T: GeneralCoeff<F>,
+    T: GroupCoeff<F>,
     F: Field,
 {
     type Output = Self;
@@ -236,7 +236,7 @@ where
 
 impl<T, F> fmt::Debug for GeneralDensePolynomial<T, F>
 where
-    T: GeneralCoeff<F>,
+    T: GroupCoeff<F>,
     F: Field,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
