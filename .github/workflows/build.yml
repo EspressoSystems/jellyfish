@@ -59,19 +59,19 @@ jobs:
           token: ${{ github.token }}
 
       - name: Check Bench
-        run: cargo bench --no-run
+        run: cargo bench --features test-srs --no-run
 
-      - name: Check Ignored Tests
-        run: cargo test --no-run -- --ignored
+      - name: Check all tests and binaries compilation
+        run: cargo check --workspace --tests --lib --bins
 
       - name: Check no_std compilation
-        run: cargo test --no-run --no-default-features
+        run: cargo check --workspace --lib --no-default-features
 
       - name: Test
         run: bash ./scripts/run_tests.sh
 
       - name: Example
-        run: cargo run --release --example proof_of_exp
+        run: cargo run --release --example proof_of_exp --features test-srs
 
       - name: Generate Documentation
         run: |

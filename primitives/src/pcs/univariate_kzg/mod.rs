@@ -67,19 +67,6 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     type Proof = UnivariateKzgProof<E>;
     type BatchProof = UnivariateKzgBatchProof<E>;
 
-    /// Build SRS for testing.
-    ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    ///
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn setup_for_testing<R: RngCore + CryptoRng>(
-        rng: &mut R,
-        supported_size: usize,
-    ) -> Result<Self::SRS, PCSError> {
-        Self::SRS::gen_srs_for_testing(rng, supported_size)
-    }
-
     /// Trim the universal parameters to specialize the public parameters.
     /// Input `max_degree` for univariate.
     /// `supported_num_vars` must be None or an error is returned.
@@ -412,7 +399,7 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = UnivariateKzgPCS::<E>::setup_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
@@ -438,7 +425,7 @@ mod tests {
         for _ in 0..100 {
             let degree = 50;
 
-            let pp = UnivariateKzgPCS::<E>::setup_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
@@ -466,7 +453,7 @@ mod tests {
             while degree <= 1 {
                 degree = usize::rand(rng) % 20;
             }
-            let pp = UnivariateKzgPCS::<E>::setup_for_testing(rng, degree)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
             let mut comms = Vec::new();
             let mut values = Vec::new();
@@ -517,7 +504,7 @@ mod tests {
 
         let mut rng = test_rng();
         let max_degree = 32;
-        let pp = UnivariateKzgPCS::<E>::setup_for_testing(&mut rng, max_degree)?;
+        let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(&mut rng, max_degree)?;
 
         for _ in 0..1 {
             let degree = 32; // has to be power-of-two

@@ -51,7 +51,12 @@ fn main() -> Result<(), PlonkError> {
     //
     // The required SRS size can be obtained from the circuit.
     let srs_size = circuit.srs_size()?;
-    let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut rng)?;
+    // in production:
+    // let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut rng)?;
+    // in test (with `test-srs` feature flag):
+    let srs = <PlonkKzgSnark<Bls12_381> as UniversalSNARK<Bls12_381>>::universal_setup_for_testing(
+        srs_size, &mut rng,
+    )?;
 
     // Then, we generate the proving key and verification key from the SRS and
     // circuit.

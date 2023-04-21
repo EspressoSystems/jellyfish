@@ -83,23 +83,6 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     type Proof = MultilinearKzgProof<E>;
     type BatchProof = MultilinearKzgBatchProof<E>;
 
-    /// Build SRS for testing.
-    ///
-    /// - For univariate polynomials, `log_size` is the log of maximum degree.
-    /// - For multilinear polynomials, `log_size` is the number of variables.
-    ///
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn setup_for_testing<R: RngCore + CryptoRng>(
-        rng: &mut R,
-        log_size: usize,
-    ) -> Result<Self::SRS, PCSError> {
-        Ok((
-            MultilinearUniversalParams::<E>::gen_srs_for_testing(rng, log_size)?,
-            UnivariateUniversalParams::<E>::gen_srs_for_testing(rng, log_size)?,
-        ))
-    }
-
     /// Trim the universal parameters to specialize the public parameters.
     /// Input both `supported_log_degree` for univariate and
     /// `supported_num_vars` for multilinear.
@@ -471,7 +454,7 @@ mod tests {
     fn test_single_commit() -> Result<(), PCSError> {
         let mut rng = test_rng();
 
-        let params = MultilinearKzgPCS::<E>::setup_for_testing(&mut rng, 10)?;
+        let params = MultilinearKzgPCS::<E>::gen_srs_for_testing(&mut rng, 10)?;
 
         // normal polynomials
         let poly1 = Arc::new(DenseMultilinearExtension::rand(8, &mut rng));
@@ -489,6 +472,6 @@ mod tests {
         let mut rng = test_rng();
 
         // normal polynomials
-        assert!(MultilinearKzgPCS::<E>::setup_for_testing(&mut rng, 0).is_err());
+        assert!(MultilinearKzgPCS::<E>::gen_srs_for_testing(&mut rng, 0).is_err());
     }
 }

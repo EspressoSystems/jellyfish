@@ -15,6 +15,7 @@ use ark_poly::{
 use ark_std::{end_timer, format, log2, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 /// Evaluate eq polynomial. use the public one later
+#[allow(dead_code)]
 pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {
     if x.len() != y.len() {
         return Err(PCSError::InvalidParameters(

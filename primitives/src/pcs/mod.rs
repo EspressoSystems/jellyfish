@@ -19,6 +19,7 @@ use ark_std::{
     borrow::Borrow,
     fmt::Debug,
     hash::Hash,
+    path::Path,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
@@ -59,19 +60,25 @@ pub trait PolynomialCommitmentScheme {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn setup_for_testing<R: RngCore + CryptoRng>(
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
     ) -> Result<Self::SRS, PCSError> {
         Self::SRS::gen_srs_for_testing(rng, supported_size)
     }
 
-    /// Setup public parameter in production environment.
+    /// Load public parameter in production environment.
     /// These parameters are loaded from files with serialized `pp` bytes, and
     /// the actual setup is usually carried out via MPC and should be
     /// implemented else where. We only load them into memory here.
-    fn setup(_supported_size: usize) -> Result<Self::SRS, PCSError> {
-        unimplemented!("TODO: implement loading SRS from files");
+    ///
+    /// If `file=None`, we load the default choice of SRS.
+    fn load_srs_from_file(
+        supported_size: usize,
+        file: Option<&Path>,
+    ) -> Result<Self::SRS, PCSError> {
+        Self::SRS::load_srs_from_file(supported_size, file)
     }
 
     /// Trim the universal parameters to specialize the public parameters.
@@ -182,8 +189,19 @@ pub trait StructuredReferenceString: Sized {
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
     /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
+    #[cfg(any(test, feature = "test-srs"))]
     fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_size: usize,
     ) -> Result<Self, PCSError>;
+
+    /// Load public parameter in production environment.
+    /// These parameters are loaded from files with serialized `pp` bytes, and
+    /// the actual setup is usually carried out via MPC and should be
+    /// implemented else where. We only load them into memory here.
+    ///
+    /// If `file=None`, we load the default choice of SRS.
+    fn load_srs_from_file(_supported_size: usize, _file: Option<&Path>) -> Result<Self, PCSError> {
+        unimplemented!("TODO: implement loading SRS from files");
+    }
 }
