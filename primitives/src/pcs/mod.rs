@@ -225,8 +225,8 @@ pub trait StructuredReferenceString: Sized {
 
 /// Super-trait specific for univariate polynomial commitment schemes.
 pub trait UnivariatePCS: PolynomialCommitmentScheme {
-    /// Same task as [`Self::multi_open()`], except the points are [roots of
-    /// unity](https://en.wikipedia.org/wiki/Root_of_unity).
+    /// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
+    /// points are [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
     /// The first `num_points` of roots will be evaluated (in canonical order).
     #[allow(clippy::type_complexity)]
     fn multi_open_rou(

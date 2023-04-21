@@ -290,7 +290,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         polynomial: &Self::Polynomial,
         points: &[Self::Point],
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
-        let h_poly = Self::compute_h_poly_in_fk23(prover_param, polynomial)?;
+        let h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
         let proofs: Vec<_> = h_poly
             .batch_evaluate(points)
             .into_iter()
@@ -312,7 +312,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         polynomial: &Self::Polynomial,
         num_points: usize,
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
-        let h_poly = Self::compute_h_poly_in_fk23(prover_param, polynomial)?;
+        let h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
         let proofs: Vec<_> = h_poly
             .batch_evaluate_rou(num_points)
             .into_iter()
@@ -335,23 +335,31 @@ where
     // Sec 2.2. of <https://eprint.iacr.org/2023/033>
     fn compute_h_poly_in_fk23(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
-        polynomial: &DensePolynomial<E::ScalarField>,
+        poly_coeffs: &[E::ScalarField],
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
-        let d = polynomial.degree();
-        if !d.is_power_of_two() {
-            return Err(PCSError::InvalidParameters(
-                "FK23 only supports polynomial with power-of-two degree".to_string(),
-            ));
+        // First, pad to power_of_two, since Toeplitz mul only works for 2^k
+        let mut padded_coeffs: Vec<F> = poly_coeffs.to_vec();
+        let mut padded_len = padded_coeffs.len();
+        if !poly_coeffs.len().is_power_of_two() {
+            padded_len = poly_coeffs
+                .len()
+                .checked_next_power_of_two()
+                .ok_or_else(|| {
+                    PCSError::InvalidParameters(format!(
+                        "polynomial degree should be no larger than usize::MAX / 2, got: {}",
+                        poly_coeffs.len()
+                    ))
+                })?;
+            padded_coeffs.resize(padded_len, F::zero());
         }
 
         // Step 1. compute \vec{h} using fast Toeplitz matrix multiplication
         // 1.1 Toeplitz matrix A (named `poly_coeff_matrix` here)
-        let mut toep_col = vec![*polynomial
-            .coeffs()
+        let mut toep_col = vec![*padded_coeffs
             .last()
             .ok_or_else(|| PCSError::InvalidParameters("poly degree should >= 1".to_string()))?];
-        toep_col.resize(d, <<E as Pairing>::ScalarField as Field>::ZERO);
-        let toep_row = polynomial.coeffs().iter().skip(1).rev().cloned().collect();
+        toep_col.resize(padded_len, <<E as Pairing>::ScalarField as Field>::ZERO);
+        let toep_row = padded_coeffs.iter().skip(1).rev().cloned().collect();
         let poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)?;
 
         // 1.2 vector s (named `srs_vec` here)
@@ -359,7 +367,7 @@ where
             .borrow()
             .powers_of_g
             .iter()
-            .take(d)
+            .take(padded_len - 1)
             .rev()
             .cloned()
             .map(|g| g.into_group())
@@ -379,7 +387,7 @@ where
         // unity are used, we need to manually resize the coefficients so that
         // `GeneralDensePolynomial::batch_evaluate` are informed to use the domain of
         // size (d+1).next_power_of_two().
-        h_poly.coeffs.resize(polynomial.coeffs.len(), E::G1::zero());
+        h_poly.coeffs.resize(padded_len, E::G1::zero());
 
         Ok(h_poly)
     }
@@ -530,8 +538,8 @@ mod tests {
         let max_degree = 32;
         let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(&mut rng, max_degree)?;
 
-        for _ in 0..1 {
-            let degree = 32; // has to be power-of-two
+        for _ in 0..5 {
+            let degree = rng.gen_range(10..33); // any degree (even non-power-of-two)
             let num_points = rng.gen_range(5..max_degree);
 
             let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
