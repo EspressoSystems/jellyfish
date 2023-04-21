@@ -111,54 +111,38 @@ where
     }
 }
 
-/// An abstraction of a batch of evaluation points
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum BatchEvalPoints<'a, F: Field> {
-    /// First `m: u64` of n-th roots of unity, NOTE that the `n` is decided by
-    /// the num_coeffs of the polynomial, `m <= n =
-    /// next_power_of_two(num_coeffs)`.
-    RootsOfUnity(u64),
-    /// Any general evaluation points (references/slices).
-    General(&'a [F]),
-}
-
 impl<T, F> GeneralDensePolynomial<T, F>
 where
     T: GroupCoeff<F> + DomainCoeff<F> + for<'a> Mul<&'a F, Output = T>,
     F: FftField,
 {
-    /// Evaluate `self` at a list of `points`.
-    ///
-    /// When there are only a few points, will use Horner's method to
-    /// individually evaluate each point.
-    /// Hwoever, when there are lots of points, will use FFT methods to get a
-    /// lower amortized cost.
-    pub fn batch_evaluate(&self, points: BatchEvalPoints<F>) -> Vec<T> {
-        match points {
-            BatchEvalPoints::General(points) => {
-                // Horner: n * d
-                // FFT: ~ d*log^2(d)  (independent of n, as long as n<=d)
-                // naive cutoff-point, not taking parallelism into consideration:
-                let cutoff_size = <F as FftField>::TWO_ADICITY.pow(2);
+    /// Evaluate `self` at a list of arbitrary `points`.
+    pub fn batch_evaluate(&self, points: &[F]) -> Vec<T> {
+        // Horner: n * d
+        // FFT: ~ d*log^2(d)  (independent of n, as long as n<=d)
+        // naive cutoff-point, not taking parallelism into consideration:
+        let cutoff_size = <F as FftField>::TWO_ADICITY.pow(2);
 
-                if points.is_empty() {
-                    Vec::new()
-                } else if points.len() < cutoff_size as usize {
-                    points.iter().map(|x| self.evaluate(x)).collect()
-                } else {
-                    unimplemented!("TODO: (alex) implements Appendix A of FK23");
-                }
-            },
-            BatchEvalPoints::RootsOfUnity(m) => {
-                // using FFT, complexity: d*log(d) independent of m (<=d+1)
-                let domain: Radix2EvaluationDomain<F> =
-                    Radix2EvaluationDomain::new(self.coeffs.len())
-                        .expect("Should init an eval domain");
-                let mut evals = domain.fft(&self.coeffs);
-                evals.truncate(m as usize);
-                evals
-            },
+        if points.is_empty() {
+            Vec::new()
+        } else if points.len() < cutoff_size as usize {
+            points.iter().map(|x| self.evaluate(x)).collect()
+        } else {
+            unimplemented!("TODO: (alex) implements Appendix A of FK23");
         }
+    }
+
+    /// Similar task as [`Self::batch_evaluate()`], except the points are
+    /// canoncially chosen first `num_points` of the [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
+    /// By leveraging FFT algorithms, we have a much lower amortized cost.
+    ///
+    /// Complexity: d*log(d) independent of m (<=d+1)
+    pub fn batch_evaluate_rou(&self, num_points: usize) -> Vec<T> {
+        let domain: Radix2EvaluationDomain<F> =
+            Radix2EvaluationDomain::new(self.coeffs.len()).expect("Should init an eval domain");
+        let mut evals = domain.fft(&self.coeffs);
+        evals.truncate(num_points);
+        evals
     }
 }
 
@@ -330,7 +314,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_poly_eval_batch_points() {
+    fn test_multi_open() {
         let mut rng = test_rng();
 
         for _ in 0..5 {
@@ -342,34 +326,33 @@ pub(crate) mod tests {
             let g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
 
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
-            let eval_points = BatchEvalPoints::General(&points);
             ark_std::println!("degree: {}, num_points: {}", degree, num_points);
 
             // First, test general points
             assert_eq!(
-                f.batch_evaluate(eval_points),
+                f.batch_evaluate(&points),
                 points.iter().map(|x| f.evaluate(x)).collect::<Vec<_>>()
             );
             assert_eq!(
-                g.batch_evaluate(eval_points),
+                g.batch_evaluate(&points),
                 points.iter().map(|x| g.evaluate(x)).collect::<Vec<_>>()
             );
 
             // Second, test points at roots-of-unity
             let roots: Vec<Fr> = get_roots_of_unity(degree + 1);
             assert_eq!(
-                f.batch_evaluate(BatchEvalPoints::RootsOfUnity(num_points)),
+                f.batch_evaluate_rou(num_points),
                 roots
                     .iter()
-                    .take(num_points as usize)
+                    .take(num_points)
                     .map(|x| f.evaluate(x))
                     .collect::<Vec<_>>()
             );
             assert_eq!(
-                g.batch_evaluate(BatchEvalPoints::RootsOfUnity(num_points)),
+                g.batch_evaluate_rou(num_points),
                 roots
                     .iter()
-                    .take(num_points as usize)
+                    .take(num_points)
                     .map(|x| g.evaluate(x))
                     .collect::<Vec<_>>()
             );

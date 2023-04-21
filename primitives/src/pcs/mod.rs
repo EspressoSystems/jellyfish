@@ -133,6 +133,23 @@ pub trait PolynomialCommitmentScheme {
         points: &[Self::Point],
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError>;
 
+    /// Open a single polynomial at multiple points.
+    /// The naive default implmenetation just open them individually.
+    #[allow(clippy::type_complexity)]
+    fn multi_open(
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
+        polynomial: &Self::Polynomial,
+        points: &[Self::Point],
+    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
+        Ok(points
+            .iter()
+            .map(|point| Self::open(prover_param.borrow(), polynomial, point))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(PCSError::from)?
+            .into_iter()
+            .unzip())
+    }
+
     /// Verifies that `value` is the evaluation at `x` of the polynomial
     /// committed inside `comm`.
     fn verify(
@@ -204,4 +221,17 @@ pub trait StructuredReferenceString: Sized {
     fn load_srs_from_file(_supported_size: usize, _file: Option<&Path>) -> Result<Self, PCSError> {
         unimplemented!("TODO: implement loading SRS from files");
     }
+}
+
+/// Super-trait specific for univariate polynomial commitment schemes.
+pub trait UnivariatePCS: PolynomialCommitmentScheme {
+    /// Same task as [`Self::multi_open()`], except the points are [roots of
+    /// unity](https://en.wikipedia.org/wiki/Root_of_unity).
+    /// The first `num_points` of roots will be evaluated (in canonical order).
+    #[allow(clippy::type_complexity)]
+    fn multi_open_rou(
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
+        polynomial: &Self::Polynomial,
+        num_points: usize,
+    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError>;
 }

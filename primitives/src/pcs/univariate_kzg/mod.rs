@@ -8,9 +8,8 @@
 
 use crate::{
     pcs::{
-        poly::{BatchEvalPoints, GeneralDensePolynomial},
-        prelude::Commitment,
-        PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
+        poly::GeneralDensePolynomial, prelude::Commitment, PCSError, PolynomialCommitmentScheme,
+        StructuredReferenceString,
     },
     toeplitz::ToeplitzMatrix,
 };
@@ -36,6 +35,8 @@ use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
+
+use super::UnivariatePCS;
 
 pub(crate) mod srs;
 
@@ -277,6 +278,53 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         end_timer!(check_time, || format!("Result: {result}"));
         Ok(result)
     }
+
+    /// Fast computation of batch opening for a single polynomial at multiple
+    /// arbitrary points.
+    /// Details see Sec 2.1~2.3 of [FK23](https://eprint.iacr.org/2023/033.pdf).
+    ///
+    /// Only accept `polynomial` with power-of-two degree, no constraint on the
+    /// size of `points`
+    fn multi_open(
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
+        polynomial: &Self::Polynomial,
+        points: &[Self::Point],
+    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
+        let h_poly = Self::compute_h_poly_in_fk23(prover_param, polynomial)?;
+        let proofs: Vec<_> = h_poly
+            .batch_evaluate(points)
+            .into_iter()
+            .map(|g| UnivariateKzgProof {
+                proof: g.into_affine(),
+            })
+            .collect();
+
+        // Evaluate at all points
+        let evals =
+            GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs).batch_evaluate(points);
+        Ok((proofs, evals))
+    }
+}
+
+impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
+    fn multi_open_rou(
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
+        polynomial: &Self::Polynomial,
+        num_points: usize,
+    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
+        let h_poly = Self::compute_h_poly_in_fk23(prover_param, polynomial)?;
+        let proofs: Vec<_> = h_poly
+            .batch_evaluate_rou(num_points)
+            .into_iter()
+            .map(|g| UnivariateKzgProof {
+                proof: g.into_affine(),
+            })
+            .collect();
+
+        let evals = GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs)
+            .batch_evaluate_rou(num_points);
+        Ok((proofs, evals))
+    }
 }
 
 impl<E, F> UnivariateKzgPCS<E>
@@ -284,23 +332,11 @@ where
     E: Pairing<ScalarField = F>,
     F: FftField,
 {
-    /// Fast computation of batch opening for a single polynomial at multiple
-    /// points. Details see Sec 2.1~2.3 of [FK23](https://eprint.iacr.org/2023/033.pdf).
-    ///
-    /// Only accept `polynomial` with power-of-two degree, no constraint on the
-    /// size of `points`
-    #[allow(clippy::type_complexity)]
-    pub fn batch_open_fk23(
+    // Sec 2.2. of <https://eprint.iacr.org/2023/033>
+    fn compute_h_poly_in_fk23(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
-        polynomial: &<Self as PolynomialCommitmentScheme>::Polynomial,
-        points: BatchEvalPoints<E::ScalarField>,
-    ) -> Result<
-        (
-            Vec<<Self as PolynomialCommitmentScheme>::Proof>,
-            Vec<<Self as PolynomialCommitmentScheme>::Evaluation>,
-        ),
-        PCSError,
-    > {
+        polynomial: &DensePolynomial<E::ScalarField>,
+    ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
         let d = polynomial.degree();
         if !d.is_power_of_two() {
             return Err(PCSError::InvalidParameters(
@@ -345,19 +381,7 @@ where
         // size (d+1).next_power_of_two().
         h_poly.coeffs.resize(polynomial.coeffs.len(), E::G1::zero());
 
-        let proofs: Vec<_> = h_poly
-            .batch_evaluate(points)
-            .into_iter()
-            .map(|g| UnivariateKzgProof {
-                proof: g.into_affine(),
-            })
-            .collect();
-
-        // Evaluate at all points
-        let evals =
-            GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs).batch_evaluate(points);
-
-        Ok((proofs, evals))
+        Ok(h_poly)
     }
 }
 
@@ -515,8 +539,7 @@ mod tests {
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
 
             // First, test general points
-            let eval_points = BatchEvalPoints::General(&points);
-            let (proofs, evals) = UnivariateKzgPCS::<E>::batch_open_fk23(&ck, &poly, eval_points)?;
+            let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open(&ck, &poly, &points)?;
             points
                 .iter()
                 .zip(proofs.into_iter())
@@ -529,8 +552,7 @@ mod tests {
                 });
 
             // Second, test roots-of-unity points
-            let eval_points = BatchEvalPoints::RootsOfUnity(num_points as u64);
-            let (proofs, evals) = UnivariateKzgPCS::<E>::batch_open_fk23(&ck, &poly, eval_points)?;
+            let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points)?;
 
             let roots_of_unity: Vec<Fr> = get_roots_of_unity(degree + 1);
 
