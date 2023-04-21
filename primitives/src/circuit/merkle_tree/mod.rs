@@ -4,12 +4,11 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Trait definitions for a Merkle tree gadget.
+//! Trait definitions for a Merkle tree gadget and implementations for RescueMerkleTree and RescueSparseMerkleTree.
 
 use ark_ff::PrimeField;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
-mod rescue_merkle_tree;
 mod sparse_merkle_tree;
 use ark_std::{string::ToString, vec::Vec};
 use typenum::{Unsigned, U3};
@@ -437,5 +436,200 @@ where
         let bool_val =
             MerkleTreeGadget::<T>::is_member(self, elem_idx_var, proof_var, expected_root_var)?;
         self.enforce_true(bool_val.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        circuit::merkle_tree::{
+            constrain_sibling_order, Merkle3AryMembershipProofVar, MerkleTreeGadget,
+        },
+        merkle_tree::{
+            internal::MerkleNode, prelude::RescueMerkleTree, MerkleCommitment, MerkleTreeScheme,
+        },
+        rescue::RescueParameter,
+    };
+    use ark_bls12_377::Fq as Fq377;
+    use ark_ed_on_bls12_377::Fq as FqEd377;
+    use ark_ed_on_bls12_381::Fq as FqEd381;
+    use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
+    use ark_ed_on_bn254::Fq as FqEd254;
+    use ark_std::{boxed::Box, vec::Vec};
+    use jf_relation::{Circuit, PlonkCircuit, Variable};
+
+    #[test]
+    fn test_permute() {
+        test_permute_helper::<FqEd254>();
+        test_permute_helper::<FqEd377>();
+        test_permute_helper::<FqEd381>();
+        test_permute_helper::<FqEd381b>();
+        test_permute_helper::<Fq377>();
+    }
+
+    fn test_permute_helper<F: RescueParameter>() {
+        fn check_permute<F: RescueParameter>(
+            circuit: &mut PlonkCircuit<F>,
+            is_left: bool,
+            is_right: bool,
+            input_vars: &[Variable],
+            expected_output_vars: &[Variable],
+        ) {
+            let zero = F::zero();
+
+            let node_is_left = circuit.create_boolean_variable(is_left).unwrap();
+            let node_is_right = circuit.create_boolean_variable(is_right).unwrap();
+
+            let node = input_vars[0];
+            let sib1 = input_vars[1];
+            let sib2 = input_vars[2];
+
+            let out_vars =
+                constrain_sibling_order(circuit, node, sib1, sib2, node_is_left, node_is_right)
+                    .unwrap();
+
+            let output: Vec<F> = out_vars[..]
+                .iter()
+                .map(|&idx| circuit.witness(idx).unwrap())
+                .collect();
+
+            let expected_output: Vec<F> = expected_output_vars
+                .iter()
+                .map(|v| circuit.witness(*v).unwrap())
+                .collect();
+
+            assert_eq!(output, expected_output);
+
+            // Check constraints
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+            *circuit.witness_mut(sib1) = zero;
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
+
+        fn gen_permutation_circuit_and_vars<F: RescueParameter>(
+        ) -> (PlonkCircuit<F>, Variable, Variable, Variable) {
+            let mut circuit = PlonkCircuit::new_turbo_plonk();
+            let mut prng = jf_utils::test_rng();
+            let node = circuit.create_variable(F::rand(&mut prng)).unwrap();
+            let sib1 = circuit.create_variable(F::rand(&mut prng)).unwrap();
+            let sib2 = circuit.create_variable(F::rand(&mut prng)).unwrap();
+
+            (circuit, node, sib1, sib2)
+        }
+
+        let (mut circuit, node, sib1, sib2) = gen_permutation_circuit_and_vars::<F>();
+        check_permute(
+            &mut circuit,
+            false,
+            true,
+            &[node, sib1, sib2],
+            &[sib1, sib2, node],
+        );
+
+        let (mut circuit, node, sib1, sib2) = gen_permutation_circuit_and_vars::<F>();
+        check_permute(
+            &mut circuit,
+            true,
+            false,
+            &[node, sib1, sib2],
+            &[node, sib1, sib2],
+        );
+
+        let (mut circuit, node, sib1, sib2) = gen_permutation_circuit_and_vars::<F>();
+        check_permute(
+            &mut circuit,
+            false,
+            false,
+            &[node, sib1, sib2],
+            &[sib1, node, sib2],
+        );
+    }
+
+    #[test]
+    fn test_mt_gadget() {
+        test_mt_gadget_helper::<FqEd254>();
+        test_mt_gadget_helper::<FqEd377>();
+        test_mt_gadget_helper::<FqEd381>();
+        test_mt_gadget_helper::<FqEd381b>();
+        test_mt_gadget_helper::<Fq377>();
+    }
+
+    fn test_mt_gadget_helper<F: RescueParameter>() {
+        // An elemement we care about
+        let elem = F::from(310_u64);
+
+        // Iterate over the positions for the given element
+        for uid in 1u64..9u64 {
+            // native computation with a MT
+            let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+            let mut elements = (1u64..=9u64).map(|x| F::from(x)).collect::<Vec<_>>();
+            elements[uid as usize] = elem;
+            let mt = RescueMerkleTree::<F>::from_elems(2, elements).unwrap();
+            let expected_root = mt.commitment().digest();
+            let (retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
+            assert_eq!(retrieved_elem, elem);
+
+            // Happy path
+            // Circuit computation with a MT
+            let elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
+            let proof_var: Merkle3AryMembershipProofVar =
+                MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
+                    &mut circuit,
+                    &proof,
+                )
+                .unwrap();
+            let root_var = MerkleTreeGadget::<RescueMerkleTree<F>>::create_root_variable(
+                &mut circuit,
+                expected_root,
+            )
+            .unwrap();
+
+            MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
+                &mut circuit,
+                elem_idx_var,
+                proof_var,
+                root_var,
+            )
+            .unwrap();
+
+            assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+            *circuit.witness_mut(root_var) = F::zero();
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+            // Bad path:
+            // The circuit cannot be satisfied if an internal node has a left child with
+            // zero value.
+            let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+            let elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
+
+            let mut bad_proof = proof.clone();
+
+            if let MerkleNode::Branch { value: _, children } = &mut bad_proof.proof[1] {
+                let left_sib = if uid % 3 == 0 { 1 } else { 0 };
+                children[left_sib] = Box::new(MerkleNode::ForgettenSubtree { value: F::zero() });
+            }
+            let path_vars: Merkle3AryMembershipProofVar =
+                MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
+                    &mut circuit,
+                    &bad_proof,
+                )
+                .unwrap();
+            let root_var = MerkleTreeGadget::<RescueMerkleTree<F>>::create_root_variable(
+                &mut circuit,
+                expected_root,
+            )
+            .unwrap();
+
+            MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
+                &mut circuit,
+                elem_idx_var,
+                path_vars,
+                root_var,
+            )
+            .unwrap();
+
+            // Circuit does not verify because a left node value is 0
+            assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        }
     }
 }
