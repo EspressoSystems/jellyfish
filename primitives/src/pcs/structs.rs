@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use ark_ec::{pairing::Pairing, CurveGroup};
+use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 
@@ -25,6 +25,11 @@ pub struct Commitment<E: Pairing>(
 );
 
 /// Allow generic access to the underlying affine point.
+/// Convert from `CurveGroup` to `Commitment`.
+/// `Commitment` is a newtype wrapper for `AffineRepr`,
+/// so why convert from `CurveGroup` instead of `AffineRepr`?
+/// Because group arithmetic with `AffineRepr`s produces `CurveGroup`s, not
+/// `AffineRepr`s, so we expect callers to want to convert from `CurveGroup`.
 impl<T, E> From<T> for Commitment<E>
 where
     T: CurveGroup,
@@ -35,24 +40,12 @@ where
     }
 }
 
-// https://stackoverflow.com/questions/63119000/why-am-i-required-to-cover-t-in-impl-foreigntraitlocaltype-for-t-e0210
-// https://users.rust-lang.org/t/generic-conversion-from-newtypes/16247
-impl<T, E> From<Commitment<E>> for (T,)
+impl<T, E> AsRef<T> for Commitment<E>
 where
-    T: CurveGroup,
-    E: Pairing<G1 = T, G1Affine = T::Affine>,
+    T: AffineRepr,
+    E: Pairing<G1Affine = T>,
 {
-    fn from(value: Commitment<E>) -> Self {
-        (value.0.into(),)
-    }
-}
-
-impl<T, E> From<&Commitment<E>> for (T,)
-where
-    T: CurveGroup,
-    E: Pairing<G1 = T, G1Affine = T::Affine>,
-{
-    fn from(value: &Commitment<E>) -> Self {
-        (value.0.into(),)
+    fn as_ref(&self) -> &T {
+        &self.0
     }
 }
