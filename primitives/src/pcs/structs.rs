@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup};
+use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 
@@ -24,22 +24,18 @@ pub struct Commitment<E: Pairing>(
     pub E::G1Affine,
 );
 
-/// Allow generic access to the underlying affine point.
-/// Convert from `CurveGroup` to `Commitment`.
-/// `Commitment` is a newtype wrapper for `AffineRepr`,
-/// so why convert from `CurveGroup` instead of `AffineRepr`?
-/// Because group arithmetic with `AffineRepr`s produces `CurveGroup`s, not
-/// `AffineRepr`s, so we expect callers to want to convert from `CurveGroup`.
+/// Allow generic creation from `AffineRepr`
 impl<T, E> From<T> for Commitment<E>
 where
-    T: CurveGroup,
-    E: Pairing<G1 = T, G1Affine = T::Affine>,
+    T: AffineRepr,
+    E: Pairing<G1Affine = T>,
 {
     fn from(value: T) -> Self {
-        Self(value.into())
+        Self(value)
     }
 }
 
+/// Allow generic access to the underlying `AffineRepr`
 impl<T, E> AsRef<T> for Commitment<E>
 where
     T: AffineRepr,
