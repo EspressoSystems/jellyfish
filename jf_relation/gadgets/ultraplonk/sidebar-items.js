@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["mod_arith","Modular arithmetic gates"]]};
+window.SIDEBAR_ITEMS = {"mod":["mod_arith"]};

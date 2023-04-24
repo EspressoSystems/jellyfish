@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["batch_arg","An argument system that proves/verifies multiple instances in a batch."],["structs","Data structures used in Plonk proof systems"]],"struct":[["PlonkKzgSnark","A Plonk instantiated with KZG PCS"]],"trait":[["UniversalSNARK","An interface for SNARKs with universal setup."]]};
+window.SIDEBAR_ITEMS = {"mod":["batch_arg","structs"],"struct":["PlonkKzgSnark"],"trait":["UniversalSNARK"]};

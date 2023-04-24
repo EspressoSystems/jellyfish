@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["schnorr","Circuit implementation of a Schnorr signature scheme."]]};
+window.SIDEBAR_ITEMS = {"mod":["schnorr"]};

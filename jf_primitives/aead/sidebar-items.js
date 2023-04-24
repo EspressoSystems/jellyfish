@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Ciphertext","The ciphertext produced by AEAD encryption"],["EncKey","Public/encryption key for AEAD"],["KeyPair","Keypair for Authenticated Encryption with Associated Data"]]};
+window.SIDEBAR_ITEMS = {"struct":["Ciphertext","EncKey","KeyPair"]};

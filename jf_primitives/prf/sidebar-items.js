@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RescuePRF","A rescue-based PRF that leverages on Full State Keyed (FSK) sponge construction"]],"trait":[["PRF","Trait for Pseudo-random Functions"]]};
+window.SIDEBAR_ITEMS = {"struct":["RescuePRF"],"trait":["PRF"]};

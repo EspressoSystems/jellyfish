@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["PlonkType","Enum for each type of Plonk scheme."]],"mod":[["circuit","Customized circuit"],["constants","Crate wide constants."],["errors","Error module."],["proof_system","Interfaces for Plonk-based proof systems"],["transcript","This module implements three different types of transcripts that are supported."]]};
+window.SIDEBAR_ITEMS = {"enum":["PlonkType"],"mod":["circuit","constants","errors","proof_system","transcript"]};
