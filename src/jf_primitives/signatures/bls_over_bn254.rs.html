@@ -526,12 +526,6 @@
 <a href="#526" id="526">526</a>
 <a href="#527" id="527">527</a>
 <a href="#528" id="528">528</a>
-<a href="#529" id="529">529</a>
-<a href="#530" id="530">530</a>
-<a href="#531" id="531">531</a>
-<a href="#532" id="532">532</a>
-<a href="#533" id="533">533</a>
-<a href="#534" id="534">534</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -811,7 +805,7 @@
 #[allow(non_snake_case)]
 </span><span class="kw">pub struct </span>Signature {
     <span class="doccomment">/// The signature is a G1 group element.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) sigma: G1Projective,
+    </span><span class="kw">pub </span>sigma: G1Projective,
 }
 
 <span class="kw">impl </span>Hash <span class="kw">for </span>Signature {
@@ -826,12 +820,6 @@
     }
 }
 
-<span class="kw">impl </span>Signature {
-    <span class="doccomment">/// Getter function to obtain the signature value
-    </span><span class="kw">pub fn </span>get_sig_value(<span class="self">self</span>) -&gt; G1Projective {
-        <span class="self">self</span>.sigma
-    }
-}
 <span class="comment">// =====================================================
 // end of definitions
 // =====================================================
