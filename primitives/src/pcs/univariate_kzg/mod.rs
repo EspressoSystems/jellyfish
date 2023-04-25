@@ -332,6 +332,24 @@ where
     E: Pairing<ScalarField = F>,
     F: FftField,
 {
+    /// For flexibility, we allow multi-opening on polynomial of any degree
+    /// (even non-power-of-two ones) using the FK23 technique by applying
+    /// implicit coefficient padding under the hood. This private function
+    /// calcuate the correct padded degree.
+    #[inline]
+    pub fn padded_degree_in_fk23(unpadded_degree: usize) -> Result<usize, PCSError> {
+        if unpadded_degree.is_power_of_two() {
+            Ok(unpadded_degree)
+        } else {
+            unpadded_degree.checked_next_power_of_two().ok_or_else(|| {
+                PCSError::InvalidParameters(format!(
+                    "polynomial degree should be no larger than usize::MAX / 2, got: {}",
+                    unpadded_degree + 1
+                ))
+            })
+        }
+    }
+
     // Sec 2.2. of <https://eprint.iacr.org/2023/033>
     fn compute_h_poly_in_fk23(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
@@ -339,26 +357,16 @@ where
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
         // First, pad to power_of_two, since Toeplitz mul only works for 2^k
         let mut padded_coeffs: Vec<F> = poly_coeffs.to_vec();
-        let mut padded_len = padded_coeffs.len();
-        if !poly_coeffs.len().is_power_of_two() {
-            padded_len = poly_coeffs
-                .len()
-                .checked_next_power_of_two()
-                .ok_or_else(|| {
-                    PCSError::InvalidParameters(format!(
-                        "polynomial degree should be no larger than usize::MAX / 2, got: {}",
-                        poly_coeffs.len()
-                    ))
-                })?;
-            padded_coeffs.resize(padded_len, F::zero());
-        }
+        let padded_degree = Self::padded_degree_in_fk23(padded_coeffs.len() - 1)?;
+        let padded_len = padded_degree + 1;
+        padded_coeffs.resize(padded_len, F::zero());
 
         // Step 1. compute \vec{h} using fast Toeplitz matrix multiplication
         // 1.1 Toeplitz matrix A (named `poly_coeff_matrix` here)
         let mut toep_col = vec![*padded_coeffs
             .last()
             .ok_or_else(|| PCSError::InvalidParameters("poly degree should >= 1".to_string()))?];
-        toep_col.resize(padded_len, <<E as Pairing>::ScalarField as Field>::ZERO);
+        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField as Field>::ZERO);
         let toep_row = padded_coeffs.iter().skip(1).rev().cloned().collect();
         let poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)?;
 
@@ -367,7 +375,7 @@ where
             .borrow()
             .powers_of_g
             .iter()
-            .take(padded_len - 1)
+            .take(padded_degree)
             .rev()
             .cloned()
             .map(|g| g.into_group())
@@ -378,17 +386,19 @@ where
 
         // Step 2. evaluate h(X) with coeffs \vec{h} at `points` using FFT
         let mut h_poly = GeneralDensePolynomial::from_coeff_vec(h_vec);
-        // NOTE!! this is the trickist subtle line in this function !!
-        // `polynomial` has a degree `d` which is guaranteed to be power-of-two to use
-        // Toeplitz fast mul algorithm. h(X) has a degree `d-1` which cause a plain
-        // domain instantiation on `h_poly` half the size of that for `polynomial`,
-        // which leads to different vector of roots of unity used, ultimately leading to
-        // wrong proofs. Thus, to make sure during FFT, the same vector of roots of
-        // unity are used, we need to manually resize the coefficients so that
-        // `GeneralDensePolynomial::batch_evaluate` are informed to use the domain of
-        // size (d+1).next_power_of_two().
-        h_poly.coeffs.resize(padded_len, E::G1::zero());
 
+        if padded_len == poly_coeffs.len() {
+            // NOTE!! this is the trickist subtle line in this function !!
+            // `polynomial` has a degree `d` which is guaranteed to be power-of-two to use
+            // Toeplitz fast mul algorithm. h(X) has a degree `d-1` which cause a plain
+            // domain instantiation on `h_poly` half the size of that for `polynomial`,
+            // which leads to different vector of roots of unity used, ultimately leading to
+            // wrong proofs. Thus, to make sure during FFT, the same vector of roots of
+            // unity are used, we need to manually resize the coefficients so that
+            // `GeneralDensePolynomial::batch_evaluate` are informed to use the domain of
+            // size (d+1).next_power_of_two().
+            h_poly.coeffs.resize(padded_len, E::G1::zero());
+        }
         Ok(h_poly)
     }
 }
@@ -530,19 +540,28 @@ mod tests {
     }
 
     #[test]
-    fn test_batch_open() -> Result<(), PCSError> {
+    fn test_multi_open() -> Result<(), PCSError> {
         type E = Bls12_381;
         type Fr = ark_bls12_381::Fr;
 
         let mut rng = test_rng();
-        let max_degree = 32;
+        let max_degree = 33;
         let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(&mut rng, max_degree)?;
 
         for _ in 0..5 {
-            let degree = rng.gen_range(10..33); // any degree (even non-power-of-two)
+            let degree = rng.gen_range(5..max_degree / 2); // any degree (even non-power-of-two)
             let num_points = rng.gen_range(5..max_degree);
+            ark_std::println!(
+                "Multi-opening: poly deg: {}, num of points: {}",
+                degree,
+                num_points
+            );
 
-            let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
+            // NOTE: THIS IS IMPORTANT FOR USER OF `multi_open()`!
+            // since we will pad your polynomial degree to the next_power_of_two, you will
+            // need to trim to the correct padded degree as follows:
+            let padded_degree = UnivariateKzgPCS::<E>::padded_degree_in_fk23(degree)?;
+            let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, padded_degree, None)?;
             let poly = <DensePolynomial<Fr> as DenseUVPolynomial<Fr>>::rand(degree, &mut rng);
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
 
@@ -562,7 +581,12 @@ mod tests {
             // Second, test roots-of-unity points
             let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points)?;
 
-            let roots_of_unity: Vec<Fr> = get_roots_of_unity(degree + 1);
+            assert_eq!(
+                get_roots_of_unity::<Fr>(padded_degree),
+                get_roots_of_unity(degree),
+                "post-padded roots of unity should be the same"
+            );
+            let roots_of_unity: Vec<Fr> = get_roots_of_unity(padded_degree);
 
             roots_of_unity
                 .iter()
