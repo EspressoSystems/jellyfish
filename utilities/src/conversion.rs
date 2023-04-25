@@ -6,9 +6,10 @@
 
 use core::mem;
 
+use anyhow::anyhow;
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, Field, PrimeField};
-use ark_std::{cmp::min, format, string::String, vec::Vec};
+use ark_std::{cmp::min, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -146,8 +147,7 @@ where
 /// - Each base prime field element must fit into one fewer byte than the
 ///   modulus.
 /// - The first field element encodes the length of bytes to return as u64.
-/// TODO String error?
-pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, String>
+pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, anyhow::Error>
 where
     T: AsRef<[F]>,
     F: Field,
@@ -158,20 +158,22 @@ where
     // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
     assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
 
-    let (first_elem, elems) = elems.as_ref().split_first().ok_or("empty elems")?;
+    let (first_elem, elems) = elems
+        .as_ref()
+        .split_first()
+        .ok_or_else(|| anyhow!("elems is empty"))?;
 
     // the first element encodes the number of bytes to return
     let first_elem = first_elem
         .to_base_prime_field_elements()
         .next()
-        .ok_or("empty first elem")?;
+        .ok_or_else(|| anyhow!("first elem is empty"))?;
     let first_elem_bytes = first_elem.into_bigint().to_bytes_le();
     let first_elem_bytes = first_elem_bytes
         .get(..mem::size_of::<u64>())
-        .ok_or("can't read result len from field element: not enough bytes")?;
-    let result_len = u64::from_le_bytes(first_elem_bytes.try_into().unwrap());
-    let result_len =
-        usize::try_from(result_len).map_err(|_| "can't convert result len u64 to usize")?;
+        .ok_or_else(|| anyhow!("first elem has too few bytes"))?;
+    let result_len = u64::from_le_bytes(first_elem_bytes.try_into()?);
+    let result_len = usize::try_from(result_len)?;
 
     let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
     let extension_degree = F::extension_degree() as usize;
@@ -184,9 +186,10 @@ where
     // however, we allow the user to pad elems with zeros so as to facilitate
     // use cases such as polynomial interpolation
     if result_len > result_capacity {
-        return Err(format!(
+        return Err(anyhow!(
             "result len {} exceeds elems capacity {}",
-            result_len, result_capacity
+            result_len,
+            result_capacity
         ));
     }
 
@@ -201,9 +204,9 @@ where
             assert_eq!(bytes.len(), primefield_chunk_len + 1);
             let (last_byte, bytes) = bytes
                 .split_last()
-                .ok_or("prime field elem bytes has 0 len")?;
+                .ok_or_else(|| anyhow!("prime field elem bytes is empty"))?;
             if *last_byte != 0 {
-                return Err(format!(
+                return Err(anyhow!(
                     "nonzero last byte {} in prime field elem",
                     *last_byte
                 ));
@@ -216,7 +219,7 @@ where
     // all bytes to truncate should be zero
     for byte in result.iter().skip(result_len) {
         if *byte != 0 {
-            return Err("nonzero bytes beyond result len".into());
+            return Err(anyhow!("nonzero bytes beyond result len"));
         }
     }
     result.truncate(result_len);
