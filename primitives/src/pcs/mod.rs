@@ -224,7 +224,9 @@ pub trait StructuredReferenceString: Sized {
 }
 
 /// Super-trait specific for univariate polynomial commitment schemes.
-pub trait UnivariatePCS: PolynomialCommitmentScheme {
+pub trait UnivariatePCS:
+    PolynomialCommitmentScheme<Point = <Self as PolynomialCommitmentScheme>::Evaluation>
+{
     /// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
     /// points are [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
     /// The first `num_points` of roots will be evaluated (in canonical order).

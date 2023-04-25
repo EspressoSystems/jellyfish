@@ -439,9 +439,7 @@ where
     type UniversalSRS = UniversalSrs<E>;
     type Error = PlonkError;
 
-    // FIXME: (alex) COPY FROM jf-primitives, can't think of a better way atm.
-    // On one hand, we want `gen_srs_for_testing` to compile only for test and
-    // bench; OTOH, we want to access it in separate crate (this one).
+    // FIXME: (alex) see <https://github.com/EspressoSystems/jellyfish/issues/249>
     #[cfg(any(test, feature = "test-srs"))]
     fn universal_setup_for_testing<R: RngCore + CryptoRng>(
         max_degree: usize,
