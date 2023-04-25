@@ -28,6 +28,8 @@ pub enum PCSError {
     TranscriptError(TranscriptError),
 }
 
+impl ark_std::error::Error for PCSError {}
+
 impl From<SerializationError> for PCSError {
     fn from(e: ark_serialize::SerializationError) -> Self {
         Self::SerializationError(e)
