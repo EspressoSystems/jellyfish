@@ -9,7 +9,7 @@ pub use crate::pcs::{
     errors::PCSError,
     multilinear_kzg::{
         srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam},
-        util::{compute_qx_degree, get_batched_nv, merge_polynomials},
+        util::{get_batched_nv, merge_polynomials},
         MultilinearKzgBatchProof, MultilinearKzgPCS, MultilinearKzgProof,
     },
     structs::Commitment,
