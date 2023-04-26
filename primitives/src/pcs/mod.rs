@@ -227,9 +227,10 @@ pub trait StructuredReferenceString: Sized {
 pub trait UnivariatePCS:
     PolynomialCommitmentScheme<Point = <Self as PolynomialCommitmentScheme>::Evaluation>
 {
-    /// Similar to [`Self::trim()`], but trim to support the next power of two
-    /// degree. This is particularly useful for any operations that require
-    /// FFTs, such as [`Self::multi_open_rou()`] API.
+    /// Similar to [`PolynomialCommitmentScheme::trim()`], but trim to support
+    /// the next power of two degree. This is particularly useful for any
+    /// operations that require FFTs, such as [`Self::multi_open_rou()`]
+    /// API.
     #[allow(clippy::type_complexity)]
     fn trim_next_power_of_two(
         srs: impl Borrow<Self::SRS>,
