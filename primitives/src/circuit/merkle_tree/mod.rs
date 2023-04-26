@@ -4,12 +4,13 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Trait definitions for a Merkle tree gadget and implementations for RescueMerkleTree and RescueSparseMerkleTree.
+//! Trait definitions for a Merkle tree gadget and implementations for
+//! RescueMerkleTree and RescueSparseMerkleTree.
 
 use ark_ff::PrimeField;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 
-mod sparse_merkle_tree;
+mod universal_merkle_tree;
 use ark_std::{string::ToString, vec::Vec};
 use typenum::{Unsigned, U3};
 
