@@ -271,7 +271,6 @@ fn scalar_decomposition_gate<F, S>(
 ) -> Result<(Variable, Variable, BoolVar), CircuitError>
 where
     F: PrimeField,
-    // P: TECurveConfig<BaseField = F, ScalarField = S>,
     S: PrimeField,
 {
     // the order of scalar field
