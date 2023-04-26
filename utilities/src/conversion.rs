@@ -186,7 +186,7 @@ where
 
     // various quantities
     let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
-        .expect("prime field modulus should fit into usize");
+        .expect("prime field modulus byte len should fit into usize");
     let extension_degree =
         usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
     let field_bytes_len = primefield_bytes_len * extension_degree;
@@ -262,23 +262,33 @@ mod tests {
     }
 
     fn bytes_field_elems<F: Field>() {
-        let mut rng = test_rng();
         let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200];
+        let trailing_zeros_lengths = [0, 1, 2, 5, 50];
+
+        let max_len = *lengths.iter().max().unwrap();
+        let max_trailing_zeros_len = *trailing_zeros_lengths.iter().max().unwrap();
+        let mut bytes = Vec::with_capacity(max_len + max_trailing_zeros_len);
+        let mut elems: Vec<F> = Vec::with_capacity(max_len);
+        let mut rng = test_rng();
 
         for len in lengths {
-            let mut random_bytes = vec![0u8; len];
-            rng.fill_bytes(&mut random_bytes);
+            for trailing_zeros_len in trailing_zeros_lengths {
+                // fill bytes with random bytes and trailing zeros
+                bytes.resize(len + trailing_zeros_len, 0);
+                rng.fill_bytes(&mut bytes[..len]);
+                bytes[len..].fill(0);
 
-            let elems: Vec<F> = bytes_to_field_elements(&random_bytes);
-            let result = bytes_from_field_elements(elems);
-            assert_eq!(result, random_bytes);
+                // round trip
+                let encoded_bytes: Vec<F> = bytes_to_field_elements(&bytes);
+                let result = bytes_from_field_elements(encoded_bytes);
+                assert_eq!(result, bytes);
+            }
+
+            // infallibility of bytes_from_field_elements
+            elems.resize(len, F::zero());
+            elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
+            bytes_from_field_elements(&elems);
         }
-
-        // trailing zeros
-        let bytes = [5, 4, 3, 2, 1, 0];
-        let elems: Vec<F> = bytes_to_field_elements(bytes);
-        let result = bytes_from_field_elements(elems);
-        assert_eq!(result, bytes);
     }
 
     #[test]
