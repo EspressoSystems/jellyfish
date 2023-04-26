@@ -138,7 +138,11 @@ where
                 primefield_elems.push(F::BasePrimeField::ZERO);
             }
         }
-        result.push(F::from_base_prime_field_elems(&primefield_elems).unwrap_or_else(|| panic!("from_base_prime_field_elems should return Some, elems len {} should equal extension degree {}", primefield_elems.len(), extension_degree)));
+        assert_eq!(primefield_elems.len(), extension_degree);
+        result.push(
+            F::from_base_prime_field_elems(&primefield_elems)
+                .expect("from_base_prime_field_elems should return Some"),
+        );
     }
     assert_eq!(result.len(), result_len);
     result
