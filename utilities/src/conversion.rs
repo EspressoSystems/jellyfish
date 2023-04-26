@@ -4,12 +4,9 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use core::mem;
-
-use anyhow::anyhow;
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, Field, PrimeField};
-use ark_std::{cmp::min, vec::Vec};
+use ark_std::{cmp::min, mem, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -96,38 +93,44 @@ where
     F::from_le_bytes_mod_order(output)
 }
 
-/// Invertible, deterministic, infallible conversion from arbitrary bytes to
+/// Deterministic, infallible, invertible conversion from arbitrary bytes to
 /// field elements.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
     B: AsRef<[u8]>,
     F: Field,
 {
-    // Need to ensure that F::characteristic is large enough to hold a u64.
+    // Ensure that F::characteristic is large enough to hold a u64.
     // This should be possible at compile time but I don't know how.
     // Example: could use <https://docs.rs/static_assertions> but then you hit
     // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
     assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
 
+    if bytes.as_ref().is_empty() {
+        return Vec::new();
+    }
+
     // - partition bytes into chunks of length one fewer than the base prime field
     //   modulus byte length
-    // - convert each chunk into PrimeField via from_le_bytes_mod_order
+    // - convert each chunk into BasePrimeField via from_le_bytes_mod_order
     // - modular reduction is guaranteed not to occur because chunk byte length is
     //   sufficiently small
-    // - collect PrimeField elements into Field elements and append to result
-    let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
+    // - collect BytePrimeField elements into Field elements and append to result
+    let primefield_byte_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
     let extension_degree = F::extension_degree() as usize;
-    let field_chunk_len = primefield_chunk_len * extension_degree;
-    let result_length = (bytes.as_ref().len() + field_chunk_len - 1) / field_chunk_len + 1;
-    let mut result = Vec::with_capacity(result_length);
+    let field_byte_len = primefield_byte_len * extension_degree;
+    let result_len = (bytes.as_ref().len() + field_byte_len - 1) / field_byte_len + 1;
+    let mut result = Vec::with_capacity(result_len);
 
     // the first field element encodes the bytes length as u64
     result.push(F::from(bytes.as_ref().len() as u64));
 
-    for field_chunk in bytes.as_ref().chunks(field_chunk_len) {
+    for field_elem_bytes in bytes.as_ref().chunks(field_byte_len) {
         let mut primefield_elems = Vec::with_capacity(extension_degree);
-        for primefield_chunk in field_chunk.chunks(primefield_chunk_len) {
-            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(primefield_chunk));
+        for primefield_elem_bytes in field_elem_bytes.chunks(primefield_byte_len) {
+            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(
+                primefield_elem_bytes,
+            ));
         }
         // not enough prime field elems? fill remaining elems with zero
         if primefield_elems.len() < extension_degree {
@@ -135,19 +138,16 @@ where
                 primefield_elems.push(F::BasePrimeField::ZERO);
             }
         }
-        assert_eq!(primefield_elems.len(), extension_degree);
-        result.push(F::from_base_prime_field_elems(&primefield_elems).unwrap());
+        result.push(F::from_base_prime_field_elems(&primefield_elems).unwrap_or_else(|| panic!("from_base_prime_field_elems should return Some, elems len {} should equal extension degree {}", primefield_elems.len(), extension_degree)));
     }
-    assert_eq!(result.len(), result_length);
+    assert_eq!(result.len(), result_len);
     result
 }
 
-/// Inverse of `bytes_to_field_elements`.
-/// Preconditions:
-/// - Each base prime field element must fit into one fewer byte than the
-///   modulus.
-/// - The first field element encodes the length of bytes to return as u64.
-pub fn bytes_from_field_elements<T, F>(elems: T) -> Result<Vec<u8>, anyhow::Error>
+/// Deterministic, infallible inverse of `bytes_to_field_elements`.
+/// `bytes_to_field_elements` is not onto, so `bytes_from_field_elements`
+/// is not one-to-one and hence not invertible.
+pub fn bytes_from_field_elements<T, F>(elems: T) -> Vec<u8>
 where
     T: AsRef<[F]>,
     F: Field,
@@ -158,40 +158,44 @@ where
     // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
     assert!(F::BasePrimeField::MODULUS_BIT_SIZE > 64);
 
+    if elems.as_ref().is_empty() {
+        return Vec::new();
+    }
+
     let (first_elem, elems) = elems
         .as_ref()
         .split_first()
-        .ok_or_else(|| anyhow!("elems is empty"))?;
+        .expect("elems should not be empty");
 
     // the first element encodes the number of bytes to return
-    let first_elem = first_elem
-        .to_base_prime_field_elements()
-        .next()
-        .ok_or_else(|| anyhow!("first elem is empty"))?;
-    let first_elem_bytes = first_elem.into_bigint().to_bytes_le();
-    let first_elem_bytes = first_elem_bytes
-        .get(..mem::size_of::<u64>())
-        .ok_or_else(|| anyhow!("first elem has too few bytes"))?;
-    let result_len = u64::from_le_bytes(first_elem_bytes.try_into()?);
-    let result_len = usize::try_from(result_len)?;
+    let result_len = usize::try_from(u64::from_le_bytes(
+        first_elem
+            .to_base_prime_field_elements()
+            .next()
+            .expect("first base prime field elem should not be empty")
+            .into_bigint()
+            .to_bytes_le()[..mem::size_of::<u64>()]
+            .try_into()
+            .expect("conversion from [u8] to u64 should succeed"),
+    ))
+    .expect("conversion from u64 to usize should succeed");
 
-    let primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8) as usize;
-    let extension_degree = F::extension_degree() as usize;
-    let field_chunk_len = primefield_chunk_len * extension_degree;
-    let result_capacity = elems.len() * field_chunk_len;
+    // various quantities
+    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
+        .expect("prime field modulus should fit into usize");
+    let extension_degree =
+        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
+    let field_bytes_len = primefield_bytes_len * extension_degree;
+    let result_capacity = elems.len() * field_bytes_len;
 
-    // the original bytes MUST end BEFORE the final field element
-    // thus, result_len <= result_capacity
-    // the original bytes SHOULD end somewhere WITHIN the final field element
-    // however, we allow the user to pad elems with zeros so as to facilitate
-    // use cases such as polynomial interpolation
-    if result_len > result_capacity {
-        return Err(anyhow!(
-            "result len {} exceeds elems capacity {}",
-            result_len,
-            result_capacity
-        ));
-    }
+    // If elems was produced by bytes_to_field_elements
+    // then the original bytes MUST end before the final field element
+    // so we expect result_len <= result_capacity.
+    // But if elems is arbitrary then result_len could be large,
+    // so we enforce result_len <= result_capacity.
+    // Do not enforce a lower bound on result_len because the caller might
+    // pad elems, for example with extra zeros from polynomial interpolation.
+    let result_len = min(result_len, result_capacity);
 
     // for each base prime field element:
     // - convert to bytes
@@ -200,30 +204,17 @@ where
     let mut result = Vec::with_capacity(result_capacity);
     for elem in elems {
         for primefield_elem in elem.to_base_prime_field_elements() {
-            let bytes = primefield_elem.into_bigint().to_bytes_le();
-            assert_eq!(bytes.len(), primefield_chunk_len + 1);
-            let (last_byte, bytes) = bytes
-                .split_last()
-                .ok_or_else(|| anyhow!("prime field elem bytes is empty"))?;
-            if *last_byte != 0 {
-                return Err(anyhow!(
-                    "nonzero last byte {} in prime field elem",
-                    *last_byte
-                ));
-            }
-            result.extend_from_slice(bytes);
+            let primefield_bytes = primefield_elem.into_bigint().to_bytes_le();
+            let (_, primefield_bytes) = primefield_bytes
+                .split_last() // ignore the final byte of primefield_elem
+                .expect("prime field elem bytes should be non-empty");
+            assert_eq!(primefield_bytes.len(), primefield_bytes_len);
+            result.extend_from_slice(primefield_bytes);
         }
     }
     assert_eq!(result.len(), result_capacity);
-
-    // all bytes to truncate should be zero
-    for byte in result.iter().skip(result_len) {
-        if *byte != 0 {
-            return Err(anyhow!("nonzero bytes beyond result len"));
-        }
-    }
     result.truncate(result_len);
-    Ok(result)
+    result
 }
 
 #[cfg(test)]
@@ -268,21 +259,21 @@ mod tests {
 
     fn bytes_field_elems<F: Field>() {
         let mut rng = test_rng();
-        let lengths = [2, 16, 32, 48, 63, 64, 65, 100, 200];
+        let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200];
 
         for len in lengths {
             let mut random_bytes = vec![0u8; len];
             rng.fill_bytes(&mut random_bytes);
 
             let elems: Vec<F> = bytes_to_field_elements(&random_bytes);
-            let result = bytes_from_field_elements(elems).unwrap();
+            let result = bytes_from_field_elements(elems);
             assert_eq!(result, random_bytes);
         }
 
         // trailing zeros
         let bytes = [5, 4, 3, 2, 1, 0];
         let elems: Vec<F> = bytes_to_field_elements(bytes);
-        let result = bytes_from_field_elements(elems).unwrap();
+        let result = bytes_from_field_elements(elems);
         assert_eq!(result, bytes);
     }
 
