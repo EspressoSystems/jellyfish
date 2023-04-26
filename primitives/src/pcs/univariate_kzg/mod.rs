@@ -9,7 +9,7 @@
 use crate::{
     pcs::{
         poly::GeneralDensePolynomial, prelude::Commitment, PCSError, PolynomialCommitmentScheme,
-        StructuredReferenceString,
+        StructuredReferenceString, UnivariatePCS,
     },
     toeplitz::ToeplitzMatrix,
 };
@@ -35,8 +35,6 @@ use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
-
-use super::UnivariatePCS;
 
 pub(crate) mod srs;
 
@@ -332,24 +330,6 @@ where
     E: Pairing<ScalarField = F>,
     F: FftField,
 {
-    /// For flexibility, we allow multi-opening on polynomial of any degree
-    /// (even non-power-of-two ones) using the FK23 technique by applying
-    /// implicit coefficient padding under the hood. This private function
-    /// calcuate the correct padded degree.
-    #[inline]
-    pub fn padded_degree_in_fk23(unpadded_degree: usize) -> Result<usize, PCSError> {
-        if unpadded_degree.is_power_of_two() {
-            Ok(unpadded_degree)
-        } else {
-            unpadded_degree.checked_next_power_of_two().ok_or_else(|| {
-                PCSError::InvalidParameters(format!(
-                    "polynomial degree should be no larger than usize::MAX / 2, got: {}",
-                    unpadded_degree + 1
-                ))
-            })
-        }
-    }
-
     // Sec 2.2. of <https://eprint.iacr.org/2023/033>
     fn compute_h_poly_in_fk23(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
@@ -357,7 +337,7 @@ where
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
         // First, pad to power_of_two, since Toeplitz mul only works for 2^k
         let mut padded_coeffs: Vec<F> = poly_coeffs.to_vec();
-        let padded_degree = Self::padded_degree_in_fk23(padded_coeffs.len() - 1)?;
+        let padded_degree = super::checked_next_power_of_two(padded_coeffs.len() - 1)?;
         let padded_len = padded_degree + 1;
         padded_coeffs.resize(padded_len, F::zero());
 
@@ -560,8 +540,7 @@ mod tests {
             // NOTE: THIS IS IMPORTANT FOR USER OF `multi_open()`!
             // since we will pad your polynomial degree to the next_power_of_two, you will
             // need to trim to the correct padded degree as follows:
-            let padded_degree = UnivariateKzgPCS::<E>::padded_degree_in_fk23(degree)?;
-            let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, padded_degree, None)?;
+            let (ck, _) = UnivariateKzgPCS::<E>::trim_next_power_of_two(&pp, degree)?;
             let poly = <DensePolynomial<Fr> as DenseUVPolynomial<Fr>>::rand(degree, &mut rng);
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
 
@@ -579,6 +558,7 @@ mod tests {
                 });
 
             // Second, test roots-of-unity points
+            let padded_degree = crate::pcs::checked_next_power_of_two(degree)?;
             let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points)?;
 
             assert_eq!(

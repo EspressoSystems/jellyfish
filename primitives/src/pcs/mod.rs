@@ -227,6 +227,24 @@ pub trait StructuredReferenceString: Sized {
 pub trait UnivariatePCS:
     PolynomialCommitmentScheme<Point = <Self as PolynomialCommitmentScheme>::Evaluation>
 {
+    /// Similar to [`Self::trim()`], but trim to support the next power of two
+    /// degree. This is particularly useful for any operations that require
+    /// FFTs, such as [`Self::multi_open_rou()`] API.
+    #[allow(clippy::type_complexity)]
+    fn trim_next_power_of_two(
+        srs: impl Borrow<Self::SRS>,
+        supported_degree: usize,
+    ) -> Result<
+        (
+            <Self::SRS as StructuredReferenceString>::ProverParam,
+            <Self::SRS as StructuredReferenceString>::VerifierParam,
+        ),
+        PCSError,
+    > {
+        srs.borrow()
+            .trim(checked_next_power_of_two(supported_degree)?)
+    }
+
     /// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
     /// points are [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
     /// The first `num_points` of roots will be evaluated (in canonical order).
@@ -236,4 +254,13 @@ pub trait UnivariatePCS:
         polynomial: &Self::Polynomial,
         num_points: usize,
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError>;
+}
+
+// elementary wrapper around std's default API with our context-specific
+// `PCSError`.
+#[inline]
+pub(crate) fn checked_next_power_of_two(x: usize) -> Result<usize, PCSError> {
+    x.checked_next_power_of_two().ok_or_else(|| {
+        PCSError::InvalidParameters(ark_std::format!("Next power of two overflows! Got: {}", x))
+    })
 }
