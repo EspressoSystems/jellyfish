@@ -289,17 +289,73 @@
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-</span><span class="kw">use </span>core::mem;
-
-<span class="kw">use </span>ark_ec::CurveConfig;
+</span><span class="kw">use </span>ark_ec::CurveConfig;
 <span class="kw">use </span>ark_ff::{BigInteger, Field, PrimeField};
-<span class="kw">use </span>ark_std::{cmp::min, format, string::String, vec::Vec};
+<span class="kw">use </span>ark_std::{cmp::min, mem, vec::Vec};
 <span class="kw">use </span>sha2::{Digest, Sha512};
 
 <span class="doccomment">/// Convert a scalar field element to a base field element.
@@ -386,38 +442,59 @@
     F::from_le_bytes_mod_order(output)
 }
 
-<span class="doccomment">/// Invertible, deterministic, infallible conversion from arbitrary bytes to
+<span class="doccomment">/// Deterministic, infallible, invertible conversion from arbitrary bytes to
 /// field elements.
 </span><span class="kw">pub fn </span>bytes_to_field_elements&lt;B, F&gt;(bytes: B) -&gt; Vec&lt;F&gt;
 <span class="kw">where
     </span>B: AsRef&lt;[u8]&gt;,
     F: Field,
 {
-    <span class="comment">// Need to ensure that F::characteristic is large enough to hold a u64.
+    <span class="comment">// Ensure that F::characteristic is large enough to hold a u64.
     // This should be possible at compile time but I don&#39;t know how.
     // Example: could use &lt;https://docs.rs/static_assertions&gt; but then you hit
     // &lt;https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512&gt;
-    </span><span class="macro">assert!</span>(F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>);
+    </span><span class="macro">assert!</span>(
+        F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>,
+        <span class="string">&quot;base prime field modulus bit len {} should exceed 64&quot;</span>,
+        F::BasePrimeField::MODULUS_BIT_SIZE
+    );
+
+    <span class="kw">if </span>bytes.as_ref().is_empty() {
+        <span class="kw">return </span>Vec::new();
+    }
+
+    <span class="comment">// various quantities
+    </span><span class="kw">let </span>primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>)
+        .expect(<span class="string">&quot;prime field modulus byte len should fit into usize&quot;</span>);
+    <span class="kw">let </span>extension_degree =
+        usize::try_from(F::extension_degree()).expect(<span class="string">&quot;extension degree should fit into usize&quot;</span>);
+    <span class="kw">let </span>field_bytes_len = primefield_bytes_len
+        .checked_mul(extension_degree)
+        .expect(<span class="string">&quot;field element byte len should fit into usize&quot;</span>);
+    <span class="kw">let </span>result_len = (field_bytes_len
+        .checked_add(bytes.as_ref().len())
+        .expect(<span class="string">&quot;result len should fit into usize&quot;</span>)
+        - <span class="number">1</span>)
+        / field_bytes_len
+        + <span class="number">1</span>;
 
     <span class="comment">// - partition bytes into chunks of length one fewer than the base prime field
     //   modulus byte length
-    // - convert each chunk into PrimeField via from_le_bytes_mod_order
+    // - convert each chunk into BasePrimeField via from_le_bytes_mod_order
     // - modular reduction is guaranteed not to occur because chunk byte length is
     //   sufficiently small
-    // - collect PrimeField elements into Field elements and append to result
-    </span><span class="kw">let </span>primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>) <span class="kw">as </span>usize;
-    <span class="kw">let </span>extension_degree = F::extension_degree() <span class="kw">as </span>usize;
-    <span class="kw">let </span>field_chunk_len = primefield_chunk_len * extension_degree;
-    <span class="kw">let </span>result_length = (bytes.as_ref().len() + field_chunk_len - <span class="number">1</span>) / field_chunk_len + <span class="number">1</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(result_length);
+    // - collect BytePrimeField elements into Field elements and append to result
+    </span><span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(result_len);
 
     <span class="comment">// the first field element encodes the bytes length as u64
     </span>result.push(F::from(bytes.as_ref().len() <span class="kw">as </span>u64));
 
-    <span class="kw">for </span>field_chunk <span class="kw">in </span>bytes.as_ref().chunks(field_chunk_len) {
+    <span class="kw">for </span>field_elem_bytes <span class="kw">in </span>bytes.as_ref().chunks(field_bytes_len) {
         <span class="kw">let </span><span class="kw-2">mut </span>primefield_elems = Vec::with_capacity(extension_degree);
-        <span class="kw">for </span>primefield_chunk <span class="kw">in </span>field_chunk.chunks(primefield_chunk_len) {
-            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(primefield_chunk));
+        <span class="kw">for </span>primefield_elem_bytes <span class="kw">in </span>field_elem_bytes.chunks(primefield_bytes_len) {
+            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(
+                primefield_elem_bytes,
+            ));
         }
         <span class="comment">// not enough prime field elems? fill remaining elems with zero
         </span><span class="kw">if </span>primefield_elems.len() &lt; extension_degree {
@@ -425,20 +502,34 @@
                 primefield_elems.push(F::BasePrimeField::ZERO);
             }
         }
-        <span class="macro">assert_eq!</span>(primefield_elems.len(), extension_degree);
-        result.push(F::from_base_prime_field_elems(<span class="kw-2">&amp;</span>primefield_elems).unwrap());
+        <span class="macro">assert_eq!</span>(
+            primefield_elems.len(),
+            extension_degree,
+            <span class="string">&quot;prime field elems len {} differs from extension degree {}&quot;</span>,
+            primefield_elems.len(),
+            extension_degree
+        );
+        result.push(
+            F::from_base_prime_field_elems(<span class="kw-2">&amp;</span>primefield_elems)
+                .expect(<span class="string">&quot;field elem construction should succeed&quot;</span>),
+        );
     }
-    <span class="macro">assert_eq!</span>(result.len(), result_length);
+    <span class="macro">assert_eq!</span>(
+        result.len(),
+        result_len,
+        <span class="string">&quot;invalid result len, expect {}, found {}&quot;</span>,
+        result_len,
+        result.len()
+    );
     result
 }
 
-<span class="doccomment">/// Inverse of `bytes_to_field_elements`.
-/// Preconditions:
-/// - Each base prime field element must fit into one fewer byte than the
-///   modulus.
-/// - The first field element encodes the length of bytes to return as u64.
-/// TODO String error?
-</span><span class="kw">pub fn </span>bytes_from_field_elements&lt;T, F&gt;(elems: T) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, String&gt;
+<span class="doccomment">/// Deterministic, infallible inverse of `bytes_to_field_elements`.
+/// `bytes_to_field_elements` is not onto, so `bytes_from_field_elements`
+/// is not one-to-one and hence not invertible.
+/// ## Panics
+/// Panics if result length overflows usize.
+</span><span class="kw">pub fn </span>bytes_from_field_elements&lt;T, F&gt;(elems: T) -&gt; Vec&lt;u8&gt;
 <span class="kw">where
     </span>T: AsRef&lt;[F]&gt;,
     F: Field,
@@ -447,71 +538,85 @@
     // This should be possible at compile time but I don&#39;t know how.
     // Example: could use &lt;https://docs.rs/static_assertions&gt; but then you hit
     // &lt;https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512&gt;
-    </span><span class="macro">assert!</span>(F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>);
+    </span><span class="macro">assert!</span>(
+        F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>,
+        <span class="string">&quot;base prime field modulus bit len {} should exceed 64&quot;</span>,
+        F::BasePrimeField::MODULUS_BIT_SIZE
+    );
 
-    <span class="kw">let </span>(first_elem, elems) = elems.as_ref().split_first().ok_or(<span class="string">&quot;empty elems&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">if </span>elems.as_ref().is_empty() {
+        <span class="kw">return </span>Vec::new();
+    }
+
+    <span class="kw">let </span>(first_elem, elems) = elems
+        .as_ref()
+        .split_first()
+        .expect(<span class="string">&quot;elems should be non-empty&quot;</span>);
 
     <span class="comment">// the first element encodes the number of bytes to return
-    </span><span class="kw">let </span>first_elem = first_elem
-        .to_base_prime_field_elements()
-        .next()
-        .ok_or(<span class="string">&quot;empty first elem&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>first_elem_bytes = first_elem.into_bigint().to_bytes_le();
-    <span class="kw">let </span>first_elem_bytes = first_elem_bytes
-        .get(..mem::size_of::&lt;u64&gt;())
-        .ok_or(<span class="string">&quot;can&#39;t read result len from field element: not enough bytes&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>result_len = u64::from_le_bytes(first_elem_bytes.try_into().unwrap());
-    <span class="kw">let </span>result_len =
-        usize::try_from(result_len).map_err(|<span class="kw">_</span>| <span class="string">&quot;can&#39;t convert result len u64 to usize&quot;</span>)<span class="question-mark">?</span>;
+    </span><span class="kw">let </span>result_len = usize::try_from(u64::from_le_bytes(
+        first_elem
+            .to_base_prime_field_elements()
+            .next()
+            .expect(<span class="string">&quot;first base prime field elem should be non-empty&quot;</span>)
+            .into_bigint()
+            .to_bytes_le()[..mem::size_of::&lt;u64&gt;()]
+            .try_into()
+            .expect(<span class="string">&quot;conversion from [u8] to u64 should succeed&quot;</span>),
+    ))
+    .expect(<span class="string">&quot;result len conversion from u64 to usize should succeed&quot;</span>);
 
-    <span class="kw">let </span>primefield_chunk_len = ((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>) <span class="kw">as </span>usize;
-    <span class="kw">let </span>extension_degree = F::extension_degree() <span class="kw">as </span>usize;
-    <span class="kw">let </span>field_chunk_len = primefield_chunk_len * extension_degree;
-    <span class="kw">let </span>result_capacity = elems.len() * field_chunk_len;
+    <span class="comment">// various quantities
+    </span><span class="kw">let </span>primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>)
+        .expect(<span class="string">&quot;prime field modulus byte len should fit into usize&quot;</span>);
+    <span class="kw">let </span>extension_degree =
+        usize::try_from(F::extension_degree()).expect(<span class="string">&quot;extension degree should fit into usize&quot;</span>);
+    <span class="kw">let </span>field_bytes_len = primefield_bytes_len
+        .checked_mul(extension_degree)
+        .expect(<span class="string">&quot;field element byte len should fit into usize&quot;</span>);
+    <span class="kw">let </span>result_capacity = field_bytes_len
+        .checked_mul(elems.len())
+        .expect(<span class="string">&quot;result capacity should fit into usize&quot;</span>);
 
-    <span class="comment">// the original bytes MUST end BEFORE the final field element
-    // thus, result_len &lt;= result_capacity
-    // the original bytes SHOULD end somewhere WITHIN the final field element
-    // however, we allow the user to pad elems with zeros so as to facilitate
-    // use cases such as polynomial interpolation
-    </span><span class="kw">if </span>result_len &gt; result_capacity {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(
-            <span class="string">&quot;result len {} exceeds elems capacity {}&quot;</span>,
-            result_len, result_capacity
-        ));
-    }
+    <span class="comment">// If elems was produced by bytes_to_field_elements
+    // then the original bytes MUST end before the final field element
+    // so we expect result_len &lt;= result_capacity.
+    // But if elems is arbitrary then result_len could be large,
+    // so we enforce result_len &lt;= result_capacity.
+    // Do not enforce a lower bound on result_len because the caller might
+    // pad elems, for example with extra zeros from polynomial interpolation.
+    </span><span class="kw">let </span>result_len = min(result_len, result_capacity);
 
     <span class="comment">// for each base prime field element:
     // - convert to bytes
-    // - drop the trailing byte, which must be zero
+    // - drop the trailing byte
     // - append bytes to result
     </span><span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(result_capacity);
     <span class="kw">for </span>elem <span class="kw">in </span>elems {
         <span class="kw">for </span>primefield_elem <span class="kw">in </span>elem.to_base_prime_field_elements() {
-            <span class="kw">let </span>bytes = primefield_elem.into_bigint().to_bytes_le();
-            <span class="macro">assert_eq!</span>(bytes.len(), primefield_chunk_len + <span class="number">1</span>);
-            <span class="kw">let </span>(last_byte, bytes) = bytes
-                .split_last()
-                .ok_or(<span class="string">&quot;prime field elem bytes has 0 len&quot;</span>)<span class="question-mark">?</span>;
-            <span class="kw">if </span><span class="kw-2">*</span>last_byte != <span class="number">0 </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;nonzero last byte {} in prime field elem&quot;</span>,
-                    <span class="kw-2">*</span>last_byte
-                ));
-            }
-            result.extend_from_slice(bytes);
+            <span class="kw">let </span>primefield_bytes = primefield_elem.into_bigint().to_bytes_le();
+            <span class="kw">let </span>(<span class="kw">_</span>, primefield_bytes) = primefield_bytes
+                .split_last() <span class="comment">// ignore the final byte of primefield_elem
+                </span>.expect(<span class="string">&quot;prime field elem bytes should be non-empty&quot;</span>);
+            <span class="macro">assert_eq!</span>(
+                primefield_bytes.len(),
+                primefield_bytes_len,
+                <span class="string">&quot;invalid prime field elem bytes len, expect {}, found {}&quot;</span>,
+                primefield_bytes_len,
+                primefield_bytes.len()
+            );
+            result.extend_from_slice(primefield_bytes);
         }
     }
-    <span class="macro">assert_eq!</span>(result.len(), result_capacity);
-
-    <span class="comment">// all bytes to truncate should be zero
-    </span><span class="kw">for </span>byte <span class="kw">in </span>result.iter().skip(result_len) {
-        <span class="kw">if </span><span class="kw-2">*</span>byte != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="string">&quot;nonzero bytes beyond result len&quot;</span>.into());
-        }
-    }
+    <span class="macro">assert_eq!</span>(
+        result.len(),
+        result_capacity,
+        <span class="string">&quot;invalid result len, expect {}, found {}&quot;</span>,
+        result_capacity,
+        result.len()
+    );
     result.truncate(result_len);
-    <span class="prelude-val">Ok</span>(result)
+    result
 }
 
 <span class="attr">#[cfg(test)]
@@ -555,23 +660,34 @@
     }
 
     <span class="kw">fn </span>bytes_field_elems&lt;F: Field&gt;() {
+        <span class="kw">let </span>lengths = [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">16</span>, <span class="number">31</span>, <span class="number">32</span>, <span class="number">33</span>, <span class="number">48</span>, <span class="number">65</span>, <span class="number">100</span>, <span class="number">200</span>];
+        <span class="kw">let </span>trailing_zeros_lengths = [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">50</span>];
+
+        <span class="kw">let </span>max_len = <span class="kw-2">*</span>lengths.iter().max().unwrap();
+        <span class="kw">let </span>max_trailing_zeros_len = <span class="kw-2">*</span>trailing_zeros_lengths.iter().max().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes = Vec::with_capacity(max_len + max_trailing_zeros_len);
+        <span class="kw">let </span><span class="kw-2">mut </span>elems: Vec&lt;F&gt; = Vec::with_capacity(max_len);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
-        <span class="kw">let </span>lengths = [<span class="number">2</span>, <span class="number">16</span>, <span class="number">32</span>, <span class="number">48</span>, <span class="number">63</span>, <span class="number">64</span>, <span class="number">65</span>, <span class="number">100</span>, <span class="number">200</span>];
 
         <span class="kw">for </span>len <span class="kw">in </span>lengths {
-            <span class="kw">let </span><span class="kw-2">mut </span>random_bytes = <span class="macro">vec!</span>[<span class="number">0u8</span>; len];
-            rng.fill_bytes(<span class="kw-2">&amp;mut </span>random_bytes);
+            <span class="kw">for </span>trailing_zeros_len <span class="kw">in </span>trailing_zeros_lengths {
+                <span class="comment">// fill bytes with random bytes and trailing zeros
+                </span>bytes.resize(len + trailing_zeros_len, <span class="number">0</span>);
+                rng.fill_bytes(<span class="kw-2">&amp;mut </span>bytes[..len]);
+                bytes[len..].fill(<span class="number">0</span>);
 
-            <span class="kw">let </span>elems: Vec&lt;F&gt; = bytes_to_field_elements(<span class="kw-2">&amp;</span>random_bytes);
-            <span class="kw">let </span>result = bytes_from_field_elements(elems).unwrap();
-            <span class="macro">assert_eq!</span>(result, random_bytes);
+                <span class="comment">// round trip
+                </span><span class="kw">let </span>encoded_bytes: Vec&lt;F&gt; = bytes_to_field_elements(<span class="kw-2">&amp;</span>bytes);
+                <span class="kw">let </span>result = bytes_from_field_elements(encoded_bytes);
+                <span class="macro">assert_eq!</span>(result, bytes);
+            }
+
+            <span class="comment">// test infallibility of bytes_from_field_elements
+            // with random field elements
+            </span>elems.resize(len, F::zero());
+            elems.iter_mut().for_each(|e| <span class="kw-2">*</span>e = F::rand(<span class="kw-2">&amp;mut </span>rng));
+            bytes_from_field_elements(<span class="kw-2">&amp;</span>elems);
         }
-
-        <span class="comment">// trailing zeros
-        </span><span class="kw">let </span>bytes = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>];
-        <span class="kw">let </span>elems: Vec&lt;F&gt; = bytes_to_field_elements(bytes);
-        <span class="kw">let </span>result = bytes_from_field_elements(elems).unwrap();
-        <span class="macro">assert_eq!</span>(result, bytes);
     }
 
     <span class="attr">#[test]
