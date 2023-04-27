@@ -173,7 +173,7 @@ mod tests {
     use super::*;
     use ark_bls12_381::{Fr, G1Projective};
     use ark_ff::Field;
-    use ark_std::{convert::Into, ops::AddAssign, UniformRand};
+    use ark_std::{convert::Into, ops::AddAssign, vec, UniformRand};
     use jf_utils::test_rng;
 
     // a MxN matrix, M rows, N cols.
@@ -269,14 +269,12 @@ mod tests {
     #[test]
     fn test_circulant_mul() -> Result<(), PrimitivesError> {
         let mut rng = test_rng();
+        // happy path
         const N: usize = 16;
 
         let cir_matrix = CirculantMatrix::new((0..N).map(|_| Fr::rand(&mut rng)).collect());
 
-        let mut msgs = [G1Projective::default(); N];
-        for m in msgs.iter_mut() {
-            *m = G1Projective::rand(&mut rng);
-        }
+        let msgs = [G1Projective::rand(&mut rng); N];
         let msg_matrix = Matrix([msgs]);
 
         let expected: Vector<G1Projective, N> =
@@ -287,8 +285,38 @@ mod tests {
         assert_eq!(
             <Vector<G1Projective, N> as Into<Vec<G1Projective>>>::into(expected),
             got,
-            "Fast Circulant Matrix mul is incorrect."
+            "Fast Circulant Matrix mul for EC group is incorrect."
         );
+
+        let f_msgs = [Fr::rand(&mut rng); N];
+        let f_msg_matrix = Matrix([f_msgs]);
+
+        let expected: Vector<Fr, N> =
+            naive_matrix_mul(cir_matrix.clone().full_matrix(), f_msg_matrix.transpose())
+                .transpose()
+                .into();
+        let got = cir_matrix.fast_vec_mul(&f_msgs)?;
+        assert_eq!(
+            <Vector<Fr, N> as Into<Vec<Fr>>>::into(expected),
+            got,
+            "Fast Circulant Matrix mul for field is incorrect."
+        );
+
+        // bad path
+        // mismatched matrix.col.len() and msgs.len() should fail
+        let bad_msg = vec![msgs.to_vec(), vec![G1Projective::rand(&mut rng)]].concat();
+        assert!(cir_matrix.fast_vec_mul(&bad_msg).is_err());
+
+        // non power-of-two matrix fast mul should fail
+        let m = bad_msg.len(); // same dimension as the message, but not a power-of-two
+        let cir_matrix = CirculantMatrix::new((0..m).map(|_| Fr::rand(&mut rng)).collect());
+
+        assert!(
+            !m.is_power_of_two()
+                && m == cir_matrix.col.len()
+                && cir_matrix.fast_vec_mul(&bad_msg).is_err()
+        );
+
         Ok(())
     }
 

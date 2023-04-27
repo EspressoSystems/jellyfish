@@ -290,22 +290,32 @@ pub(crate) mod tests {
         for _ in 0..5 {
             let degree = rng.gen_range(5..40);
             let f_1 = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
-            let f_2 = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
+            let mut f_2 = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
             let expected_f_3 = DensePolynomial::from_coefficients_slice(&f_1.coeffs)
                 + DensePolynomial::from_coefficients_slice(&f_2.coeffs);
-            let f_3 = f_1 + f_2;
+            let f_3 = f_1.clone() + f_2.clone();
             assert_eq!(f_3.coeffs, expected_f_3.coeffs);
 
+            f_2.coeffs[degree] = -f_1.coeffs[degree];
+            let f_4 = f_1 + f_2;
+            assert_eq!(f_4.degree(), degree - 1,);
+
             let g_1 = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
-            let g_2 = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
+            let mut g_2 = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
             let expected_g_3: Vec<G1Projective> = g_1
                 .coeffs
                 .iter()
                 .zip(g_2.coeffs.iter())
                 .map(|(a, b)| a + b)
                 .collect();
-            let g_3 = g_1 + g_2;
+            let g_3 = g_1.clone() + g_2.clone();
             assert_eq!(g_3.coeffs, expected_g_3);
+
+            g_2.coeffs[degree] = -g_1.coeffs[degree];
+            g_2.coeffs[degree - 1] = -g_1.coeffs[degree - 1];
+            g_2.coeffs[degree - 2] = -g_1.coeffs[degree - 2];
+            let g_4 = g_1 + g_2;
+            assert_eq!(g_4.degree(), degree - 3);
         }
     }
 
