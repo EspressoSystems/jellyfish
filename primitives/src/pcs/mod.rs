@@ -228,11 +228,10 @@ pub trait UnivariatePCS:
     PolynomialCommitmentScheme<Point = <Self as PolynomialCommitmentScheme>::Evaluation>
 {
     /// Similar to [`PolynomialCommitmentScheme::trim()`], but trim to support
-    /// the next power of two degree. This is particularly useful for any
-    /// operations that require FFTs, such as [`Self::multi_open_rou()`]
-    /// API.
+    /// the FFT operations, such as [`Self::multi_open_rou()`] or other
+    /// operations that involves roots of unity.
     #[allow(clippy::type_complexity)]
-    fn trim_next_power_of_two(
+    fn trim_fft_size(
         srs: impl Borrow<Self::SRS>,
         supported_degree: usize,
     ) -> Result<
@@ -242,8 +241,7 @@ pub trait UnivariatePCS:
         ),
         PCSError,
     > {
-        srs.borrow()
-            .trim(checked_next_power_of_two(supported_degree)?)
+        srs.borrow().trim(checked_fft_size(supported_degree)?)
     }
 
     /// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
@@ -257,11 +255,18 @@ pub trait UnivariatePCS:
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError>;
 }
 
-// elementary wrapper around std's default API with our context-specific
-// `PCSError`.
+// compute the fft size (i.e. `num_coeffs`) given a degree.
 #[inline]
-pub(crate) fn checked_next_power_of_two(x: usize) -> Result<usize, PCSError> {
-    x.checked_next_power_of_two().ok_or_else(|| {
-        PCSError::InvalidParameters(ark_std::format!("Next power of two overflows! Got: {}", x))
-    })
+pub(crate) fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
+    let err = || {
+        PCSError::InvalidParameters(ark_std::format!(
+            "Next power of two overflows! Got: {}",
+            degree
+        ))
+    };
+    if degree.is_power_of_two() {
+        degree.checked_mul(2).ok_or_else(err)
+    } else {
+        degree.checked_next_power_of_two().ok_or_else(err)
+    }
 }

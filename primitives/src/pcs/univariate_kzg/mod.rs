@@ -337,7 +337,14 @@ where
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
         // First, pad to power_of_two, since Toeplitz mul only works for 2^k
         let mut padded_coeffs: Vec<F> = poly_coeffs.to_vec();
-        let padded_degree = super::checked_next_power_of_two(padded_coeffs.len() - 1)?;
+        let padded_degree = (padded_coeffs.len() - 1)
+            .checked_next_power_of_two()
+            .ok_or_else(|| {
+                PCSError::InvalidParameters(ark_std::format!(
+                    "Next power of two overflows! Got: {}",
+                    (padded_coeffs.len() - 1)
+                ))
+            })?;
         let padded_len = padded_degree + 1;
         padded_coeffs.resize(padded_len, F::zero());
 
@@ -366,19 +373,14 @@ where
 
         // Step 2. evaluate h(X) with coeffs \vec{h} at `points` using FFT
         let mut h_poly = GeneralDensePolynomial::from_coeff_vec(h_vec);
+        // NOTE: this resizing is to ensure that when computing the proofs by evaluting
+        // h(X), we are using the same roots-of-unity as evaluation points of f(X) which
+        // uses FFT, therefore we resize to the `fft_size`.
+        h_poly.coeffs.resize(
+            super::checked_fft_size(poly_coeffs.len() - 1)?,
+            E::G1::zero(),
+        );
 
-        if padded_len == poly_coeffs.len() {
-            // NOTE!! this is the trickist subtle line in this function !!
-            // `polynomial` has a degree `d` which is guaranteed to be power-of-two to use
-            // Toeplitz fast mul algorithm. h(X) has a degree `d-1` which cause a plain
-            // domain instantiation on `h_poly` half the size of that for `polynomial`,
-            // which leads to different vector of roots of unity used, ultimately leading to
-            // wrong proofs. Thus, to make sure during FFT, the same vector of roots of
-            // unity are used, we need to manually resize the coefficients so that
-            // `GeneralDensePolynomial::batch_evaluate` are informed to use the domain of
-            // size (d+1).next_power_of_two().
-            h_poly.coeffs.resize(padded_len, E::G1::zero());
-        }
         Ok(h_poly)
     }
 }
@@ -527,10 +529,10 @@ mod tests {
         let mut rng = test_rng();
         let max_degree = 33;
         let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(&mut rng, max_degree)?;
+        let degrees = [14, 15, 16, 17, 18];
 
-        for _ in 0..5 {
-            let degree = rng.gen_range(5..max_degree / 2); // any degree (even non-power-of-two)
-            let num_points = rng.gen_range(5..max_degree);
+        for degree in degrees {
+            let num_points = rng.gen_range(5..degree);
             ark_std::println!(
                 "Multi-opening: poly deg: {}, num of points: {}",
                 degree,
@@ -540,7 +542,7 @@ mod tests {
             // NOTE: THIS IS IMPORTANT FOR USER OF `multi_open()`!
             // since we will pad your polynomial degree to the next_power_of_two, you will
             // need to trim to the correct padded degree as follows:
-            let (ck, _) = UnivariateKzgPCS::<E>::trim_next_power_of_two(&pp, degree)?;
+            let (ck, _) = UnivariateKzgPCS::<E>::trim_fft_size(&pp, degree)?;
             let poly = <DensePolynomial<Fr> as DenseUVPolynomial<Fr>>::rand(degree, &mut rng);
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
 
@@ -558,15 +560,10 @@ mod tests {
                 });
 
             // Second, test roots-of-unity points
-            let padded_degree = crate::pcs::checked_next_power_of_two(degree)?;
+            let fft_size = crate::pcs::checked_fft_size(degree)?;
             let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points)?;
 
-            assert_eq!(
-                get_roots_of_unity::<Fr>(padded_degree),
-                get_roots_of_unity(degree),
-                "post-padded roots of unity should be the same"
-            );
-            let roots_of_unity: Vec<Fr> = get_roots_of_unity(padded_degree);
+            let roots_of_unity: Vec<Fr> = get_roots_of_unity(fft_size);
 
             roots_of_unity
                 .iter()

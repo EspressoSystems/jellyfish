@@ -81,7 +81,7 @@ where
     /// Outputs a univariate polynomial of degree `d` where
     /// each coefficient is sampled uniformly at random.
     #[allow(dead_code)]
-    fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
+    pub fn rand<R: Rng>(d: usize, rng: &mut R) -> Self {
         let mut random_coeffs = Vec::new();
         for _ in 0..=d {
             random_coeffs.push(T::rand(rng));
@@ -249,11 +249,7 @@ pub(crate) mod tests {
     // helper function to generate all roots of unity for evaluating polynomial with
     // `num_coeffs` coeffs.
     pub(crate) fn get_roots_of_unity<F: FftField>(num_coeffs: usize) -> Vec<F> {
-        let size = if num_coeffs.is_power_of_two() {
-            num_coeffs
-        } else {
-            num_coeffs.checked_next_power_of_two().unwrap()
-        } as u64;
+        let size = num_coeffs.checked_next_power_of_two().unwrap() as u64;
 
         let group_gen = F::get_root_of_unity(size)
             .expect("Failed to get roots of unity, maybe wronge domain size");
@@ -316,12 +312,12 @@ pub(crate) mod tests {
     #[test]
     fn test_multi_open() {
         let mut rng = test_rng();
+        let degrees = [14, 15, 16, 17, 18];
 
-        for _ in 0..5 {
+        for degree in degrees {
             // TODO: (alex) change to a higher degree when need to test cutoff point and
             // FFT-based eval on arbitrary points
-            let degree = rng.gen_range(5..30);
-            let num_points = rng.gen_range(5..30);
+            let num_points = rng.gen_range(5..degree);
             let f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
             let g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
 
