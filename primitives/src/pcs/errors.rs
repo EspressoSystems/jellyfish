@@ -7,8 +7,9 @@
 //! Error module.
 
 use super::transcript::TranscriptError;
+use crate::errors::PrimitivesError;
 use ark_serialize::SerializationError;
-use ark_std::string::String;
+use ark_std::string::{String, ToString};
 use displaydoc::Display;
 
 /// A `enum` specifying the possible failure modes of the PCS.
@@ -26,6 +27,8 @@ pub enum PCSError {
     SerializationError(SerializationError),
     /// Transcript error {0}
     TranscriptError(TranscriptError),
+    /// Error from upstream dependencies: {0}
+    UpstreamError(String),
 }
 
 impl ark_std::error::Error for PCSError {}
@@ -39,5 +42,11 @@ impl From<SerializationError> for PCSError {
 impl From<TranscriptError> for PCSError {
     fn from(e: TranscriptError) -> Self {
         Self::TranscriptError(e)
+    }
+}
+
+impl From<PrimitivesError> for PCSError {
+    fn from(e: PrimitivesError) -> Self {
+        Self::UpstreamError(e.to_string())
     }
 }

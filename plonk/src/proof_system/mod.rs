@@ -49,8 +49,18 @@ pub trait UniversalSNARK<E: Pairing> {
     /// out to have higher assurance on the "toxic waste"/trapdoor being thrown
     /// away to ensure soundness of the argument system.
     fn universal_setup<R: RngCore + CryptoRng>(
-        max_degree: usize,
-        rng: &mut R,
+        _max_degree: usize,
+        _rng: &mut R,
+    ) -> Result<Self::UniversalSRS, Self::Error> {
+        unimplemented!("Should load from files in practice.");
+    }
+
+    /// Same as `universal_setup`, but for testing and benchmarking code only.
+    /// Insecure local generation for trusted setup! Don't use in production!
+    #[cfg(any(test, feature = "test-srs"))]
+    fn universal_setup_for_testing<R: RngCore + CryptoRng>(
+        _max_degree: usize,
+        _rng: &mut R,
     ) -> Result<Self::UniversalSRS, Self::Error>;
 
     /// Circuit-specific preprocessing to compute the proving/verifying keys.

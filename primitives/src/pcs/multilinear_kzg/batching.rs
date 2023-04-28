@@ -55,7 +55,7 @@ use ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, 
 ///
 /// TODO: Migrate the batching algorithm in HyperPlonk repo
 pub(super) fn batch_open_internal<E: Pairing>(
-    uni_prover_param: &UnivariateProverParam<E::G1Affine>,
+    uni_prover_param: &UnivariateProverParam<E>,
     ml_prover_param: &MultilinearProverParam<E>,
     polynomials: &[Arc<DenseMultilinearExtension<E::ScalarField>>],
     batch_commitment: &Commitment<E>,

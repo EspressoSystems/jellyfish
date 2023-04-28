@@ -56,3 +56,4 @@ test_apis = [] # exposing apis for testing purpose
 parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
             "jf-utils/parallel", "jf-relation/parallel", "jf-primitives/parallel",
             "rayon" ]
+test-srs = []

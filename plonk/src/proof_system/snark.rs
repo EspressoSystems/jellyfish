@@ -439,11 +439,51 @@ where
     type UniversalSRS = UniversalSrs<E>;
     type Error = PlonkError;
 
-    fn universal_setup<R: RngCore + CryptoRng>(
+    // FIXME: (alex) see <https://github.com/EspressoSystems/jellyfish/issues/249>
+    #[cfg(any(test, feature = "test-srs"))]
+    fn universal_setup_for_testing<R: RngCore + CryptoRng>(
         max_degree: usize,
         rng: &mut R,
     ) -> Result<Self::UniversalSRS, Self::Error> {
-        UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
+        use ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
+        use ark_ff::PrimeField;
+        use ark_std::{end_timer, start_timer, UniformRand};
+
+        let setup_time = start_timer!(|| format!("KZG10::Setup with degree {}", max_degree));
+        let beta = E::ScalarField::rand(rng);
+        let g = E::G1::rand(rng);
+        let h = E::G2::rand(rng);
+
+        let mut powers_of_beta = vec![E::ScalarField::one()];
+
+        let mut cur = beta;
+        for _ in 0..max_degree {
+            powers_of_beta.push(cur);
+            cur *= &beta;
+        }
+
+        let window_size = FixedBase::get_mul_window_size(max_degree + 1);
+
+        let scalar_bits = E::ScalarField::MODULUS_BIT_SIZE as usize;
+        let g_time = start_timer!(|| "Generating powers of G");
+        // TODO: parallelization
+        let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
+        let powers_of_g =
+            FixedBase::msm::<E::G1>(scalar_bits, window_size, &g_table, &powers_of_beta);
+        end_timer!(g_time);
+
+        let powers_of_g = E::G1::normalize_batch(&powers_of_g);
+
+        let h = h.into_affine();
+        let beta_h = (h * beta).into_affine();
+
+        let pp = UniversalSrs {
+            powers_of_g,
+            h,
+            beta_h,
+        };
+        end_timer!(setup_time);
+        Ok(pp)
     }
 
     /// Input a circuit and the SRS, precompute the proving key and verification
@@ -735,7 +775,7 @@ pub mod test {
         let sigmas = circuit.compute_extended_permutation_polynomials()?;
 
         let max_degree = 64 + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
         let (pk, vk) = PlonkKzgSnark::<E>::preprocess(&srs, &circuit)?;
 
         // check proving key
@@ -867,7 +907,7 @@ pub mod test {
         let rng = &mut test_rng();
         let n = 64;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         // 2. Create circuits
         let circuits = (0..6)
@@ -1083,7 +1123,7 @@ pub mod test {
         let rng = &mut test_rng();
         let n = 8;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         // 2. Create circuits
         let mut cs1: PlonkCircuit<E::ScalarField> = match plonk_type {
@@ -1182,7 +1222,7 @@ pub mod test {
         let rng = &mut test_rng();
         let n = 64;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         // 2. Create the circuit
         let circuit = gen_circuit_for_test(10, 3, plonk_type)?;
@@ -1451,7 +1491,7 @@ pub mod test {
         let rng = &mut jf_utils::test_rng();
         let circuit = gen_circuit_for_test(3, 4, PlonkType::TurboPlonk)?;
         let max_degree = 80;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         let (pk, _) = PlonkKzgSnark::<E>::preprocess(&srs, &circuit)?;
         let proof =
@@ -1497,7 +1537,7 @@ pub mod test {
         let rng = &mut jf_utils::test_rng();
         let circuit = gen_circuit_for_test(3, 4, plonk_type)?;
         let max_degree = 80;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         let (pk, vk) = PlonkKzgSnark::<E>::preprocess(&srs, &circuit)?;
         let proof = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &circuit, &pk, None)?;
@@ -1561,7 +1601,7 @@ pub mod test {
         let rng = &mut test_rng();
         let n = 128;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         // 2. Create many circuits with same domain size
         let circuits = (6..13)

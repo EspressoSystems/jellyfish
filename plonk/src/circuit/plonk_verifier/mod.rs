@@ -357,7 +357,7 @@ mod test {
         let rng = &mut test_rng();
         let n = 32;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         // Setup instances and create verifying keys
         let mut vks_type_a = vec![];
@@ -478,7 +478,7 @@ mod test {
             // 1. Simulate universal setup
             let n = 1 << log_circuit_size;
             let max_degree = n + 2;
-            let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+            let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
             // 2. Setup instances
             let shared_public_input = E::ScalarField::rand(rng);
@@ -764,7 +764,7 @@ mod test {
         // 1. Simulate universal setup
         let n = 1 << i;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         for _ in 0..2 {
             // =======================================

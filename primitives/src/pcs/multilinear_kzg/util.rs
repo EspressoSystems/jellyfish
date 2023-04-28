@@ -15,6 +15,7 @@ use ark_poly::{
 use ark_std::{end_timer, format, log2, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 /// Evaluate eq polynomial. use the public one later
+#[cfg(any(test, feature = "test-srs"))]
 pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {
     if x.len() != y.len() {
         return Err(PCSError::InvalidParameters(
@@ -32,7 +33,6 @@ pub(crate) fn eq_eval<F: PrimeField>(x: &[F], y: &[F]) -> Result<F, PCSError> {
 }
 
 /// Decompose an integer into a binary vector in little endian.
-#[allow(dead_code)]
 pub(crate) fn bit_decompose(input: u64, num_var: usize) -> Vec<bool> {
     let mut res = Vec::with_capacity(num_var);
     let mut i = input;
@@ -51,7 +51,7 @@ pub(crate) fn bit_decompose(input: u64, num_var: usize) -> Vec<bool> {
 // - mle has degree one
 // - worst case is `\prod_{i=0}^{mle_num_vars-1} l_i(x) < point_len * mle_num_vars`
 #[inline]
-#[allow(dead_code)]
+#[cfg(test)]
 pub fn compute_qx_degree(mle_num_vars: usize, point_len: usize) -> usize {
     mle_num_vars * point_len
 }

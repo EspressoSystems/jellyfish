@@ -485,7 +485,7 @@ mod test {
         let rng = &mut test_rng();
         let n = 128;
         let max_degree = n + 2;
-        let srs = PlonkKzgSnark::<E>::universal_setup(max_degree, rng)?;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
 
         // 2. Setup instances
         let shared_public_input = E::ScalarField::rand(rng);

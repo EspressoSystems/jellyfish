@@ -5,22 +5,16 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
-use crate::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
-use ark_ff::{Field, PrimeField, Zero};
-use ark_poly::DenseMultilinearExtension;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{
-    collections::LinkedList,
-    end_timer, format,
-    rand::{CryptoRng, RngCore},
-    start_timer,
-    string::ToString,
-    vec,
-    vec::Vec,
-    UniformRand,
+use crate::pcs::{
+    prelude::PCSError,
+    univariate_kzg::srs::{
+        UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
+    },
+    StructuredReferenceString,
 };
-use core::iter::FromIterator;
+use ark_ec::{pairing::Pairing, AffineRepr};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::{format, vec::Vec};
 
 /// Evaluations over {0,1}^n for G1 or G2
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
@@ -123,13 +117,148 @@ impl<E: Pairing> StructuredReferenceString for MultilinearUniversalParams<E> {
         Ok((ck, vk))
     }
 
-    /// Build SRS for testing.
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing<R>(rng: &mut R, num_vars: usize) -> Result<Self, PCSError>
+    where
+        R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        tests::gen_srs_for_testing(rng, num_vars)
+    }
+}
+
+// Implement `trait StructuredReferenceString` for (ML_pp, Uni_pp) to be used in
+// MLE PCS.
+impl<E: Pairing> StructuredReferenceString
+    for (MultilinearUniversalParams<E>, UnivariateUniversalParams<E>)
+{
+    type ProverParam = (MultilinearProverParam<E>, UnivariateProverParam<E>);
+    type VerifierParam = (MultilinearVerifierParam<E>, UnivariateVerifierParam<E>);
+
+    fn trim(
+        &self,
+        supported_size: usize,
+    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
+        let ml_pp = <MultilinearUniversalParams<E> as StructuredReferenceString>::trim(
+            &self.0,
+            supported_size,
+        )?;
+        let uni_pp = <UnivariateUniversalParams<E> as StructuredReferenceString>::trim(
+            &self.1,
+            supported_size,
+        )?;
+
+        Ok(((ml_pp.0, uni_pp.0), (ml_pp.1, uni_pp.1)))
+    }
+
+    fn extract_prover_param(&self, supported_size: usize) -> Self::ProverParam {
+        let ml_prover_param =
+            <MultilinearUniversalParams<E> as StructuredReferenceString>::extract_prover_param(
+                &self.0,
+                supported_size,
+            );
+        let uni_prover_param =
+            <UnivariateUniversalParams<E> as StructuredReferenceString>::extract_prover_param(
+                &self.1,
+                supported_size,
+            );
+
+        (ml_prover_param, uni_prover_param)
+    }
+
+    fn extract_verifier_param(&self, supported_size: usize) -> Self::VerifierParam {
+        let ml_verifier_param =
+            <MultilinearUniversalParams<E> as StructuredReferenceString>::extract_verifier_param(
+                &self.0,
+                supported_size,
+            );
+        let uni_verifier_param =
+            <UnivariateUniversalParams<E> as StructuredReferenceString>::extract_verifier_param(
+                &self.1,
+                supported_size,
+            );
+
+        (ml_verifier_param, uni_verifier_param)
+    }
+
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing<R>(rng: &mut R, supported_size: usize) -> Result<Self, PCSError>
+    where
+        R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        let ml_pp =
+            <MultilinearUniversalParams<E> as StructuredReferenceString>::gen_srs_for_testing(
+                rng,
+                supported_size,
+            )?;
+        let uni_pp =
+            <UnivariateUniversalParams<E> as StructuredReferenceString>::gen_srs_for_testing(
+                rng,
+                supported_size,
+            )?;
+        Ok((ml_pp, uni_pp))
+    }
+}
+
+#[cfg(any(test, feature = "test-srs"))]
+mod tests {
+    use super::*;
+    use crate::pcs::multilinear_kzg::util::eq_eval;
+    use ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
+    use ark_ff::{Field, PrimeField, Zero};
+    use ark_poly::DenseMultilinearExtension;
+    use ark_std::{
+        collections::LinkedList,
+        end_timer,
+        iter::FromIterator,
+        rand::{CryptoRng, RngCore},
+        start_timer,
+        string::ToString,
+        vec,
+        vec::Vec,
+        UniformRand,
+    };
+
+    // fix first `pad` variables of `poly` represented in evaluation form to zero
+    fn remove_dummy_variable<F: Field>(poly: &[F], pad: usize) -> Result<Vec<F>, PCSError> {
+        if pad == 0 {
+            return Ok(poly.to_vec());
+        }
+        if !poly.len().is_power_of_two() {
+            return Err(PCSError::InvalidParameters(
+                "Size of polynomial should be power of two.".to_string(),
+            ));
+        }
+        let nv = ark_std::log2(poly.len()) as usize - pad;
+
+        Ok((0..(1 << nv)).map(|x| poly[x << pad]).collect())
+    }
+
+    // Generate eq(t,x), a product of multilinear polynomials with fixed t.
+    // eq(a,b) is takes extensions of a,b in {0,1}^num_vars such that if a and
+    // b in {0,1}^num_vars are equal then this polynomial evaluates to 1.
+    fn eq_extension<F: PrimeField>(t: &[F]) -> Vec<DenseMultilinearExtension<F>> {
+        let start = start_timer!(|| "eq extension");
+
+        let dim = t.len();
+        let mut result = Vec::new();
+        for (i, &ti) in t.iter().enumerate().take(dim) {
+            let mut poly = Vec::with_capacity(1 << dim);
+            for x in 0..(1 << dim) {
+                let xi = if x >> i & 1 == 1 { F::one() } else { F::zero() };
+                let ti_xi = ti * xi;
+                poly.push(ti_xi + ti_xi - xi - ti + F::one());
+            }
+            result.push(DenseMultilinearExtension::from_evaluations_vec(dim, poly));
+        }
+
+        end_timer!(start);
+        result
+    }
+
+    pub(crate) fn gen_srs_for_testing<E: Pairing, R: RngCore + CryptoRng>(
         rng: &mut R,
         num_vars: usize,
-    ) -> Result<Self, PCSError> {
+    ) -> Result<MultilinearUniversalParams<E>, PCSError> {
         if num_vars == 0 {
             return Err(PCSError::InvalidParameters(
                 "constant polynomial not supported".to_string(),
@@ -201,7 +330,7 @@ impl<E: Pairing> StructuredReferenceString for MultilinearUniversalParams<E> {
         };
         powers_of_g.push(gg);
 
-        let pp = Self::ProverParam {
+        let pp = MultilinearProverParam {
             num_vars,
             g: g.into_affine(),
             h: h.into_affine(),
@@ -218,59 +347,18 @@ impl<E: Pairing> StructuredReferenceString for MultilinearUniversalParams<E> {
         };
         end_timer!(vp_generation_timer);
         end_timer!(total_timer);
-        Ok(Self {
+        Ok(MultilinearUniversalParams {
             prover_param: pp,
             h_mask,
         })
     }
-}
-
-/// fix first `pad` variables of `poly` represented in evaluation form to zero
-fn remove_dummy_variable<F: Field>(poly: &[F], pad: usize) -> Result<Vec<F>, PCSError> {
-    if pad == 0 {
-        return Ok(poly.to_vec());
-    }
-    if !poly.len().is_power_of_two() {
-        return Err(PCSError::InvalidParameters(
-            "Size of polynomial should be power of two.".to_string(),
-        ));
-    }
-    let nv = ark_std::log2(poly.len()) as usize - pad;
-
-    Ok((0..(1 << nv)).map(|x| poly[x << pad]).collect())
-}
-
-/// Generate eq(t,x), a product of multilinear polynomials with fixed t.
-/// eq(a,b) is takes extensions of a,b in {0,1}^num_vars such that if a and b in
-/// {0,1}^num_vars are equal then this polynomial evaluates to 1.
-fn eq_extension<F: PrimeField>(t: &[F]) -> Vec<DenseMultilinearExtension<F>> {
-    let start = start_timer!(|| "eq extension");
-
-    let dim = t.len();
-    let mut result = Vec::new();
-    for (i, &ti) in t.iter().enumerate().take(dim) {
-        let mut poly = Vec::with_capacity(1 << dim);
-        for x in 0..(1 << dim) {
-            let xi = if x >> i & 1 == 1 { F::one() } else { F::zero() };
-            let ti_xi = ti * xi;
-            poly.push(ti_xi + ti_xi - xi - ti + F::one());
-        }
-        result.push(DenseMultilinearExtension::from_evaluations_vec(dim, poly));
-    }
-
-    end_timer!(start);
-    result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_bls12_381::Bls12_381;
-    use jf_utils::test_rng;
-    type E = Bls12_381;
 
     #[test]
     fn test_srs_gen() -> Result<(), PCSError> {
+        use ark_bls12_381::Bls12_381;
+        use jf_utils::test_rng;
+        type E = Bls12_381;
+
         let mut rng = test_rng();
         for nv in 4..10 {
             let _ = MultilinearUniversalParams::<E>::gen_srs_for_testing(&mut rng, nv)?;

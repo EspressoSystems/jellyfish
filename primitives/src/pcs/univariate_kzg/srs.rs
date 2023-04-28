@@ -7,16 +7,9 @@
 //! Implementing Structured Reference Strings for univariate polynomial KZG
 
 use crate::pcs::{PCSError, StructuredReferenceString};
-use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
-use ark_ff::PrimeField;
+use ark_ec::pairing::Pairing;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{
-    end_timer,
-    rand::{CryptoRng, RngCore},
-    start_timer, vec,
-    vec::Vec,
-    One, UniformRand,
-};
+use ark_std::vec::Vec;
 
 /// `UniversalParams` are the universal parameters for the KZG10 scheme.
 // Adapted from
@@ -41,9 +34,9 @@ impl<E: Pairing> UnivariateUniversalParams<E> {
 
 /// `UnivariateProverParam` is used to generate a proof
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
-pub struct UnivariateProverParam<C: AffineRepr> {
+pub struct UnivariateProverParam<E: Pairing> {
     /// Config
-    pub powers_of_g: Vec<C>,
+    pub powers_of_g: Vec<E::G1Affine>,
 }
 
 /// `UnivariateVerifierParam` is used to check evaluation proofs for a given
@@ -67,7 +60,7 @@ pub struct UnivariateVerifierParam<E: Pairing> {
 }
 
 impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
-    type ProverParam = UnivariateProverParam<E::G1Affine>;
+    type ProverParam = UnivariateProverParam<E>;
     type VerifierParam = UnivariateVerifierParam<E>;
 
     /// Extract the prover parameters from the public parameters.
@@ -105,13 +98,33 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
         Ok((pk, vk))
     }
 
-    /// Build SRS for testing.
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    fn gen_srs_for_testing<R: RngCore + CryptoRng>(
+    // (alex): I'm not sure how to import `RngCore, CryptoRng` under `cfg(test)`
+    // when they are unused by the rest. Thus, I use explicit import path.
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing<R>(rng: &mut R, max_degree: usize) -> Result<Self, PCSError>
+    where
+        R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        tests::gen_srs_for_testing(rng, max_degree)
+    }
+}
+
+#[cfg(any(test, feature = "test-srs"))]
+mod tests {
+    use super::UnivariateUniversalParams;
+    use crate::pcs::PCSError;
+    use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, CurveGroup};
+    use ark_ff::PrimeField;
+    use ark_std::{
+        end_timer,
+        rand::{CryptoRng, RngCore},
+        start_timer, vec, One, UniformRand,
+    };
+
+    pub(crate) fn gen_srs_for_testing<E: Pairing, R: RngCore + CryptoRng>(
         rng: &mut R,
         max_degree: usize,
-    ) -> Result<Self, PCSError> {
+    ) -> Result<UnivariateUniversalParams<E>, PCSError> {
         let setup_time = start_timer!(|| format!("KZG10::Setup with degree {}", max_degree));
         let beta = E::ScalarField::rand(rng);
         let g = E::G1::rand(rng);
@@ -140,7 +153,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
         let h = h.into_affine();
         let beta_h = (h * beta).into_affine();
 
-        let pp = Self {
+        let pp = UnivariateUniversalParams {
             powers_of_g,
             h,
             beta_h,
