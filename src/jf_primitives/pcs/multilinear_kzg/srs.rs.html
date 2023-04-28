@@ -279,6 +279,94 @@
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -286,22 +374,16 @@
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
 </span><span class="doccomment">//! Implementing Structured Reference Strings for multilinear polynomial KZG
-</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{multilinear_kzg::util::eq_eval, prelude::PCSError, StructuredReferenceString};
-<span class="kw">use </span>ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
-<span class="kw">use </span>ark_ff::{Field, PrimeField, Zero};
-<span class="kw">use </span>ark_poly::DenseMultilinearExtension;
-<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-<span class="kw">use </span>ark_std::{
-    collections::LinkedList,
-    end_timer, format,
-    rand::{CryptoRng, RngCore},
-    start_timer,
-    string::ToString,
-    vec,
-    vec::Vec,
-    UniformRand,
+</span><span class="kw">use </span><span class="kw">crate</span>::pcs::{
+    prelude::PCSError,
+    univariate_kzg::srs::{
+        UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
+    },
+    StructuredReferenceString,
 };
-<span class="kw">use </span>core::iter::FromIterator;
+<span class="kw">use </span>ark_ec::{pairing::Pairing, AffineRepr};
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+<span class="kw">use </span>ark_std::{format, vec::Vec};
 
 <span class="doccomment">/// Evaluations over {0,1}^n for G1 or G2
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug)]
@@ -404,13 +486,148 @@
         <span class="prelude-val">Ok</span>((ck, vk))
     }
 
-    <span class="doccomment">/// Build SRS for testing.
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
+    <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R&gt;(rng: <span class="kw-2">&amp;mut </span>R, num_vars: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt;
+    <span class="kw">where
+        </span>R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        tests::gen_srs_for_testing(rng, num_vars)
+    }
+}
+
+<span class="comment">// Implement `trait StructuredReferenceString` for (ML_pp, Uni_pp) to be used in
+// MLE PCS.
+</span><span class="kw">impl</span>&lt;E: Pairing&gt; StructuredReferenceString
+    <span class="kw">for </span>(MultilinearUniversalParams&lt;E&gt;, UnivariateUniversalParams&lt;E&gt;)
+{
+    <span class="kw">type </span>ProverParam = (MultilinearProverParam&lt;E&gt;, UnivariateProverParam&lt;E&gt;);
+    <span class="kw">type </span>VerifierParam = (MultilinearVerifierParam&lt;E&gt;, UnivariateVerifierParam&lt;E&gt;);
+
+    <span class="kw">fn </span>trim(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        supported_size: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
+        <span class="kw">let </span>ml_pp = &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::trim(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
+            supported_size,
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>uni_pp = &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::trim(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>,
+            supported_size,
+        )<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(((ml_pp.<span class="number">0</span>, uni_pp.<span class="number">0</span>), (ml_pp.<span class="number">1</span>, uni_pp.<span class="number">1</span>)))
+    }
+
+    <span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::ProverParam {
+        <span class="kw">let </span>ml_prover_param =
+            &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_prover_param(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
+                supported_size,
+            );
+        <span class="kw">let </span>uni_prover_param =
+            &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_prover_param(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>,
+                supported_size,
+            );
+
+        (ml_prover_param, uni_prover_param)
+    }
+
+    <span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::VerifierParam {
+        <span class="kw">let </span>ml_verifier_param =
+            &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_verifier_param(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
+                supported_size,
+            );
+        <span class="kw">let </span>uni_verifier_param =
+            &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_verifier_param(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>,
+                supported_size,
+            );
+
+        (ml_verifier_param, uni_verifier_param)
+    }
+
+    <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R&gt;(rng: <span class="kw-2">&amp;mut </span>R, supported_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt;
+    <span class="kw">where
+        </span>R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        <span class="kw">let </span>ml_pp =
+            &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::gen_srs_for_testing(
+                rng,
+                supported_size,
+            )<span class="question-mark">?</span>;
+        <span class="kw">let </span>uni_pp =
+            &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::gen_srs_for_testing(
+                rng,
+                supported_size,
+            )<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((ml_pp, uni_pp))
+    }
+}
+
+<span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::multilinear_kzg::util::eq_eval;
+    <span class="kw">use </span>ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
+    <span class="kw">use </span>ark_ff::{Field, PrimeField, Zero};
+    <span class="kw">use </span>ark_poly::DenseMultilinearExtension;
+    <span class="kw">use </span>ark_std::{
+        collections::LinkedList,
+        end_timer,
+        iter::FromIterator,
+        rand::{CryptoRng, RngCore},
+        start_timer,
+        string::ToString,
+        vec,
+        vec::Vec,
+        UniformRand,
+    };
+
+    <span class="comment">// fix first `pad` variables of `poly` represented in evaluation form to zero
+    </span><span class="kw">fn </span>remove_dummy_variable&lt;F: Field&gt;(poly: <span class="kw-2">&amp;</span>[F], pad: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PCSError&gt; {
+        <span class="kw">if </span>pad == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(poly.to_vec());
+        }
+        <span class="kw">if </span>!poly.len().is_power_of_two() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+                <span class="string">&quot;Size of polynomial should be power of two.&quot;</span>.to_string(),
+            ));
+        }
+        <span class="kw">let </span>nv = ark_std::log2(poly.len()) <span class="kw">as </span>usize - pad;
+
+        <span class="prelude-val">Ok</span>((<span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; nv)).map(|x| poly[x &lt;&lt; pad]).collect())
+    }
+
+    <span class="comment">// Generate eq(t,x), a product of multilinear polynomials with fixed t.
+    // eq(a,b) is takes extensions of a,b in {0,1}^num_vars such that if a and
+    // b in {0,1}^num_vars are equal then this polynomial evaluates to 1.
+    </span><span class="kw">fn </span>eq_extension&lt;F: PrimeField&gt;(t: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;DenseMultilinearExtension&lt;F&gt;&gt; {
+        <span class="kw">let </span>start = <span class="macro">start_timer!</span>(|| <span class="string">&quot;eq extension&quot;</span>);
+
+        <span class="kw">let </span>dim = t.len();
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
+        <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>ti) <span class="kw">in </span>t.iter().enumerate().take(dim) {
+            <span class="kw">let </span><span class="kw-2">mut </span>poly = Vec::with_capacity(<span class="number">1 </span>&lt;&lt; dim);
+            <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; dim) {
+                <span class="kw">let </span>xi = <span class="kw">if </span>x &gt;&gt; i &amp; <span class="number">1 </span>== <span class="number">1 </span>{ F::one() } <span class="kw">else </span>{ F::zero() };
+                <span class="kw">let </span>ti_xi = ti * xi;
+                poly.push(ti_xi + ti_xi - xi - ti + F::one());
+            }
+            result.push(DenseMultilinearExtension::from_evaluations_vec(dim, poly));
+        }
+
+        <span class="macro">end_timer!</span>(start);
+        result
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>gen_srs_for_testing&lt;E: Pairing, R: RngCore + CryptoRng&gt;(
         rng: <span class="kw-2">&amp;mut </span>R,
         num_vars: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;MultilinearUniversalParams&lt;E&gt;, PCSError&gt; {
         <span class="kw">if </span>num_vars == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
                 <span class="string">&quot;constant polynomial not supported&quot;</span>.to_string(),
@@ -482,7 +699,7 @@
         };
         powers_of_g.push(gg);
 
-        <span class="kw">let </span>pp = <span class="self">Self</span>::ProverParam {
+        <span class="kw">let </span>pp = MultilinearProverParam {
             num_vars,
             g: g.into_affine(),
             h: h.into_affine(),
@@ -499,59 +716,18 @@
         };
         <span class="macro">end_timer!</span>(vp_generation_timer);
         <span class="macro">end_timer!</span>(total_timer);
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+        <span class="prelude-val">Ok</span>(MultilinearUniversalParams {
             prover_param: pp,
             h_mask,
         })
     }
-}
-
-<span class="doccomment">/// fix first `pad` variables of `poly` represented in evaluation form to zero
-</span><span class="kw">fn </span>remove_dummy_variable&lt;F: Field&gt;(poly: <span class="kw-2">&amp;</span>[F], pad: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PCSError&gt; {
-    <span class="kw">if </span>pad == <span class="number">0 </span>{
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(poly.to_vec());
-    }
-    <span class="kw">if </span>!poly.len().is_power_of_two() {
-        <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-            <span class="string">&quot;Size of polynomial should be power of two.&quot;</span>.to_string(),
-        ));
-    }
-    <span class="kw">let </span>nv = ark_std::log2(poly.len()) <span class="kw">as </span>usize - pad;
-
-    <span class="prelude-val">Ok</span>((<span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; nv)).map(|x| poly[x &lt;&lt; pad]).collect())
-}
-
-<span class="doccomment">/// Generate eq(t,x), a product of multilinear polynomials with fixed t.
-/// eq(a,b) is takes extensions of a,b in {0,1}^num_vars such that if a and b in
-/// {0,1}^num_vars are equal then this polynomial evaluates to 1.
-</span><span class="kw">fn </span>eq_extension&lt;F: PrimeField&gt;(t: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;DenseMultilinearExtension&lt;F&gt;&gt; {
-    <span class="kw">let </span>start = <span class="macro">start_timer!</span>(|| <span class="string">&quot;eq extension&quot;</span>);
-
-    <span class="kw">let </span>dim = t.len();
-    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
-    <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>ti) <span class="kw">in </span>t.iter().enumerate().take(dim) {
-        <span class="kw">let </span><span class="kw-2">mut </span>poly = Vec::with_capacity(<span class="number">1 </span>&lt;&lt; dim);
-        <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; dim) {
-            <span class="kw">let </span>xi = <span class="kw">if </span>x &gt;&gt; i &amp; <span class="number">1 </span>== <span class="number">1 </span>{ F::one() } <span class="kw">else </span>{ F::zero() };
-            <span class="kw">let </span>ti_xi = ti * xi;
-            poly.push(ti_xi + ti_xi - xi - ti + F::one());
-        }
-        result.push(DenseMultilinearExtension::from_evaluations_vec(dim, poly));
-    }
-
-    <span class="macro">end_timer!</span>(start);
-    result
-}
-
-<span class="attr">#[cfg(test)]
-</span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span>ark_bls12_381::Bls12_381;
-    <span class="kw">use </span>jf_utils::test_rng;
-    <span class="kw">type </span>E = Bls12_381;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_srs_gen() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
+        <span class="kw">use </span>ark_bls12_381::Bls12_381;
+        <span class="kw">use </span>jf_utils::test_rng;
+        <span class="kw">type </span>E = Bls12_381;
+
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
         <span class="kw">for </span>nv <span class="kw">in </span><span class="number">4</span>..<span class="number">10 </span>{
             <span class="kw">let _ </span>= MultilinearUniversalParams::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, nv)<span class="question-mark">?</span>;

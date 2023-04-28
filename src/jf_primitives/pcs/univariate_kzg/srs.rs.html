@@ -149,6 +149,19 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -158,16 +171,9 @@
 </span><span class="doccomment">//! Implementing Structured Reference Strings for univariate polynomial KZG
 
 </span><span class="kw">use </span><span class="kw">crate</span>::pcs::{PCSError, StructuredReferenceString};
-<span class="kw">use </span>ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, AffineRepr, CurveGroup};
-<span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_ec::pairing::Pairing;
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-<span class="kw">use </span>ark_std::{
-    end_timer,
-    rand::{CryptoRng, RngCore},
-    start_timer, vec,
-    vec::Vec,
-    One, UniformRand,
-};
+<span class="kw">use </span>ark_std::vec::Vec;
 
 <span class="doccomment">/// `UniversalParams` are the universal parameters for the KZG10 scheme.
 </span><span class="comment">// Adapted from
@@ -192,9 +198,9 @@
 
 <span class="doccomment">/// `UnivariateProverParam` is used to generate a proof
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, Eq, PartialEq, Default)]
-</span><span class="kw">pub struct </span>UnivariateProverParam&lt;C: AffineRepr&gt; {
+</span><span class="kw">pub struct </span>UnivariateProverParam&lt;E: Pairing&gt; {
     <span class="doccomment">/// Config
-    </span><span class="kw">pub </span>powers_of_g: Vec&lt;C&gt;,
+    </span><span class="kw">pub </span>powers_of_g: Vec&lt;E::G1Affine&gt;,
 }
 
 <span class="doccomment">/// `UnivariateVerifierParam` is used to check evaluation proofs for a given
@@ -218,7 +224,7 @@
 }
 
 <span class="kw">impl</span>&lt;E: Pairing&gt; StructuredReferenceString <span class="kw">for </span>UnivariateUniversalParams&lt;E&gt; {
-    <span class="kw">type </span>ProverParam = UnivariateProverParam&lt;E::G1Affine&gt;;
+    <span class="kw">type </span>ProverParam = UnivariateProverParam&lt;E&gt;;
     <span class="kw">type </span>VerifierParam = UnivariateVerifierParam&lt;E&gt;;
 
     <span class="doccomment">/// Extract the prover parameters from the public parameters.
@@ -256,13 +262,33 @@
         <span class="prelude-val">Ok</span>((pk, vk))
     }
 
-    <span class="doccomment">/// Build SRS for testing.
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
+    <span class="comment">// (alex): I&#39;m not sure how to import `RngCore, CryptoRng` under `cfg(test)`
+    // when they are unused by the rest. Thus, I use explicit import path.
+    </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R&gt;(rng: <span class="kw-2">&amp;mut </span>R, max_degree: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt;
+    <span class="kw">where
+        </span>R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        tests::gen_srs_for_testing(rng, max_degree)
+    }
+}
+
+<span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">super</span>::UnivariateUniversalParams;
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::PCSError;
+    <span class="kw">use </span>ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, CurveGroup};
+    <span class="kw">use </span>ark_ff::PrimeField;
+    <span class="kw">use </span>ark_std::{
+        end_timer,
+        rand::{CryptoRng, RngCore},
+        start_timer, vec, One, UniformRand,
+    };
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>gen_srs_for_testing&lt;E: Pairing, R: RngCore + CryptoRng&gt;(
         rng: <span class="kw-2">&amp;mut </span>R,
         max_degree: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;UnivariateUniversalParams&lt;E&gt;, PCSError&gt; {
         <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;KZG10::Setup with degree {}&quot;</span>, max_degree));
         <span class="kw">let </span>beta = E::ScalarField::rand(rng);
         <span class="kw">let </span>g = E::G1::rand(rng);
@@ -291,7 +317,7 @@
         <span class="kw">let </span>h = h.into_affine();
         <span class="kw">let </span>beta_h = (h * beta).into_affine();
 
-        <span class="kw">let </span>pp = <span class="self">Self </span>{
+        <span class="kw">let </span>pp = UnivariateUniversalParams {
             powers_of_g,
             h,
             beta_h,

@@ -692,6 +692,7 @@
 <span class="kw">use </span>ark_std::{end_timer, format, log2, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
 
 <span class="doccomment">/// Evaluate eq polynomial. use the public one later
+</span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eq_eval&lt;F: PrimeField&gt;(x: <span class="kw-2">&amp;</span>[F], y: <span class="kw-2">&amp;</span>[F]) -&gt; <span class="prelude-ty">Result</span>&lt;F, PCSError&gt; {
     <span class="kw">if </span>x.len() != y.len() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
@@ -709,7 +710,6 @@
 }
 
 <span class="doccomment">/// Decompose an integer into a binary vector in little endian.
-</span><span class="attr">#[allow(dead_code)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>bit_decompose(input: u64, num_var: usize) -&gt; Vec&lt;bool&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>res = Vec::with_capacity(num_var);
     <span class="kw">let </span><span class="kw-2">mut </span>i = input;
@@ -728,7 +728,7 @@
 // - mle has degree one
 // - worst case is `\prod_{i=0}^{mle_num_vars-1} l_i(x) &lt; point_len * mle_num_vars`
 </span><span class="attr">#[inline]
-#[allow(dead_code)]
+#[cfg(test)]
 </span><span class="kw">pub fn </span>compute_qx_degree(mle_num_vars: usize, point_len: usize) -&gt; usize {
     mle_num_vars * point_len
 }

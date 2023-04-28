@@ -1719,6 +1719,46 @@
 <a href="#1719" id="1719">1719</a>
 <a href="#1720" id="1720">1720</a>
 <a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
+<a href="#1730" id="1730">1730</a>
+<a href="#1731" id="1731">1731</a>
+<a href="#1732" id="1732">1732</a>
+<a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a>
+<a href="#1739" id="1739">1739</a>
+<a href="#1740" id="1740">1740</a>
+<a href="#1741" id="1741">1741</a>
+<a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2160,11 +2200,51 @@
     <span class="kw">type </span>UniversalSRS = UniversalSrs&lt;E&gt;;
     <span class="kw">type </span>Error = PlonkError;
 
-    <span class="kw">fn </span>universal_setup&lt;R: RngCore + CryptoRng&gt;(
+    <span class="comment">// FIXME: (alex) see &lt;https://github.com/EspressoSystems/jellyfish/issues/249&gt;
+    </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="kw">fn </span>universal_setup_for_testing&lt;R: RngCore + CryptoRng&gt;(
         max_degree: usize,
         rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::UniversalSRS, <span class="self">Self</span>::Error&gt; {
-        UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, max_degree).map_err(PlonkError::PCSError)
+        <span class="kw">use </span>ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
+        <span class="kw">use </span>ark_ff::PrimeField;
+        <span class="kw">use </span>ark_std::{end_timer, start_timer, UniformRand};
+
+        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;KZG10::Setup with degree {}&quot;</span>, max_degree));
+        <span class="kw">let </span>beta = E::ScalarField::rand(rng);
+        <span class="kw">let </span>g = E::G1::rand(rng);
+        <span class="kw">let </span>h = E::G2::rand(rng);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>powers_of_beta = <span class="macro">vec!</span>[E::ScalarField::one()];
+
+        <span class="kw">let </span><span class="kw-2">mut </span>cur = beta;
+        <span class="kw">for _ in </span><span class="number">0</span>..max_degree {
+            powers_of_beta.push(cur);
+            cur <span class="kw-2">*</span>= <span class="kw-2">&amp;</span>beta;
+        }
+
+        <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(max_degree + <span class="number">1</span>);
+
+        <span class="kw">let </span>scalar_bits = E::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
+        <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Generating powers of G&quot;</span>);
+        <span class="comment">// TODO: parallelization
+        </span><span class="kw">let </span>g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
+        <span class="kw">let </span>powers_of_g =
+            FixedBase::msm::&lt;E::G1&gt;(scalar_bits, window_size, <span class="kw-2">&amp;</span>g_table, <span class="kw-2">&amp;</span>powers_of_beta);
+        <span class="macro">end_timer!</span>(g_time);
+
+        <span class="kw">let </span>powers_of_g = E::G1::normalize_batch(<span class="kw-2">&amp;</span>powers_of_g);
+
+        <span class="kw">let </span>h = h.into_affine();
+        <span class="kw">let </span>beta_h = (h * beta).into_affine();
+
+        <span class="kw">let </span>pp = UniversalSrs {
+            powers_of_g,
+            h,
+            beta_h,
+        };
+        <span class="macro">end_timer!</span>(setup_time);
+        <span class="prelude-val">Ok</span>(pp)
     }
 
     <span class="doccomment">/// Input a circuit and the SRS, precompute the proving key and verification
@@ -2456,7 +2536,7 @@
         <span class="kw">let </span>sigmas = circuit.compute_extended_permutation_polynomials()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>max_degree = <span class="number">64 </span>+ <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
         <span class="kw">let </span>(pk, vk) = PlonkKzgSnark::&lt;E&gt;::preprocess(<span class="kw-2">&amp;</span>srs, <span class="kw-2">&amp;</span>circuit)<span class="question-mark">?</span>;
 
         <span class="comment">// check proving key
@@ -2588,7 +2668,7 @@
         </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">let </span>n = <span class="number">64</span>;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Create circuits
         </span><span class="kw">let </span>circuits = (<span class="number">0</span>..<span class="number">6</span>)
@@ -2804,7 +2884,7 @@
         </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">let </span>n = <span class="number">8</span>;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Create circuits
         </span><span class="kw">let </span><span class="kw-2">mut </span>cs1: PlonkCircuit&lt;E::ScalarField&gt; = <span class="kw">match </span>plonk_type {
@@ -2903,7 +2983,7 @@
         </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">let </span>n = <span class="number">64</span>;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Create the circuit
         </span><span class="kw">let </span>circuit = gen_circuit_for_test(<span class="number">10</span>, <span class="number">3</span>, plonk_type)<span class="question-mark">?</span>;
@@ -3172,7 +3252,7 @@
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>jf_utils::test_rng();
         <span class="kw">let </span>circuit = gen_circuit_for_test(<span class="number">3</span>, <span class="number">4</span>, PlonkType::TurboPlonk)<span class="question-mark">?</span>;
         <span class="kw">let </span>max_degree = <span class="number">80</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(pk, <span class="kw">_</span>) = PlonkKzgSnark::&lt;E&gt;::preprocess(<span class="kw-2">&amp;</span>srs, <span class="kw-2">&amp;</span>circuit)<span class="question-mark">?</span>;
         <span class="kw">let </span>proof =
@@ -3218,7 +3298,7 @@
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>jf_utils::test_rng();
         <span class="kw">let </span>circuit = gen_circuit_for_test(<span class="number">3</span>, <span class="number">4</span>, plonk_type)<span class="question-mark">?</span>;
         <span class="kw">let </span>max_degree = <span class="number">80</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(pk, vk) = PlonkKzgSnark::&lt;E&gt;::preprocess(<span class="kw-2">&amp;</span>srs, <span class="kw-2">&amp;</span>circuit)<span class="question-mark">?</span>;
         <span class="kw">let </span>proof = PlonkKzgSnark::&lt;E&gt;::prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(rng, <span class="kw-2">&amp;</span>circuit, <span class="kw-2">&amp;</span>pk, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
@@ -3282,7 +3362,7 @@
         </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">let </span>n = <span class="number">128</span>;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Create many circuits with same domain size
         </span><span class="kw">let </span>circuits = (<span class="number">6</span>..<span class="number">13</span>)

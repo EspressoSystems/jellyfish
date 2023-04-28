@@ -492,7 +492,7 @@
 ///
 /// TODO: Migrate the batching algorithm in HyperPlonk repo
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_open_internal&lt;E: Pairing&gt;(
-    uni_prover_param: <span class="kw-2">&amp;</span>UnivariateProverParam&lt;E::G1Affine&gt;,
+    uni_prover_param: <span class="kw-2">&amp;</span>UnivariateProverParam&lt;E&gt;,
     ml_prover_param: <span class="kw-2">&amp;</span>MultilinearProverParam&lt;E&gt;,
     polynomials: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt;],
     batch_commitment: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,

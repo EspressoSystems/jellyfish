@@ -90,6 +90,16 @@
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -141,8 +151,18 @@
     /// out to have higher assurance on the &quot;toxic waste&quot;/trapdoor being thrown
     /// away to ensure soundness of the argument system.
     </span><span class="kw">fn </span>universal_setup&lt;R: RngCore + CryptoRng&gt;(
-        max_degree: usize,
-        rng: <span class="kw-2">&amp;mut </span>R,
+        _max_degree: usize,
+        _rng: <span class="kw-2">&amp;mut </span>R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::UniversalSRS, <span class="self">Self</span>::Error&gt; {
+        <span class="macro">unimplemented!</span>(<span class="string">&quot;Should load from files in practice.&quot;</span>);
+    }
+
+    <span class="doccomment">/// Same as `universal_setup`, but for testing and benchmarking code only.
+    /// Insecure local generation for trusted setup! Don&#39;t use in production!
+    </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="kw">fn </span>universal_setup_for_testing&lt;R: RngCore + CryptoRng&gt;(
+        _max_degree: usize,
+        _rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::UniversalSRS, <span class="self">Self</span>::Error&gt;;
 
     <span class="doccomment">/// Circuit-specific preprocessing to compute the proving/verifying keys.

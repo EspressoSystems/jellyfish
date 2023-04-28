@@ -1086,7 +1086,7 @@
         </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">let </span>n = <span class="number">128</span>;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Setup instances
         </span><span class="kw">let </span>shared_public_input = E::ScalarField::rand(rng);

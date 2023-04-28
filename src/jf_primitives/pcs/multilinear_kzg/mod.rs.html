@@ -475,25 +475,6 @@
 <a href="#475" id="475">475</a>
 <a href="#476" id="476">476</a>
 <a href="#477" id="477">477</a>
-<a href="#478" id="478">478</a>
-<a href="#479" id="479">479</a>
-<a href="#480" id="480">480</a>
-<a href="#481" id="481">481</a>
-<a href="#482" id="482">482</a>
-<a href="#483" id="483">483</a>
-<a href="#484" id="484">484</a>
-<a href="#485" id="485">485</a>
-<a href="#486" id="486">486</a>
-<a href="#487" id="487">487</a>
-<a href="#488" id="488">488</a>
-<a href="#489" id="489">489</a>
-<a href="#490" id="490">490</a>
-<a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
-<a href="#494" id="494">494</a>
-<a href="#495" id="495">495</a>
-<a href="#496" id="496">496</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -507,9 +488,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>util;
 
 <span class="kw">use </span><span class="kw">crate</span>::pcs::{
-    prelude::{
-        Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
-    },
+    prelude::{Commitment, UnivariateUniversalParams},
     univariate_kzg::UnivariateKzgProof,
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
@@ -536,6 +515,11 @@
 <span class="kw">use </span>batching::{batch_open_internal, batch_verify_internal};
 <span class="kw">use </span>srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam};
 <span class="kw">use </span>util::merge_polynomials;
+
+<span class="comment">// type alias for SRS
+</span><span class="kw">type </span>Srs&lt;E&gt; = (MultilinearUniversalParams&lt;E&gt;, UnivariateUniversalParams&lt;E&gt;);
+<span class="kw">type </span>ProverParam&lt;E&gt; = &lt;Srs&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam;
+<span class="kw">type </span>VerifierParam&lt;E&gt; = &lt;Srs&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::VerifierParam;
 
 <span class="doccomment">/// KZG Polynomial Commitment Scheme on multilinear polynomials.
 </span><span class="kw">pub struct </span>MultilinearKzgPCS&lt;E: Pairing&gt; {
@@ -565,12 +549,7 @@
 
 <span class="kw">impl</span>&lt;E: Pairing&gt; PolynomialCommitmentScheme <span class="kw">for </span>MultilinearKzgPCS&lt;E&gt; {
     <span class="comment">// Config
-    </span><span class="kw">type </span>ProverParam = (
-        MultilinearProverParam&lt;E&gt;,
-        UnivariateProverParam&lt;E::G1Affine&gt;,
-    );
-    <span class="kw">type </span>VerifierParam = (MultilinearVerifierParam&lt;E&gt;, UnivariateVerifierParam&lt;E&gt;);
-    <span class="kw">type </span>SRS = (MultilinearUniversalParams&lt;E&gt;, UnivariateUniversalParams&lt;E&gt;);
+    </span><span class="kw">type </span>SRS = Srs&lt;E&gt;;
     <span class="comment">// Polynomial and its associated types
     </span><span class="kw">type </span>Polynomial = Arc&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt;;
     <span class="kw">type </span>Point = Vec&lt;E::ScalarField&gt;;
@@ -581,23 +560,6 @@
     <span class="kw">type </span>Proof = MultilinearKzgProof&lt;E&gt;;
     <span class="kw">type </span>BatchProof = MultilinearKzgBatchProof&lt;E&gt;;
 
-    <span class="doccomment">/// Build SRS for testing.
-    ///
-    /// - For univariate polynomials, `log_size` is the log of maximum degree.
-    /// - For multilinear polynomials, `log_size` is the number of variables.
-    ///
-    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
-    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
-    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
-        rng: <span class="kw-2">&amp;mut </span>R,
-        log_size: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SRS, PCSError&gt; {
-        <span class="prelude-val">Ok</span>((
-            MultilinearUniversalParams::&lt;E&gt;::gen_srs_for_testing(rng, log_size)<span class="question-mark">?</span>,
-            UnivariateUniversalParams::&lt;E&gt;::gen_srs_for_testing(rng, log_size)<span class="question-mark">?</span>,
-        ))
-    }
-
     <span class="doccomment">/// Trim the universal parameters to specialize the public parameters.
     /// Input both `supported_log_degree` for univariate and
     /// `supported_num_vars` for multilinear.
@@ -605,7 +567,7 @@
         srs: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::SRS&gt;,
         supported_log_degree: usize,
         supported_num_vars: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(ProverParam&lt;E&gt;, VerifierParam&lt;E&gt;), PCSError&gt; {
         <span class="kw">let </span>supported_num_vars = <span class="kw">match </span>supported_num_vars {
             <span class="prelude-val">Some</span>(p) =&gt; p,
             <span class="prelude-val">None </span>=&gt; {
@@ -625,7 +587,7 @@
     /// This function takes `2^num_vars` number of scalar multiplications over
     /// G1.
     </span><span class="kw">fn </span>commit(
-        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        prover_param: <span class="kw">impl </span>Borrow&lt;ProverParam&lt;E&gt;&gt;,
         poly: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
@@ -657,7 +619,7 @@
     /// This function takes `2^(num_vars + log(polys.len())` number of scalar
     /// multiplications over G1.
     </span><span class="kw">fn </span>batch_commit(
-        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        prover_param: <span class="kw">impl </span>Borrow&lt;ProverParam&lt;E&gt;&gt;,
         polys: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
@@ -688,7 +650,7 @@
     /// - at round i, we compute an MSM for `2^{num_var - i + 1}` number of G2
     ///   elements.
     </span><span class="kw">fn </span>open(
-        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        prover_param: <span class="kw">impl </span>Borrow&lt;ProverParam&lt;E&gt;&gt;,
         polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
         point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Proof, <span class="self">Self</span>::Evaluation), PCSError&gt; {
@@ -727,7 +689,7 @@
     /// 8. output an opening of `w` over point `p`
     /// 9. output `w(p)`
     </span><span class="kw">fn </span>batch_open(
-        prover_param: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::ProverParam&gt;,
+        prover_param: <span class="kw">impl </span>Borrow&lt;ProverParam&lt;E&gt;&gt;,
         batch_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
         polynomials: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
         points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
@@ -748,7 +710,7 @@
     /// - num_var number of pairing product.
     /// - num_var number of MSM
     </span><span class="kw">fn </span>verify(
-        verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
+        verifier_param: <span class="kw-2">&amp;</span>VerifierParam&lt;E&gt;,
         commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::Commitment,
         point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
         value: <span class="kw-2">&amp;</span>E::ScalarField,
@@ -769,7 +731,7 @@
     /// 5. get a point `p := l(r)`
     /// 6. verifies `p` is verifies against proof
     </span><span class="kw">fn </span>batch_verify&lt;R: RngCore + CryptoRng&gt;(
-        verifier_param: <span class="kw-2">&amp;</span><span class="self">Self</span>::VerifierParam,
+        verifier_param: <span class="kw-2">&amp;</span>VerifierParam&lt;E&gt;,
         batch_commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::BatchCommitment,
         points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
         values: <span class="kw-2">&amp;</span>[E::ScalarField],

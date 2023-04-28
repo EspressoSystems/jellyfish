@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["errors","prelude"],"trait":["PolynomialCommitmentScheme","StructuredReferenceString"]};
+window.SIDEBAR_ITEMS = {"mod":["errors","prelude"],"trait":["PolynomialCommitmentScheme","StructuredReferenceString","UnivariatePCS"]};

@@ -1191,7 +1191,7 @@
         </span><span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
         <span class="kw">let </span>n = <span class="number">32</span>;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="comment">// Setup instances and create verifying keys
         </span><span class="kw">let </span><span class="kw-2">mut </span>vks_type_a = <span class="macro">vec!</span>[];
@@ -1312,7 +1312,7 @@
             // 1. Simulate universal setup
             </span><span class="kw">let </span>n = <span class="number">1 </span>&lt;&lt; log_circuit_size;
             <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-            <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+            <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
             <span class="comment">// 2. Setup instances
             </span><span class="kw">let </span>shared_public_input = E::ScalarField::rand(rng);
@@ -1598,7 +1598,7 @@
         <span class="comment">// 1. Simulate universal setup
         </span><span class="kw">let </span>n = <span class="number">1 </span>&lt;&lt; i;
         <span class="kw">let </span>max_degree = n + <span class="number">2</span>;
-        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup(max_degree, rng)<span class="question-mark">?</span>;
+        <span class="kw">let </span>srs = PlonkKzgSnark::&lt;E&gt;::universal_setup_for_testing(max_degree, rng)<span class="question-mark">?</span>;
 
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">2 </span>{
             <span class="comment">// =======================================
