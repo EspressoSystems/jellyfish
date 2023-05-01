@@ -71,6 +71,7 @@
 
             stableToolchain
             nightlyToolchain
+            rustup
             cargo-sort
 
           ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
@@ -81,6 +82,9 @@
 
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
+
+            # Add wasm compilation target
+            rustup target add wasm32-unknown-unknown
           ''
           # install pre-commit hooks
           + self.check.${system}.pre-commit-check.shellHook;
