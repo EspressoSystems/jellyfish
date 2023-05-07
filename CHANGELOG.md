@@ -23,6 +23,8 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 ### Changed
 
 - [#238](https://github.com/EspressoSystems/jellyfish/pull/238) add public keys into signature aggregation APIs
+- [#251](https://github.com/EspressoSystems/jellyfish/pull/251) add sign_key_ref api for BLSKeyPair
+
 
 ### Removed
 
