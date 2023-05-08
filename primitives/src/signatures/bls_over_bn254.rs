@@ -371,6 +371,11 @@ impl KeyPair {
         &self.sk.0
     }
 
+    /// Get the signing key reference
+    pub fn sign_key_ref(&self) -> &SignKey {
+        &self.sk
+    }
+
     /// Signature function
     pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], csid: B) -> Signature {
         let msg_input = [msg, csid.as_ref()].concat();
