@@ -526,6 +526,11 @@
 <a href="#526" id="526">526</a>
 <a href="#527" id="527">527</a>
 <a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -898,6 +903,11 @@
     </span><span class="kw">pub fn </span>sign_key_internal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ScalarField {
         <span class="kw-2">&amp;</span><span class="self">self</span>.sk.<span class="number">0
     </span>}
+
+    <span class="doccomment">/// Get the signing key reference
+    </span><span class="kw">pub fn </span>sign_key_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SignKey {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.sk
+    }
 
     <span class="doccomment">/// Signature function
     </span><span class="kw">pub fn </span>sign&lt;B: AsRef&lt;[u8]&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>[u8], csid: B) -&gt; Signature {
