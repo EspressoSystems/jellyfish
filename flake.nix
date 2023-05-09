@@ -73,7 +73,9 @@
             stableToolchain
             nightlyToolchain
             cargo-sort
-
+            llvmPackages_15.clang
+            llvmPackages_15.libstdcxxClang
+            llvm_15
           ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
           shellHook = ''
@@ -83,9 +85,13 @@
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
 
+            export CC="clang-15"
+            export AR="llvm-ar"
           ''
           # install pre-commit hooks
           + self.check.${system}.pre-commit-check.shellHook;
+
+          # LD_LIBRARY_PATH = lib.strings.makeLibraryPath [ pkgs.llvmPackages_15.clang.libcxx ];
         };
       }
     );
