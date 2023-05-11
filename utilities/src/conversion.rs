@@ -256,6 +256,9 @@ mod tests {
     use crate::test_rng;
 
     use super::*;
+    use ark_bls12_377::Fq12 as Fq12_377;
+    use ark_bls12_381::Fq12 as Fq12_381;
+    use ark_bn254::Fq12 as Fq12_254;
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
@@ -325,6 +328,10 @@ mod tests {
     #[test]
     fn test_bytes_field_elems() {
         bytes_field_elems::<Fr381>();
+        bytes_field_elems::<Fr377>();
         bytes_field_elems::<Fr254>();
+        bytes_field_elems::<Fq12_381>();
+        bytes_field_elems::<Fq12_377>();
+        bytes_field_elems::<Fq12_254>();
     }
 }
