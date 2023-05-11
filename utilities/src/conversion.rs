@@ -6,7 +6,12 @@
 
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, Field, PrimeField};
-use ark_std::{cmp::min, iter::repeat, mem, vec::Vec};
+use ark_std::{
+    cmp::min,
+    iter::{once, repeat},
+    mem,
+    vec::Vec,
+};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -134,24 +139,26 @@ where
     // - convert each chunk into BasePrimeField via from_le_bytes_mod_order
     // - modular reduction is guaranteed not to occur because chunk byte length is
     //   sufficiently small
-    // - collect BytePrimeField elements into Field elements and append to result
-    let mut result = Vec::with_capacity(result_len);
-
-    // the first field element encodes the bytes length as u64
-    result.push(F::from(bytes.as_ref().len() as u64));
-
-    for field_elem_bytes in bytes.as_ref().chunks(field_bytes_len) {
-        let primefield_elems = field_elem_bytes
-            .chunks(primefield_bytes_len)
-            .map(F::BasePrimeField::from_le_bytes_mod_order)
-            // not enough prime field elems? fill remaining elems with zero
-            .chain(repeat(F::BasePrimeField::ZERO).take(extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1))
-            .collect::<Vec<_>>();
-        result.push(
-            F::from_base_prime_field_elems(&primefield_elems)
-                .expect("failed to construct field element"),
-        );
-    }
+    // - collect BasePrimeField elements into Field elements and append to result
+    let result = once(F::from(bytes.as_ref().len() as u64)) // the first field element encodes the bytes length as u64
+        .chain(
+            bytes
+                .as_ref()
+                .chunks(field_bytes_len)
+                .map(|field_elem_bytes| {
+                    F::from_base_prime_field_elems(
+                        &field_elem_bytes.chunks(primefield_bytes_len)
+                .map(F::BasePrimeField::from_le_bytes_mod_order)
+                // not enough prime field elems? fill remaining elems with zero
+                .chain(repeat(F::BasePrimeField::ZERO).take(
+                    extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1)
+                )
+                .collect::<Vec<_>>(),
+                    )
+                    .expect("failed to construct field element")
+                }),
+        )
+        .collect::<Vec<_>>();
 
     assert_eq!(
         result.len(),
