@@ -105,28 +105,11 @@ where
     B: AsRef<[u8]>,
     F: Field,
 {
-    // Ensure that F::characteristic is large enough to hold a u64.
-    // This should be possible at compile time but I don't know how.
-    // Example: could use <https://docs.rs/static_assertions> but then you hit
-    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
-    assert!(
-        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
-        "base prime field modulus bit len {} should exceed 64",
-        F::BasePrimeField::MODULUS_BIT_SIZE
-    );
-
+    let (primefield_bytes_len, extension_degree, field_bytes_len) = compile_time_checks::<F>();
     if bytes.as_ref().is_empty() {
         return Vec::new();
     }
 
-    // various quantities
-    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
-        .expect("prime field modulus byte len should fit into usize");
-    let extension_degree =
-        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
-    let field_bytes_len = primefield_bytes_len
-        .checked_mul(extension_degree)
-        .expect("field element byte len should fit into usize");
     let result_len = (field_bytes_len
         .checked_add(bytes.as_ref().len())
         .expect("result len should fit into usize")
@@ -180,16 +163,7 @@ where
     T: AsRef<[F]>,
     F: Field,
 {
-    // Need to ensure that F::characteristic is large enough to hold a u64.
-    // This should be possible at compile time but I don't know how.
-    // Example: could use <https://docs.rs/static_assertions> but then you hit
-    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
-    assert!(
-        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
-        "base prime field modulus bit len {} should exceed 64",
-        F::BasePrimeField::MODULUS_BIT_SIZE
-    );
-
+    let (primefield_bytes_len, _, field_bytes_len) = compile_time_checks::<F>();
     if elems.as_ref().is_empty() {
         return Vec::new();
     }
@@ -212,14 +186,6 @@ where
     ))
     .expect("result len conversion from u64 to usize should succeed");
 
-    // various quantities
-    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
-        .expect("prime field modulus byte len should fit into usize");
-    let extension_degree =
-        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
-    let field_bytes_len = primefield_bytes_len
-        .checked_mul(extension_degree)
-        .expect("field element byte len should fit into usize");
     let result_capacity = field_bytes_len
         .checked_mul(elems.len())
         .expect("result capacity should fit into usize");
@@ -263,6 +229,26 @@ where
     );
     result.truncate(result_len);
     result
+}
+
+/// It should be possible to do all this at compile time but I don't know how.
+/// Want to panic on overflow, so use checked arithetic and conversion.
+fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
+    // Ensure that F::characteristic is large enough to hold a u64.
+    assert!(
+        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
+        "base prime field modulus bit len {} should exceed 64",
+        F::BasePrimeField::MODULUS_BIT_SIZE
+    );
+
+    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
+        .expect("prime field modulus byte len should fit into usize");
+    let extension_degree =
+        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
+    let field_bytes_len = primefield_bytes_len
+        .checked_mul(extension_degree)
+        .expect("field element byte len should fit into usize");
+    (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
 #[cfg(test)]
