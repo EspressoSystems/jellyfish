@@ -19,7 +19,6 @@ use ark_std::{
     borrow::Borrow,
     fmt::Debug,
     hash::Hash,
-    path::Path,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
@@ -32,13 +31,7 @@ pub trait PolynomialCommitmentScheme {
     /// Structured reference string
     type SRS: Clone + Debug + StructuredReferenceString;
     /// Polynomial and its associated types
-    type Polynomial: Clone
-        + Debug
-        + Hash
-        + PartialEq
-        + Eq
-        + CanonicalSerialize
-        + CanonicalDeserialize;
+    type Polynomial: Clone + Debug + Hash + PartialEq + Eq + CanonicalSerialize;
     /// Polynomial input domain
     type Point: Clone + Ord + Debug + Sync + Hash + PartialEq + Eq;
     /// Polynomial Evaluation
@@ -76,7 +69,7 @@ pub trait PolynomialCommitmentScheme {
     /// If `file=None`, we load the default choice of SRS.
     fn load_srs_from_file(
         supported_size: usize,
-        file: Option<&Path>,
+        file: Option<&str>,
     ) -> Result<Self::SRS, PCSError> {
         Self::SRS::load_srs_from_file(supported_size, file)
     }
@@ -218,7 +211,7 @@ pub trait StructuredReferenceString: Sized {
     /// implemented else where. We only load them into memory here.
     ///
     /// If `file=None`, we load the default choice of SRS.
-    fn load_srs_from_file(_supported_size: usize, _file: Option<&Path>) -> Result<Self, PCSError> {
+    fn load_srs_from_file(_supported_size: usize, _file: Option<&str>) -> Result<Self, PCSError> {
         unimplemented!("TODO: implement loading SRS from files");
     }
 }

@@ -12,7 +12,7 @@ ark-bls12-377 = "0.4.0"
 ark-bls12-381 = "0.4.0"
 ark-bn254 = "0.4.0"
 ark-bw6-761 = "0.4.0"
-ark-crypto-primitives = { version = "0.4.0", features = ["sponge"] }
+ark-crypto-primitives = { version = "0.4.0", default-features = false, features = ["sponge"] }
 ark-ec = "0.4.0"
 ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"

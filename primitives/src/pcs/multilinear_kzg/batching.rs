@@ -19,7 +19,7 @@ use crate::pcs::{
 };
 use ark_ec::pairing::Pairing;
 use ark_poly::{DenseMultilinearExtension, EvaluationDomain, MultilinearExtension, Polynomial};
-use ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
+use ark_std::{end_timer, format, rc::Rc, start_timer, string::ToString, vec, vec::Vec};
 
 /// Input
 /// - the prover parameters for univariate KZG,
@@ -57,7 +57,7 @@ use ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, 
 pub(super) fn batch_open_internal<E: Pairing>(
     uni_prover_param: &UnivariateProverParam<E>,
     ml_prover_param: &MultilinearProverParam<E>,
-    polynomials: &[Arc<DenseMultilinearExtension<E::ScalarField>>],
+    polynomials: &[Rc<DenseMultilinearExtension<E::ScalarField>>],
     batch_commitment: &Commitment<E>,
     points: &[Vec<E::ScalarField>],
 ) -> Result<(MultilinearKzgBatchProof<E>, Vec<E::ScalarField>), PCSError> {
@@ -318,7 +318,7 @@ mod tests {
     fn test_batch_commit_helper<R: RngCore + CryptoRng>(
         uni_params: &UnivariateUniversalParams<E>,
         ml_params: &MultilinearUniversalParams<E>,
-        polys: &[Arc<DenseMultilinearExtension<Fr>>],
+        polys: &[Rc<DenseMultilinearExtension<Fr>>],
         rng: &mut R,
     ) -> Result<(), PCSError> {
         let merged_nv = get_batched_nv(polys[0].num_vars(), polys.len());
@@ -422,13 +422,13 @@ mod tests {
 
         // normal polynomials
         let polys1: Vec<_> = (0..5)
-            .map(|_| Arc::new(DenseMultilinearExtension::rand(4, &mut rng)))
+            .map(|_| Rc::new(DenseMultilinearExtension::rand(4, &mut rng)))
             .collect();
         test_batch_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
 
         // single-variate polynomials
         let polys1: Vec<_> = (0..5)
-            .map(|_| Arc::new(DenseMultilinearExtension::rand(1, &mut rng)))
+            .map(|_| Rc::new(DenseMultilinearExtension::rand(1, &mut rng)))
             .collect();
         test_batch_commit_helper(&uni_params, &ml_params, &polys1, &mut rng)?;
 
