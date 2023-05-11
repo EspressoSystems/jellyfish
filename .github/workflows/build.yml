@@ -32,6 +32,8 @@ jobs:
           override: true
           default: true
           components: rustfmt, clippy
+          targets: |
+            wasm32-unknown-unknown
 
       - name: Install nightly toolchain
         uses: actions-rs/toolchain@v1
@@ -65,7 +67,7 @@ jobs:
         run: cargo check --workspace --tests --lib --bins
 
       - name: Check no_std compilation
-        run: cargo check --workspace --lib --no-default-features
+        run: bash ./scripts/build_wasm.sh
 
       - name: Test
         run: bash ./scripts/run_tests.sh
