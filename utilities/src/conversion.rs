@@ -6,7 +6,7 @@
 
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, Field, PrimeField};
-use ark_std::{cmp::min, mem, vec::Vec};
+use ark_std::{cmp::min, iter::repeat, mem, vec::Vec};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -141,30 +141,18 @@ where
     result.push(F::from(bytes.as_ref().len() as u64));
 
     for field_elem_bytes in bytes.as_ref().chunks(field_bytes_len) {
-        let mut primefield_elems = Vec::with_capacity(extension_degree);
-        for primefield_elem_bytes in field_elem_bytes.chunks(primefield_bytes_len) {
-            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(
-                primefield_elem_bytes,
-            ));
-        }
-        // not enough prime field elems? fill remaining elems with zero
-        if primefield_elems.len() < extension_degree {
-            for _ in 0..(extension_degree - primefield_elems.len()) {
-                primefield_elems.push(F::BasePrimeField::ZERO);
-            }
-        }
-        assert_eq!(
-            primefield_elems.len(),
-            extension_degree,
-            "prime field elems len {} differs from extension degree {}",
-            primefield_elems.len(),
-            extension_degree
-        );
+        let primefield_elems = field_elem_bytes
+            .chunks(primefield_bytes_len)
+            .map(F::BasePrimeField::from_le_bytes_mod_order)
+            // not enough prime field elems? fill remaining elems with zero
+            .chain(repeat(F::BasePrimeField::ZERO).take(extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1))
+            .collect::<Vec<_>>();
         result.push(
             F::from_base_prime_field_elems(&primefield_elems)
-                .expect("field elem construction should succeed"),
+                .expect("failed to construct field element"),
         );
     }
+
     assert_eq!(
         result.len(),
         result_len,
