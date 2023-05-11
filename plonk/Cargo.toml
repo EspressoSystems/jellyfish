@@ -49,6 +49,12 @@ name = "plonk-benches"
 path = "benches/bench.rs"
 harness = false
 
+# Examples
+[[example]]
+name = "proof-of-exp"
+path = "examples/proof_of_exp.rs"
+required-features = ["test-srs"]
+
 [features]
 default = ["parallel"]
 std = ["ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", "ark-poly/std"]

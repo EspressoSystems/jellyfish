@@ -1189,25 +1189,21 @@ mod test {
             .is_err());
 
         let circuit_1 =
-            build_binary_point_vars_select_circuit::<F, P>(true, Point::from(p0), Point::from(p1))?;
-        let circuit_2 = build_binary_point_vars_select_circuit::<F, P>(
-            false,
-            Point::from(p1),
-            Point::from(p2),
-        )?;
+            build_binary_point_vars_select_circuit::<F>(true, Point::from(p0), Point::from(p1))?;
+        let circuit_2 =
+            build_binary_point_vars_select_circuit::<F>(false, Point::from(p1), Point::from(p2))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
 
-    fn build_binary_point_vars_select_circuit<F, P>(
+    fn build_binary_point_vars_select_circuit<F>(
         b: bool,
         p0: Point<F>,
         p1: Point<F>,
     ) -> Result<PlonkCircuit<F>, CircuitError>
     where
         F: PrimeField,
-        P: Config<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let b_var = circuit.create_boolean_variable(b)?;
