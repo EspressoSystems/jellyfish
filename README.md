@@ -44,9 +44,6 @@ Jellyfish is `no_std` compliant and compilable to WASM target environment, just 
 
 ```
 ./scripts/build_wasm.sh
-
-# or to check no_std using cargo nono (make sure you have that installed)
-./scripts/check_no_std.sh
 ```
 
 ### Tests
