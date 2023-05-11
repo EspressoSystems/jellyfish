@@ -21,7 +21,25 @@
   outputs = { self, nixpkgs, flake-utils, flake-compat, rust-overlay, pre-commit-hooks, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ (import rust-overlay) ];
+        overlays = [ 
+          (import rust-overlay)
+          (self: super: {
+            rustc = (super.rustc.override {
+                stdenv = self.stdenv.override {
+                    targetPlatform = super.stdenv.targetPlatform // {
+                        parsed = {
+                            cpu = { name = "wasm32"; };
+                            vendor = {name = "unknown";};
+                            kernel = {name = "unknown";};
+                            abi = {name = "unknown";};
+                        };
+                    };
+                };
+            }).overrideAttrs (attrs: {
+                configureFlags = attrs.configureFlags ++ ["--set=build.docs=false"];
+            });
+          })
+        ];
         pkgs = import nixpkgs { inherit system overlays; };
         nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith
           (toolchain: toolchain.minimal.override { extensions = [ "rustfmt" ]; });
@@ -63,7 +81,8 @@
             };
           };
         };
-        devShell = mkShell {
+        devShell = clang15Stdenv.mkDerivation {
+          name = "clang15-nix-shell";
           buildInputs = [
             argbash
             openssl
@@ -73,8 +92,8 @@
             stableToolchain
             nightlyToolchain
             cargo-sort
-            llvmPackages_15.clang
-            llvmPackages_15.libstdcxxClang
+            clang-tools_15
+            clangStdenv
             llvm_15
           ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
@@ -85,13 +104,13 @@
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
 
-            export CC="clang-15"
-            export AR="llvm-ar"
+            export C_INCLUDE_PATH="${llvmPackages_15.libclang.lib}/lib/clang/15.0.7/include"
+            export CC=$(which clang)
+            export AR=$(which llvm-ar)
+            export CFLAGS="-mcpu=generic"
           ''
           # install pre-commit hooks
           + self.check.${system}.pre-commit-check.shellHook;
-
-          # LD_LIBRARY_PATH = lib.strings.makeLibraryPath [ pkgs.llvmPackages_15.clang.libcxx ];
         };
       }
     );

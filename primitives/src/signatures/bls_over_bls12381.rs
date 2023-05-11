@@ -15,18 +15,19 @@
 //! # Examples
 //!
 //! ```
-//! use rand_core::{RngCore, OsRng};
+//! use rand_chacha::{ChaCha20Rng, rand_core::SeedableRng};
 //! use jf_primitives::signatures::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
 //!
-//! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
+//! let pp = BLSSignatureScheme::param_gen::<ChaCha20Rng>(None)?;
 //!
 //! // make sure the PRNG passed has good and trusted entropy.
 //! // you could use `OsRng` from `rand_core` or `getrandom` crate,
 //! // or a `SeedableRng` like `ChaChaRng` with seed generated from good randomness source.
-//! let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut OsRng)?;
+//! let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
+//! let (sk, pk) = BLSSignatureScheme::key_gen(&pp, &mut rng)?;
 //!
 //! let msg = "The quick brown fox jumps over the lazy dog";
-//! let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, &mut OsRng)?;
+//! let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, &mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&pp, &pk, &msg, &sig).is_ok());
 //!
 //! # Ok::<(), Box<dyn std::error::Error>>(())
@@ -38,16 +39,17 @@
 //! reconstruct them later on from IKM.
 //!
 //! ```
-//! use rand_core::{RngCore, OsRng};
+//! use rand_chacha::{ChaCha20Rng, rand_core::{SeedableRng, RngCore}};
 //! use sha2::{Sha256, Digest};
 //! use jf_primitives::signatures::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
 //!
-//! let pp = BLSSignatureScheme::param_gen::<OsRng>(None)?;
+//! let mut rng = ChaCha20Rng::from_seed([0u8; 32]); // seed from proper entropy source in practice!
+//! let pp = BLSSignatureScheme::param_gen::<ChaCha20Rng>(None)?;
 //!
 //! // NOTE: in practice, please use [`zeroize`][zeroize] to wipe sensitive
 //! // key materials out of memory.
 //! let mut ikm = [0u8; 32]; // should be at least 32 bytes
-//! OsRng.fill_bytes(&mut ikm);
+//! rng.fill_bytes(&mut ikm);
 //!
 //! let mut hasher = Sha256::new();
 //! hasher.update(b"MY-BLS-SIG-KEYGEN-SALT-DOM-SEP");
@@ -57,11 +59,11 @@
 //! let (sk2, pk2) = BLSSignatureScheme::key_gen_v5(&ikm, &salt, b"legal".as_ref())?;
 //!
 //! let msg = "I authorize transfering 10 dollars to Alice";
-//! let sig = BLSSignatureScheme::sign(&pp, &sk1, &msg, &mut OsRng)?;
+//! let sig = BLSSignatureScheme::sign(&pp, &sk1, &msg, &mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&pp, &pk1, &msg, &sig).is_ok());
 //!
 //! let msg = "I agree to the Terms and Conditions.";
-//! let sig = BLSSignatureScheme::sign(&pp, &sk2, &msg, &mut OsRng)?;
+//! let sig = BLSSignatureScheme::sign(&pp, &sk2, &msg, &mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&pp, &pk2, &msg, &sig).is_ok());
 //!
 //! # Ok::<(), Box<dyn std::error::Error>>(())
