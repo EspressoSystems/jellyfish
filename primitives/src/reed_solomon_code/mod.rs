@@ -61,16 +61,19 @@ where
 /// The degree of the interpolated polynomial is `data_size - 1`.
 /// Returns a data vector of length `data_size`.
 /// Time complexity of O(n^2).
-pub fn reed_solomon_erasure_decode<F, D>(
-    eval_points: D,
-    values: D,
+pub fn reed_solomon_erasure_decode<F, D1, D2>(
+    eval_points: D1,
+    values: D2,
     data_size: usize,
 ) -> Result<Vec<F>, PrimitivesError>
 where
     F: Field,
-    D: IntoIterator,
-    D::Item: Borrow<F>,
-    D::IntoIter: ExactSizeIterator + Clone,
+    D1: IntoIterator,
+    D1::Item: Borrow<F>,
+    D1::IntoIter: ExactSizeIterator + Clone,
+    D2: IntoIterator,
+    D2::Item: Borrow<F>,
+    D2::IntoIter: ExactSizeIterator + Clone,
 {
     let eval_points_iter = eval_points.into_iter();
     let values_iter = values.into_iter();
