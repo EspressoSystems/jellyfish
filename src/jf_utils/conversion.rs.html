@@ -347,6 +347,37 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -355,7 +386,12 @@
 
 </span><span class="kw">use </span>ark_ec::CurveConfig;
 <span class="kw">use </span>ark_ff::{BigInteger, Field, PrimeField};
-<span class="kw">use </span>ark_std::{cmp::min, mem, vec::Vec};
+<span class="kw">use </span>ark_std::{
+    cmp::min,
+    iter::{once, repeat},
+    mem,
+    vec::Vec,
+};
 <span class="kw">use </span>sha2::{Digest, Sha512};
 
 <span class="doccomment">/// Convert a scalar field element to a base field element.
@@ -444,77 +480,72 @@
 
 <span class="doccomment">/// Deterministic, infallible, invertible conversion from arbitrary bytes to
 /// field elements.
+///
+/// # How it works
+///
+/// - The first [`Field`] element in the result encodes `bytes` length as a
+///   `u64`.
+/// - Partition `bytes` into chunks of length P, where P is the field
+///   characteristic byte length minus 1.
+/// - Convert each chunk into [`BasePrimeField`] via
+///   [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic is
+///   guaranteed not to occur because chunk byte length is sufficiently small.
+/// - Collect [`BasePrimeField`] elements into [`Field`] elements and append to
+///   result.
+/// - If `bytes` is empty then result is empty.
+///
+/// # Panics
+///
+/// Panics only under conditions that should be checkable at compile time:
+///
+/// - The [`BasePrimeField`] modulus bit length is too small to hold a `u64`.
+/// - The byte length of a single [`BasePrimeField`] element fails to fit inside
+///   a `usize`.
+/// - The extension degree of the [`Field`] fails to fit inside a `usize`.
+/// - The byte length of a [`Field`] element fails to fit inside a `usize`.
+///
+/// If any of the above conditions holds then this function *always* panics.
 </span><span class="kw">pub fn </span>bytes_to_field_elements&lt;B, F&gt;(bytes: B) -&gt; Vec&lt;F&gt;
 <span class="kw">where
     </span>B: AsRef&lt;[u8]&gt;,
     F: Field,
 {
-    <span class="comment">// Ensure that F::characteristic is large enough to hold a u64.
-    // This should be possible at compile time but I don&#39;t know how.
-    // Example: could use &lt;https://docs.rs/static_assertions&gt; but then you hit
-    // &lt;https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512&gt;
-    </span><span class="macro">assert!</span>(
-        F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>,
-        <span class="string">&quot;base prime field modulus bit len {} should exceed 64&quot;</span>,
-        F::BasePrimeField::MODULUS_BIT_SIZE
-    );
-
+    <span class="kw">let </span>(primefield_bytes_len, extension_degree, field_bytes_len) = compile_time_checks::&lt;F&gt;();
     <span class="kw">if </span>bytes.as_ref().is_empty() {
         <span class="kw">return </span>Vec::new();
     }
 
-    <span class="comment">// various quantities
-    </span><span class="kw">let </span>primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>)
-        .expect(<span class="string">&quot;prime field modulus byte len should fit into usize&quot;</span>);
-    <span class="kw">let </span>extension_degree =
-        usize::try_from(F::extension_degree()).expect(<span class="string">&quot;extension degree should fit into usize&quot;</span>);
-    <span class="kw">let </span>field_bytes_len = primefield_bytes_len
-        .checked_mul(extension_degree)
-        .expect(<span class="string">&quot;field element byte len should fit into usize&quot;</span>);
-    <span class="kw">let </span>result_len = (field_bytes_len
+    <span class="comment">// Result length is always less than `bytes` length for sufficiently large
+    // `bytes`. Thus, the following should never panic.
+    </span><span class="kw">let </span>result_len = (field_bytes_len
         .checked_add(bytes.as_ref().len())
         .expect(<span class="string">&quot;result len should fit into usize&quot;</span>)
         - <span class="number">1</span>)
         / field_bytes_len
         + <span class="number">1</span>;
 
-    <span class="comment">// - partition bytes into chunks of length one fewer than the base prime field
-    //   modulus byte length
-    // - convert each chunk into BasePrimeField via from_le_bytes_mod_order
-    // - modular reduction is guaranteed not to occur because chunk byte length is
-    //   sufficiently small
-    // - collect BytePrimeField elements into Field elements and append to result
-    </span><span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(result_len);
+    <span class="kw">let </span>result = once(F::from(bytes.as_ref().len() <span class="kw">as </span>u64)) <span class="comment">// the first field element encodes the bytes length as u64
+        </span>.chain(
+            bytes
+                .as_ref()
+                .chunks(field_bytes_len)
+                .map(|field_elem_bytes| {
+                    F::from_base_prime_field_elems(
+                        <span class="kw-2">&amp;</span>field_elem_bytes.chunks(primefield_bytes_len)
+                .map(F::BasePrimeField::from_le_bytes_mod_order)
+                <span class="comment">// not enough prime field elems? fill remaining elems with zero
+                </span>.chain(repeat(F::BasePrimeField::ZERO).take(
+                    extension_degree - (field_elem_bytes.len()-<span class="number">1</span>) / primefield_bytes_len - <span class="number">1</span>)
+                )
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                    )
+                    .expect(<span class="string">&quot;failed to construct field element&quot;</span>)
+                }),
+        )
+        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-    <span class="comment">// the first field element encodes the bytes length as u64
-    </span>result.push(F::from(bytes.as_ref().len() <span class="kw">as </span>u64));
-
-    <span class="kw">for </span>field_elem_bytes <span class="kw">in </span>bytes.as_ref().chunks(field_bytes_len) {
-        <span class="kw">let </span><span class="kw-2">mut </span>primefield_elems = Vec::with_capacity(extension_degree);
-        <span class="kw">for </span>primefield_elem_bytes <span class="kw">in </span>field_elem_bytes.chunks(primefield_bytes_len) {
-            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(
-                primefield_elem_bytes,
-            ));
-        }
-        <span class="comment">// not enough prime field elems? fill remaining elems with zero
-        </span><span class="kw">if </span>primefield_elems.len() &lt; extension_degree {
-            <span class="kw">for _ in </span><span class="number">0</span>..(extension_degree - primefield_elems.len()) {
-                primefield_elems.push(F::BasePrimeField::ZERO);
-            }
-        }
-        <span class="macro">assert_eq!</span>(
-            primefield_elems.len(),
-            extension_degree,
-            <span class="string">&quot;prime field elems len {} differs from extension degree {}&quot;</span>,
-            primefield_elems.len(),
-            extension_degree
-        );
-        result.push(
-            F::from_base_prime_field_elems(<span class="kw-2">&amp;</span>primefield_elems)
-                .expect(<span class="string">&quot;field elem construction should succeed&quot;</span>),
-        );
-    }
-    <span class="macro">assert_eq!</span>(
+    <span class="comment">// sanity check
+    </span><span class="macro">assert_eq!</span>(
         result.len(),
         result_len,
         <span class="string">&quot;invalid result len, expect {}, found {}&quot;</span>,
@@ -524,26 +555,21 @@
     result
 }
 
-<span class="doccomment">/// Deterministic, infallible inverse of `bytes_to_field_elements`.
-/// `bytes_to_field_elements` is not onto, so `bytes_from_field_elements`
-/// is not one-to-one and hence not invertible.
+<span class="doccomment">/// Deterministic, infallible inverse of [`bytes_to_field_elements`].
+///
+/// This function is not invertible because [`bytes_to_field_elements`] is not
+/// onto.
+///
 /// ## Panics
-/// Panics if result length overflows usize.
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`], or if the
+/// length of the return `Vec&lt;u8&gt;` overflows `usize`.
 </span><span class="kw">pub fn </span>bytes_from_field_elements&lt;T, F&gt;(elems: T) -&gt; Vec&lt;u8&gt;
 <span class="kw">where
     </span>T: AsRef&lt;[F]&gt;,
     F: Field,
 {
-    <span class="comment">// Need to ensure that F::characteristic is large enough to hold a u64.
-    // This should be possible at compile time but I don&#39;t know how.
-    // Example: could use &lt;https://docs.rs/static_assertions&gt; but then you hit
-    // &lt;https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512&gt;
-    </span><span class="macro">assert!</span>(
-        F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>,
-        <span class="string">&quot;base prime field modulus bit len {} should exceed 64&quot;</span>,
-        F::BasePrimeField::MODULUS_BIT_SIZE
-    );
-
+    <span class="kw">let </span>(primefield_bytes_len, <span class="kw">_</span>, field_bytes_len) = compile_time_checks::&lt;F&gt;();
     <span class="kw">if </span>elems.as_ref().is_empty() {
         <span class="kw">return </span>Vec::new();
     }
@@ -566,25 +592,17 @@
     ))
     .expect(<span class="string">&quot;result len conversion from u64 to usize should succeed&quot;</span>);
 
-    <span class="comment">// various quantities
-    </span><span class="kw">let </span>primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>)
-        .expect(<span class="string">&quot;prime field modulus byte len should fit into usize&quot;</span>);
-    <span class="kw">let </span>extension_degree =
-        usize::try_from(F::extension_degree()).expect(<span class="string">&quot;extension degree should fit into usize&quot;</span>);
-    <span class="kw">let </span>field_bytes_len = primefield_bytes_len
-        .checked_mul(extension_degree)
-        .expect(<span class="string">&quot;field element byte len should fit into usize&quot;</span>);
     <span class="kw">let </span>result_capacity = field_bytes_len
         .checked_mul(elems.len())
         .expect(<span class="string">&quot;result capacity should fit into usize&quot;</span>);
 
-    <span class="comment">// If elems was produced by bytes_to_field_elements
+    <span class="comment">// If `elems` was produced by `bytes_to_field_elements`
     // then the original bytes MUST end before the final field element
-    // so we expect result_len &lt;= result_capacity.
-    // But if elems is arbitrary then result_len could be large,
-    // so we enforce result_len &lt;= result_capacity.
-    // Do not enforce a lower bound on result_len because the caller might
-    // pad elems, for example with extra zeros from polynomial interpolation.
+    // so we expect `result_len &lt;= result_capacity`.
+    // But if `elems` is arbitrary then `result_len` could be large,
+    // so we enforce `result_len &lt;= result_capacity`.
+    // Do not enforce a lower bound on `result_len` because the caller might
+    // pad `elems`, for example with extra zeros from polynomial interpolation.
     </span><span class="kw">let </span>result_len = min(result_len, result_capacity);
 
     <span class="comment">// for each base prime field element:
@@ -608,15 +626,52 @@
             result.extend_from_slice(primefield_bytes);
         }
     }
-    <span class="macro">assert_eq!</span>(
+
+    <span class="comment">// sanity check
+    </span><span class="macro">assert_eq!</span>(
         result.len(),
         result_capacity,
         <span class="string">&quot;invalid result len, expect {}, found {}&quot;</span>,
         result_capacity,
         result.len()
     );
+
     result.truncate(result_len);
     result
+}
+
+<span class="doccomment">/// Compute various `usize` quantities as a function of the generic [`Field`]
+/// parameter.
+///
+/// It should be possible to do all this at compile time but I don&#39;t know how.
+/// Want to panic on overflow, so use checked arithetic and type conversion.
+///
+/// # Returns
+///
+/// Returns the following tuple:
+/// 1. The byte length P of the [`BasePrimeField`] modulus minus 1.
+/// 2. The extension degree of the [`Field`].
+/// 3. The total byte length of a single [`Field`] element under the constraint
+/// that   each [`BasePrimeField`] element fits into only P bytes.
+///
+/// # Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`].
+</span><span class="kw">fn </span>compile_time_checks&lt;F: Field&gt;() -&gt; (usize, usize, usize) {
+    <span class="macro">assert!</span>(
+        F::BasePrimeField::MODULUS_BIT_SIZE &gt; <span class="number">64</span>,
+        <span class="string">&quot;base prime field modulus bit len {} too small to hold a u64&quot;</span>,
+        F::BasePrimeField::MODULUS_BIT_SIZE
+    );
+
+    <span class="kw">let </span>primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - <span class="number">1</span>) / <span class="number">8</span>)
+        .expect(<span class="string">&quot;prime field modulus byte len should fit into usize&quot;</span>);
+    <span class="kw">let </span>extension_degree =
+        usize::try_from(F::extension_degree()).expect(<span class="string">&quot;extension degree should fit into usize&quot;</span>);
+    <span class="kw">let </span>field_bytes_len = primefield_bytes_len
+        .checked_mul(extension_degree)
+        .expect(<span class="string">&quot;field element byte len should fit into usize&quot;</span>);
+    (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
 <span class="attr">#[cfg(test)]
@@ -624,6 +679,9 @@
     <span class="kw">use </span><span class="kw">crate</span>::test_rng;
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>ark_bls12_377::Fq12 <span class="kw">as </span>Fq12_377;
+    <span class="kw">use </span>ark_bls12_381::Fq12 <span class="kw">as </span>Fq12_381;
+    <span class="kw">use </span>ark_bn254::Fq12 <span class="kw">as </span>Fq12_254;
     <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsConfig <span class="kw">as </span>Param377, Fr <span class="kw">as </span>Fr377};
     <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsConfig <span class="kw">as </span>Param381, Fr <span class="kw">as </span>Fr381};
     <span class="kw">use </span>ark_ed_on_bn254::{EdwardsConfig <span class="kw">as </span>Param254, Fr <span class="kw">as </span>Fr254};
@@ -693,7 +751,11 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_bytes_field_elems() {
         bytes_field_elems::&lt;Fr381&gt;();
+        bytes_field_elems::&lt;Fr377&gt;();
         bytes_field_elems::&lt;Fr254&gt;();
+        bytes_field_elems::&lt;Fq12_381&gt;();
+        bytes_field_elems::&lt;Fq12_377&gt;();
+        bytes_field_elems::&lt;Fq12_254&gt;();
     }
 }
 </code></pre></div>
