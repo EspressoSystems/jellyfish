@@ -13,9 +13,8 @@ mod bench {
     use ark_bls12_381::{Bls12_381, Fr};
     use ark_ff::UniformRand;
     use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    use ark_std::rc::Rc;
     use jf_primitives::pcs::{
-        prelude::{MultilinearKzgPCS, PCSError, PolynomialCommitmentScheme},
+        prelude::{MultilinearKzgPCS, PCSError, PolynomialCommitmentScheme, MLE},
         StructuredReferenceString,
     };
     use jf_utils::test_rng;
@@ -36,7 +35,7 @@ mod bench {
                 10
             };
 
-            let poly = Rc::new(DenseMultilinearExtension::rand(nv, &mut rng));
+            let poly = MLE::from(DenseMultilinearExtension::rand(nv, &mut rng));
             let (ml_ck, ml_vk) = uni_params.0.trim(nv)?;
             let (uni_ck, uni_vk) = uni_params.1.trim(nv)?;
             let ck = (ml_ck, uni_ck);

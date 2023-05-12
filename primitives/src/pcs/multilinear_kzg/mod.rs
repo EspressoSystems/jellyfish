@@ -15,6 +15,8 @@ use crate::pcs::{
     univariate_kzg::UnivariateKzgProof,
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
+#[cfg(target_has_atomic = "ptr")]
+use alloc::sync::Arc;
 use ark_ec::{
     pairing::Pairing,
     scalar_mul::{fixed_base::FixedBase, variable_base::VariableBaseMSM},
@@ -28,7 +30,6 @@ use ark_std::{
     end_timer, format,
     marker::PhantomData,
     rand::{CryptoRng, RngCore},
-    rc::Rc,
     start_timer,
     string::ToString,
     vec,
@@ -70,11 +71,21 @@ pub struct MultilinearKzgBatchProof<E: Pairing> {
     pub q_x_opens: Vec<UnivariateKzgProof<E>>,
 }
 
+/// Multi-linear Extension (MLE) polynomial, this type alias is set to owned
+/// `DenseMultilinearExtension` on wasm platforms since only message-passing
+/// concurrency is supported. And set to `Arc<DenseMultilinearExtension>` for
+/// platforms that supports atomic operations (e.g. mostly non-wasm, MIPS, x86
+/// etc.)
+#[cfg(target_has_atomic = "ptr")]
+pub type MLE<F> = Arc<DenseMultilinearExtension<F>>;
+#[cfg(not(target_has_atomic = "ptr"))]
+pub type MLE<F> = DenseMultilinearExtension<F>;
+
 impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     // Config
     type SRS = Srs<E>;
     // Polynomial and its associated types
-    type Polynomial = Rc<DenseMultilinearExtension<E::ScalarField>>;
+    type Polynomial = MLE<E::ScalarField>;
     type Point = Vec<E::ScalarField>;
     type Evaluation = E::ScalarField;
     // Commitments and proofs
@@ -427,7 +438,7 @@ mod tests {
 
     fn test_single_helper<R: RngCore + CryptoRng>(
         params: &(MultilinearUniversalParams<E>, UnivariateUniversalParams<E>),
-        poly: &Rc<DenseMultilinearExtension<Fr>>,
+        poly: &MLE<Fr>,
         rng: &mut R,
     ) -> Result<(), PCSError> {
         let nv = poly.num_vars();
@@ -457,11 +468,11 @@ mod tests {
         let params = MultilinearKzgPCS::<E>::gen_srs_for_testing(&mut rng, 10)?;
 
         // normal polynomials
-        let poly1 = Rc::new(DenseMultilinearExtension::rand(8, &mut rng));
+        let poly1 = MLE::from(DenseMultilinearExtension::rand(8, &mut rng));
         test_single_helper(&params, &poly1, &mut rng)?;
 
         // single-variate polynomials
-        let poly2 = Rc::new(DenseMultilinearExtension::rand(1, &mut rng));
+        let poly2 = MLE::from(DenseMultilinearExtension::rand(1, &mut rng));
         test_single_helper(&params, &poly2, &mut rng)?;
 
         Ok(())

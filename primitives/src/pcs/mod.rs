@@ -31,7 +31,7 @@ pub trait PolynomialCommitmentScheme {
     /// Structured reference string
     type SRS: Clone + Debug + StructuredReferenceString;
     /// Polynomial and its associated types
-    type Polynomial: Clone + Debug + Hash + PartialEq + Eq + CanonicalSerialize;
+    type Polynomial: Clone + Debug + Hash + PartialEq + Eq;
     /// Polynomial input domain
     type Point: Clone + Ord + Debug + Sync + Hash + PartialEq + Eq;
     /// Polynomial Evaluation
