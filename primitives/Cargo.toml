@@ -65,7 +65,10 @@ harness = false
 
 [features]
 default = ["parallel"]
-std = []
+std = ["ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", 
+        "ark-poly/std", "ark-crypto-primitives/std", "num-bigint/std",
+        "num-traits/std", "sha2/std", "sha3/std", "zeroize/std", 
+        "itertools/use_std", "rand_chacha/std", "jf-utils/std", "jf-relation/std"]
 print-trace = ["ark-std/print-trace"] 
 parallel = ["ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel", 
             "jf-relation/parallel", "rayon" ]

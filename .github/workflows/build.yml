@@ -69,7 +69,9 @@ jobs:
       - name: Check no_std support and WASM compilation
         env:
           RUSTFLAGS: -C target-cpu=generic
-        run: cargo build --target wasm32-unknown-unknown --no-default-features
+        run: |
+          cargo check --no-default-features
+          cargo build --target wasm32-unknown-unknown --no-default-features
 
       - name: Test
         run: bash ./scripts/run_tests.sh
