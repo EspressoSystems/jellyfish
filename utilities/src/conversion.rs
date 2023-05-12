@@ -6,7 +6,12 @@
 
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, Field, PrimeField};
-use ark_std::{cmp::min, mem, vec::Vec};
+use ark_std::{
+    cmp::min,
+    iter::{once, repeat},
+    mem,
+    vec::Vec,
+};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -95,33 +100,43 @@ where
 
 /// Deterministic, infallible, invertible conversion from arbitrary bytes to
 /// field elements.
+///
+/// # How it works
+///
+/// - The first [`Field`] element in the result encodes `bytes` length as a
+///   `u64`.
+/// - Partition `bytes` into chunks of length P, where P is the field
+///   characteristic byte length minus 1.
+/// - Convert each chunk into [`BasePrimeField`] via
+///   [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic is
+///   guaranteed not to occur because chunk byte length is sufficiently small.
+/// - Collect [`BasePrimeField`] elements into [`Field`] elements and append to
+///   result.
+/// - If `bytes` is empty then result is empty.
+///
+/// # Panics
+///
+/// Panics only under conditions that should be checkable at compile time:
+///
+/// - The [`BasePrimeField`] modulus bit length is too small to hold a `u64`.
+/// - The byte length of a single [`BasePrimeField`] element fails to fit inside
+///   a `usize`.
+/// - The extension degree of the [`Field`] fails to fit inside a `usize`.
+/// - The byte length of a [`Field`] element fails to fit inside a `usize`.
+///
+/// If any of the above conditions holds then this function *always* panics.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
     B: AsRef<[u8]>,
     F: Field,
 {
-    // Ensure that F::characteristic is large enough to hold a u64.
-    // This should be possible at compile time but I don't know how.
-    // Example: could use <https://docs.rs/static_assertions> but then you hit
-    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
-    assert!(
-        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
-        "base prime field modulus bit len {} should exceed 64",
-        F::BasePrimeField::MODULUS_BIT_SIZE
-    );
-
+    let (primefield_bytes_len, extension_degree, field_bytes_len) = compile_time_checks::<F>();
     if bytes.as_ref().is_empty() {
         return Vec::new();
     }
 
-    // various quantities
-    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
-        .expect("prime field modulus byte len should fit into usize");
-    let extension_degree =
-        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
-    let field_bytes_len = primefield_bytes_len
-        .checked_mul(extension_degree)
-        .expect("field element byte len should fit into usize");
+    // Result length is always less than `bytes` length for sufficiently large
+    // `bytes`. Thus, the following should never panic.
     let result_len = (field_bytes_len
         .checked_add(bytes.as_ref().len())
         .expect("result len should fit into usize")
@@ -129,42 +144,27 @@ where
         / field_bytes_len
         + 1;
 
-    // - partition bytes into chunks of length one fewer than the base prime field
-    //   modulus byte length
-    // - convert each chunk into BasePrimeField via from_le_bytes_mod_order
-    // - modular reduction is guaranteed not to occur because chunk byte length is
-    //   sufficiently small
-    // - collect BytePrimeField elements into Field elements and append to result
-    let mut result = Vec::with_capacity(result_len);
+    let result = once(F::from(bytes.as_ref().len() as u64)) // the first field element encodes the bytes length as u64
+        .chain(
+            bytes
+                .as_ref()
+                .chunks(field_bytes_len)
+                .map(|field_elem_bytes| {
+                    F::from_base_prime_field_elems(
+                        &field_elem_bytes.chunks(primefield_bytes_len)
+                .map(F::BasePrimeField::from_le_bytes_mod_order)
+                // not enough prime field elems? fill remaining elems with zero
+                .chain(repeat(F::BasePrimeField::ZERO).take(
+                    extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1)
+                )
+                .collect::<Vec<_>>(),
+                    )
+                    .expect("failed to construct field element")
+                }),
+        )
+        .collect::<Vec<_>>();
 
-    // the first field element encodes the bytes length as u64
-    result.push(F::from(bytes.as_ref().len() as u64));
-
-    for field_elem_bytes in bytes.as_ref().chunks(field_bytes_len) {
-        let mut primefield_elems = Vec::with_capacity(extension_degree);
-        for primefield_elem_bytes in field_elem_bytes.chunks(primefield_bytes_len) {
-            primefield_elems.push(F::BasePrimeField::from_le_bytes_mod_order(
-                primefield_elem_bytes,
-            ));
-        }
-        // not enough prime field elems? fill remaining elems with zero
-        if primefield_elems.len() < extension_degree {
-            for _ in 0..(extension_degree - primefield_elems.len()) {
-                primefield_elems.push(F::BasePrimeField::ZERO);
-            }
-        }
-        assert_eq!(
-            primefield_elems.len(),
-            extension_degree,
-            "prime field elems len {} differs from extension degree {}",
-            primefield_elems.len(),
-            extension_degree
-        );
-        result.push(
-            F::from_base_prime_field_elems(&primefield_elems)
-                .expect("field elem construction should succeed"),
-        );
-    }
+    // sanity check
     assert_eq!(
         result.len(),
         result_len,
@@ -175,26 +175,21 @@ where
     result
 }
 
-/// Deterministic, infallible inverse of `bytes_to_field_elements`.
-/// `bytes_to_field_elements` is not onto, so `bytes_from_field_elements`
-/// is not one-to-one and hence not invertible.
+/// Deterministic, infallible inverse of [`bytes_to_field_elements`].
+///
+/// This function is not invertible because [`bytes_to_field_elements`] is not
+/// onto.
+///
 /// ## Panics
-/// Panics if result length overflows usize.
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`], or if the
+/// length of the return `Vec<u8>` overflows `usize`.
 pub fn bytes_from_field_elements<T, F>(elems: T) -> Vec<u8>
 where
     T: AsRef<[F]>,
     F: Field,
 {
-    // Need to ensure that F::characteristic is large enough to hold a u64.
-    // This should be possible at compile time but I don't know how.
-    // Example: could use <https://docs.rs/static_assertions> but then you hit
-    // <https://users.rust-lang.org/t/error-e0401-cant-use-generic-parameters-from-outer-function/84512>
-    assert!(
-        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
-        "base prime field modulus bit len {} should exceed 64",
-        F::BasePrimeField::MODULUS_BIT_SIZE
-    );
-
+    let (primefield_bytes_len, _, field_bytes_len) = compile_time_checks::<F>();
     if elems.as_ref().is_empty() {
         return Vec::new();
     }
@@ -217,25 +212,17 @@ where
     ))
     .expect("result len conversion from u64 to usize should succeed");
 
-    // various quantities
-    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
-        .expect("prime field modulus byte len should fit into usize");
-    let extension_degree =
-        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
-    let field_bytes_len = primefield_bytes_len
-        .checked_mul(extension_degree)
-        .expect("field element byte len should fit into usize");
     let result_capacity = field_bytes_len
         .checked_mul(elems.len())
         .expect("result capacity should fit into usize");
 
-    // If elems was produced by bytes_to_field_elements
+    // If `elems` was produced by `bytes_to_field_elements`
     // then the original bytes MUST end before the final field element
-    // so we expect result_len <= result_capacity.
-    // But if elems is arbitrary then result_len could be large,
-    // so we enforce result_len <= result_capacity.
-    // Do not enforce a lower bound on result_len because the caller might
-    // pad elems, for example with extra zeros from polynomial interpolation.
+    // so we expect `result_len <= result_capacity`.
+    // But if `elems` is arbitrary then `result_len` could be large,
+    // so we enforce `result_len <= result_capacity`.
+    // Do not enforce a lower bound on `result_len` because the caller might
+    // pad `elems`, for example with extra zeros from polynomial interpolation.
     let result_len = min(result_len, result_capacity);
 
     // for each base prime field element:
@@ -259,6 +246,8 @@ where
             result.extend_from_slice(primefield_bytes);
         }
     }
+
+    // sanity check
     assert_eq!(
         result.len(),
         result_capacity,
@@ -266,8 +255,43 @@ where
         result_capacity,
         result.len()
     );
+
     result.truncate(result_len);
     result
+}
+
+/// Compute various `usize` quantities as a function of the generic [`Field`]
+/// parameter.
+///
+/// It should be possible to do all this at compile time but I don't know how.
+/// Want to panic on overflow, so use checked arithetic and type conversion.
+///
+/// # Returns
+///
+/// Returns the following tuple:
+/// 1. The byte length P of the [`BasePrimeField`] modulus minus 1.
+/// 2. The extension degree of the [`Field`].
+/// 3. The total byte length of a single [`Field`] element under the constraint
+/// that   each [`BasePrimeField`] element fits into only P bytes.
+///
+/// # Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`].
+fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
+    assert!(
+        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
+        "base prime field modulus bit len {} too small to hold a u64",
+        F::BasePrimeField::MODULUS_BIT_SIZE
+    );
+
+    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
+        .expect("prime field modulus byte len should fit into usize");
+    let extension_degree =
+        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
+    let field_bytes_len = primefield_bytes_len
+        .checked_mul(extension_degree)
+        .expect("field element byte len should fit into usize");
+    (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
 #[cfg(test)]
@@ -275,6 +299,9 @@ mod tests {
     use crate::test_rng;
 
     use super::*;
+    use ark_bls12_377::Fq12 as Fq12_377;
+    use ark_bls12_381::Fq12 as Fq12_381;
+    use ark_bn254::Fq12 as Fq12_254;
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
@@ -344,6 +371,10 @@ mod tests {
     #[test]
     fn test_bytes_field_elems() {
         bytes_field_elems::<Fr381>();
+        bytes_field_elems::<Fr377>();
         bytes_field_elems::<Fr254>();
+        bytes_field_elems::<Fq12_381>();
+        bytes_field_elems::<Fq12_377>();
+        bytes_field_elems::<Fq12_254>();
     }
 }
