@@ -100,6 +100,31 @@ where
 
 /// Deterministic, infallible, invertible conversion from arbitrary bytes to
 /// field elements.
+///
+/// # How it works
+///
+/// - The first [`Field`] element in the result encodes `bytes` length as a
+///   `u64`.
+/// - Partition `bytes` into chunks of length P, where P is the field
+///   characteristic byte length minus 1.
+/// - Convert each chunk into [`BasePrimeField`] via
+///   [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic is
+///   guaranteed not to occur because chunk byte length is sufficiently small.
+/// - Collect [`BasePrimeField`] elements into [`Field`] elements and append to
+///   result.
+/// - If `bytes` is empty then result is empty.
+///
+/// # Panics
+///
+/// Panics only under conditions that should be checkable at compile time:
+///
+/// - The [`BasePrimeField`] modulus bit length is too small to hold a `u64`.
+/// - The byte length of a single [`BasePrimeField`] element fails to fit inside
+///   a `usize`.
+/// - The extension degree of the [`Field`] fails to fit inside a `usize`.
+/// - The byte length of a [`Field`] element fails to fit inside a `usize`.
+///
+/// If any of the above conditions holds then this function *always* panics.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
     B: AsRef<[u8]>,
@@ -110,6 +135,8 @@ where
         return Vec::new();
     }
 
+    // Result length is always less than `bytes` length for sufficiently large
+    // `bytes`. Thus, the following should never panic.
     let result_len = (field_bytes_len
         .checked_add(bytes.as_ref().len())
         .expect("result len should fit into usize")
@@ -117,12 +144,6 @@ where
         / field_bytes_len
         + 1;
 
-    // - partition bytes into chunks of length one fewer than the base prime field
-    //   modulus byte length
-    // - convert each chunk into BasePrimeField via from_le_bytes_mod_order
-    // - modular reduction is guaranteed not to occur because chunk byte length is
-    //   sufficiently small
-    // - collect BasePrimeField elements into Field elements and append to result
     let result = once(F::from(bytes.as_ref().len() as u64)) // the first field element encodes the bytes length as u64
         .chain(
             bytes
@@ -143,6 +164,7 @@ where
         )
         .collect::<Vec<_>>();
 
+    // sanity check
     assert_eq!(
         result.len(),
         result_len,
@@ -153,11 +175,15 @@ where
     result
 }
 
-/// Deterministic, infallible inverse of `bytes_to_field_elements`.
-/// `bytes_to_field_elements` is not onto, so `bytes_from_field_elements`
-/// is not one-to-one and hence not invertible.
+/// Deterministic, infallible inverse of [`bytes_to_field_elements`].
+///
+/// This function is not invertible because [`bytes_to_field_elements`] is not
+/// onto.
+///
 /// ## Panics
-/// Panics if result length overflows usize.
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`], or if the
+/// length of the return `Vec<u8>` overflows `usize`.
 pub fn bytes_from_field_elements<T, F>(elems: T) -> Vec<u8>
 where
     T: AsRef<[F]>,
@@ -190,13 +216,13 @@ where
         .checked_mul(elems.len())
         .expect("result capacity should fit into usize");
 
-    // If elems was produced by bytes_to_field_elements
+    // If `elems` was produced by `bytes_to_field_elements`
     // then the original bytes MUST end before the final field element
-    // so we expect result_len <= result_capacity.
-    // But if elems is arbitrary then result_len could be large,
-    // so we enforce result_len <= result_capacity.
-    // Do not enforce a lower bound on result_len because the caller might
-    // pad elems, for example with extra zeros from polynomial interpolation.
+    // so we expect `result_len <= result_capacity`.
+    // But if `elems` is arbitrary then `result_len` could be large,
+    // so we enforce `result_len <= result_capacity`.
+    // Do not enforce a lower bound on `result_len` because the caller might
+    // pad `elems`, for example with extra zeros from polynomial interpolation.
     let result_len = min(result_len, result_capacity);
 
     // for each base prime field element:
@@ -220,6 +246,8 @@ where
             result.extend_from_slice(primefield_bytes);
         }
     }
+
+    // sanity check
     assert_eq!(
         result.len(),
         result_capacity,
@@ -227,17 +255,32 @@ where
         result_capacity,
         result.len()
     );
+
     result.truncate(result_len);
     result
 }
 
+/// Compute various `usize` quantities as a function of the generic [`Field`]
+/// parameter.
+///
 /// It should be possible to do all this at compile time but I don't know how.
-/// Want to panic on overflow, so use checked arithetic and conversion.
+/// Want to panic on overflow, so use checked arithetic and type conversion.
+///
+/// # Returns
+///
+/// Returns the following tuple:
+/// 1. The byte length P of the [`BasePrimeField`] modulus minus 1.
+/// 2. The extension degree of the [`Field`].
+/// 3. The total byte length of a single [`Field`] element under the constraint
+/// that   each [`BasePrimeField`] element fits into only P bytes.
+///
+/// # Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`].
 fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
-    // Ensure that F::characteristic is large enough to hold a u64.
     assert!(
         F::BasePrimeField::MODULUS_BIT_SIZE > 64,
-        "base prime field modulus bit len {} should exceed 64",
+        "base prime field modulus bit len {} too small to hold a u64",
         F::BasePrimeField::MODULUS_BIT_SIZE
     );
 
