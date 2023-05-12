@@ -32,7 +32,7 @@ cargo build
 Run an example:
 
 ```
-cargo run --release --example proof_of_exp
+cargo run --release --example proof-of-exp
 ```
 
 This is a simple example to prove and verify knowledge of exponent.
