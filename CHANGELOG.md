@@ -19,9 +19,11 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#233](https://github.com/EspressoSystems/jellyfish/pull/233) BLS aggregation APIs
 - [#234](https://github.com/EspressoSystems/jellyfish/pull/234) New `bytes_from_field_elements` util
 - [#231](https://github.com/EspressoSystems/jellyfish/pull/231) Implemented FK23 for fast amortized opening for univariate PCS
+- [#225](https://github.com/EspressoSystems/jellyfish/pull/225) Implemented Reed Solomon erasure code
 
 ### Changed
 
+- [#256](https://github.com/EspressoSystems/jellyfish/pull/256) Refactored Reed Solomon erasure code
 - [#238](https://github.com/EspressoSystems/jellyfish/pull/238) add public keys into signature aggregation APIs
 - [#251](https://github.com/EspressoSystems/jellyfish/pull/251) add sign_key_ref api for BLSKeyPair
 
