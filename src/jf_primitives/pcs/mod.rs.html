@@ -263,13 +263,6 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -291,7 +284,6 @@
     borrow::Borrow,
     fmt::Debug,
     hash::Hash,
-    path::Path,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
@@ -304,13 +296,7 @@
     <span class="doccomment">/// Structured reference string
     </span><span class="kw">type </span>SRS: Clone + Debug + StructuredReferenceString;
     <span class="doccomment">/// Polynomial and its associated types
-    </span><span class="kw">type </span>Polynomial: Clone
-        + Debug
-        + Hash
-        + PartialEq
-        + Eq
-        + CanonicalSerialize
-        + CanonicalDeserialize;
+    </span><span class="kw">type </span>Polynomial: Clone + Debug + Hash + PartialEq + Eq;
     <span class="doccomment">/// Polynomial input domain
     </span><span class="kw">type </span>Point: Clone + Ord + Debug + Sync + Hash + PartialEq + Eq;
     <span class="doccomment">/// Polynomial Evaluation
@@ -348,7 +334,7 @@
     /// If `file=None`, we load the default choice of SRS.
     </span><span class="kw">fn </span>load_srs_from_file(
         supported_size: usize,
-        file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Path&gt;,
+        file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SRS, PCSError&gt; {
         <span class="self">Self</span>::SRS::load_srs_from_file(supported_size, file)
     }
@@ -490,7 +476,7 @@
     /// implemented else where. We only load them into memory here.
     ///
     /// If `file=None`, we load the default choice of SRS.
-    </span><span class="kw">fn </span>load_srs_from_file(_supported_size: usize, _file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Path&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+    </span><span class="kw">fn </span>load_srs_from_file(_supported_size: usize, _file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
         <span class="macro">unimplemented!</span>(<span class="string">&quot;TODO: implement loading SRS from files&quot;</span>);
     }
 }

@@ -475,6 +475,17 @@
 <a href="#475" id="475">475</a>
 <a href="#476" id="476">476</a>
 <a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -492,6 +503,8 @@
     univariate_kzg::UnivariateKzgProof,
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
+<span class="attr">#[cfg(target_has_atomic = <span class="string">&quot;ptr&quot;</span>)]
+</span><span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>ark_ec::{
     pairing::Pairing,
     scalar_mul::{fixed_base::FixedBase, variable_base::VariableBaseMSM},
@@ -507,7 +520,6 @@
     rand::{CryptoRng, RngCore},
     start_timer,
     string::ToString,
-    sync::Arc,
     vec,
     vec::Vec,
     One, Zero,
@@ -547,11 +559,21 @@
     </span><span class="kw">pub </span>q_x_opens: Vec&lt;UnivariateKzgProof&lt;E&gt;&gt;,
 }
 
+<span class="doccomment">/// Multi-linear Extension (MLE) polynomial, this type alias is set to owned
+/// `DenseMultilinearExtension` on wasm platforms since only message-passing
+/// concurrency is supported. And set to `Arc&lt;DenseMultilinearExtension&gt;` for
+/// platforms that supports atomic operations (e.g. mostly non-wasm, MIPS, x86
+/// etc.)
+</span><span class="attr">#[cfg(target_has_atomic = <span class="string">&quot;ptr&quot;</span>)]
+</span><span class="kw">pub type </span>MLE&lt;F&gt; = Arc&lt;DenseMultilinearExtension&lt;F&gt;&gt;;
+<span class="attr">#[cfg(not(target_has_atomic = <span class="string">&quot;ptr&quot;</span>))]
+</span><span class="kw">pub type </span>MLE&lt;F&gt; = DenseMultilinearExtension&lt;F&gt;;
+
 <span class="kw">impl</span>&lt;E: Pairing&gt; PolynomialCommitmentScheme <span class="kw">for </span>MultilinearKzgPCS&lt;E&gt; {
     <span class="comment">// Config
     </span><span class="kw">type </span>SRS = Srs&lt;E&gt;;
     <span class="comment">// Polynomial and its associated types
-    </span><span class="kw">type </span>Polynomial = Arc&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt;;
+    </span><span class="kw">type </span>Polynomial = MLE&lt;E::ScalarField&gt;;
     <span class="kw">type </span>Point = Vec&lt;E::ScalarField&gt;;
     <span class="kw">type </span>Evaluation = E::ScalarField;
     <span class="comment">// Commitments and proofs
@@ -904,7 +926,7 @@
 
     <span class="kw">fn </span>test_single_helper&lt;R: RngCore + CryptoRng&gt;(
         params: <span class="kw-2">&amp;</span>(MultilinearUniversalParams&lt;E&gt;, UnivariateUniversalParams&lt;E&gt;),
-        poly: <span class="kw-2">&amp;</span>Arc&lt;DenseMultilinearExtension&lt;Fr&gt;&gt;,
+        poly: <span class="kw-2">&amp;</span>MLE&lt;Fr&gt;,
         rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
         <span class="kw">let </span>nv = poly.num_vars();
@@ -934,11 +956,11 @@
         <span class="kw">let </span>params = MultilinearKzgPCS::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, <span class="number">10</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// normal polynomials
-        </span><span class="kw">let </span>poly1 = Arc::new(DenseMultilinearExtension::rand(<span class="number">8</span>, <span class="kw-2">&amp;mut </span>rng));
+        </span><span class="kw">let </span>poly1 = MLE::from(DenseMultilinearExtension::rand(<span class="number">8</span>, <span class="kw-2">&amp;mut </span>rng));
         test_single_helper(<span class="kw-2">&amp;</span>params, <span class="kw-2">&amp;</span>poly1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
         <span class="comment">// single-variate polynomials
-        </span><span class="kw">let </span>poly2 = Arc::new(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng));
+        </span><span class="kw">let </span>poly2 = MLE::from(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng));
         test_single_helper(<span class="kw-2">&amp;</span>params, <span class="kw-2">&amp;</span>poly2, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())

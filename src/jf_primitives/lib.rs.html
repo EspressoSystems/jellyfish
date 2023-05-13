@@ -34,6 +34,10 @@
 <a href="#34" id="34">34</a>
 <a href="#35" id="35">35</a>
 <a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -51,6 +55,10 @@
 
 <span class="attr">#[macro_use]
 </span><span class="kw">extern crate </span>derivative;
+
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+#[doc(hidden)]
+</span><span class="kw">extern crate </span>alloc;
 
 <span class="kw">pub mod </span>aead;
 <span class="kw">pub mod </span>circuit;

@@ -675,6 +675,8 @@
 <a href="#675" id="675">675</a>
 <a href="#676" id="676">676</a>
 <a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -689,7 +691,9 @@
     univariate::DensePolynomial, DenseMultilinearExtension, EvaluationDomain, Evaluations,
     MultilinearExtension, Polynomial, Radix2EvaluationDomain,
 };
-<span class="kw">use </span>ark_std::{end_timer, format, log2, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
+<span class="kw">use </span>ark_std::{end_timer, format, log2, start_timer, string::ToString, vec, vec::Vec};
+
+<span class="kw">use </span><span class="kw">super</span>::MLE;
 
 <span class="doccomment">/// Evaluate eq polynomial. use the public one later
 </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
@@ -807,7 +811,7 @@
 <span class="doccomment">/// merge a set of polynomials. Returns an error if the
 /// polynomials do not share a same number of nvs.
 </span><span class="kw">pub fn </span>merge_polynomials&lt;F: PrimeField&gt;(
-    polynomials: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;F&gt;&gt;],
+    polynomials: <span class="kw-2">&amp;</span>[MLE&lt;F&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;DenseMultilinearExtension&lt;F&gt;, PCSError&gt; {
     <span class="kw">let </span>nv = polynomials[<span class="number">0</span>].num_vars();
     <span class="kw">for </span>poly <span class="kw">in </span>polynomials.iter() {
@@ -869,7 +873,7 @@
 // are included in the `batch_proof`.
 </span><span class="attr">#[cfg(test)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>generate_evaluations&lt;F: PrimeField&gt;(
-    polynomials: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;F&gt;&gt;],
+    polynomials: <span class="kw-2">&amp;</span>[MLE&lt;F&gt;],
     points: <span class="kw-2">&amp;</span>[Vec&lt;F&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, PCSError&gt; {
     <span class="kw">if </span>polynomials.len() != points.len() {
@@ -993,7 +997,7 @@
         // 1, 0 |-&gt; 0
         // 1, 1 |-&gt; 5
         </span><span class="kw">let </span>w_eval = <span class="macro">vec!</span>[F::zero(), F::from(<span class="number">2u64</span>), F::zero(), F::from(<span class="number">5u64</span>)];
-        <span class="kw">let </span>w1 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
+        <span class="kw">let </span>w1 = MLE::from(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
 
         <span class="comment">// W2 = x1x2 + x1 whose evaluations are
         // 0, 0 |-&gt; 0
@@ -1001,7 +1005,7 @@
         // 1, 0 |-&gt; 1
         // 1, 1 |-&gt; 2
         </span><span class="kw">let </span>w_eval = <span class="macro">vec!</span>[F::zero(), F::zero(), F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>)];
-        <span class="kw">let </span>w2 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
+        <span class="kw">let </span>w2 = MLE::from(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
 
         <span class="comment">// W3 = x1 + x2 whose evaluations are
         // 0, 0 |-&gt; 0
@@ -1009,7 +1013,7 @@
         // 1, 0 |-&gt; 1
         // 1, 1 |-&gt; 2
         </span><span class="kw">let </span>w_eval = <span class="macro">vec!</span>[F::zero(), F::one(), F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>)];
-        <span class="kw">let </span>w3 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
+        <span class="kw">let </span>w3 = MLE::from(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
 
         {
             <span class="comment">// W = (3x1x2 + 2x2)(1-x0) + (x1x2 + x1)x0
@@ -1242,15 +1246,15 @@
         <span class="comment">// Example from page 53:
         // W1 = 3x1x2 + 2x2
         </span><span class="kw">let </span>w_eval = <span class="macro">vec!</span>[Fr::zero(), Fr::from(<span class="number">2u64</span>), Fr::zero(), Fr::from(<span class="number">5u64</span>)];
-        <span class="kw">let </span>w1 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
+        <span class="kw">let </span>w1 = MLE::from(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
 
         <span class="comment">// W2 = x1x2 + x1
         </span><span class="kw">let </span>w_eval = <span class="macro">vec!</span>[Fr::zero(), Fr::zero(), Fr::from(<span class="number">1u64</span>), Fr::from(<span class="number">2u64</span>)];
-        <span class="kw">let </span>w2 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
+        <span class="kw">let </span>w2 = MLE::from(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
 
         <span class="comment">// W3 = x1 + x2
         </span><span class="kw">let </span>w_eval = <span class="macro">vec!</span>[Fr::zero(), Fr::one(), Fr::from(<span class="number">1u64</span>), Fr::from(<span class="number">2u64</span>)];
-        <span class="kw">let </span>w3 = Arc::new(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
+        <span class="kw">let </span>w3 = MLE::from(DenseMultilinearExtension::from_evaluations_vec(<span class="number">2</span>, w_eval));
 
         <span class="kw">let </span>r = Fr::from(<span class="number">42u64</span>);
 

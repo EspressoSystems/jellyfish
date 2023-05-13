@@ -445,7 +445,7 @@
     open_internal,
     srs::{MultilinearProverParam, MultilinearVerifierParam},
     util::{build_l, compute_w_circ_l, merge_polynomials},
-    verify_internal, MultilinearKzgBatchProof,
+    verify_internal, MultilinearKzgBatchProof, MLE,
 };
 <span class="kw">use </span><span class="kw">crate</span>::pcs::{
     multilinear_kzg::util::get_uni_domain,
@@ -455,8 +455,8 @@
     PCSError, PolynomialCommitmentScheme,
 };
 <span class="kw">use </span>ark_ec::pairing::Pairing;
-<span class="kw">use </span>ark_poly::{DenseMultilinearExtension, EvaluationDomain, MultilinearExtension, Polynomial};
-<span class="kw">use </span>ark_std::{end_timer, format, start_timer, string::ToString, sync::Arc, vec, vec::Vec};
+<span class="kw">use </span>ark_poly::{EvaluationDomain, MultilinearExtension, Polynomial};
+<span class="kw">use </span>ark_std::{end_timer, format, start_timer, string::ToString, vec, vec::Vec};
 
 <span class="doccomment">/// Input
 /// - the prover parameters for univariate KZG,
@@ -494,7 +494,7 @@
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>batch_open_internal&lt;E: Pairing&gt;(
     uni_prover_param: <span class="kw-2">&amp;</span>UnivariateProverParam&lt;E&gt;,
     ml_prover_param: <span class="kw-2">&amp;</span>MultilinearProverParam&lt;E&gt;,
-    polynomials: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt;],
+    polynomials: <span class="kw-2">&amp;</span>[MLE&lt;E::ScalarField&gt;],
     batch_commitment: <span class="kw-2">&amp;</span>Commitment&lt;E&gt;,
     points: <span class="kw-2">&amp;</span>[Vec&lt;E::ScalarField&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(MultilinearKzgBatchProof&lt;E&gt;, Vec&lt;E::ScalarField&gt;), PCSError&gt; {
@@ -755,7 +755,7 @@
     <span class="kw">fn </span>test_batch_commit_helper&lt;R: RngCore + CryptoRng&gt;(
         uni_params: <span class="kw-2">&amp;</span>UnivariateUniversalParams&lt;E&gt;,
         ml_params: <span class="kw-2">&amp;</span>MultilinearUniversalParams&lt;E&gt;,
-        polys: <span class="kw-2">&amp;</span>[Arc&lt;DenseMultilinearExtension&lt;Fr&gt;&gt;],
+        polys: <span class="kw-2">&amp;</span>[MLE&lt;Fr&gt;],
         rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
         <span class="kw">let </span>merged_nv = get_batched_nv(polys[<span class="number">0</span>].num_vars(), polys.len());
@@ -859,13 +859,13 @@
 
         <span class="comment">// normal polynomials
         </span><span class="kw">let </span>polys1: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..<span class="number">5</span>)
-            .map(|<span class="kw">_</span>| Arc::new(DenseMultilinearExtension::rand(<span class="number">4</span>, <span class="kw-2">&amp;mut </span>rng)))
+            .map(|<span class="kw">_</span>| MLE::from(DenseMultilinearExtension::rand(<span class="number">4</span>, <span class="kw-2">&amp;mut </span>rng)))
             .collect();
         test_batch_commit_helper(<span class="kw-2">&amp;</span>uni_params, <span class="kw-2">&amp;</span>ml_params, <span class="kw-2">&amp;</span>polys1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
         <span class="comment">// single-variate polynomials
         </span><span class="kw">let </span>polys1: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..<span class="number">5</span>)
-            .map(|<span class="kw">_</span>| Arc::new(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng)))
+            .map(|<span class="kw">_</span>| MLE::from(DenseMultilinearExtension::rand(<span class="number">1</span>, <span class="kw-2">&amp;mut </span>rng)))
             .collect();
         test_batch_commit_helper(<span class="kw-2">&amp;</span>uni_params, <span class="kw-2">&amp;</span>ml_params, <span class="kw-2">&amp;</span>polys1, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 
