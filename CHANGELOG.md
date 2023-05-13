@@ -19,6 +19,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#233](https://github.com/EspressoSystems/jellyfish/pull/233) BLS aggregation APIs
 - [#234](https://github.com/EspressoSystems/jellyfish/pull/234) New `bytes_from_field_elements` util
 - [#231](https://github.com/EspressoSystems/jellyfish/pull/231) Implemented FK23 for fast amortized opening for univariate PCS
+- [#254](https://github.com/EspressoSystems/jellyfish/pull/254) Ensure `no_std` and target WASM support
 
 ### Changed
 

@@ -5,6 +5,7 @@
 cargo-system-config.toml
 Cargo.lock
 *.org
+.pre-commit-config.yaml
 
 # Test coverage (grcov)
 default.profraw
