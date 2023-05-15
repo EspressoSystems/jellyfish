@@ -61,3 +61,8 @@ parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel",
             "jf-utils/parallel", "jf-relation/parallel", "jf-primitives/parallel",
             "dep:rayon" ]
 test-srs = []
+
+[[example]]
+name = "proof-of-exp"
+path = "examples/proof_of_exp.rs"
+required-features = ["test-srs"]
