@@ -32,7 +32,7 @@ cargo build
 Run an example:
 
 ```
-cargo run --release --example proof_of_exp --features test-srs
+cargo run --release --example proof-of-exp --features test-srs
 ```
 
 This is a simple example to prove and verify knowledge of exponent.

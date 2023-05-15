@@ -77,7 +77,7 @@ jobs:
         run: bash ./scripts/run_tests.sh
 
       - name: Example
-        run: cargo run --release --example proof_of_exp --features test-srs
+        run: cargo run --release --example proof-of-exp --features test-srs
 
       - name: Generate Documentation
         run: |
