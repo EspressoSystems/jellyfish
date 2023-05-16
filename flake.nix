@@ -23,22 +23,6 @@
       let
         overlays = [ 
           (import rust-overlay)
-          (self: super: {
-            rustc = (super.rustc.override {
-                stdenv = self.stdenv.override {
-                    targetPlatform = super.stdenv.targetPlatform // {
-                        parsed = {
-                            cpu = { name = "wasm32"; };
-                            vendor = {name = "unknown";};
-                            kernel = {name = "unknown";};
-                            abi = {name = "unknown";};
-                        };
-                    };
-                };
-            }).overrideAttrs (attrs: {
-                configureFlags = attrs.configureFlags ++ ["--set=build.docs=false"];
-            });
-          })
         ];
         pkgs = import nixpkgs { inherit system overlays; };
         nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith
@@ -104,9 +88,9 @@
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
 
-            export C_INCLUDE_PATH="${llvmPackages_15.libclang.lib}/lib/clang/15.0.7/include"
-            export CC=$(which clang)
-            export AR=$(which llvm-ar)
+            export C_INCLUDE_PATH="${llvmPackages_15.libclang.lib}/lib/clang/${llvmPackages_15.libclang.version}/include"
+            export CC="${clang-tools_15.clang}/bin/clang"
+            export AR="${llvm_15}/bin/llvm-ar"
             export CFLAGS="-mcpu=generic"
           ''
           # install pre-commit hooks
