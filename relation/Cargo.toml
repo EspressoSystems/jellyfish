@@ -13,7 +13,7 @@ ark-bls12-381 = "0.4.0"
 ark-bn254 = "0.4.0"
 ark-bw6-761 = "0.4.0"
 ark-ec = "0.4.0"
-ark-ff = { version = "0.4.0", features = [ "asm" ] }
+ark-ff = { version = "0.4.0", features = ["asm"] }
 ark-poly = "0.4.0"
 ark-serialize = "0.4.0"
 ark-std = { version = "0.4.0", default-features = false }
@@ -36,8 +36,21 @@ itertools = { version = "0.10.1", default-features = false }
 
 [features]
 default = ["parallel"]
-std = ["ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", 
-        "ark-poly/std", "downcast-rs/std", "jf-utils/std", "num-bigint/std",
-        "rand_chacha/std"]
-parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
-            "jf-utils/parallel", "dep:rayon" ]
+std = [
+        "ark-std/std",
+        "ark-serialize/std",
+        "ark-ff/std",
+        "ark-ec/std",
+        "ark-poly/std",
+        "downcast-rs/std",
+        "jf-utils/std",
+        "num-bigint/std",
+        "rand_chacha/std",
+]
+parallel = [
+        "ark-ff/parallel",
+        "ark-ec/parallel",
+        "ark-poly/parallel",
+        "jf-utils/parallel",
+        "dep:rayon",
+]

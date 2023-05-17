@@ -9,6 +9,7 @@
 
 use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm, Element, Index};
 use crate::rescue::{sponge::RescueCRHF, RescueParameter};
+use alloc::vec::Vec;
 use ark_ff::Field;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
@@ -82,7 +83,7 @@ impl Valid for Sha3Node {
 /// Wrapper for SHA3_512 hash function
 pub struct Sha3Digest();
 
-impl<E: Element, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {
+impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {
     fn digest(data: &[Sha3Node]) -> Sha3Node {
         let mut hasher = Sha3_256::new();
         for value in data {
@@ -91,9 +92,12 @@ impl<E: Element, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {
         Sha3Node(hasher.finalize().into())
     }
 
-    fn digest_leaf(_pos: &I, _elem: &E) -> Sha3Node {
-        // Serialize and hash
-        todo!()
+    fn digest_leaf(_pos: &I, elem: &E) -> Sha3Node {
+        let mut writer = Vec::new();
+        elem.serialize_compressed(&mut writer).unwrap();
+        let mut hasher = Sha3_256::new();
+        hasher.update(writer);
+        Sha3Node(hasher.finalize().into())
     }
 }
 

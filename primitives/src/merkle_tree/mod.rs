@@ -9,6 +9,7 @@ pub mod append_only;
 pub mod examples;
 pub mod light_weight;
 pub mod macros;
+mod nmt;
 pub mod universal_merkle_tree;
 
 pub(crate) mod internal;
