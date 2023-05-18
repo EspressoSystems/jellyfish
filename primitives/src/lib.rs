@@ -16,6 +16,10 @@ extern crate std;
 #[macro_use]
 extern crate derivative;
 
+#[cfg(not(feature = "std"))]
+#[doc(hidden)]
+extern crate alloc;
+
 pub mod aead;
 pub mod circuit;
 pub mod commitment;

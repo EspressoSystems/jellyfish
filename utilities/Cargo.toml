@@ -28,5 +28,5 @@ ark-ed-on-bn254 = "0.4.0"
 
 [features]
 default = []
-std = ["ark-ff/std", "ark-std/std", "ark-ec/std", "ark-serialize/std"]
-parallel = ["ark-ff/parallel", "ark-std/parallel", "ark-ec/parallel", "rayon"]
+std = ["ark-ff/std", "ark-std/std", "ark-ec/std", "ark-serialize/std", "digest/std", "serde/std", "sha2/std"]
+parallel = ["ark-ff/parallel", "ark-std/parallel", "ark-ec/parallel", "dep:rayon"]
