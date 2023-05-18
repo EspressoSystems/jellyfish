@@ -217,9 +217,7 @@ pub trait StructuredReferenceString: Sized {
 }
 
 /// Super-trait specific for univariate polynomial commitment schemes.
-pub trait UnivariatePCS:
-    PolynomialCommitmentScheme<Point = <Self as PolynomialCommitmentScheme>::Evaluation>
-{
+pub trait UnivariatePCS: PolynomialCommitmentScheme {
     /// Similar to [`PolynomialCommitmentScheme::trim()`], but trim to support
     /// the FFT operations, such as [`Self::multi_open_rou()`] or other
     /// operations that involves roots of unity.
