@@ -10,7 +10,7 @@ use ark_std::vec::Vec;
 
 use super::{
     examples::{Sha3Digest, Sha3Node},
-    DigestAlgorithm, Element, Index, NodeValue,
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, NodeValue,
 };
 
 pub struct NamespacedHasher<H, E, I, T, N>
@@ -88,7 +88,7 @@ where
     H: DigestAlgorithm<E, I, T>,
 {
     fn digest(data: &[NamespacedHash<T, N>]) -> NamespacedHash<T, N> {
-        // TODO generalize to N internal nodes?
+        // generalize to N internal nodes?
         let (left_node, right_node) = (data[0], data[1]);
 
         let NamespacedHash {
@@ -121,6 +121,8 @@ where
     }
 }
 
+type NamespaceId = u64;
+
 #[derive(
     Default,
     Eq,
@@ -135,7 +137,7 @@ where
     CanonicalDeserialize,
 )]
 pub struct Leaf {
-    namespace: u64,
+    namespace: NamespaceId,
 }
 
 impl Namespaced<u64> for Leaf {
@@ -145,7 +147,40 @@ impl Namespaced<u64> for Leaf {
 }
 
 #[allow(dead_code)]
-pub type NamespacedSha3Hasher = NamespacedHasher<Sha3Digest, Leaf, u64, Sha3Node, u64>;
+pub type NamespacedSha3Hasher = NamespacedHasher<Sha3Digest, Leaf, NamespaceId, Sha3Node, u64>;
+
+// pub struct NMT {
+//     inner: LightWeightMerkleTree<
+//         Leaf,
+//         NamespacedSha3Hasher,
+//         u64,
+//         U2,
+//         NamespacedHash<Sha3Node, NamespaceId>,
+//     >,
+//     namespace_ranges: HashMap<NamespaceId, Range<usize>>,
+//     max_namespace: NamespaceId,
+// }
+
+/// Namespaced Merkle Tree where leaves are sorted by a namespace identifier.
+/// The tree supports batch namespace inclusion and abscence proofs.
+pub trait NamespacedMerkleTreeScheme: AppendableMerkleTreeScheme
+where
+    Self::Element: Namespaced<Self::NamespaceId>,
+{
+    type NamespaceProof: Clone;
+    type NamespaceId: Namespace;
+
+    fn get_namespace_leaves_and_proof(
+        &self,
+        namespace: NamespaceId,
+    ) -> (Vec<Self::Element>, Self::NamespaceProof);
+
+    fn verify_namespace_proof(
+        leaves: &[Self::Element],
+        proof: Self::NamespaceProof,
+        namespace: NamespaceId,
+    ) -> Result<(), ()>;
+}
 
 #[cfg(test)]
 mod tests {
