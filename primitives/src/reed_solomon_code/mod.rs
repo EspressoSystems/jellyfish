@@ -27,9 +27,7 @@ use core::borrow::Borrow;
 /// let mut result = domain.fft(&input); // FFT encoding
 /// let mut eval_points = domain.elements().collect::<Vec<_>>(); // Evaluation points
 /// // test decoding
-/// result.remove(1);
-/// eval_points.remove(1);
-/// let output = reed_solomon_erasure_decode(eval_points, result, 2).unwrap();
+/// let output = reed_solomon_erasure_decode(eval_points.iter().zip(result).take(2), 2).unwrap();
 /// assert_eq!(input, output);
 /// ```
 pub fn reed_solomon_encode<F, D>(data: D, parity_size: usize) -> Result<Vec<F>, PrimitivesError>
@@ -59,39 +57,29 @@ where
 
 /// Decode into `data_size` data elements via polynomial interpolation.
 /// The degree of the interpolated polynomial is `data_size - 1`.
-/// Returns a data vector of length `data_size`.
+/// First part of the share is the evaluation point, second part is its
+/// evaluation. Returns a data vector of length `data_size`.
 /// Time complexity of O(n^2).
-pub fn reed_solomon_erasure_decode<F, D1, D2>(
-    eval_points: D1,
-    values: D2,
+pub fn reed_solomon_erasure_decode<F, D, T1, T2>(
+    shares: D,
     data_size: usize,
 ) -> Result<Vec<F>, PrimitivesError>
 where
     F: Field,
-    D1: IntoIterator,
-    D1::Item: Borrow<F>,
-    D1::IntoIter: ExactSizeIterator + Clone,
-    D2: IntoIterator,
-    D2::Item: Borrow<F>,
-    D2::IntoIter: ExactSizeIterator + Clone,
+    T1: Borrow<F>,
+    T2: Borrow<F>,
+    D: IntoIterator,
+    D::Item: Borrow<(T1, T2)>,
+    D::IntoIter: ExactSizeIterator + Clone,
 {
-    let eval_points_iter = eval_points.into_iter();
-    let values_iter = values.into_iter();
-    if eval_points_iter.len() < data_size {
+    let shares_iter = shares.into_iter().take(data_size);
+    if shares_iter.len() < data_size {
         return Err(PrimitivesError::ParameterError(format!(
             "Insufficient evaluation points: got {} expected at least {}",
-            eval_points_iter.len(),
+            shares_iter.len(),
             data_size
         )));
     }
-    if eval_points_iter.len() != values_iter.len() {
-        return Err(PrimitivesError::ParameterError(format!(
-            "Malformed input, received {} evaluation points but {} values.",
-            eval_points_iter.len(),
-            values_iter.len()
-        )));
-    }
-    let shares_iter = eval_points_iter.zip(values_iter).take(data_size);
 
     // Lagrange interpolation:
     // Given a list of points (x_1, y_1) ... (x_n, y_n)
@@ -102,7 +90,7 @@ where
     //  4. Return f(x) = \sum_i y_i * l_i(x)
     let x = shares_iter
         .clone()
-        .map(|share| *share.0.borrow())
+        .map(|share| *share.borrow().0.borrow())
         .collect::<Vec<_>>();
     // Calculating l(x) = \prod (x - x_i)
     let mut l = vec![F::zero(); data_size + 1];
@@ -135,7 +123,7 @@ where
         for j in (0..data_size - 1).rev() {
             li[j] = l[j + 1] + x[i] * li[j + 1];
         }
-        let weight = w[i] * share.1.borrow();
+        let weight = w[i] * share.borrow().1.borrow();
         for j in 0..data_size {
             f[j] += weight * li[j];
         }
@@ -159,7 +147,7 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![F::from(3u64), F::from(5u64), F::from(7u64)];
-        let code = reed_solomon_encode(&data, 1).unwrap();
+        let code: Vec<F> = reed_solomon_encode(&data, 1).unwrap();
         assert_eq!(code, expected);
 
         for to_be_removed in 0..code.len() {
@@ -167,8 +155,8 @@ mod test {
             let mut new_code = code.clone();
             indices.remove(to_be_removed);
             new_code.remove(to_be_removed);
-            let decode = reed_solomon_erasure_decode(&indices, &new_code, 2).unwrap();
-            assert_eq!(data, decode);
+            let output = reed_solomon_erasure_decode(indices.iter().zip(new_code), 2).unwrap();
+            assert_eq!(data, output);
         }
     }
 
@@ -186,7 +174,7 @@ mod test {
         let mut eval_points = domain.elements().collect::<Vec<_>>();
         eval_points.remove(1);
         code.remove(1);
-        let output = reed_solomon_erasure_decode(eval_points, code, 2).unwrap();
+        let output = reed_solomon_erasure_decode(eval_points.iter().zip(code), 2).unwrap();
         assert_eq!(input, output);
     }
 
