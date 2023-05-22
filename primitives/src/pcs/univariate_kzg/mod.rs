@@ -307,12 +307,12 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 }
 
 impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
-    fn multi_open_rou(
+    fn multi_open_rou_proofs(
         prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         polynomial: &Self::Polynomial,
         num_points: usize,
-        domain: &Radix2EvaluationDomain<E::ScalarField>,
-    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
+        domain: &Radix2EvaluationDomain<Self::Evaluation>,
+    ) -> Result<Vec<Self::Proof>, PCSError> {
         let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
         let proofs: Vec<_> = h_poly
             .batch_evaluate_rou(domain)?
@@ -322,13 +322,21 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 proof: g.into_affine(),
             })
             .collect();
+        Ok(proofs)
+    }
 
+    /// Compute the evaluations in [`Self::multi_open_rou()`].
+    fn multi_open_rou_evals(
+        polynomial: &Self::Polynomial,
+        num_points: usize,
+        domain: &Radix2EvaluationDomain<Self::Evaluation>,
+    ) -> Result<Vec<Self::Evaluation>, PCSError> {
         let evals = GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs)
             .batch_evaluate_rou(domain)?
             .into_iter()
             .take(num_points)
             .collect();
-        Ok((proofs, evals))
+        Ok(evals)
     }
 }
 

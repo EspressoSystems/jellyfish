@@ -277,7 +277,26 @@ where
         polynomial: &Self::Polynomial,
         num_points: usize,
         domain: &Radix2EvaluationDomain<Self::Evaluation>,
-    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError>;
+    ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
+        let evals = Self::multi_open_rou_evals(polynomial, num_points, domain)?;
+        let proofs = Self::multi_open_rou_proofs(prover_param, polynomial, num_points, domain)?;
+        Ok((proofs, evals))
+    }
+
+    /// Compute the opening proofs in [`Self::multi_open_rou()`].
+    fn multi_open_rou_proofs(
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
+        polynomial: &Self::Polynomial,
+        num_points: usize,
+        domain: &Radix2EvaluationDomain<Self::Evaluation>,
+    ) -> Result<Vec<Self::Proof>, PCSError>;
+
+    /// Compute the evaluations in [`Self::multi_open_rou()`].
+    fn multi_open_rou_evals(
+        polynomial: &Self::Polynomial,
+        num_points: usize,
+        domain: &Radix2EvaluationDomain<Self::Evaluation>,
+    ) -> Result<Vec<Self::Evaluation>, PCSError>;
 }
 
 // compute the fft size (i.e. `num_coeffs`) given a degree.
