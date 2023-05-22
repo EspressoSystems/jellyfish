@@ -47,8 +47,8 @@ pub trait PolynomialCommitmentScheme {
 
     /// Setup for testing.
     ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is the number of
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is the number of
     ///   variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
@@ -56,9 +56,9 @@ pub trait PolynomialCommitmentScheme {
     #[cfg(any(test, feature = "test-srs"))]
     fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
-        supported_size: usize,
+        supported_degree: usize,
     ) -> Result<Self::SRS, PCSError> {
-        Self::SRS::gen_srs_for_testing(rng, supported_size)
+        Self::SRS::gen_srs_for_testing(rng, supported_degree)
     }
 
     /// Load public parameter in production environment.
@@ -68,10 +68,10 @@ pub trait PolynomialCommitmentScheme {
     ///
     /// If `file=None`, we load the default choice of SRS.
     fn load_srs_from_file(
-        supported_size: usize,
+        supported_degree: usize,
         file: Option<&str>,
     ) -> Result<Self::SRS, PCSError> {
-        Self::SRS::load_srs_from_file(supported_size, file)
+        Self::SRS::load_srs_from_file(supported_degree, file)
     }
 
     /// Trim the universal parameters to specialize the public parameters.
@@ -173,28 +173,28 @@ pub trait StructuredReferenceString: Sized {
     type VerifierParam;
 
     /// Extract the prover parameters from the public parameters.
-    fn extract_prover_param(&self, supported_size: usize) -> Self::ProverParam;
+    fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam;
     /// Extract the verifier parameters from the public parameters.
-    fn extract_verifier_param(&self, supported_size: usize) -> Self::VerifierParam;
+    fn extract_verifier_param(&self, supported_degree: usize) -> Self::VerifierParam;
 
     /// Trim the universal parameters to specialize the public parameters
-    /// for polynomials to the given `supported_size`, and
+    /// for polynomials to the given `supported_degree`, and
     /// returns committer key and verifier key.
     ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is 2 to the number of
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is 2 to the number of
     ///   variables.
     ///
     /// `supported_log_size` should be in range `1..=params.log_size`
     fn trim(
         &self,
-        supported_size: usize,
+        supported_degree: usize,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
 
     /// Build SRS for testing.
     ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is the number of
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is the number of
     ///   variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
@@ -202,7 +202,7 @@ pub trait StructuredReferenceString: Sized {
     #[cfg(any(test, feature = "test-srs"))]
     fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
-        supported_size: usize,
+        supported_degree: usize,
     ) -> Result<Self, PCSError>;
 
     /// Load public parameter in production environment.
@@ -211,7 +211,7 @@ pub trait StructuredReferenceString: Sized {
     /// implemented else where. We only load them into memory here.
     ///
     /// If `file=None`, we load the default choice of SRS.
-    fn load_srs_from_file(_supported_size: usize, _file: Option<&str>) -> Result<Self, PCSError> {
+    fn load_srs_from_file(_supported_degree: usize, _file: Option<&str>) -> Result<Self, PCSError> {
         unimplemented!("TODO: implement loading SRS from files");
     }
 }
@@ -232,7 +232,14 @@ pub trait UnivariatePCS: PolynomialCommitmentScheme {
         ),
         PCSError,
     > {
-        srs.borrow().trim(checked_fft_size(supported_degree)?)
+        let fft_degree = checked_fft_size(supported_degree)?;
+        srs.borrow().trim(fft_degree).map_err(|e| {
+            PCSError::InvalidParameters(ark_std::format!(
+                "Requesting degree of {} for FFT:\n\t\t{:?}",
+                fft_degree,
+                e
+            ))
+        })
     }
 
     /// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
