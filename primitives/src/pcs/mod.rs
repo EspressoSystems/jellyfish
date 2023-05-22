@@ -13,10 +13,12 @@ mod structs;
 mod transcript;
 mod univariate_kzg;
 
-use ark_ff::Field;
+use ark_ff::{FftField, Field};
+use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
+    cmp,
     fmt::Debug,
     hash::Hash,
     rand::{CryptoRng, RngCore},
@@ -217,7 +219,10 @@ pub trait StructuredReferenceString: Sized {
 }
 
 /// Super-trait specific for univariate polynomial commitment schemes.
-pub trait UnivariatePCS: PolynomialCommitmentScheme {
+pub trait UnivariatePCS: PolynomialCommitmentScheme
+where
+    Self::Evaluation: FftField,
+{
     /// Similar to [`PolynomialCommitmentScheme::trim()`], but trim to support
     /// the FFT operations, such as [`Self::multi_open_rou()`] or other
     /// operations that involves roots of unity.
@@ -242,6 +247,27 @@ pub trait UnivariatePCS: PolynomialCommitmentScheme {
         })
     }
 
+    /// Given `degree` of the committed polynomial and `num_points` to open,
+    /// return the evaluation domain for faster computation of opening proofs
+    /// and evaluations (both using FFT).
+    fn multi_open_rou_eval_domain(
+        degree: usize,
+        num_points: usize,
+    ) -> Result<Radix2EvaluationDomain<Self::Evaluation>, PCSError> {
+        // reason for zero-padding: https://github.com/EspressoSystems/jellyfish/pull/231#issuecomment-1526488659
+        let padded_degree = checked_fft_size(degree)?;
+
+        let domain_size = cmp::max(padded_degree + 1, num_points);
+        let domain = Radix2EvaluationDomain::new(domain_size).ok_or_else(|| {
+            PCSError::UpstreamError(ark_std::format!(
+                "Fail to init eval domain of size {}",
+                domain_size
+            ))
+        })?;
+
+        Ok(domain)
+    }
+
     /// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
     /// points are [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
     /// The first `num_points` of roots will be evaluated (in canonical order).
@@ -250,12 +276,13 @@ pub trait UnivariatePCS: PolynomialCommitmentScheme {
         prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         polynomial: &Self::Polynomial,
         num_points: usize,
+        domain: &Radix2EvaluationDomain<Self::Evaluation>,
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError>;
 }
 
 // compute the fft size (i.e. `num_coeffs`) given a degree.
 #[inline]
-pub(crate) fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
+fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
     let err = || {
         PCSError::InvalidParameters(ark_std::format!(
             "Next power of two overflows! Got: {}",

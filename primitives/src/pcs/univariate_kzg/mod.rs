@@ -17,7 +17,9 @@ use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
 use ark_ff::{FftField, Field, PrimeField};
-use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+use ark_poly::{
+    univariate::DensePolynomial, DenseUVPolynomial, Polynomial, Radix2EvaluationDomain,
+};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
@@ -309,22 +311,23 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
         polynomial: &Self::Polynomial,
         num_points: usize,
+        domain: &Radix2EvaluationDomain<E::ScalarField>,
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
         let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
-        // reason for zero-padding: https://github.com/EspressoSystems/jellyfish/pull/231#issuecomment-1526488659
-        h_poly
-            .coeffs
-            .resize_with(super::checked_fft_size(polynomial.degree())?, Zero::zero);
         let proofs: Vec<_> = h_poly
-            .batch_evaluate_rou(num_points)
+            .batch_evaluate_rou(domain)?
             .into_iter()
+            .take(num_points)
             .map(|g| UnivariateKzgProof {
                 proof: g.into_affine(),
             })
             .collect();
 
         let evals = GeneralDensePolynomial::from_coeff_slice(&polynomial.coeffs)
-            .batch_evaluate_rou(num_points);
+            .batch_evaluate_rou(domain)?
+            .into_iter()
+            .take(num_points)
+            .collect();
         Ok((proofs, evals))
     }
 }
@@ -400,10 +403,10 @@ fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pcs::{poly::tests::get_roots_of_unity, StructuredReferenceString};
+    use crate::pcs::StructuredReferenceString;
     use ark_bls12_381::Bls12_381;
     use ark_ec::pairing::Pairing;
-    use ark_poly::univariate::DensePolynomial;
+    use ark_poly::{univariate::DensePolynomial, EvaluationDomain};
     use ark_std::{rand::Rng, UniformRand};
     use jf_utils::test_rng;
 
@@ -557,18 +560,18 @@ mod tests {
                     );
                 });
             // Second, test roots-of-unity points
-            let fft_size = crate::pcs::checked_fft_size(degree)?;
-            let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points)?;
+            let domain: Radix2EvaluationDomain<Fr> =
+                UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(degree, num_points)?;
+            let (proofs, evals) =
+                UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points, &domain)?;
             assert!(
                 proofs.len() == evals.len() && proofs.len() == num_points,
                 "fn multi_open_rou() should return the correct number of proofs and evals"
             );
 
-            let roots_of_unity: Vec<Fr> =
-                get_roots_of_unity(ark_std::cmp::max(fft_size, num_points));
-
-            roots_of_unity
-                .iter()
+            domain
+                .elements()
+                .take(num_points)
                 .zip(proofs.into_iter())
                 .zip(evals.into_iter())
                 .for_each(|((point, proof), eval)| {
