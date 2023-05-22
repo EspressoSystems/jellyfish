@@ -269,16 +269,15 @@ mod tests {
 
     #[test]
     fn apply_counter_mode_stream_no_padding() {
-        apply_counter_mode_stream_no_padding_helper::<FqEd254, ParamEd254>();
-        apply_counter_mode_stream_no_padding_helper::<FqEd377, ParamEd377>();
-        apply_counter_mode_stream_no_padding_helper::<FqEd381, ParamEd381>();
-        apply_counter_mode_stream_no_padding_helper::<FqEd381b, ParamEd381b>();
+        apply_counter_mode_stream_no_padding_helper::<FqEd254>();
+        apply_counter_mode_stream_no_padding_helper::<FqEd377>();
+        apply_counter_mode_stream_no_padding_helper::<FqEd381>();
+        apply_counter_mode_stream_no_padding_helper::<FqEd381b>();
     }
 
-    fn apply_counter_mode_stream_no_padding_helper<F, P>()
+    fn apply_counter_mode_stream_no_padding_helper<F>()
     where
         F: RescueParameter,
-        P: TECurveConfig<BaseField = F>,
     {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let mut prng = jf_utils::test_rng();

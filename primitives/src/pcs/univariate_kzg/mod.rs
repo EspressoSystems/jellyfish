@@ -554,7 +554,7 @@ mod tests {
                 .zip(evals.into_iter())
                 .for_each(|((point, proof), eval)| {
                     assert_eq!(
-                        UnivariateKzgPCS::<E>::open(&ck, &poly, &point).unwrap(),
+                        UnivariateKzgPCS::<E>::open(&ck, &poly, point).unwrap(),
                         (proof, eval)
                     );
                 });
@@ -571,7 +571,7 @@ mod tests {
                 .zip(evals.into_iter())
                 .for_each(|((point, proof), eval)| {
                     assert_eq!(
-                        UnivariateKzgPCS::<E>::open(&ck, &poly, &point).unwrap(),
+                        UnivariateKzgPCS::<E>::open(&ck, &poly, point).unwrap(),
                         (proof, eval)
                     );
                 });

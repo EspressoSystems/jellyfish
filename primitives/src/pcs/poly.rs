@@ -276,7 +276,7 @@ pub(crate) mod tests {
             // g(X) = G0 + G1 * X + G2 * X^2 + G3 * X^3 + ...
             // turn into an MSM between [G0, G1, G2, ...] and [1, x, x^2, x^3, ...]
             let scalars: Vec<Fr> = successors(Some(Fr::from(1u32)), |&prev| Some(prev * point))
-                .take((g.degree() + 1) as usize)
+                .take(g.degree() + 1)
                 .collect();
             let expected_g_x =
                 SWCurveConfig::msm(&CurveGroup::normalize_batch(&g.coeffs), &scalars).unwrap();
