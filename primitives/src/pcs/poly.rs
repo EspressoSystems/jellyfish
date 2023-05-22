@@ -136,10 +136,18 @@ where
     /// canoncially chosen first `num_points` of the [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
     /// By leveraging FFT algorithms, we have a much lower amortized cost.
     ///
-    /// Complexity: d*log(d) independent of m (<=d+1)
-    pub fn batch_evaluate_rou(&self, num_points: usize) -> Vec<T> {
+    /// NOTE: we support num_points (m) > degree (d) + 1
+    /// Complexity: d*log(d) when m <=d+1 (independent of m);
+    ///             m*log(m) when m > d+1.
+    pub fn batch_evaluate_rou(&mut self, num_points: usize) -> Vec<T> {
+        let domain_size = if num_points <= self.coeffs.len() {
+            self.coeffs.len()
+        } else {
+            self.coeffs.resize_with(num_points, Zero::zero);
+            num_points
+        };
         let domain: Radix2EvaluationDomain<F> =
-            Radix2EvaluationDomain::new(self.coeffs.len()).expect("Should init an eval domain");
+            Radix2EvaluationDomain::new(domain_size).expect("Should init an eval domain");
         let mut evals = domain.fft(&self.coeffs);
         evals.truncate(num_points);
         evals
@@ -327,9 +335,9 @@ pub(crate) mod tests {
         for degree in degrees {
             // TODO: (alex) change to a higher degree when need to test cutoff point and
             // FFT-based eval on arbitrary points
-            let num_points = rng.gen_range(5..degree);
-            let f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
-            let g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
+            let num_points = rng.gen_range(degree - 4..degree + 4); // should allow more points than degree
+            let mut f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
+            let mut g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
 
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
             ark_std::println!("degree: {}, num_points: {}", degree, num_points);
@@ -345,7 +353,7 @@ pub(crate) mod tests {
             );
 
             // Second, test points at roots-of-unity
-            let roots: Vec<Fr> = get_roots_of_unity(degree + 1);
+            let roots: Vec<Fr> = get_roots_of_unity(ark_std::cmp::max(degree + 1, num_points));
             assert_eq!(
                 f.batch_evaluate_rou(num_points),
                 roots

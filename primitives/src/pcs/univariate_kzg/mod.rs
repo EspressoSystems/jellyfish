@@ -310,7 +310,11 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         polynomial: &Self::Polynomial,
         num_points: usize,
     ) -> Result<(Vec<Self::Proof>, Vec<Self::Evaluation>), PCSError> {
-        let h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
+        let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
+        // reason for zero-padding: https://github.com/EspressoSystems/jellyfish/pull/231#issuecomment-1526488659
+        h_poly
+            .coeffs
+            .resize_with(super::checked_fft_size(polynomial.degree())?, Zero::zero);
         let proofs: Vec<_> = h_poly
             .batch_evaluate_rou(num_points)
             .into_iter()
@@ -371,17 +375,7 @@ where
         // 1.3 compute \vec{h}
         let h_vec = poly_coeff_matrix.fast_vec_mul(&srs_vec)?;
 
-        // Step 2. evaluate h(X) with coeffs \vec{h} at `points` using FFT
-        let mut h_poly = GeneralDensePolynomial::from_coeff_vec(h_vec);
-        // NOTE: this resizing is to ensure that when computing the proofs by evaluting
-        // h(X), we are using the same roots-of-unity as evaluation points of f(X) which
-        // uses FFT, therefore we resize to the `fft_size`.
-        h_poly.coeffs.resize(
-            super::checked_fft_size(poly_coeffs.len() - 1)?,
-            E::G1::zero(),
-        );
-
-        Ok(h_poly)
+        Ok(GeneralDensePolynomial::from_coeff_vec(h_vec))
     }
 }
 
@@ -532,7 +526,7 @@ mod tests {
         let degrees = [14, 15, 16, 17, 18];
 
         for degree in degrees {
-            let num_points = rng.gen_range(5..degree);
+            let num_points = rng.gen_range(5..30); // should allow more points than degree
             ark_std::println!(
                 "Multi-opening: poly deg: {}, num of points: {}",
                 degree,
@@ -548,6 +542,10 @@ mod tests {
 
             // First, test general points
             let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open(&ck, &poly, &points)?;
+            assert!(
+                proofs.len() == evals.len() && proofs.len() == num_points,
+                "fn multi_open() should return the correct number of proofs and evals"
+            );
             points
                 .iter()
                 .zip(proofs.into_iter())
@@ -558,12 +556,16 @@ mod tests {
                         (proof, eval)
                     );
                 });
-
             // Second, test roots-of-unity points
             let fft_size = crate::pcs::checked_fft_size(degree)?;
             let (proofs, evals) = UnivariateKzgPCS::<E>::multi_open_rou(&ck, &poly, num_points)?;
+            assert!(
+                proofs.len() == evals.len() && proofs.len() == num_points,
+                "fn multi_open_rou() should return the correct number of proofs and evals"
+            );
 
-            let roots_of_unity: Vec<Fr> = get_roots_of_unity(fft_size);
+            let roots_of_unity: Vec<Fr> =
+                get_roots_of_unity(ark_std::cmp::max(fft_size, num_points));
 
             roots_of_unity
                 .iter()
