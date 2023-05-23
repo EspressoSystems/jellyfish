@@ -505,64 +505,64 @@
 
     <span class="kw">fn </span>trim(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        supported_size: usize,
+        supported_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
         <span class="kw">let </span>ml_pp = &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::trim(
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
-            supported_size,
+            supported_degree,
         )<span class="question-mark">?</span>;
         <span class="kw">let </span>uni_pp = &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::trim(
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>,
-            supported_size,
+            supported_degree,
         )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(((ml_pp.<span class="number">0</span>, uni_pp.<span class="number">0</span>), (ml_pp.<span class="number">1</span>, uni_pp.<span class="number">1</span>)))
     }
 
-    <span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::ProverParam {
+    <span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_degree: usize) -&gt; <span class="self">Self</span>::ProverParam {
         <span class="kw">let </span>ml_prover_param =
             &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_prover_param(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
-                supported_size,
+                supported_degree,
             );
         <span class="kw">let </span>uni_prover_param =
             &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_prover_param(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>,
-                supported_size,
+                supported_degree,
             );
 
         (ml_prover_param, uni_prover_param)
     }
 
-    <span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::VerifierParam {
+    <span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_degree: usize) -&gt; <span class="self">Self</span>::VerifierParam {
         <span class="kw">let </span>ml_verifier_param =
             &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_verifier_param(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
-                supported_size,
+                supported_degree,
             );
         <span class="kw">let </span>uni_verifier_param =
             &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::extract_verifier_param(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>,
-                supported_size,
+                supported_degree,
             );
 
         (ml_verifier_param, uni_verifier_param)
     }
 
     <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
-    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R&gt;(rng: <span class="kw-2">&amp;mut </span>R, supported_size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt;
+    </span><span class="kw">fn </span>gen_srs_for_testing&lt;R&gt;(rng: <span class="kw-2">&amp;mut </span>R, supported_degree: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt;
     <span class="kw">where
         </span>R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
     {
         <span class="kw">let </span>ml_pp =
             &lt;MultilinearUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::gen_srs_for_testing(
                 rng,
-                supported_size,
+                supported_degree,
             )<span class="question-mark">?</span>;
         <span class="kw">let </span>uni_pp =
             &lt;UnivariateUniversalParams&lt;E&gt; <span class="kw">as </span>StructuredReferenceString&gt;::gen_srs_for_testing(
                 rng,
-                supported_size,
+                supported_degree,
             )<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((ml_pp, uni_pp))
     }

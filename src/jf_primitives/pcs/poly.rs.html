@@ -363,8 +363,6 @@
 <a href="#363" id="363">363</a>
 <a href="#364" id="364">364</a>
 <a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -389,6 +387,8 @@
     EitherOrBoth::{Both, Left, Right},
     Itertools,
 };
+
+<span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
 
 <span class="comment">// TODO: (alex) change to trait alias once stablized in Rust:
 // `https://doc.rust-lang.org/unstable-book/language-features/trait-alias.html`
@@ -500,16 +500,23 @@
     }
 
     <span class="doccomment">/// Similar task as [`Self::batch_evaluate()`], except the points are
-    /// canoncially chosen first `num_points` of the [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
+    /// [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity) of `domain`.
     /// By leveraging FFT algorithms, we have a much lower amortized cost.
-    ///
-    /// Complexity: d*log(d) independent of m (&lt;=d+1)
-    </span><span class="kw">pub fn </span>batch_evaluate_rou(<span class="kw-2">&amp;</span><span class="self">self</span>, num_points: usize) -&gt; Vec&lt;T&gt; {
-        <span class="kw">let </span>domain: Radix2EvaluationDomain&lt;F&gt; =
-            Radix2EvaluationDomain::new(<span class="self">self</span>.coeffs.len()).expect(<span class="string">&quot;Should init an eval domain&quot;</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>evals = domain.fft(<span class="kw-2">&amp;</span><span class="self">self</span>.coeffs);
-        evals.truncate(num_points);
-        evals
+    </span><span class="kw">pub fn </span>batch_evaluate_rou(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;F&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;T&gt;, PrimitivesError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.coeffs.len() &gt; domain.size() {
+            <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
+                <span class="macro">ark_std::format!</span>(
+                    <span class="string">&quot;Polynomial with {} num_of_coeffs can&#39;t be evaluated on a smaller domain with size {}&quot;</span>,
+                    <span class="self">self</span>.coeffs.len(), domain.size(),
+                )
+            ))
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.coeffs.resize_with(domain.size(), Zero::zero);
+            <span class="prelude-val">Ok</span>(domain.fft(<span class="kw-2">&amp;</span><span class="self">self</span>.coeffs))
+        }
     }
 }
 
@@ -613,18 +620,6 @@
     <span class="kw">use </span>ark_std::iter::successors;
     <span class="kw">use </span>jf_utils::test_rng;
 
-    <span class="comment">// helper function to generate all roots of unity for evaluating polynomial with
-    // `num_coeffs` coeffs.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_roots_of_unity&lt;F: FftField&gt;(num_coeffs: usize) -&gt; Vec&lt;F&gt; {
-        <span class="kw">let </span>size = num_coeffs.checked_next_power_of_two().unwrap() <span class="kw">as </span>u64;
-
-        <span class="kw">let </span>group_gen = F::get_root_of_unity(size)
-            .expect(<span class="string">&quot;Failed to get roots of unity, maybe wronge domain size&quot;</span>);
-        successors(<span class="prelude-val">Some</span>(F::from(<span class="number">1u32</span>)), |<span class="kw-2">&amp;</span>prev| <span class="prelude-val">Some</span>(prev * group_gen))
-            .take(size <span class="kw">as </span>usize)
-            .collect()
-    }
-
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_poly_eval_single_point() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
@@ -694,9 +689,9 @@
         <span class="kw">for </span>degree <span class="kw">in </span>degrees {
             <span class="comment">// TODO: (alex) change to a higher degree when need to test cutoff point and
             // FFT-based eval on arbitrary points
-            </span><span class="kw">let </span>num_points = rng.gen_range(<span class="number">5</span>..degree);
-            <span class="kw">let </span>f = GeneralDensePolynomial::&lt;Fr, Fr&gt;::rand(degree, <span class="kw-2">&amp;mut </span>rng);
-            <span class="kw">let </span>g = GeneralDensePolynomial::&lt;G1Projective, Fr&gt;::rand(degree, <span class="kw-2">&amp;mut </span>rng);
+            </span><span class="kw">let </span>num_points = rng.gen_range(degree - <span class="number">4</span>..degree + <span class="number">4</span>); <span class="comment">// should allow more points than degree
+            </span><span class="kw">let </span><span class="kw-2">mut </span>f = GeneralDensePolynomial::&lt;Fr, Fr&gt;::rand(degree, <span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span><span class="kw-2">mut </span>g = GeneralDensePolynomial::&lt;G1Projective, Fr&gt;::rand(degree, <span class="kw-2">&amp;mut </span>rng);
 
             <span class="kw">let </span>points: Vec&lt;Fr&gt; = (<span class="number">0</span>..num_points).map(|<span class="kw">_</span>| Fr::rand(<span class="kw-2">&amp;mut </span>rng)).collect();
             <span class="macro">ark_std::println!</span>(<span class="string">&quot;degree: {}, num_points: {}&quot;</span>, degree, num_points);
@@ -712,21 +707,22 @@
             );
 
             <span class="comment">// Second, test points at roots-of-unity
-            </span><span class="kw">let </span>roots: Vec&lt;Fr&gt; = get_roots_of_unity(degree + <span class="number">1</span>);
+            </span><span class="kw">let </span>domain =
+                Radix2EvaluationDomain::new(ark_std::cmp::max(degree + <span class="number">1</span>, num_points)).unwrap();
+            <span class="kw">let </span>roots = domain.elements();
             <span class="macro">assert_eq!</span>(
-                f.batch_evaluate_rou(num_points),
+                f.batch_evaluate_rou(<span class="kw-2">&amp;</span>domain).unwrap()[..num_points],
                 roots
-                    .iter()
                     .take(num_points)
-                    .map(|x| f.evaluate(x))
+                    .map(|x| f.evaluate(<span class="kw-2">&amp;</span>x))
                     .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
             );
             <span class="macro">assert_eq!</span>(
-                g.batch_evaluate_rou(num_points),
-                roots
-                    .iter()
+                g.batch_evaluate_rou(<span class="kw-2">&amp;</span>domain).unwrap()[..num_points],
+                domain
+                    .elements()
                     .take(num_points)
-                    .map(|x| g.evaluate(x))
+                    .map(|x| g.evaluate(<span class="kw-2">&amp;</span>x))
                     .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
             );
         }

@@ -263,6 +263,57 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -278,10 +329,12 @@
 <span class="kw">mod </span>transcript;
 <span class="kw">mod </span>univariate_kzg;
 
-<span class="kw">use </span>ark_ff::Field;
+<span class="kw">use </span>ark_ff::{FftField, Field};
+<span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow,
+    cmp,
     fmt::Debug,
     hash::Hash,
     rand::{CryptoRng, RngCore},
@@ -312,8 +365,8 @@
 
     <span class="doccomment">/// Setup for testing.
     ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is the number of
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is the number of
     ///   variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
@@ -321,9 +374,9 @@
     </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
     </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
         rng: <span class="kw-2">&amp;mut </span>R,
-        supported_size: usize,
+        supported_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SRS, PCSError&gt; {
-        <span class="self">Self</span>::SRS::gen_srs_for_testing(rng, supported_size)
+        <span class="self">Self</span>::SRS::gen_srs_for_testing(rng, supported_degree)
     }
 
     <span class="doccomment">/// Load public parameter in production environment.
@@ -333,10 +386,10 @@
     ///
     /// If `file=None`, we load the default choice of SRS.
     </span><span class="kw">fn </span>load_srs_from_file(
-        supported_size: usize,
+        supported_degree: usize,
         file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SRS, PCSError&gt; {
-        <span class="self">Self</span>::SRS::load_srs_from_file(supported_size, file)
+        <span class="self">Self</span>::SRS::load_srs_from_file(supported_degree, file)
     }
 
     <span class="doccomment">/// Trim the universal parameters to specialize the public parameters.
@@ -438,28 +491,28 @@
     </span><span class="kw">type </span>VerifierParam;
 
     <span class="doccomment">/// Extract the prover parameters from the public parameters.
-    </span><span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::ProverParam;
+    </span><span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_degree: usize) -&gt; <span class="self">Self</span>::ProverParam;
     <span class="doccomment">/// Extract the verifier parameters from the public parameters.
-    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::VerifierParam;
+    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_degree: usize) -&gt; <span class="self">Self</span>::VerifierParam;
 
     <span class="doccomment">/// Trim the universal parameters to specialize the public parameters
-    /// for polynomials to the given `supported_size`, and
+    /// for polynomials to the given `supported_degree`, and
     /// returns committer key and verifier key.
     ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is 2 to the number of
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is 2 to the number of
     ///   variables.
     ///
     /// `supported_log_size` should be in range `1..=params.log_size`
     </span><span class="kw">fn </span>trim(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        supported_size: usize,
+        supported_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt;;
 
     <span class="doccomment">/// Build SRS for testing.
     ///
-    /// - For univariate polynomials, `supported_size` is the maximum degree.
-    /// - For multilinear polynomials, `supported_size` is the number of
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is the number of
     ///   variables.
     ///
     /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
@@ -467,7 +520,7 @@
     </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
     </span><span class="kw">fn </span>gen_srs_for_testing&lt;R: RngCore + CryptoRng&gt;(
         rng: <span class="kw-2">&amp;mut </span>R,
-        supported_size: usize,
+        supported_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt;;
 
     <span class="doccomment">/// Load public parameter in production environment.
@@ -476,14 +529,15 @@
     /// implemented else where. We only load them into memory here.
     ///
     /// If `file=None`, we load the default choice of SRS.
-    </span><span class="kw">fn </span>load_srs_from_file(_supported_size: usize, _file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+    </span><span class="kw">fn </span>load_srs_from_file(_supported_degree: usize, _file: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
         <span class="macro">unimplemented!</span>(<span class="string">&quot;TODO: implement loading SRS from files&quot;</span>);
     }
 }
 
 <span class="doccomment">/// Super-trait specific for univariate polynomial commitment schemes.
-</span><span class="kw">pub trait </span>UnivariatePCS:
-    PolynomialCommitmentScheme&lt;Point = &lt;<span class="self">Self </span><span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation&gt;
+</span><span class="kw">pub trait </span>UnivariatePCS: PolynomialCommitmentScheme
+<span class="kw">where
+    </span><span class="self">Self</span>::Evaluation: FftField,
 {
     <span class="doccomment">/// Similar to [`PolynomialCommitmentScheme::trim()`], but trim to support
     /// the FFT operations, such as [`Self::multi_open_rou()`] or other
@@ -499,7 +553,35 @@
         ),
         PCSError,
     &gt; {
-        srs.borrow().trim(checked_fft_size(supported_degree)<span class="question-mark">?</span>)
+        <span class="kw">let </span>fft_degree = checked_fft_size(supported_degree)<span class="question-mark">?</span>;
+        srs.borrow().trim(fft_degree).map_err(|e| {
+            PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
+                <span class="string">&quot;Requesting degree of {} for FFT:\n\t\t{:?}&quot;</span>,
+                fft_degree,
+                e
+            ))
+        })
+    }
+
+    <span class="doccomment">/// Given `degree` of the committed polynomial and `num_points` to open,
+    /// return the evaluation domain for faster computation of opening proofs
+    /// and evaluations (both using FFT).
+    </span><span class="kw">fn </span>multi_open_rou_eval_domain(
+        degree: usize,
+        num_points: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;, PCSError&gt; {
+        <span class="comment">// reason for zero-padding: https://github.com/EspressoSystems/jellyfish/pull/231#issuecomment-1526488659
+        </span><span class="kw">let </span>padded_degree = checked_fft_size(degree)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>domain_size = cmp::max(padded_degree + <span class="number">1</span>, num_points);
+        <span class="kw">let </span>domain = Radix2EvaluationDomain::new(domain_size).ok_or_else(|| {
+            PCSError::UpstreamError(<span class="macro">ark_std::format!</span>(
+                <span class="string">&quot;Fail to init eval domain of size {}&quot;</span>,
+                domain_size
+            ))
+        })<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(domain)
     }
 
     <span class="doccomment">/// Same task as [`PolynomialCommitmentScheme::multi_open()`], except the
@@ -510,12 +592,32 @@
         prover_param: <span class="kw">impl </span>Borrow&lt;&lt;<span class="self">Self</span>::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam&gt;,
         polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
         num_points: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;<span class="self">Self</span>::Proof&gt;, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt;;
+        domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;<span class="self">Self</span>::Proof&gt;, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt; {
+        <span class="kw">let </span>evals = <span class="self">Self</span>::multi_open_rou_evals(polynomial, num_points, domain)<span class="question-mark">?</span>;
+        <span class="kw">let </span>proofs = <span class="self">Self</span>::multi_open_rou_proofs(prover_param, polynomial, num_points, domain)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((proofs, evals))
+    }
+
+    <span class="doccomment">/// Compute the opening proofs in [`Self::multi_open_rou()`].
+    </span><span class="kw">fn </span>multi_open_rou_proofs(
+        prover_param: <span class="kw">impl </span>Borrow&lt;&lt;<span class="self">Self</span>::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam&gt;,
+        polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
+        num_points: usize,
+        domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Proof&gt;, PCSError&gt;;
+
+    <span class="doccomment">/// Compute the evaluations in [`Self::multi_open_rou()`].
+    </span><span class="kw">fn </span>multi_open_rou_evals(
+        polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
+        num_points: usize,
+        domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Evaluation&gt;, PCSError&gt;;
 }
 
 <span class="comment">// compute the fft size (i.e. `num_coeffs`) given a degree.
 </span><span class="attr">#[inline]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>checked_fft_size(degree: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, PCSError&gt; {
+</span><span class="kw">fn </span>checked_fft_size(degree: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, PCSError&gt; {
     <span class="kw">let </span>err = || {
         PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
             <span class="string">&quot;Next power of two overflows! Got: {}&quot;</span>,

@@ -580,6 +580,19 @@
 <a href="#580" id="580">580</a>
 <a href="#581" id="581">581</a>
 <a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -599,7 +612,9 @@
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
 <span class="kw">use </span>ark_ff::{FftField, Field, PrimeField};
-<span class="kw">use </span>ark_poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+<span class="kw">use </span>ark_poly::{
+    univariate::DensePolynomial, DenseUVPolynomial, Polynomial, Radix2EvaluationDomain,
+};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow,
@@ -887,23 +902,36 @@
 }
 
 <span class="kw">impl</span>&lt;E: Pairing&gt; UnivariatePCS <span class="kw">for </span>UnivariateKzgPCS&lt;E&gt; {
-    <span class="kw">fn </span>multi_open_rou(
+    <span class="kw">fn </span>multi_open_rou_proofs(
         prover_param: <span class="kw">impl </span>Borrow&lt;&lt;<span class="self">Self</span>::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam&gt;,
         polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
         num_points: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;<span class="self">Self</span>::Proof&gt;, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt; {
-        <span class="kw">let </span>h_poly = <span class="self">Self</span>::compute_h_poly_in_fk23(prover_param, <span class="kw-2">&amp;</span>polynomial.coeffs)<span class="question-mark">?</span>;
+        domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Proof&gt;, PCSError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>h_poly = <span class="self">Self</span>::compute_h_poly_in_fk23(prover_param, <span class="kw-2">&amp;</span>polynomial.coeffs)<span class="question-mark">?</span>;
         <span class="kw">let </span>proofs: Vec&lt;<span class="kw">_</span>&gt; = h_poly
-            .batch_evaluate_rou(num_points)
-            .into_iter()
+            .batch_evaluate_rou(domain)<span class="question-mark">?
+            </span>.into_iter()
+            .take(num_points)
             .map(|g| UnivariateKzgProof {
                 proof: g.into_affine(),
             })
             .collect();
+        <span class="prelude-val">Ok</span>(proofs)
+    }
 
+    <span class="doccomment">/// Compute the evaluations in [`Self::multi_open_rou()`].
+    </span><span class="kw">fn </span>multi_open_rou_evals(
+        polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
+        num_points: usize,
+        domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Evaluation&gt;, PCSError&gt; {
         <span class="kw">let </span>evals = GeneralDensePolynomial::from_coeff_slice(<span class="kw-2">&amp;</span>polynomial.coeffs)
-            .batch_evaluate_rou(num_points);
-        <span class="prelude-val">Ok</span>((proofs, evals))
+            .batch_evaluate_rou(domain)<span class="question-mark">?
+            </span>.into_iter()
+            .take(num_points)
+            .collect();
+        <span class="prelude-val">Ok</span>(evals)
     }
 }
 
@@ -953,17 +981,7 @@
         <span class="comment">// 1.3 compute \vec{h}
         </span><span class="kw">let </span>h_vec = poly_coeff_matrix.fast_vec_mul(<span class="kw-2">&amp;</span>srs_vec)<span class="question-mark">?</span>;
 
-        <span class="comment">// Step 2. evaluate h(X) with coeffs \vec{h} at `points` using FFT
-        </span><span class="kw">let </span><span class="kw-2">mut </span>h_poly = GeneralDensePolynomial::from_coeff_vec(h_vec);
-        <span class="comment">// NOTE: this resizing is to ensure that when computing the proofs by evaluting
-        // h(X), we are using the same roots-of-unity as evaluation points of f(X) which
-        // uses FFT, therefore we resize to the `fft_size`.
-        </span>h_poly.coeffs.resize(
-            <span class="kw">super</span>::checked_fft_size(poly_coeffs.len() - <span class="number">1</span>)<span class="question-mark">?</span>,
-            E::G1::zero(),
-        );
-
-        <span class="prelude-val">Ok</span>(h_poly)
+        <span class="prelude-val">Ok</span>(GeneralDensePolynomial::from_coeff_vec(h_vec))
     }
 }
 
@@ -988,10 +1006,10 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::pcs::{poly::tests::get_roots_of_unity, StructuredReferenceString};
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::StructuredReferenceString;
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
     <span class="kw">use </span>ark_ec::pairing::Pairing;
-    <span class="kw">use </span>ark_poly::univariate::DensePolynomial;
+    <span class="kw">use </span>ark_poly::{univariate::DensePolynomial, EvaluationDomain};
     <span class="kw">use </span>ark_std::{rand::Rng, UniformRand};
     <span class="kw">use </span>jf_utils::test_rng;
 
@@ -1114,8 +1132,8 @@
         <span class="kw">let </span>degrees = [<span class="number">14</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">17</span>, <span class="number">18</span>];
 
         <span class="kw">for </span>degree <span class="kw">in </span>degrees {
-            <span class="kw">let </span>num_points = rng.gen_range(<span class="number">5</span>..degree);
-            <span class="macro">ark_std::println!</span>(
+            <span class="kw">let </span>num_points = rng.gen_range(<span class="number">5</span>..<span class="number">30</span>); <span class="comment">// should allow more points than degree
+            </span><span class="macro">ark_std::println!</span>(
                 <span class="string">&quot;Multi-opening: poly deg: {}, num of points: {}&quot;</span>,
                 degree,
                 num_points
@@ -1130,6 +1148,10 @@
 
             <span class="comment">// First, test general points
             </span><span class="kw">let </span>(proofs, evals) = UnivariateKzgPCS::&lt;E&gt;::multi_open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, <span class="kw-2">&amp;</span>points)<span class="question-mark">?</span>;
+            <span class="macro">assert!</span>(
+                proofs.len() == evals.len() &amp;&amp; proofs.len() == num_points,
+                <span class="string">&quot;fn multi_open() should return the correct number of proofs and evals&quot;
+            </span>);
             points
                 .iter()
                 .zip(proofs.into_iter())
@@ -1140,15 +1162,19 @@
                         (proof, eval)
                     );
                 });
-
             <span class="comment">// Second, test roots-of-unity points
-            </span><span class="kw">let </span>fft_size = <span class="kw">crate</span>::pcs::checked_fft_size(degree)<span class="question-mark">?</span>;
-            <span class="kw">let </span>(proofs, evals) = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, num_points)<span class="question-mark">?</span>;
+            </span><span class="kw">let </span>domain: Radix2EvaluationDomain&lt;Fr&gt; =
+                UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_eval_domain(degree, num_points)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(proofs, evals) =
+                UnivariateKzgPCS::&lt;E&gt;::multi_open_rou(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, num_points, <span class="kw-2">&amp;</span>domain)<span class="question-mark">?</span>;
+            <span class="macro">assert!</span>(
+                proofs.len() == evals.len() &amp;&amp; proofs.len() == num_points,
+                <span class="string">&quot;fn multi_open_rou() should return the correct number of proofs and evals&quot;
+            </span>);
 
-            <span class="kw">let </span>roots_of_unity: Vec&lt;Fr&gt; = get_roots_of_unity(fft_size);
-
-            roots_of_unity
-                .iter()
+            domain
+                .elements()
+                .take(num_points)
                 .zip(proofs.into_iter())
                 .zip(evals.into_iter())
                 .for_each(|((point, proof), eval)| {

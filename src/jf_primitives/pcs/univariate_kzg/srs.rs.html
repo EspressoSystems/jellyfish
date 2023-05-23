@@ -162,6 +162,13 @@
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -228,14 +235,14 @@
     <span class="kw">type </span>VerifierParam = UnivariateVerifierParam&lt;E&gt;;
 
     <span class="doccomment">/// Extract the prover parameters from the public parameters.
-    </span><span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_size: usize) -&gt; <span class="self">Self</span>::ProverParam {
-        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_size].to_vec();
+    </span><span class="kw">fn </span>extract_prover_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_degree: usize) -&gt; <span class="self">Self</span>::ProverParam {
+        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_degree].to_vec();
 
         <span class="self">Self</span>::ProverParam { powers_of_g }
     }
 
     <span class="doccomment">/// Extract the verifier parameters from the public parameters.
-    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, _supported_size: usize) -&gt; <span class="self">Self</span>::VerifierParam {
+    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, _supported_degree: usize) -&gt; <span class="self">Self</span>::VerifierParam {
         <span class="self">Self</span>::VerifierParam {
             g: <span class="self">self</span>.powers_of_g[<span class="number">0</span>],
             h: <span class="self">self</span>.h,
@@ -244,14 +251,21 @@
     }
 
     <span class="doccomment">/// Trim the universal parameters to specialize the public parameters
-    /// for univariate polynomials to the given `supported_size`, and
-    /// returns committer key and verifier key. `supported_size` should
+    /// for univariate polynomials to the given `supported_degree`, and
+    /// returns committer key and verifier key. `supported_degree` should
     /// be in range `1..params.len()`
     </span><span class="kw">fn </span>trim(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        supported_size: usize,
+        supported_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
-        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_size].to_vec();
+        <span class="kw">if </span><span class="self">self</span>.powers_of_g.len() &lt;= supported_degree {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
+                <span class="string">&quot;Largest supported degree by the SRS is: {}, but requested: {}&quot;</span>,
+                <span class="self">self</span>.powers_of_g.len() - <span class="number">1</span>,
+                supported_degree,
+            )));
+        }
+        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_degree].to_vec();
 
         <span class="kw">let </span>pk = <span class="self">Self</span>::ProverParam { powers_of_g };
         <span class="kw">let </span>vk = <span class="self">Self</span>::VerifierParam {
