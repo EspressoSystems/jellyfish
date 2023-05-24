@@ -18,17 +18,19 @@ use typenum::U3;
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element};
 
-/// derive traits needed for blanket impl of [`NodeValue`]
-#[derive(Default, Eq, PartialEq, Clone, Copy, Debug, Ord, PartialOrd, Hash)]
+/// Can't derive traits needed for blanket impl of [`NodeValue`]
+///
+/// `#[derive(Default, Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash)]`
+
 pub struct HasherNode<H>(Output<H>)
 where
-    H: Digest + Clone + Copy + Debug + Default + Eq + Hash + Ord + PartialEq + PartialOrd,
+    H: Digest,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy;
 
 /// Needed for the blanket impl of [`NodeValue`].
 impl<H> CanonicalSerialize for HasherNode<H>
 where
-    H: Digest + Clone + Copy + Debug + Default + Eq + Hash + Ord + PartialEq + PartialOrd,
+    H: Digest,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     fn serialize_with_mode<W: Write>(
@@ -48,7 +50,7 @@ where
 /// Needed for the blanket impl of [`NodeValue`].
 impl<H> CanonicalDeserialize for HasherNode<H>
 where
-    H: Digest + Clone + Copy + Debug + Default + Eq + Hash + Ord + PartialEq + PartialOrd,
+    H: Digest,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     fn deserialize_with_mode<R: Read>(
@@ -65,7 +67,7 @@ where
 /// Needed to impl [`CanonicalDeserialize`].
 impl<H> Valid for HasherNode<H>
 where
-    H: Digest + Clone + Copy + Debug + Default + Eq + Hash + Ord + PartialEq + PartialOrd,
+    H: Digest,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     fn check(&self) -> Result<(), SerializationError> {
@@ -73,13 +75,89 @@ where
     }
 }
 
+// CAN'T USE derive OR derivative TO AUTOMATICALLY DERIVE THESE TRAITS
+impl<H> Clone for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn clone(&self) -> Self {
+        Self(self.0)
+    }
+}
+impl<H> Copy for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+}
+impl<H> Debug for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("HasherNode").field(&self.0).finish()
+    }
+}
+impl<H> Default for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+impl<H> ark_std::cmp::Eq for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+}
+impl<H> Hash for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn hash<K: core::hash::Hasher>(&self, state: &mut K) {
+        self.0.hash(state);
+    }
+}
+impl<H> ark_std::cmp::Ord for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+impl<H> ark_std::cmp::PartialEq for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+impl<H> ark_std::cmp::PartialOrd for HasherNode<H>
+where
+    H: Digest,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
 /// impl [`DigestAlgorithm`] as required by [`MerkleTree`].
 pub struct HasherDigestAlgorithm();
 
 impl<E, H> DigestAlgorithm<E, usize, HasherNode<H>> for HasherDigestAlgorithm
 where
     E: Element + CanonicalSerialize,
-    H: Digest + Clone + Copy + Debug + Default + Eq + Hash + Ord + PartialEq + PartialOrd + Write,
+    H: Digest + Write,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     fn digest(data: &[HasherNode<H>]) -> HasherNode<H> {
@@ -102,7 +180,7 @@ where
 /// Needed to impl [`DigestAlgorithm`].
 impl<H> AsRef<[u8]> for HasherNode<H>
 where
-    H: Digest + Copy + Debug + Default + Hash + Ord,
+    H: Digest,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     fn as_ref(&self) -> &[u8] {
