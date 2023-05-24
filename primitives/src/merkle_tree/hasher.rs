@@ -16,7 +16,7 @@ use digest::{
 };
 use typenum::U3;
 
-use super::{append_only::MerkleTree, DigestAlgorithm, Element};
+use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 
 /// Can't derive traits needed for blanket impl of [`NodeValue`]
 ///
@@ -154,9 +154,10 @@ where
 /// impl [`DigestAlgorithm`] as required by [`MerkleTree`].
 pub struct HasherDigestAlgorithm();
 
-impl<E, H> DigestAlgorithm<E, usize, HasherNode<H>> for HasherDigestAlgorithm
+impl<E, I, H> DigestAlgorithm<E, I, HasherNode<H>> for HasherDigestAlgorithm
 where
     E: Element + CanonicalSerialize,
+    I: Index + CanonicalSerialize,
     H: Digest + Write,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
@@ -168,9 +169,10 @@ where
         HasherNode(hasher.finalize())
     }
 
-    fn digest_leaf(pos: &usize, elem: &E) -> HasherNode<H> {
+    fn digest_leaf(pos: &I, elem: &E) -> HasherNode<H> {
         let mut hasher = H::new();
-        hasher.update(pos.to_le_bytes());
+        pos.serialize_uncompressed(&mut hasher)
+            .expect("serialize should succeed");
         elem.serialize_uncompressed(&mut hasher)
             .expect("serialize should succeed");
         HasherNode(hasher.finalize())
@@ -190,4 +192,4 @@ where
 
 /// Merkle tree generic over [`Digest`] hasher.
 /// where clauses not allowed in type decls [issue link]
-pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, usize, U3, HasherNode<H>>;
+pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
