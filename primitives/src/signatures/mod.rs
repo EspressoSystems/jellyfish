@@ -92,7 +92,9 @@ pub trait SignatureScheme {
 
 /// Trait for aggregatable signatures.
 /// TODO: generic over hash functions
-pub trait AggregateableSignatureSchemes: SignatureScheme {
+pub trait AggregateableSignatureSchemes:
+    SignatureScheme + Serialize + for<'a> Deserialize<'a>
+{
     /// Aggregate multiple signatures into a single signature
     /// The list of public keys is also in the input as some aggregate signature
     /// schemes might also use pks for aggregation

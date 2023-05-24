@@ -48,7 +48,7 @@ use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
     BigInteger, Field, PrimeField,
 };
-use ark_serialize::*;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, *};
 use ark_std::{
     format,
     hash::{Hash, Hasher},
@@ -58,6 +58,7 @@ use ark_std::{
     One, UniformRand,
 };
 use digest::DynDigest;
+use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
 use crate::errors::PrimitivesError::{ParameterError, VerificationError};
@@ -67,7 +68,7 @@ use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// BLS signature scheme.
-#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct BLSOverBN254CurveSignatureScheme;
 
 impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
