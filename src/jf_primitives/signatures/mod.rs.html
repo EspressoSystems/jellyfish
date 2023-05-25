@@ -188,6 +188,8 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
@@ -232,7 +234,7 @@
         + Eq;
 
     <span class="doccomment">/// Public Parameter
-    </span><span class="kw">type </span>PublicParameter;
+    </span><span class="kw">type </span>PublicParameter: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt; + Serialize;
 
     <span class="doccomment">/// Signature
     </span><span class="kw">type </span>Signature: Debug
@@ -282,7 +284,9 @@
 
 <span class="doccomment">/// Trait for aggregatable signatures.
 /// TODO: generic over hash functions
-</span><span class="kw">pub trait </span>AggregateableSignatureSchemes: SignatureScheme {
+</span><span class="kw">pub trait </span>AggregateableSignatureSchemes:
+    SignatureScheme + Serialize + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt;
+{
     <span class="doccomment">/// Aggregate multiple signatures into a single signature
     /// The list of public keys is also in the input as some aggregate signature
     /// schemes might also use pks for aggregation

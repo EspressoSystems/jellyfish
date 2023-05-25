@@ -531,6 +531,8 @@
 <a href="#531" id="531">531</a>
 <a href="#532" id="532">532</a>
 <a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -581,7 +583,7 @@
     field_hashers::{DefaultFieldHasher, HashToField},
     BigInteger, Field, PrimeField,
 };
-<span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, <span class="kw-2">*</span>};
 <span class="kw">use </span>ark_std::{
     format,
     hash::{Hash, Hasher},
@@ -591,6 +593,7 @@
     One, UniformRand,
 };
 <span class="kw">use </span>digest::DynDigest;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>sha3::Keccak256;
 
 <span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError::{ParameterError, VerificationError};
@@ -600,6 +603,7 @@
 <span class="kw">use </span>zeroize::Zeroize;
 
 <span class="doccomment">/// BLS signature scheme.
+</span><span class="attr">#[derive(Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>BLSOverBN254CurveSignatureScheme;
 
 <span class="kw">impl </span>SignatureScheme <span class="kw">for </span>BLSOverBN254CurveSignatureScheme {
