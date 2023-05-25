@@ -32,11 +32,19 @@ cargo build
 Run an example:
 
 ```
-cargo run --release --example proof_of_exp
+cargo run --release --example proof-of-exp --features test-srs
 ```
 
 This is a simple example to prove and verify knowledge of exponent.
 It shows how one may compose a circuit, and then build a proof for the circuit.
+
+### WASM target
+
+Jellyfish is `no_std` compliant and compilable to WASM target environment, just run:
+
+```
+./scripts/build_wasm.sh
+```
 
 ### Tests
 

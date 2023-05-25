@@ -34,34 +34,41 @@
 //! [eip196]: https://eips.ethereum.org/EIPS/eip-196
 //! [eip197]: https://eips.ethereum.org/EIPS/eip-197
 
-use super::SignatureScheme;
+use super::{AggregateableSignatureSchemes, SignatureScheme};
 use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
 use ark_bn254::{
     Bn254, Fq as BaseField, Fr as ScalarField, G1Affine, G1Projective, G2Affine, G2Projective,
 };
-use ark_ec::{pairing::Pairing, CurveGroup, Group};
+use ark_ec::{
+    bn::{Bn, G1Prepared, G2Prepared},
+    pairing::Pairing,
+    CurveGroup, Group,
+};
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    Field, MontFp,
+    BigInteger, Field, PrimeField,
 };
-use ark_serialize::*;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, *};
 use ark_std::{
+    format,
     hash::{Hash, Hasher},
     rand::{CryptoRng, Rng, RngCore},
     string::ToString,
     vec::Vec,
-    UniformRand,
+    One, UniformRand,
 };
 use digest::DynDigest;
+use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
-use crate::errors::PrimitivesError::VerificationError;
+use crate::errors::PrimitivesError::{ParameterError, VerificationError};
 use espresso_systems_common::jellyfish::tag;
 
 use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// BLS signature scheme.
+#[derive(Serialize, Deserialize)]
 pub struct BLSOverBN254CurveSignatureScheme;
 
 impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
@@ -120,6 +127,97 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
     }
 }
 
+impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
+    /// Aggregate multiple signatures into a single signature
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-aggregate>
+    fn aggregate(
+        _pp: &Self::PublicParameter,
+        _vks: &[Self::VerificationKey],
+        sigs: &[Self::Signature],
+    ) -> Result<Self::Signature, PrimitivesError> {
+        if sigs.is_empty() {
+            return Err(ParameterError("no signatures to aggregate".to_string()));
+        }
+        let mut agg_point = sigs[0].sigma;
+        for sig in sigs.iter().skip(1) {
+            agg_point += sig.sigma;
+        }
+        Ok(Self::Signature { sigma: agg_point })
+    }
+
+    /// Verify an aggregate signature w.r.t. a list of messages and public keys.
+    /// It is user's responsibility to ensure that the public keys are
+    /// validated.
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-coreaggregateverify>
+    fn aggregate_verify<M: AsRef<[Self::MessageUnit]>>(
+        _pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msgs: &[M],
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError> {
+        if vks.is_empty() {
+            return Err(ParameterError(
+                "no verification key for signature verification".to_string(),
+            ));
+        }
+        if vks.len() != msgs.len() {
+            return Err(ParameterError(format!(
+                "vks.len = {}; msgs.len = {}",
+                vks.len(),
+                msgs.len(),
+            )));
+        }
+        // subgroup check
+        // TODO: for BN we don't need a subgroup check
+        sig.sigma.check().map_err(|_e| {
+            PrimitivesError::ParameterError("signature subgroup check failed".to_string())
+        })?;
+        // verify
+        let mut m_points: Vec<G1Prepared<_>> = msgs
+            .iter()
+            .map(|msg| {
+                let msg_input: Vec<u8> = [msg.as_ref(), Self::CS_ID.as_bytes()].concat();
+                let hash_value: G1Projective = hash_to_curve::<Keccak256>(msg_input.as_ref());
+                G1Prepared::from(hash_value)
+            })
+            .collect();
+        let mut vk_points: Vec<G2Prepared<_>> =
+            vks.iter().map(|vk| G2Prepared::from(vk.0)).collect();
+        m_points.push(G1Prepared::from(-sig.sigma));
+        let g2 = G2Projective::generator();
+        vk_points.push(G2Prepared::from(g2));
+        let is_sig_valid = Bn254::multi_pairing(m_points, vk_points)
+            == ark_ec::pairing::PairingOutput(
+                <Bn<ark_bn254::Config> as ark_ec::pairing::Pairing>::TargetField::one(),
+            );
+        match is_sig_valid {
+            true => Ok(()),
+            false => Err(VerificationError("Batch pairing check failed".to_string())),
+        }
+    }
+
+    /// Verify a multisignature w.r.t. a single message and a list of public
+    /// keys. It is user's responsibility to ensure that the public keys are
+    /// validated.
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-fastaggregateverify>
+    fn multi_sig_verify(
+        pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msg: &[Self::MessageUnit],
+        sig: &Self::Signature,
+    ) -> Result<(), PrimitivesError> {
+        if vks.is_empty() {
+            return Err(ParameterError(
+                "no verification key for signature verification".to_string(),
+            ));
+        }
+        let mut agg_vk = vks[0].0;
+        for vk in vks.iter().skip(1) {
+            agg_vk += vk.0;
+        }
+        Self::verify(pp, &VerKey(agg_vk), msg, sig)
+    }
+}
 // =====================================================
 // Signing key
 // =====================================================
@@ -180,7 +278,8 @@ pub struct KeyPair {
 #[derive(CanonicalSerialize, CanonicalDeserialize, Eq, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct Signature {
-    pub(crate) sigma: G1Projective,
+    /// The signature is a G1 group element.
+    pub sigma: G1Projective,
 }
 
 impl Hash for Signature {
@@ -194,6 +293,7 @@ impl PartialEq for Signature {
         self.sigma == other.sigma
     }
 }
+
 // =====================================================
 // end of definitions
 // =====================================================
@@ -217,7 +317,7 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
 
     // General equation of the curve: y^2 = x^3 + ax + b
     // For BN254 we have a=0 and b=3 so we only use b
-    let coeff_b: BaseField = MontFp!("3");
+    let coeff_b: BaseField = BaseField::from(3);
 
     let mut x: BaseField = hasher.hash_to_field(msg, 1)[0];
     let mut Y: BaseField = x * x * x + coeff_b;
@@ -230,7 +330,14 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
     }
 
     // Safe unwrap as `y` is a quadratic residue
-    let y = Y.sqrt().unwrap();
+    let mut y = Y.sqrt().unwrap();
+
+    // Ensure that y < p/2 where p is the modulus of Fq
+    let mut y_mul_2 = y.into_bigint();
+    y_mul_2.mul2();
+    if y_mul_2 > BaseField::MODULUS {
+        y.neg_in_place();
+    }
 
     let g1_affine = G1Affine::new(x, y);
     G1Projective::from(g1_affine)
@@ -264,6 +371,11 @@ impl KeyPair {
     /// Get the internal of the signing key, namely a P::ScalarField element
     pub fn sign_key_internal(&self) -> &ScalarField {
         &self.sk.0
+    }
+
+    /// Get the signing key reference
+    pub fn sign_key_ref(&self) -> &SignKey {
+        &self.sk
     }
 
     /// Signature function
@@ -322,12 +434,12 @@ mod tests {
             bls_over_bn254::{
                 BLSOverBN254CurveSignatureScheme, KeyPair, SignKey, Signature, VerKey,
             },
-            tests::{failed_verification, sign_and_verify},
+            tests::{agg_sign_and_verify, failed_verification, sign_and_verify},
         },
     };
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    use jf_utils::Vec;
+    use ark_std::vec::Vec;
 
     #[test]
     fn test_bls_signature_internals() {
@@ -372,6 +484,20 @@ mod tests {
         sign_and_verify::<BLSOverBN254CurveSignatureScheme>(message.as_slice());
         failed_verification::<BLSOverBN254CurveSignatureScheme>(
             message.as_slice(),
+            wrong_message.as_slice(),
+        );
+    }
+
+    #[test]
+    fn test_agg_sig_trait() {
+        let m1 = vec![87u8, 32u8];
+        let m2 = vec![12u8, 2u8, 7u8];
+        let m3 = vec![3u8, 6u8];
+        let m4 = vec![72u8];
+        let messages = vec![&m1[..], &m2[..], &m3[..], &m4[..]];
+        let wrong_message = vec![255u8];
+        agg_sign_and_verify::<BLSOverBN254CurveSignatureScheme>(
+            messages.as_slice(),
             wrong_message.as_slice(),
         );
     }

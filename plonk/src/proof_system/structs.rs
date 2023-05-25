@@ -50,7 +50,7 @@ use tagged_base64::tagged;
 /// Universal StructuredReferenceString
 pub type UniversalSrs<E> = UnivariateUniversalParams<E>;
 /// Commitment key
-pub type CommitKey<E> = UnivariateProverParam<<E as Pairing>::G1Affine>;
+pub type CommitKey<E> = UnivariateProverParam<E>;
 /// Key for verifying PCS opening proof.
 pub type OpenKey<E> = UnivariateVerifierParam<E>;
 

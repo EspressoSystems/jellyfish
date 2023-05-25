@@ -23,4 +23,6 @@ jobs:
       - name: Run cargo-udeps
         uses: aig787/cargo-udeps-action@v1
         with:
-          args: '--all-targets'
+          # not using --all-targets because --examples need "--features test-srs"
+          # checking the rest is sufficient for udeps purposes.
+          args: "--workspace --tests --lib --bins --benches"

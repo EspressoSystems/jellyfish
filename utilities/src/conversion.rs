@@ -5,8 +5,13 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use ark_ec::CurveConfig;
-use ark_ff::{BigInteger, PrimeField};
-use ark_std::{cmp::min, vec::Vec};
+use ark_ff::{BigInteger, Field, PrimeField};
+use ark_std::{
+    cmp::min,
+    iter::{once, repeat},
+    mem,
+    vec::Vec,
+};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -93,33 +98,200 @@ where
     F::from_le_bytes_mod_order(output)
 }
 
-/// One-way, deterministic, infallible conversion between arbitrary bytes (of
-/// unknown length and potentially non-canonical) to field elements.
-/// This function converts bytes to vector of BaseField.
+/// Deterministic, infallible, invertible conversion from arbitrary bytes to
+/// field elements.
+///
+/// # How it works
+///
+/// - The first [`Field`] element in the result encodes `bytes` length as a
+///   `u64`.
+/// - Partition `bytes` into chunks of length P, where P is the field
+///   characteristic byte length minus 1.
+/// - Convert each chunk into [`BasePrimeField`] via
+///   [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic is
+///   guaranteed not to occur because chunk byte length is sufficiently small.
+/// - Collect [`BasePrimeField`] elements into [`Field`] elements and append to
+///   result.
+/// - If `bytes` is empty then result is empty.
+///
+/// # Panics
+///
+/// Panics only under conditions that should be checkable at compile time:
+///
+/// - The [`BasePrimeField`] modulus bit length is too small to hold a `u64`.
+/// - The byte length of a single [`BasePrimeField`] element fails to fit inside
+///   a `usize`.
+/// - The extension degree of the [`Field`] fails to fit inside a `usize`.
+/// - The byte length of a [`Field`] element fails to fit inside a `usize`.
+///
+/// If any of the above conditions holds then this function *always* panics.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
-    B: AsRef<[u8]> + Clone,
-    F: PrimeField,
+    B: AsRef<[u8]>,
+    F: Field,
 {
-    // segment the bytes into chunks of bytes, each chunk is of size
-    // that is floor(F::size_in_bits/8). then, cast each chunk
-    // into F via F::from_le_bytes_mod_order
-    // note that mod_reduction is guaranteed to not occur
-
-    // Field order is never a multiple of 8
-    let chunk_length = (F::MODULUS_BIT_SIZE / 8) as usize;
-
-    // pad the input to a multiple of chunk_length
-    let padded_length = (bytes.as_ref().len() + chunk_length - 1) / chunk_length * chunk_length;
-    let mut padded_bytes: Vec<u8> = bytes.as_ref().to_vec();
-    padded_bytes.resize(padded_length, 0u8);
-    assert!(padded_bytes.len() % chunk_length == 0);
-
-    let mut result = Vec::new();
-    for chunk in padded_bytes.chunks(chunk_length) {
-        result.push(F::from_le_bytes_mod_order(chunk));
+    let (primefield_bytes_len, extension_degree, field_bytes_len) = compile_time_checks::<F>();
+    if bytes.as_ref().is_empty() {
+        return Vec::new();
     }
+
+    // Result length is always less than `bytes` length for sufficiently large
+    // `bytes`. Thus, the following should never panic.
+    let result_len = (field_bytes_len
+        .checked_add(bytes.as_ref().len())
+        .expect("result len should fit into usize")
+        - 1)
+        / field_bytes_len
+        + 1;
+
+    let result = once(F::from(bytes.as_ref().len() as u64)) // the first field element encodes the bytes length as u64
+        .chain(
+            bytes
+                .as_ref()
+                .chunks(field_bytes_len)
+                .map(|field_elem_bytes| {
+                    F::from_base_prime_field_elems(
+                        &field_elem_bytes.chunks(primefield_bytes_len)
+                .map(F::BasePrimeField::from_le_bytes_mod_order)
+                // not enough prime field elems? fill remaining elems with zero
+                .chain(repeat(F::BasePrimeField::ZERO).take(
+                    extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1)
+                )
+                .collect::<Vec<_>>(),
+                    )
+                    .expect("failed to construct field element")
+                }),
+        )
+        .collect::<Vec<_>>();
+
+    // sanity check
+    assert_eq!(
+        result.len(),
+        result_len,
+        "invalid result len, expect {}, found {}",
+        result_len,
+        result.len()
+    );
     result
+}
+
+/// Deterministic, infallible inverse of [`bytes_to_field_elements`].
+///
+/// This function is not invertible because [`bytes_to_field_elements`] is not
+/// onto.
+///
+/// ## Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`], or if the
+/// length of the return `Vec<u8>` overflows `usize`.
+pub fn bytes_from_field_elements<T, F>(elems: T) -> Vec<u8>
+where
+    T: AsRef<[F]>,
+    F: Field,
+{
+    let (primefield_bytes_len, _, field_bytes_len) = compile_time_checks::<F>();
+    if elems.as_ref().is_empty() {
+        return Vec::new();
+    }
+
+    let (first_elem, elems) = elems
+        .as_ref()
+        .split_first()
+        .expect("elems should be non-empty");
+
+    // the first element encodes the number of bytes to return
+    let result_len = usize::try_from(u64::from_le_bytes(
+        first_elem
+            .to_base_prime_field_elements()
+            .next()
+            .expect("first base prime field elem should be non-empty")
+            .into_bigint()
+            .to_bytes_le()[..mem::size_of::<u64>()]
+            .try_into()
+            .expect("conversion from [u8] to u64 should succeed"),
+    ))
+    .expect("result len conversion from u64 to usize should succeed");
+
+    let result_capacity = field_bytes_len
+        .checked_mul(elems.len())
+        .expect("result capacity should fit into usize");
+
+    // If `elems` was produced by `bytes_to_field_elements`
+    // then the original bytes MUST end before the final field element
+    // so we expect `result_len <= result_capacity`.
+    // But if `elems` is arbitrary then `result_len` could be large,
+    // so we enforce `result_len <= result_capacity`.
+    // Do not enforce a lower bound on `result_len` because the caller might
+    // pad `elems`, for example with extra zeros from polynomial interpolation.
+    let result_len = min(result_len, result_capacity);
+
+    // for each base prime field element:
+    // - convert to bytes
+    // - drop the trailing byte
+    // - append bytes to result
+    let mut result = Vec::with_capacity(result_capacity);
+    for elem in elems {
+        for primefield_elem in elem.to_base_prime_field_elements() {
+            let primefield_bytes = primefield_elem.into_bigint().to_bytes_le();
+            let (_, primefield_bytes) = primefield_bytes
+                .split_last() // ignore the final byte of primefield_elem
+                .expect("prime field elem bytes should be non-empty");
+            assert_eq!(
+                primefield_bytes.len(),
+                primefield_bytes_len,
+                "invalid prime field elem bytes len, expect {}, found {}",
+                primefield_bytes_len,
+                primefield_bytes.len()
+            );
+            result.extend_from_slice(primefield_bytes);
+        }
+    }
+
+    // sanity check
+    assert_eq!(
+        result.len(),
+        result_capacity,
+        "invalid result len, expect {}, found {}",
+        result_capacity,
+        result.len()
+    );
+
+    result.truncate(result_len);
+    result
+}
+
+/// Compute various `usize` quantities as a function of the generic [`Field`]
+/// parameter.
+///
+/// It should be possible to do all this at compile time but I don't know how.
+/// Want to panic on overflow, so use checked arithetic and type conversion.
+///
+/// # Returns
+///
+/// Returns the following tuple:
+/// 1. The byte length P of the [`BasePrimeField`] modulus minus 1.
+/// 2. The extension degree of the [`Field`].
+/// 3. The total byte length of a single [`Field`] element under the constraint
+/// that   each [`BasePrimeField`] element fits into only P bytes.
+///
+/// # Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field_elements`].
+fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
+    assert!(
+        F::BasePrimeField::MODULUS_BIT_SIZE > 64,
+        "base prime field modulus bit len {} too small to hold a u64",
+        F::BasePrimeField::MODULUS_BIT_SIZE
+    );
+
+    let primefield_bytes_len = usize::try_from((F::BasePrimeField::MODULUS_BIT_SIZE - 1) / 8)
+        .expect("prime field modulus byte len should fit into usize");
+    let extension_degree =
+        usize::try_from(F::extension_degree()).expect("extension degree should fit into usize");
+    let field_bytes_len = primefield_bytes_len
+        .checked_mul(extension_degree)
+        .expect("field element byte len should fit into usize");
+    (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
 #[cfg(test)]
@@ -127,10 +299,13 @@ mod tests {
     use crate::test_rng;
 
     use super::*;
+    use ark_bls12_377::Fq12 as Fq12_377;
+    use ark_bls12_381::Fq12 as Fq12_381;
+    use ark_bn254::Fq12 as Fq12_254;
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
-    use ark_std::UniformRand;
+    use ark_std::{rand::RngCore, UniformRand};
 
     #[test]
     fn test_bn254_scalar_conversion() {
@@ -160,5 +335,46 @@ mod tests {
             let jj_bls = fr_to_fq::<_, Param381>(&jj);
             assert!(jj.into_bigint() == jj_bls.into_bigint());
         }
+    }
+
+    fn bytes_field_elems<F: Field>() {
+        let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200];
+        let trailing_zeros_lengths = [0, 1, 2, 5, 50];
+
+        let max_len = *lengths.iter().max().unwrap();
+        let max_trailing_zeros_len = *trailing_zeros_lengths.iter().max().unwrap();
+        let mut bytes = Vec::with_capacity(max_len + max_trailing_zeros_len);
+        let mut elems: Vec<F> = Vec::with_capacity(max_len);
+        let mut rng = test_rng();
+
+        for len in lengths {
+            for trailing_zeros_len in trailing_zeros_lengths {
+                // fill bytes with random bytes and trailing zeros
+                bytes.resize(len + trailing_zeros_len, 0);
+                rng.fill_bytes(&mut bytes[..len]);
+                bytes[len..].fill(0);
+
+                // round trip
+                let encoded_bytes: Vec<F> = bytes_to_field_elements(&bytes);
+                let result = bytes_from_field_elements(encoded_bytes);
+                assert_eq!(result, bytes);
+            }
+
+            // test infallibility of bytes_from_field_elements
+            // with random field elements
+            elems.resize(len, F::zero());
+            elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
+            bytes_from_field_elements(&elems);
+        }
+    }
+
+    #[test]
+    fn test_bytes_field_elems() {
+        bytes_field_elems::<Fr381>();
+        bytes_field_elems::<Fr377>();
+        bytes_field_elems::<Fr254>();
+        bytes_field_elems::<Fq12_381>();
+        bytes_field_elems::<Fq12_377>();
+        bytes_field_elems::<Fq12_254>();
     }
 }

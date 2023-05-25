@@ -94,7 +94,8 @@ where
         self.check_var_bound(scalar)?;
         self.check_point_var_bound(base)?;
 
-        let (s1_var, s2_var, s2_sign_var) = scalar_decomposition_gate::<_, P, _>(self, &scalar)?;
+        let (s1_var, s2_var, s2_sign_var) =
+            scalar_decomposition_gate::<P::BaseField, P::ScalarField>(self, &scalar)?;
 
         let endo_base_var = endomorphism_circuit::<_, P>(self, base)?;
         multi_scalar_mul_circuit::<_, P>(self, base, s1_var, &endo_base_var, s2_var, s2_sign_var)
@@ -264,13 +265,12 @@ macro_rules! int_to_fq {
 // Return the variables for k1 and k2
 // and sign bit for k2.
 #[allow(clippy::type_complexity)]
-fn scalar_decomposition_gate<F, P, S>(
+fn scalar_decomposition_gate<F, S>(
     circuit: &mut PlonkCircuit<F>,
     s_var: &Variable,
 ) -> Result<(Variable, Variable, BoolVar), CircuitError>
 where
     F: PrimeField,
-    P: TECurveConfig<BaseField = F, ScalarField = S>,
     S: PrimeField,
 {
     // the order of scalar field
@@ -572,7 +572,10 @@ fn get_bits(a: &[bool]) -> u16 {
 mod tests {
     use super::*;
     use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
-    use ark_ec::twisted_edwards::{Affine, TECurveConfig as Config};
+    use ark_ec::{
+        twisted_edwards::{Affine, TECurveConfig as Config},
+        CurveConfig,
+    };
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
     use ark_ff::{BigInteger, MontFp, One, PrimeField, UniformRand};
     use jf_utils::{field_switching, fr_to_fq, test_rng};
@@ -697,9 +700,11 @@ mod tests {
 
             let mut circuit: PlonkCircuit<Fq> = PlonkCircuit::new_ultra_plonk(16);
             let scalar_var = circuit.create_variable(field_switching(&scalar)).unwrap();
-            let (k1_var, k2_var, k2_sign_var) =
-                scalar_decomposition_gate::<_, EdwardsConfig, _>(&mut circuit, &scalar_var)
-                    .unwrap();
+            let (k1_var, k2_var, k2_sign_var) = scalar_decomposition_gate::<
+                <EdwardsConfig as CurveConfig>::BaseField,
+                <EdwardsConfig as CurveConfig>::ScalarField,
+            >(&mut circuit, &scalar_var)
+            .unwrap();
 
             let k1_rec = circuit.witness(k1_var).unwrap();
             assert_eq!(field_switching::<_, Fq>(&k1), k1_rec);

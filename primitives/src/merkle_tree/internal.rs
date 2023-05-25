@@ -72,7 +72,7 @@ where
     }
 }
 
-type MerklePath<E, I, T> = Vec<MerkleNode<E, I, T>>;
+pub type MerklePath<E, I, T> = Vec<MerkleNode<E, I, T>>;
 
 /// A merkle commitment consists a root hash value, a tree height and number of
 /// leaves
