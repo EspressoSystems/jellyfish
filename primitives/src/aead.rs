@@ -144,7 +144,7 @@ impl From<[u8; 32]> for DecKey {
 }
 impl From<DecKey> for [u8; 32] {
     fn from(dec_key: DecKey) -> Self {
-        *dec_key.0.as_bytes()
+        dec_key.0.to_bytes()
     }
 }
 
@@ -159,7 +159,7 @@ impl CanonicalSerialize for DecKey {
     where
         W: Write,
     {
-        CanonicalSerialize::serialize_compressed(self.0.as_bytes().as_ref(), w)
+        CanonicalSerialize::serialize_compressed(self.0.to_bytes().as_ref(), w)
     }
     fn serialized_size(&self, _compress: Compress) -> usize {
         crypto_box::KEY_SIZE
@@ -416,7 +416,7 @@ mod test {
             .serialize_compressed(&mut dec_key_bytes)
             .unwrap();
         let dec_key_de = DecKey::deserialize_compressed(&dec_key_bytes[..]).unwrap();
-        assert_eq!(dec_key_de.0.as_bytes(), keypair.dec_key.0.as_bytes());
+        assert_eq!(dec_key_de.0.to_bytes(), keypair.dec_key.0.to_bytes());
         // wrong byte length
         assert!(DecKey::deserialize_compressed(&dec_key_bytes[1..]).is_err());
 
