@@ -24,8 +24,7 @@ use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 
 pub struct HasherNode<H>(Output<H>)
 where
-    H: Digest,
-    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy;
+    H: Digest;
 
 /// Needed for the blanket impl of [`NodeValue`].
 impl<H> CanonicalSerialize for HasherNode<H>
