@@ -15,10 +15,17 @@ use ark_std::{
 use blst::BLST_ERROR;
 use displaydoc::Display;
 
+/// A glorified [`bool`] that leverages compile lints to encourage the caller to
+/// use the result.
+///
+/// Intended as the return type for verification of proofs, signatures, etc.
+/// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
+pub type VerificationResult = Result<(), ()>;
+
 /// A `enum` specifying the possible failure modes of the primitives.
 #[derive(Debug, Display)]
 pub enum PrimitivesError {
-    /// Unsuccessful verification for proof or signature, {0}
+    /// Verify fail (proof, sig), {0} [DEPRACATED: use [`VerificationResult`]]
     VerificationError(String),
     /// Bad parameter in function call, {0}
     ParameterError(String),

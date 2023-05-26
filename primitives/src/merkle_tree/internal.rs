@@ -9,7 +9,7 @@ use core::{marker::PhantomData, ops::AddAssign};
 use super::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
 };
-use crate::errors::PrimitivesError;
+use crate::errors::{PrimitivesError, VerificationResult};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
@@ -812,7 +812,7 @@ where
     pub(crate) fn verify_membership_proof<H>(
         &self,
         expected_root: &T,
-    ) -> Result<bool, PrimitivesError>
+    ) -> Result<VerificationResult, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -848,7 +848,11 @@ where
                         }
                     },
                 )?;
-            Ok(computed_root == *expected_root)
+            if computed_root == *expected_root {
+                Ok(Ok(()))
+            } else {
+                Ok(Err(()))
+            }
         } else {
             Err(PrimitivesError::ParameterError(
                 "Invalid proof type".to_string(),

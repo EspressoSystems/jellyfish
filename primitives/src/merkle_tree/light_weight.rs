@@ -14,7 +14,10 @@ use super::{
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
-use crate::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
+use crate::{
+    errors::{PrimitivesError, VerificationResult},
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+};
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -135,7 +138,11 @@ mod mt_tests {
         let (elem, proof) = mock_mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(mt.verify(0u64, &proof).unwrap());
+        assert!(
+            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &proof)
+                .unwrap()
+                .is_ok()
+        );
 
         let mut bad_proof = proof.clone();
         if let MerkleNode::Leaf {
@@ -149,8 +156,8 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = mt.verify(0u64, &bad_proof);
-        assert!(result.is_ok() && !result.unwrap());
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &bad_proof);
+        assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
         if let MerkleNode::Leaf {
@@ -164,9 +171,8 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = mt.verify(2u64, &forge_proof);
-        assert!(result.is_ok());
-        assert!(!result.unwrap());
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &forge_proof);
+        assert!(result.unwrap().is_err());
     }
 
     #[test]
