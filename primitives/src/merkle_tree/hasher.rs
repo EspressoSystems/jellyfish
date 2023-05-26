@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! A convenience wrapper to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
+//! A convenience wrapper [`HasherMerkleTree`] to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
@@ -24,14 +24,6 @@ use typenum::U3;
 ///
 /// TODO: example usage.
 pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
-
-/// Newtype wrapper for hash output that impls [`NodeValue`].
-// Most subtraits of [`NodeValue`] cannot be automatically derived,
-// so we must impl them manually.
-
-pub struct HasherNode<H>(Output<H>)
-where
-    H: Digest;
 
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
 pub struct HasherDigestAlgorithm;
@@ -61,6 +53,14 @@ where
     }
 }
 
+/// Newtype wrapper for hash output that impls [`NodeValue`].
+// Most subtraits of [`NodeValue`] cannot be automatically derived,
+// so we must impl them manually.
+
+pub struct HasherNode<H>(Output<H>)
+where
+    H: Digest;
+
 /// Allow generic creation from [`Output`]
 impl<H> From<Output<H>> for HasherNode<H>
 where
@@ -75,7 +75,6 @@ where
 impl<H> AsRef<Output<H>> for HasherNode<H>
 where
     H: Digest,
-    // <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     fn as_ref(&self) -> &Output<H> {
         &self.0
