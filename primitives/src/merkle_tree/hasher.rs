@@ -5,6 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! A convenience wrapper to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
+use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
@@ -16,17 +17,72 @@ use digest::{
 };
 use typenum::U3;
 
-use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
-
-/// Can't derive traits needed for blanket impl of [`NodeValue`]
+/// Merkle tree generic over [`Digest`] hasher.
 ///
-/// `#[derive(Default, Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash)]`
+/// * `H: Digest` any [`Digest`] hasher
+/// * `E: Element` the payload data type
+///
+/// TODO: example usage.
+pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
+
+/// Newtype wrapper for hash output that impls [`NodeValue`].
+// Most subtraits of [`NodeValue`] cannot be automatically derived,
+// so we must impl them manually.
 
 pub struct HasherNode<H>(Output<H>)
 where
     H: Digest;
 
-/// Needed for the blanket impl of [`NodeValue`].
+/// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
+pub struct HasherDigestAlgorithm;
+
+impl<E, I, H> DigestAlgorithm<E, I, HasherNode<H>> for HasherDigestAlgorithm
+where
+    E: Element + CanonicalSerialize,
+    I: Index + CanonicalSerialize,
+    H: Digest + Write,
+    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn digest(data: &[HasherNode<H>]) -> HasherNode<H> {
+        let mut hasher = H::new();
+        for value in data {
+            hasher.update(value.as_ref());
+        }
+        HasherNode(hasher.finalize())
+    }
+
+    fn digest_leaf(pos: &I, elem: &E) -> HasherNode<H> {
+        let mut hasher = H::new();
+        pos.serialize_uncompressed(&mut hasher)
+            .expect("serialize should succeed");
+        elem.serialize_uncompressed(&mut hasher)
+            .expect("serialize should succeed");
+        HasherNode(hasher.finalize())
+    }
+}
+
+/// Allow generic creation from [`Output`]
+impl<H> From<Output<H>> for HasherNode<H>
+where
+    H: Digest,
+{
+    fn from(value: Output<H>) -> Self {
+        Self(value)
+    }
+}
+
+/// Allow generic access to the underlying [`Output`]
+impl<H> AsRef<Output<H>> for HasherNode<H>
+where
+    H: Digest,
+    // <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    fn as_ref(&self) -> &Output<H> {
+        &self.0
+    }
+}
+
+// Manual impls of the subtraits of [`NodeValue`] for [`HasherNode`]
 impl<H> CanonicalSerialize for HasherNode<H>
 where
     H: Digest,
@@ -45,8 +101,6 @@ where
         <H as Digest>::output_size()
     }
 }
-
-/// Needed for the blanket impl of [`NodeValue`].
 impl<H> CanonicalDeserialize for HasherNode<H>
 where
     H: Digest,
@@ -62,8 +116,6 @@ where
         Ok(HasherNode(ret))
     }
 }
-
-/// Needed to impl [`CanonicalDeserialize`].
 impl<H> Valid for HasherNode<H>
 where
     H: Digest,
@@ -73,8 +125,6 @@ where
         Ok(())
     }
 }
-
-// CAN'T USE derive OR derivative TO AUTOMATICALLY DERIVE THESE TRAITS
 impl<H> Clone for HasherNode<H>
 where
     H: Digest,
@@ -150,45 +200,3 @@ where
         self.0.partial_cmp(&other.0)
     }
 }
-/// impl [`DigestAlgorithm`] as required by [`MerkleTree`].
-pub struct HasherDigestAlgorithm();
-
-impl<E, I, H> DigestAlgorithm<E, I, HasherNode<H>> for HasherDigestAlgorithm
-where
-    E: Element + CanonicalSerialize,
-    I: Index + CanonicalSerialize,
-    H: Digest + Write,
-    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
-{
-    fn digest(data: &[HasherNode<H>]) -> HasherNode<H> {
-        let mut hasher = H::new();
-        for value in data {
-            hasher.update(value);
-        }
-        HasherNode(hasher.finalize())
-    }
-
-    fn digest_leaf(pos: &I, elem: &E) -> HasherNode<H> {
-        let mut hasher = H::new();
-        pos.serialize_uncompressed(&mut hasher)
-            .expect("serialize should succeed");
-        elem.serialize_uncompressed(&mut hasher)
-            .expect("serialize should succeed");
-        HasherNode(hasher.finalize())
-    }
-}
-
-/// Needed to impl [`DigestAlgorithm`].
-impl<H> AsRef<[u8]> for HasherNode<H>
-where
-    H: Digest,
-    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
-{
-    fn as_ref(&self) -> &[u8] {
-        &self.0
-    }
-}
-
-/// Merkle tree generic over [`Digest`] hasher.
-/// where clauses not allowed in type decls [issue link]
-pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
