@@ -1,12 +1,11 @@
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::vec::Vec;
 use core::{
     cmp::{max, min},
     fmt::Debug,
     hash::Hash,
     marker::PhantomData,
 };
-
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::vec::Vec;
 
 use super::{
     examples::{Sha3Digest, Sha3Node},
@@ -35,16 +34,21 @@ pub trait Namespaced<N: Namespace> {
 pub trait Namespace:
     Debug + Clone + CanonicalDeserialize + CanonicalSerialize + Default + Copy + Hash + Ord
 {
+    fn min() -> Self;
+    fn max() -> Self;
 }
 
-impl<T> Namespace for T where
-    T: Debug + Clone + CanonicalDeserialize + CanonicalSerialize + Default + Copy + Hash + Ord
-{
+impl Namespace for u64 {
+    fn min() -> u64 {
+        u64::MIN
+    }
+    fn max() -> u64 {
+        u64::MAX
+    }
 }
 
 #[derive(
     CanonicalSerialize,
-    Default,
     CanonicalDeserialize,
     Hash,
     Copy,
@@ -55,7 +59,7 @@ impl<T> Namespace for T where
     PartialEq,
     PartialOrd,
 )]
-struct NamespacedHash<T, N>
+pub struct NamespacedHash<T, N>
 where
     N: Namespace,
     T: NodeValue,
@@ -63,6 +67,20 @@ where
     min_namespace: N,
     max_namespace: N,
     hash: T,
+}
+
+impl<T, N> Default for NamespacedHash<T, N>
+where
+    N: Namespace,
+    T: NodeValue,
+{
+    fn default() -> Self {
+        Self {
+            hash: T::default(),
+            max_namespace: <N as Namespace>::min(),
+            min_namespace: <N as Namespace>::max(),
+        }
+    }
 }
 
 impl<T, N> NamespacedHash<T, N>
@@ -109,6 +127,7 @@ where
 
         let min_ns = min(right_min_ns, left_min_ns);
         let max_ns = max(right_max_ns, left_max_ns);
+        // Hash the entire node
         let inner_hash = H::digest(&[left_hash, right_hash]);
 
         NamespacedHash::new(min_ns, max_ns, inner_hash)
@@ -140,26 +159,14 @@ pub struct Leaf {
     namespace: NamespaceId,
 }
 
-impl Namespaced<u64> for Leaf {
-    fn get_namespace(&self) -> u64 {
+impl Namespaced<NamespaceId> for Leaf {
+    fn get_namespace(&self) -> NamespaceId {
         self.namespace
     }
 }
 
 #[allow(dead_code)]
 pub type NamespacedSha3Hasher = NamespacedHasher<Sha3Digest, Leaf, NamespaceId, Sha3Node, u64>;
-
-// pub struct NMT {
-//     inner: LightWeightMerkleTree<
-//         Leaf,
-//         NamespacedSha3Hasher,
-//         u64,
-//         U2,
-//         NamespacedHash<Sha3Node, NamespaceId>,
-//     >,
-//     namespace_ranges: HashMap<NamespaceId, Range<usize>>,
-//     max_namespace: NamespaceId,
-// }
 
 /// Namespaced Merkle Tree where leaves are sorted by a namespace identifier.
 /// The tree supports batch namespace inclusion and abscence proofs.
@@ -181,9 +188,43 @@ where
         namespace: NamespaceId,
     ) -> Result<(), ()>;
 }
+// pub type Tree =
+//     MerkleTree<Leaf, NamespacedSha3Hasher, u64, U2, NamespacedHash<Sha3Node,
+// NamespaceId>>;
+
+// pub struct NMT {
+//     inner: Tree,
+//     namespace_ranges: HashMap<NamespaceId, Range<usize>>,
+//     max_namespace: NamespaceId,
+// }
+
+// impl NamespacedMerkleTreeScheme for NMT {
+//     type NamespaceId = NamespaceId;
+//     type NamespaceProof = ();
+//     fn get_namespace_leaves_and_proof(
+//         &self,
+//         namespace: NamespaceId,
+//     ) -> (Vec<Self::Element>, Self::NamespaceProof) {
+//         // For exclusion proof: one subpath, if leaves are siblings, check
+// the neighbor, else check         // the uncle
+//         // inclusion proof: check boundary of the start and end leaves in the
+// merkle proof         unimplemented!()
+//     }
+// –
+//     fn verify_namespace_proof(
+//         leaves: &[Self::Element],
+//         proof: Self::NamespaceProof,
+//         namespace: NamespaceId,
+//     ) -> Result<(), ()> {
+//         unimplemented!()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
+
+    use crate::merkle_tree::{append_only::MerkleTree, MerkleCommitment, MerkleTreeScheme};
+
     use super::*;
     #[test]
     fn test_namespaced_hash() {
@@ -195,5 +236,18 @@ mod tests {
         let node = Hasher::digest(&[h1, h2]);
         assert_eq!(node.min_namespace, 0);
         assert_eq!(node.max_namespace, 52);
+    }
+
+    #[test]
+    fn test_merkle_tree() {
+        let leaf1 = Leaf { namespace: 1 };
+        let leaf2 = Leaf { namespace: 54 };
+        let leaf4 = Leaf { namespace: 112 };
+        let elems = &[leaf1, leaf2, leaf4];
+        let tree = Tree::from_elems(2, elems).unwrap();
+        let root = tree.commitment().digest();
+        let (leaves, proof) = tree.get_namespace_leaves_and_proof(1);
+        assert_eq!(root.min_namespace, 1);
+        assert_eq!(root.max_namespace, 112);
     }
 }
