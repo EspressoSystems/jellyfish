@@ -10,7 +10,6 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
-use ark_std::{fmt::Debug, hash::Hash};
 use digest::{
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
@@ -55,10 +54,19 @@ where
 }
 
 /// Newtype wrapper for hash output that impls [`NodeValue`].
-#[derive(Serialize, Deserialize)]
+#[derive(Derivative, Deserialize, Serialize)]
 #[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
-// Most subtraits of [`NodeValue`] cannot be automatically derived,
-// so we must impl them manually.
+#[derivative(
+    Clone(bound = ""),
+    Copy(bound = "<<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy"),
+    Debug(bound = ""),
+    Default(bound = ""),
+    Eq(bound = ""),
+    Hash(bound = ""),
+    Ord(bound = ""),
+    PartialEq(bound = ""),
+    PartialOrd(bound = "")
+)]
 pub struct HasherNode<H>(Output<H>)
 where
     H: Digest;
@@ -121,68 +129,5 @@ where
 {
     fn check(&self) -> Result<(), SerializationError> {
         Ok(())
-    }
-}
-impl<H> Clone for HasherNode<H>
-where
-    H: Digest,
-{
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
-}
-impl<H> Copy for HasherNode<H>
-where
-    H: Digest,
-    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
-{
-}
-impl<H> Debug for HasherNode<H>
-where
-    H: Digest,
-{
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_tuple("HasherNode").field(&self.0).finish()
-    }
-}
-impl<H> Default for HasherNode<H>
-where
-    H: Digest,
-{
-    fn default() -> Self {
-        Self(Default::default())
-    }
-}
-impl<H> ark_std::cmp::Eq for HasherNode<H> where H: Digest {}
-impl<H> Hash for HasherNode<H>
-where
-    H: Digest,
-{
-    fn hash<K: core::hash::Hasher>(&self, state: &mut K) {
-        self.0.hash(state);
-    }
-}
-impl<H> ark_std::cmp::Ord for HasherNode<H>
-where
-    H: Digest,
-{
-    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-impl<H> ark_std::cmp::PartialEq for HasherNode<H>
-where
-    H: Digest,
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-impl<H> ark_std::cmp::PartialOrd for HasherNode<H>
-where
-    H: Digest,
-{
-    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        self.0.partial_cmp(&other.0)
     }
 }
