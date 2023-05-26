@@ -98,7 +98,7 @@ macro_rules! impl_merkle_tree_scheme {
             fn verify(
                 root: impl Borrow<Self::NodeValue>,
                 proof: impl Borrow<Self::MembershipProof>,
-            ) -> Result<bool, PrimitivesError> {
+            ) -> Result<VerificationResult, PrimitivesError> {
                 proof.borrow().verify_membership_proof::<H>(root.borrow())
             }
         }

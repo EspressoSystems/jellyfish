@@ -13,7 +13,10 @@ use super::{
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
-use crate::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
+use crate::{
+    errors::{PrimitivesError, VerificationResult},
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+};
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -123,7 +126,9 @@ mod mt_tests {
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&root, &proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&root, &proof)
+            .unwrap()
+            .is_ok());
 
         let mut bad_proof = proof.clone();
         if let MerkleNode::Leaf {
@@ -138,7 +143,7 @@ mod mt_tests {
         }
 
         let result = RescueMerkleTree::<F>::verify(&root, &bad_proof);
-        assert!(result.is_ok() && !result.unwrap());
+        assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
         if let MerkleNode::Leaf {
@@ -153,8 +158,7 @@ mod mt_tests {
             unreachable!()
         }
         let result = RescueMerkleTree::<F>::verify(&root, &forge_proof);
-        assert!(result.is_ok());
-        assert!(!result.unwrap());
+        assert!(result.unwrap().is_err());
     }
 
     #[test]
@@ -173,8 +177,12 @@ mod mt_tests {
         assert_eq!(lookup_proof, proof);
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&root, &lookup_proof).unwrap());
-        assert!(RescueMerkleTree::<F>::verify(&root, &proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&root, &lookup_proof)
+            .unwrap()
+            .is_ok());
+        assert!(RescueMerkleTree::<F>::verify(&root, &proof)
+            .unwrap()
+            .is_ok());
 
         assert!(mt.forget(0).expect_ok().is_err());
         assert!(matches!(mt.lookup(0), LookupResult::NotInMemory));

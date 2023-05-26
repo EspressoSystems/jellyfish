@@ -16,7 +16,8 @@ pub(crate) mod internal;
 pub mod prelude;
 
 use crate::{
-    errors::PrimitivesError, impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
+    errors::{PrimitivesError, VerificationResult},
+    impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec::Vec};
@@ -228,7 +229,7 @@ pub trait MerkleTreeScheme: Sized {
     fn verify(
         root: impl Borrow<Self::NodeValue>,
         proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<bool, PrimitivesError>;
+    ) -> Result<VerificationResult, PrimitivesError>;
 
     // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
     // Self::BatchProof>; fn batch_verify(

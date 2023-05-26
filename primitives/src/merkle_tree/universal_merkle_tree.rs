@@ -11,7 +11,10 @@ use super::{
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,
 };
-use crate::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
+use crate::{
+    errors::{PrimitivesError, VerificationResult},
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+};
 use ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -270,7 +273,11 @@ mod mt_tests {
             let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();
             assert_eq!(val, F::from(i as u64));
             assert_eq!(*proof.elem().unwrap(), val);
-            assert!(RescueSparseMerkleTree::<F, F>::verify(&mt.root.value(), &proof).unwrap());
+            assert!(
+                RescueSparseMerkleTree::<F, F>::verify(&mt.root.value(), &proof)
+                    .unwrap()
+                    .is_ok()
+            );
         }
     }
 
@@ -302,8 +309,16 @@ mod mt_tests {
         assert_eq!(lookup_mem_proof, mem_proof);
         assert_eq!(elem, 1u64.into());
         assert_eq!(mem_proof.tree_height(), 11);
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &lookup_mem_proof).unwrap());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &mem_proof).unwrap());
+        assert!(
+            RescueSparseMerkleTree::<BigUint, F>::verify(&root, &lookup_mem_proof)
+                .unwrap()
+                .is_ok()
+        );
+        assert!(
+            RescueSparseMerkleTree::<BigUint, F>::verify(&root, &mem_proof)
+                .unwrap()
+                .is_ok()
+        );
 
         // Forgetting or looking up an element that is already forgotten should fail.
         assert!(matches!(
@@ -321,7 +336,9 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, 3u64.into());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof).unwrap());
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof)
+            .unwrap()
+            .is_ok());
 
         // Look up and forget an empty sub-tree.
         let lookup_non_mem_proof = match mt.universal_lookup(BigUint::from(1u64)) {
@@ -362,7 +379,9 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, 3u64.into());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof).unwrap());
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof)
+            .unwrap()
+            .is_ok());
 
         // Now if we forget the last entry, which is the only thing keeping the root
         // branch in memory, every entry will be forgotten.
@@ -427,7 +446,9 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, 1u64.into());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof).unwrap());
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof)
+            .unwrap()
+            .is_ok());
 
         match mt.universal_lookup(BigUint::from(1u64)) {
             LookupResult::NotFound(proof) => {
