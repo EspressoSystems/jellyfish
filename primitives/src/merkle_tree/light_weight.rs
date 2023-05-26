@@ -135,7 +135,7 @@ mod mt_tests {
         let (elem, proof) = mock_mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueLightWeightMerkleTree::<F>::verify(&proof).unwrap());
+        assert!(RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &proof).unwrap());
 
         let mut bad_proof = proof.clone();
         if let MerkleNode::Leaf {
@@ -149,7 +149,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueLightWeightMerkleTree::<F>::verify(&bad_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &bad_proof);
         assert!(result.is_ok() && !result.unwrap());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof, mt.root.value());
@@ -164,7 +164,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueLightWeightMerkleTree::<F>::verify(&forge_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &forge_proof);
         assert!(result.is_ok());
         assert!(!result.unwrap());
     }

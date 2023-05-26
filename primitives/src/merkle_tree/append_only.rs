@@ -119,10 +119,11 @@ mod mt_tests {
 
     fn test_mt_lookup_helper<F: RescueParameter>() {
         let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let root = mt.commitment().digest();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&root, &proof).unwrap());
 
         let mut bad_proof = proof.clone();
         if let MerkleNode::Leaf {
@@ -136,7 +137,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueMerkleTree::<F>::verify(&bad_proof);
+        let result = RescueMerkleTree::<F>::verify(&root, &bad_proof);
         assert!(result.is_ok() && !result.unwrap());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof, mt.root.value());
@@ -151,7 +152,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueMerkleTree::<F>::verify(&forge_proof);
+        let result = RescueMerkleTree::<F>::verify(&root, &forge_proof);
         assert!(result.is_ok());
         assert!(!result.unwrap());
     }
@@ -165,14 +166,15 @@ mod mt_tests {
 
     fn test_mt_forget_remember_helper<F: RescueParameter>() {
         let mut mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let root = mt.commitment().digest();
         let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
         let (elem, proof) = mt.forget(0).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_proof, proof);
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&lookup_proof).unwrap());
-        assert!(RescueMerkleTree::<F>::verify(&proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&root, &lookup_proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&root, &proof).unwrap());
 
         assert!(mt.forget(0).expect_ok().is_err());
         assert!(matches!(mt.lookup(0), LookupResult::NotInMemory));
