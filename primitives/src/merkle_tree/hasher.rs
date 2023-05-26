@@ -15,6 +15,7 @@ use digest::{
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
 };
+use serde::{Deserialize, Serialize};
 use typenum::U3;
 
 /// Merkle tree generic over [`Digest`] hasher.
@@ -54,9 +55,10 @@ where
 }
 
 /// Newtype wrapper for hash output that impls [`NodeValue`].
+#[derive(Serialize, Deserialize)]
+#[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
 // Most subtraits of [`NodeValue`] cannot be automatically derived,
 // so we must impl them manually.
-
 pub struct HasherNode<H>(Output<H>)
 where
     H: Digest;
