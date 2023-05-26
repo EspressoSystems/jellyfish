@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["PrimitivesError"]};
+window.SIDEBAR_ITEMS = {"enum":["PrimitivesError"],"type":["VerificationResult"]};

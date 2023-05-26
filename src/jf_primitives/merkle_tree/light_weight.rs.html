@@ -196,6 +196,12 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -212,7 +218,10 @@
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
-<span class="kw">use crate</span>::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
+<span class="kw">use crate</span>::{
+    errors::{PrimitivesError, VerificationResult},
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -333,7 +342,11 @@
         <span class="kw">let </span>(elem, proof) = mock_mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
         <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
-        <span class="macro">assert!</span>(mt.verify(<span class="number">0u64</span>, <span class="kw-2">&amp;</span>proof).unwrap());
+        <span class="macro">assert!</span>(
+            RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>proof)
+                .unwrap()
+                .is_ok()
+        );
 
         <span class="kw">let </span><span class="kw-2">mut </span>bad_proof = proof.clone();
         <span class="kw">if let </span>MerkleNode::Leaf {
@@ -347,8 +360,8 @@
             <span class="macro">unreachable!</span>()
         }
 
-        <span class="kw">let </span>result = mt.verify(<span class="number">0u64</span>, <span class="kw-2">&amp;</span>bad_proof);
-        <span class="macro">assert!</span>(result.is_ok() &amp;&amp; !result.unwrap());
+        <span class="kw">let </span>result = RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>bad_proof);
+        <span class="macro">assert!</span>(result.unwrap().is_err());
 
         <span class="kw">let </span><span class="kw-2">mut </span>forge_proof = MerkleProof::new(<span class="number">2</span>, proof.proof);
         <span class="kw">if let </span>MerkleNode::Leaf {
@@ -362,9 +375,8 @@
         } <span class="kw">else </span>{
             <span class="macro">unreachable!</span>()
         }
-        <span class="kw">let </span>result = mt.verify(<span class="number">2u64</span>, <span class="kw-2">&amp;</span>forge_proof);
-        <span class="macro">assert!</span>(result.is_ok());
-        <span class="macro">assert!</span>(!result.unwrap());
+        <span class="kw">let </span>result = RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>forge_proof);
+        <span class="macro">assert!</span>(result.unwrap().is_err());
     }
 
     <span class="attr">#[test]

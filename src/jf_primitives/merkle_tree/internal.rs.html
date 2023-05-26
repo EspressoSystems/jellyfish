@@ -900,6 +900,10 @@
 <a href="#900" id="900">900</a>
 <a href="#901" id="901">901</a>
 <a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -911,7 +915,7 @@
 <span class="kw">use super</span>::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
 };
-<span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
+<span class="kw">use </span><span class="kw">crate</span>::errors::{PrimitivesError, VerificationResult};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
@@ -1714,7 +1718,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>verify_membership_proof&lt;H&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         expected_root: <span class="kw-2">&amp;</span>T,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PrimitivesError&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, I, T&gt;,
         Arity: Unsigned,
@@ -1750,7 +1754,11 @@
                         }
                     },
                 )<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(computed_root == <span class="kw-2">*</span>expected_root)
+            <span class="kw">if </span>computed_root == <span class="kw-2">*</span>expected_root {
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()))
+            }
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
                 <span class="string">&quot;Invalid proof type&quot;</span>.to_string(),

@@ -60,6 +60,13 @@
 <a href="#60" id="60">60</a>
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -77,10 +84,17 @@
 <span class="kw">use </span>blst::BLST_ERROR;
 <span class="kw">use </span>displaydoc::Display;
 
+<span class="doccomment">/// A glorified [`bool`] that leverages compile lints to encourage the caller to
+/// use the result.
+///
+/// Intended as the return type for verification of proofs, signatures, etc.
+/// Recommended for use in the nested [`Result`] pattern: see &lt;https://sled.rs/errors&gt;.
+</span><span class="kw">pub type </span>VerificationResult = <span class="prelude-ty">Result</span>&lt;(), ()&gt;;
+
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the primitives.
 </span><span class="attr">#[derive(Debug, Display)]
 </span><span class="kw">pub enum </span>PrimitivesError {
-    <span class="doccomment">/// Unsuccessful verification for proof or signature, {0}
+    <span class="doccomment">/// Verify fail (proof, sig), {0} [DEPRACATED: use [`VerificationResult`]]
     </span>VerificationError(String),
     <span class="doccomment">/// Bad parameter in function call, {0}
     </span>ParameterError(String),

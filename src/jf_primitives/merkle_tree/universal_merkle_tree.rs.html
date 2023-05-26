@@ -476,6 +476,29 @@
 <a href="#476" id="476">476</a>
 <a href="#477" id="477">477</a>
 <a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -489,7 +512,10 @@
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,
 };
-<span class="kw">use crate</span>::{errors::PrimitivesError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
+<span class="kw">use crate</span>::{
+    errors::{PrimitivesError, VerificationResult},
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
 };
@@ -657,7 +683,8 @@
             internal::{MerkleNode, MerkleProof},
             prelude::{RescueHash, RescueSparseMerkleTree},
             DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-            Index, LookupResult, MerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
+            Index, LookupResult, MerkleCommitment, MerkleTreeScheme, ToTraversalPath,
+            UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -747,7 +774,11 @@
             <span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
             <span class="macro">assert_eq!</span>(val, F::from(i <span class="kw">as </span>u64));
             <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>proof.elem().unwrap(), val);
-            <span class="macro">assert!</span>(mt.verify(F::from(i <span class="kw">as </span>u64), <span class="kw-2">&amp;</span>proof).unwrap());
+            <span class="macro">assert!</span>(
+                RescueSparseMerkleTree::&lt;F, F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>proof)
+                    .unwrap()
+                    .is_ok()
+            );
         }
     }
 
@@ -767,6 +798,7 @@
             ],
         )
         .unwrap();
+        <span class="kw">let </span>root = mt.commitment().digest();
 
         <span class="comment">// Look up and forget an element that is in the tree.
         </span><span class="kw">let </span>(lookup_elem, lookup_mem_proof) = mt
@@ -778,8 +810,16 @@
         <span class="macro">assert_eq!</span>(lookup_mem_proof, mem_proof);
         <span class="macro">assert_eq!</span>(elem, <span class="number">1u64</span>.into());
         <span class="macro">assert_eq!</span>(mem_proof.tree_height(), <span class="number">11</span>);
-        <span class="macro">assert!</span>(mt.verify(BigUint::from(<span class="number">0u64</span>), <span class="kw-2">&amp;</span>lookup_mem_proof).unwrap());
-        <span class="macro">assert!</span>(mt.verify(BigUint::from(<span class="number">0u64</span>), <span class="kw-2">&amp;</span>mem_proof).unwrap());
+        <span class="macro">assert!</span>(
+            RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>lookup_mem_proof)
+                .unwrap()
+                .is_ok()
+        );
+        <span class="macro">assert!</span>(
+            RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>mem_proof)
+                .unwrap()
+                .is_ok()
+        );
 
         <span class="comment">// Forgetting or looking up an element that is already forgotten should fail.
         </span><span class="macro">assert!</span>(<span class="macro">matches!</span>(
@@ -797,7 +837,9 @@
             .expect_ok()
             .unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="number">3u64</span>.into());
-        <span class="macro">assert!</span>(mt.verify(BigUint::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>proof).unwrap());
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>proof)
+            .unwrap()
+            .is_ok());
 
         <span class="comment">// Look up and forget an empty sub-tree.
         </span><span class="kw">let </span>lookup_non_mem_proof = <span class="kw">match </span>mt.universal_lookup(BigUint::from(<span class="number">1u64</span>)) {
@@ -838,7 +880,9 @@
             .expect_ok()
             .unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="number">3u64</span>.into());
-        <span class="macro">assert!</span>(mt.verify(BigUint::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>proof).unwrap());
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>proof)
+            .unwrap()
+            .is_ok());
 
         <span class="comment">// Now if we forget the last entry, which is the only thing keeping the root
         // branch in memory, every entry will be forgotten.
@@ -903,7 +947,9 @@
             .expect_ok()
             .unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="number">1u64</span>.into());
-        <span class="macro">assert!</span>(mt.verify(BigUint::from(<span class="number">0u64</span>), <span class="kw-2">&amp;</span>proof).unwrap());
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>proof)
+            .unwrap()
+            .is_ok());
 
         <span class="kw">match </span>mt.universal_lookup(BigUint::from(<span class="number">1u64</span>)) {
             LookupResult::NotFound(proof) =&gt; {

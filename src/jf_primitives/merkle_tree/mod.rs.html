@@ -379,6 +379,7 @@
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -397,7 +398,8 @@
 <span class="kw">pub mod </span>prelude;
 
 <span class="kw">use crate</span>::{
-    errors::PrimitivesError, impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
+    errors::{PrimitivesError, VerificationResult},
+    impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
 };
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec::Vec};
@@ -601,15 +603,15 @@
     ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt;;
 
     <span class="doccomment">/// Verify an element is a leaf of a Merkle tree given the proof
-    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `root` - a merkle tree root, usually obtained from
+    ///   `Self::commitment().digest()`
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     </span><span class="kw">fn </span>verify(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        root: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NodeValue&gt;,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PrimitivesError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, PrimitivesError&gt;;
 
     <span class="comment">// fn batch_lookup(&amp;self, pos: impl Iterator&lt;Item = usize&gt;) -&gt; LookupResult&lt;(),
     // Self::BatchProof&gt;; fn batch_verify(
