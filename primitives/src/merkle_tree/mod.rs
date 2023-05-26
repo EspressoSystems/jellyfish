@@ -225,7 +225,6 @@ pub trait MerkleTreeScheme: Sized {
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
-        &self,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<bool, PrimitivesError>;
