@@ -96,16 +96,9 @@ macro_rules! impl_merkle_tree_scheme {
             }
 
             fn verify(
-                pos: impl Borrow<Self::Index>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<bool, PrimitivesError> {
-                let pos = pos.borrow();
                 let proof = proof.borrow();
-                if *pos != proof.pos {
-                    return Err(PrimitivesError::ParameterError(
-                        "Inconsistent proof index".to_string(),
-                    ));
-                }
                 proof.verify_membership_proof::<H>(&proof.root)
             }
         }

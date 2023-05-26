@@ -220,14 +220,10 @@ pub trait MerkleTreeScheme: Sized {
     ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
-    /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
-    fn verify(
-        pos: impl Borrow<Self::Index>,
-        proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<bool, PrimitivesError>;
+    fn verify(proof: impl Borrow<Self::MembershipProof>) -> Result<bool, PrimitivesError>;
 
     // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
     // Self::BatchProof>; fn batch_verify(

@@ -122,7 +122,7 @@ mod mt_tests {
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(0u64, &proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&proof).unwrap());
 
         let mut bad_proof = proof.clone();
         if let MerkleNode::Leaf {
@@ -136,7 +136,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueMerkleTree::<F>::verify(0u64, &bad_proof);
+        let result = RescueMerkleTree::<F>::verify(&bad_proof);
         assert!(result.is_ok() && !result.unwrap());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof, mt.root.value());
@@ -151,7 +151,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueMerkleTree::<F>::verify(2u64, &forge_proof);
+        let result = RescueMerkleTree::<F>::verify(&forge_proof);
         assert!(result.is_ok());
         assert!(!result.unwrap());
     }
@@ -171,8 +171,8 @@ mod mt_tests {
         assert_eq!(lookup_proof, proof);
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(0, &lookup_proof).unwrap());
-        assert!(RescueMerkleTree::<F>::verify(0, &proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&lookup_proof).unwrap());
+        assert!(RescueMerkleTree::<F>::verify(&proof).unwrap());
 
         assert!(mt.forget(0).expect_ok().is_err());
         assert!(matches!(mt.lookup(0), LookupResult::NotInMemory));
