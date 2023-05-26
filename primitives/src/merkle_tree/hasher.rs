@@ -5,6 +5,20 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! A convenience wrapper [`HasherMerkleTree`] to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
+//!
+//! I can't get the following example to complile, but it should work:
+//! ```
+//! // use jf_primitives::merkle_tree::{MerkleTreeScheme, hasher::HasherMerkleTree};
+//! // use sha2::Sha256;
+//!
+//! // let my_data = [1,2,3,4,5,6,7,8,9];
+//! // let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, &my_data)?;
+//! // let root = mt.commitment().digest();
+//! // let (val, proof) = mt.lookup(2).expect_ok().unwrap();
+//! // assert_eq!(val, 3);
+//! // assert!(HasherMerkleTree::<Sha256, usize>::verify(root, proof).unwrap().is_ok());
+//! ```
+
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
@@ -18,11 +32,6 @@ use serde::{Deserialize, Serialize};
 use typenum::U3;
 
 /// Merkle tree generic over [`Digest`] hasher.
-///
-/// * `H: Digest` any [`Digest`] hasher
-/// * `E: Element` the payload data type
-///
-/// TODO: example usage.
 pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
 
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
@@ -53,7 +62,7 @@ where
     }
 }
 
-/// Newtype wrapper for hash output that impls [`NodeValue`].
+/// Newtype wrapper for hash output that impls `NodeValue`.
 #[derive(Derivative, Deserialize, Serialize)]
 #[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
 #[derivative(
@@ -71,7 +80,7 @@ pub struct HasherNode<H>(Output<H>)
 where
     H: Digest;
 
-/// Allow generic creation from [`Output`]
+/// Allow creation from [`Output`]
 impl<H> From<Output<H>> for HasherNode<H>
 where
     H: Digest,
@@ -81,7 +90,7 @@ where
     }
 }
 
-/// Allow generic access to the underlying [`Output`]
+/// Allow access to the underlying [`Output`]
 impl<H> AsRef<Output<H>> for HasherNode<H>
 where
     H: Digest,
@@ -91,7 +100,7 @@ where
     }
 }
 
-// Manual impls of the subtraits of [`NodeValue`] for [`HasherNode`]
+// Manual impls of some subtraits of `NodeValue`
 impl<H> CanonicalSerialize for HasherNode<H>
 where
     H: Digest,
