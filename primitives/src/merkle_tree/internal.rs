@@ -137,9 +137,6 @@ where
     pub pos: I,
     /// Nodes of proof path, from root to leaf
     pub proof: MerklePath<E, I, T>,
-    /// Root
-    #[serde(with = "canonical")]
-    pub root: T,
 
     /// Place holder for Arity
     _phantom_arity: PhantomData<Arity>,
@@ -156,11 +153,10 @@ where
         self.proof.len()
     }
 
-    pub fn new(pos: I, proof: MerklePath<E, I, T>, root: T) -> Self {
+    pub fn new(pos: I, proof: MerklePath<E, I, T>) -> Self {
         MerkleProof {
             pos,
             proof,
-            root,
             _phantom_arity: PhantomData,
         }
     }

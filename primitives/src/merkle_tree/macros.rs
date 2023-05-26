@@ -88,7 +88,7 @@ macro_rules! impl_merkle_tree_scheme {
                 let traversal_path = pos.to_traversal_path(self.height);
                 match self.root.lookup_internal(self.height, &traversal_path) {
                     LookupResult::Ok(value, proof) => {
-                        LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof, self.root.value()))
+                        LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof))
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
@@ -137,7 +137,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 let traversal_path = pos.to_traversal_path(self.height);
                 match self.root.forget_internal(self.height, &traversal_path) {
                     LookupResult::Ok(elem, proof) => {
-                        LookupResult::Ok(elem, MerkleProof::new(pos, proof, self.root.value()))
+                        LookupResult::Ok(elem, MerkleProof::new(pos, proof))
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),

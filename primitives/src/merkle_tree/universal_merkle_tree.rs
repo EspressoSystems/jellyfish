@@ -91,14 +91,13 @@ where
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
         match self.root.lookup_internal(self.height, &traversal_path) {
-            LookupResult::Ok(value, proof) => LookupResult::Ok(
-                value,
-                MerkleProof::new(pos.clone(), proof, self.root.value()),
-            ),
+            LookupResult::Ok(value, proof) => {
+                LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof))
+            },
             LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::NotFound(non_membership_proof) => LookupResult::NotFound(
-                MerkleProof::new(pos.clone(), non_membership_proof, self.root.value()),
-            ),
+            LookupResult::NotFound(non_membership_proof) => {
+                LookupResult::NotFound(MerkleProof::new(pos.clone(), non_membership_proof))
+            },
         }
     }
 }
@@ -118,13 +117,9 @@ where
     ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
         let traversal_path = pos.to_traversal_path(self.height);
         match self.root.forget_internal(self.height, &traversal_path) {
-            LookupResult::Ok(elem, proof) => {
-                LookupResult::Ok(elem, MerkleProof::new(pos, proof, self.root.value()))
-            },
+            LookupResult::Ok(elem, proof) => LookupResult::Ok(elem, MerkleProof::new(pos, proof)),
             LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::NotFound(proof) => {
-                LookupResult::NotFound(MerkleProof::new(pos, proof, self.root.value()))
-            },
+            LookupResult::NotFound(proof) => LookupResult::NotFound(MerkleProof::new(pos, proof)),
         }
     }
 
@@ -406,8 +401,7 @@ mod mt_tests {
         mt.non_membership_remember(1u64.into(), &bad_non_mem_proof)
             .unwrap_err();
 
-        let mut forge_mem_proof =
-            MerkleProof::new(1u64.into(), mem_proof.proof.clone(), mt.root.value());
+        let mut forge_mem_proof = MerkleProof::new(1u64.into(), mem_proof.proof.clone());
         if let MerkleNode::Leaf { pos, elem, .. } = &mut forge_mem_proof.proof[0] {
             *pos = 1u64.into();
             *elem = F::from(0u64);

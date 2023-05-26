@@ -140,7 +140,7 @@ mod mt_tests {
         let result = RescueMerkleTree::<F>::verify(&root, &bad_proof);
         assert!(result.is_ok() && !result.unwrap());
 
-        let mut forge_proof = MerkleProof::new(2, proof.proof, mt.root.value());
+        let mut forge_proof = MerkleProof::new(2, proof.proof);
         if let MerkleNode::Leaf {
             value: _,
             pos,
@@ -194,7 +194,7 @@ mod mt_tests {
         let result = mt.remember(0u64, elem, &bad_proof);
         assert!(result.is_err());
 
-        let mut forge_proof = MerkleProof::new(2, proof.proof.clone(), mt.root.value());
+        let mut forge_proof = MerkleProof::new(2, proof.proof.clone());
         if let MerkleNode::Leaf {
             value: _,
             pos,
