@@ -6,17 +6,27 @@
 
 //! A convenience wrapper [`HasherMerkleTree`] to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
 //!
-//! I can't get the following example to complile, but it should work:
 //! ```
-//! // use jf_primitives::merkle_tree::{MerkleTreeScheme, hasher::HasherMerkleTree};
-//! // use sha2::Sha256;
+//! # use jf_primitives::errors::PrimitivesError;
+//! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme};
+//! use sha2::Sha256;
 //!
-//! // let my_data = [1,2,3,4,5,6,7,8,9];
-//! // let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, &my_data)?;
-//! // let root = mt.commitment().digest();
-//! // let (val, proof) = mt.lookup(2).expect_ok().unwrap();
-//! // assert_eq!(val, 3);
-//! // assert!(HasherMerkleTree::<Sha256, usize>::verify(root, proof).unwrap().is_ok());
+//! # fn main() -> Result<(), PrimitivesError> {
+//! let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+//! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, &my_data)?;
+//! let root = mt.commitment().digest();
+//! let (val, proof) = mt.lookup(2).expect_ok()?;
+//! assert_eq!(val, 3);
+//! assert!(HasherMerkleTree::<Sha256, usize>::verify(root, proof)?.is_ok());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! [`HasherMerkleTree`] requires the `std` feature for your hasher, which is
+//! enabled by default. Example:
+//! ```toml
+//! [dependencies]
+//! sha2 = "0.10"
 //! ```
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
