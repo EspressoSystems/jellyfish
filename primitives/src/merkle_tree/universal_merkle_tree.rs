@@ -31,7 +31,7 @@ impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, 
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + TryFrom<u64> + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -110,7 +110,7 @@ impl<E, H, I, Arity, T> ForgetableUniversalMerkleTreeScheme
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + TryFrom<u64> + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -260,7 +260,7 @@ mod mt_tests {
 
     fn test_update_and_lookup_helper<I, F>()
     where
-        I: Index + ToTraversalPath<U3> + From<u64>,
+        I: Index + ToTraversalPath<U3> + TryFrom<u64>,
         F: RescueParameter + ToTraversalPath<U3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {

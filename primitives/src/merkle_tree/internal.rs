@@ -181,7 +181,7 @@ pub(crate) fn build_tree_internal<E, H, I, Arity, T>(
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
+    I: Index + TryFrom<u64>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -202,21 +202,26 @@ where
             .map(|chunk| {
                 let children = chunk
                     .map(|(pos, elem)| {
-                        let pos = I::from(pos as u64);
-                        Box::new(MerkleNode::Leaf {
+                        let pos = I::try_from(pos as u64).map_err(|_| {
+                            PrimitivesError::InternalError(format!(
+                                "failure to convert index {} to u64",
+                                pos
+                            ))
+                        })?;
+                        Ok(Box::new(MerkleNode::Leaf {
                             value: H::digest_leaf(&pos, elem.borrow()),
                             pos,
                             elem: elem.borrow().clone(),
-                        })
+                        }))
                     })
-                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::<E, I, T>::Branch {
+                    .pad_using(Arity::to_usize(), |_| Ok(Box::new(MerkleNode::Empty)))
+                    .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                Ok(Box::new(MerkleNode::<E, I, T>::Branch {
                     value: digest_branch::<E, H, I, T>(&children),
                     children,
-                })
+                }))
             })
-            .collect_vec();
+            .collect::<Result<Vec<_>, PrimitivesError>>()?;
         for _ in 1..height {
             cur_nodes = cur_nodes
                 .into_iter()
@@ -249,7 +254,7 @@ pub(crate) fn build_light_weight_tree_internal<E, H, I, Arity, T>(
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64>,
+    I: Index + TryFrom<u64>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -272,27 +277,32 @@ where
             .map(|chunk| {
                 let children = chunk
                     .map(|(pos, elem)| {
+                        let ipos = I::try_from(pos as u64).map_err(|_| {
+                            PrimitivesError::InternalError(format!(
+                                "failure to convert index {} to u64",
+                                pos
+                            ))
+                        })?;
                         if (pos as u64) < num_leaves - 1 {
-                            Box::new(MerkleNode::ForgettenSubtree {
-                                value: H::digest_leaf(&I::from(pos as u64), elem.borrow()),
-                            })
+                            Ok(Box::new(MerkleNode::ForgettenSubtree {
+                                value: H::digest_leaf(&ipos, elem.borrow()),
+                            }))
                         } else {
-                            let pos = I::from(pos as u64);
-                            Box::new(MerkleNode::Leaf {
-                                value: H::digest_leaf(&pos, elem.borrow()),
-                                pos,
+                            Ok(Box::new(MerkleNode::Leaf {
+                                value: H::digest_leaf(&ipos, elem.borrow()),
+                                pos: ipos,
                                 elem: elem.borrow().clone(),
-                            })
+                            }))
                         }
                     })
-                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::<E, I, T>::Branch {
+                    .pad_using(Arity::to_usize(), |_| Ok(Box::new(MerkleNode::Empty)))
+                    .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                Ok(Box::new(MerkleNode::<E, I, T>::Branch {
                     value: digest_branch::<E, H, I, T>(&children),
                     children,
-                })
+                }))
             })
-            .collect_vec();
+            .collect::<Result<Vec<_>, PrimitivesError>>()?;
         for i in 1..cur_nodes.len() - 1 {
             cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
                 value: cur_nodes[i].value(),
@@ -342,7 +352,7 @@ where
 impl<E, I, T> MerkleNode<E, I, T>
 where
     E: Element,
-    I: Index + From<u64>,
+    I: Index + TryFrom<u64>,
     T: NodeValue,
 {
     /// Forget a leaf from the merkle tree. Internal branch merkle node will
@@ -644,7 +654,12 @@ where
                         data,
                     )?;
                     cnt += increment;
-                    cur_pos += I::from(increment);
+                    cur_pos += I::try_from(increment).map_err(|_| {
+                        PrimitivesError::InternalError(format!(
+                            "failure to convert increment {} to u64",
+                            increment
+                        ))
+                    })?;
                     frontier += 1;
                 }
                 *value = digest_branch::<E, H, I, T>(children);
@@ -678,7 +693,12 @@ where
                             data,
                         )?;
                         cnt += increment;
-                        cur_pos += I::from(increment);
+                        cur_pos += I::try_from(increment).map_err(|_| {
+                            PrimitivesError::InternalError(format!(
+                                "failure to convert increment {} to u64",
+                                increment
+                            ))
+                        })?;
                         frontier += 1;
                     }
                     *self = MerkleNode::Branch {
@@ -740,7 +760,12 @@ where
                         data,
                     )?;
                     cnt += increment;
-                    cur_pos += I::from(increment);
+                    cur_pos += I::try_from(increment).map_err(|_| {
+                        PrimitivesError::InternalError(format!(
+                            "failure to convert increment {} to u64",
+                            increment
+                        ))
+                    })?;
                     frontier += 1;
                 }
                 *value = digest_branch::<E, H, I, T>(children);
@@ -780,7 +805,12 @@ where
                             data,
                         )?;
                         cnt += increment;
-                        cur_pos += I::from(increment);
+                        cur_pos += I::try_from(increment).map_err(|_| {
+                            PrimitivesError::InternalError(format!(
+                                "failure to convert increment {} to u64",
+                                increment
+                            ))
+                        })?;
                         frontier += 1;
                     }
                     *self = MerkleNode::Branch {
@@ -803,7 +833,7 @@ where
 impl<E, I, T, Arity> MerkleProof<E, I, T, Arity>
 where
     E: Element,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + TryFrom<u64> + ToTraversalPath<Arity>,
     T: NodeValue,
     Arity: Unsigned,
 {

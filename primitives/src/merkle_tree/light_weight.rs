@@ -7,8 +7,6 @@
 //! A light weight merkle tree is an append only merkle tree who only keeps its
 //! frontier -- the right-most path.
 
-use core::ops::AddAssign;
-
 use super::{
     internal::{build_light_weight_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
@@ -19,7 +17,8 @@ use crate::{
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
 use ark_std::{
-    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
+    borrow::Borrow, boxed::Box, fmt::Debug, format, marker::PhantomData, ops::AddAssign,
+    string::ToString, vec, vec::Vec,
 };
 use num_bigint::BigUint;
 use num_traits::pow::pow;
@@ -33,7 +32,7 @@ impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for LightWeightMerkleTree<E, 
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    I: Index + TryFrom<u64> + AddAssign + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -46,11 +45,17 @@ where
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
+        let num_leaves = I::try_from(self.num_leaves).map_err(|_| {
+            PrimitivesError::InternalError(format!(
+                "failure to convert num_leaves {} to u64",
+                self.num_leaves
+            ))
+        })?;
 
-        let traversal_path = I::from(self.num_leaves).to_traversal_path(self.height);
+        let traversal_path = num_leaves.to_traversal_path(self.height);
         self.num_leaves += self.root.extend_and_forget_internal::<H, Arity>(
             self.height,
-            &I::from(self.num_leaves),
+            &num_leaves,
             &traversal_path,
             true,
             &mut iter,

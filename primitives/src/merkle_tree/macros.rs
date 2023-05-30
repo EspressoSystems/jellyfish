@@ -36,7 +36,7 @@ macro_rules! impl_merkle_tree_scheme {
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64> + ToTraversalPath<Arity>,
+            I: Index + TryFrom<u64> + ToTraversalPath<Arity>,
             Arity: Unsigned,
             T: NodeValue,
         {
@@ -113,7 +113,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64> + ToTraversalPath<Arity>,
+            I: Index + TryFrom<u64> + ToTraversalPath<Arity>,
             Arity: Unsigned,
             T: NodeValue,
         {

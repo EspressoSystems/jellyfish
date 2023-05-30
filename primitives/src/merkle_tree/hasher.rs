@@ -42,7 +42,9 @@ use serde::{Deserialize, Serialize};
 use typenum::U3;
 
 /// Merkle tree generic over [`Digest`] hasher.
-pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
+pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, usize, U3, HasherNode<H>>;
+// pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64,
+// U3, HasherNode<H>>;
 
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
 pub struct HasherDigestAlgorithm;
