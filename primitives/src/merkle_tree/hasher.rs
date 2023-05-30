@@ -58,7 +58,7 @@ pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, U3>;
 /// Like [`HasherMerkleTree`] except with additional parameters.
 ///
 /// Additional parameters beyond [`HasherMerkleTree`]:
-/// - `I` is a [`Index`] data type that impls [`TryFrom<u64>`]. (eg. [`u64`],
+/// - `I` is a [`Index`] data type that impls [`From<u64>`]. (eg. [`u64`],
 ///   [`Field`](ark_ff::Field), etc.)
 /// - `Arity` is a [`Unsigned`](typenum::Unsigned). (eg. [`U2`](typenum::U2) for
 ///   a binary tree, [`U3`] for a trinary tree, etc.)
