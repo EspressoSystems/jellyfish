@@ -13,7 +13,10 @@
 //!
 //! # fn main() -> Result<(), PrimitivesError> {
 //! let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+//!
+//! // payload type is `usize`, hash function is `Sha256`.
 //! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, &my_data)?;
+//!
 //! let root = mt.commitment().digest();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
 //! assert_eq!(val, 3);
@@ -28,6 +31,9 @@
 //! [dependencies]
 //! sha2 = "0.10"
 //! ```
+//!
+//! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `Arity`
+//! and node [`Index`] types.
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 use ark_serialize::{
@@ -41,8 +47,23 @@ use digest::{
 use serde::{Deserialize, Serialize};
 use typenum::U3;
 
-/// Merkle tree generic over [`Digest`] hasher.
-pub type HasherMerkleTree<H, E> = MerkleTree<E, HasherDigestAlgorithm, u64, U3, HasherNode<H>>;
+/// Merkle tree generic over [`Digest`] hasher `H`.
+///
+/// It's a trinary ([`U3`]) tree whose nodes are indexed by [`u64`].
+/// - `H` is a [RustCrypto-compatible](https://github.com/RustCrypto/hashes)
+///   hash function.
+/// - `E` is a [`Element`] payload data type for the Merkle tree.
+pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, U3>;
+
+/// Like [`HasherMerkleTree`] except with additional parameters.
+///
+/// Additional parameters beyond [`HasherMerkleTree`]:
+/// - `I` is a [`Index`] data type that impls [`TryFrom<u64>`]. (eg. [`u64`],
+///   [`Field`](ark_ff::Field), etc.)
+/// - `Arity` is a [`Unsigned`](typenum::Unsigned). (eg. [`U2`](typenum::U2) for
+///   a binary tree, [`U3`] for a trinary tree, etc.)
+pub type GenericHasherMerkleTree<H, E, I, Arity> =
+    MerkleTree<E, HasherDigestAlgorithm, I, Arity, HasherNode<H>>;
 
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
 pub struct HasherDigestAlgorithm;
@@ -72,7 +93,7 @@ where
     }
 }
 
-/// Newtype wrapper for hash output that impls `NodeValue`.
+/// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
 #[derive(Derivative, Deserialize, Serialize)]
 #[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
 #[derivative(
@@ -110,7 +131,7 @@ where
     }
 }
 
-// Manual impls of some subtraits of `NodeValue`
+// Manual impls of some subtraits of [`NodeValue`](super::NodeValue).
 impl<H> CanonicalSerialize for HasherNode<H>
 where
     H: Digest,
