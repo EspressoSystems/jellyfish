@@ -225,7 +225,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Constrain variable `y` to the addition of `a` and `c`, where `c` is a
     /// constant value Return error if the input variables are invalid.
-    fn add_constant_gate(&mut self, x: Variable, c: F, y: Variable) -> Result<(), CircuitError> {
+    pub fn add_constant_gate(
+        &mut self,
+        x: Variable,
+        c: F,
+        y: Variable,
+    ) -> Result<(), CircuitError> {
         self.check_var_bound(x)?;
         self.check_var_bound(y)?;
 
