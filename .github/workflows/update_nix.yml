@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v20
+        uses: cachix/install-nix-action@v21
 
       - uses: cachix/cachix-action@v12
         with:
@@ -21,6 +21,6 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v18
+        uses: DeterminateSystems/update-flake-lock@v19
         with:
           pr-title: "Weekly PR to bump flake.nix" # Title of PR to be created

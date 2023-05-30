@@ -23,6 +23,8 @@ use itertools::{
     Itertools,
 };
 
+use crate::errors::PrimitivesError;
+
 // TODO: (alex) change to trait alias once stablized in Rust:
 // `https://doc.rust-lang.org/unstable-book/language-features/trait-alias.html`
 /// A trait bound alias for generalized coefficient type used in
@@ -133,16 +135,23 @@ where
     }
 
     /// Similar task as [`Self::batch_evaluate()`], except the points are
-    /// canoncially chosen first `num_points` of the [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity).
+    /// [roots of unity](https://en.wikipedia.org/wiki/Root_of_unity) of `domain`.
     /// By leveraging FFT algorithms, we have a much lower amortized cost.
-    ///
-    /// Complexity: d*log(d) independent of m (<=d+1)
-    pub fn batch_evaluate_rou(&self, num_points: usize) -> Vec<T> {
-        let domain: Radix2EvaluationDomain<F> =
-            Radix2EvaluationDomain::new(self.coeffs.len()).expect("Should init an eval domain");
-        let mut evals = domain.fft(&self.coeffs);
-        evals.truncate(num_points);
-        evals
+    pub fn batch_evaluate_rou(
+        &mut self,
+        domain: &Radix2EvaluationDomain<F>,
+    ) -> Result<Vec<T>, PrimitivesError> {
+        if self.coeffs.len() > domain.size() {
+            Err(PrimitivesError::ParameterError(
+                ark_std::format!(
+                    "Polynomial with {} num_of_coeffs can't be evaluated on a smaller domain with size {}",
+                    self.coeffs.len(), domain.size(),
+                )
+            ))
+        } else {
+            self.coeffs.resize_with(domain.size(), Zero::zero);
+            Ok(domain.fft(&self.coeffs))
+        }
     }
 }
 
@@ -246,18 +255,6 @@ pub(crate) mod tests {
     use ark_std::iter::successors;
     use jf_utils::test_rng;
 
-    // helper function to generate all roots of unity for evaluating polynomial with
-    // `num_coeffs` coeffs.
-    pub(crate) fn get_roots_of_unity<F: FftField>(num_coeffs: usize) -> Vec<F> {
-        let size = num_coeffs.checked_next_power_of_two().unwrap() as u64;
-
-        let group_gen = F::get_root_of_unity(size)
-            .expect("Failed to get roots of unity, maybe wronge domain size");
-        successors(Some(F::from(1u32)), |&prev| Some(prev * group_gen))
-            .take(size as usize)
-            .collect()
-    }
-
     #[test]
     fn test_poly_eval_single_point() {
         let mut rng = test_rng();
@@ -327,9 +324,9 @@ pub(crate) mod tests {
         for degree in degrees {
             // TODO: (alex) change to a higher degree when need to test cutoff point and
             // FFT-based eval on arbitrary points
-            let num_points = rng.gen_range(5..degree);
-            let f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
-            let g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
+            let num_points = rng.gen_range(degree - 4..degree + 4); // should allow more points than degree
+            let mut f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
+            let mut g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);
 
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();
             ark_std::println!("degree: {}, num_points: {}", degree, num_points);
@@ -345,21 +342,22 @@ pub(crate) mod tests {
             );
 
             // Second, test points at roots-of-unity
-            let roots: Vec<Fr> = get_roots_of_unity(degree + 1);
+            let domain =
+                Radix2EvaluationDomain::new(ark_std::cmp::max(degree + 1, num_points)).unwrap();
+            let roots = domain.elements();
             assert_eq!(
-                f.batch_evaluate_rou(num_points),
+                f.batch_evaluate_rou(&domain).unwrap()[..num_points],
                 roots
-                    .iter()
                     .take(num_points)
-                    .map(|x| f.evaluate(x))
+                    .map(|x| f.evaluate(&x))
                     .collect::<Vec<_>>()
             );
             assert_eq!(
-                g.batch_evaluate_rou(num_points),
-                roots
-                    .iter()
+                g.batch_evaluate_rou(&domain).unwrap()[..num_points],
+                domain
+                    .elements()
                     .take(num_points)
-                    .map(|x| g.evaluate(x))
+                    .map(|x| g.evaluate(&x))
                     .collect::<Vec<_>>()
             );
         }

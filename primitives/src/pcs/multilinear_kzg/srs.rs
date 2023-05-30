@@ -136,64 +136,64 @@ impl<E: Pairing> StructuredReferenceString
 
     fn trim(
         &self,
-        supported_size: usize,
+        supported_degree: usize,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
         let ml_pp = <MultilinearUniversalParams<E> as StructuredReferenceString>::trim(
             &self.0,
-            supported_size,
+            supported_degree,
         )?;
         let uni_pp = <UnivariateUniversalParams<E> as StructuredReferenceString>::trim(
             &self.1,
-            supported_size,
+            supported_degree,
         )?;
 
         Ok(((ml_pp.0, uni_pp.0), (ml_pp.1, uni_pp.1)))
     }
 
-    fn extract_prover_param(&self, supported_size: usize) -> Self::ProverParam {
+    fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam {
         let ml_prover_param =
             <MultilinearUniversalParams<E> as StructuredReferenceString>::extract_prover_param(
                 &self.0,
-                supported_size,
+                supported_degree,
             );
         let uni_prover_param =
             <UnivariateUniversalParams<E> as StructuredReferenceString>::extract_prover_param(
                 &self.1,
-                supported_size,
+                supported_degree,
             );
 
         (ml_prover_param, uni_prover_param)
     }
 
-    fn extract_verifier_param(&self, supported_size: usize) -> Self::VerifierParam {
+    fn extract_verifier_param(&self, supported_degree: usize) -> Self::VerifierParam {
         let ml_verifier_param =
             <MultilinearUniversalParams<E> as StructuredReferenceString>::extract_verifier_param(
                 &self.0,
-                supported_size,
+                supported_degree,
             );
         let uni_verifier_param =
             <UnivariateUniversalParams<E> as StructuredReferenceString>::extract_verifier_param(
                 &self.1,
-                supported_size,
+                supported_degree,
             );
 
         (ml_verifier_param, uni_verifier_param)
     }
 
     #[cfg(any(test, feature = "test-srs"))]
-    fn gen_srs_for_testing<R>(rng: &mut R, supported_size: usize) -> Result<Self, PCSError>
+    fn gen_srs_for_testing<R>(rng: &mut R, supported_degree: usize) -> Result<Self, PCSError>
     where
         R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
     {
         let ml_pp =
             <MultilinearUniversalParams<E> as StructuredReferenceString>::gen_srs_for_testing(
                 rng,
-                supported_size,
+                supported_degree,
             )?;
         let uni_pp =
             <UnivariateUniversalParams<E> as StructuredReferenceString>::gen_srs_for_testing(
                 rng,
-                supported_size,
+                supported_degree,
             )?;
         Ok((ml_pp, uni_pp))
     }

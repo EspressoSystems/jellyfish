@@ -19,7 +19,10 @@ use crate::{
     },
     transcript::PlonkTranscript,
 };
-use ark_ec::{pairing::Pairing, short_weierstrass::Affine, SWCurveConfig};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+};
 use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_std::vec::Vec;
@@ -168,7 +171,7 @@ impl<E: Pairing> From<verifier::Verifier<E>> for Verifier<E> {
 
 impl<E, F, P> Verifier<E>
 where
-    E: Pairing<Fq = F, G1Affine = Affine<P>>,
+    E: Pairing<BaseField = F, G1Affine = Affine<P>>,
     F: RescueParameter + SWToTEConParam,
     P: SWCurveConfig<BaseField = F>,
 {

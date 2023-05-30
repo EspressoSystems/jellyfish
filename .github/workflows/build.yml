@@ -64,7 +64,9 @@ jobs:
         run: cargo bench --features test-srs --no-run
 
       - name: Check all tests and binaries compilation
-        run: cargo check --workspace --tests --lib --bins
+        run: |
+          cargo check --workspace --tests --lib --bins
+          cargo check --workspace --all-features
 
       - name: Check no_std support and WASM compilation
         env:
