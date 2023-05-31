@@ -323,212 +323,64 @@
 <a href="#323" id="323">323</a>
 <a href="#324" id="324">324</a>
 <a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a>
-<a href="#335" id="335">335</a>
-<a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a>
-<a href="#338" id="338">338</a>
-<a href="#339" id="339">339</a>
-<a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
-</span><span class="doccomment">//! Wraps crypto_box&#39;s AEAD encryption scheme.
+</span><span class="doccomment">//! Use `crypto_kx` to derive shared session secrets and use symmetric AEAD
+//! (`xchacha20poly1305`) for authenticated encryption with associated data.
+//!
+//! We only provide an ultra-thin wrapper for stable APIs for jellyfish users,
+//! independent of RustCrypto&#39;s upstream changes.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
-<span class="kw">use </span>ark_serialize::{
-    CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
-    Write,
-};
 <span class="kw">use </span>ark_std::{
-    format,
+    fmt, format,
+    ops::{Deref, DerefMut},
     rand::{CryptoRng, RngCore},
-    vec,
     vec::Vec,
 };
-<span class="kw">use </span>crypto_box::{
-    aead::{Aead, AeadCore, Nonce, Payload},
-    ChaChaBox,
+<span class="kw">use </span>chacha20poly1305::{
+    aead::{Aead, AeadCore, Payload},
+    KeyInit, XChaCha20Poly1305, XNonce,
 };
-<span class="kw">use </span>generic_array::{typenum::U24, GenericArray};
+<span class="kw">use </span>serde::{Deserialize, Deserializer, Serialize};
 
-<span class="attr">#[derive(Clone, Debug, Eq, Derivative)]
+<span class="attr">#[derive(Clone, Eq, Derivative, Serialize, Deserialize)]
 #[derivative(PartialEq, Hash)]
 </span><span class="doccomment">/// Public/encryption key for AEAD
-</span><span class="kw">pub struct </span>EncKey(crypto_box::PublicKey);
+</span><span class="kw">pub struct </span>EncKey(crypto_kx::PublicKey);
 
 <span class="kw">impl </span>From&lt;[u8; <span class="number">32</span>]&gt; <span class="kw">for </span>EncKey {
     <span class="kw">fn </span>from(bytes: [u8; <span class="number">32</span>]) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(crypto_box::PublicKey::from(bytes))
+        <span class="self">Self</span>(crypto_kx::PublicKey::from(bytes))
     }
 }
 <span class="kw">impl </span>From&lt;EncKey&gt; <span class="kw">for </span>[u8; <span class="number">32</span>] {
     <span class="kw">fn </span>from(enc_key: EncKey) -&gt; <span class="self">Self </span>{
-        <span class="kw-2">*</span>enc_key.<span class="number">0</span>.as_bytes()
+        <span class="kw-2">*</span>enc_key.<span class="number">0</span>.as_ref()
     }
 }
-<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>DecKey&gt; <span class="kw">for </span>EncKey {
-    <span class="kw">fn </span>from(dec_key: <span class="kw-2">&amp;</span>DecKey) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>enc_key = crypto_box::PublicKey::from(<span class="kw-2">&amp;</span>dec_key.<span class="number">0</span>);
+<span class="kw">impl </span>From&lt;DecKey&gt; <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>from(dec_key: DecKey) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>enc_key = <span class="kw-2">*</span>crypto_kx::Keypair::from(dec_key.<span class="number">0</span>).public();
         <span class="self">Self</span>(enc_key)
     }
 }
 <span class="kw">impl </span>Default <span class="kw">for </span>EncKey {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(crypto_box::PublicKey::from([<span class="number">0u8</span>; crypto_box::KEY_SIZE]))
+        <span class="self">Self</span>(crypto_kx::PublicKey::from(
+            [<span class="number">0u8</span>; crypto_kx::PublicKey::BYTES],
+        ))
     }
 }
-
-<span class="kw">impl </span>CanonicalSerialize <span class="kw">for </span>EncKey {
-    <span class="doccomment">/// Serializes the public key. Only compressed form is supported.
-    /// TODO (tessico): should we fail if user asks for uncompressed form?
-    </span><span class="kw">fn </span>serialize_with_mode&lt;W&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, w: W, _compress: Compress) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt;
-    <span class="kw">where
-        </span>W: Write,
-    {
-        CanonicalSerialize::serialize_compressed(<span class="self">self</span>.<span class="number">0</span>.as_ref(), w)
-    }
-    <span class="kw">fn </span>serialized_size(<span class="kw-2">&amp;</span><span class="self">self</span>, _compress: Compress) -&gt; usize {
-        crypto_box::KEY_SIZE
-    }
-}
-
-<span class="kw">impl </span>CanonicalDeserialize <span class="kw">for </span>EncKey {
-    <span class="doccomment">/// Currently no checking is done on the public key. This is unimplemented
-    /// upstream, see &lt;https://github.com/RustCrypto/nacl-compat/blob/b57fb37eb558132546131d1ca2b59615d8aa3c72/crypto_box/src/lib.rs#L338&gt;
-    </span><span class="kw">fn </span>deserialize_with_mode&lt;R&gt;(
-        <span class="kw-2">mut </span>reader: R,
-        _compress: Compress,
-        validate: Validate,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, SerializationError&gt;
-    <span class="kw">where
-        </span>R: Read,
-    {
-        <span class="kw">let </span>len = u64::deserialize_compressed_unchecked(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
-        <span class="kw">if </span>len != crypto_box::KEY_SIZE <span class="kw">as </span>u64 {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(SerializationError::InvalidData);
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>key = [<span class="number">0u8</span>; crypto_box::KEY_SIZE];
-        reader.read_exact(<span class="kw-2">&amp;mut </span>key)<span class="question-mark">?</span>;
-        <span class="kw">let </span>enc_key = <span class="self">Self</span>(crypto_box::PublicKey::from(key));
-        <span class="kw">if </span>validate == Validate::Yes {
-            <span class="comment">// TODO (tessico): Currently this is a no-op. Should we fail if user asks to
-            // validate?
-            </span>enc_key.check()<span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(enc_key)
-    }
-}
-
-<span class="kw">impl </span>Valid <span class="kw">for </span>EncKey {
-    <span class="kw">fn </span>check(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt; {
-        <span class="prelude-val">Ok</span>(())
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>EncKey {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">&quot;aead::EncKey&quot;</span>)
+            .field(<span class="self">self</span>.<span class="number">0</span>.as_ref())
+            .finish()
     }
 }
 
@@ -545,95 +397,59 @@
         message: <span class="kw-2">&amp;</span>[u8],
         aad: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Ciphertext, PrimitivesError&gt; {
-        <span class="kw">let </span>nonce = ChaChaBox::generate_nonce(<span class="kw-2">&amp;mut </span>rng);
-
         <span class="comment">// generate an ephemeral key pair as the virtual sender to derive the crypto box
-        </span><span class="kw">let </span>ephemeral_sk = crypto_box::SecretKey::generate(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>ephemeral_pk = EncKey(crypto_box::PublicKey::from(<span class="kw-2">&amp;</span>ephemeral_sk));
-        <span class="kw">let </span>my_box = ChaChaBox::new(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span>ephemeral_sk);
+        </span><span class="kw">let </span>ephemeral_keypair = crypto_kx::Keypair::generate(<span class="kw-2">&amp;mut </span>rng);
+        <span class="comment">// `crypto_kx` generates a pair of shared secrets, see &lt;https://libsodium.gitbook.io/doc/key_exchange&gt;
+        // we use the transimission key of the ephemeral sender (equals to the receiving
+        // key of the server) as the shared secret.
+        </span><span class="kw">let </span>shared_secret = ephemeral_keypair.session_keys_to(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).tx;
+        <span class="kw">let </span>cipher = XChaCha20Poly1305::new(shared_secret.as_ref().into());
+        <span class="kw">let </span>nonce = XChaCha20Poly1305::generate_nonce(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="comment">// encrypt the message and associated data using crypto box
-        </span><span class="kw">let </span>ct = my_box
+        </span><span class="kw">let </span>ct = cipher
             .encrypt(<span class="kw-2">&amp;</span>nonce, Payload { msg: message, aad })
             .map_err(|e| PrimitivesError::InternalError(<span class="macro">format!</span>(<span class="string">&quot;{e:?}&quot;</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Ciphertext {
-            nonce,
+            nonce: Nonce(nonce),
             ct,
-            ephemeral_pk,
+            ephemeral_pk: EncKey(<span class="kw-2">*</span>ephemeral_keypair.public()),
         })
     }
 }
 
 <span class="doccomment">/// Private/decryption key for AEAD
 </span><span class="comment">// look into zeroization logic from aead lib
-</span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">struct </span>DecKey(crypto_box::SecretKey);
+</span><span class="attr">#[derive(Clone, Serialize, Deserialize)]
+</span><span class="kw">struct </span>DecKey(crypto_kx::SecretKey);
 
 <span class="kw">impl </span>From&lt;[u8; <span class="number">32</span>]&gt; <span class="kw">for </span>DecKey {
     <span class="kw">fn </span>from(bytes: [u8; <span class="number">32</span>]) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(crypto_box::SecretKey::from(bytes))
+        <span class="self">Self</span>(crypto_kx::SecretKey::from(bytes))
     }
 }
 <span class="kw">impl </span>From&lt;DecKey&gt; <span class="kw">for </span>[u8; <span class="number">32</span>] {
     <span class="kw">fn </span>from(dec_key: DecKey) -&gt; <span class="self">Self </span>{
-        <span class="kw-2">*</span>dec_key.<span class="number">0</span>.as_bytes()
+        dec_key.<span class="number">0</span>.to_bytes()
     }
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>DecKey {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(crypto_box::SecretKey::from([<span class="number">0</span>; crypto_box::KEY_SIZE]))
+        <span class="self">Self</span>(crypto_kx::SecretKey::from([<span class="number">0</span>; crypto_kx::SecretKey::BYTES]))
     }
 }
-
-<span class="kw">impl </span>CanonicalSerialize <span class="kw">for </span>DecKey {
-    <span class="kw">fn </span>serialize_with_mode&lt;W&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, w: W, _compress: Compress) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt;
-    <span class="kw">where
-        </span>W: Write,
-    {
-        CanonicalSerialize::serialize_compressed(<span class="self">self</span>.<span class="number">0</span>.as_bytes().as_ref(), w)
-    }
-    <span class="kw">fn </span>serialized_size(<span class="kw-2">&amp;</span><span class="self">self</span>, _compress: Compress) -&gt; usize {
-        crypto_box::KEY_SIZE
-    }
-}
-
-<span class="kw">impl </span>CanonicalDeserialize <span class="kw">for </span>DecKey {
-    <span class="kw">fn </span>deserialize_with_mode&lt;R&gt;(
-        <span class="kw-2">mut </span>reader: R,
-        _compress: Compress,
-        validate: Validate,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, SerializationError&gt;
-    <span class="kw">where
-        </span>R: Read,
-    {
-        <span class="kw">let </span>len = u64::deserialize_compressed_unchecked(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
-        <span class="kw">if </span>len != crypto_box::KEY_SIZE <span class="kw">as </span>u64 {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(SerializationError::InvalidData);
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>k = [<span class="number">0u8</span>; crypto_box::KEY_SIZE];
-        reader.read_exact(<span class="kw-2">&amp;mut </span>k)<span class="question-mark">?</span>;
-        <span class="kw">let </span>dec_key = <span class="self">Self</span>(crypto_box::SecretKey::from(k));
-
-        <span class="kw">if </span>validate == Validate::Yes {
-            <span class="comment">// TODO (tessico): Currently this is a no-op. Should we fail if user asks to
-            // validate?
-            </span>dec_key.check()<span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(dec_key)
-    }
-}
-
-<span class="kw">impl </span>Valid <span class="kw">for </span>DecKey {
-    <span class="kw">fn </span>check(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt; {
-        <span class="prelude-val">Ok</span>(())
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>DecKey {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">&quot;aead::DecKey&quot;</span>)
+            .field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.to_bytes())
+            .finish()
     }
 }
 
 <span class="doccomment">/// Keypair for Authenticated Encryption with Associated Data
-</span><span class="attr">#[derive(Clone, Debug, Default, CanonicalSerialize, CanonicalDeserialize)]
+</span><span class="attr">#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>KeyPair {
     enc_key: EncKey,
     dec_key: DecKey,
@@ -648,8 +464,7 @@
 <span class="kw">impl </span>KeyPair {
     <span class="doccomment">/// Randomly sample a key pair.
     </span><span class="kw">pub fn </span>generate&lt;R: RngCore + CryptoRng&gt;(rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>dec_key = crypto_box::SecretKey::generate(rng);
-        <span class="kw">let </span>enc_key = crypto_box::PublicKey::from(<span class="kw-2">&amp;</span>dec_key);
+        <span class="kw">let </span>(enc_key, dec_key) = crypto_kx::Keypair::generate(rng).split();
         <span class="self">Self </span>{
             enc_key: EncKey(enc_key),
             dec_key: DecKey(dec_key),
@@ -670,8 +485,11 @@
     /// If the associated data is different that that used during encryption,
     /// then decryption will fail.
     </span><span class="kw">pub fn </span>decrypt(<span class="kw-2">&amp;</span><span class="self">self</span>, ciphertext: <span class="kw-2">&amp;</span>Ciphertext, aad: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, PrimitivesError&gt; {
-        <span class="kw">let </span>my_box = ChaChaBox::new(<span class="kw-2">&amp;</span>ciphertext.ephemeral_pk.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.dec_key.<span class="number">0</span>);
-        <span class="kw">let </span>plaintext = my_box
+        <span class="kw">let </span>shared_secret = crypto_kx::Keypair::from(<span class="self">self</span>.dec_key.<span class="number">0</span>.clone())
+            .session_keys_from(<span class="kw-2">&amp;</span>ciphertext.ephemeral_pk.<span class="number">0</span>)
+            .rx;
+        <span class="kw">let </span>cipher = XChaCha20Poly1305::new(shared_secret.as_ref().into());
+        <span class="kw">let </span>plaintext = cipher
             .decrypt(
                 <span class="kw-2">&amp;</span>ciphertext.nonce,
                 Payload {
@@ -683,80 +501,75 @@
         <span class="prelude-val">Ok</span>(plaintext)
     }
 }
+<span class="comment">// newtype for `chacha20poly1305::XNonce` for easier serde support for
+// `Ciphertext`.
+</span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+</span><span class="kw">struct </span>Nonce(XNonce);
+
+<span class="kw">impl </span>Serialize <span class="kw">for </span>Nonce {
+    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        serializer.serialize_bytes(<span class="self">self</span>.<span class="number">0</span>.as_slice())
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Nonce {
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">where
+        </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">struct </span>NonceVisitor;
+
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; serde::de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NonceVisitor {
+            <span class="kw">type </span>Value = Nonce;
+
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+                formatter.write_str(<span class="string">&quot;byte array&quot;</span>)
+            }
+
+            <span class="kw">fn </span>visit_byte_buf&lt;E&gt;(<span class="self">self</span>, v: Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="kw">where
+                </span>E: serde::de::Error,
+            {
+                <span class="prelude-val">Ok</span>(Nonce(<span class="kw-2">*</span>XNonce::from_slice(<span class="kw-2">&amp;</span>v)))
+            }
+
+            <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+            <span class="kw">where
+                </span>A: serde::de::SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
+            {
+                <span class="kw">let </span>bytes: Vec&lt;u8&gt; = seq
+                    .next_element()<span class="question-mark">?
+                    </span>.ok_or_else(|| serde::de::Error::invalid_length(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="self">self</span>))<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(Nonce(<span class="kw-2">*</span>XNonce::from_slice(<span class="kw-2">&amp;</span>bytes)))
+            }
+        }
+
+        deserializer.deserialize_byte_buf(NonceVisitor)
+    }
+}
+
+<span class="comment">// Deref for newtype which acts like a smart pointer
+</span><span class="kw">impl </span>Deref <span class="kw">for </span>Nonce {
+    <span class="kw">type </span>Target = XNonce;
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+    </span>}
+}
+<span class="kw">impl </span>DerefMut <span class="kw">for </span>Nonce {
+    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
+    </span>}
+}
 
 <span class="doccomment">/// The ciphertext produced by AEAD encryption
-</span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+</span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>Ciphertext {
-    nonce: Nonce&lt;ChaChaBox&gt;,
+    nonce: Nonce,
     ct: Vec&lt;u8&gt;,
     ephemeral_pk: EncKey,
-}
-
-<span class="kw">impl </span>CanonicalSerialize <span class="kw">for </span>Ciphertext {
-    <span class="doccomment">/// Serialize the ciphertext. `Compress` mode is ignored.
-    </span><span class="kw">fn </span>serialize_with_mode&lt;W&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw-2">mut </span>writer: W,
-        _compress: Compress,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ark_serialize::SerializationError&gt;
-    <span class="kw">where
-        </span>W: ark_serialize::Write,
-    {
-        <span class="kw">let </span>len = <span class="self">self</span>.nonce.len() <span class="kw">as </span>u64;
-        len.serialize_compressed(<span class="kw-2">&amp;mut </span>writer)<span class="question-mark">?</span>;
-        writer.write_all(<span class="self">self</span>.nonce.as_slice())<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>len = <span class="self">self</span>.ct.len() <span class="kw">as </span>u64;
-        len.serialize_compressed(<span class="kw-2">&amp;mut </span>writer)<span class="question-mark">?</span>;
-        writer.write_all(<span class="kw-2">&amp;</span><span class="self">self</span>.ct[..])<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.ephemeral_pk.serialize_compressed(<span class="kw-2">&amp;mut </span>writer)
-    }
-    <span class="kw">fn </span>serialized_size(<span class="kw-2">&amp;</span><span class="self">self</span>, compress: Compress) -&gt; usize {
-        core::mem::size_of::&lt;u64&gt;() * <span class="number">2
-            </span>+ <span class="self">self</span>.nonce.len()
-            + <span class="self">self</span>.ct.len()
-            + <span class="self">self</span>.ephemeral_pk.serialized_size(compress)
-    }
-}
-
-<span class="kw">impl </span>CanonicalDeserialize <span class="kw">for </span>Ciphertext {
-    <span class="kw">fn </span>deserialize_with_mode&lt;R&gt;(
-        <span class="kw-2">mut </span>reader: R,
-        _compress: Compress,
-        validate: Validate,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ark_serialize::SerializationError&gt;
-    <span class="kw">where
-        </span>R: ark_serialize::Read,
-    {
-        <span class="kw">let </span>len = u64::deserialize_uncompressed_unchecked(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
-        <span class="kw">if </span>len != <span class="number">24 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(SerializationError::InvalidData);
-        }
-        <span class="kw">let </span><span class="kw-2">mut </span>nonce = [<span class="number">0u8</span>; <span class="number">24</span>];
-        reader.read_exact(<span class="kw-2">&amp;mut </span>nonce)<span class="question-mark">?</span>;
-        <span class="kw">let </span>nonce: Nonce&lt;ChaChaBox&gt; = GenericArray::&lt;u8, U24&gt;::clone_from_slice(<span class="kw-2">&amp;</span>nonce);
-
-        <span class="kw">let </span>len = u64::deserialize_uncompressed_unchecked(<span class="kw-2">&amp;mut </span>reader)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>ct = <span class="macro">vec!</span>[<span class="number">0u8</span>; len <span class="kw">as </span>usize];
-        reader.read_exact(<span class="kw-2">&amp;mut </span>ct)<span class="question-mark">?</span>;
-
-        <span class="comment">// Note: since EncKey validation check is a no-op, it will propagate here and
-        // validation will also be a no-op. Keeping the validation flag for
-        // potential future use when some EncKey validation is implemented.
-        </span><span class="kw">let </span>ephemeral_pk = EncKey::deserialize_with_mode(<span class="kw-2">&amp;mut </span>reader, Compress::Yes, validate)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            nonce,
-            ct,
-            ephemeral_pk,
-        })
-    }
-}
-
-<span class="kw">impl </span>Valid <span class="kw">for </span>Ciphertext {
-    <span class="kw">fn </span>check(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), SerializationError&gt; {
-        <span class="prelude-val">Ok</span>(())
-    }
 }
 
 <span class="attr">#[cfg(test)]
@@ -797,25 +610,6 @@
     }
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_conversion() {
-        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
-        <span class="kw">let </span><span class="kw-2">mut </span>rand_bytes = [<span class="number">0u8</span>; <span class="number">32</span>];
-        rng.fill_bytes(<span class="kw-2">&amp;mut </span>rand_bytes[..]);
-        <span class="kw">let </span>enc_key = EncKey::from(rand_bytes);
-        <span class="kw">let </span>bytes: [u8; <span class="number">32</span>] = enc_key.into();
-        <span class="macro">assert_eq!</span>(bytes, rand_bytes);
-
-        rng.fill_bytes(<span class="kw-2">&amp;mut </span>rand_bytes[..]);
-        <span class="kw">let </span>dec_key = DecKey::from(rand_bytes);
-        <span class="kw">let </span>bytes: [u8; <span class="number">32</span>] = dec_key.into();
-        <span class="macro">assert_eq!</span>(bytes, rand_bytes);
-
-        <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>enc_key = EncKey::from(<span class="kw-2">&amp;</span>keypair.dec_key);
-        <span class="macro">assert_eq!</span>(enc_key, keypair.enc_key());
-    }
-
-    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_serde() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
@@ -824,44 +618,34 @@
         <span class="kw">let </span>ciphertext = keypair.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad).unwrap();
 
         <span class="comment">// serde for Keypair
-        </span><span class="kw">let </span><span class="kw-2">mut </span>keypair_bytes = Vec::new();
-        keypair.serialize_compressed(<span class="kw-2">&amp;mut </span>keypair_bytes).unwrap();
-        <span class="kw">let </span>keypair_de = KeyPair::deserialize_compressed(<span class="kw-2">&amp;</span>keypair_bytes[..]).unwrap();
-        <span class="macro">assert_eq!</span>(keypair, keypair_de);
+        </span><span class="kw">let </span>bytes = bincode::serialize(<span class="kw-2">&amp;</span>keypair).unwrap();
+        <span class="macro">assert_eq!</span>(keypair, bincode::deserialize(<span class="kw-2">&amp;</span>bytes).unwrap());
         <span class="comment">// wrong byte length
-        </span><span class="macro">assert!</span>(KeyPair::deserialize_compressed(<span class="kw-2">&amp;</span>keypair_bytes[<span class="number">1</span>..]).is_err());
+        </span><span class="macro">assert!</span>(bincode::deserialize::&lt;KeyPair&gt;(<span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..]).is_err());
 
         <span class="comment">// serde for EncKey
-        </span><span class="kw">let </span><span class="kw-2">mut </span>enc_key_bytes = Vec::new();
-        keypair
-            .enc_key
-            .serialize_compressed(<span class="kw-2">&amp;mut </span>enc_key_bytes)
-            .unwrap();
-        <span class="kw">let </span>enc_key_de = EncKey::deserialize_compressed(<span class="kw-2">&amp;</span>enc_key_bytes[..]).unwrap();
-        <span class="macro">assert_eq!</span>(enc_key_de, keypair.enc_key);
+        </span><span class="kw">let </span>bytes = bincode::serialize(keypair.enc_key_ref()).unwrap();
+        <span class="macro">assert_eq!</span>(
+            keypair.enc_key_ref(),
+            <span class="kw-2">&amp;</span>bincode::deserialize(<span class="kw-2">&amp;</span>bytes).unwrap()
+        );
         <span class="comment">// wrong byte length
-        </span><span class="macro">assert!</span>(EncKey::deserialize_compressed(<span class="kw-2">&amp;</span>enc_key_bytes[<span class="number">1</span>..]).is_err());
+        </span><span class="macro">assert!</span>(bincode::deserialize::&lt;EncKey&gt;(<span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..]).is_err());
 
         <span class="comment">// serde for DecKey
-        </span><span class="kw">let </span><span class="kw-2">mut </span>dec_key_bytes = Vec::new();
-        keypair
-            .dec_key
-            .serialize_compressed(<span class="kw-2">&amp;mut </span>dec_key_bytes)
-            .unwrap();
-        <span class="kw">let </span>dec_key_de = DecKey::deserialize_compressed(<span class="kw-2">&amp;</span>dec_key_bytes[..]).unwrap();
-        <span class="macro">assert_eq!</span>(dec_key_de.<span class="number">0</span>.as_bytes(), keypair.dec_key.<span class="number">0</span>.as_bytes());
+        </span><span class="kw">let </span>bytes = bincode::serialize(<span class="kw-2">&amp;</span>keypair.dec_key).unwrap();
+        <span class="macro">assert_eq!</span>(
+            keypair.dec_key.<span class="number">0</span>.to_bytes(),
+            bincode::deserialize::&lt;DecKey&gt;(<span class="kw-2">&amp;</span>bytes).unwrap().<span class="number">0</span>.to_bytes()
+        );
         <span class="comment">// wrong byte length
-        </span><span class="macro">assert!</span>(DecKey::deserialize_compressed(<span class="kw-2">&amp;</span>dec_key_bytes[<span class="number">1</span>..]).is_err());
+        </span><span class="macro">assert!</span>(bincode::deserialize::&lt;DecKey&gt;(<span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..]).is_err());
 
         <span class="comment">// serde for Ciphertext
-        </span><span class="kw">let </span><span class="kw-2">mut </span>ciphertext_bytes = Vec::new();
-        ciphertext
-            .serialize_compressed(<span class="kw-2">&amp;mut </span>ciphertext_bytes)
-            .unwrap();
-        <span class="kw">let </span>ciphertext_de = Ciphertext::deserialize_compressed(<span class="kw-2">&amp;</span>ciphertext_bytes[..]).unwrap();
-        <span class="macro">assert_eq!</span>(ciphertext_de, ciphertext);
+        </span><span class="kw">let </span>bytes = bincode::serialize(<span class="kw-2">&amp;</span>ciphertext).unwrap();
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>ciphertext, <span class="kw-2">&amp;</span>bincode::deserialize(<span class="kw-2">&amp;</span>bytes).unwrap());
         <span class="comment">// wrong byte length
-        </span><span class="macro">assert!</span>(Ciphertext::deserialize_compressed(<span class="kw-2">&amp;</span>ciphertext_bytes[<span class="number">1</span>..]).is_err());
+        </span><span class="macro">assert!</span>(bincode::deserialize::&lt;Ciphertext&gt;(<span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..]).is_err());
     }
 }
 </code></pre></div>
