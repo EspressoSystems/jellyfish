@@ -183,8 +183,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let q: BigUint = E::MODULUS.into();
         let b_pow = BigUint::from(2u32).pow(E::B as u32);
         let add_no_mod = &val_a + &val_b;
-        let k = if add_no_mod > q { 1u32 } else { 0u32 };
-        let var_k = self.create_boolean_variable(add_no_mod > q)?.0;
+        let k = if add_no_mod >= q { 1u32 } else { 0u32 };
+        let var_k = self.create_boolean_variable(add_no_mod >= q)?.0;
         let q_limbs = biguint_to_limbs::<F>(q, E::B, E::NUM_LIMBS);
 
         let add_no_mod_limbs = biguint_to_limbs::<F>(add_no_mod, E::B, E::NUM_LIMBS)
@@ -248,8 +248,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let q: BigUint = E::MODULUS.into();
         let b_pow = BigUint::from(2u32).pow(E::B as u32);
         let add_no_mod = &val_a + &val_b;
-        let k = if add_no_mod > q { 1u32 } else { 0u32 };
-        let var_k = self.create_boolean_variable(add_no_mod > q)?.0;
+        let k = if add_no_mod >= q { 1u32 } else { 0u32 };
+        let var_k = self.create_boolean_variable(add_no_mod >= q)?.0;
         let q_limbs = biguint_to_limbs::<F>(q, E::B, E::NUM_LIMBS);
         let b_limbs = biguint_to_limbs::<F>(val_b, E::B, E::NUM_LIMBS);
 
@@ -313,6 +313,58 @@ impl EmulationConfig<ark_bn254::Fr> for ark_bls12_377::Fq {
 
 #[cfg(test)]
 mod tests {
+    use super::EmulationConfig;
+    use crate::{gadgets::from_emulated_field, Circuit, PlonkCircuit};
+    use ark_bls12_377::Fq as Fq377;
+    use ark_bn254::Fr as Fr254;
+    use ark_ff::PrimeField;
+
     #[test]
-    fn test_basics() {}
+    fn test_basics() {
+        test_basics_helper::<Fq377, Fr254>();
+    }
+
+    fn test_basics_helper<E, F>()
+    where
+        E: EmulationConfig<F>,
+        F: PrimeField,
+    {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        let overflow = E::from(F::MODULUS.into() * 2u64 + 1u64);
+        let var_y = circuit.create_emulated_variable(overflow).unwrap();
+        assert_eq!(circuit.emulated_witness(&var_x).unwrap(), E::one());
+        assert_eq!(circuit.emulated_witness(&var_y).unwrap(), overflow);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+    }
+
+    #[test]
+    fn test_emulated_add() {
+        test_emulated_add_helper::<Fq377, Fr254>();
+    }
+
+    fn test_emulated_add_helper<E, F>()
+    where
+        E: EmulationConfig<F>,
+        F: PrimeField,
+    {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let var_x = circuit.create_public_emulated_variable(E::one()).unwrap();
+        let overflow = E::from(E::MODULUS.into() - 1u64);
+        let var_y = circuit.create_emulated_variable(overflow).unwrap();
+        let var_z = circuit.emulated_add(&var_x, &var_y).unwrap();
+        assert_eq!(circuit.emulated_witness(&var_x).unwrap(), E::one());
+        assert_eq!(circuit.emulated_witness(&var_y).unwrap(), overflow);
+        assert_eq!(circuit.emulated_witness(&var_z).unwrap(), E::zero());
+
+        let var_z = circuit.emulated_add_constant(&var_z, overflow).unwrap();
+        assert_eq!(circuit.emulated_witness(&var_z).unwrap(), overflow);
+
+        let x = from_emulated_field(E::one());
+        assert!(circuit.check_circuit_satisfiability(&x).is_ok());
+
+        let var_z = circuit.create_emulated_variable(E::one()).unwrap();
+        circuit.emulated_add_gate(&var_x, &var_y, &var_z).unwrap();
+        assert!(circuit.check_circuit_satisfiability(&x).is_err());
+    }
 }
