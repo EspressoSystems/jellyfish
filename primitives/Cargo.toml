@@ -22,7 +22,8 @@ ark-poly = "0.4.0"
 ark-serialize = "0.4.0"
 ark-std = { version = "0.4.0", default-features = false }
 blst = { git = "https://github.com/EspressoSystems/blst.git", branch = "no-std", default-features = false } # TODO: pin to a tag or commit
-crypto_box = { version = "=0.9.0-rc.0", default-features = false, features = ["alloc", "chacha20", "rand_core"] }
+chacha20poly1305 = { version = "0.10.1", default-features = false, features = ["alloc", "rand_core"] }
+crypto_kx = { version = "=0.2.0-pre.0", features = ["serde"] }
 derivative = { version = "2", features = ["use_core"] }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { version = "0.2.3", default-features = false }
@@ -35,7 +36,6 @@ merlin = { version = "3.0.0", default-features = false }
 num-bigint = { version = "0.4.3", default-features = false }
 num-traits = { version = "0.2.15", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
-rand_core = "0.6.4" # pin to this version where `trait CryptoRngCore` is available which crypto_box depends on
 rayon = { version = "1.5.0", optional = true }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10.1", default-features = false }
