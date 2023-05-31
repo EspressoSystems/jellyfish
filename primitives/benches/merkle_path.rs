@@ -30,7 +30,7 @@ fn twenty_hashes(c: &mut Criterion) {
 
     let num_inputs = 0;
     benchmark_group.bench_with_input(BENCH_NAME, &num_inputs, move |b, &_num_inputs| {
-        b.iter(|| RescueMerkleTree::<Fq381>::verify(&root, &proof).unwrap())
+        b.iter(|| RescueMerkleTree::<Fq381>::verify(&root, 0, &proof).unwrap())
     });
     benchmark_group.finish();
 }
