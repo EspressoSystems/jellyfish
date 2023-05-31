@@ -11,7 +11,7 @@
 <span class="kw">let </span>root = mt.commitment().digest();
 <span class="kw">let </span>(val, proof) = mt.lookup(<span class="number">2</span>).expect_ok()<span class="question-mark">?</span>;
 <span class="macro">assert_eq!</span>(val, <span class="number">3</span>);
-<span class="macro">assert!</span>(HasherMerkleTree::&lt;Sha256, usize&gt;::verify(root, proof)<span class="question-mark">?</span>.is_ok());</code></pre></div>
+<span class="macro">assert!</span>(HasherMerkleTree::&lt;Sha256, usize&gt;::verify(root, <span class="number">2</span>, proof)<span class="question-mark">?</span>.is_ok());</code></pre></div>
 <p><a href="type.HasherMerkleTree.html" title="type jf_primitives::merkle_tree::hasher::HasherMerkleTree"><code>HasherMerkleTree</code></a> requires the <code>std</code> feature for your hasher, which is
 enabled by default. Example:</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]

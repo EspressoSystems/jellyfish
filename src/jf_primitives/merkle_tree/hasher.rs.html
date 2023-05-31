@@ -193,7 +193,7 @@
 //! let root = mt.commitment().digest();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
 //! assert_eq!(val, 3);
-//! assert!(HasherMerkleTree::&lt;Sha256, usize&gt;::verify(root, proof)?.is_ok());
+//! assert!(HasherMerkleTree::&lt;Sha256, usize&gt;::verify(root, 2, proof)?.is_ok());
 //! # Ok(())
 //! # }
 //! ```

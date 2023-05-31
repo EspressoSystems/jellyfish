@@ -375,7 +375,7 @@
         <span class="kw">let </span>(elem, proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
         <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>proof)
+        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0u64</span>, <span class="kw-2">&amp;</span>proof)
             .unwrap()
             .is_ok());
 
@@ -391,7 +391,7 @@
             <span class="macro">unreachable!</span>()
         }
 
-        <span class="kw">let </span>result = RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>bad_proof);
+        <span class="kw">let </span>result = RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0u64</span>, <span class="kw-2">&amp;</span>bad_proof);
         <span class="macro">assert!</span>(result.unwrap().is_err());
 
         <span class="kw">let </span><span class="kw-2">mut </span>forge_proof = MerkleProof::new(<span class="number">2</span>, proof.proof);
@@ -406,7 +406,7 @@
         } <span class="kw">else </span>{
             <span class="macro">unreachable!</span>()
         }
-        <span class="kw">let </span>result = RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>forge_proof);
+        <span class="kw">let </span>result = RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">2u64</span>, <span class="kw-2">&amp;</span>forge_proof);
         <span class="macro">assert!</span>(result.unwrap().is_err());
     }
 
@@ -426,10 +426,10 @@
         <span class="macro">assert_eq!</span>(lookup_proof, proof);
         <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
         <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>lookup_proof)
+        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0</span>, <span class="kw-2">&amp;</span>lookup_proof)
             .unwrap()
             .is_ok());
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="kw-2">&amp;</span>proof)
+        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0</span>, <span class="kw-2">&amp;</span>proof)
             .unwrap()
             .is_ok());
 

@@ -381,6 +381,8 @@
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
 <a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -607,11 +609,13 @@
     <span class="doccomment">/// Verify an element is a leaf of a Merkle tree given the proof
     /// * `root` - a merkle tree root, usually obtained from
     ///   `Self::commitment().digest()`
+    /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     </span><span class="kw">fn </span>verify(
         root: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NodeValue&gt;,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, PrimitivesError&gt;;
 

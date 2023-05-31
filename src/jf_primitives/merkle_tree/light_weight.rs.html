@@ -343,7 +343,7 @@
         <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
         <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
         <span class="macro">assert!</span>(
-            RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>proof)
+            RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="number">0u64</span>, <span class="kw-2">&amp;</span>proof)
                 .unwrap()
                 .is_ok()
         );
@@ -360,7 +360,7 @@
             <span class="macro">unreachable!</span>()
         }
 
-        <span class="kw">let </span>result = RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>bad_proof);
+        <span class="kw">let </span>result = RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="number">0u64</span>, <span class="kw-2">&amp;</span>bad_proof);
         <span class="macro">assert!</span>(result.unwrap().is_err());
 
         <span class="kw">let </span><span class="kw-2">mut </span>forge_proof = MerkleProof::new(<span class="number">2</span>, proof.proof);
@@ -375,7 +375,7 @@
         } <span class="kw">else </span>{
             <span class="macro">unreachable!</span>()
         }
-        <span class="kw">let </span>result = RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="kw-2">&amp;</span>forge_proof);
+        <span class="kw">let </span>result = RescueLightWeightMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), <span class="number">2u64</span>, <span class="kw-2">&amp;</span>forge_proof);
         <span class="macro">assert!</span>(result.unwrap().is_err());
     }
 
