@@ -7,6 +7,7 @@
 //! Merkle Tree traits and implementations
 pub mod append_only;
 pub mod examples;
+pub mod hasher;
 pub mod light_weight;
 pub mod macros;
 pub mod universal_merkle_tree;
