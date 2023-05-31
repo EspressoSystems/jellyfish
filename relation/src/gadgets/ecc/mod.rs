@@ -222,7 +222,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// variables. `b` is a boolean variable that indicates selection of P_b
     /// from (P0, P1).
     /// Return error if invalid input parameters are provided.
-    fn binary_point_vars_select(
+    pub fn binary_point_vars_select(
         &mut self,
         b: BoolVar,
         point0: &PointVariable,
