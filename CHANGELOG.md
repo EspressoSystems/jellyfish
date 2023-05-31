@@ -10,6 +10,11 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 
 ### Breaking Changes
 
+- [#270](https://github.com/EspressoSystems/jellyfish/pull/270) (`jf-primitives`) Major refactoring on AEAD internals.
+  - Switch from `crypto_box` to `chacha20poly1305` (with `crypto_kx` to establish shared secret) for AEAD.
+  - Supports `--cfg curve25519_dalek_backend="u32_backend"` RUSTFLAGS to select Curve25519 backend.
+  - Remove `Canonical(De)Serialize` on AEAD-related structs, and directly expose `serde::(De)Serialize` instead.
+
 ### Fixed
 
 - [#243](https://github.com/EspressoSystems/jellyfish/pull/243) fixes bug in MerkleTreeGadget implementation for SparseRescueMerkleTree.
@@ -20,12 +25,12 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#234](https://github.com/EspressoSystems/jellyfish/pull/234) New `bytes_from_field_elements` util
 - [#231](https://github.com/EspressoSystems/jellyfish/pull/231) Implemented FK23 for fast amortized opening for univariate PCS
 - [#254](https://github.com/EspressoSystems/jellyfish/pull/254) Ensure `no_std` and target WASM support
+- [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregateable signatures
 
 ### Changed
 
 - [#238](https://github.com/EspressoSystems/jellyfish/pull/238) add public keys into signature aggregation APIs
 - [#251](https://github.com/EspressoSystems/jellyfish/pull/251) add sign_key_ref api for BLSKeyPair
-
 
 ### Removed
 

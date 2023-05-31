@@ -46,6 +46,23 @@ Jellyfish is `no_std` compliant and compilable to WASM target environment, just 
 ./scripts/build_wasm.sh
 ```
 
+### Backends
+
+To choose different backends for arithemtics of `curve25519-dalek`, which is currently
+used by `jf-primitives/aead`, set the environment variable:
+
+```
+RUSTFLAGS='--cfg curve25519_dalek_backend="BACKEND"'
+```
+
+See the full list of backend options [here](https://github.com/dalek-cryptography/curve25519-dalek#backends).
+
+You could further configure the word size for the backend by setting (see [here](https://github.com/dalek-cryptography/curve25519-dalek#word-size-for-serial-backends)):
+
+```
+RUSTFLAGS='--cfg curve25519_dalek_bits="SIZE"'
+```
+
 ### Tests
 
 ```

@@ -96,23 +96,10 @@ macro_rules! impl_merkle_tree_scheme {
             }
 
             fn verify(
-                &self,
-                pos: impl Borrow<Self::Index>,
+                root: impl Borrow<Self::NodeValue>,
                 proof: impl Borrow<Self::MembershipProof>,
-            ) -> Result<bool, PrimitivesError> {
-                let pos = pos.borrow();
-                let proof = proof.borrow();
-                if self.height != proof.tree_height() - 1 {
-                    return Err(PrimitivesError::ParameterError(
-                        "Incompatible membership proof for this merkle tree".to_string(),
-                    ));
-                }
-                if *pos != proof.pos {
-                    return Err(PrimitivesError::ParameterError(
-                        "Inconsistent proof index".to_string(),
-                    ));
-                }
-                proof.verify_membership_proof::<H>(&self.root.value())
+            ) -> Result<VerificationResult, PrimitivesError> {
+                proof.borrow().verify_membership_proof::<H>(root.borrow())
             }
         }
     };
