@@ -94,7 +94,7 @@
             export CFLAGS="-mcpu=generic"
 
             # by default choose u64_backend
-            export RUSTFLAGS='--cfg curve25519_dalek_backend="u64_backend"'
+            export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
           ''
           # install pre-commit hooks
           + self.check.${system}.pre-commit-check.shellHook;
