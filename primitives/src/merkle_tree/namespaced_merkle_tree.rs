@@ -17,7 +17,7 @@ use super::{AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, NodeVal
 /// Namespaced Merkle Tree where leaves are sorted by a namespace identifier.
 pub trait NamespacedMerkleTreeScheme: AppendableMerkleTreeScheme
 where
-    Self::Element: Namespaced<Self::NamespaceId>,
+    Self::Element: Namespaced,
 {
     /// Namespace proof type
     type NamespaceProof: Clone;
@@ -46,7 +46,7 @@ where
 pub struct NamespacedHasher<H, E, I, T, N>
 where
     H: DigestAlgorithm<E, I, T>,
-    E: Element + Namespaced<N>,
+    E: Element + Namespaced<Namespace = N>,
     N: Namespace,
     I: Index,
     T: NodeValue,
@@ -59,9 +59,11 @@ where
 }
 
 /// Trait indicating that a leaf has a namespace
-pub trait Namespaced<N: Namespace> {
+pub trait Namespaced {
+    /// Namespace type
+    type Namespace: Namespace;
     /// Returns the namespace of the leaf
-    fn get_namespace(&self) -> N;
+    fn get_namespace(&self) -> Self::Namespace;
 }
 
 /// Trait indicating that a digest algorithm can bind namespaces
@@ -102,6 +104,7 @@ impl Namespace for u64 {
     Copy,
     Clone,
     Debug,
+    Default,
     Ord,
     Eq,
     PartialEq,
@@ -116,20 +119,6 @@ where
     min_namespace: N,
     max_namespace: N,
     hash: T,
-}
-
-impl<T, N> Default for NamespacedHash<T, N>
-where
-    N: Namespace,
-    T: NodeValue,
-{
-    fn default() -> Self {
-        Self {
-            hash: T::default(),
-            max_namespace: <N as Namespace>::min(),
-            min_namespace: <N as Namespace>::max(),
-        }
-    }
 }
 
 impl<T, N> NamespacedHash<T, N>
@@ -149,12 +138,13 @@ where
 
 impl<E, H, T, I, N> DigestAlgorithm<E, I, NamespacedHash<T, N>> for NamespacedHasher<H, E, I, T, N>
 where
-    E: Element + Namespaced<N>,
+    E: Element + Namespaced<Namespace = N>,
     I: Index,
     N: Namespace,
     T: NodeValue,
     H: DigestAlgorithm<E, I, T> + BindNamespace<E, I, T, N>,
 {
+    // Assumes that data is sorted by namespace, will be enforced by "append"
     fn digest(data: &[NamespacedHash<T, N>]) -> NamespacedHash<T, N> {
         if data.is_empty() {
             return NamespacedHash::default();
@@ -163,7 +153,7 @@ where
         let min_namespace = first_node.min_namespace;
         let mut max_namespace = first_node.max_namespace;
         let mut nodes = vec![H::generate_namespaced_commitment(first_node)];
-        for node in data {
+        for node in &data[1..] {
             // Ensure that namespaced nodes are sorted
             if node.min_namespace < max_namespace {
                 panic!("leaves are out of order")
@@ -186,6 +176,8 @@ where
 
 #[cfg(test)]
 mod nmt_tests {
+    use std::panic::catch_unwind;
+
     use digest::Digest;
     use sha3::Sha3_256;
 
@@ -212,7 +204,14 @@ mod nmt_tests {
         namespace: NamespaceId,
     }
 
-    impl Namespaced<NamespaceId> for Leaf {
+    impl Leaf {
+        pub fn new(namespace: NamespaceId) -> Self {
+            Leaf { namespace }
+        }
+    }
+
+    impl Namespaced for Leaf {
+        type Namespace = NamespaceId;
         fn get_namespace(&self) -> NamespaceId {
             self.namespace
         }
@@ -227,7 +226,7 @@ mod nmt_tests {
         fn generate_namespaced_commitment(
             namespaced_hash: NamespacedHash<Sha3Node, N>,
         ) -> Sha3Node {
-            let hasher = Sha3_256::new();
+            let mut hasher = Sha3_256::new();
             let mut writer = Vec::new();
             namespaced_hash
                 .min_namespace
@@ -241,22 +240,28 @@ mod nmt_tests {
                 .hash
                 .serialize_compressed(&mut writer)
                 .unwrap();
+            hasher.update(&mut writer);
             Sha3Node(hasher.finalize().into())
         }
     }
 
     #[test]
     fn test_namespaced_hash() {
-        // Ensure that hashing with a default namespaced hash does not affect the
-        // namespace range Ensure that leaves are digested correctly
+        let first_leaf = Leaf::new(1);
+        let second_leaf = Leaf::new(5);
+
+        //  Ensure that leaves are digested correctly
+        let first_hash = Hasher::digest_leaf(&0, &first_leaf);
+        let second_hash = Hasher::digest_leaf(&1, &second_leaf);
+        assert_eq!((first_hash.min_namespace, first_hash.max_namespace), (1, 1));
+
         // Ensure that sorted internal nodes are digested correctly
-        // Ensure that unsorted internal nodes error when digested
-        let leaf1 = Leaf { namespace: 0 };
-        let leaf2 = Leaf { namespace: 52 };
-        let h1 = Hasher::digest_leaf(&1, &leaf1);
-        let h2 = Hasher::digest_leaf(&1, &leaf2);
-        let node = Hasher::digest(&[h1, h2]);
-        assert_eq!(node.min_namespace, 0);
-        assert_eq!(node.max_namespace, 52);
+        let hash = Hasher::digest(&[first_hash, second_hash]);
+        assert_eq!((hash.min_namespace, hash.max_namespace), (1, 5));
+
+        // Ensure that digest errors when internal nodes are not sorted by namespace
+        // Digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
+        let res = catch_unwind(|| Hasher::digest(&[second_hash, first_hash]));
+        assert!(res.is_err());
     }
 }
