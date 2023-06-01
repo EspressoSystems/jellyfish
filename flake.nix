@@ -84,6 +84,8 @@
           shellHook = ''
             export RUST_BACKTRACE=full
             export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
+            # Prevent cargo aliases from using programs in `~/.cargo` to avoid conflicts with local rustup installations.
+            export CARGO_HOME=$HOME/.cargo-nix
 
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
