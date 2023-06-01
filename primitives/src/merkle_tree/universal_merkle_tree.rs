@@ -135,7 +135,9 @@ where
             let mut path_values = vec![empty_value];
             traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(empty_value),
-                |result, (branch, node)| -> Result<T, PrimitivesError> {
+                |result: Result<T, PrimitivesError>,
+                 (branch, node)|
+                 -> Result<T, PrimitivesError> {
                     match result {
                         Ok(val) => match node {
                             MerkleNode::Branch { value: _, children } => {
