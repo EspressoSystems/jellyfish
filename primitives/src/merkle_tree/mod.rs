@@ -7,6 +7,7 @@
 //! Merkle Tree traits and implementations
 pub mod append_only;
 pub mod examples;
+pub mod hasher;
 pub mod light_weight;
 pub mod macros;
 pub mod universal_merkle_tree;
@@ -223,11 +224,13 @@ pub trait MerkleTreeScheme: Sized {
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `root` - a merkle tree root, usually obtained from
     ///   `Self::commitment().digest()`
+    /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
         root: impl Borrow<Self::NodeValue>,
+        pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, PrimitivesError>;
 
