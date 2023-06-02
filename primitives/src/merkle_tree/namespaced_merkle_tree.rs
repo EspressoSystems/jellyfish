@@ -15,6 +15,7 @@ use crate::errors::PrimitivesError;
 use super::{AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, NodeValue};
 
 /// Namespaced Merkle Tree where leaves are sorted by a namespace identifier.
+/// The data structure supports namespace inclusion proofs.
 pub trait NamespacedMerkleTreeScheme: AppendableMerkleTreeScheme
 where
     Self::Element: Namespaced,
@@ -25,14 +26,14 @@ where
     type NamespaceId: Namespace;
 
     /// Returns the entire set of leaves corresponding to a given namespace and
-    /// a completeness proof
+    /// a completeness proof.
     fn get_namespace_leaves_and_proof(
         &self,
         namespace: Self::NamespaceId,
     ) -> (Vec<Self::Element>, Self::NamespaceProof);
 
     /// Verifies the completeness proof for a given set of leaves and a
-    /// namespace
+    /// namespace.
     fn verify_namespace_proof(
         leaves: &[Self::Element],
         proof: Self::NamespaceProof,
@@ -42,7 +43,7 @@ where
 
 /// NamespacedHasher wraps a standard hash function (implementer of
 /// DigestAlgorithm), turning it into a hash function that tags internal nodes
-/// with namespace ranges
+/// with namespace ranges.
 pub struct NamespacedHasher<H, E, I, T, N>
 where
     H: DigestAlgorithm<E, I, T>,
@@ -58,7 +59,7 @@ where
     phantom5: PhantomData<N>,
 }
 
-/// Trait indicating that a leaf has a namespace
+/// Trait indicating that a leaf has a namespace.
 pub trait Namespaced {
     /// Namespace type
     type Namespace: Namespace;
@@ -66,7 +67,8 @@ pub trait Namespaced {
     fn get_namespace(&self) -> Self::Namespace;
 }
 
-/// Trait indicating that a digest algorithm can bind namespaces
+/// Trait indicating that a digest algorithm can commit to
+/// a namespace range.
 pub trait BindNamespace<E, I, T, N>: DigestAlgorithm<E, I, T>
 where
     E: Element,
@@ -250,7 +252,7 @@ mod nmt_tests {
         let num_leaves = 5;
         let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
 
-        //  Ensure that leaves are digested correctly
+        // Ensure that leaves are digested correctly
         let mut hashes: Vec<NamespacedHash<Sha3Node, u64>> = leaves
             .iter()
             .enumerate()
@@ -266,7 +268,7 @@ mod nmt_tests {
         );
 
         // Ensure that digest errors when internal nodes are not sorted by namespace
-        // Digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
+        // digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
         hashes[0] = hashes[hashes.len() - 1];
         let res = catch_unwind(|| Hasher::digest(&hashes));
         assert!(res.is_err());
