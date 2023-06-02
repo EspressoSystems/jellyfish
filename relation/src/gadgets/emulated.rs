@@ -17,21 +17,6 @@ use core::marker::PhantomData;
 use itertools::izip;
 use num_bigint::BigUint;
 
-/// Temporary comments
-/// a <- E
-/// (a1 = a % 2^T)
-/// 2^T * F::MODULUS > E::MODULUS^2 -> 2^T > E::MODULUS > F::MODULUS
-/// a * b <- E
-///
-/// a * b - E::MODULUS * k = c  (mod F::MODULUS) easy
-/// a * b - E::MODULUS * k = c  (mod 2^T)
-///
-/// T = NUM_LIMBS * B
-/// 2^{2B} * aux < F::MODULUS
-/// a = a0 + a1 * 2^B + a2 * 2^2B + .. // (mod F::MODULUS)
-///
-/// https://hackmd.io/@arielg/B13JoihA8
-
 /// Parameters needed for emulating field operations over [`F`].
 pub trait EmulationConfig<F: PrimeField>: PrimeField {
     /// Log2 of the other CRT modulus is 2^T.
