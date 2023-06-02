@@ -17,6 +17,21 @@ use core::marker::PhantomData;
 use itertools::izip;
 use num_bigint::BigUint;
 
+/// Temporary comments
+/// a <- E
+/// (a1 = a % 2^T)
+/// 2^T * F::MODULUS > E::MODULUS^2 -> 2^T > E::MODULUS > F::MODULUS
+/// a * b <- E
+///
+/// a * b - E::MODULUS * k = c  (mod F::MODULUS) easy
+/// a * b - E::MODULUS * k = c  (mod 2^T)
+///
+/// T = NUM_LIMBS * B
+/// 2^{2B} * aux < F::MODULUS
+/// a = a0 + a1 * 2^B + a2 * 2^2B + .. // (mod F::MODULUS)
+///
+/// https://hackmd.io/@arielg/B13JoihA8
+
 /// Parameters needed for emulating field operations over [`F`].
 pub trait EmulationConfig<F: PrimeField>: PrimeField {
     /// Log2 of the other CRT modulus is 2^T.
@@ -605,17 +620,27 @@ impl EmulationConfig<ark_bn254::Fr> for ark_bls12_377::Fq {
     const NUM_LIMBS: usize = 4;
 }
 
+impl EmulationConfig<ark_bn254::Fr> for ark_bn254::Fq {
+    const T: usize = 261;
+
+    const B: usize = 87;
+
+    const NUM_LIMBS: usize = 3;
+}
+
 #[cfg(test)]
 mod tests {
     use super::EmulationConfig;
     use crate::{gadgets::from_emulated_field, Circuit, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
+    use ark_bn254::Fq as Fq254;
     use ark_bn254::Fr as Fr254;
     use ark_ff::PrimeField;
 
     #[test]
     fn test_basics() {
         test_basics_helper::<Fq377, Fr254>();
+        test_basics_helper::<Fq254, Fr254>();
     }
 
     fn test_basics_helper<E, F>()
@@ -635,6 +660,7 @@ mod tests {
     #[test]
     fn test_emulated_add() {
         test_emulated_add_helper::<Fq377, Fr254>();
+        test_emulated_add_helper::<Fq254, Fr254>();
     }
 
     fn test_emulated_add_helper<E, F>()
@@ -665,6 +691,7 @@ mod tests {
     #[test]
     fn test_emulated_mul() {
         test_emulated_mul_helper::<Fq377, Fr254>();
+        test_emulated_mul_helper::<Fq254, Fr254>();
     }
 
     fn test_emulated_mul_helper<E, F>()
