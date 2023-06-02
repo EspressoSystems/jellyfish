@@ -247,21 +247,28 @@ mod nmt_tests {
 
     #[test]
     fn test_namespaced_hash() {
-        let first_leaf = Leaf::new(1);
-        let second_leaf = Leaf::new(5);
+        let num_leaves = 5;
+        let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
 
         //  Ensure that leaves are digested correctly
-        let first_hash = Hasher::digest_leaf(&0, &first_leaf);
-        let second_hash = Hasher::digest_leaf(&1, &second_leaf);
-        assert_eq!((first_hash.min_namespace, first_hash.max_namespace), (1, 1));
+        let mut hashes: Vec<NamespacedHash<Sha3Node, u64>> = leaves
+            .iter()
+            .enumerate()
+            .map(|(idx, leaf)| Hasher::digest_leaf(&(idx as u64), leaf))
+            .collect();
+        assert_eq!((hashes[0].min_namespace, hashes[0].max_namespace), (0, 0));
 
         // Ensure that sorted internal nodes are digested correctly
-        let hash = Hasher::digest(&[first_hash, second_hash]);
-        assert_eq!((hash.min_namespace, hash.max_namespace), (1, 5));
+        let hash = Hasher::digest(&hashes);
+        assert_eq!(
+            (hash.min_namespace, hash.max_namespace),
+            (0, num_leaves - 1)
+        );
 
         // Ensure that digest errors when internal nodes are not sorted by namespace
         // Digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
-        let res = catch_unwind(|| Hasher::digest(&[second_hash, first_hash]));
+        hashes[0] = hashes[hashes.len() - 1];
+        let res = catch_unwind(|| Hasher::digest(&hashes));
         assert!(res.is_err());
     }
 }
