@@ -7,8 +7,10 @@
 //! Emulate arithmetic operations on a large prime field.
 //! To emulate arithmetic operations on F_q when the native field is F_p where p
 //! < q, we represent the elements in F_q using CRT modulus [p, 2^T] where p *
-//! 2^T > q^2 + q. The second componenet, with modulus 2^T, will be divided into
-//! limbs each with B bits where 2^{2B} < p.
+//! 2^T > q^2 + q. This constraint is required to emulate the F_q multiplication
+//! by checking a * b - k * q = c (mod 2^T * p) without any overflow. The second
+//! componenet, with modulus 2^T, will be divided into limbs each with B bits
+//! where 2^{2B} < p.
 
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ff::PrimeField;
@@ -115,18 +117,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         &mut self,
         val: E,
     ) -> Result<EmulatedVariable<E>, CircuitError> {
-        let var = self.create_constant_emulated_variable_unchecked(val)?;
-        for &v in &var.0 {
-            self.enforce_in_range(v, E::B)?;
-        }
-        Ok(var)
-    }
-
-    /// Add a constant emulated variable without enforcing the validity check
-    fn create_constant_emulated_variable_unchecked<E: EmulationConfig<F>>(
-        &mut self,
-        val: E,
-    ) -> Result<EmulatedVariable<E>, CircuitError> {
         Ok(EmulatedVariable::<E>(
             from_emulated_field(val)
                 .into_iter()
@@ -135,6 +125,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             PhantomData,
         ))
     }
+
     /// Add a public emulated variable
     pub fn create_public_emulated_variable<E: EmulationConfig<F>>(
         &mut self,
@@ -302,7 +293,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
-    /// Constrain that a*b=c in the emulated field.
+    /// Constrain that a*b=c in the emulated field for a constant b.
     pub fn emulated_mul_constant_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -328,6 +319,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
             E::B,
             E::NUM_LIMBS,
         );
+
+        // range checking for output c
+        c.0.iter()
+            .map(|v| self.enforce_in_range(*v, E::B))
+            .collect::<Result<Vec<_>, CircuitError>>()?;
 
         // enforcing a * b - k * E::MODULUS = c mod 2^t
 
@@ -449,7 +445,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out =
                 F::from(<F as Into<BigUint>>::into(self.witness(*a)? + self.witness(*b)?) / &b_pow);
             let next_carry_out = self.create_variable(next_carry_out)?;
-            self.enforce_in_range(next_carry_out, 1)?;
+            self.enforce_bool(next_carry_out)?;
 
             let wires = [*a, *b, carry_out, next_carry_out, *c];
             let coeffs = [F::one(), F::one(), F::one(), -F::from(b_pow.clone())];
@@ -465,14 +461,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out =
                 F::from(<F as Into<BigUint>>::into(a * F::from(k) + self.witness(*b)?) / &b_pow);
             let next_carry_out = self.create_variable(next_carry_out)?;
-            self.enforce_in_range(next_carry_out, 1)?;
+            self.enforce_bool(next_carry_out)?;
 
             let wires = [var_k, *b, carry_out, next_carry_out, *c];
             let coeffs = [a, F::one(), F::one(), -F::from(b_pow.clone())];
             self.lc_gate(&wires, &coeffs)?;
             carry_out = next_carry_out;
-
-            self.enforce_in_range(*b, E::B)?;
         }
         Ok(())
     }
@@ -520,7 +514,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out =
                 F::from(<F as Into<BigUint>>::into(self.witness(*a)? + b) / &b_pow);
             let next_carry_out = self.create_variable(next_carry_out)?;
-            self.enforce_in_range(next_carry_out, 1)?;
+            self.enforce_bool(next_carry_out)?;
 
             let wires = [*a, self.one(), carry_out, next_carry_out, *c];
             let coeffs = [F::one(), b, F::one(), -F::from(b_pow.clone())];
@@ -536,14 +530,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out =
                 F::from(<F as Into<BigUint>>::into(a * F::from(k) + self.witness(*b)?) / &b_pow);
             let next_carry_out = self.create_variable(next_carry_out)?;
-            self.enforce_in_range(next_carry_out, 1)?;
+            self.enforce_bool(next_carry_out)?;
 
             let wires = [var_k, *b, carry_out, next_carry_out, *c];
             let coeffs = [a, F::one(), F::one(), -F::from(b_pow.clone())];
             self.lc_gate(&wires, &coeffs)?;
             carry_out = next_carry_out;
-
-            self.enforce_in_range(*b, E::B)?;
         }
         Ok(())
     }
