@@ -633,8 +633,7 @@ mod tests {
     use super::EmulationConfig;
     use crate::{gadgets::from_emulated_field, Circuit, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
-    use ark_bn254::Fq as Fq254;
-    use ark_bn254::Fr as Fr254;
+    use ark_bn254::{Fq as Fq254, Fr as Fr254};
     use ark_ff::PrimeField;
 
     #[test]
