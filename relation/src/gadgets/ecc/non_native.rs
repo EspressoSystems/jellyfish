@@ -77,6 +77,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // checking that x3 = x1y2 + x2y1 - dx1y1x2y2x3
         // t1 = x1y2 + x2y1
         let t1 = self.emulated_add(&x1y2, &x2y1)?;
+        // t2 = d x1 y1 x2 y2 x3
         let t2 = self.emulated_mul(&dx1x2y1y2, &c.0)?;
         self.emulated_add_gate(&c.0, &t2, &t1)?;
 
@@ -101,12 +102,53 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         let t1 = x1 * y2;
         let t2 = x2 * y1;
-        let d = d * t1 * t2;
+        let dx1x2y1y2 = d * t1 * t2;
 
-        let x3 = (t1 + t2) / (E::one() + d);
-        let y3 = (x1 * x2 + y1 * y2) / (E::one() - d);
+        let x3 = (t1 + t2) / (E::one() + dx1x2y1y2);
+        let y3 = (x1 * x2 + y1 * y2) / (E::one() - dx1x2y1y2);
         let c = self.create_emulated_point_variable(Point(x3, y3))?;
         self.emulated_ecc_add_gate(a, b, &c, d)?;
         Ok(c)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::gadgets::ecc::{conversion::*, Point};
+    use crate::gadgets::EmulationConfig;
+    use crate::{Circuit, PlonkCircuit};
+    use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
+    use ark_bn254::Fr as Fr254;
+    use ark_ec::short_weierstrass::{Projective, SWCurveConfig};
+    use ark_ec::CurveGroup;
+    use ark_ff::{MontFp, PrimeField};
+    use ark_std::UniformRand;
+
+    #[test]
+    fn test_emulated_point_addition() {
+        let d : Fq377 = MontFp!("122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
+        test_emulated_point_addition_helper::<Fq377, Fr254, Param377>(d);
+    }
+
+    fn test_emulated_point_addition_helper<E, F, P>(d: E)
+    where
+        E: EmulationConfig<F> + SWToTEConParam,
+        F: PrimeField,
+        P: SWCurveConfig<BaseField = E>,
+    {
+        let mut rng = jf_utils::test_rng();
+        let p1 = Projective::<P>::rand(&mut rng).into_affine();
+        let p2 = Projective::<P>::rand(&mut rng).into_affine();
+        let p3: Point<E> = (&(p1 + p2).into_affine()).into();
+        let p1: Point<E> = (&p1).into();
+        let p2: Point<E> = (&p2).into();
+
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+
+        let var_p1 = circuit.create_emulated_point_variable(p1).unwrap();
+        let var_p2 = circuit.create_emulated_point_variable(p2).unwrap();
+        let var_p3 = circuit.emulated_ecc_add(&var_p1, &var_p2, d).unwrap();
+        assert_eq!(circuit.emulated_point_witness(&var_p3).unwrap(), p3);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
     }
 }

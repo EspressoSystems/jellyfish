@@ -689,6 +689,12 @@ mod tests {
             .check_circuit_satisfiability(&from_emulated_field(x))
             .is_ok());
 
+        let var_y_z = circuit.emulated_mul(&var_y, &var_z).unwrap();
+        assert_eq!(circuit.emulated_witness(&var_y_z).unwrap(), expected * y);
+        assert!(circuit
+            .check_circuit_satisfiability(&from_emulated_field(x))
+            .is_ok());
+
         let var_z = circuit.emulated_mul_constant(&var_z, expected).unwrap();
         assert_eq!(
             circuit.emulated_witness(&var_z).unwrap(),
