@@ -131,18 +131,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         &mut self,
         val: E,
     ) -> Result<EmulatedVariable<E>, CircuitError> {
-        let var = self.create_public_emulated_variable_unchecked(val)?;
-        for &v in &var.0 {
-            self.enforce_in_range(v, E::B)?;
-        }
-        Ok(var)
-    }
-
-    /// Add a public emulated variable without enforcing the validity check
-    fn create_public_emulated_variable_unchecked<E: EmulationConfig<F>>(
-        &mut self,
-        val: E,
-    ) -> Result<EmulatedVariable<E>, CircuitError> {
         Ok(EmulatedVariable::<E>(
             from_emulated_field(val)
                 .into_iter()
