@@ -114,13 +114,19 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::gadgets::ecc::{conversion::*, Point};
-    use crate::gadgets::EmulationConfig;
-    use crate::{Circuit, PlonkCircuit};
+    use crate::{
+        gadgets::{
+            ecc::{conversion::*, Point},
+            EmulationConfig,
+        },
+        Circuit, PlonkCircuit,
+    };
     use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
     use ark_bn254::Fr as Fr254;
-    use ark_ec::short_weierstrass::{Projective, SWCurveConfig};
-    use ark_ec::CurveGroup;
+    use ark_ec::{
+        short_weierstrass::{Projective, SWCurveConfig},
+        CurveGroup,
+    };
     use ark_ff::{MontFp, PrimeField};
     use ark_std::UniformRand;
 
