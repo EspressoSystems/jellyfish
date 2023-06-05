@@ -125,7 +125,7 @@ mod tests {
     use ark_bn254::Fr as Fr254;
     use ark_ec::{
         short_weierstrass::{Projective, SWCurveConfig},
-        CurveGroup,
+        CurveGroup, Group,
     };
     use ark_ff::{MontFp, PrimeField};
     use ark_std::UniformRand;
@@ -146,6 +146,7 @@ mod tests {
         let p1 = Projective::<P>::rand(&mut rng).into_affine();
         let p2 = Projective::<P>::rand(&mut rng).into_affine();
         let p3: Point<E> = (&(p1 + p2).into_affine()).into();
+        let fail_p3: Point<E> = (&(p1 + p2 + Projective::<P>::generator()).into_affine()).into();
         let p1: Point<E> = (&p1).into();
         let p2: Point<E> = (&p2).into();
 
@@ -156,5 +157,11 @@ mod tests {
         let var_p3 = circuit.emulated_ecc_add(&var_p1, &var_p2, d).unwrap();
         assert_eq!(circuit.emulated_point_witness(&var_p3).unwrap(), p3);
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+
+        let var_fail_p3 = circuit.create_emulated_point_variable(fail_p3).unwrap();
+        circuit
+            .emulated_ecc_add_gate(&var_p1, &var_p2, &var_fail_p3, d)
+            .unwrap();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
     }
 }
