@@ -14,7 +14,7 @@
 
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ff::PrimeField;
-use ark_std::{string::ToString, vec, vec::Vec, Zero};
+use ark_std::{string::ToString, vec, vec::Vec, One, Zero};
 use core::marker::PhantomData;
 use itertools::izip;
 use num_bigint::BigUint;
@@ -31,7 +31,7 @@ pub trait EmulationConfig<F: PrimeField>: PrimeField {
 
 fn biguint_to_limbs<F: PrimeField>(val: &BigUint, b: usize, num_limbs: usize) -> Vec<F> {
     let mut result = vec![];
-    let b_pow = BigUint::from(2u32).pow(b as u32);
+    let b_pow = BigUint::one() << b;
     let mut val = val.clone();
 
     // Since q < 2^T, no need to perform mod 2^T
@@ -62,7 +62,7 @@ where
             "Malformed structure for emulated field element conversion.".to_string(),
         ));
     }
-    let b_pow = BigUint::from(2u32).pow(E::B as u32);
+    let b_pow = BigUint::one() << E::B;
     Ok(E::from(
         vals.iter().rfold(BigUint::zero(), |result, &val| {
             result * &b_pow + <F as Into<BigUint>>::into(val)
