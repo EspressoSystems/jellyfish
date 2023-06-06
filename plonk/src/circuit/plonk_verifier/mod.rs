@@ -457,15 +457,14 @@ mod test {
 
     #[test]
     fn test_partial_verification_circuit() -> Result<(), CircuitError> {
-        test_partial_verification_circuit_helper::<Bls12_377, _, _, Param377, RescueTranscript<_>>()
+        test_partial_verification_circuit_helper::<Bls12_377, _, _, RescueTranscript<_>>()
     }
 
-    fn test_partial_verification_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
+    fn test_partial_verification_circuit_helper<E, F, P, T>() -> Result<(), CircuitError>
     where
         E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
-        Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         let rng = &mut test_rng();
@@ -743,18 +742,16 @@ mod test {
             Bls12_377,
             _,
             _,
-            Param377,
             RescueTranscript<_>,
         >()
     }
 
-    fn test_variable_independence_for_partial_verification_circuit_helper<E, F, P, Q, T>(
+    fn test_variable_independence_for_partial_verification_circuit_helper<E, F, P, T>(
     ) -> Result<(), CircuitError>
     where
         E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
-        Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         let rng = &mut test_rng();

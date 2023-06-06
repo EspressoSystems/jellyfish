@@ -292,3 +292,31 @@ where
         F::one()
     }
 }
+
+/// A multiplication-then-addition gate
+#[derive(Clone)]
+pub struct ArithmeticGate<F: Field> {
+    pub(crate) lc_coeffs: [F; GATE_WIDTH],
+    pub(crate) mul_coeffs: [F; N_MUL_SELECTORS],
+    pub(crate) constant: F,
+}
+impl<F> Gate<F> for ArithmeticGate<F>
+where
+    F: Field,
+{
+    fn name(&self) -> &'static str {
+        "Multiplication-then-addition Gate"
+    }
+    fn q_lc(&self) -> [F; GATE_WIDTH] {
+        self.lc_coeffs
+    }
+    fn q_mul(&self) -> [F; N_MUL_SELECTORS] {
+        self.mul_coeffs
+    }
+    fn q_c(&self) -> F {
+        self.constant
+    }
+    fn q_o(&self) -> F {
+        F::one()
+    }
+}
