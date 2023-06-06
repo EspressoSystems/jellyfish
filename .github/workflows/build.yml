@@ -64,11 +64,13 @@ jobs:
         run: cargo bench --features test-srs --no-run
 
       - name: Check all tests and binaries compilation
-        run: cargo check --workspace --tests --lib --bins
+        run: |
+          cargo check --workspace --tests --lib --bins
+          cargo check --workspace --all-features
 
       - name: Check no_std support and WASM compilation
         env:
-          RUSTFLAGS: -C target-cpu=generic
+          RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
         run: |
           cargo check --no-default-features
           cargo build --target wasm32-unknown-unknown --no-default-features

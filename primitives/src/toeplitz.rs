@@ -183,16 +183,13 @@ mod tests {
     impl<T: Copy, const M: usize, const N: usize> Matrix<T, M, N> {
         fn transpose(self) -> Matrix<T, N, M> {
             let mut transposed = [[self.0[0][0]; M]; N];
-            // for i in 0..M {
-            //     for j in 0..N {
-            //         transposed[j][i] = self.0[i][j];
-            //     }
-            // }
-            transposed.iter_mut().enumerate().for_each(|(j, row)| {
-                row.iter_mut().enumerate().for_each(|(i, val)| {
-                    *val = self.0[i][j];
-                })
-            });
+
+            #[allow(clippy::needless_range_loop)]
+            for i in 0..M {
+                for j in 0..N {
+                    transposed[j][i] = self.0[i][j];
+                }
+            }
             Matrix(transposed)
         }
     }
@@ -221,10 +218,11 @@ mod tests {
             let mut row_vecs = [first_row; N];
             let mut cur_row = first_row;
 
-            (1..N).for_each(|i| {
+            #[allow(clippy::needless_range_loop)]
+            for i in 1..N {
                 cur_row.rotate_right(1);
                 row_vecs[i] = cur_row;
-            });
+            }
             // some arbitrary sanity check
             assert_eq!(row_vecs[N - 1][0], row_vecs[0][1]);
             assert_eq!(row_vecs[1][0], row_vecs[0][N - 1]);
@@ -261,13 +259,14 @@ mod tests {
     {
         let mut c = [[T::default(); K]; M];
 
-        (0..M).for_each(|i| {
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..M {
             for j in 0..K {
                 for k in 0..N {
                     c[i][j] += b.0[k][j] * &a.0[i][k];
                 }
             }
-        });
+        }
         Matrix(c)
     }
 

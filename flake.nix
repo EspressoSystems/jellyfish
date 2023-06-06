@@ -84,6 +84,8 @@
           shellHook = ''
             export RUST_BACKTRACE=full
             export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
+            # Prevent cargo aliases from using programs in `~/.cargo` to avoid conflicts with local rustup installations.
+            export CARGO_HOME=$HOME/.cargo-nix
 
             # Ensure `cargo fmt` uses `rustfmt` from nightly.
             export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
@@ -92,6 +94,9 @@
             export CC="${clang-tools_15.clang}/bin/clang"
             export AR="${llvm_15}/bin/llvm-ar"
             export CFLAGS="-mcpu=generic"
+
+            # by default choose u64_backend
+            export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
           ''
           # install pre-commit hooks
           + self.check.${system}.pre-commit-check.shellHook;

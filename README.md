@@ -20,6 +20,11 @@ We recommend the following tools:
 - [`direnv`](https://direnv.net/docs/installation.html)
 
 Run `direnv allow` at the repo root. You should see dependencies (including Rust) being installed.
+Alternatively, enter the nix-shell manually via `nix develop`.
+
+You can check you are in the correct development environment by running `which cargo`, which should print
+something like `/nix/store/2gb31jhahrm59n3lhpv1lw0wfax9cf9v-rust-minimal-1.69.0/bin/cargo`;
+and running `echo $CARGO_HOME` should print `~/.cargo-nix`.
 
 ## Build, run tests and examples
 
@@ -44,6 +49,23 @@ Jellyfish is `no_std` compliant and compilable to WASM target environment, just 
 
 ```
 ./scripts/build_wasm.sh
+```
+
+### Backends
+
+To choose different backends for arithemtics of `curve25519-dalek`, which is currently
+used by `jf-primitives/aead`, set the environment variable:
+
+```
+RUSTFLAGS='--cfg curve25519_dalek_backend="BACKEND"'
+```
+
+See the full list of backend options [here](https://github.com/dalek-cryptography/curve25519-dalek#backends).
+
+You could further configure the word size for the backend by setting (see [here](https://github.com/dalek-cryptography/curve25519-dalek#word-size-for-serial-backends)):
+
+```
+RUSTFLAGS='--cfg curve25519_dalek_bits="SIZE"'
 ```
 
 ### Tests

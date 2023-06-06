@@ -64,14 +64,14 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
     type VerifierParam = UnivariateVerifierParam<E>;
 
     /// Extract the prover parameters from the public parameters.
-    fn extract_prover_param(&self, supported_size: usize) -> Self::ProverParam {
-        let powers_of_g = self.powers_of_g[..=supported_size].to_vec();
+    fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam {
+        let powers_of_g = self.powers_of_g[..=supported_degree].to_vec();
 
         Self::ProverParam { powers_of_g }
     }
 
     /// Extract the verifier parameters from the public parameters.
-    fn extract_verifier_param(&self, _supported_size: usize) -> Self::VerifierParam {
+    fn extract_verifier_param(&self, _supported_degree: usize) -> Self::VerifierParam {
         Self::VerifierParam {
             g: self.powers_of_g[0],
             h: self.h,
@@ -80,14 +80,21 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
     }
 
     /// Trim the universal parameters to specialize the public parameters
-    /// for univariate polynomials to the given `supported_size`, and
-    /// returns committer key and verifier key. `supported_size` should
+    /// for univariate polynomials to the given `supported_degree`, and
+    /// returns committer key and verifier key. `supported_degree` should
     /// be in range `1..params.len()`
     fn trim(
         &self,
-        supported_size: usize,
+        supported_degree: usize,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
-        let powers_of_g = self.powers_of_g[..=supported_size].to_vec();
+        if self.powers_of_g.len() <= supported_degree {
+            return Err(PCSError::InvalidParameters(ark_std::format!(
+                "Largest supported degree by the SRS is: {}, but requested: {}",
+                self.powers_of_g.len() - 1,
+                supported_degree,
+            )));
+        }
+        let powers_of_g = self.powers_of_g[..=supported_degree].to_vec();
 
         let pk = Self::ProverParam { powers_of_g };
         let vk = Self::VerifierParam {

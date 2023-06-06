@@ -7,6 +7,7 @@
 //! Merkle Tree traits and implementations
 pub mod append_only;
 pub mod examples;
+pub mod hasher;
 pub mod light_weight;
 pub mod macros;
 pub mod universal_merkle_tree;
@@ -16,7 +17,8 @@ pub(crate) mod internal;
 pub mod prelude;
 
 use crate::{
-    errors::PrimitivesError, impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
+    errors::{PrimitivesError, VerificationResult},
+    impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec::Vec};
@@ -220,15 +222,17 @@ pub trait MerkleTreeScheme: Sized {
     ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
+    /// * `root` - a merkle tree root, usually obtained from
+    ///   `Self::commitment().digest()`
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
-        &self,
+        root: impl Borrow<Self::NodeValue>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<bool, PrimitivesError>;
+    ) -> Result<VerificationResult, PrimitivesError>;
 
     // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
     // Self::BatchProof>; fn batch_verify(
