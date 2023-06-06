@@ -12,7 +12,7 @@
 //! componenet, with modulus 2^T, will be divided into limbs each with B bits
 //! where 2^{2B} < p.
 
-use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec, vec::Vec, One, Zero};
 use core::marker::PhantomData;
@@ -540,6 +540,44 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
+    /// Obtain an emulated variable of the conditional selection from 2 emulated
+    /// variables. `b` is a boolean variable that indicates selection of P_b
+    /// from (P0, P1).
+    /// Return error if invalid input parameters are provided.
+    pub fn conditional_select_emulated<E: EmulationConfig<F>>(
+        &mut self,
+        b: BoolVar,
+        p0: &EmulatedVariable<E>,
+        p1: &EmulatedVariable<E>,
+    ) -> Result<EmulatedVariable<E>, CircuitError> {
+        self.check_var_bound(b.into())?;
+        self.check_vars_bound(&p0.0[..])?;
+        self.check_vars_bound(&p1.0[..])?;
+
+        let mut vals = vec![];
+        for (&x_0, &x_1) in p0.0.iter().zip(p1.0.iter()) {
+            let selected = self.conditional_select(b, x_0, x_1)?;
+            vals.push(selected);
+        }
+
+        Ok(EmulatedVariable::<E>(vals, PhantomData::<E>))
+    }
+
+    /// Constrain two emulated variables to be the same.
+    /// Return error if the input variables are invalid.
+    pub fn enforce_emulated_var_equal<E: EmulationConfig<F>>(
+        &mut self,
+        p0: &EmulatedVariable<E>,
+        p1: &EmulatedVariable<E>,
+    ) -> Result<(), CircuitError> {
+        self.check_vars_bound(&p0.0[..])?;
+        self.check_vars_bound(&p1.0[..])?;
+        for (&a, &b) in p0.0.iter().zip(p1.0.iter()) {
+            self.enforce_equal(a, b)?;
+        }
+        Ok(())
+    }
+
     /// Given an emulated field element `a`, return `a mod F::MODULUS` in the
     /// native field.
     fn mod_to_native_field<E: EmulationConfig<F>>(
@@ -697,5 +735,52 @@ mod tests {
         assert!(circuit
             .check_circuit_satisfiability(&from_emulated_field(x))
             .is_err());
+    }
+
+    #[test]
+    fn test_select() {
+        test_select_helper::<Fq377, Fr254>();
+        test_select_helper::<Fq254, Fr254>();
+    }
+
+    fn test_select_helper<E, F>()
+    where
+        E: EmulationConfig<F>,
+        F: PrimeField,
+    {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        let overflow = E::from(E::MODULUS.into() - 1u64);
+        let var_y = circuit.create_emulated_variable(overflow).unwrap();
+        let b = circuit.create_boolean_variable(true).unwrap();
+        let var_z = circuit
+            .conditional_select_emulated(b, &var_x, &var_y)
+            .unwrap();
+        assert_eq!(circuit.emulated_witness(&var_z).unwrap(), overflow);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        *circuit.witness_mut(var_z.0[0]) = F::zero();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+    }
+
+    #[test]
+    fn test_enforce_equal() {
+        test_enforce_equal_helper::<Fq377, Fr254>();
+        test_enforce_equal_helper::<Fq254, Fr254>();
+    }
+
+    fn test_enforce_equal_helper<E, F>()
+    where
+        E: EmulationConfig<F>,
+        F: PrimeField,
+    {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        let overflow = E::from(E::MODULUS.into() - 1u64);
+        let var_y = circuit.create_emulated_variable(overflow).unwrap();
+        let var_z = circuit.create_emulated_variable(overflow).unwrap();
+        circuit.enforce_emulated_var_equal(&var_y, &var_z).unwrap();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        circuit.enforce_emulated_var_equal(&var_x, &var_y).unwrap();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
     }
 }
