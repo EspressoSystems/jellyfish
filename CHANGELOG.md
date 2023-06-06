@@ -26,6 +26,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#231](https://github.com/EspressoSystems/jellyfish/pull/231) Implemented FK23 for fast amortized opening for univariate PCS
 - [#254](https://github.com/EspressoSystems/jellyfish/pull/254) Ensure `no_std` and target WASM support
 - [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregateable signatures
+- [#291](https://github.com/EspressoSystems/jellyfish/pull/291) Non-native field operations and elliptic curve addition
 
 ### Changed
 

@@ -422,10 +422,10 @@ mod test {
 
     #[test]
     fn test_build_l() -> Result<(), PCSError> {
-        test_build_l_helper::<Fr>()
+        test_build_l_helper()
     }
 
-    fn test_build_l_helper<F: PrimeField>() -> Result<(), PCSError> {
+    fn test_build_l_helper() -> Result<(), PCSError> {
         // point 1 is [1, 2]
         let point1 = vec![Fr::from(1u64), Fr::from(2u64)];
 
