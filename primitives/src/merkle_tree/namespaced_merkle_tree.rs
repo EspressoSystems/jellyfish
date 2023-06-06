@@ -225,6 +225,7 @@ mod nmt_tests {
         I: Index,
         N: Namespace,
     {
+        // TODO ensure the hashing of (min,max,hash) is collision resistant
         fn generate_namespaced_commitment(
             namespaced_hash: NamespacedHash<Sha3Node, N>,
         ) -> Sha3Node {
