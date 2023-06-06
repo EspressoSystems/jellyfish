@@ -71,7 +71,15 @@ where
 }
 
 /// The variable represents an element in the emulated field.
+#[derive(Debug, Clone)]
 pub struct EmulatedVariable<E: PrimeField>(pub(crate) Vec<Variable>, PhantomData<E>);
+
+impl<E: PrimeField> EmulatedVariable<E> {
+    /// Return the list of variables that simulate the field element
+    pub fn to_vec(&self) -> Vec<Variable> {
+        self.0.clone()
+    }
+}
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Return the witness point for the circuit

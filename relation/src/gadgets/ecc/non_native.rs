@@ -15,6 +15,7 @@ use crate::{
 use ark_ff::PrimeField;
 
 /// The variable represents an EC point in the emulated field.
+#[derive(Debug, Clone)]
 pub struct EmulatedPointVariable<E: PrimeField>(pub EmulatedVariable<E>, pub EmulatedVariable<E>);
 
 impl<F: PrimeField> PlonkCircuit<F> {
