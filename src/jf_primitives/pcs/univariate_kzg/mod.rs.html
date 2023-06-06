@@ -1158,7 +1158,7 @@
                 .zip(evals.into_iter())
                 .for_each(|((point, proof), eval)| {
                     <span class="macro">assert_eq!</span>(
-                        UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, <span class="kw-2">&amp;</span>point).unwrap(),
+                        UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, point).unwrap(),
                         (proof, eval)
                     );
                 });

@@ -1287,9 +1287,6 @@
 <a href="#1287" id="1287">1287</a>
 <a href="#1288" id="1288">1288</a>
 <a href="#1289" id="1289">1289</a>
-<a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1312,6 +1309,7 @@
 <span class="kw">mod </span>conversion;
 <span class="kw">mod </span>glv;
 <span class="kw">mod </span>msm;
+<span class="kw">pub mod </span>non_native;
 <span class="kw">pub use </span>conversion::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>msm::<span class="kw-2">*</span>;
 
@@ -2481,25 +2479,21 @@
             .is_err());
 
         <span class="kw">let </span>circuit_1 =
-            build_binary_point_vars_select_circuit::&lt;F, P&gt;(<span class="bool-val">true</span>, Point::from(p0), Point::from(p1))<span class="question-mark">?</span>;
-        <span class="kw">let </span>circuit_2 = build_binary_point_vars_select_circuit::&lt;F, P&gt;(
-            <span class="bool-val">false</span>,
-            Point::from(p1),
-            Point::from(p2),
-        )<span class="question-mark">?</span>;
+            build_binary_point_vars_select_circuit::&lt;F&gt;(<span class="bool-val">true</span>, Point::from(p0), Point::from(p1))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_2 =
+            build_binary_point_vars_select_circuit::&lt;F&gt;(<span class="bool-val">false</span>, Point::from(p1), Point::from(p2))<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>build_binary_point_vars_select_circuit&lt;F, P&gt;(
+    <span class="kw">fn </span>build_binary_point_vars_select_circuit&lt;F&gt;(
         b: bool,
         p0: Point&lt;F&gt;,
         p1: Point&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
-        P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>b_var = circuit.create_boolean_variable(b)<span class="question-mark">?</span>;

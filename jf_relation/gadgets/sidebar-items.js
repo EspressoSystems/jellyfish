@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["ecc","test_utils","ultraplonk"]};
+window.SIDEBAR_ITEMS = {"fn":["from_emulated_field","to_emulated_field"],"mod":["ecc","test_utils","ultraplonk"],"struct":["EmulatedVariable"],"trait":["EmulationConfig"]};

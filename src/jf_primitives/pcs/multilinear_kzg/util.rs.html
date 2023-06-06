@@ -1101,10 +1101,10 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_build_l() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
-        test_build_l_helper::&lt;Fr&gt;()
+        test_build_l_helper()
     }
 
-    <span class="kw">fn </span>test_build_l_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
+    <span class="kw">fn </span>test_build_l_helper() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
         <span class="comment">// point 1 is [1, 2]
         </span><span class="kw">let </span>point1 = <span class="macro">vec!</span>[Fr::from(<span class="number">1u64</span>), Fr::from(<span class="number">2u64</span>)];
 

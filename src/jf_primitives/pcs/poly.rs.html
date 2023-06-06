@@ -638,7 +638,7 @@
             <span class="comment">// g(X) = G0 + G1 * X + G2 * X^2 + G3 * X^3 + ...
             // turn into an MSM between [G0, G1, G2, ...] and [1, x, x^2, x^3, ...]
             </span><span class="kw">let </span>scalars: Vec&lt;Fr&gt; = successors(<span class="prelude-val">Some</span>(Fr::from(<span class="number">1u32</span>)), |<span class="kw-2">&amp;</span>prev| <span class="prelude-val">Some</span>(prev * point))
-                .take((g.degree() + <span class="number">1</span>) <span class="kw">as </span>usize)
+                .take(g.degree() + <span class="number">1</span>)
                 .collect();
             <span class="kw">let </span>expected_g_x =
                 SWCurveConfig::msm(<span class="kw-2">&amp;</span>CurveGroup::normalize_batch(<span class="kw-2">&amp;</span>g.coeffs), <span class="kw-2">&amp;</span>scalars).unwrap();

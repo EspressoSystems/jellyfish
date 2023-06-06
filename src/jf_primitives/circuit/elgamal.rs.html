@@ -443,7 +443,6 @@
 <a href="#443" id="443">443</a>
 <a href="#444" id="444">444</a>
 <a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -715,16 +714,15 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_counter_mode_stream_no_padding() {
-        apply_counter_mode_stream_no_padding_helper::&lt;FqEd254, ParamEd254&gt;();
-        apply_counter_mode_stream_no_padding_helper::&lt;FqEd377, ParamEd377&gt;();
-        apply_counter_mode_stream_no_padding_helper::&lt;FqEd381, ParamEd381&gt;();
-        apply_counter_mode_stream_no_padding_helper::&lt;FqEd381b, ParamEd381b&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd254&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd377&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd381&gt;();
+        apply_counter_mode_stream_no_padding_helper::&lt;FqEd381b&gt;();
     }
 
-    <span class="kw">fn </span>apply_counter_mode_stream_no_padding_helper&lt;F, P&gt;()
+    <span class="kw">fn </span>apply_counter_mode_stream_no_padding_helper&lt;F&gt;()
     <span class="kw">where
         </span>F: RescueParameter,
-        P: TECurveConfig&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
         <span class="kw">let </span><span class="kw-2">mut </span>prng = jf_utils::test_rng();

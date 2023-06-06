@@ -829,9 +829,6 @@
 <a href="#829" id="829">829</a>
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
-<a href="#833" id="833">833</a>
-<a href="#834" id="834">834</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1291,15 +1288,14 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_partial_verification_circuit() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        test_partial_verification_circuit_helper::&lt;Bls12_377, <span class="kw">_</span>, <span class="kw">_</span>, Param377, RescueTranscript&lt;<span class="kw">_</span>&gt;&gt;()
+        test_partial_verification_circuit_helper::&lt;Bls12_377, <span class="kw">_</span>, <span class="kw">_</span>, RescueTranscript&lt;<span class="kw">_</span>&gt;&gt;()
     }
 
-    <span class="kw">fn </span>test_partial_verification_circuit_helper&lt;E, F, P, Q, T&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
+    <span class="kw">fn </span>test_partial_verification_circuit_helper&lt;E, F, P, T&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig&lt;BaseField = F&gt; + TECurveConfig,
-        Q: TEParam&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
@@ -1577,18 +1573,16 @@
             Bls12_377,
             <span class="kw">_</span>,
             <span class="kw">_</span>,
-            Param377,
             RescueTranscript&lt;<span class="kw">_</span>&gt;,
         &gt;()
     }
 
-    <span class="kw">fn </span>test_variable_independence_for_partial_verification_circuit_helper&lt;E, F, P, Q, T&gt;(
+    <span class="kw">fn </span>test_variable_independence_for_partial_verification_circuit_helper&lt;E, F, P, T&gt;(
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;
     <span class="kw">where
         </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig&lt;BaseField = F&gt; + TECurveConfig,
-        Q: TEParam&lt;BaseField = F&gt;,
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
