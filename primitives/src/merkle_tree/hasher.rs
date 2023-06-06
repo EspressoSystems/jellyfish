@@ -35,6 +35,8 @@
 //! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `Arity`
 //! and node [`Index`] types.
 
+use crate::errors::PrimitivesError;
+
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
@@ -75,21 +77,19 @@ where
     H: Digest + Write,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
-    fn digest(data: &[HasherNode<H>]) -> HasherNode<H> {
+    fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, PrimitivesError> {
         let mut hasher = H::new();
         for value in data {
             hasher.update(value.as_ref());
         }
-        HasherNode(hasher.finalize())
+        Ok(HasherNode(hasher.finalize()))
     }
 
-    fn digest_leaf(pos: &I, elem: &E) -> HasherNode<H> {
+    fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, PrimitivesError> {
         let mut hasher = H::new();
-        pos.serialize_uncompressed(&mut hasher)
-            .expect("serialize should succeed");
-        elem.serialize_uncompressed(&mut hasher)
-            .expect("serialize should succeed");
-        HasherNode(hasher.finalize())
+        pos.serialize_uncompressed(&mut hasher)?;
+        elem.serialize_uncompressed(&mut hasher)?;
+        Ok(HasherNode(hasher.finalize()))
     }
 }
 

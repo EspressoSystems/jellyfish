@@ -129,10 +129,10 @@ where
     T: NodeValue,
 {
     /// Digest a list of values
-    fn digest(data: &[T]) -> T;
+    fn digest(data: &[T]) -> Result<T, PrimitivesError>;
 
     /// Digest an indexed element
-    fn digest_leaf(pos: &I, elem: &E) -> T;
+    fn digest_leaf(pos: &I, elem: &E) -> Result<T, PrimitivesError>;
 }
 
 /// An trait for Merkle tree index type.

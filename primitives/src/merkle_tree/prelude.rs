@@ -16,7 +16,10 @@ pub use crate::{
     },
 };
 
-use crate::rescue::{sponge::RescueCRHF, RescueParameter};
+use crate::{
+    errors::PrimitivesError,
+    rescue::{sponge::RescueCRHF, RescueParameter},
+};
 use ark_std::marker::PhantomData;
 use num_bigint::BigUint;
 use typenum::U3;
@@ -30,13 +33,13 @@ pub struct RescueHash<F: RescueParameter> {
 }
 
 impl<F: RescueParameter> DigestAlgorithm<F, u64, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> F {
-        RescueCRHF::<F>::sponge_no_padding(data, 1).unwrap()[0]
+    fn digest(data: &[F]) -> Result<F, PrimitivesError> {
+        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
     }
 
-    fn digest_leaf(pos: &u64, elem: &F) -> F {
+    fn digest_leaf(pos: &u64, elem: &F) -> Result<F, PrimitivesError> {
         let data = [F::zero(), F::from(*pos), *elem];
-        RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0]
+        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
     }
 }
 
@@ -47,24 +50,24 @@ pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
 pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, U3, F>;
 
 impl<F: RescueParameter> DigestAlgorithm<F, BigUint, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> F {
-        RescueCRHF::<F>::sponge_no_padding(data, 1).unwrap()[0]
+    fn digest(data: &[F]) -> Result<F, PrimitivesError> {
+        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
     }
 
-    fn digest_leaf(pos: &BigUint, elem: &F) -> F {
+    fn digest_leaf(pos: &BigUint, elem: &F) -> Result<F, PrimitivesError> {
         let data = [F::zero(), F::from(pos.clone()), *elem];
-        RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0]
+        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
     }
 }
 
 impl<F: RescueParameter> DigestAlgorithm<F, F, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> F {
-        RescueCRHF::<F>::sponge_no_padding(data, 1).unwrap()[0]
+    fn digest(data: &[F]) -> Result<F, PrimitivesError> {
+        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
     }
 
-    fn digest_leaf(pos: &F, elem: &F) -> F {
+    fn digest_leaf(pos: &F, elem: &F) -> Result<F, PrimitivesError> {
         let data = [F::zero(), *pos, *elem];
-        RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0]
+        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
     }
 }
 

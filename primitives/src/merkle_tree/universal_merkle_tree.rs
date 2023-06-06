@@ -44,7 +44,8 @@ where
         let traversal_path = pos.to_traversal_path(self.height);
         let ret = self
             .root
-            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem);
+            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem)
+            .expect("Internal error caused by hash failure.");
         if let LookupResult::NotFound(_) = ret {
             self.num_leaves += 1;
         }
@@ -145,7 +146,7 @@ where
                                 let mut data: Vec<_> =
                                     children.iter().map(|node| node.value()).collect();
                                 data[*branch] = val;
-                                let digest = H::digest(&data);
+                                let digest = H::digest(&data)?;
                                 path_values.push(digest);
                                 Ok(digest)
                             },
