@@ -8,13 +8,16 @@
 //! E.g. Sparse merkle tree with BigUInt index.
 
 use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm, Element, Index};
-use crate::rescue::{sponge::RescueCRHF, RescueParameter};
-use alloc::vec::Vec;
+use crate::{
+    errors::PrimitivesError,
+    rescue::{sponge::RescueCRHF, RescueParameter},
+};
 use ark_ff::Field;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
+use ark_std::vec::Vec;
 use sha3::{Digest, Sha3_256};
 use typenum::U3;
 
@@ -24,13 +27,13 @@ pub struct Interval<F: Field>(pub F, pub F);
 // impl<F: Field> Element for Interval<F> {}
 
 impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> F {
-        RescueCRHF::<F>::sponge_no_padding(data, 1).unwrap()[0]
+    fn digest(data: &[F]) -> Result<F, PrimitivesError> {
+        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
     }
 
-    fn digest_leaf(pos: &u64, elem: &Interval<F>) -> F {
+    fn digest_leaf(pos: &u64, elem: &Interval<F>) -> Result<F, PrimitivesError> {
         let data = [F::from(*pos), elem.0, elem.1];
-        RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0]
+        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
     }
 }
 
@@ -84,20 +87,20 @@ impl Valid for Sha3Node {
 pub struct Sha3Digest();
 
 impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {
-    fn digest(data: &[Sha3Node]) -> Sha3Node {
+    fn digest(data: &[Sha3Node]) -> Result<Sha3Node, PrimitivesError> {
         let mut hasher = Sha3_256::new();
         for value in data {
             hasher.update(value);
         }
-        Sha3Node(hasher.finalize().into())
+        Ok(Sha3Node(hasher.finalize().into()))
     }
 
-    fn digest_leaf(_pos: &I, elem: &E) -> Sha3Node {
+    fn digest_leaf(_pos: &I, elem: &E) -> Result<Sha3Node, PrimitivesError> {
         let mut writer = Vec::new();
         elem.serialize_compressed(&mut writer).unwrap();
         let mut hasher = Sha3_256::new();
         hasher.update(writer);
-        Sha3Node(hasher.finalize().into())
+        Ok(Sha3Node(hasher.finalize().into()))
     }
 }
 
