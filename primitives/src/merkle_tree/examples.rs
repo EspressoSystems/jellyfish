@@ -84,6 +84,7 @@ impl Valid for Sha3Node {
 }
 
 /// Wrapper for SHA3_512 hash function
+#[derive(Clone)]
 pub struct Sha3Digest();
 
 impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {

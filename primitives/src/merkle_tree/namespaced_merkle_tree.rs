@@ -15,8 +15,8 @@ use typenum::Unsigned;
 use crate::errors::{PrimitivesError, VerificationResult};
 
 use super::{
-    append_only::MerkleTree, AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    append_only::MerkleTree, internal::MerkleProof, AppendableMerkleTreeScheme, DigestAlgorithm,
+    Element, Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
 };
 
 /// Namespaced Merkle Tree where leaves are sorted by a namespace identifier.
@@ -26,7 +26,7 @@ where
     Self::Element: Namespaced,
 {
     /// Namespace proof type
-    type NamespaceProof: Clone;
+    type NamespaceProof;
     /// Namespace type
     type NamespaceId: Namespace;
 
@@ -40,13 +40,13 @@ where
         &self,
         proof: Self::NamespaceProof,
         namespace: Self::NamespaceId,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<VerificationResult, PrimitivesError>;
 }
 
 /// NamespacedHasher wraps a standard hash function (implementer of
 /// DigestAlgorithm), turning it into a hash function that tags internal nodes
 /// with namespace ranges.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NamespacedHasher<H, E, I, T, N>
 where
     H: DigestAlgorithm<E, I, T>,
@@ -191,7 +191,7 @@ where
 type InnerTree<E, H, T, N, Arity> =
     MerkleTree<E, NamespacedHasher<H, E, u64, T, N>, u64, Arity, NamespacedHash<T, N>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// NMT
 pub struct NMT<E, H, Arity, N, T>
 where
@@ -312,60 +312,96 @@ where
     }
 }
 
+#[derive(Clone)]
+/// Namespace Proof
+pub struct NamespaceProof<E, T, Arity, N, H>
+where
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    proofs: Vec<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
+    indices: Vec<u64>,
+    phantom: PhantomData<H>,
+}
+
+impl<E, T, Arity, N, H> NamespaceProof<E, T, Arity, N, H>
+where
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    /// Verify a namespace proof
+    pub fn verify(
+        &self,
+        root: &NamespacedHash<T, N>,
+        namespace: N,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        for (idx, proof) in self.proofs.iter().enumerate() {
+            if <InnerTree<E, H, T, N, Arity>>::verify(root, self.indices[idx], proof)?.is_err() {
+                return Err(PrimitivesError::VerificationError(
+                    "Leaf verification error".into(),
+                ));
+            }
+            // TODO: Once boundaries are checked, it will be sufficient to simply check the
+            // First elem's namespace, the last elem's namespace and that indices are
+            // sequential
+            if proof.elem().unwrap().get_namespace() != namespace {
+                return Err(PrimitivesError::VerificationError(
+                    "Incorrect namespace".into(),
+                ));
+            }
+        }
+        Ok(Ok(()))
+    }
+}
+
 impl<E, H, Arity, N, T> NamespacedMerkleTreeScheme for NMT<E, H, Arity, N, T>
 where
-    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N> + Clone,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
     Arity: Unsigned,
 {
     type NamespaceId = N;
-    type NamespaceProof = Vec<(E, <Self as MerkleTreeScheme>::MembershipProof, u64)>;
+    type NamespaceProof = NamespaceProof<E, T, Arity, N, H>;
 
     fn get_namespace_proof(&self, namespace: Self::NamespaceId) -> Self::NamespaceProof {
         let ns_range = self.namespace_ranges.get(&namespace);
-        let mut ns_proof = Vec::new();
+        let mut proofs = Vec::new();
+        let mut indices = Vec::new();
         if let Some(ns_range) = ns_range {
             for i in ns_range.clone() {
-                if let LookupResult::Ok(elem, proof) = self.inner.lookup(i) {
-                    ns_proof.push((elem, proof, i));
+                if let LookupResult::Ok(_, proof) = self.inner.lookup(i) {
+                    proofs.push(proof);
+                    indices.push(i);
                 }
             }
         }
-        ns_proof
+        NamespaceProof {
+            proofs,
+            indices,
+            phantom: PhantomData,
+        }
     }
 
     fn verify_namespace_proof(
         &self,
         proof: Self::NamespaceProof,
         namespace: Self::NamespaceId,
-    ) -> Result<(), PrimitivesError> {
-        for (elem, elem_proof, i) in proof {
-            // This just verifies each merkle leaf, placeholder until completeness is
-            // actually checked
-            if Self::verify(self.commitment().digest(), i, elem_proof.clone())?.is_err() {
-                return Err(PrimitivesError::VerificationError(
-                    "Leaf verification error".into(),
-                ));
-            }
-            if &elem != elem_proof.elem().unwrap() {
-                return Err(PrimitivesError::VerificationError(
-                    "Element does not match the proven value".into(),
-                ));
-            }
-            if elem.get_namespace() != namespace {
-                return Err(PrimitivesError::VerificationError(
-                    "Namespace invalid".into(),
-                ));
-            }
-        }
-        Ok(())
+    ) -> Result<VerificationResult, PrimitivesError> {
+        proof.verify(&self.commitment().digest(), namespace)
     }
 }
 
 #[cfg(test)]
 mod nmt_tests {
+
     use digest::Digest;
     use sha3::Sha3_256;
     use typenum::U2;
@@ -465,11 +501,11 @@ mod nmt_tests {
 
     #[test]
     fn test_nmt() {
-        let num_leaves = 5;
+        let num_leaves = 8;
         let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
         let tree = TestNMT::from_elems(3, leaves).unwrap();
-        let proof = tree.get_namespace_proof(0);
-        assert!(tree.verify_namespace_proof(proof.clone(), 0).is_ok());
-        assert!(tree.verify_namespace_proof(proof, 1).is_err());
+        let proof = tree.get_namespace_proof(1);
+        assert!(tree.verify_namespace_proof(proof.clone(), 1).is_ok());
+        assert!(tree.verify_namespace_proof(proof, 2).is_err());
     }
 }
