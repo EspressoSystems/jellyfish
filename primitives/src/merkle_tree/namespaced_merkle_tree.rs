@@ -183,8 +183,6 @@ where
 
 #[cfg(test)]
 mod nmt_tests {
-    use std::panic::catch_unwind;
-
     use digest::Digest;
     use sha3::Sha3_256;
 
@@ -277,7 +275,6 @@ mod nmt_tests {
         // Ensure that digest errors when internal nodes are not sorted by namespace
         // digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
         hashes[0] = hashes[hashes.len() - 1];
-        let res = catch_unwind(|| Hasher::digest(&hashes));
-        assert!(res.is_err());
+        assert!(Hasher::digest(&hashes).is_err());
     }
 }
