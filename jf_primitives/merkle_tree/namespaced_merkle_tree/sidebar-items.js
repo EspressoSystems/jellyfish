@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["NamespacedHash","NamespacedHasher"],"trait":["BindNamespace","Namespace","Namespaced","NamespacedMerkleTreeScheme"]};
