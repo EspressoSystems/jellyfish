@@ -410,7 +410,7 @@
                             <span class="string">&quot;Element does not match the proof.&quot;</span>.to_string(),
                         ));
                     }
-                    <span class="kw">let </span>proof_leaf_value = H::digest_leaf(pos, elem);
+                    <span class="kw">let </span>proof_leaf_value = H::digest_leaf(pos, elem)<span class="question-mark">?</span>;
                     <span class="kw">let </span><span class="kw-2">mut </span>path_values = <span class="macro">vec!</span>[proof_leaf_value];
                     traversal_path.iter().zip(proof.proof.iter().skip(<span class="number">1</span>)).fold(
                         <span class="prelude-val">Ok</span>(proof_leaf_value),
@@ -421,7 +421,7 @@
                                         <span class="kw">let </span><span class="kw-2">mut </span>data: Vec&lt;<span class="kw">_</span>&gt; =
                                             children.iter().map(|node| node.value()).collect();
                                         data[<span class="kw-2">*</span>branch] = val;
-                                        <span class="kw">let </span>digest = H::digest(<span class="kw-2">&amp;</span>data);
+                                        <span class="kw">let </span>digest = H::digest(<span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>;
                                         path_values.push(digest);
                                         <span class="prelude-val">Ok</span>(digest)
                                     },

@@ -904,6 +904,12 @@
 <a href="#904" id="904">904</a>
 <a href="#905" id="905">905</a>
 <a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1109,20 +1115,20 @@
                 <span class="kw">let </span>children = chunk
                     .map(|(pos, elem)| {
                         <span class="kw">let </span>pos = I::from(pos <span class="kw">as </span>u64);
-                        Box::new(MerkleNode::Leaf {
-                            value: H::digest_leaf(<span class="kw-2">&amp;</span>pos, elem.borrow()),
+                        <span class="prelude-val">Ok</span>(Box::new(MerkleNode::Leaf {
+                            value: H::digest_leaf(<span class="kw-2">&amp;</span>pos, elem.borrow())<span class="question-mark">?</span>,
                             pos,
                             elem: elem.borrow().clone(),
-                        })
+                        }))
                     })
-                    .pad_using(Arity::to_usize(), |<span class="kw">_</span>| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
-                    value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                    .pad_using(Arity::to_usize(), |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(Box::new(MerkleNode::Empty)))
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
+                    value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                     children,
-                })
+                }))
             })
-            .collect_vec();
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
         <span class="kw">for _ in </span><span class="number">1</span>..height {
             cur_nodes = cur_nodes
                 .into_iter()
@@ -1133,13 +1139,13 @@
                         .pad_using(Arity::to_usize(), |<span class="kw">_</span>| {
                             Box::new(MerkleNode::&lt;E, I, T&gt;::Empty)
                         })
-                        .collect_vec();
-                    Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
-                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+                    <span class="prelude-val">Ok</span>(Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
+                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                         children,
-                    })
+                    }))
                 })
-                .collect_vec();
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>((cur_nodes[<span class="number">0</span>].clone(), num_leaves))
     } <span class="kw">else </span>{
@@ -1178,27 +1184,27 @@
             .map(|chunk| {
                 <span class="kw">let </span>children = chunk
                     .map(|(pos, elem)| {
-                        <span class="kw">if </span>(pos <span class="kw">as </span>u64) &lt; num_leaves - <span class="number">1 </span>{
+                        <span class="prelude-val">Ok</span>(<span class="kw">if </span>(pos <span class="kw">as </span>u64) &lt; num_leaves - <span class="number">1 </span>{
                             Box::new(MerkleNode::ForgettenSubtree {
-                                value: H::digest_leaf(<span class="kw-2">&amp;</span>I::from(pos <span class="kw">as </span>u64), elem.borrow()),
+                                value: H::digest_leaf(<span class="kw-2">&amp;</span>I::from(pos <span class="kw">as </span>u64), elem.borrow())<span class="question-mark">?</span>,
                             })
                         } <span class="kw">else </span>{
                             <span class="kw">let </span>pos = I::from(pos <span class="kw">as </span>u64);
                             Box::new(MerkleNode::Leaf {
-                                value: H::digest_leaf(<span class="kw-2">&amp;</span>pos, elem.borrow()),
+                                value: H::digest_leaf(<span class="kw-2">&amp;</span>pos, elem.borrow())<span class="question-mark">?</span>,
                                 pos,
                                 elem: elem.borrow().clone(),
                             })
-                        }
+                        })
                     })
-                    .pad_using(Arity::to_usize(), |<span class="kw">_</span>| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
-                    value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                    .pad_using(Arity::to_usize(), |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(Box::new(MerkleNode::Empty)))
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
+                    value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                     children,
-                })
+                }))
             })
-            .collect_vec();
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..cur_nodes.len() - <span class="number">1 </span>{
             cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
                 value: cur_nodes[i].value(),
@@ -1214,13 +1220,13 @@
                         .pad_using(Arity::to_usize(), |<span class="kw">_</span>| {
                             Box::new(MerkleNode::&lt;E, I, T&gt;::Empty)
                         })
-                        .collect_vec();
-                    Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
-                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+                    <span class="prelude-val">Ok</span>(Box::new(MerkleNode::&lt;E, I, T&gt;::Branch {
+                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                         children,
-                    })
+                    }))
                 })
-                .collect_vec();
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
             <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..cur_nodes.len() - <span class="number">1 </span>{
                 cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
                     value: cur_nodes[i].value(),
@@ -1233,7 +1239,9 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>digest_branch&lt;E, H, I, T&gt;(data: <span class="kw-2">&amp;</span>[Box&lt;MerkleNode&lt;E, I, T&gt;&gt;]) -&gt; T
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>digest_branch&lt;E, H, I, T&gt;(
+    data: <span class="kw-2">&amp;</span>[Box&lt;MerkleNode&lt;E, I, T&gt;&gt;],
+) -&gt; <span class="prelude-ty">Result</span>&lt;T, PrimitivesError&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
@@ -1241,7 +1249,7 @@
     T: NodeValue,
 {
     <span class="comment">// Question(Chengyu): any more efficient implementation?
-    </span><span class="kw">let </span>data = data.iter().map(|node| node.value()).collect_vec();
+    </span><span class="kw">let </span>data = data.iter().map(|node| node.value()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
     H::digest(<span class="kw-2">&amp;</span>data)
 }
 
@@ -1278,7 +1286,7 @@
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                         });
                         <span class="kw">if </span>children.iter().all(|child| {
                             <span class="macro">matches!</span>(
@@ -1305,7 +1313,7 @@
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                         });
                         LookupResult::NotFound(non_membership_proof)
                     },
@@ -1412,7 +1420,7 @@
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                         });
                         LookupResult::Ok(elem, proof)
                     },
@@ -1431,7 +1439,7 @@
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                         });
                         LookupResult::NotFound(non_membership_proof)
                     },
@@ -1453,7 +1461,7 @@
         pos: <span class="kw">impl </span>Borrow&lt;I&gt;,
         traversal_path: <span class="kw-2">&amp;</span>[usize],
         elem: <span class="kw">impl </span>Borrow&lt;E&gt;,
-    ) -&gt; LookupResult&lt;E, (), ()&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;E, (), ()&gt;, PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, I, T&gt;,
         Arity: Unsigned,
@@ -1467,8 +1475,8 @@
                 pos,
             } =&gt; {
                 <span class="kw">let </span>ret = ark_std::mem::replace(node_elem, elem.clone());
-                <span class="kw-2">*</span>value = H::digest_leaf(pos, elem);
-                LookupResult::Ok(ret, ())
+                <span class="kw-2">*</span>value = H::digest_leaf(pos, elem)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(LookupResult::Ok(ret, ()))
             },
             MerkleNode::Branch { value, children } =&gt; {
                 <span class="kw">let </span>res = (<span class="kw-2">*</span>children[traversal_path[height - <span class="number">1</span>]]).update_internal::&lt;H, Arity&gt;(
@@ -1476,22 +1484,22 @@
                     pos,
                     traversal_path,
                     elem,
-                );
+                )<span class="question-mark">?</span>;
                 <span class="comment">// If the branch containing the update was not in memory, the update failed and
                 // nothing was changed, so we can short-circuit without recomputing this node&#39;s
                 // value.
                 </span><span class="kw">if </span>res == LookupResult::NotInMemory {
-                    <span class="kw">return </span>res;
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(res);
                 }
                 <span class="comment">// Otherwise, an entry has been updated and the value of one of our children has
                 // changed, so we must recompute our own value.
-                </span><span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children);
-                res
+                </span><span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(res)
             },
             MerkleNode::Empty =&gt; {
                 <span class="kw-2">*</span><span class="self">self </span>= <span class="kw">if </span>height == <span class="number">0 </span>{
                     MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem),
+                        value: H::digest_leaf(pos, elem)<span class="question-mark">?</span>,
                         pos: pos.clone(),
                         elem: elem.clone(),
                     }
@@ -1502,15 +1510,15 @@
                         pos,
                         traversal_path,
                         elem,
-                    );
+                    )<span class="question-mark">?</span>;
                     MerkleNode::Branch {
-                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                         children,
                     }
                 };
-                LookupResult::NotFound(())
+                <span class="prelude-val">Ok</span>(LookupResult::NotFound(()))
             },
-            MerkleNode::ForgettenSubtree { .. } =&gt; LookupResult::NotInMemory,
+            MerkleNode::ForgettenSubtree { .. } =&gt; <span class="prelude-val">Ok</span>(LookupResult::NotInMemory),
         }
     }
 
@@ -1553,7 +1561,7 @@
                     cur_pos += I::from(increment);
                     frontier += <span class="number">1</span>;
                 }
-                <span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children);
+                <span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(cnt)
             },
             MerkleNode::Empty =&gt; {
@@ -1561,7 +1569,7 @@
                     <span class="kw">let </span>elem = data.next().unwrap();
                     <span class="kw">let </span>elem = elem.borrow();
                     <span class="kw-2">*</span><span class="self">self </span>= MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem),
+                        value: H::digest_leaf(pos, elem)<span class="question-mark">?</span>,
                         pos: pos.clone(),
                         elem: elem.clone(),
                     };
@@ -1588,7 +1596,7 @@
                         frontier += <span class="number">1</span>;
                     }
                     <span class="kw-2">*</span><span class="self">self </span>= MerkleNode::Branch {
-                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                         children,
                     };
                     <span class="prelude-val">Ok</span>(cnt)
@@ -1649,7 +1657,7 @@
                     cur_pos += I::from(increment);
                     frontier += <span class="number">1</span>;
                 }
-                <span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children);
+                <span class="kw-2">*</span>value = digest_branch::&lt;E, H, I, T&gt;(children)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(cnt)
             },
             MerkleNode::Empty =&gt; {
@@ -1657,7 +1665,7 @@
                     <span class="kw">let </span>elem = data.next().unwrap();
                     <span class="kw">let </span>elem = elem.borrow();
                     <span class="kw-2">*</span><span class="self">self </span>= MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem),
+                        value: H::digest_leaf(pos, elem)<span class="question-mark">?</span>,
                         pos: pos.clone(),
                         elem: elem.clone(),
                     };
@@ -1690,7 +1698,7 @@
                         frontier += <span class="number">1</span>;
                     }
                     <span class="kw-2">*</span><span class="self">self </span>= MerkleNode::Branch {
-                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children),
+                        value: digest_branch::&lt;E, H, I, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
                         children,
                     };
                     <span class="prelude-val">Ok</span>(cnt)
@@ -1729,7 +1737,7 @@
             elem,
         } = <span class="kw-2">&amp;</span><span class="self">self</span>.proof[<span class="number">0</span>]
         {
-            <span class="kw">let </span>init = H::digest_leaf(pos, elem);
+            <span class="kw">let </span>init = H::digest_leaf(pos, elem)<span class="question-mark">?</span>;
             <span class="kw">let </span>computed_root = <span class="self">self
                 </span>.pos
                 .to_traversal_path(<span class="self">self</span>.tree_height() - <span class="number">1</span>)
@@ -1741,10 +1749,12 @@
                         <span class="kw">match </span>result {
                             <span class="prelude-val">Ok</span>(val) =&gt; <span class="kw">match </span>node {
                                 MerkleNode::Branch { value: <span class="kw">_</span>, children } =&gt; {
-                                    <span class="kw">let </span><span class="kw-2">mut </span>data =
-                                        children.iter().map(|node| node.value()).collect_vec();
+                                    <span class="kw">let </span><span class="kw-2">mut </span>data = children
+                                        .iter()
+                                        .map(|node| node.value())
+                                        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                                     data[<span class="kw-2">*</span>branch] = val;
-                                    <span class="prelude-val">Ok</span>(H::digest(<span class="kw-2">&amp;</span>data))
+                                    H::digest(<span class="kw-2">&amp;</span>data)
                                 },
                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
                                     <span class="string">&quot;Incompatible proof for this merkle tree&quot;</span>.to_string(),
@@ -1788,10 +1798,12 @@
                         <span class="kw">match </span>result {
                             <span class="prelude-val">Ok</span>(val) =&gt; <span class="kw">match </span>node {
                                 MerkleNode::Branch { value: <span class="kw">_</span>, children } =&gt; {
-                                    <span class="kw">let </span><span class="kw-2">mut </span>data =
-                                        children.iter().map(|node| node.value()).collect_vec();
+                                    <span class="kw">let </span><span class="kw-2">mut </span>data = children
+                                        .iter()
+                                        .map(|node| node.value())
+                                        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                                     data[<span class="kw-2">*</span>branch] = val;
-                                    <span class="prelude-val">Ok</span>(H::digest(<span class="kw-2">&amp;</span>data))
+                                    H::digest(<span class="kw-2">&amp;</span>data)
                                 },
                                 MerkleNode::Empty =&gt; <span class="prelude-val">Ok</span>(init),
                                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(

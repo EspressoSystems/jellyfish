@@ -208,7 +208,9 @@
 //! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `Arity`
 //! and node [`Index`] types.
 
-</span><span class="kw">use super</span>::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
+</span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
+
+<span class="kw">use super</span>::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
 <span class="kw">use </span>ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
@@ -248,21 +250,19 @@
     H: Digest + Write,
     &lt;&lt;H <span class="kw">as </span>OutputSizeUser&gt;::OutputSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
 {
-    <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[HasherNode&lt;H&gt;]) -&gt; HasherNode&lt;H&gt; {
+    <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[HasherNode&lt;H&gt;]) -&gt; <span class="prelude-ty">Result</span>&lt;HasherNode&lt;H&gt;, PrimitivesError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
         <span class="kw">for </span>value <span class="kw">in </span>data {
             hasher.update(value.as_ref());
         }
-        HasherNode(hasher.finalize())
+        <span class="prelude-val">Ok</span>(HasherNode(hasher.finalize()))
     }
 
-    <span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>I, elem: <span class="kw-2">&amp;</span>E) -&gt; HasherNode&lt;H&gt; {
+    <span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>I, elem: <span class="kw-2">&amp;</span>E) -&gt; <span class="prelude-ty">Result</span>&lt;HasherNode&lt;H&gt;, PrimitivesError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
-        pos.serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
-            .expect(<span class="string">&quot;serialize should succeed&quot;</span>);
-        elem.serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
-            .expect(<span class="string">&quot;serialize should succeed&quot;</span>);
-        HasherNode(hasher.finalize())
+        pos.serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)<span class="question-mark">?</span>;
+        elem.serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(HasherNode(hasher.finalize()))
     }
 }
 

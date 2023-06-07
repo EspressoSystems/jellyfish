@@ -275,6 +275,8 @@
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
 <a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -282,9 +284,8 @@
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
 </span><span class="doccomment">//! Implementation of a Namespaced Merkle Tree.
-</span><span class="kw">use </span>alloc::vec;
-<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-<span class="kw">use </span>ark_std::vec::Vec;
+</span><span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+<span class="kw">use </span>ark_std::{string::ToString, vec, vec::Vec};
 <span class="kw">use </span>core::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 <span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
@@ -424,9 +425,9 @@
     H: DigestAlgorithm&lt;E, I, T&gt; + BindNamespace&lt;E, I, T, N&gt;,
 {
     <span class="comment">// Assumes that data is sorted by namespace, will be enforced by &quot;append&quot;
-    </span><span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[NamespacedHash&lt;T, N&gt;]) -&gt; NamespacedHash&lt;T, N&gt; {
+    </span><span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[NamespacedHash&lt;T, N&gt;]) -&gt; <span class="prelude-ty">Result</span>&lt;NamespacedHash&lt;T, N&gt;, PrimitivesError&gt; {
         <span class="kw">if </span>data.is_empty() {
-            <span class="kw">return </span>NamespacedHash::default();
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(NamespacedHash::default());
         }
         <span class="kw">let </span>first_node = data[<span class="number">0</span>];
         <span class="kw">let </span>min_namespace = first_node.min_namespace;
@@ -435,28 +436,32 @@
         <span class="kw">for </span>node <span class="kw">in </span><span class="kw-2">&amp;</span>data[<span class="number">1</span>..] {
             <span class="comment">// Ensure that namespaced nodes are sorted
             </span><span class="kw">if </span>node.min_namespace &lt; max_namespace {
-                <span class="macro">panic!</span>(<span class="string">&quot;leaves are out of order&quot;</span>)
+                <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::InternalError(
+                    <span class="string">&quot;Namespace Merkle tree leaves are out of order&quot;</span>.to_string(),
+                ));
             }
             max_namespace = node.max_namespace;
             nodes.push(H::generate_namespaced_commitment(<span class="kw-2">*</span>node));
         }
 
-        <span class="kw">let </span>inner_hash = H::digest(<span class="kw-2">&amp;</span>nodes);
+        <span class="kw">let </span>inner_hash = H::digest(<span class="kw-2">&amp;</span>nodes)<span class="question-mark">?</span>;
 
-        NamespacedHash::new(min_namespace, max_namespace, inner_hash)
+        <span class="prelude-val">Ok</span>(NamespacedHash::new(
+            min_namespace,
+            max_namespace,
+            inner_hash,
+        ))
     }
 
-    <span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>I, elem: <span class="kw-2">&amp;</span>E) -&gt; NamespacedHash&lt;T, N&gt; {
+    <span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>I, elem: <span class="kw-2">&amp;</span>E) -&gt; <span class="prelude-ty">Result</span>&lt;NamespacedHash&lt;T, N&gt;, PrimitivesError&gt; {
         <span class="kw">let </span>namespace = elem.get_namespace();
-        <span class="kw">let </span>hash = H::digest_leaf(pos, elem);
-        NamespacedHash::new(namespace, namespace, hash)
+        <span class="kw">let </span>hash = H::digest_leaf(pos, elem)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(NamespacedHash::new(namespace, namespace, hash))
     }
 }
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>nmt_tests {
-    <span class="kw">use </span>std::panic::catch_unwind;
-
     <span class="kw">use </span>digest::Digest;
     <span class="kw">use </span>sha3::Sha3_256;
 
@@ -528,28 +533,27 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_namespaced_hash() {
         <span class="kw">let </span>num_leaves = <span class="number">5</span>;
-        <span class="kw">let </span>leaves: Vec&lt;Leaf&gt; = (<span class="number">0</span>..num_leaves).map(|i| Leaf::new(i)).collect();
+        <span class="kw">let </span>leaves: Vec&lt;Leaf&gt; = (<span class="number">0</span>..num_leaves).map(Leaf::new).collect();
 
         <span class="comment">// Ensure that leaves are digested correctly
-        </span><span class="kw">let </span><span class="kw-2">mut </span>hashes: Vec&lt;NamespacedHash&lt;Sha3Node, u64&gt;&gt; = leaves
+        </span><span class="kw">let </span><span class="kw-2">mut </span>hashes = leaves
             .iter()
             .enumerate()
             .map(|(idx, leaf)| Hasher::digest_leaf(<span class="kw-2">&amp;</span>(idx <span class="kw">as </span>u64), leaf))
-            .collect();
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()
+            .unwrap();
         <span class="macro">assert_eq!</span>((hashes[<span class="number">0</span>].min_namespace, hashes[<span class="number">0</span>].max_namespace), (<span class="number">0</span>, <span class="number">0</span>));
 
         <span class="comment">// Ensure that sorted internal nodes are digested correctly
-        </span><span class="kw">let </span>hash = Hasher::digest(<span class="kw-2">&amp;</span>hashes);
+        </span><span class="kw">let </span>hash = Hasher::digest(<span class="kw-2">&amp;</span>hashes).unwrap();
         <span class="macro">assert_eq!</span>(
             (hash.min_namespace, hash.max_namespace),
             (<span class="number">0</span>, num_leaves - <span class="number">1</span>)
         );
 
         <span class="comment">// Ensure that digest errors when internal nodes are not sorted by namespace
-        // digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
         </span>hashes[<span class="number">0</span>] = hashes[hashes.len() - <span class="number">1</span>];
-        <span class="kw">let </span>res = catch_unwind(|| Hasher::digest(<span class="kw-2">&amp;</span>hashes));
-        <span class="macro">assert!</span>(res.is_err());
+        <span class="macro">assert!</span>(Hasher::digest(<span class="kw-2">&amp;</span>hashes).is_err());
     }
 }
 </code></pre></div></section></main></body></html>

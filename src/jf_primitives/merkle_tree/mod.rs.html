@@ -384,6 +384,8 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -516,10 +518,10 @@
     T: NodeValue,
 {
     <span class="doccomment">/// Digest a list of values
-    </span><span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[T]) -&gt; T;
+    </span><span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;T, PrimitivesError&gt;;
 
     <span class="doccomment">/// Digest an indexed element
-    </span><span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>I, elem: <span class="kw-2">&amp;</span>E) -&gt; T;
+    </span><span class="kw">fn </span>digest_leaf(pos: <span class="kw-2">&amp;</span>I, elem: <span class="kw-2">&amp;</span>E) -&gt; <span class="prelude-ty">Result</span>&lt;T, PrimitivesError&gt;;
 }
 
 <span class="doccomment">/// An trait for Merkle tree index type.
@@ -677,11 +679,13 @@
     <span class="doccomment">/// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
+    /// * `returns` - Ok(elem) if the update is success, and `elem` is the
+    ///   original element at the given `pos`. Err() if the update fails.
     </span><span class="kw">fn </span>update(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         elem: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
-    ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt;;
 
     <span class="doccomment">/// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree

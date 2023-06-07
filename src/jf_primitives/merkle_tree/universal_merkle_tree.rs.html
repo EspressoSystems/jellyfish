@@ -513,6 +513,10 @@
 <a href="#513" id="513">513</a>
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -553,17 +557,21 @@
     <span class="kw">type </span>NonMembershipProof = MerkleProof&lt;E, I, T, Arity&gt;;
     <span class="kw">type </span>BatchNonMembershipProof = ();
 
-    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: <span class="kw">impl </span>Borrow&lt;I&gt;, elem: <span class="kw">impl </span>Borrow&lt;E&gt;) -&gt; LookupResult&lt;E, (), ()&gt; {
+    <span class="kw">fn </span>update(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;I&gt;,
+        elem: <span class="kw">impl </span>Borrow&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;E, (), ()&gt;, PrimitivesError&gt; {
         <span class="kw">let </span>pos = pos.borrow();
         <span class="kw">let </span>elem = elem.borrow();
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
         <span class="kw">let </span>ret = <span class="self">self
             </span>.root
-            .update_internal::&lt;H, Arity&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, elem);
+            .update_internal::&lt;H, Arity&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, elem)<span class="question-mark">?</span>;
         <span class="kw">if let </span>LookupResult::NotFound(<span class="kw">_</span>) = ret {
             <span class="self">self</span>.num_leaves += <span class="number">1</span>;
         }
-        ret
+        <span class="prelude-val">Ok</span>(ret)
     }
 
     <span class="kw">fn </span>from_kv_set&lt;BI, BE&gt;(
@@ -577,7 +585,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>mt = <span class="self">Self</span>::from_elems(height, [] <span class="kw">as </span>[<span class="kw-2">&amp;</span><span class="self">Self</span>::Element; <span class="number">0</span>])<span class="question-mark">?</span>;
         <span class="kw">for </span>tuple <span class="kw">in </span>data.into_iter() {
             <span class="kw">let </span>(key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(<span class="kw-2">&amp;mut </span>mt, key.borrow(), value.borrow());
+            UniversalMerkleTreeScheme::update(<span class="kw-2">&amp;mut </span>mt, key.borrow(), value.borrow())<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(mt)
     }
@@ -662,7 +670,7 @@
                                 <span class="kw">let </span><span class="kw-2">mut </span>data: Vec&lt;<span class="kw">_</span>&gt; =
                                     children.iter().map(|node| node.value()).collect();
                                 data[<span class="kw-2">*</span>branch] = val;
-                                <span class="kw">let </span>digest = H::digest(<span class="kw-2">&amp;</span>data);
+                                <span class="kw">let </span>digest = H::digest(<span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>;
                                 path_values.push(digest);
                                 <span class="prelude-val">Ok</span>(digest)
                             },
@@ -784,7 +792,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>mt =
             RescueSparseMerkleTree::&lt;F, F&gt;::from_kv_set(<span class="number">10</span>, HashMap::&lt;F, F&gt;::new()).unwrap();
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
-            mt.update(F::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64));
+            mt.update(F::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64)).unwrap();
         }
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
             <span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
