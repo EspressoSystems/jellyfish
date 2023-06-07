@@ -38,18 +38,21 @@ where
     type NonMembershipProof = MerkleProof<E, I, T, Arity>;
     type BatchNonMembershipProof = ();
 
-    fn update(&mut self, pos: impl Borrow<I>, elem: impl Borrow<E>) -> LookupResult<E, (), ()> {
+    fn update(
+        &mut self,
+        pos: impl Borrow<I>,
+        elem: impl Borrow<E>,
+    ) -> Result<LookupResult<E, (), ()>, PrimitivesError> {
         let pos = pos.borrow();
         let elem = elem.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
         let ret = self
             .root
-            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem)
-            .expect("Internal error caused by hash failure.");
+            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem)?;
         if let LookupResult::NotFound(_) = ret {
             self.num_leaves += 1;
         }
-        ret
+        Ok(ret)
     }
 
     fn from_kv_set<BI, BE>(
@@ -63,7 +66,7 @@ where
         let mut mt = Self::from_elems(height, [] as [&Self::Element; 0])?;
         for tuple in data.into_iter() {
             let (key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow());
+            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
         }
         Ok(mt)
     }
@@ -268,7 +271,7 @@ mod mt_tests {
         let mut mt =
             RescueSparseMerkleTree::<F, F>::from_kv_set(10, HashMap::<F, F>::new()).unwrap();
         for i in 0..2 {
-            mt.update(F::from(i as u64), F::from(i as u64));
+            mt.update(F::from(i as u64), F::from(i as u64)).unwrap();
         }
         for i in 0..2 {
             let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();

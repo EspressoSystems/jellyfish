@@ -290,11 +290,13 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
+    /// * `returns` - Ok(elem) if the update is success, and `elem` is the
+    ///   original element at the given `pos`. Err() if the update fails.
     fn update(
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> LookupResult<Self::Element, (), ()>;
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
