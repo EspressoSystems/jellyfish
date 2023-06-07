@@ -8,11 +8,16 @@
 use alloc::vec;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
-use core::{fmt::Debug, hash::Hash, marker::PhantomData};
+use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
+use hashbrown::{hash_map::Entry, HashMap};
+use typenum::Unsigned;
 
-use crate::errors::PrimitivesError;
+use crate::errors::{PrimitivesError, VerificationResult};
 
-use super::{AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, NodeValue};
+use super::{
+    append_only::MerkleTree, AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index,
+    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+};
 
 /// Namespaced Merkle Tree where leaves are sorted by a namespace identifier.
 /// The data structure supports namespace inclusion proofs.
@@ -27,15 +32,12 @@ where
 
     /// Returns the entire set of leaves corresponding to a given namespace and
     /// a completeness proof.
-    fn get_namespace_leaves_and_proof(
-        &self,
-        namespace: Self::NamespaceId,
-    ) -> (Vec<Self::Element>, Self::NamespaceProof);
+    fn get_namespace_proof(&self, namespace: Self::NamespaceId) -> Self::NamespaceProof;
 
     /// Verifies the completeness proof for a given set of leaves and a
     /// namespace.
     fn verify_namespace_proof(
-        leaves: &[Self::Element],
+        &self,
         proof: Self::NamespaceProof,
         namespace: Self::NamespaceId,
     ) -> Result<(), PrimitivesError>;
@@ -44,6 +46,7 @@ where
 /// NamespacedHasher wraps a standard hash function (implementer of
 /// DigestAlgorithm), turning it into a hash function that tags internal nodes
 /// with namespace ranges.
+#[derive(Debug)]
 pub struct NamespacedHasher<H, E, I, T, N>
 where
     H: DigestAlgorithm<E, I, T>,
@@ -156,9 +159,15 @@ where
         let mut max_namespace = first_node.max_namespace;
         let mut nodes = vec![H::generate_namespaced_commitment(first_node)];
         for node in &data[1..] {
+            if node == &NamespacedHash::default() {
+                continue;
+            }
             // Ensure that namespaced nodes are sorted
             if node.min_namespace < max_namespace {
-                panic!("leaves are out of order")
+                panic!(
+                    "leaves are out of order: Max namespace is {:?} but candidate range is {:?}:{:?}",
+                    max_namespace, node.min_namespace, node.max_namespace
+                );
             }
             max_namespace = node.max_namespace;
             nodes.push(H::generate_namespaced_commitment(*node));
@@ -176,12 +185,189 @@ where
     }
 }
 
+type InnerTree<E, H, T, N, Arity> =
+    MerkleTree<E, NamespacedHasher<H, E, u64, T, N>, u64, Arity, NamespacedHash<T, N>>;
+
+#[derive(Debug)]
+/// NMT
+pub struct NMT<E, H, Arity, N, T>
+where
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    namespace_ranges: HashMap<N, Range<u64>>,
+    inner: InnerTree<E, H, T, N, Arity>,
+}
+
+impl<E, H, Arity, N, T> MerkleTreeScheme for NMT<E, H, Arity, N, T>
+where
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    type Element = E;
+    type Index = u64;
+    type NodeValue = NamespacedHash<T, N>;
+    type MembershipProof = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::MembershipProof;
+    type BatchMembershipProof =
+        <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::BatchMembershipProof;
+    const ARITY: usize = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::ARITY;
+    type Commitment = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::Commitment;
+
+    fn from_elems(
+        height: usize,
+        elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
+    ) -> Result<Self, PrimitivesError> {
+        let mut namespace_ranges: HashMap<N, Range<u64>> = HashMap::new();
+        let mut max_namespace = <N as Namespace>::min();
+        let mut leaves = Vec::new();
+        for (idx, elem) in elems.into_iter().enumerate() {
+            let ns = elem.borrow().get_namespace();
+            let idx: u64 = idx.try_into().unwrap();
+            if ns < max_namespace {
+                return Err(PrimitivesError::InconsistentStructureError(
+                    "Namespace leaves must be pushed in sorted order".into(),
+                ));
+            }
+            match namespace_ranges.entry(ns) {
+                Entry::Occupied(entry) => {
+                    entry.into_mut().end = idx + 1;
+                },
+                Entry::Vacant(entry) => {
+                    entry.insert(idx..idx + 1);
+                },
+            }
+            max_namespace = ns;
+            leaves.push(elem);
+        }
+        let inner = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::from_elems(height, leaves)?;
+        Ok(NMT {
+            inner,
+            namespace_ranges,
+        })
+    }
+
+    fn height(&self) -> usize {
+        self.inner.height()
+    }
+
+    fn capacity(&self) -> num_bigint::BigUint {
+        self.inner.capacity()
+    }
+
+    fn num_leaves(&self) -> u64 {
+        self.inner.num_leaves()
+    }
+
+    fn commitment(&self) -> Self::Commitment {
+        self.inner.commitment()
+    }
+
+    fn lookup(
+        &self,
+        pos: impl Borrow<Self::Index>,
+    ) -> super::LookupResult<Self::Element, Self::MembershipProof, ()> {
+        self.inner.lookup(pos)
+    }
+
+    fn verify(
+        root: impl Borrow<Self::NodeValue>,
+        pos: impl Borrow<Self::Index>,
+        proof: impl Borrow<Self::MembershipProof>,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::verify(root, pos, proof)
+    }
+}
+
+impl<E, H, Arity, N, T> AppendableMerkleTreeScheme for NMT<E, H, Arity, N, T>
+where
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    fn extend(
+        &mut self,
+        elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
+    ) -> Result<(), PrimitivesError> {
+        // TODO: update namespace metadata
+        self.inner.extend(elems)
+    }
+
+    fn push(
+        &mut self,
+        elem: impl core::borrow::Borrow<Self::Element>,
+    ) -> Result<(), PrimitivesError> {
+        // TODO: update namespace metadata
+        self.inner.push(elem)
+    }
+}
+
+impl<E, H, Arity, N, T> NamespacedMerkleTreeScheme for NMT<E, H, Arity, N, T>
+where
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    type NamespaceId = N;
+    type NamespaceProof = Vec<(E, <Self as MerkleTreeScheme>::MembershipProof, u64)>;
+
+    fn get_namespace_proof(&self, namespace: Self::NamespaceId) -> Self::NamespaceProof {
+        let ns_range = self.namespace_ranges.get(&namespace);
+        let mut ns_proof = Vec::new();
+        if let Some(ns_range) = ns_range {
+            for i in ns_range.clone() {
+                if let LookupResult::Ok(elem, proof) = self.inner.lookup(i) {
+                    ns_proof.push((elem, proof, i));
+                }
+            }
+        }
+        ns_proof
+    }
+
+    fn verify_namespace_proof(
+        &self,
+        proof: Self::NamespaceProof,
+        namespace: Self::NamespaceId,
+    ) -> Result<(), PrimitivesError> {
+        for (elem, elem_proof, i) in proof {
+            // This just verifies each merkle leaf, placeholder until completeness is
+            // actually checked
+            if Self::verify(self.commitment().digest(), i, elem_proof.clone())?.is_err() {
+                return Err(PrimitivesError::VerificationError(
+                    "Leaf verification error".into(),
+                ));
+            }
+            if &elem != elem_proof.elem().unwrap() {
+                return Err(PrimitivesError::VerificationError(
+                    "Element does not match the proven value".into(),
+                ));
+            }
+            if elem.get_namespace() != namespace {
+                return Err(PrimitivesError::VerificationError(
+                    "Namespace invalid".into(),
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod nmt_tests {
     use std::panic::catch_unwind;
 
     use digest::Digest;
     use sha3::Sha3_256;
+    use typenum::U2;
 
     use super::*;
     use crate::merkle_tree::examples::{Sha3Digest, Sha3Node};
@@ -218,6 +404,8 @@ mod nmt_tests {
             self.namespace
         }
     }
+
+    type TestNMT = NMT<Leaf, Sha3Digest, U2, NamespaceId, Sha3Node>;
 
     impl<E, I, N> BindNamespace<E, I, Sha3Node, N> for Sha3Digest
     where
@@ -273,5 +461,15 @@ mod nmt_tests {
         hashes[0] = hashes[hashes.len() - 1];
         let res = catch_unwind(|| Hasher::digest(&hashes));
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_nmt() {
+        let num_leaves = 5;
+        let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
+        let tree = TestNMT::from_elems(3, leaves).unwrap();
+        let proof = tree.get_namespace_proof(0);
+        assert!(tree.verify_namespace_proof(proof.clone(), 0).is_ok());
+        assert!(tree.verify_namespace_proof(proof, 1).is_err());
     }
 }
