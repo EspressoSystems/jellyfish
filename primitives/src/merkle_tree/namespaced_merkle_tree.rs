@@ -312,7 +312,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// Namespace Proof
 pub struct NamespaceProof<E, T, Arity, N, H>
 where
@@ -323,6 +323,8 @@ where
     Arity: Unsigned,
 {
     proofs: Vec<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
+    left_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
+    right_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
     indices: Vec<u64>,
     phantom: PhantomData<H>,
 }
@@ -335,6 +337,51 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
+    fn verify_left_namespace_boundary(
+        &self,
+        root: &NamespacedHash<T, N>,
+        namespace: N,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        if let Some(boundary_proof) = self.left_boundary_proof.as_ref() {
+            // If there is a leaf to the left of the namespace range, check that it is less
+            // than the target namespace
+            if boundary_proof.elem().unwrap().get_namespace() >= namespace
+                || *boundary_proof.index() != self.indices[0] - 1
+            {
+                return Ok(Err(()));
+            }
+        } else {
+            // If there is no left boundary, ensure that target namespace is the tree's
+            // minimum namespace
+            if root.min_namespace != namespace {
+                return Ok(Err(()));
+            }
+        }
+        Ok(Ok(()))
+    }
+
+    fn verify_right_namespace_boundary(
+        &self,
+        root: &NamespacedHash<T, N>,
+        namespace: N,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        if let Some(boundary_proof) = self.right_boundary_proof.as_ref() {
+            // If there is a leaf to the left of the namespace range, check that it is less
+            // than the target namespace
+            if boundary_proof.elem().unwrap().get_namespace() <= namespace
+                || *boundary_proof.index() != self.indices[self.indices.len() - 1] + 1
+            {
+                return Ok(Err(()));
+            }
+        } else {
+            // If there is no left boundary, ensure that target namespace is the tree's
+            // minimum namespace
+            if root.max_namespace != namespace {
+                return Ok(Err(()));
+            }
+        }
+        Ok(Ok(()))
+    }
     /// Verify a namespace proof
     pub fn verify(
         &self,
@@ -343,18 +390,24 @@ where
     ) -> Result<VerificationResult, PrimitivesError> {
         for (idx, proof) in self.proofs.iter().enumerate() {
             if <InnerTree<E, H, T, N, Arity>>::verify(root, self.indices[idx], proof)?.is_err() {
-                return Err(PrimitivesError::VerificationError(
-                    "Leaf verification error".into(),
-                ));
+                return Ok(Err(()));
             }
-            // TODO: Once boundaries are checked, it will be sufficient to simply check the
-            // First elem's namespace, the last elem's namespace and that indices are
-            // sequential
+            // TODO: Maybe sufficient to check that the indices are sequential?
             if proof.elem().unwrap().get_namespace() != namespace {
-                return Err(PrimitivesError::VerificationError(
-                    "Incorrect namespace".into(),
-                ));
+                return Ok(Err(()));
             }
+        }
+        if self
+            .verify_left_namespace_boundary(root, namespace)?
+            .is_err()
+        {
+            return Ok(Err(()));
+        }
+        if self
+            .verify_right_namespace_boundary(root, namespace)?
+            .is_err()
+        {
+            return Ok(Err(()));
         }
         Ok(Ok(()))
     }
@@ -375,16 +428,38 @@ where
         let ns_range = self.namespace_ranges.get(&namespace);
         let mut proofs = Vec::new();
         let mut indices = Vec::new();
+        let mut left_boundary_proof = None;
+        let mut right_boundary_proof = None;
         if let Some(ns_range) = ns_range {
             for i in ns_range.clone() {
                 if let LookupResult::Ok(_, proof) = self.inner.lookup(i) {
                     proofs.push(proof);
                     indices.push(i);
+                } else {
+                    panic!()
+                }
+            }
+            let left_index = indices[0];
+            let right_index = indices[indices.len() - 1];
+            if left_index > 0 {
+                if let LookupResult::Ok(_, proof) = self.inner.lookup(left_index - 1) {
+                    left_boundary_proof = Some(proof);
+                } else {
+                    panic!()
+                }
+            }
+            if right_index < self.num_leaves() - 1 {
+                if let LookupResult::Ok(_, proof) = self.inner.lookup(right_index + 1) {
+                    right_boundary_proof = Some(proof);
+                } else {
+                    panic!()
                 }
             }
         }
         NamespaceProof {
             proofs,
+            left_boundary_proof,
+            right_boundary_proof,
             indices,
             phantom: PhantomData,
         }
@@ -401,7 +476,6 @@ where
 
 #[cfg(test)]
 mod nmt_tests {
-
     use digest::Digest;
     use sha3::Sha3_256;
     use typenum::U2;
