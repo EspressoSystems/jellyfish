@@ -9,7 +9,7 @@
 use crate::errors::PrimitivesError;
 use ark_ff::{FftField, Field};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
-use ark_std::{format, vec, vec::Vec};
+use ark_std::{format, string::ToString, vec, vec::Vec};
 use core::borrow::Borrow;
 
 /// Erasure-encode `data` into `data.len() + parity_size` shares.
@@ -152,10 +152,32 @@ where
     D::Item: Borrow<(usize, F)>,
     D::IntoIter: ExactSizeIterator + Clone,
 {
-    let domain_shares = shares.into_iter().map(|share| {
+    let shares_iter = shares.into_iter();
+
+    // check arguments
+    let max_index = shares_iter
+        .clone()
+        .max_by_key(|s| s.borrow().0)
+        .ok_or_else(|| PrimitivesError::ParameterError("empty shares".to_string()))?
+        .borrow()
+        .0;
+    if max_index >= domain.size() {
+        return Err(PrimitivesError::ParameterError(format!(
+            "share index {} out of bounds for domain size {}",
+            max_index,
+            domain.size()
+        )));
+    }
+
+    // We need random access to domain elements
+    // but we are given only an iterator.
+    // The least bad solution is to collect all elements.
+    let domain_elements: Vec<_> = domain.elements().collect();
+
+    let domain_shares = shares_iter.map(|share| {
         let &(index, eval) = share.borrow();
-        // TODO(Gus) nth runtime is linear in index!
-        (domain.elements().nth(index).unwrap(), eval)
+        // index cannot panic, we already checked
+        (domain_elements[index], eval)
     });
     reed_solomon_erasure_decode(domain_shares, data_size)
 }
