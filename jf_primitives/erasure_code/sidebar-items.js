@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["reed_solomon_erasure"],"trait":["ErasureCode"]};
