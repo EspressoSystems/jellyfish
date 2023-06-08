@@ -34,7 +34,7 @@ use core::borrow::Borrow;
 /// let output = reed_solomon_erasure_decode(eval_points.iter().zip(result).take(2), 2).unwrap();
 /// assert_eq!(input, output);
 /// ```
-pub fn reed_solomon_encode<F, D>(
+pub fn reed_solomon_erasure_encode<F, D>(
     data: D,
     parity_size: usize,
 ) -> Result<impl Iterator<Item = F>, PrimitivesError>
@@ -170,7 +170,7 @@ mod test {
     use ark_std::{vec, vec::Vec};
 
     use crate::reed_solomon_code::{
-        reed_solomon_encode, reed_solomon_erasure_decode, reed_solomon_erasure_decode_rou,
+        reed_solomon_erasure_decode, reed_solomon_erasure_decode_rou, reed_solomon_erasure_encode,
     };
 
     fn test_rs_code_helper<F: Field>() {
@@ -178,7 +178,9 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![F::from(3u64), F::from(5u64), F::from(7u64)];
-        let code: Vec<F> = reed_solomon_encode(data.iter(), 1).unwrap().collect();
+        let code: Vec<F> = reed_solomon_erasure_encode(data.iter(), 1)
+            .unwrap()
+            .collect();
         assert_eq!(code, expected);
 
         for to_be_removed in 0..code.len() {
