@@ -11,6 +11,7 @@
 //! independent of RustCrypto's upstream changes.
 
 use crate::errors::PrimitivesError;
+use ark_serialize::*;
 use ark_std::{
     fmt, format,
     ops::{Deref, DerefMut},
@@ -124,7 +125,9 @@ impl fmt::Debug for DecKey {
 }
 
 /// Keypair for Authenticated Encryption with Associated Data
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, Default, Serialize, Deserialize, CanonicalSerialize, CanonicalDeserialize,
+)]
 pub struct KeyPair {
     enc_key: EncKey,
     dec_key: DecKey,
@@ -240,11 +243,125 @@ impl DerefMut for Nonce {
 }
 
 /// The ciphertext produced by AEAD encryption
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    CanonicalSerialize,
+    CanonicalDeserialize,
+)]
 pub struct Ciphertext {
     nonce: Nonce,
     ct: Vec<u8>,
     ephemeral_pk: EncKey,
+}
+
+// TODO: (alex) Temporarily add CanonicalSerde back to these structs due to the
+// limitations of `tagged` proc macro and requests from downstream usage.
+// Tracking issue: <https://github.com/EspressoSystems/jellyfish/issues/288>
+mod canonical_serde {
+    use super::*;
+
+    impl CanonicalSerialize for EncKey {
+        fn serialize_with_mode<W: Write>(
+            &self,
+            mut writer: W,
+            _compress: Compress,
+        ) -> Result<(), SerializationError> {
+            let bytes: [u8; crypto_kx::PublicKey::BYTES] = self.clone().into();
+            writer.write_all(&bytes)?;
+            Ok(())
+        }
+        fn serialized_size(&self, _compress: Compress) -> usize {
+            crypto_kx::PublicKey::BYTES
+        }
+    }
+
+    impl CanonicalDeserialize for EncKey {
+        fn deserialize_with_mode<R: Read>(
+            mut reader: R,
+            _compress: Compress,
+            _validate: Validate,
+        ) -> Result<Self, SerializationError> {
+            let mut result = [0u8; crypto_kx::PublicKey::BYTES];
+            reader.read_exact(&mut result)?;
+            Ok(EncKey(crypto_kx::PublicKey::from(result)))
+        }
+    }
+
+    impl Valid for EncKey {
+        fn check(&self) -> Result<(), SerializationError> {
+            Ok(())
+        }
+    }
+
+    impl CanonicalSerialize for DecKey {
+        fn serialize_with_mode<W: Write>(
+            &self,
+            mut writer: W,
+            _compress: Compress,
+        ) -> Result<(), SerializationError> {
+            let bytes: [u8; crypto_kx::SecretKey::BYTES] = self.clone().into();
+            writer.write_all(&bytes)?;
+            Ok(())
+        }
+        fn serialized_size(&self, _compress: Compress) -> usize {
+            crypto_kx::SecretKey::BYTES
+        }
+    }
+
+    impl CanonicalDeserialize for DecKey {
+        fn deserialize_with_mode<R: Read>(
+            mut reader: R,
+            _compress: Compress,
+            _validate: Validate,
+        ) -> Result<Self, SerializationError> {
+            let mut result = [0u8; crypto_kx::SecretKey::BYTES];
+            reader.read_exact(&mut result)?;
+            Ok(DecKey(crypto_kx::SecretKey::from(result)))
+        }
+    }
+    impl Valid for DecKey {
+        fn check(&self) -> Result<(), SerializationError> {
+            Ok(())
+        }
+    }
+
+    impl CanonicalSerialize for Nonce {
+        fn serialize_with_mode<W: Write>(
+            &self,
+            mut writer: W,
+            _compress: Compress,
+        ) -> Result<(), SerializationError> {
+            writer.write_all(self.0.as_slice())?;
+            Ok(())
+        }
+        fn serialized_size(&self, _compress: Compress) -> usize {
+            // see <https://docs.rs/chacha20poly1305/0.10.1/chacha20poly1305/type.XNonce.html>
+            24
+        }
+    }
+
+    impl CanonicalDeserialize for Nonce {
+        fn deserialize_with_mode<R: Read>(
+            mut reader: R,
+            _compress: Compress,
+            _validate: Validate,
+        ) -> Result<Self, SerializationError> {
+            let mut result = [0u8; 24];
+            reader.read_exact(&mut result)?;
+            Ok(Nonce(XNonce::from(result)))
+        }
+    }
+    impl Valid for Nonce {
+        fn check(&self) -> Result<(), SerializationError> {
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]
@@ -321,5 +438,31 @@ mod test {
         assert_eq!(&ciphertext, &bincode::deserialize(&bytes).unwrap());
         // wrong byte length
         assert!(bincode::deserialize::<Ciphertext>(&bytes[1..]).is_err());
+    }
+
+    #[test]
+    fn test_canonical_serde() {
+        let mut rng = jf_utils::test_rng();
+        let keypair = KeyPair::generate(&mut rng);
+        let msg = b"The quick brown fox jumps over the lazy dog".to_vec();
+        let aad = b"my associated data".to_vec();
+        let ciphertext = keypair.enc_key.encrypt(&mut rng, &msg, &aad).unwrap();
+
+        // when testing keypair, already tests serde on pk and sk
+        let mut bytes = Vec::new();
+        CanonicalSerialize::serialize_compressed(&keypair, &mut bytes).unwrap();
+        assert_eq!(
+            keypair,
+            KeyPair::deserialize_compressed(&bytes[..]).unwrap()
+        );
+        assert!(KeyPair::deserialize_compressed(&bytes[1..]).is_err());
+
+        let mut bytes = Vec::new();
+        CanonicalSerialize::serialize_compressed(&ciphertext, &mut bytes).unwrap();
+        assert_eq!(
+            ciphertext,
+            Ciphertext::deserialize_compressed(&bytes[..]).unwrap()
+        );
+        assert!(Ciphertext::deserialize_compressed(&bytes[1..]).is_err());
     }
 }
