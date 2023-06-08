@@ -313,6 +313,12 @@ where
 }
 
 #[derive(Clone, Debug)]
+enum NamespaceProofType {
+    Presence,
+    Absence,
+}
+
+#[derive(Clone, Debug)]
 /// Namespace Proof
 pub struct NamespaceProof<E, T, Arity, N, H>
 where
@@ -322,6 +328,7 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
+    proof_type: NamespaceProofType,
     proofs: Vec<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
     left_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
     right_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
@@ -339,10 +346,14 @@ where
     /// Return the set of leaves associated with this Namespace proof
     /// TODO: return reference to avoid cloning?
     pub fn get_namespace_leaves(&self) -> Vec<E> {
-        self.proofs
-            .iter()
-            .map(|proof| proof.elem().cloned().unwrap())
-            .collect::<Vec<E>>()
+        match self.proof_type {
+            NamespaceProofType::Presence => self
+                .proofs
+                .iter()
+                .map(|proof| proof.elem().cloned().unwrap())
+                .collect::<Vec<E>>(),
+            NamespaceProofType::Absence => Vec::new(),
+        }
     }
 }
 
@@ -399,8 +410,52 @@ where
         }
         Ok(Ok(()))
     }
+
     /// Verify a namespace proof
-    pub fn verify(
+    fn verify(
+        &self,
+        root: &NamespacedHash<T, N>,
+        namespace: N,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        match self.proof_type {
+            NamespaceProofType::Presence => self.verify_presence_proof(root, namespace),
+            NamespaceProofType::Absence => self.verify_absence_proof(root, namespace),
+        }
+    }
+
+    fn verify_absence_proof(
+        &self,
+        root: &NamespacedHash<T, N>,
+        namespace: N,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        if namespace < root.min_namespace || namespace > root.max_namespace {
+            // Easy case where the namespace isn't covered by the range of the tree root
+            return Ok(Ok(()));
+        } else {
+            // Harder case: Find an element whose namespace is greater than our
+            // target and show that the namespace to the left is less than our
+            // target
+            let left_proof = &self.left_boundary_proof.as_ref().unwrap();
+            let right_proof = &self.proofs[0];
+            let left_index = left_proof.index();
+            let left_ns = left_proof.elem().unwrap().get_namespace();
+            let right_index = right_proof.index();
+            let right_ns = right_proof.elem().unwrap().get_namespace();
+            // Ensure that leaves are adjacent
+            if *right_index != left_index + 1 {
+                return Ok(Err(()));
+            }
+            // And that our target namespace is in between the leaves'
+            // namespaces
+            if namespace <= left_ns || namespace >= right_ns {
+                return Ok(Err(()));
+            }
+        }
+
+        Ok(Ok(()))
+    }
+
+    fn verify_presence_proof(
         &self,
         root: &NamespacedHash<T, N>,
         namespace: N,
@@ -458,7 +513,9 @@ where
         let mut indices = Vec::new();
         let mut left_boundary_proof = None;
         let mut right_boundary_proof = None;
+        let proof_type;
         if let Some(ns_range) = ns_range {
+            proof_type = NamespaceProofType::Presence;
             for i in ns_range.clone() {
                 if let LookupResult::Ok(_, proof) = self.inner.lookup(i) {
                     proofs.push(proof);
@@ -483,8 +540,13 @@ where
                     panic!()
                 }
             }
+        } else {
+            proof_type = NamespaceProofType::Absence
+            // TODO: This only handles the simple absence proof case where the
+            // namespace is outside of the root's namespace range
         }
         NamespaceProof {
+            proof_type,
             proofs,
             left_boundary_proof,
             right_boundary_proof,
@@ -648,5 +710,14 @@ mod nmt_tests {
             .verify_namespace_proof(&internal_proof, internal_ns)
             .unwrap()
             .is_err());
+
+        // Check the simple absence proof case when the namespace falls outside of the
+        // tree range
+        let absence_proof = tree.get_namespace_proof(last_ns + 1);
+        assert!(tree
+            .verify_namespace_proof(&absence_proof, last_ns + 1)
+            .unwrap()
+            .is_ok());
+        assert_eq!(absence_proof.get_namespace_leaves(), []);
     }
 }
