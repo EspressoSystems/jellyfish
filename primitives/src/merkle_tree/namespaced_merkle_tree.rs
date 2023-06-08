@@ -579,7 +579,10 @@ mod nmt_tests {
         let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
         let tree = TestNMT::from_elems(3, leaves).unwrap();
         let proof = tree.get_namespace_proof(1);
-        assert!(tree.verify_namespace_proof(proof.clone(), 1).is_ok());
-        assert!(tree.verify_namespace_proof(proof, 2).is_err());
+        assert!(tree
+            .verify_namespace_proof(proof.clone(), 1)
+            .unwrap()
+            .is_ok());
+        assert!(tree.verify_namespace_proof(proof, 2).unwrap().is_err());
     }
 }
