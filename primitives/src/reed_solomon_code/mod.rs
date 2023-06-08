@@ -7,7 +7,8 @@
 //! Module for erasure code
 
 use crate::errors::PrimitivesError;
-use ark_ff::Field;
+use ark_ff::{FftField, Field};
+use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec, vec::Vec};
 use core::borrow::Borrow;
 
@@ -131,16 +132,42 @@ where
     Ok(f)
 }
 
+/// Like [`reed_solomon_erasure_decode`] except input points are drawn from the
+/// given FFT domain.
+///
+/// Differences from [`reed_solomon_erasure_decode`]:
+/// - First part of the share is an index into `domain`
+pub fn reed_solomon_erasure_decode_rou<F, D>(
+    shares: D,
+    data_size: usize,
+    domain: &Radix2EvaluationDomain<F>,
+) -> Result<Vec<F>, PrimitivesError>
+where
+    F: FftField,
+    D: IntoIterator,
+    D::Item: Borrow<(usize, F)>,
+    D::IntoIter: ExactSizeIterator + Clone,
+{
+    let domain_shares = shares.into_iter().map(|share| {
+        let &(index, eval) = share.borrow();
+        // TODO(Gus) nth runtime is linear in index!
+        (domain.elements().nth(index).unwrap(), eval)
+    });
+    reed_solomon_erasure_decode(domain_shares, data_size)
+}
+
 #[cfg(test)]
 mod test {
     use ark_bls12_377::Fr as Fr377;
     use ark_bls12_381::Fr as Fr381;
     use ark_bn254::Fr as Fr254;
     use ark_ff::{FftField, Field};
-    use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
+    use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
     use ark_std::{vec, vec::Vec};
 
-    use crate::reed_solomon_code::{reed_solomon_encode, reed_solomon_erasure_decode};
+    use crate::reed_solomon_code::{
+        reed_solomon_encode, reed_solomon_erasure_decode, reed_solomon_erasure_decode_rou,
+    };
 
     fn test_rs_code_helper<F: Field>() {
         // Encoded as a polynomial 2x + 1
@@ -168,14 +195,27 @@ mod test {
     }
 
     fn test_rs_code_fft_helper<F: FftField>() {
-        let domain = GeneralEvaluationDomain::<F>::new(3).unwrap();
+        let domain = Radix2EvaluationDomain::<F>::new(3).unwrap();
         let input = vec![F::from(1u64), F::from(2u64)];
-        let mut code = domain.fft(&input);
-        let mut eval_points = domain.elements().collect::<Vec<_>>();
-        eval_points.remove(1);
-        code.remove(1);
-        let output = reed_solomon_erasure_decode(eval_points.iter().zip(code), 2).unwrap();
-        assert_eq!(input, output);
+
+        // manually encode via FFT, then decode by explicitly supplying roots of unity
+        {
+            let mut code = domain.fft(&input);
+            let mut eval_points = domain.elements().collect::<Vec<_>>();
+            eval_points.remove(1);
+            code.remove(1);
+            let output = reed_solomon_erasure_decode(eval_points.iter().zip(code), 2).unwrap();
+            assert_eq!(input, output);
+        }
+
+        // manually encode via FFT, then decode via reed_solomon_erasure_decode_rou
+        {
+            let mut code = domain.fft(&input);
+            code.remove(1);
+            let output =
+                reed_solomon_erasure_decode_rou([0, 2].into_iter().zip(code), 2, &domain).unwrap();
+            assert_eq!(input, output);
+        }
     }
 
     #[test]
