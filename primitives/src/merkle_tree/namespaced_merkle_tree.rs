@@ -5,9 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementation of a Namespaced Merkle Tree.
-use alloc::vec;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::vec::Vec;
+use ark_std::{string::ToString, vec, vec::Vec};
 use core::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use crate::errors::PrimitivesError;
@@ -147,9 +146,9 @@ where
     H: DigestAlgorithm<E, I, T> + BindNamespace<E, I, T, N>,
 {
     // Assumes that data is sorted by namespace, will be enforced by "append"
-    fn digest(data: &[NamespacedHash<T, N>]) -> NamespacedHash<T, N> {
+    fn digest(data: &[NamespacedHash<T, N>]) -> Result<NamespacedHash<T, N>, PrimitivesError> {
         if data.is_empty() {
-            return NamespacedHash::default();
+            return Ok(NamespacedHash::default());
         }
         let first_node = data[0];
         let min_namespace = first_node.min_namespace;
@@ -158,28 +157,32 @@ where
         for node in &data[1..] {
             // Ensure that namespaced nodes are sorted
             if node.min_namespace < max_namespace {
-                panic!("leaves are out of order")
+                return Err(PrimitivesError::InternalError(
+                    "Namespace Merkle tree leaves are out of order".to_string(),
+                ));
             }
             max_namespace = node.max_namespace;
             nodes.push(H::generate_namespaced_commitment(*node));
         }
 
-        let inner_hash = H::digest(&nodes);
+        let inner_hash = H::digest(&nodes)?;
 
-        NamespacedHash::new(min_namespace, max_namespace, inner_hash)
+        Ok(NamespacedHash::new(
+            min_namespace,
+            max_namespace,
+            inner_hash,
+        ))
     }
 
-    fn digest_leaf(pos: &I, elem: &E) -> NamespacedHash<T, N> {
+    fn digest_leaf(pos: &I, elem: &E) -> Result<NamespacedHash<T, N>, PrimitivesError> {
         let namespace = elem.get_namespace();
-        let hash = H::digest_leaf(pos, elem);
-        NamespacedHash::new(namespace, namespace, hash)
+        let hash = H::digest_leaf(pos, elem)?;
+        Ok(NamespacedHash::new(namespace, namespace, hash))
     }
 }
 
 #[cfg(test)]
 mod nmt_tests {
-    use std::panic::catch_unwind;
-
     use digest::Digest;
     use sha3::Sha3_256;
 
@@ -251,27 +254,26 @@ mod nmt_tests {
     #[test]
     fn test_namespaced_hash() {
         let num_leaves = 5;
-        let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
+        let leaves: Vec<Leaf> = (0..num_leaves).map(Leaf::new).collect();
 
         // Ensure that leaves are digested correctly
-        let mut hashes: Vec<NamespacedHash<Sha3Node, u64>> = leaves
+        let mut hashes = leaves
             .iter()
             .enumerate()
             .map(|(idx, leaf)| Hasher::digest_leaf(&(idx as u64), leaf))
-            .collect();
+            .collect::<Result<Vec<_>, PrimitivesError>>()
+            .unwrap();
         assert_eq!((hashes[0].min_namespace, hashes[0].max_namespace), (0, 0));
 
         // Ensure that sorted internal nodes are digested correctly
-        let hash = Hasher::digest(&hashes);
+        let hash = Hasher::digest(&hashes).unwrap();
         assert_eq!(
             (hash.min_namespace, hash.max_namespace),
             (0, num_leaves - 1)
         );
 
         // Ensure that digest errors when internal nodes are not sorted by namespace
-        // digest will turn a result when https://github.com/EspressoSystems/jellyfish/issues/275 is addressed
         hashes[0] = hashes[hashes.len() - 1];
-        let res = catch_unwind(|| Hasher::digest(&hashes));
-        assert!(res.is_err());
+        assert!(Hasher::digest(&hashes).is_err());
     }
 }

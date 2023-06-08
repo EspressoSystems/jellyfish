@@ -167,7 +167,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                             "Element does not match the proof.".to_string(),
                         ));
                     }
-                    let proof_leaf_value = H::digest_leaf(pos, elem);
+                    let proof_leaf_value = H::digest_leaf(pos, elem)?;
                     let mut path_values = vec![proof_leaf_value];
                     traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                         Ok(proof_leaf_value),
@@ -178,7 +178,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                                         let mut data: Vec<_> =
                                             children.iter().map(|node| node.value()).collect();
                                         data[*branch] = val;
-                                        let digest = H::digest(&data);
+                                        let digest = H::digest(&data)?;
                                         path_values.push(digest);
                                         Ok(digest)
                                     },
