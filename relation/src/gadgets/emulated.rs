@@ -183,8 +183,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let mut val_carry_out =
             (a_limbs[0] * b_limbs[0] + k_limbs[0] * neg_modulus[0] - val_expected_limbs[0]) / b_pow;
         let mut carry_out = self.create_variable(val_carry_out)?;
-        // checking that the carry_out has at most [`E::B`] bits
-        self.enforce_in_range(carry_out, E::B)?;
+        // checking that the carry_out has at most [`E::B`] + 1 bits
+        self.enforce_in_range(carry_out, E::B + 1)?;
         // enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
         self.general_arithmetic_gate(
             &[a.0[0], b.0[0], k.0[0], carry_out, c.0[0]],
@@ -206,7 +206,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out = self.create_variable(val_next_carry_out)?;
 
             // range checking for this carry out.
-            let num_vals = 2u64 * (i as u64) + 1;
+            // let a = 2^B - 1. The maximum possible value of `next_carry_out` is ((i + 1) *
+            // 2 * a^2 + a) / 2^B.
+            let num_vals = 2u64 * (i as u64) + 2;
             let log_num_vals = (u64::BITS - num_vals.leading_zeros()) as usize;
             self.enforce_in_range(next_carry_out, E::B + log_num_vals)?;
 
@@ -328,7 +330,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             (a_limbs[0] * b_limbs[0] + k_limbs[0] * neg_modulus[0] - val_expected_limbs[0]) / b_pow;
         let mut carry_out = self.create_variable(val_carry_out)?;
         // checking that the carry_out has at most [`E::B`] bits
-        self.enforce_in_range(carry_out, E::B)?;
+        self.enforce_in_range(carry_out, E::B + 1)?;
         // enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
         self.lc_gate(
             &[a.0[0], k.0[0], carry_out, self.zero(), c.0[0]],
@@ -348,7 +350,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out = self.create_variable(val_next_carry_out)?;
 
             // range checking for this carry out.
-            let num_vals = 2u64 * (i as u64) + 1;
+            let num_vals = 2u64 * (i as u64) + 2;
             let log_num_vals = (u64::BITS - num_vals.leading_zeros()) as usize;
             self.enforce_in_range(next_carry_out, E::B + log_num_vals)?;
 
@@ -645,7 +647,7 @@ mod tests {
     use crate::{gadgets::from_emulated_field, Circuit, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
     use ark_bn254::{Fq as Fq254, Fr as Fr254};
-    use ark_ff::PrimeField;
+    use ark_ff::{MontFp, PrimeField};
 
     #[test]
     fn test_basics() {
@@ -702,6 +704,15 @@ mod tests {
     fn test_emulated_mul() {
         test_emulated_mul_helper::<Fq377, Fr254>();
         test_emulated_mul_helper::<Fq254, Fr254>();
+
+        // test for issue (https://github.com/EspressoSystems/jellyfish/issues/306)
+        let x : Fq377= MontFp!("218393408942992446968589193493746660101651787560689350338764189588519393175121782177906966561079408675464506489966");
+        let y : Fq377 = MontFp!("122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
+
+        let mut circuit = PlonkCircuit::<Fr254>::new_turbo_plonk();
+        let var_x = circuit.create_emulated_variable(x).unwrap();
+        let _ = circuit.emulated_mul_constant(&var_x, y).unwrap();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
     }
 
     fn test_emulated_mul_helper<E, F>()
