@@ -28,6 +28,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#254](https://github.com/EspressoSystems/jellyfish/pull/254) Ensure `no_std` and target WASM support
 - [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregateable signatures
 - [#291](https://github.com/EspressoSystems/jellyfish/pull/291) Non-native field operations and elliptic curve addition
+- [#309](https://github.com/EspressoSystems/jellyfish/pull/309) Reed-Solomon decoder accept FFT domain
 
 ### Changed
 
