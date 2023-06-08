@@ -12,10 +12,13 @@ use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec, vec::Vec};
 use core::borrow::Borrow;
 
-/// Encode `data` into `data.len() + parity_size` shares.
+/// Erasure-encode `data` into `data.len() + parity_size` shares.
+///
 /// Treating the input data as the coefficients of a polynomial,
 /// Returns the evaluations of this polynomial over [1, data.len() +
-/// parity_size]. If `F` is a `FftField`, the encoding can be done using FFT on
+/// parity_size].
+///
+/// If `F` is a [`FftField`], the encoding can be done using FFT on
 /// a `GeneralEvaluationDomain` (E.g. when num_shares = 3):
 /// ```
 /// use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
@@ -31,7 +34,10 @@ use core::borrow::Borrow;
 /// let output = reed_solomon_erasure_decode(eval_points.iter().zip(result).take(2), 2).unwrap();
 /// assert_eq!(input, output);
 /// ```
-pub fn reed_solomon_encode<F, D>(data: D, parity_size: usize) -> Result<Vec<F>, PrimitivesError>
+pub fn reed_solomon_encode<F, D>(
+    data: D,
+    parity_size: usize,
+) -> Result<impl Iterator<Item = F>, PrimitivesError>
 where
     F: Field,
     D: IntoIterator,
@@ -43,17 +49,15 @@ where
 
     // view `data` as coefficients of a polynomial
     // make shares by evaluating this polynomial at 1..=num_shares
-    Ok((1..=num_shares)
-        .map(|index| {
-            let mut value = F::zero();
-            let mut x = F::one();
-            data_iter.clone().for_each(|coef| {
-                value += x * coef.borrow();
-                x *= F::from(index as u64);
-            });
-            value
-        })
-        .collect())
+    Ok((1..=num_shares).map(move |index| {
+        let mut value = F::zero();
+        let mut x = F::one();
+        data_iter.clone().for_each(|coef| {
+            value += x * coef.borrow();
+            x *= F::from(index as u64);
+        });
+        value
+    }))
 }
 
 /// Decode into `data_size` data elements via polynomial interpolation.
@@ -174,7 +178,7 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![F::from(3u64), F::from(5u64), F::from(7u64)];
-        let code: Vec<F> = reed_solomon_encode(&data, 1).unwrap();
+        let code: Vec<F> = reed_solomon_encode(data.iter(), 1).unwrap().collect();
         assert_eq!(code, expected);
 
         for to_be_removed in 0..code.len() {
