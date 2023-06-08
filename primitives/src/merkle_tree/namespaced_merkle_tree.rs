@@ -38,7 +38,7 @@ where
     /// namespace.
     fn verify_namespace_proof(
         &self,
-        proof: Self::NamespaceProof,
+        proof: &Self::NamespaceProof,
         namespace: Self::NamespaceId,
     ) -> Result<VerificationResult, PrimitivesError>;
 }
@@ -328,6 +328,23 @@ where
     indices: Vec<u64>,
     phantom: PhantomData<H>,
 }
+impl<E, T, Arity, N, H> NamespaceProof<E, T, Arity, N, H>
+where
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    /// Return the set of leaves associated with this Namespace proof
+    /// TODO: return reference to avoid cloning?
+    pub fn get_namespace_leaves(&self) -> Vec<E> {
+        self.proofs
+            .iter()
+            .map(|proof| proof.elem().cloned().unwrap())
+            .collect::<Vec<E>>()
+    }
+}
 
 impl<E, T, Arity, N, H> NamespaceProof<E, T, Arity, N, H>
 where
@@ -388,21 +405,32 @@ where
         root: &NamespacedHash<T, N>,
         namespace: N,
     ) -> Result<VerificationResult, PrimitivesError> {
+        let mut last_idx: Option<u64> = None;
         for (idx, proof) in self.proofs.iter().enumerate() {
-            if <InnerTree<E, H, T, N, Arity>>::verify(root, self.indices[idx], proof)?.is_err() {
+            let leaf_index = self.indices[idx];
+            if <InnerTree<E, H, T, N, Arity>>::verify(root, leaf_index, proof)?.is_err() {
                 return Ok(Err(()));
             }
-            // TODO: Maybe sufficient to check that the indices are sequential?
             if proof.elem().unwrap().get_namespace() != namespace {
                 return Ok(Err(()));
             }
+            // Indices must be sequential, this checks that there are no gaps in the
+            // namespace
+            if let Some(prev_index) = last_idx {
+                if leaf_index != prev_index + 1 {
+                    return Ok(Err(()));
+                }
+                last_idx = Some(leaf_index);
+            }
         }
+        // Verify that the proof contains the left boundary of the namespace
         if self
             .verify_left_namespace_boundary(root, namespace)?
             .is_err()
         {
             return Ok(Err(()));
         }
+        // Verify that the proof contains the right boundary of the namespace
         if self
             .verify_right_namespace_boundary(root, namespace)?
             .is_err()
@@ -467,7 +495,7 @@ where
 
     fn verify_namespace_proof(
         &self,
-        proof: Self::NamespaceProof,
+        proof: &Self::NamespaceProof,
         namespace: Self::NamespaceId,
     ) -> Result<VerificationResult, PrimitivesError> {
         proof.verify(&self.commitment().digest(), namespace)
@@ -575,14 +603,50 @@ mod nmt_tests {
 
     #[test]
     fn test_nmt() {
-        let num_leaves = 8;
-        let leaves: Vec<Leaf> = (0..num_leaves).map(|i| Leaf::new(i)).collect();
-        let tree = TestNMT::from_elems(3, leaves).unwrap();
-        let proof = tree.get_namespace_proof(1);
+        let namespaces = [1, 2, 2, 2, 3, 3, 3, 4];
+        let first_ns = namespaces[0];
+        let last_ns = namespaces[namespaces.len() - 1];
+        let internal_ns = namespaces[1];
+        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
+        let tree = TestNMT::from_elems(3, leaves.clone()).unwrap();
+        let left_proof = tree.get_namespace_proof(first_ns);
+        let right_proof = tree.get_namespace_proof(last_ns);
+        let mut internal_proof = tree.get_namespace_proof(internal_ns);
+
+        // Check namespace proof on the left boundary
         assert!(tree
-            .verify_namespace_proof(proof.clone(), 1)
+            .verify_namespace_proof(&left_proof, first_ns)
             .unwrap()
             .is_ok());
-        assert!(tree.verify_namespace_proof(proof, 2).unwrap().is_err());
+
+        // Check namespace proof on the right boundary
+        assert!(tree
+            .verify_namespace_proof(&right_proof, last_ns)
+            .unwrap()
+            .is_ok());
+
+        // Check namespace proof for some internal namespace
+        assert!(tree
+            .verify_namespace_proof(&internal_proof, internal_ns)
+            .unwrap()
+            .is_ok());
+
+        // Assert that namespace proof fails for a different namespace
+        assert!(tree
+            .verify_namespace_proof(&left_proof, 2)
+            .unwrap()
+            .is_err());
+
+        // Sanity check that the leaves returned by the proof are correct
+        let internal_leaves = internal_proof.get_namespace_leaves();
+        let raw_leaves_for_ns = &leaves[1..4];
+        assert_eq!(raw_leaves_for_ns, internal_leaves);
+
+        // Check that a namespace proof fails if one of the leaves is removed
+        internal_proof.proofs.remove(1);
+        assert!(tree
+            .verify_namespace_proof(&internal_proof, internal_ns)
+            .unwrap()
+            .is_err());
     }
 }
