@@ -699,6 +699,17 @@
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
 <a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -876,8 +887,8 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>val_carry_out =
             (a_limbs[<span class="number">0</span>] * b_limbs[<span class="number">0</span>] + k_limbs[<span class="number">0</span>] * neg_modulus[<span class="number">0</span>] - val_expected_limbs[<span class="number">0</span>]) / b_pow;
         <span class="kw">let </span><span class="kw-2">mut </span>carry_out = <span class="self">self</span>.create_variable(val_carry_out)<span class="question-mark">?</span>;
-        <span class="comment">// checking that the carry_out has at most [`E::B`] bits
-        </span><span class="self">self</span>.enforce_in_range(carry_out, E::B)<span class="question-mark">?</span>;
+        <span class="comment">// checking that the carry_out has at most [`E::B`] + 1 bits
+        </span><span class="self">self</span>.enforce_in_range(carry_out, E::B + <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="comment">// enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
         </span><span class="self">self</span>.general_arithmetic_gate(
             <span class="kw-2">&amp;</span>[a.<span class="number">0</span>[<span class="number">0</span>], b.<span class="number">0</span>[<span class="number">0</span>], k.<span class="number">0</span>[<span class="number">0</span>], carry_out, c.<span class="number">0</span>[<span class="number">0</span>]],
@@ -899,7 +910,9 @@
             <span class="kw">let </span>next_carry_out = <span class="self">self</span>.create_variable(val_next_carry_out)<span class="question-mark">?</span>;
 
             <span class="comment">// range checking for this carry out.
-            </span><span class="kw">let </span>num_vals = <span class="number">2u64 </span>* (i <span class="kw">as </span>u64) + <span class="number">1</span>;
+            // let a = 2^B - 1. The maximum possible value of `next_carry_out` is ((i + 1) *
+            // 2 * a^2 + a) / 2^B.
+            </span><span class="kw">let </span>num_vals = <span class="number">2u64 </span>* (i <span class="kw">as </span>u64) + <span class="number">2</span>;
             <span class="kw">let </span>log_num_vals = (u64::BITS - num_vals.leading_zeros()) <span class="kw">as </span>usize;
             <span class="self">self</span>.enforce_in_range(next_carry_out, E::B + log_num_vals)<span class="question-mark">?</span>;
 
@@ -1021,7 +1034,7 @@
             (a_limbs[<span class="number">0</span>] * b_limbs[<span class="number">0</span>] + k_limbs[<span class="number">0</span>] * neg_modulus[<span class="number">0</span>] - val_expected_limbs[<span class="number">0</span>]) / b_pow;
         <span class="kw">let </span><span class="kw-2">mut </span>carry_out = <span class="self">self</span>.create_variable(val_carry_out)<span class="question-mark">?</span>;
         <span class="comment">// checking that the carry_out has at most [`E::B`] bits
-        </span><span class="self">self</span>.enforce_in_range(carry_out, E::B)<span class="question-mark">?</span>;
+        </span><span class="self">self</span>.enforce_in_range(carry_out, E::B + <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="comment">// enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
         </span><span class="self">self</span>.lc_gate(
             <span class="kw-2">&amp;</span>[a.<span class="number">0</span>[<span class="number">0</span>], k.<span class="number">0</span>[<span class="number">0</span>], carry_out, <span class="self">self</span>.zero(), c.<span class="number">0</span>[<span class="number">0</span>]],
@@ -1041,7 +1054,7 @@
             <span class="kw">let </span>next_carry_out = <span class="self">self</span>.create_variable(val_next_carry_out)<span class="question-mark">?</span>;
 
             <span class="comment">// range checking for this carry out.
-            </span><span class="kw">let </span>num_vals = <span class="number">2u64 </span>* (i <span class="kw">as </span>u64) + <span class="number">1</span>;
+            </span><span class="kw">let </span>num_vals = <span class="number">2u64 </span>* (i <span class="kw">as </span>u64) + <span class="number">2</span>;
             <span class="kw">let </span>log_num_vals = (u64::BITS - num_vals.leading_zeros()) <span class="kw">as </span>usize;
             <span class="self">self</span>.enforce_in_range(next_carry_out, E::B + log_num_vals)<span class="question-mark">?</span>;
 
@@ -1300,7 +1313,7 @@
     <span class="kw">use crate</span>::{gadgets::from_emulated_field, Circuit, PlonkCircuit};
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_bn254::{Fq <span class="kw">as </span>Fq254, Fr <span class="kw">as </span>Fr254};
-    <span class="kw">use </span>ark_ff::PrimeField;
+    <span class="kw">use </span>ark_ff::{MontFp, PrimeField};
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_basics() {
@@ -1357,6 +1370,15 @@
     </span><span class="kw">fn </span>test_emulated_mul() {
         test_emulated_mul_helper::&lt;Fq377, Fr254&gt;();
         test_emulated_mul_helper::&lt;Fq254, Fr254&gt;();
+
+        <span class="comment">// test for issue (https://github.com/EspressoSystems/jellyfish/issues/306)
+        </span><span class="kw">let </span>x : Fq377= <span class="macro">MontFp!</span>(<span class="string">&quot;218393408942992446968589193493746660101651787560689350338764189588519393175121782177906966561079408675464506489966&quot;</span>);
+        <span class="kw">let </span>y : Fq377 = <span class="macro">MontFp!</span>(<span class="string">&quot;122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179&quot;</span>);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;Fr254&gt;::new_turbo_plonk();
+        <span class="kw">let </span>var_x = circuit.create_emulated_variable(x).unwrap();
+        <span class="kw">let _ </span>= circuit.emulated_mul_constant(<span class="kw-2">&amp;</span>var_x, y).unwrap();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
     }
 
     <span class="kw">fn </span>test_emulated_mul_helper&lt;E, F&gt;()
