@@ -252,4 +252,32 @@ mod test {
         test_rs_code_fft_helper::<Fr377>();
         test_rs_code_fft_helper::<Fr381>();
     }
+
+    fn duplicate_inputs_helper<F: Field>() {
+        // Encoded as a polynomial 4x^2 + x + 3
+        let payload = [3u64, 1, 4].map(|x| F::from(x));
+        // Evaluation of the above polynomial on (1, 2, 3, 4, 5) is (8, 21, 42, 71, 108)
+        let expected = [8u64, 21, 42, 71, 108].map(|x| F::from(x));
+        let code: Vec<F> = reed_solomon_erasure_encode(payload.iter(), 2)
+            .unwrap()
+            .collect();
+        assert_eq!(code, expected);
+
+        let mut points = [1u64, 2, 3].map(|x| F::from(x));
+        let recovered_payload: Vec<F> =
+            reed_solomon_erasure_decode(points.iter().zip(&code[..3]), payload.len()).unwrap();
+        assert_eq!(recovered_payload, payload);
+
+        points[1] = points[0]; // duplicate input point
+        assert!(reed_solomon_erasure_decode::<F, _, _, _>(
+            points.iter().zip(&code[..3]),
+            payload.len()
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn duplicate_inputs() {
+        duplicate_inputs_helper::<Fr381>();
+    }
 }
