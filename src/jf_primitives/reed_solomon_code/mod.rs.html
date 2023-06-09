@@ -253,6 +253,41 @@
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -366,14 +401,21 @@
     </span><span class="kw">let </span>w = (<span class="number">0</span>..data_size)
         .map(|i| {
             <span class="kw">let </span><span class="kw-2">mut </span>ret = F::one();
-            (<span class="number">0</span>..data_size).for_each(|j| {
+            <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..data_size {
                 <span class="kw">if </span>i != j {
-                    ret /= x[i] - x[j];
+                    <span class="kw">let </span>denom = x[i] - x[j];
+                    <span class="kw">if </span>denom.is_zero() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
+                            <span class="string">&quot;duplicate input point {} at indices {}, {}&quot;</span>,
+                            x[i], i, j
+                        )));
+                    }
+                    ret /= denom;
                 }
-            });
-            ret
+            }
+            <span class="prelude-val">Ok</span>(ret)
         })
-        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
     <span class="comment">// Calculate f(x) = \sum_i l_i(x)
     </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="macro">vec!</span>[F::zero(); data_size];
     <span class="comment">// for i in 0..shares.len() {
@@ -506,6 +548,34 @@
         test_rs_code_fft_helper::&lt;Fr254&gt;();
         test_rs_code_fft_helper::&lt;Fr377&gt;();
         test_rs_code_fft_helper::&lt;Fr381&gt;();
+    }
+
+    <span class="kw">fn </span>duplicate_inputs_helper&lt;F: Field&gt;() {
+        <span class="comment">// Encoded as a polynomial 4x^2 + x + 3
+        </span><span class="kw">let </span>payload = [<span class="number">3u64</span>, <span class="number">1</span>, <span class="number">4</span>].map(|x| F::from(x));
+        <span class="comment">// Evaluation of the above polynomial on (1, 2, 3, 4, 5) is (8, 21, 42, 71, 108)
+        </span><span class="kw">let </span>expected = [<span class="number">8u64</span>, <span class="number">21</span>, <span class="number">42</span>, <span class="number">71</span>, <span class="number">108</span>].map(|x| F::from(x));
+        <span class="kw">let </span>code: Vec&lt;F&gt; = reed_solomon_erasure_encode(payload.iter(), <span class="number">2</span>)
+            .unwrap()
+            .collect();
+        <span class="macro">assert_eq!</span>(code, expected);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>points = [<span class="number">1u64</span>, <span class="number">2</span>, <span class="number">3</span>].map(|x| F::from(x));
+        <span class="kw">let </span>recovered_payload: Vec&lt;F&gt; =
+            reed_solomon_erasure_decode(points.iter().zip(<span class="kw-2">&amp;</span>code[..<span class="number">3</span>]), payload.len()).unwrap();
+        <span class="macro">assert_eq!</span>(recovered_payload, payload);
+
+        points[<span class="number">1</span>] = points[<span class="number">0</span>]; <span class="comment">// duplicate input point
+        </span><span class="macro">assert!</span>(reed_solomon_erasure_decode::&lt;F, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>&gt;(
+            points.iter().zip(<span class="kw-2">&amp;</span>code[..<span class="number">3</span>]),
+            payload.len()
+        )
+        .is_err());
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>duplicate_inputs() {
+        duplicate_inputs_helper::&lt;Fr381&gt;();
     }
 }
 </code></pre></div></section></main></body></html>
