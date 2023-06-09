@@ -111,14 +111,21 @@ where
     let w = (0..data_size)
         .map(|i| {
             let mut ret = F::one();
-            (0..data_size).for_each(|j| {
+            for j in 0..data_size {
                 if i != j {
-                    ret /= x[i] - x[j];
+                    let denom = x[i] - x[j];
+                    if denom.is_zero() {
+                        return Err(PrimitivesError::ParameterError(format!(
+                            "duplicate input point {} at indices {}, {}",
+                            x[i], i, j
+                        )));
+                    }
+                    ret /= denom;
                 }
-            });
-            ret
+            }
+            Ok(ret)
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, _>>()?;
     // Calculate f(x) = \sum_i l_i(x)
     let mut f = vec![F::zero(); data_size];
     // for i in 0..shares.len() {
