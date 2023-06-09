@@ -343,17 +343,17 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
-    /// Return the set of leaves associated with this Namespace proof
-    /// TODO: return reference to avoid cloning?
-    pub fn get_namespace_leaves(&self) -> Vec<E> {
-        match self.proof_type {
-            NamespaceProofType::Presence => self
-                .proofs
-                .iter()
-                .map(|proof| proof.elem().cloned().unwrap())
-                .collect::<Vec<E>>(),
-            NamespaceProofType::Absence => Vec::new(),
-        }
+    /// Return the set of leaves associated with this Namespace proof as an
+    /// iterator
+    pub fn get_namespace_leaves(&self) -> impl Iterator<Item = &E> {
+        let num_leaves = match self.proof_type {
+            NamespaceProofType::Presence => self.proofs.len(),
+            NamespaceProofType::Absence => 0,
+        };
+        self.proofs
+            .iter()
+            .map(|proof| proof.elem().unwrap())
+            .take(num_leaves)
     }
 }
 
@@ -700,7 +700,7 @@ mod nmt_tests {
             .is_err());
 
         // Sanity check that the leaves returned by the proof are correct
-        let internal_leaves = internal_proof.get_namespace_leaves();
+        let internal_leaves: Vec<Leaf> = internal_proof.get_namespace_leaves().copied().collect();
         let raw_leaves_for_ns = &leaves[1..4];
         assert_eq!(raw_leaves_for_ns, internal_leaves);
 
@@ -714,10 +714,11 @@ mod nmt_tests {
         // Check the simple absence proof case when the namespace falls outside of the
         // tree range
         let absence_proof = tree.get_namespace_proof(last_ns + 1);
+        let leaves: Vec<Leaf> = absence_proof.get_namespace_leaves().copied().collect();
         assert!(tree
             .verify_namespace_proof(&absence_proof, last_ns + 1)
             .unwrap()
             .is_ok());
-        assert_eq!(absence_proof.get_namespace_leaves(), []);
+        assert_eq!(leaves, []);
     }
 }
