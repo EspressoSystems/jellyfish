@@ -183,6 +183,8 @@ mod tests {
     impl<T: Copy, const M: usize, const N: usize> Matrix<T, M, N> {
         fn transpose(self) -> Matrix<T, N, M> {
             let mut transposed = [[self.0[0][0]; M]; N];
+
+            #[allow(clippy::needless_range_loop)]
             for i in 0..M {
                 for j in 0..N {
                     transposed[j][i] = self.0[i][j];
@@ -216,6 +218,7 @@ mod tests {
             let mut row_vecs = [first_row; N];
             let mut cur_row = first_row;
 
+            #[allow(clippy::needless_range_loop)]
             for i in 1..N {
                 cur_row.rotate_right(1);
                 row_vecs[i] = cur_row;
@@ -256,6 +259,7 @@ mod tests {
     {
         let mut c = [[T::default(); K]; M];
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..M {
             for j in 0..K {
                 for k in 0..N {

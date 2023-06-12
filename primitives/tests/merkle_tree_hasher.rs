@@ -9,11 +9,11 @@ fn doctest_example() -> Result<(), PrimitivesError> {
     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     // payload type is `usize`, hash function is `Sha256`.
-    let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, &my_data)?;
+    let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, my_data)?;
 
     let root = mt.commitment().digest();
     let (val, proof) = mt.lookup(2).expect_ok()?;
     assert_eq!(val, 3);
-    assert!(HasherMerkleTree::<Sha256, usize>::verify(root, proof)?.is_ok());
+    assert!(HasherMerkleTree::<Sha256, usize>::verify(root, 2, proof)?.is_ok());
     Ok(())
 }

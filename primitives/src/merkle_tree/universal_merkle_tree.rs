@@ -38,17 +38,21 @@ where
     type NonMembershipProof = MerkleProof<E, I, T, Arity>;
     type BatchNonMembershipProof = ();
 
-    fn update(&mut self, pos: impl Borrow<I>, elem: impl Borrow<E>) -> LookupResult<E, (), ()> {
+    fn update(
+        &mut self,
+        pos: impl Borrow<I>,
+        elem: impl Borrow<E>,
+    ) -> Result<LookupResult<E, (), ()>, PrimitivesError> {
         let pos = pos.borrow();
         let elem = elem.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
         let ret = self
             .root
-            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem);
+            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem)?;
         if let LookupResult::NotFound(_) = ret {
             self.num_leaves += 1;
         }
-        ret
+        Ok(ret)
     }
 
     fn from_kv_set<BI, BE>(
@@ -62,7 +66,7 @@ where
         let mut mt = Self::from_elems(height, [] as [&Self::Element; 0])?;
         for tuple in data.into_iter() {
             let (key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow());
+            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
         }
         Ok(mt)
     }
@@ -138,14 +142,16 @@ where
             let mut path_values = vec![empty_value];
             traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                 Ok(empty_value),
-                |result, (branch, node)| -> Result<T, PrimitivesError> {
+                |result: Result<T, PrimitivesError>,
+                 (branch, node)|
+                 -> Result<T, PrimitivesError> {
                     match result {
                         Ok(val) => match node {
                             MerkleNode::Branch { value: _, children } => {
                                 let mut data: Vec<_> =
                                     children.iter().map(|node| node.value()).collect();
                                 data[*branch] = val;
-                                let digest = H::digest(&data);
+                                let digest = H::digest(&data)?;
                                 path_values.push(digest);
                                 Ok(digest)
                             },
@@ -267,17 +273,19 @@ mod mt_tests {
         let mut mt =
             RescueSparseMerkleTree::<F, F>::from_kv_set(10, HashMap::<F, F>::new()).unwrap();
         for i in 0..2 {
-            mt.update(F::from(i as u64), F::from(i as u64));
+            mt.update(F::from(i as u64), F::from(i as u64)).unwrap();
         }
         for i in 0..2 {
             let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();
             assert_eq!(val, F::from(i as u64));
             assert_eq!(*proof.elem().unwrap(), val);
-            assert!(
-                RescueSparseMerkleTree::<F, F>::verify(&mt.root.value(), &proof)
-                    .unwrap()
-                    .is_ok()
-            );
+            assert!(RescueSparseMerkleTree::<F, F>::verify(
+                &mt.root.value(),
+                F::from(i as u64),
+                &proof
+            )
+            .unwrap()
+            .is_ok());
         }
     }
 
@@ -309,16 +317,20 @@ mod mt_tests {
         assert_eq!(lookup_mem_proof, mem_proof);
         assert_eq!(elem, 1u64.into());
         assert_eq!(mem_proof.tree_height(), 11);
-        assert!(
-            RescueSparseMerkleTree::<BigUint, F>::verify(&root, &lookup_mem_proof)
-                .unwrap()
-                .is_ok()
-        );
-        assert!(
-            RescueSparseMerkleTree::<BigUint, F>::verify(&root, &mem_proof)
-                .unwrap()
-                .is_ok()
-        );
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
+            &root,
+            BigUint::from(0u64),
+            &lookup_mem_proof
+        )
+        .unwrap()
+        .is_ok());
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
+            &root,
+            BigUint::from(0u64),
+            &mem_proof
+        )
+        .unwrap()
+        .is_ok());
 
         // Forgetting or looking up an element that is already forgotten should fail.
         assert!(matches!(
@@ -336,9 +348,11 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, 3u64.into());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof)
-            .unwrap()
-            .is_ok());
+        assert!(
+            RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
+                .unwrap()
+                .is_ok()
+        );
 
         // Look up and forget an empty sub-tree.
         let lookup_non_mem_proof = match mt.universal_lookup(BigUint::from(1u64)) {
@@ -379,9 +393,11 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, 3u64.into());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof)
-            .unwrap()
-            .is_ok());
+        assert!(
+            RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
+                .unwrap()
+                .is_ok()
+        );
 
         // Now if we forget the last entry, which is the only thing keeping the root
         // branch in memory, every entry will be forgotten.
@@ -446,9 +462,11 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, 1u64.into());
-        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(&root, &proof)
-            .unwrap()
-            .is_ok());
+        assert!(
+            RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(0u64), &proof)
+                .unwrap()
+                .is_ok()
+        );
 
         match mt.universal_lookup(BigUint::from(1u64)) {
             LookupResult::NotFound(proof) => {

@@ -24,13 +24,13 @@ fn twenty_hashes(c: &mut Criterion) {
 
     let leaf: Fq381 = rng.gen();
 
-    let mt = RescueMerkleTree::<Fq381>::from_elems(20, &[leaf, leaf]).unwrap();
+    let mt = RescueMerkleTree::<Fq381>::from_elems(20, [leaf, leaf]).unwrap();
     let root = mt.commitment().digest();
     let (_, proof) = mt.lookup(0).expect_ok().unwrap();
 
     let num_inputs = 0;
     benchmark_group.bench_with_input(BENCH_NAME, &num_inputs, move |b, &_num_inputs| {
-        b.iter(|| RescueMerkleTree::<Fq381>::verify(&root, &proof).unwrap())
+        b.iter(|| RescueMerkleTree::<Fq381>::verify(&root, 0, &proof).unwrap())
     });
     benchmark_group.finish();
 }

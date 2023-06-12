@@ -20,6 +20,11 @@ We recommend the following tools:
 - [`direnv`](https://direnv.net/docs/installation.html)
 
 Run `direnv allow` at the repo root. You should see dependencies (including Rust) being installed.
+Alternatively, enter the nix-shell manually via `nix develop`.
+
+You can check you are in the correct development environment by running `which cargo`, which should print
+something like `/nix/store/2gb31jhahrm59n3lhpv1lw0wfax9cf9v-rust-minimal-1.69.0/bin/cargo`;
+and running `echo $CARGO_HOME` should print `~/.cargo-nix`.
 
 ## Build, run tests and examples
 

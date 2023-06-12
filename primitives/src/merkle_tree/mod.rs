@@ -10,6 +10,7 @@ pub mod examples;
 pub mod hasher;
 pub mod light_weight;
 pub mod macros;
+pub mod namespaced_merkle_tree;
 pub mod universal_merkle_tree;
 
 pub(crate) mod internal;
@@ -129,10 +130,10 @@ where
     T: NodeValue,
 {
     /// Digest a list of values
-    fn digest(data: &[T]) -> T;
+    fn digest(data: &[T]) -> Result<T, PrimitivesError>;
 
     /// Digest an indexed element
-    fn digest_leaf(pos: &I, elem: &E) -> T;
+    fn digest_leaf(pos: &I, elem: &E) -> Result<T, PrimitivesError>;
 }
 
 /// An trait for Merkle tree index type.
@@ -224,11 +225,13 @@ pub trait MerkleTreeScheme: Sized {
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `root` - a merkle tree root, usually obtained from
     ///   `Self::commitment().digest()`
+    /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
         root: impl Borrow<Self::NodeValue>,
+        pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, PrimitivesError>;
 
@@ -288,11 +291,13 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
+    /// * `returns` - Ok(elem) if the update is success, and `elem` is the
+    ///   original element at the given `pos`. Err() if the update fails.
     fn update(
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> LookupResult<Self::Element, (), ()>;
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree

@@ -459,7 +459,7 @@ mod test {
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
-    use ark_bls12_377::{g1::Config as Param377, Bls12_377};
+    use ark_bls12_377::Bls12_377;
     use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
     use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
@@ -469,16 +469,14 @@ mod test {
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     #[test]
     fn test_compute_challenges_vars_circuit() -> Result<(), CircuitError> {
-        test_compute_challenges_vars_circuit_helper::<Bls12_377, _, _, Param377, RescueTranscript<_>>(
-        )
+        test_compute_challenges_vars_circuit_helper::<Bls12_377, _, _, RescueTranscript<_>>()
     }
 
-    fn test_compute_challenges_vars_circuit_helper<E, F, P, Q, T>() -> Result<(), CircuitError>
+    fn test_compute_challenges_vars_circuit_helper<E, F, P, T>() -> Result<(), CircuitError>
     where
         E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         F: RescueParameter + SWToTEConParam,
         P: SWCurveConfig<BaseField = F> + TECurveConfig,
-        Q: TEParam<BaseField = F>,
         T: PlonkTranscript<F>,
     {
         // 1. Simulate universal setup

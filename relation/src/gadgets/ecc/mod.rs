@@ -20,6 +20,7 @@ use core::marker::PhantomData;
 mod conversion;
 mod glv;
 mod msm;
+pub mod non_native;
 pub use conversion::*;
 pub use msm::*;
 
@@ -222,7 +223,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// variables. `b` is a boolean variable that indicates selection of P_b
     /// from (P0, P1).
     /// Return error if invalid input parameters are provided.
-    fn binary_point_vars_select(
+    pub fn binary_point_vars_select(
         &mut self,
         b: BoolVar,
         point0: &PointVariable,
@@ -1189,25 +1190,21 @@ mod test {
             .is_err());
 
         let circuit_1 =
-            build_binary_point_vars_select_circuit::<F, P>(true, Point::from(p0), Point::from(p1))?;
-        let circuit_2 = build_binary_point_vars_select_circuit::<F, P>(
-            false,
-            Point::from(p1),
-            Point::from(p2),
-        )?;
+            build_binary_point_vars_select_circuit::<F>(true, Point::from(p0), Point::from(p1))?;
+        let circuit_2 =
+            build_binary_point_vars_select_circuit::<F>(false, Point::from(p1), Point::from(p2))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
 
         Ok(())
     }
 
-    fn build_binary_point_vars_select_circuit<F, P>(
+    fn build_binary_point_vars_select_circuit<F>(
         b: bool,
         p0: Point<F>,
         p1: Point<F>,
     ) -> Result<PlonkCircuit<F>, CircuitError>
     where
         F: PrimeField,
-        P: Config<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
         let b_var = circuit.create_boolean_variable(b)?;

@@ -11,10 +11,12 @@ pub mod ultraplonk;
 
 mod arithmetic;
 mod cmp;
+mod emulated;
 mod logic;
 mod range;
 pub use arithmetic::*;
 pub use cmp::*;
+pub use emulated::*;
 pub use logic::*;
 pub use range::*;
 

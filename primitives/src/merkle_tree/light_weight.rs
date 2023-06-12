@@ -139,7 +139,7 @@ mod mt_tests {
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
         assert!(
-            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &proof)
+            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &proof)
                 .unwrap()
                 .is_ok()
         );
@@ -156,7 +156,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &bad_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -171,7 +171,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), &forge_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 2u64, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 
