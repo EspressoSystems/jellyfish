@@ -24,14 +24,19 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#233](https://github.com/EspressoSystems/jellyfish/pull/233) BLS aggregation APIs
 - [#234](https://github.com/EspressoSystems/jellyfish/pull/234) New `bytes_from_field_elements` util
 - [#231](https://github.com/EspressoSystems/jellyfish/pull/231) Implemented FK23 for fast amortized opening for univariate PCS
+- [#225](https://github.com/EspressoSystems/jellyfish/pull/225) Implemented Reed Solomon erasure code
 - [#254](https://github.com/EspressoSystems/jellyfish/pull/254) Ensure `no_std` and target WASM support
 - [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregateable signatures
 - [#291](https://github.com/EspressoSystems/jellyfish/pull/291) Non-native field operations and elliptic curve addition
+- [#309](https://github.com/EspressoSystems/jellyfish/pull/309) Reed-Solomon decoder accept FFT domain
 
 ### Changed
 
+- [#256](https://github.com/EspressoSystems/jellyfish/pull/256) Refactored Reed Solomon erasure code
 - [#238](https://github.com/EspressoSystems/jellyfish/pull/238) add public keys into signature aggregation APIs
 - [#251](https://github.com/EspressoSystems/jellyfish/pull/251) add sign_key_ref api for BLSKeyPair
+- [#297](https://github.com/EspressoSystems/jellyfish/pull/297) Updated `tagged-base64` dependency to the `crates.io` package
+- [#299](https://github.com/EspressoSystems/jellyfish/pull/299) For Merkle tree, `DigestAlgorithm` now returns a `Result` type.
 
 ### Removed
 

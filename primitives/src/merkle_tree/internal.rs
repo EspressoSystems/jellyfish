@@ -203,20 +203,20 @@ where
                 let children = chunk
                     .map(|(pos, elem)| {
                         let pos = I::from(pos as u64);
-                        Box::new(MerkleNode::Leaf {
-                            value: H::digest_leaf(&pos, elem.borrow()),
+                        Ok(Box::new(MerkleNode::Leaf {
+                            value: H::digest_leaf(&pos, elem.borrow())?,
                             pos,
                             elem: elem.borrow().clone(),
-                        })
+                        }))
                     })
-                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::<E, I, T>::Branch {
-                    value: digest_branch::<E, H, I, T>(&children),
+                    .pad_using(Arity::to_usize(), |_| Ok(Box::new(MerkleNode::Empty)))
+                    .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                Ok(Box::new(MerkleNode::<E, I, T>::Branch {
+                    value: digest_branch::<E, H, I, T>(&children)?,
                     children,
-                })
+                }))
             })
-            .collect_vec();
+            .collect::<Result<Vec<_>, PrimitivesError>>()?;
         for _ in 1..height {
             cur_nodes = cur_nodes
                 .into_iter()
@@ -227,13 +227,13 @@ where
                         .pad_using(Arity::to_usize(), |_| {
                             Box::new(MerkleNode::<E, I, T>::Empty)
                         })
-                        .collect_vec();
-                    Box::new(MerkleNode::<E, I, T>::Branch {
-                        value: digest_branch::<E, H, I, T>(&children),
+                        .collect::<Vec<_>>();
+                    Ok(Box::new(MerkleNode::<E, I, T>::Branch {
+                        value: digest_branch::<E, H, I, T>(&children)?,
                         children,
-                    })
+                    }))
                 })
-                .collect_vec();
+                .collect::<Result<Vec<_>, PrimitivesError>>()?;
         }
         Ok((cur_nodes[0].clone(), num_leaves))
     } else {
@@ -272,27 +272,27 @@ where
             .map(|chunk| {
                 let children = chunk
                     .map(|(pos, elem)| {
-                        if (pos as u64) < num_leaves - 1 {
+                        Ok(if (pos as u64) < num_leaves - 1 {
                             Box::new(MerkleNode::ForgettenSubtree {
-                                value: H::digest_leaf(&I::from(pos as u64), elem.borrow()),
+                                value: H::digest_leaf(&I::from(pos as u64), elem.borrow())?,
                             })
                         } else {
                             let pos = I::from(pos as u64);
                             Box::new(MerkleNode::Leaf {
-                                value: H::digest_leaf(&pos, elem.borrow()),
+                                value: H::digest_leaf(&pos, elem.borrow())?,
                                 pos,
                                 elem: elem.borrow().clone(),
                             })
-                        }
+                        })
                     })
-                    .pad_using(Arity::to_usize(), |_| Box::new(MerkleNode::Empty))
-                    .collect_vec();
-                Box::new(MerkleNode::<E, I, T>::Branch {
-                    value: digest_branch::<E, H, I, T>(&children),
+                    .pad_using(Arity::to_usize(), |_| Ok(Box::new(MerkleNode::Empty)))
+                    .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                Ok(Box::new(MerkleNode::<E, I, T>::Branch {
+                    value: digest_branch::<E, H, I, T>(&children)?,
                     children,
-                })
+                }))
             })
-            .collect_vec();
+            .collect::<Result<Vec<_>, PrimitivesError>>()?;
         for i in 1..cur_nodes.len() - 1 {
             cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
                 value: cur_nodes[i].value(),
@@ -308,13 +308,13 @@ where
                         .pad_using(Arity::to_usize(), |_| {
                             Box::new(MerkleNode::<E, I, T>::Empty)
                         })
-                        .collect_vec();
-                    Box::new(MerkleNode::<E, I, T>::Branch {
-                        value: digest_branch::<E, H, I, T>(&children),
+                        .collect::<Vec<_>>();
+                    Ok(Box::new(MerkleNode::<E, I, T>::Branch {
+                        value: digest_branch::<E, H, I, T>(&children)?,
                         children,
-                    })
+                    }))
                 })
-                .collect_vec();
+                .collect::<Result<Vec<_>, PrimitivesError>>()?;
             for i in 1..cur_nodes.len() - 1 {
                 cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
                     value: cur_nodes[i].value(),
@@ -327,7 +327,9 @@ where
     }
 }
 
-pub(crate) fn digest_branch<E, H, I, T>(data: &[Box<MerkleNode<E, I, T>>]) -> T
+pub(crate) fn digest_branch<E, H, I, T>(
+    data: &[Box<MerkleNode<E, I, T>>],
+) -> Result<T, PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
@@ -335,7 +337,7 @@ where
     T: NodeValue,
 {
     // Question(Chengyu): any more efficient implementation?
-    let data = data.iter().map(|node| node.value()).collect_vec();
+    let data = data.iter().map(|node| node.value()).collect::<Vec<_>>();
     H::digest(&data)
 }
 
@@ -372,7 +374,7 @@ where
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::<Vec<_>>(),
                         });
                         if children.iter().all(|child| {
                             matches!(
@@ -399,7 +401,7 @@ where
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::<Vec<_>>(),
                         });
                         LookupResult::NotFound(non_membership_proof)
                     },
@@ -506,7 +508,7 @@ where
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::<Vec<_>>(),
                         });
                         LookupResult::Ok(elem, proof)
                     },
@@ -525,7 +527,7 @@ where
                                         })
                                     }
                                 })
-                                .collect_vec(),
+                                .collect::<Vec<_>>(),
                         });
                         LookupResult::NotFound(non_membership_proof)
                     },
@@ -547,7 +549,7 @@ where
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         elem: impl Borrow<E>,
-    ) -> LookupResult<E, (), ()>
+    ) -> Result<LookupResult<E, (), ()>, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -561,8 +563,8 @@ where
                 pos,
             } => {
                 let ret = ark_std::mem::replace(node_elem, elem.clone());
-                *value = H::digest_leaf(pos, elem);
-                LookupResult::Ok(ret, ())
+                *value = H::digest_leaf(pos, elem)?;
+                Ok(LookupResult::Ok(ret, ()))
             },
             MerkleNode::Branch { value, children } => {
                 let res = (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
@@ -570,22 +572,22 @@ where
                     pos,
                     traversal_path,
                     elem,
-                );
+                )?;
                 // If the branch containing the update was not in memory, the update failed and
                 // nothing was changed, so we can short-circuit without recomputing this node's
                 // value.
                 if res == LookupResult::NotInMemory {
-                    return res;
+                    return Ok(res);
                 }
                 // Otherwise, an entry has been updated and the value of one of our children has
                 // changed, so we must recompute our own value.
-                *value = digest_branch::<E, H, I, T>(children);
-                res
+                *value = digest_branch::<E, H, I, T>(children)?;
+                Ok(res)
             },
             MerkleNode::Empty => {
                 *self = if height == 0 {
                     MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem),
+                        value: H::digest_leaf(pos, elem)?,
                         pos: pos.clone(),
                         elem: elem.clone(),
                     }
@@ -596,15 +598,15 @@ where
                         pos,
                         traversal_path,
                         elem,
-                    );
+                    )?;
                     MerkleNode::Branch {
-                        value: digest_branch::<E, H, I, T>(&children),
+                        value: digest_branch::<E, H, I, T>(&children)?,
                         children,
                     }
                 };
-                LookupResult::NotFound(())
+                Ok(LookupResult::NotFound(()))
             },
-            MerkleNode::ForgettenSubtree { .. } => LookupResult::NotInMemory,
+            MerkleNode::ForgettenSubtree { .. } => Ok(LookupResult::NotInMemory),
         }
     }
 
@@ -647,7 +649,7 @@ where
                     cur_pos += I::from(increment);
                     frontier += 1;
                 }
-                *value = digest_branch::<E, H, I, T>(children);
+                *value = digest_branch::<E, H, I, T>(children)?;
                 Ok(cnt)
             },
             MerkleNode::Empty => {
@@ -655,7 +657,7 @@ where
                     let elem = data.next().unwrap();
                     let elem = elem.borrow();
                     *self = MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem),
+                        value: H::digest_leaf(pos, elem)?,
                         pos: pos.clone(),
                         elem: elem.clone(),
                     };
@@ -682,7 +684,7 @@ where
                         frontier += 1;
                     }
                     *self = MerkleNode::Branch {
-                        value: digest_branch::<E, H, I, T>(&children),
+                        value: digest_branch::<E, H, I, T>(&children)?,
                         children,
                     };
                     Ok(cnt)
@@ -743,7 +745,7 @@ where
                     cur_pos += I::from(increment);
                     frontier += 1;
                 }
-                *value = digest_branch::<E, H, I, T>(children);
+                *value = digest_branch::<E, H, I, T>(children)?;
                 Ok(cnt)
             },
             MerkleNode::Empty => {
@@ -751,7 +753,7 @@ where
                     let elem = data.next().unwrap();
                     let elem = elem.borrow();
                     *self = MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem),
+                        value: H::digest_leaf(pos, elem)?,
                         pos: pos.clone(),
                         elem: elem.clone(),
                     };
@@ -784,7 +786,7 @@ where
                         frontier += 1;
                     }
                     *self = MerkleNode::Branch {
-                        value: digest_branch::<E, H, I, T>(&children),
+                        value: digest_branch::<E, H, I, T>(&children)?,
                         children,
                     };
                     Ok(cnt)
@@ -823,7 +825,7 @@ where
             elem,
         } = &self.proof[0]
         {
-            let init = H::digest_leaf(pos, elem);
+            let init = H::digest_leaf(pos, elem)?;
             let computed_root = self
                 .pos
                 .to_traversal_path(self.tree_height() - 1)
@@ -835,10 +837,12 @@ where
                         match result {
                             Ok(val) => match node {
                                 MerkleNode::Branch { value: _, children } => {
-                                    let mut data =
-                                        children.iter().map(|node| node.value()).collect_vec();
+                                    let mut data = children
+                                        .iter()
+                                        .map(|node| node.value())
+                                        .collect::<Vec<_>>();
                                     data[*branch] = val;
-                                    Ok(H::digest(&data))
+                                    H::digest(&data)
                                 },
                                 _ => Err(PrimitivesError::ParameterError(
                                     "Incompatible proof for this merkle tree".to_string(),
@@ -882,10 +886,12 @@ where
                         match result {
                             Ok(val) => match node {
                                 MerkleNode::Branch { value: _, children } => {
-                                    let mut data =
-                                        children.iter().map(|node| node.value()).collect_vec();
+                                    let mut data = children
+                                        .iter()
+                                        .map(|node| node.value())
+                                        .collect::<Vec<_>>();
                                     data[*branch] = val;
-                                    Ok(H::digest(&data))
+                                    H::digest(&data)
                                 },
                                 MerkleNode::Empty => Ok(init),
                                 _ => Err(PrimitivesError::ParameterError(
