@@ -10,6 +10,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
 use hashbrown::{hash_map::Entry, HashMap};
+use itertools::Itertools;
 use typenum::Unsigned;
 
 use crate::errors::{PrimitivesError, VerificationResult};
@@ -26,7 +27,7 @@ where
     Self::Element: Namespaced,
 {
     /// Namespace proof type
-    type NamespaceProof;
+    type NamespaceProof: NamespaceProof;
     /// Namespace type
     type NamespaceId: Namespace;
 
@@ -60,6 +61,26 @@ where
     phantom3: PhantomData<I>,
     phantom4: PhantomData<T>,
     phantom5: PhantomData<N>,
+}
+
+/// Completeness proof for a namespace
+pub trait NamespaceProof {
+    /// Namespace type
+    type Namespace: Namespace;
+    /// Namespaced leaf
+    type Leaf: Element + Namespaced<Namespace = Self::Namespace>;
+    /// Internal node value
+    type Node: NodeValue;
+
+    /// Return the set of leaves associated with this Namespace proof
+    fn get_namespace_leaves(&self) -> Vec<&Self::Leaf>;
+
+    /// Verify a namespace proof
+    fn verify(
+        &self,
+        root: &NamespacedHash<Self::Node, Self::Namespace>,
+        namespace: Self::Namespace,
+    ) -> Result<VerificationResult, PrimitivesError>;
 }
 
 /// Trait indicating that a leaf has a namespace.
@@ -299,7 +320,7 @@ where
         &mut self,
         elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
     ) -> Result<(), PrimitivesError> {
-        // TODO: update namespace metadata
+        // TODO(#314): update namespace metadata
         self.inner.extend(elems)
     }
 
@@ -307,11 +328,13 @@ where
         &mut self,
         elem: impl core::borrow::Borrow<Self::Element>,
     ) -> Result<(), PrimitivesError> {
-        // TODO: update namespace metadata
+        // TODO(#314): update namespace metadata
         self.inner.push(elem)
     }
 }
 
+/// Indicates whether the namespace proof represents a populated set or an empty
+/// set
 #[derive(Clone, Debug)]
 enum NamespaceProofType {
     Presence,
@@ -320,7 +343,7 @@ enum NamespaceProofType {
 
 #[derive(Clone, Debug)]
 /// Namespace Proof
-pub struct NamespaceProof<E, T, Arity, N, H>
+pub struct NaiveNamespaceProof<E, T, Arity, N, H>
 where
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
@@ -329,13 +352,14 @@ where
     Arity: Unsigned,
 {
     proof_type: NamespaceProofType,
+    // TODO(#140) Switch to a batch proof
     proofs: Vec<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
     left_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
     right_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
-    indices: Vec<u64>,
+    first_index: u64,
     phantom: PhantomData<H>,
 }
-impl<E, T, Arity, N, H> NamespaceProof<E, T, Arity, N, H>
+impl<E, T, Arity, N, H> NamespaceProof for NaiveNamespaceProof<E, T, Arity, N, H>
 where
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
@@ -343,21 +367,36 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
-    /// Return the set of leaves associated with this Namespace proof as an
-    /// iterator
-    pub fn get_namespace_leaves(&self) -> impl Iterator<Item = &E> {
+    type Leaf = E;
+    type Node = T;
+    type Namespace = N;
+
+    fn get_namespace_leaves(&self) -> Vec<&Self::Leaf> {
         let num_leaves = match self.proof_type {
             NamespaceProofType::Presence => self.proofs.len(),
             NamespaceProofType::Absence => 0,
         };
         self.proofs
             .iter()
+            // This unwrap is safe assuming that the proof is valid
             .map(|proof| proof.elem().unwrap())
             .take(num_leaves)
+            .collect_vec()
+    }
+
+    fn verify(
+        &self,
+        root: &NamespacedHash<T, N>,
+        namespace: N,
+    ) -> Result<VerificationResult, PrimitivesError> {
+        match self.proof_type {
+            NamespaceProofType::Presence => self.verify_presence_proof(root, namespace),
+            NamespaceProofType::Absence => self.verify_absence_proof(root, namespace),
+        }
     }
 }
 
-impl<E, T, Arity, N, H> NamespaceProof<E, T, Arity, N, H>
+impl<E, T, Arity, N, H> NaiveNamespaceProof<E, T, Arity, N, H>
 where
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
@@ -373,8 +412,20 @@ where
         if let Some(boundary_proof) = self.left_boundary_proof.as_ref() {
             // If there is a leaf to the left of the namespace range, check that it is less
             // than the target namespace
-            if boundary_proof.elem().unwrap().get_namespace() >= namespace
-                || *boundary_proof.index() != self.indices[0] - 1
+            if boundary_proof
+                .elem()
+                .ok_or(PrimitivesError::InconsistentStructureError(
+                    "Boundary proof does not contain an element".into(),
+                ))?
+                .get_namespace()
+                >= namespace
+                || *boundary_proof.index() != self.first_index - 1
+            {
+                return Ok(Err(()));
+            }
+            // Verify the boundary proof
+            if <InnerTree<E, H, T, N, Arity>>::verify(root, boundary_proof.index(), boundary_proof)?
+                .is_err()
             {
                 return Ok(Err(()));
             }
@@ -396,8 +447,20 @@ where
         if let Some(boundary_proof) = self.right_boundary_proof.as_ref() {
             // If there is a leaf to the left of the namespace range, check that it is less
             // than the target namespace
-            if boundary_proof.elem().unwrap().get_namespace() <= namespace
-                || *boundary_proof.index() != self.indices[self.indices.len() - 1] + 1
+            if boundary_proof
+                .elem()
+                .ok_or(PrimitivesError::InconsistentStructureError(
+                    "Boundary proof does not contain an element".to_string(),
+                ))?
+                .get_namespace()
+                <= namespace
+                || *boundary_proof.index() != self.first_index + self.proofs.len() as u64
+            {
+                return Ok(Err(()));
+            }
+            // Verify the boundary proof
+            if <InnerTree<E, H, T, N, Arity>>::verify(root, boundary_proof.index(), boundary_proof)?
+                .is_err()
             {
                 return Ok(Err(()));
             }
@@ -409,18 +472,6 @@ where
             }
         }
         Ok(Ok(()))
-    }
-
-    /// Verify a namespace proof
-    fn verify(
-        &self,
-        root: &NamespacedHash<T, N>,
-        namespace: N,
-    ) -> Result<VerificationResult, PrimitivesError> {
-        match self.proof_type {
-            NamespaceProofType::Presence => self.verify_presence_proof(root, namespace),
-            NamespaceProofType::Absence => self.verify_absence_proof(root, namespace),
-        }
     }
 
     fn verify_absence_proof(
@@ -435,12 +486,30 @@ where
             // Harder case: Find an element whose namespace is greater than our
             // target and show that the namespace to the left is less than our
             // target
-            let left_proof = &self.left_boundary_proof.as_ref().unwrap();
-            let right_proof = &self.proofs[0];
+            let left_proof = &self.left_boundary_proof.as_ref().cloned().ok_or(
+                PrimitivesError::InconsistentStructureError(
+                    "Left Boundary proof must be present".into(),
+                ),
+            )?;
+            let right_proof = &self.right_boundary_proof.as_ref().cloned().ok_or(
+                PrimitivesError::InconsistentStructureError(
+                    "Right boundary proof must be present".into(),
+                ),
+            )?;
             let left_index = left_proof.index();
-            let left_ns = left_proof.elem().unwrap().get_namespace();
+            let left_ns = left_proof
+                .elem()
+                .ok_or(PrimitivesError::InconsistentStructureError(
+                    "The left boundary proof is missing an element".into(),
+                ))?
+                .get_namespace();
             let right_index = right_proof.index();
-            let right_ns = right_proof.elem().unwrap().get_namespace();
+            let right_ns = right_proof
+                .elem()
+                .ok_or(PrimitivesError::InconsistentStructureError(
+                    "The left boundary proof is missing an element".into(),
+                ))?
+                .get_namespace();
             // Ensure that leaves are adjacent
             if *right_index != left_index + 1 {
                 return Ok(Err(()));
@@ -448,6 +517,17 @@ where
             // And that our target namespace is in between the leaves'
             // namespaces
             if namespace <= left_ns || namespace >= right_ns {
+                return Ok(Err(()));
+            }
+            // Verify the boundary proofs
+            if <InnerTree<E, H, T, N, Arity>>::verify(root, left_proof.index(), left_proof)?
+                .is_err()
+            {
+                return Ok(Err(()));
+            }
+            if <InnerTree<E, H, T, N, Arity>>::verify(root, right_proof.index(), right_proof)?
+                .is_err()
+            {
                 return Ok(Err(()));
             }
         }
@@ -462,11 +542,18 @@ where
     ) -> Result<VerificationResult, PrimitivesError> {
         let mut last_idx: Option<u64> = None;
         for (idx, proof) in self.proofs.iter().enumerate() {
-            let leaf_index = self.indices[idx];
+            let leaf_index = self.first_index + idx as u64;
             if <InnerTree<E, H, T, N, Arity>>::verify(root, leaf_index, proof)?.is_err() {
                 return Ok(Err(()));
             }
-            if proof.elem().unwrap().get_namespace() != namespace {
+            if proof
+                .elem()
+                .ok_or(PrimitivesError::InconsistentStructureError(
+                    "Missing namespace element".into(),
+                ))?
+                .get_namespace()
+                != namespace
+            {
                 return Ok(Err(()));
             }
             // Indices must be sequential, this checks that there are no gaps in the
@@ -480,18 +567,20 @@ where
         }
         // Verify that the proof contains the left boundary of the namespace
         if self
-            .verify_left_namespace_boundary(root, namespace)?
+            .verify_left_namespace_boundary(root, namespace)
             .is_err()
         {
             return Ok(Err(()));
         }
+
         // Verify that the proof contains the right boundary of the namespace
         if self
-            .verify_right_namespace_boundary(root, namespace)?
+            .verify_right_namespace_boundary(root, namespace)
             .is_err()
         {
             return Ok(Err(()));
         }
+
         Ok(Ok(()))
     }
 }
@@ -505,31 +594,35 @@ where
     Arity: Unsigned,
 {
     type NamespaceId = N;
-    type NamespaceProof = NamespaceProof<E, T, Arity, N, H>;
+    type NamespaceProof = NaiveNamespaceProof<E, T, Arity, N, H>;
 
     fn get_namespace_proof(&self, namespace: Self::NamespaceId) -> Self::NamespaceProof {
         let ns_range = self.namespace_ranges.get(&namespace);
         let mut proofs = Vec::new();
-        let mut indices = Vec::new();
         let mut left_boundary_proof = None;
         let mut right_boundary_proof = None;
         let proof_type;
+        let mut first_index = None;
         if let Some(ns_range) = ns_range {
             proof_type = NamespaceProofType::Presence;
             for i in ns_range.clone() {
+                if first_index.is_none() {
+                    first_index = Some(i);
+                }
                 if let LookupResult::Ok(_, proof) = self.inner.lookup(i) {
                     proofs.push(proof);
-                    indices.push(i);
                 } else {
+                    // The NMT is malformed, we cannot recover
                     panic!()
                 }
             }
-            let left_index = indices[0];
-            let right_index = indices[indices.len() - 1];
+            let left_index = first_index.unwrap_or(0);
+            let right_index = left_index + proofs.len() as u64;
             if left_index > 0 {
                 if let LookupResult::Ok(_, proof) = self.inner.lookup(left_index - 1) {
                     left_boundary_proof = Some(proof);
                 } else {
+                    // The NMT is malformed, we cannot recover
                     panic!()
                 }
             }
@@ -537,6 +630,7 @@ where
                 if let LookupResult::Ok(_, proof) = self.inner.lookup(right_index + 1) {
                     right_boundary_proof = Some(proof);
                 } else {
+                    // The NMT is malformed, we cannot recover
                     panic!()
                 }
             }
@@ -545,12 +639,12 @@ where
             // TODO: This only handles the simple absence proof case where the
             // namespace is outside of the root's namespace range
         }
-        NamespaceProof {
+        NaiveNamespaceProof {
             proof_type,
             proofs,
             left_boundary_proof,
             right_boundary_proof,
-            indices,
+            first_index: first_index.unwrap_or(0),
             phantom: PhantomData,
         }
     }
@@ -700,7 +794,11 @@ mod nmt_tests {
             .is_err());
 
         // Sanity check that the leaves returned by the proof are correct
-        let internal_leaves: Vec<Leaf> = internal_proof.get_namespace_leaves().copied().collect();
+        let internal_leaves: Vec<Leaf> = internal_proof
+            .get_namespace_leaves()
+            .into_iter()
+            .copied()
+            .collect();
         let raw_leaves_for_ns = &leaves[1..4];
         assert_eq!(raw_leaves_for_ns, internal_leaves);
 
@@ -714,7 +812,11 @@ mod nmt_tests {
         // Check the simple absence proof case when the namespace falls outside of the
         // tree range
         let absence_proof = tree.get_namespace_proof(last_ns + 1);
-        let leaves: Vec<Leaf> = absence_proof.get_namespace_leaves().copied().collect();
+        let leaves: Vec<Leaf> = absence_proof
+            .get_namespace_leaves()
+            .into_iter()
+            .cloned()
+            .collect();
         assert!(tree
             .verify_namespace_proof(&absence_proof, last_ns + 1)
             .unwrap()
