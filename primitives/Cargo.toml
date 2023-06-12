@@ -74,6 +74,11 @@ harness = false
 name = "pcs"
 harness = false
 
+[[bench]]
+name = "reed-solomon"
+path = "benches/reed_solomon.rs"
+harness = false
+
 [features]
 default = ["parallel"]
 std = [
