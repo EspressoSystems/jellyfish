@@ -11,6 +11,7 @@ use ark_std::{string::ToString, vec::Vec};
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
 use hashbrown::{hash_map::Entry, HashMap};
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 use crate::errors::{PrimitivesError, VerificationResult};
@@ -252,7 +253,7 @@ where
         let mut leaves = Vec::new();
         for (idx, elem) in elems.into_iter().enumerate() {
             let ns = elem.borrow().get_namespace();
-            let idx: u64 = idx.try_into().unwrap();
+            let idx = idx as u64;
             if ns < max_namespace {
                 return Err(PrimitivesError::InconsistentStructureError(
                     "Namespace leaves must be pushed in sorted order".into(),
@@ -335,13 +336,15 @@ where
 
 /// Indicates whether the namespace proof represents a populated set or an empty
 /// set
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 enum NamespaceProofType {
     Presence,
     Absence,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
+                 T: CanonicalSerialize + CanonicalDeserialize,")]
 /// Namespace Proof
 pub struct NaiveNamespaceProof<E, T, Arity, N, H>
 where
