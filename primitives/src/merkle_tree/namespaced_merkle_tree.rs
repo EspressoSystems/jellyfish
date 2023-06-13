@@ -646,20 +646,12 @@ where
             }
         } else {
             proof_type = NamespaceProofType::Absence;
-            let ranges: Vec<&N> = self.namespace_ranges.keys().collect();
-            let closest_ns_idx = ranges
-                .binary_search_by(|leaf_ns| (**leaf_ns).cmp(&namespace))
-                .expect_err("The namespace should not be in the range");
             // If there is a namespace in the tree greater than our target
             // namespace at some index i, prove that the
             // target namespace is empty by providing proofs of leaves at index i and
             // i - 1
-            if closest_ns_idx > 0 && closest_ns_idx < ranges.len() {
-                let i = self
-                    .namespace_ranges
-                    .get(ranges[closest_ns_idx])
-                    .unwrap()
-                    .start;
+            if let Some((namespace, _)) = self.namespace_ranges.range(namespace..).next() {
+                let i = self.namespace_ranges.get(namespace).unwrap().start;
                 left_boundary_proof = Some(self.lookup_proof(i - 1));
                 right_boundary_proof = Some(self.lookup_proof(i));
             }
