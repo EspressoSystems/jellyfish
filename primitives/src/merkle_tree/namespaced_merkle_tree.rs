@@ -5,11 +5,13 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementation of a Namespaced Merkle Tree.
-use alloc::vec;
+use alloc::{
+    collections::{btree_map::Entry, BTreeMap},
+    vec,
+};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
-use hashbrown::{hash_map::Entry, HashMap};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
@@ -223,7 +225,7 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
-    namespace_ranges: HashMap<N, Range<u64>>,
+    namespace_ranges: BTreeMap<N, Range<u64>>,
     inner: InnerTree<E, H, T, N, Arity>,
 }
 
@@ -248,7 +250,7 @@ where
         height: usize,
         elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
-        let mut namespace_ranges: HashMap<N, Range<u64>> = HashMap::new();
+        let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
         let mut max_namespace = <N as Namespace>::min();
         let mut leaves = Vec::new();
         for (idx, elem) in elems.into_iter().enumerate() {
@@ -588,6 +590,26 @@ where
     }
 }
 
+impl<E, H, Arity, N, T> NMT<E, H, Arity, N, T>
+where
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N> + Clone,
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    // Helper function to lookup a proof that should be in the tree because of NMT
+    // invariants
+    fn lookup_proof(&self, idx: u64) -> MerkleProof<E, u64, NamespacedHash<T, N>, Arity> {
+        if let LookupResult::Ok(_, proof) = self.inner.lookup(idx) {
+            proof
+        } else {
+            // The NMT is malformed, we cannot recover
+            panic!()
+        }
+    }
+}
+
 impl<E, H, Arity, N, T> NamespacedMerkleTreeScheme for NMT<E, H, Arity, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N> + Clone,
@@ -612,35 +634,35 @@ where
                 if first_index.is_none() {
                     first_index = Some(i);
                 }
-                if let LookupResult::Ok(_, proof) = self.inner.lookup(i) {
-                    proofs.push(proof);
-                } else {
-                    // The NMT is malformed, we cannot recover
-                    panic!()
-                }
+                proofs.push(self.lookup_proof(i));
             }
             let left_index = first_index.unwrap_or(0);
             let right_index = left_index + proofs.len() as u64;
             if left_index > 0 {
-                if let LookupResult::Ok(_, proof) = self.inner.lookup(left_index - 1) {
-                    left_boundary_proof = Some(proof);
-                } else {
-                    // The NMT is malformed, we cannot recover
-                    panic!()
-                }
+                left_boundary_proof = Some(self.lookup_proof(left_index - 1));
             }
             if right_index < self.num_leaves() - 1 {
-                if let LookupResult::Ok(_, proof) = self.inner.lookup(right_index + 1) {
-                    right_boundary_proof = Some(proof);
-                } else {
-                    // The NMT is malformed, we cannot recover
-                    panic!()
-                }
+                right_boundary_proof = Some(self.lookup_proof(right_index + 1));
             }
         } else {
-            proof_type = NamespaceProofType::Absence
-            // TODO: This only handles the simple absence proof case where the
-            // namespace is outside of the root's namespace range
+            proof_type = NamespaceProofType::Absence;
+            let ranges: Vec<&N> = self.namespace_ranges.keys().collect();
+            let closest_ns_idx = ranges
+                .binary_search_by(|leaf_ns| (**leaf_ns).cmp(&namespace))
+                .expect_err("The namespace should not be in the range");
+            // If there is a namespace in the tree greater than our target
+            // namespace at some index i, prove that the
+            // target namespace is empty by providing proofs of leaves at index i and
+            // i - 1
+            if closest_ns_idx > 0 && closest_ns_idx < ranges.len() {
+                let i = self
+                    .namespace_ranges
+                    .get(ranges[closest_ns_idx])
+                    .unwrap()
+                    .start;
+                left_boundary_proof = Some(self.lookup_proof(i - 1));
+                right_boundary_proof = Some(self.lookup_proof(i));
+            }
         }
         NaiveNamespaceProof {
             proof_type,
@@ -762,7 +784,7 @@ mod nmt_tests {
 
     #[test]
     fn test_nmt() {
-        let namespaces = [1, 2, 2, 2, 3, 3, 3, 4];
+        let namespaces = [1, 2, 2, 2, 4, 4, 4, 5];
         let first_ns = namespaces[0];
         let last_ns = namespaces[namespaces.len() - 1];
         let internal_ns = namespaces[1];
@@ -825,5 +847,35 @@ mod nmt_tests {
             .unwrap()
             .is_ok());
         assert_eq!(leaves, []);
+
+        // Check absence proof case when the namespace falls inside of the tree range
+        let absence_proof = tree.get_namespace_proof(3);
+        let leaves: Vec<Leaf> = absence_proof
+            .get_namespace_leaves()
+            .into_iter()
+            .cloned()
+            .collect();
+        assert!(tree
+            .verify_namespace_proof(&absence_proof, 3)
+            .unwrap()
+            .is_ok());
+        assert_eq!(leaves, []);
+
+        // Ensure that the absence proof fails when the boundaries are not provided
+        let mut malformed_proof = absence_proof.clone();
+        malformed_proof.left_boundary_proof = None;
+        assert!(tree.verify_namespace_proof(&malformed_proof, 3).is_err());
+        let mut malformed_proof = absence_proof.clone();
+        malformed_proof.right_boundary_proof = None;
+        assert!(tree.verify_namespace_proof(&malformed_proof, 3).is_err());
+
+        // Ensure that the absence proof returns a verification error when one of the
+        // boundary proofs is incorrect
+        let mut malicious_proof = absence_proof.clone();
+        malicious_proof.right_boundary_proof = malicious_proof.left_boundary_proof.clone();
+        assert!(tree
+            .verify_namespace_proof(&malicious_proof, 3)
+            .unwrap()
+            .is_err());
     }
 }
