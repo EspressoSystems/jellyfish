@@ -652,8 +652,11 @@ where
             // i - 1
             if let Some((_, range)) = self.namespace_ranges.range(namespace..).next() {
                 let i = range.start;
-                left_boundary_proof = Some(self.lookup_proof(i - 1));
-                right_boundary_proof = Some(self.lookup_proof(i));
+                // If i == 0, the target namespace is less than the tree's minimum namespace
+                if i > 0 {
+                    left_boundary_proof = Some(self.lookup_proof(i - 1));
+                    right_boundary_proof = Some(self.lookup_proof(i));
+                }
             }
         }
         NaiveNamespaceProof {
@@ -827,7 +830,7 @@ mod nmt_tests {
             .is_err());
 
         // Check the simple absence proof case when the namespace falls outside of the
-        // tree range
+        // tree range (namespace > root.max_namespace)
         let absence_proof = tree.get_namespace_proof(last_ns + 1);
         let leaves: Vec<Leaf> = absence_proof
             .get_namespace_leaves()
@@ -836,6 +839,20 @@ mod nmt_tests {
             .collect();
         assert!(tree
             .verify_namespace_proof(&absence_proof, last_ns + 1)
+            .unwrap()
+            .is_ok());
+        assert_eq!(leaves, []);
+
+        // Check the simple absence proof case when the namespace falls outside of the
+        // tree range (namespace < root.min_namespace)
+        let absence_proof = tree.get_namespace_proof(first_ns - 1);
+        let leaves: Vec<Leaf> = absence_proof
+            .get_namespace_leaves()
+            .into_iter()
+            .cloned()
+            .collect();
+        assert!(tree
+            .verify_namespace_proof(&absence_proof, first_ns - 1)
             .unwrap()
             .is_ok());
         assert_eq!(leaves, []);
