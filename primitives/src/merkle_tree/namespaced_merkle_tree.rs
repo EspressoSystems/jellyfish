@@ -650,8 +650,8 @@ where
             // namespace at some index i, prove that the
             // target namespace is empty by providing proofs of leaves at index i and
             // i - 1
-            if let Some((namespace, _)) = self.namespace_ranges.range(namespace..).next() {
-                let i = self.namespace_ranges.get(namespace).unwrap().start;
+            if let Some((_, range)) = self.namespace_ranges.range(namespace..).next() {
+                let i = range.start;
                 left_boundary_proof = Some(self.lookup_proof(i - 1));
                 right_boundary_proof = Some(self.lookup_proof(i));
             }
