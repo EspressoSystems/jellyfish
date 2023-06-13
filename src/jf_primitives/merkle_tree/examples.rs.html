@@ -106,6 +106,7 @@
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -192,6 +193,7 @@
 }
 
 <span class="doccomment">/// Wrapper for SHA3_512 hash function
+</span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Sha3Digest();
 
 <span class="kw">impl</span>&lt;E: Element + CanonicalSerialize, I: Index&gt; DigestAlgorithm&lt;E, I, Sha3Node&gt; <span class="kw">for </span>Sha3Digest {
