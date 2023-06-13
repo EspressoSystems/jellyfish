@@ -827,6 +827,67 @@
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
 <a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -834,11 +895,13 @@
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
 </span><span class="doccomment">//! Implementation of a Namespaced Merkle Tree.
-</span><span class="kw">use </span>alloc::vec;
+</span><span class="kw">use </span>alloc::{
+    collections::{btree_map::Entry, BTreeMap},
+    vec,
+};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{string::ToString, vec::Vec};
 <span class="kw">use </span>core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
-<span class="kw">use </span>hashbrown::{hash_map::Entry, HashMap};
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>typenum::Unsigned;
@@ -1052,7 +1115,7 @@
     N: Namespace,
     Arity: Unsigned,
 {
-    namespace_ranges: HashMap&lt;N, Range&lt;u64&gt;&gt;,
+    namespace_ranges: BTreeMap&lt;N, Range&lt;u64&gt;&gt;,
     inner: InnerTree&lt;E, H, T, N, Arity&gt;,
 }
 
@@ -1077,7 +1140,7 @@
         height: usize,
         elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>core::borrow::Borrow&lt;<span class="self">Self</span>::Element&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>namespace_ranges: HashMap&lt;N, Range&lt;u64&gt;&gt; = HashMap::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>namespace_ranges: BTreeMap&lt;N, Range&lt;u64&gt;&gt; = BTreeMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>max_namespace = &lt;N <span class="kw">as </span>Namespace&gt;::min();
         <span class="kw">let </span><span class="kw-2">mut </span>leaves = Vec::new();
         <span class="kw">for </span>(idx, elem) <span class="kw">in </span>elems.into_iter().enumerate() {
@@ -1417,6 +1480,26 @@
     }
 }
 
+<span class="kw">impl</span>&lt;E, H, Arity, N, T&gt; NMT&lt;E, H, Arity, N, T&gt;
+<span class="kw">where
+    </span>H: DigestAlgorithm&lt;E, u64, T&gt; + BindNamespace&lt;E, u64, T, N&gt; + Clone,
+    E: Element + Namespaced&lt;Namespace = N&gt;,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    <span class="comment">// Helper function to lookup a proof that should be in the tree because of NMT
+    // invariants
+    </span><span class="kw">fn </span>lookup_proof(<span class="kw-2">&amp;</span><span class="self">self</span>, idx: u64) -&gt; MerkleProof&lt;E, u64, NamespacedHash&lt;T, N&gt;, Arity&gt; {
+        <span class="kw">if let </span>LookupResult::Ok(<span class="kw">_</span>, proof) = <span class="self">self</span>.inner.lookup(idx) {
+            proof
+        } <span class="kw">else </span>{
+            <span class="comment">// The NMT is malformed, we cannot recover
+            </span><span class="macro">panic!</span>()
+        }
+    }
+}
+
 <span class="kw">impl</span>&lt;E, H, Arity, N, T&gt; NamespacedMerkleTreeScheme <span class="kw">for </span>NMT&lt;E, H, Arity, N, T&gt;
 <span class="kw">where
     </span>H: DigestAlgorithm&lt;E, u64, T&gt; + BindNamespace&lt;E, u64, T, N&gt; + Clone,
@@ -1441,36 +1524,31 @@
                 <span class="kw">if </span>first_index.is_none() {
                     first_index = <span class="prelude-val">Some</span>(i);
                 }
-                <span class="kw">if let </span>LookupResult::Ok(<span class="kw">_</span>, proof) = <span class="self">self</span>.inner.lookup(i) {
-                    proofs.push(proof);
-                } <span class="kw">else </span>{
-                    <span class="comment">// The NMT is malformed, we cannot recover
-                    </span><span class="macro">panic!</span>()
-                }
+                proofs.push(<span class="self">self</span>.lookup_proof(i));
             }
             <span class="kw">let </span>left_index = first_index.unwrap_or(<span class="number">0</span>);
             <span class="kw">let </span>right_index = left_index + proofs.len() <span class="kw">as </span>u64;
             <span class="kw">if </span>left_index &gt; <span class="number">0 </span>{
-                <span class="kw">if let </span>LookupResult::Ok(<span class="kw">_</span>, proof) = <span class="self">self</span>.inner.lookup(left_index - <span class="number">1</span>) {
-                    left_boundary_proof = <span class="prelude-val">Some</span>(proof);
-                } <span class="kw">else </span>{
-                    <span class="comment">// The NMT is malformed, we cannot recover
-                    </span><span class="macro">panic!</span>()
-                }
+                left_boundary_proof = <span class="prelude-val">Some</span>(<span class="self">self</span>.lookup_proof(left_index - <span class="number">1</span>));
             }
             <span class="kw">if </span>right_index &lt; <span class="self">self</span>.num_leaves() - <span class="number">1 </span>{
-                <span class="kw">if let </span>LookupResult::Ok(<span class="kw">_</span>, proof) = <span class="self">self</span>.inner.lookup(right_index + <span class="number">1</span>) {
-                    right_boundary_proof = <span class="prelude-val">Some</span>(proof);
-                } <span class="kw">else </span>{
-                    <span class="comment">// The NMT is malformed, we cannot recover
-                    </span><span class="macro">panic!</span>()
-                }
+                right_boundary_proof = <span class="prelude-val">Some</span>(<span class="self">self</span>.lookup_proof(right_index + <span class="number">1</span>));
             }
         } <span class="kw">else </span>{
-            proof_type = NamespaceProofType::Absence
-            <span class="comment">// TODO: This only handles the simple absence proof case where the
-            // namespace is outside of the root&#39;s namespace range
-        </span>}
+            proof_type = NamespaceProofType::Absence;
+            <span class="comment">// If there is a namespace in the tree greater than our target
+            // namespace at some index i, prove that the
+            // target namespace is empty by providing proofs of leaves at index i and
+            // i - 1
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, range)) = <span class="self">self</span>.namespace_ranges.range(namespace..).next() {
+                <span class="kw">let </span>i = range.start;
+                <span class="comment">// If i == 0, the target namespace is less than the tree&#39;s minimum namespace
+                </span><span class="kw">if </span>i &gt; <span class="number">0 </span>{
+                    left_boundary_proof = <span class="prelude-val">Some</span>(<span class="self">self</span>.lookup_proof(i - <span class="number">1</span>));
+                    right_boundary_proof = <span class="prelude-val">Some</span>(<span class="self">self</span>.lookup_proof(i));
+                }
+            }
+        }
         NaiveNamespaceProof {
             proof_type,
             proofs,
@@ -1591,7 +1669,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_nmt() {
-        <span class="kw">let </span>namespaces = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">3</span>, <span class="number">3</span>, <span class="number">4</span>];
+        <span class="kw">let </span>namespaces = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">4</span>, <span class="number">4</span>, <span class="number">5</span>];
         <span class="kw">let </span>first_ns = namespaces[<span class="number">0</span>];
         <span class="kw">let </span>last_ns = namespaces[namespaces.len() - <span class="number">1</span>];
         <span class="kw">let </span>internal_ns = namespaces[<span class="number">1</span>];
@@ -1642,7 +1720,7 @@
             .is_err());
 
         <span class="comment">// Check the simple absence proof case when the namespace falls outside of the
-        // tree range
+        // tree range (namespace &gt; root.max_namespace)
         </span><span class="kw">let </span>absence_proof = tree.get_namespace_proof(last_ns + <span class="number">1</span>);
         <span class="kw">let </span>leaves: Vec&lt;Leaf&gt; = absence_proof
             .get_namespace_leaves()
@@ -1654,6 +1732,50 @@
             .unwrap()
             .is_ok());
         <span class="macro">assert_eq!</span>(leaves, []);
+
+        <span class="comment">// Check the simple absence proof case when the namespace falls outside of the
+        // tree range (namespace &lt; root.min_namespace)
+        </span><span class="kw">let </span>absence_proof = tree.get_namespace_proof(first_ns - <span class="number">1</span>);
+        <span class="kw">let </span>leaves: Vec&lt;Leaf&gt; = absence_proof
+            .get_namespace_leaves()
+            .into_iter()
+            .cloned()
+            .collect();
+        <span class="macro">assert!</span>(tree
+            .verify_namespace_proof(<span class="kw-2">&amp;</span>absence_proof, first_ns - <span class="number">1</span>)
+            .unwrap()
+            .is_ok());
+        <span class="macro">assert_eq!</span>(leaves, []);
+
+        <span class="comment">// Check absence proof case when the namespace falls inside of the tree range
+        </span><span class="kw">let </span>absence_proof = tree.get_namespace_proof(<span class="number">3</span>);
+        <span class="kw">let </span>leaves: Vec&lt;Leaf&gt; = absence_proof
+            .get_namespace_leaves()
+            .into_iter()
+            .cloned()
+            .collect();
+        <span class="macro">assert!</span>(tree
+            .verify_namespace_proof(<span class="kw-2">&amp;</span>absence_proof, <span class="number">3</span>)
+            .unwrap()
+            .is_ok());
+        <span class="macro">assert_eq!</span>(leaves, []);
+
+        <span class="comment">// Ensure that the absence proof fails when the boundaries are not provided
+        </span><span class="kw">let </span><span class="kw-2">mut </span>malformed_proof = absence_proof.clone();
+        malformed_proof.left_boundary_proof = <span class="prelude-val">None</span>;
+        <span class="macro">assert!</span>(tree.verify_namespace_proof(<span class="kw-2">&amp;</span>malformed_proof, <span class="number">3</span>).is_err());
+        <span class="kw">let </span><span class="kw-2">mut </span>malformed_proof = absence_proof.clone();
+        malformed_proof.right_boundary_proof = <span class="prelude-val">None</span>;
+        <span class="macro">assert!</span>(tree.verify_namespace_proof(<span class="kw-2">&amp;</span>malformed_proof, <span class="number">3</span>).is_err());
+
+        <span class="comment">// Ensure that the absence proof returns a verification error when one of the
+        // boundary proofs is incorrect
+        </span><span class="kw">let </span><span class="kw-2">mut </span>malicious_proof = absence_proof.clone();
+        malicious_proof.right_boundary_proof = malicious_proof.left_boundary_proof.clone();
+        <span class="macro">assert!</span>(tree
+            .verify_namespace_proof(<span class="kw-2">&amp;</span>malicious_proof, <span class="number">3</span>)
+            .unwrap()
+            .is_err());
     }
 }
 </code></pre></div></section></main></body></html>
