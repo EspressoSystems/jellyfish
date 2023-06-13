@@ -299,9 +299,9 @@ where
     ) -> Result<Vec<Self::Evaluation>, PCSError>;
 }
 
-// compute the fft size (i.e. `num_coeffs`) given a degree.
+/// compute the fft size (i.e. `num_coeffs`) given a degree.
 #[inline]
-fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
+pub fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
     let err = || {
         PCSError::InvalidParameters(ark_std::format!(
             "Next power of two overflows! Got: {}",
