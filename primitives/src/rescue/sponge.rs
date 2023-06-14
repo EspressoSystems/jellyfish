@@ -27,7 +27,7 @@ struct RescueSponge<F: RescueParameter, const RATE: usize> {
 
 /// CRHF
 #[derive(Debug, Clone)]
-pub(crate) struct RescueCRHF<F: RescueParameter> {
+pub struct RescueCRHF<F: RescueParameter> {
     sponge: RescueSponge<F, CRHF_RATE>,
 }
 
@@ -47,7 +47,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
     /// multiple of RATE
     ///
     /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Bit_padding
-    pub(crate) fn sponge_with_bit_padding(input: &[F], num_outputs: usize) -> Vec<F> {
+    pub fn sponge_with_bit_padding(input: &[F], num_outputs: usize) -> Vec<F> {
         let mut padded = input.to_vec();
         padded.push(F::one());
         pad_with_zeros(&mut padded, CRHF_RATE);
@@ -60,7 +60,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
     /// overall length to be a multiple of RATE.
     ///
     /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding
-    pub(crate) fn sponge_with_zero_padding(input: &[F], num_outputs: usize) -> Vec<F> {
+    pub fn sponge_with_zero_padding(input: &[F], num_outputs: usize) -> Vec<F> {
         let mut padded = input.to_vec();
         pad_with_zeros(&mut padded, CRHF_RATE);
         Self::sponge_no_padding(padded.as_slice(), num_outputs)
@@ -70,7 +70,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
     /// Sponge hashing based on rescue permutation for RATE 3 and CAPACITY 1. It
     /// allows inputs with length that is a multiple of `CRHF_RATE` and
     /// returns a vector of `num_outputs` elements.
-    pub(crate) fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
+    pub fn sponge_no_padding(input: &[F], num_output: usize) -> Result<Vec<F>, RescueError> {
         if input.len() % CRHF_RATE != 0 {
             return Err(RescueError::ParameterError(
                 "Rescue sponge Error : input to sponge hashing function is not multiple of RATE."
