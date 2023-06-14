@@ -8,6 +8,7 @@
 //     RAYON_NUM_THREADS=N cargo bench
 // where N is the number of threads you want to use (N = 1 for single-thread).
 
+#![cfg(feature = "test-srs")]
 use ark_bls12_377::{Bls12_377, Fr as Fr377};
 use ark_bls12_381::{Bls12_381, Fr as Fr381};
 use ark_bn254::{Bn254, Fr as Fr254};
@@ -51,7 +52,8 @@ macro_rules! plonk_prove_bench {
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
         let max_degree = $num_gates + 2;
-        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+        let srs =
+            PlonkKzgSnark::<$bench_curve>::universal_setup_for_testing(max_degree, rng).unwrap();
 
         let (pk, _) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
@@ -90,7 +92,8 @@ macro_rules! plonk_verify_bench {
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
         let max_degree = $num_gates + 2;
-        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+        let srs =
+            PlonkKzgSnark::<$bench_curve>::universal_setup_for_testing(max_degree, rng).unwrap();
 
         let (pk, vk) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 
@@ -132,7 +135,8 @@ macro_rules! plonk_batch_verify_bench {
         let cs = gen_circuit_for_bench::<$bench_field>(1024, $bench_plonk_type).unwrap();
 
         let max_degree = 1026;
-        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+        let srs =
+            PlonkKzgSnark::<$bench_curve>::universal_setup_for_testing(max_degree, rng).unwrap();
 
         let (pk, vk) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 

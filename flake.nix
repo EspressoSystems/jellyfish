@@ -7,6 +7,13 @@
 {
   description = "Jellyfish dev env";
 
+  nixConfig = {
+    extra-substituters = [ "https://espresso-systems-private.cachix.org" ];
+    extra-trusted-public-keys = [
+      "espresso-systems-private.cachix.org-1:LHYk03zKQCeZ4dvg3NctyCq88e44oBZVug5LpYKjPRI="
+    ];
+  };
+
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils"; # for dedup
 
@@ -18,22 +25,20 @@
   inputs.pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   inputs.pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, flake-utils, flake-compat, rust-overlay, pre-commit-hooks, ... }:
+  outputs = { self, nixpkgs, flake-utils, flake-compat, rust-overlay
+    , pre-commit-hooks, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ 
-          (import rust-overlay)
-        ];
+        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith
-          (toolchain: toolchain.minimal.override { extensions = [ "rustfmt" ]; });
+        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
+          toolchain.minimal.override { extensions = [ "rustfmt" ]; });
 
         stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
           extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
-          targets = ["wasm32-unknown-unknown"];
+          targets = [ "wasm32-unknown-unknown" ];
         };
-      in with pkgs;
-      {
+      in with pkgs; {
         check = {
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;
@@ -76,10 +81,12 @@
             stableToolchain
             nightlyToolchain
             cargo-sort
+            cargo-flamegraph
             clang-tools_15
             clangStdenv
             llvm_15
-          ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
+          ] ++ lib.optionals stdenv.isDarwin
+            [ darwin.apple_sdk.frameworks.Security ];
 
           shellHook = ''
             export RUST_BACKTRACE=full
@@ -98,9 +105,8 @@
             # by default choose u64_backend
             export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
           ''
-          # install pre-commit hooks
-          + self.check.${system}.pre-commit-check.shellHook;
+            # install pre-commit hooks
+            + self.check.${system}.pre-commit-check.shellHook;
         };
-      }
-    );
+      });
 }

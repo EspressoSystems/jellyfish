@@ -137,10 +137,17 @@ where N is the number of threads you want to use (N = 1 for single-thread).
 
 A sample benchmark result is available under [`bench.md`](./bench.md).
 
-## Git Hooks
+### Profiling
 
-The pre-commit hooks are installed via the nix shell. To run them on all files use
+You could use `cargo flamegraph` (already installed in the nix-shell) as follows (more [documentations here](https://github.com/flamegraph-rs/flamegraph#examples)):
 
-```
-pre-commit run --all-files
+``` bash
+# --root is necessary for Mac users
+cargo flamegraph --root --bench=plonk-benches --features test-srs
+
+# output to a specific file, targeting wasm
+cargo flamegraph --root -o path/to/wasm-flamegraph.svg --bench=plonk-benches --no-default-features --features test-srs
+
+# profile a specific test
+cargo flamegraph --root --unit-test -p jf-primitives -- pcs::univariate_kzg::tests::end_to_end_test
 ```
