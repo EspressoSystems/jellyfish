@@ -710,6 +710,99 @@
 <a href="#710" id="710">710</a>
 <a href="#711" id="711">711</a>
 <a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -724,7 +817,7 @@
 //! componenet, with modulus 2^T, will be divided into limbs each with B bits
 //! where 2^{2B} &lt; p.
 
-</span><span class="kw">use crate</span>::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+</span><span class="kw">use crate</span>::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_std::{string::ToString, vec, vec::Vec, One, Zero};
 <span class="kw">use </span>core::marker::PhantomData;
@@ -783,7 +876,15 @@
 }
 
 <span class="doccomment">/// The variable represents an element in the emulated field.
+</span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>EmulatedVariable&lt;E: PrimeField&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) Vec&lt;Variable&gt;, PhantomData&lt;E&gt;);
+
+<span class="kw">impl</span>&lt;E: PrimeField&gt; EmulatedVariable&lt;E&gt; {
+    <span class="doccomment">/// Return the list of variables that simulate the field element
+    </span><span class="kw">pub fn </span>to_vec(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Variable&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.clone()
+    }
+}
 
 <span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
     <span class="doccomment">/// Return the witness point for the circuit
@@ -1254,6 +1355,44 @@
         <span class="prelude-val">Ok</span>(c)
     }
 
+    <span class="doccomment">/// Obtain an emulated variable of the conditional selection from 2 emulated
+    /// variables. `b` is a boolean variable that indicates selection of P_b
+    /// from (P0, P1).
+    /// Return error if invalid input parameters are provided.
+    </span><span class="kw">pub fn </span>conditional_select_emulated&lt;E: EmulationConfig&lt;F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        b: BoolVar,
+        p0: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        p1: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedVariable&lt;E&gt;, CircuitError&gt; {
+        <span class="self">self</span>.check_var_bound(b.into())<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>p1.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>vals = <span class="macro">vec!</span>[];
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>x_0, <span class="kw-2">&amp;</span>x_1) <span class="kw">in </span>p0.<span class="number">0</span>.iter().zip(p1.<span class="number">0</span>.iter()) {
+            <span class="kw">let </span>selected = <span class="self">self</span>.conditional_select(b, x_0, x_1)<span class="question-mark">?</span>;
+            vals.push(selected);
+        }
+
+        <span class="prelude-val">Ok</span>(EmulatedVariable::&lt;E&gt;(vals, PhantomData::&lt;E&gt;))
+    }
+
+    <span class="doccomment">/// Constrain two emulated variables to be the same.
+    /// Return error if the input variables are invalid.
+    </span><span class="kw">pub fn </span>enforce_emulated_var_equal&lt;E: EmulationConfig&lt;F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        p0: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        p1: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>p1.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b) <span class="kw">in </span>p0.<span class="number">0</span>.iter().zip(p1.<span class="number">0</span>.iter()) {
+            <span class="self">self</span>.enforce_equal(a, b)<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Given an emulated field element `a`, return `a mod F::MODULUS` in the
     /// native field.
     </span><span class="kw">fn </span>mod_to_native_field&lt;E: EmulationConfig&lt;F&gt;&gt;(
@@ -1420,6 +1559,53 @@
         <span class="macro">assert!</span>(circuit
             .check_circuit_satisfiability(<span class="kw-2">&amp;</span>from_emulated_field(x))
             .is_err());
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_select() {
+        test_select_helper::&lt;Fq377, Fr254&gt;();
+        test_select_helper::&lt;Fq254, Fr254&gt;();
+    }
+
+    <span class="kw">fn </span>test_select_helper&lt;E, F&gt;()
+    <span class="kw">where
+        </span>E: EmulationConfig&lt;F&gt;,
+        F: PrimeField,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        <span class="kw">let </span>overflow = E::from(E::MODULUS.into() - <span class="number">1u64</span>);
+        <span class="kw">let </span>var_y = circuit.create_emulated_variable(overflow).unwrap();
+        <span class="kw">let </span>b = circuit.create_boolean_variable(<span class="bool-val">true</span>).unwrap();
+        <span class="kw">let </span>var_z = circuit
+            .conditional_select_emulated(b, <span class="kw-2">&amp;</span>var_x, <span class="kw-2">&amp;</span>var_y)
+            .unwrap();
+        <span class="macro">assert_eq!</span>(circuit.emulated_witness(<span class="kw-2">&amp;</span>var_z).unwrap(), overflow);
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        <span class="kw-2">*</span>circuit.witness_mut(var_z.<span class="number">0</span>[<span class="number">0</span>]) = F::zero();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_enforce_equal() {
+        test_enforce_equal_helper::&lt;Fq377, Fr254&gt;();
+        test_enforce_equal_helper::&lt;Fq254, Fr254&gt;();
+    }
+
+    <span class="kw">fn </span>test_enforce_equal_helper&lt;E, F&gt;()
+    <span class="kw">where
+        </span>E: EmulationConfig&lt;F&gt;,
+        F: PrimeField,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span>var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        <span class="kw">let </span>overflow = E::from(E::MODULUS.into() - <span class="number">1u64</span>);
+        <span class="kw">let </span>var_y = circuit.create_emulated_variable(overflow).unwrap();
+        <span class="kw">let </span>var_z = circuit.create_emulated_variable(overflow).unwrap();
+        circuit.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>var_y, <span class="kw-2">&amp;</span>var_z).unwrap();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
+        circuit.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>var_x, <span class="kw-2">&amp;</span>var_y).unwrap();
+        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
     }
 }
 </code></pre></div></section></main></body></html>

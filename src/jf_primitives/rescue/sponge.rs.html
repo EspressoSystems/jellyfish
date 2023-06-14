@@ -375,7 +375,7 @@
 
 <span class="doccomment">/// CRHF
 </span><span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RescueCRHF&lt;F: RescueParameter&gt; {
+</span><span class="kw">pub struct </span>RescueCRHF&lt;F: RescueParameter&gt; {
     sponge: RescueSponge&lt;F, CRHF_RATE&gt;,
 }
 
@@ -395,7 +395,7 @@
     /// multiple of RATE
     ///
     /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Bit_padding
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sponge_with_bit_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
+    </span><span class="kw">pub fn </span>sponge_with_bit_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
         padded.push(F::one());
         pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, CRHF_RATE);
@@ -408,7 +408,7 @@
     /// overall length to be a multiple of RATE.
     ///
     /// [padding]: https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sponge_with_zero_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
+    </span><span class="kw">pub fn </span>sponge_with_zero_padding(input: <span class="kw-2">&amp;</span>[F], num_outputs: usize) -&gt; Vec&lt;F&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>padded = input.to_vec();
         pad_with_zeros(<span class="kw-2">&amp;mut </span>padded, CRHF_RATE);
         <span class="self">Self</span>::sponge_no_padding(padded.as_slice(), num_outputs)
@@ -418,7 +418,7 @@
     <span class="doccomment">/// Sponge hashing based on rescue permutation for RATE 3 and CAPACITY 1. It
     /// allows inputs with length that is a multiple of `CRHF_RATE` and
     /// returns a vector of `num_outputs` elements.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>sponge_no_padding(input: <span class="kw-2">&amp;</span>[F], num_output: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
+    </span><span class="kw">pub fn </span>sponge_no_padding(input: <span class="kw-2">&amp;</span>[F], num_output: usize) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;F&gt;, RescueError&gt; {
         <span class="kw">if </span>input.len() % CRHF_RATE != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(RescueError::ParameterError(
                 <span class="string">&quot;Rescue sponge Error : input to sponge hashing function is not multiple of RATE.&quot;
