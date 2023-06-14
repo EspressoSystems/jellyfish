@@ -112,9 +112,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
-    /// Obtain an emulated point variable of the conditional selection from 2 emulated point
-    /// variables. `b` is a boolean variable that indicates selection of P_b
-    /// from (P0, P1).
+    /// Obtain an emulated point variable of the conditional selection from 2
+    /// emulated point variables. `b` is a boolean variable that indicates
+    /// selection of P_b from (P0, P1).
     /// Return error if invalid input parameters are provided.
     pub fn binary_emulated_point_vars_select<E: EmulationConfig<F>>(
         &mut self,
