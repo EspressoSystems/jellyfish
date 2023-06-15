@@ -7,7 +7,7 @@ const N: usize = 2048;
 const N_HALF: usize = 1024;
 // run it many times so coz will be triggered enough times
 // see: <https://github.com/plasma-umass/coz/issues/158#issuecomment-708507510>
-const ITERATIONS: usize = 2_000_000_000;
+const ITERATIONS: usize = 100;
 
 fn main() {
     coz::thread_init();
