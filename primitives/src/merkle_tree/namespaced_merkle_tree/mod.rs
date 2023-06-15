@@ -9,7 +9,7 @@ use alloc::collections::{btree_map::Entry, BTreeMap};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use typenum::Unsigned;
 
@@ -104,7 +104,7 @@ pub trait Namespace:
     + Hash
     + Ord
     + Serialize
-    + for<'a> Deserialize<'a>
+    + DeserializeOwned
 {
     /// Returns the minimum possible namespace
     fn min() -> Self;
@@ -226,9 +226,7 @@ where
         &mut self,
         elem: impl core::borrow::Borrow<Self::Element>,
     ) -> Result<(), PrimitivesError> {
-        let cloned = elem.borrow().clone();
-        NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut self.namespace_ranges, [elem])?;
-        self.inner.push(cloned)
+        self.extend([elem])
     }
 }
 
