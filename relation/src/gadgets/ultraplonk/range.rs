@@ -160,12 +160,12 @@ mod test {
         *circuit.witness_mut(a[0]) = tmp;
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        // Should fail when the value = 2^RANGE_BIT_LEN_FOR_TEST
+        // Should fail when the value = 2^bit_len
         let a_var = circuit.create_variable(F::from(1u64 << bit_len))?;
         circuit.range_gate_with_lookup(a_var, bit_len)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
-        // Should fail when the value = 2^{2*RANGE_BIT_LEN_FOR_TEST}
+        // Should fail when the value = 2^{2*bit_len}
         let a_var = circuit.create_variable(F::from(1u64 << (2 * bit_len)))?;
         circuit.range_gate_with_lookup(a_var, 2 * bit_len)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
