@@ -64,6 +64,7 @@ ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381-bandersnatch = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
 bincode = "1.3"
+coz = "0.1"
 criterion = "0.4.0"
 sha2 = { version = "0.10.1" }
 
@@ -78,6 +79,11 @@ harness = false
 [[bench]]
 name = "reed-solomon"
 path = "benches/reed_solomon.rs"
+harness = false
+
+[[bench]]
+name = "reed-solomon-coz"
+path = "benches/reed_solomon_coz.rs"
 harness = false
 
 [features]

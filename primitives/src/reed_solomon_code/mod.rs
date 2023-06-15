@@ -116,7 +116,6 @@ where
     #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
     {
         coz::end!("computing l(X)");
-        coz::progress!("finish l(X)");
         coz::begin!("computing barycentric weight w_i");
     }
     // Calculate the barycentric weight w_i
@@ -141,7 +140,6 @@ where
     #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
     {
         coz::end!("computing barycentric weight w_i");
-        coz::progress!("finish w_i");
         coz::begin!("computing f(X)");
     }
     // Calculate f(x) = \sum_i l_i(x)
@@ -161,7 +159,6 @@ where
     #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
     {
         coz::end!("computing f(X)");
-        coz::progress!("finish f(X)");
     }
     Ok(f)
 }
