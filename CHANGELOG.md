@@ -38,6 +38,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#297](https://github.com/EspressoSystems/jellyfish/pull/297) Updated `tagged-base64` dependency to the `crates.io` package
 - [#299](https://github.com/EspressoSystems/jellyfish/pull/299) For Merkle tree, `DigestAlgorithm` now returns a `Result` type.
 - [#302](https://github.com/EspressoSystems/jellyfish/pull/302) Followup APIs for non-native ECC circuit support.
+- [#323](https://github.com/EspressoSystems/jellyfish/pull/323) Improve performance of range gate in ultra plonk.
 
 ### Removed
 
