@@ -318,11 +318,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
             E::NUM_LIMBS,
         );
 
-        // range checking for output c
-        c.0.iter()
-            .map(|v| self.enforce_in_range(*v, E::B))
-            .collect::<Result<Vec<_>, CircuitError>>()?;
-
         // enforcing a * b - k * E::MODULUS = c mod 2^t
 
         // first compare the first limb
