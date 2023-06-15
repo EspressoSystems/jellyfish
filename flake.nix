@@ -86,7 +86,8 @@
             clangStdenv
             llvm_15
           ] ++ lib.optionals stdenv.isDarwin
-            [ darwin.apple_sdk.frameworks.Security ];
+            [ darwin.apple_sdk.frameworks.Security ]
+            ++ lib.optionals stdenv.isLinux [ coz ];
 
           shellHook = ''
             export RUST_BACKTRACE=full
