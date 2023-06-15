@@ -28,11 +28,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         if bit_len == 0 {
             return Err(ParameterError("bit_len cannot be zero".to_string()));
         }
-        // if bit_len % range_bit_len != 0 {
-        //     return Err(ParameterError(
-        //         "circuit.range_bit_len does not divide bit_len".to_string(),
-        //     ));
-        // }
         self.check_var_bound(a)?;
         let leftover = bit_len % range_bit_len;
         let lookup_len = bit_len / range_bit_len;
