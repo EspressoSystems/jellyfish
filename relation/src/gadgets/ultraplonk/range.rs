@@ -16,7 +16,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain a variable to be within the [0, 2^{bit_len}) range
     /// Return error if one of the following holds:
     /// 1. the variable is invalid;
-    /// 2. `RANGE_BIT_LEN` equals zero or does not divide `bit_len`;
+    /// 2. `RANGE_BIT_LEN` equals zero;
     /// 3. the circuit does not support lookup.
     pub(crate) fn range_gate_with_lookup(
         &mut self,
@@ -28,13 +28,10 @@ impl<F: PrimeField> PlonkCircuit<F> {
         if bit_len == 0 {
             return Err(ParameterError("bit_len cannot be zero".to_string()));
         }
-        if bit_len % range_bit_len != 0 {
-            return Err(ParameterError(
-                "circuit.range_bit_len does not divide bit_len".to_string(),
-            ));
-        }
         self.check_var_bound(a)?;
-        let len = bit_len / range_bit_len;
+        let leftover = bit_len % range_bit_len;
+        let lookup_len = bit_len / range_bit_len;
+        let len = lookup_len + if leftover > 0 { 1 } else { 0 };
         let reprs_le = decompose_le(self.witness(a)?, len, range_bit_len);
         let reprs_le_vars: Vec<Variable> = reprs_le
             .iter()
@@ -42,8 +39,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
             .collect::<Result<Vec<_>, CircuitError>>()?;
 
         // add range gates for decomposed variables
-        for &var in reprs_le_vars.iter() {
+        for &var in reprs_le_vars[..lookup_len].iter() {
             self.add_range_check_variable(var)?;
+        }
+
+        if leftover > 0 {
+            self.range_gate_internal(reprs_le_vars[lookup_len], leftover)?;
         }
 
         // add linear combination gates
@@ -124,24 +125,30 @@ mod test {
 
     #[test]
     fn test_range_gate_with_lookup() -> Result<(), CircuitError> {
-        test_range_gate_with_lookup_helper::<FqEd254>()?;
-        test_range_gate_with_lookup_helper::<FqEd377>()?;
-        test_range_gate_with_lookup_helper::<FqEd381>()?;
-        test_range_gate_with_lookup_helper::<Fq377>()
+        (2 * RANGE_BIT_LEN_FOR_TEST..3 * RANGE_BIT_LEN_FOR_TEST)
+            .map(|bitlen| -> Result<(), CircuitError> {
+                test_range_gate_with_lookup_helper::<FqEd254>(bitlen)?;
+                test_range_gate_with_lookup_helper::<FqEd377>(bitlen)?;
+                test_range_gate_with_lookup_helper::<FqEd381>(bitlen)?;
+                test_range_gate_with_lookup_helper::<Fq377>(bitlen)
+            })
+            .collect::<Result<Vec<_>, CircuitError>>()?;
+        Ok(())
     }
-    fn test_range_gate_with_lookup_helper<F: PrimeField>() -> Result<(), CircuitError> {
+    fn test_range_gate_with_lookup_helper<F: PrimeField>(
+        bit_len: usize,
+    ) -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
         let mut rng = test_rng();
-        let bit_len = RANGE_BIT_LEN_FOR_TEST * 4;
 
         // Good path
         let a = (0..10)
             .map(|_| circuit.create_variable(F::from(rng.gen_range(0..u32::MAX))))
             .collect::<Result<Vec<_>, CircuitError>>()?;
         for &var in a.iter() {
-            circuit.range_gate_with_lookup(var, bit_len)?;
+            circuit.range_gate_with_lookup(var, 32)?;
         }
-        circuit.range_gate_with_lookup(circuit.zero(), RANGE_BIT_LEN_FOR_TEST)?;
+        circuit.range_gate_with_lookup(circuit.zero(), bit_len)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
         // Error paths
@@ -153,23 +160,19 @@ mod test {
         *circuit.witness_mut(a[0]) = tmp;
 
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        // Should fail when the value = 2^RANGE_BIT_LEN_FOR_TEST
-        let a_var = circuit.create_variable(F::from(1u32 << RANGE_BIT_LEN_FOR_TEST))?;
-        circuit.range_gate_with_lookup(a_var, RANGE_BIT_LEN_FOR_TEST)?;
+        // Should fail when the value = 2^bit_len
+        let a_var = circuit.create_variable(F::from(1u64 << bit_len))?;
+        circuit.range_gate_with_lookup(a_var, bit_len)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
-        // Should fail when the value = 2^{2*RANGE_BIT_LEN_FOR_TEST}
-        let a_var = circuit.create_variable(F::from(1u32 << (2 * RANGE_BIT_LEN_FOR_TEST)))?;
-        circuit.range_gate_with_lookup(a_var, 2 * RANGE_BIT_LEN_FOR_TEST)?;
+        // Should fail when the value = 2^{2*bit_len}
+        let a_var = circuit.create_variable(F::from(1u64 << (2 * bit_len)))?;
+        circuit.range_gate_with_lookup(a_var, 2 * bit_len)?;
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         let zero_var = circuit.zero();
         // bit_len = 0
         assert!(circuit.range_gate_with_lookup(zero_var, 0).is_err());
-        // bit_len % RANGE_BIT_LEN_FOR_TEST != 0
-        assert!(circuit
-            .range_gate_with_lookup(zero_var, bit_len + 1)
-            .is_err());
         // Check variable out of bound error.
         assert!(circuit
             .range_gate_with_lookup(circuit.num_vars(), bit_len)

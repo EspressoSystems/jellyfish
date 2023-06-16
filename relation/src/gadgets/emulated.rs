@@ -150,6 +150,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Constrain that a*b=c in the emulated field.
     /// Checking that a * b - k * E::MODULUS = c.
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a, b and c. We assume that they are already performed elsewhere.
     pub fn emulated_mul_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -292,6 +294,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     /// Constrain that a*b=c in the emulated field for a constant b.
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a and c. We assume that they are already performed elsewhere.
     pub fn emulated_mul_constant_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -317,11 +321,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
             E::B,
             E::NUM_LIMBS,
         );
-
-        // range checking for output c
-        c.0.iter()
-            .map(|v| self.enforce_in_range(*v, E::B))
-            .collect::<Result<Vec<_>, CircuitError>>()?;
 
         // enforcing a * b - k * E::MODULUS = c mod 2^t
 
@@ -413,6 +412,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Constrain that a+b=c in the emulated field.
     /// Checking whether a + b = k * E::MODULUS + c
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a, b and c. We assume that they are already performed elsewhere.
     pub fn emulated_add_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -482,6 +483,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     /// Constrain that a+b=c in the emulated field.
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a and c. We assume that they are already performed elsewhere.
     pub fn emulated_add_constant_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
