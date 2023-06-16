@@ -803,6 +803,9 @@
 <a href="#803" id="803">803</a>
 <a href="#804" id="804">804</a>
 <a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -955,6 +958,8 @@
 
     <span class="doccomment">/// Constrain that a*b=c in the emulated field.
     /// Checking that a * b - k * E::MODULUS = c.
+    /// This function doesn&#39;t perform emulated variable validaty check on the
+    /// input a, b and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_mul_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
@@ -1097,6 +1102,8 @@
     }
 
     <span class="doccomment">/// Constrain that a*b=c in the emulated field for a constant b.
+    /// This function doesn&#39;t perform emulated variable validaty check on the
+    /// input a and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_mul_constant_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
@@ -1122,11 +1129,6 @@
             E::B,
             E::NUM_LIMBS,
         );
-
-        <span class="comment">// range checking for output c
-        </span>c.<span class="number">0</span>.iter()
-            .map(|v| <span class="self">self</span>.enforce_in_range(<span class="kw-2">*</span>v, E::B))
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="comment">// enforcing a * b - k * E::MODULUS = c mod 2^t
 
@@ -1218,6 +1220,8 @@
 
     <span class="doccomment">/// Constrain that a+b=c in the emulated field.
     /// Checking whether a + b = k * E::MODULUS + c
+    /// This function doesn&#39;t perform emulated variable validaty check on the
+    /// input a, b and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_add_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
@@ -1287,6 +1291,8 @@
     }
 
     <span class="doccomment">/// Constrain that a+b=c in the emulated field.
+    /// This function doesn&#39;t perform emulated variable validaty check on the
+    /// input a and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_add_constant_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,

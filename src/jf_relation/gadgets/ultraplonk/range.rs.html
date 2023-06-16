@@ -181,6 +181,9 @@
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -199,7 +202,7 @@
     <span class="doccomment">/// Constrain a variable to be within the [0, 2^{bit_len}) range
     /// Return error if one of the following holds:
     /// 1. the variable is invalid;
-    /// 2. `RANGE_BIT_LEN` equals zero or does not divide `bit_len`;
+    /// 2. `RANGE_BIT_LEN` equals zero;
     /// 3. the circuit does not support lookup.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>range_gate_with_lookup(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -211,13 +214,10 @@
         <span class="kw">if </span>bit_len == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;bit_len cannot be zero&quot;</span>.to_string()));
         }
-        <span class="kw">if </span>bit_len % range_bit_len != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;circuit.range_bit_len does not divide bit_len&quot;</span>.to_string(),
-            ));
-        }
         <span class="self">self</span>.check_var_bound(a)<span class="question-mark">?</span>;
-        <span class="kw">let </span>len = bit_len / range_bit_len;
+        <span class="kw">let </span>leftover = bit_len % range_bit_len;
+        <span class="kw">let </span>lookup_len = bit_len / range_bit_len;
+        <span class="kw">let </span>len = lookup_len + <span class="kw">if </span>leftover &gt; <span class="number">0 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
         <span class="kw">let </span>reprs_le = decompose_le(<span class="self">self</span>.witness(a)<span class="question-mark">?</span>, len, range_bit_len);
         <span class="kw">let </span>reprs_le_vars: Vec&lt;Variable&gt; = reprs_le
             .iter()
@@ -225,8 +225,12 @@
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="comment">// add range gates for decomposed variables
-        </span><span class="kw">for </span><span class="kw-2">&amp;</span>var <span class="kw">in </span>reprs_le_vars.iter() {
+        </span><span class="kw">for </span><span class="kw-2">&amp;</span>var <span class="kw">in </span>reprs_le_vars[..lookup_len].iter() {
             <span class="self">self</span>.add_range_check_variable(var)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span>leftover &gt; <span class="number">0 </span>{
+            <span class="self">self</span>.range_gate_internal(reprs_le_vars[lookup_len], leftover)<span class="question-mark">?</span>;
         }
 
         <span class="comment">// add linear combination gates
@@ -307,24 +311,30 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_range_gate_with_lookup() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        test_range_gate_with_lookup_helper::&lt;FqEd254&gt;()<span class="question-mark">?</span>;
-        test_range_gate_with_lookup_helper::&lt;FqEd377&gt;()<span class="question-mark">?</span>;
-        test_range_gate_with_lookup_helper::&lt;FqEd381&gt;()<span class="question-mark">?</span>;
-        test_range_gate_with_lookup_helper::&lt;Fq377&gt;()
+        (<span class="number">2 </span>* RANGE_BIT_LEN_FOR_TEST..<span class="number">3 </span>* RANGE_BIT_LEN_FOR_TEST)
+            .map(|bitlen| -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+                test_range_gate_with_lookup_helper::&lt;FqEd254&gt;(bitlen)<span class="question-mark">?</span>;
+                test_range_gate_with_lookup_helper::&lt;FqEd377&gt;(bitlen)<span class="question-mark">?</span>;
+                test_range_gate_with_lookup_helper::&lt;FqEd381&gt;(bitlen)<span class="question-mark">?</span>;
+                test_range_gate_with_lookup_helper::&lt;Fq377&gt;(bitlen)
+            })
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
-    <span class="kw">fn </span>test_range_gate_with_lookup_helper&lt;F: PrimeField&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
+    <span class="kw">fn </span>test_range_gate_with_lookup_helper&lt;F: PrimeField&gt;(
+        bit_len: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
-        <span class="kw">let </span>bit_len = RANGE_BIT_LEN_FOR_TEST * <span class="number">4</span>;
 
         <span class="comment">// Good path
         </span><span class="kw">let </span>a = (<span class="number">0</span>..<span class="number">10</span>)
             .map(|<span class="kw">_</span>| circuit.create_variable(F::from(rng.gen_range(<span class="number">0</span>..u32::MAX))))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
         <span class="kw">for </span><span class="kw-2">&amp;</span>var <span class="kw">in </span>a.iter() {
-            circuit.range_gate_with_lookup(var, bit_len)<span class="question-mark">?</span>;
+            circuit.range_gate_with_lookup(var, <span class="number">32</span>)<span class="question-mark">?</span>;
         }
-        circuit.range_gate_with_lookup(circuit.zero(), RANGE_BIT_LEN_FOR_TEST)<span class="question-mark">?</span>;
+        circuit.range_gate_with_lookup(circuit.zero(), bit_len)<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
         <span class="comment">// Error paths
@@ -336,23 +346,19 @@
         <span class="kw-2">*</span>circuit.witness_mut(a[<span class="number">0</span>]) = tmp;
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
-        <span class="comment">// Should fail when the value = 2^RANGE_BIT_LEN_FOR_TEST
-        </span><span class="kw">let </span>a_var = circuit.create_variable(F::from(<span class="number">1u32 </span>&lt;&lt; RANGE_BIT_LEN_FOR_TEST))<span class="question-mark">?</span>;
-        circuit.range_gate_with_lookup(a_var, RANGE_BIT_LEN_FOR_TEST)<span class="question-mark">?</span>;
+        <span class="comment">// Should fail when the value = 2^bit_len
+        </span><span class="kw">let </span>a_var = circuit.create_variable(F::from(<span class="number">1u64 </span>&lt;&lt; bit_len))<span class="question-mark">?</span>;
+        circuit.range_gate_with_lookup(a_var, bit_len)<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
-        <span class="comment">// Should fail when the value = 2^{2*RANGE_BIT_LEN_FOR_TEST}
-        </span><span class="kw">let </span>a_var = circuit.create_variable(F::from(<span class="number">1u32 </span>&lt;&lt; (<span class="number">2 </span>* RANGE_BIT_LEN_FOR_TEST)))<span class="question-mark">?</span>;
-        circuit.range_gate_with_lookup(a_var, <span class="number">2 </span>* RANGE_BIT_LEN_FOR_TEST)<span class="question-mark">?</span>;
+        <span class="comment">// Should fail when the value = 2^{2*bit_len}
+        </span><span class="kw">let </span>a_var = circuit.create_variable(F::from(<span class="number">1u64 </span>&lt;&lt; (<span class="number">2 </span>* bit_len)))<span class="question-mark">?</span>;
+        circuit.range_gate_with_lookup(a_var, <span class="number">2 </span>* bit_len)<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
         <span class="kw">let </span>zero_var = circuit.zero();
         <span class="comment">// bit_len = 0
         </span><span class="macro">assert!</span>(circuit.range_gate_with_lookup(zero_var, <span class="number">0</span>).is_err());
-        <span class="comment">// bit_len % RANGE_BIT_LEN_FOR_TEST != 0
-        </span><span class="macro">assert!</span>(circuit
-            .range_gate_with_lookup(zero_var, bit_len + <span class="number">1</span>)
-            .is_err());
         <span class="comment">// Check variable out of bound error.
         </span><span class="macro">assert!</span>(circuit
             .range_gate_with_lookup(circuit.num_vars(), bit_len)

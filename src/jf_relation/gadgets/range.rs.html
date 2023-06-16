@@ -286,7 +286,7 @@
     <span class="doccomment">/// Constrain a variable to be within the [0, 2^`bit_len`) range
     /// Return error if the variable is invalid.
     </span><span class="kw">pub fn </span>enforce_in_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: Variable, bit_len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.support_lookup() &amp;&amp; bit_len % <span class="self">self</span>.range_bit_len()<span class="question-mark">? </span>== <span class="number">0 </span>{
+        <span class="kw">if </span><span class="self">self</span>.support_lookup() {
             <span class="self">self</span>.range_gate_with_lookup(a, bit_len)<span class="question-mark">?</span>;
         } <span class="kw">else </span>{
             <span class="self">self</span>.range_gate_internal(a, bit_len)<span class="question-mark">?</span>;
@@ -364,7 +364,7 @@
 <span class="doccomment">/// Private helper function for range gate
 </span><span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
     <span class="comment">// internal of a range check gate
-    </span><span class="kw">fn </span>range_gate_internal(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>range_gate_internal(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         a: Variable,
         bit_len: usize,
