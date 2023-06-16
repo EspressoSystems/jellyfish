@@ -81,11 +81,6 @@ name = "reed-solomon"
 path = "benches/reed_solomon.rs"
 harness = false
 
-[[bench]]
-name = "reed-solomon-coz"
-path = "benches/reed_solomon_coz.rs"
-harness = false
-
 [features]
 default = ["parallel"]
 std = [
