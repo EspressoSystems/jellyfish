@@ -7,7 +7,7 @@ const N: usize = 2048;
 const N_HALF: usize = 1024;
 // run it many times so coz will be triggered enough times
 // see: <https://github.com/plasma-umass/coz/issues/158#issuecomment-708507510>
-const ITERATIONS: usize = 100;
+const ITERATIONS: usize = 100_000;
 
 fn main() {
     coz::thread_init();
@@ -21,6 +21,7 @@ fn main() {
 
     // decode
     for _ in 0..ITERATIONS {
+        coz::scope!("rs decode");
         reed_solomon_erasure_decode::<Fr254, _, _, _>(
             eval_points.iter().zip(&code).take(N_HALF),
             N_HALF,
