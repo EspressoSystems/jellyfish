@@ -9,6 +9,8 @@ use alloc::collections::{btree_map::Entry, BTreeMap};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
 use typenum::Unsigned;
 
 use crate::errors::{PrimitivesError, VerificationResult};
@@ -91,9 +93,18 @@ where
     fn generate_namespaced_commitment(namespaced_hash: NamespacedHash<T, N>) -> T;
 }
 
-/// Trait indiciating that a struct can act as an orderable namespace
+/// Trait indicating that a struct can act as an orderable namespace
 pub trait Namespace:
-    Debug + Clone + CanonicalDeserialize + CanonicalSerialize + Default + Copy + Hash + Ord
+    Debug
+    + Clone
+    + CanonicalDeserialize
+    + CanonicalSerialize
+    + Default
+    + Copy
+    + Hash
+    + Ord
+    + Serialize
+    + DeserializeOwned
 {
     /// Returns the minimum possible namespace
     fn min() -> Self;
@@ -113,7 +124,11 @@ impl Namespace for u64 {
 type InnerTree<E, H, T, N, Arity> =
     MerkleTree<E, NamespacedHasher<H, E, u64, T, N>, u64, Arity, NamespacedHash<T, N>>;
 
-#[derive(Debug, Clone)]
+type NamespaceRanges<N> = BTreeMap<N, Range<u64>>;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
+                 T: CanonicalSerialize + CanonicalDeserialize")]
 /// NMT
 pub struct NMT<E, H, Arity, N, T>
 where
@@ -123,7 +138,7 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
-    namespace_ranges: BTreeMap<N, Range<u64>>,
+    namespace_ranges: NamespaceRanges<N>,
     inner: InnerTree<E, H, T, N, Arity>,
 }
 
@@ -149,27 +164,8 @@ where
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
         let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
-        let mut max_namespace = <N as Namespace>::min();
-        let mut leaves = Vec::new();
-        for (idx, elem) in elems.into_iter().enumerate() {
-            let ns = elem.borrow().get_namespace();
-            let idx = idx as u64;
-            if ns < max_namespace {
-                return Err(PrimitivesError::InconsistentStructureError(
-                    "Namespace leaves must be pushed in sorted order".into(),
-                ));
-            }
-            match namespace_ranges.entry(ns) {
-                Entry::Occupied(entry) => {
-                    entry.into_mut().end = idx + 1;
-                },
-                Entry::Vacant(entry) => {
-                    entry.insert(idx..idx + 1);
-                },
-            }
-            max_namespace = ns;
-            leaves.push(elem);
-        }
+        let leaves =
+            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
         let inner = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::from_elems(height, leaves)?;
         Ok(NMT {
             inner,
@@ -221,22 +217,22 @@ where
         &mut self,
         elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
     ) -> Result<(), PrimitivesError> {
-        // TODO(#314): update namespace metadata
-        self.inner.extend(elems)
+        let leaves =
+            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut self.namespace_ranges, elems)?;
+        self.inner.extend(leaves)
     }
 
     fn push(
         &mut self,
         elem: impl core::borrow::Borrow<Self::Element>,
     ) -> Result<(), PrimitivesError> {
-        // TODO(#314): update namespace metadata
-        self.inner.push(elem)
+        self.extend([elem])
     }
 }
 
 impl<E, H, Arity, N, T> NMT<E, H, Arity, N, T>
 where
-    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N> + Clone,
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
@@ -251,6 +247,40 @@ where
             // The NMT is malformed, we cannot recover
             panic!()
         }
+    }
+
+    // Helper function to keep namespace metadata in sync with new leaves,
+    // Returns cached leaf references so that the inner merkle tree can append them
+    fn update_namespace_metadata(
+        namespace_ranges: &mut NamespaceRanges<N>,
+        elems: impl IntoIterator<Item = impl Borrow<E>>,
+    ) -> Result<Vec<impl Borrow<E>>, PrimitivesError> {
+        let (mut max_namespace, start_idx) = namespace_ranges
+            .iter()
+            .next_back()
+            .map(|(n, range)| (*n, range.end))
+            .unwrap_or((<N as Namespace>::min(), 0));
+        let mut leaves = Vec::new();
+        for (idx, elem) in elems.into_iter().enumerate() {
+            let ns = elem.borrow().get_namespace();
+            let idx = start_idx + idx as u64;
+            if ns < max_namespace {
+                return Err(PrimitivesError::InconsistentStructureError(
+                    "Namespace leaves must be pushed in sorted order".into(),
+                ));
+            }
+            match namespace_ranges.entry(ns) {
+                Entry::Occupied(entry) => {
+                    entry.into_mut().end = idx + 1;
+                },
+                Entry::Vacant(entry) => {
+                    entry.insert(idx..idx + 1);
+                },
+            }
+            max_namespace = ns;
+            leaves.push(elem);
+        }
+        Ok(leaves)
     }
 }
 
@@ -421,14 +451,57 @@ mod nmt_tests {
         assert!(Hasher::digest(&hashes).is_err());
     }
 
+    enum BuildType {
+        FromElems,
+        Push,
+        Extend,
+    }
+
+    fn build_tree(leaves: &[Leaf], build_type: BuildType) -> TestNMT {
+        match build_type {
+            BuildType::FromElems => TestNMT::from_elems(3, leaves.clone()).unwrap(),
+            BuildType::Extend => {
+                let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
+                nmt.extend(leaves.clone()).unwrap();
+                nmt
+            },
+            BuildType::Push => {
+                let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
+                for leaf in leaves.clone() {
+                    nmt.push(leaf).unwrap();
+                }
+                nmt
+            },
+        }
+    }
+
     #[test]
     fn test_nmt() {
+        test_nmt_with_build_type(BuildType::Extend);
+        test_nmt_with_build_type(BuildType::FromElems);
+        test_nmt_with_build_type(BuildType::Push);
+    }
+
+    #[test]
+    fn test_tree_consistency() {
         let namespaces = [1, 2, 2, 2, 4, 4, 4, 5];
+        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
+        let tree1 = build_tree(&leaves, BuildType::Extend);
+        let tree2 = build_tree(&leaves, BuildType::FromElems);
+        let tree3 = build_tree(&leaves, BuildType::Push);
+        assert_eq!(tree1.commitment(), tree2.commitment());
+        assert_eq!(tree1.namespace_ranges, tree2.namespace_ranges);
+        assert_eq!(tree1.commitment(), tree3.commitment());
+        assert_eq!(tree1.namespace_ranges, tree3.namespace_ranges);
+    }
+
+    fn test_nmt_with_build_type(build_type: BuildType) {
+        let namespaces = [1, 2, 2, 2, 4, 4, 4, 5];
+        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
         let first_ns = namespaces[0];
         let last_ns = namespaces[namespaces.len() - 1];
         let internal_ns = namespaces[1];
-        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
-        let tree = TestNMT::from_elems(3, leaves.clone()).unwrap();
+        let tree = build_tree(&leaves, build_type);
         let left_proof = tree.get_namespace_proof(first_ns);
         let right_proof = tree.get_namespace_proof(last_ns);
         let mut internal_proof = tree.get_namespace_proof(internal_ns);
