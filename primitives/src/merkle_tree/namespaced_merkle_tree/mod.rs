@@ -93,7 +93,7 @@ where
     fn generate_namespaced_commitment(namespaced_hash: NamespacedHash<T, N>) -> T;
 }
 
-/// Trait indiciating that a struct can act as an orderable namespace
+/// Trait indicating that a struct can act as an orderable namespace
 pub trait Namespace:
     Debug
     + Clone
@@ -457,20 +457,8 @@ mod nmt_tests {
         Extend,
     }
 
-    #[test]
-    fn test_nmt() {
-        test_nmt_with_build_type(BuildType::Extend);
-        test_nmt_with_build_type(BuildType::FromElems);
-        test_nmt_with_build_type(BuildType::Push);
-    }
-
-    fn test_nmt_with_build_type(build_type: BuildType) {
-        let namespaces = [1, 2, 2, 2, 4, 4, 4, 5];
-        let first_ns = namespaces[0];
-        let last_ns = namespaces[namespaces.len() - 1];
-        let internal_ns = namespaces[1];
-        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
-        let tree = match build_type {
+    fn build_tree(leaves: &[Leaf], build_type: BuildType) -> TestNMT {
+        match build_type {
             BuildType::FromElems => TestNMT::from_elems(3, leaves.clone()).unwrap(),
             BuildType::Extend => {
                 let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
@@ -484,7 +472,36 @@ mod nmt_tests {
                 }
                 nmt
             },
-        };
+        }
+    }
+
+    #[test]
+    fn test_nmt() {
+        test_nmt_with_build_type(BuildType::Extend);
+        test_nmt_with_build_type(BuildType::FromElems);
+        test_nmt_with_build_type(BuildType::Push);
+    }
+
+    #[test]
+    fn test_tree_consistency() {
+        let namespaces = [1, 2, 2, 2, 4, 4, 4, 5];
+        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
+        let tree1 = build_tree(&leaves, BuildType::Extend);
+        let tree2 = build_tree(&leaves, BuildType::FromElems);
+        let tree3 = build_tree(&leaves, BuildType::Push);
+        assert_eq!(tree1.commitment(), tree2.commitment());
+        assert_eq!(tree1.namespace_ranges, tree2.namespace_ranges);
+        assert_eq!(tree1.commitment(), tree3.commitment());
+        assert_eq!(tree1.namespace_ranges, tree3.namespace_ranges);
+    }
+
+    fn test_nmt_with_build_type(build_type: BuildType) {
+        let namespaces = [1, 2, 2, 2, 4, 4, 4, 5];
+        let leaves: Vec<Leaf> = namespaces.iter().map(|i| Leaf::new(*i)).collect();
+        let first_ns = namespaces[0];
+        let last_ns = namespaces[namespaces.len() - 1];
+        let internal_ns = namespaces[1];
+        let tree = build_tree(&leaves, build_type);
         let left_proof = tree.get_namespace_proof(first_ns);
         let right_proof = tree.get_namespace_proof(last_ns);
         let mut internal_proof = tree.get_namespace_proof(internal_ns);
