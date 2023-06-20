@@ -2,15 +2,20 @@ use alloc::vec;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
 use core::{fmt::Debug, hash::Hash, marker::PhantomData};
+use digest::Digest;
+use sha3::Sha3_256;
 
-use crate::errors::PrimitivesError;
+use crate::{
+    errors::PrimitivesError,
+    merkle_tree::examples::{Sha3Digest, Sha3Node},
+};
 
 use super::{BindNamespace, DigestAlgorithm, Element, Index, Namespace, Namespaced, NodeValue};
 
 /// NamespacedHasher wraps a standard hash function (implementer of
 /// DigestAlgorithm), turning it into a hash function that tags internal nodes
 /// with namespace ranges.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct NamespacedHasher<H, E, I, T, N>
 where
     H: DigestAlgorithm<E, I, T>,
@@ -109,5 +114,32 @@ where
         let namespace = elem.get_namespace();
         let hash = H::digest_leaf(pos, elem)?;
         Ok(NamespacedHash::new(namespace, namespace, hash))
+    }
+}
+
+impl<E, I, N> BindNamespace<E, I, Sha3Node, N> for Sha3Digest
+where
+    E: Element + CanonicalSerialize,
+    I: Index,
+    N: Namespace,
+{
+    // TODO ensure the hashing of (min,max,hash) is collision resistant
+    fn generate_namespaced_commitment(namespaced_hash: NamespacedHash<Sha3Node, N>) -> Sha3Node {
+        let mut hasher = Sha3_256::new();
+        let mut writer = Vec::new();
+        namespaced_hash
+            .min_namespace
+            .serialize_compressed(&mut writer)
+            .unwrap();
+        namespaced_hash
+            .max_namespace
+            .serialize_compressed(&mut writer)
+            .unwrap();
+        namespaced_hash
+            .hash
+            .serialize_compressed(&mut writer)
+            .unwrap();
+        hasher.update(&mut writer);
+        Sha3Node(hasher.finalize().into())
     }
 }

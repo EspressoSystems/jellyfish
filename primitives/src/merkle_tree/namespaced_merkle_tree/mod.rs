@@ -126,7 +126,7 @@ type InnerTree<E, H, T, N, Arity> =
 
 type NamespaceRanges<N> = BTreeMap<N, Range<u64>>;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
                  T: CanonicalSerialize + CanonicalDeserialize")]
 /// NMT
@@ -192,7 +192,7 @@ where
     fn lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> super::LookupResult<Self::Element, Self::MembershipProof, ()> {
+    ) -> super::LookupResult<&Self::Element, Self::MembershipProof, ()> {
         self.inner.lookup(pos)
     }
 
@@ -247,6 +247,14 @@ where
             // The NMT is malformed, we cannot recover
             panic!()
         }
+    }
+
+    /// Helper function to return an iterator over the leaves in the tree
+    pub fn leaves(&self) -> impl ExactSizeIterator<Item = &E> + '_ {
+        (0..self.num_leaves() as usize).map(|idx| match self.inner.lookup(idx as u64) {
+            LookupResult::Ok(elem, _) => elem,
+            _ => panic!("NMT variant violated: every leaf in the tree should be occupied"),
+        })
     }
 
     // Helper function to keep namespace metadata in sync with new leaves,
@@ -354,8 +362,6 @@ where
 
 #[cfg(test)]
 mod nmt_tests {
-    use digest::Digest;
-    use sha3::Sha3_256;
     use typenum::U2;
 
     use super::*;
@@ -395,35 +401,6 @@ mod nmt_tests {
     }
 
     type TestNMT = NMT<Leaf, Sha3Digest, U2, NamespaceId, Sha3Node>;
-
-    impl<E, I, N> BindNamespace<E, I, Sha3Node, N> for Sha3Digest
-    where
-        E: Element + CanonicalSerialize,
-        I: Index,
-        N: Namespace,
-    {
-        // TODO ensure the hashing of (min,max,hash) is collision resistant
-        fn generate_namespaced_commitment(
-            namespaced_hash: NamespacedHash<Sha3Node, N>,
-        ) -> Sha3Node {
-            let mut hasher = Sha3_256::new();
-            let mut writer = Vec::new();
-            namespaced_hash
-                .min_namespace
-                .serialize_compressed(&mut writer)
-                .unwrap();
-            namespaced_hash
-                .max_namespace
-                .serialize_compressed(&mut writer)
-                .unwrap();
-            namespaced_hash
-                .hash
-                .serialize_compressed(&mut writer)
-                .unwrap();
-            hasher.update(&mut writer);
-            Sha3Node(hasher.finalize().into())
-        }
-    }
 
     #[test]
     fn test_namespaced_hash() {
@@ -505,6 +482,10 @@ mod nmt_tests {
         let left_proof = tree.get_namespace_proof(first_ns);
         let right_proof = tree.get_namespace_proof(last_ns);
         let mut internal_proof = tree.get_namespace_proof(internal_ns);
+
+        // Check all of the leaves
+        let fetched_leaves = tree.leaves().cloned().collect::<Vec<Leaf>>();
+        assert_eq!(fetched_leaves, leaves);
 
         // Check namespace proof on the left boundary
         assert!(tree

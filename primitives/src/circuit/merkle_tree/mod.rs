@@ -568,7 +568,7 @@ mod test {
             let mt = RescueMerkleTree::<F>::from_elems(2, elements).unwrap();
             let expected_root = mt.commitment().digest();
             let (retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
-            assert_eq!(retrieved_elem, elem);
+            assert_eq!(retrieved_elem, &elem);
 
             // Happy path
             // Circuit computation with a MT

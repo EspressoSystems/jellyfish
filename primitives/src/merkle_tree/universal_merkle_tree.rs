@@ -94,7 +94,7 @@ where
     fn universal_lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
+    ) -> LookupResult<&Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
         match self.root.lookup_internal(self.height, &traversal_path) {
@@ -277,8 +277,8 @@ mod mt_tests {
         }
         for i in 0..2 {
             let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();
-            assert_eq!(val, F::from(i as u64));
-            assert_eq!(*proof.elem().unwrap(), val);
+            assert_eq!(val, &F::from(i as u64));
+            assert_eq!(proof.elem().unwrap(), val);
             assert!(RescueSparseMerkleTree::<F, F>::verify(
                 &mt.root.value(),
                 F::from(i as u64),
@@ -312,6 +312,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(0u64))
             .expect_ok()
             .unwrap();
+        let lookup_elem = lookup_elem.clone();
         let (elem, mem_proof) = mt.universal_forget(0u64.into()).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_mem_proof, mem_proof);
@@ -347,7 +348,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(2u64))
             .expect_ok()
             .unwrap();
-        assert_eq!(elem, 3u64.into());
+        assert_eq!(elem, &3u64.into());
         assert!(
             RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
                 .unwrap()
@@ -392,7 +393,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(2u64))
             .expect_ok()
             .unwrap();
-        assert_eq!(elem, 3u64.into());
+        assert_eq!(elem, &3u64.into());
         assert!(
             RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
                 .unwrap()
@@ -461,7 +462,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(0u64))
             .expect_ok()
             .unwrap();
-        assert_eq!(elem, 1u64.into());
+        assert_eq!(elem, &1u64.into());
         assert!(
             RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(0u64), &proof)
                 .unwrap()
