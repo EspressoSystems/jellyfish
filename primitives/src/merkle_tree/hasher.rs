@@ -19,7 +19,7 @@
 //!
 //! let root = mt.commitment().digest();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
-//! assert_eq!(val, 3);
+//! assert_eq!(val, &3);
 //! assert!(HasherMerkleTree::<Sha256, usize>::verify(root, 2, proof)?.is_ok());
 //! # Ok(())
 //! # }

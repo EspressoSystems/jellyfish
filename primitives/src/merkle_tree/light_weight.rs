@@ -136,7 +136,7 @@ mod mt_tests {
         assert!(mt.lookup(2).expect_not_in_memory().is_ok());
         assert!(mt.lookup(3).expect_ok().is_ok());
         let (elem, proof) = mock_mt.lookup(0).expect_ok().unwrap();
-        assert_eq!(elem, F::from(3u64));
+        assert_eq!(elem, &F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
         assert!(
             RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &proof)

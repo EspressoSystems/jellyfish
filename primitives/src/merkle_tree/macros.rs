@@ -83,12 +83,12 @@ macro_rules! impl_merkle_tree_scheme {
             fn lookup(
                 &self,
                 pos: impl Borrow<Self::Index>,
-            ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
+            ) -> LookupResult<&Self::Element, Self::MembershipProof, ()> {
                 let pos = pos.borrow();
                 let traversal_path = pos.to_traversal_path(self.height);
                 match self.root.lookup_internal(self.height, &traversal_path) {
                     LookupResult::Ok(value, proof) => {
-                        LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof))
+                        LookupResult::Ok(&value, MerkleProof::new(pos.clone(), proof))
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
