@@ -482,6 +482,18 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
+    /// Return an [`EmulatedVariable`] which equals to a-b.
+    pub fn emulated_sub<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+        b: &EmulatedVariable<E>,
+    ) -> Result<EmulatedVariable<E>, CircuitError> {
+        let c = self.emulated_witness(a)? - self.emulated_witness(b)?;
+        let c = self.create_emulated_variable(c)?;
+        self.emulated_add_gate(&c, b, a)?;
+        Ok(c)
+    }
+
     /// Constrain that a+b=c in the emulated field.
     /// This function doesn't perform emulated variable validaty check on the
     /// input a and c. We assume that they are already performed elsewhere.
@@ -553,6 +565,17 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
+    /// Return an [`EmulatedVariable`] which equals to a+b.
+    pub fn emulated_sub_constant<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+        b: E,
+    ) -> Result<EmulatedVariable<E>, CircuitError> {
+        let c = self.emulated_witness(a)? - b;
+        let c = self.create_emulated_variable(c)?;
+        self.emulated_add_constant_gate(&c, b, a)?;
+        Ok(c)
+    }
     /// Obtain an emulated variable of the conditional selection from 2 emulated
     /// variables. `b` is a boolean variable that indicates selection of P_b
     /// from (P0, P1).
@@ -595,17 +618,31 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// are equal. Return error if variables are invalid.
     pub fn is_emulated_var_equal<E: EmulationConfig<F>>(
         &mut self,
-        p0: &EmulatedVariable<E>,
-        p1: &EmulatedVariable<E>,
+        a: &EmulatedVariable<E>,
+        b: &EmulatedVariable<E>,
     ) -> Result<BoolVar, CircuitError> {
-        self.check_vars_bound(&p0.0[..])?;
-        self.check_vars_bound(&p1.0[..])?;
-        let mut result = self.is_equal(p0.0[0], p1.0[0])?;
-        for (&a, &b) in p0.0.iter().zip(p1.0.iter()).skip(1) {
-            let c = self.is_equal(a, b)?;
-            result.0 = self.mul(result.0, c.0)?;
-        }
-        Ok(result)
+        self.check_vars_bound(&a.0[..])?;
+        self.check_vars_bound(&b.0[..])?;
+        let c =
+            a.0.iter()
+                .zip(b.0.iter())
+                .map(|(&a, &b)| self.is_equal(a, b))
+                .collect::<Result<Vec<_>, _>>()?;
+        self.logic_and_all(&c)
+    }
+
+    /// Obtain a bool variable representing whether the input emulated variable
+    /// is zero. Return error if variables are invalid.
+    pub fn is_emulated_var_zero<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+    ) -> Result<BoolVar, CircuitError> {
+        self.check_vars_bound(&a.0[..])?;
+        let c =
+            a.0.iter()
+                .map(|&a| self.is_zero(a))
+                .collect::<Result<Vec<_>, _>>()?;
+        self.logic_and_all(&c)
     }
 
     /// Given an emulated field element `a`, return `a mod F::MODULUS` in the
