@@ -586,25 +586,6 @@
 <a href="#586" id="586">586</a>
 <a href="#587" id="587">587</a>
 <a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
-<a href="#592" id="592">592</a>
-<a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -733,7 +714,7 @@
 
 <span class="kw">type </span>NamespaceRanges&lt;N&gt; = BTreeMap&lt;N, Range&lt;u64&gt;&gt;;
 
-<span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
+<span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[serde(bound = <span class="string">&quot;E: CanonicalSerialize + CanonicalDeserialize,
                  T: CanonicalSerialize + CanonicalDeserialize&quot;</span>)]
 </span><span class="doccomment">/// NMT
@@ -799,7 +780,7 @@
     <span class="kw">fn </span>lookup(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
-    ) -&gt; <span class="kw">super</span>::LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt; {
+    ) -&gt; <span class="kw">super</span>::LookupResult&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt; {
         <span class="self">self</span>.inner.lookup(pos)
     }
 
@@ -854,6 +835,14 @@
             <span class="comment">// The NMT is malformed, we cannot recover
             </span><span class="macro">panic!</span>()
         }
+    }
+
+    <span class="doccomment">/// Helper function to return an iterator over the leaves in the tree
+    </span><span class="kw">pub fn </span>leaves(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span>E&gt; + <span class="lifetime">&#39;_ </span>{
+        (<span class="number">0</span>..<span class="self">self</span>.num_leaves() <span class="kw">as </span>usize).map(|idx| <span class="kw">match </span><span class="self">self</span>.inner.lookup(idx <span class="kw">as </span>u64) {
+            LookupResult::Ok(elem, <span class="kw">_</span>) =&gt; elem,
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;NMT variant violated: every leaf in the tree should be occupied&quot;</span>),
+        })
     }
 
     <span class="comment">// Helper function to keep namespace metadata in sync with new leaves,
@@ -961,8 +950,6 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>nmt_tests {
-    <span class="kw">use </span>digest::Digest;
-    <span class="kw">use </span>sha3::Sha3_256;
     <span class="kw">use </span>typenum::U2;
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -1002,35 +989,6 @@
     }
 
     <span class="kw">type </span>TestNMT = NMT&lt;Leaf, Sha3Digest, U2, NamespaceId, Sha3Node&gt;;
-
-    <span class="kw">impl</span>&lt;E, I, N&gt; BindNamespace&lt;E, I, Sha3Node, N&gt; <span class="kw">for </span>Sha3Digest
-    <span class="kw">where
-        </span>E: Element + CanonicalSerialize,
-        I: Index,
-        N: Namespace,
-    {
-        <span class="comment">// TODO ensure the hashing of (min,max,hash) is collision resistant
-        </span><span class="kw">fn </span>generate_namespaced_commitment(
-            namespaced_hash: NamespacedHash&lt;Sha3Node, N&gt;,
-        ) -&gt; Sha3Node {
-            <span class="kw">let </span><span class="kw-2">mut </span>hasher = Sha3_256::new();
-            <span class="kw">let </span><span class="kw-2">mut </span>writer = Vec::new();
-            namespaced_hash
-                .min_namespace
-                .serialize_compressed(<span class="kw-2">&amp;mut </span>writer)
-                .unwrap();
-            namespaced_hash
-                .max_namespace
-                .serialize_compressed(<span class="kw-2">&amp;mut </span>writer)
-                .unwrap();
-            namespaced_hash
-                .hash
-                .serialize_compressed(<span class="kw-2">&amp;mut </span>writer)
-                .unwrap();
-            hasher.update(<span class="kw-2">&amp;mut </span>writer);
-            Sha3Node(hasher.finalize().into())
-        }
-    }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_namespaced_hash() {
@@ -1112,6 +1070,10 @@
         <span class="kw">let </span>left_proof = tree.get_namespace_proof(first_ns);
         <span class="kw">let </span>right_proof = tree.get_namespace_proof(last_ns);
         <span class="kw">let </span><span class="kw-2">mut </span>internal_proof = tree.get_namespace_proof(internal_ns);
+
+        <span class="comment">// Check all of the leaves
+        </span><span class="kw">let </span>fetched_leaves = tree.leaves().cloned().collect::&lt;Vec&lt;Leaf&gt;&gt;();
+        <span class="macro">assert_eq!</span>(fetched_leaves, leaves);
 
         <span class="comment">// Check namespace proof on the left boundary
         </span><span class="macro">assert!</span>(tree

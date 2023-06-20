@@ -517,6 +517,7 @@
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -613,7 +614,7 @@
     <span class="kw">fn </span>universal_lookup(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
-    ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt; {
+    ) -&gt; LookupResult&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt; {
         <span class="kw">let </span>pos = pos.borrow();
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
         <span class="kw">match </span><span class="self">self</span>.root.lookup_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path) {
@@ -796,8 +797,8 @@
         }
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
             <span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
-            <span class="macro">assert_eq!</span>(val, F::from(i <span class="kw">as </span>u64));
-            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>proof.elem().unwrap(), val);
+            <span class="macro">assert_eq!</span>(val, <span class="kw-2">&amp;</span>F::from(i <span class="kw">as </span>u64));
+            <span class="macro">assert_eq!</span>(proof.elem().unwrap(), val);
             <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;F, F&gt;::verify(
                 <span class="kw-2">&amp;</span>mt.root.value(),
                 F::from(i <span class="kw">as </span>u64),
@@ -831,6 +832,7 @@
             .universal_lookup(BigUint::from(<span class="number">0u64</span>))
             .expect_ok()
             .unwrap();
+        <span class="kw">let </span>lookup_elem = lookup_elem.clone();
         <span class="kw">let </span>(elem, mem_proof) = mt.universal_forget(<span class="number">0u64</span>.into()).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(lookup_elem, elem);
         <span class="macro">assert_eq!</span>(lookup_mem_proof, mem_proof);
@@ -866,7 +868,7 @@
             .universal_lookup(BigUint::from(<span class="number">2u64</span>))
             .expect_ok()
             .unwrap();
-        <span class="macro">assert_eq!</span>(elem, <span class="number">3u64</span>.into());
+        <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span><span class="number">3u64</span>.into());
         <span class="macro">assert!</span>(
             RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, BigUint::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>proof)
                 .unwrap()
@@ -911,7 +913,7 @@
             .universal_lookup(BigUint::from(<span class="number">2u64</span>))
             .expect_ok()
             .unwrap();
-        <span class="macro">assert_eq!</span>(elem, <span class="number">3u64</span>.into());
+        <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span><span class="number">3u64</span>.into());
         <span class="macro">assert!</span>(
             RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, BigUint::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>proof)
                 .unwrap()
@@ -980,7 +982,7 @@
             .universal_lookup(BigUint::from(<span class="number">0u64</span>))
             .expect_ok()
             .unwrap();
-        <span class="macro">assert_eq!</span>(elem, <span class="number">1u64</span>.into());
+        <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span><span class="number">1u64</span>.into());
         <span class="macro">assert!</span>(
             RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, BigUint::from(<span class="number">0u64</span>), <span class="kw-2">&amp;</span>proof)
                 .unwrap()

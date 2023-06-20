@@ -608,7 +608,7 @@
     </span><span class="kw">fn </span>lookup(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
-    ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt;;
+    ) -&gt; LookupResult&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt;;
 
     <span class="doccomment">/// Verify an element is a leaf of a Merkle tree given the proof
     /// * `root` - a merkle tree root, usually obtained from
@@ -696,7 +696,7 @@
     </span><span class="kw">fn </span>universal_lookup(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
-    ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt;;
+    ) -&gt; LookupResult&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt;;
 
     <span class="doccomment">/// Verify an index is not in this merkle tree
     /// * `pos` - zero-based index of the leaf in the tree

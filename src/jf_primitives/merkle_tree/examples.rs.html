@@ -193,7 +193,7 @@
 }
 
 <span class="doccomment">/// Wrapper for SHA3_512 hash function
-</span><span class="attr">#[derive(Clone, Debug)]
+</span><span class="attr">#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>Sha3Digest();
 
 <span class="kw">impl</span>&lt;E: Element + CanonicalSerialize, I: Index&gt; DigestAlgorithm&lt;E, I, Sha3Node&gt; <span class="kw">for </span>Sha3Digest {
