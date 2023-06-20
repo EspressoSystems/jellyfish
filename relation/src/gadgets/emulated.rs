@@ -591,6 +591,23 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(())
     }
 
+    /// Obtain a bool variable representing whether two input emulated variables
+    /// are equal. Return error if variables are invalid.
+    pub fn is_emulated_var_equal<E: EmulationConfig<F>>(
+        &mut self,
+        p0: &EmulatedVariable<E>,
+        p1: &EmulatedVariable<E>,
+    ) -> Result<BoolVar, CircuitError> {
+        self.check_vars_bound(&p0.0[..])?;
+        self.check_vars_bound(&p1.0[..])?;
+        let mut result = self.is_equal(p0.0[0], p1.0[0])?;
+        for (&a, &b) in p0.0.iter().zip(p1.0.iter()).skip(1) {
+            let c = self.is_equal(a, b)?;
+            result.0 = self.mul(result.0, c.0)?;
+        }
+        Ok(result)
+    }
+
     /// Given an emulated field element `a`, return `a mod F::MODULUS` in the
     /// native field.
     fn mod_to_native_field<E: EmulationConfig<F>>(

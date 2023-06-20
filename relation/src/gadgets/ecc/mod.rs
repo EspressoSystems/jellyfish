@@ -18,9 +18,9 @@ use ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
 
 mod conversion;
+pub mod emulated;
 mod glv;
 mod msm;
-pub mod non_native;
 pub use conversion::*;
 pub use msm::*;
 
