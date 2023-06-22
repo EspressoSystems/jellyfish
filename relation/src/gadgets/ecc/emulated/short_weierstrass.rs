@@ -6,13 +6,30 @@
 
 //! Short Weierstrass curve point addition
 
-use super::EmulatedPointVariable;
+use super::EmulatedTEPointVariable;
 use crate::{
     errors::CircuitError,
-    gadgets::{ecc::Point, EmulationConfig},
+    gadgets::{ecc::TEPoint, EmulationConfig},
     PlonkCircuit,
 };
+use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::PrimeField;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::vec::Vec;
+
+/// An elliptic curve point in short Weierstrass affine form (x, y, infinity).
+#[derive(Debug, Eq, PartialEq, Copy, Clone, CanonicalSerialize, CanonicalDeserialize)]
+pub struct SWPoint<F: PrimeField>(pub F, pub F, pub bool);
+
+impl<F, P> From<Affine<P>> for SWPoint<F>
+where
+    F: PrimeField,
+    P: SWCurveConfig<BaseField = F>,
+{
+    fn from(p: Affine<P>) -> Self {
+        SWPoint(p.x, p.y, p.infinity)
+    }
+}
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain variable `c` to be the point addition of `a` and
@@ -29,16 +46,21 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ///     - Calculate s = (y1 - y2) / (x1 - x2)
     ///     - x3 = s^2 - x1 - x2
     ///     - y3 = s(x1 - x3) - y1
-    /// The second case is equivalent of testing the following
+    /// The first case is equivalent to the following:
+    ///   - (x3 + 2 * x1) * (y1 + y1) * y1 = (3* x_1^2 + d)^2 * y1
+    ///   - (y3 + y1) * 2 * y1 * y1 = (3* x_1^2 + d) (x1 - x3) * y1
+    ///   - not_equal(x1, x2) || not_equal(y1, y2) || not_zero(y1) || ((x3 == 0)
+    ///     && (y3 == 0))
+    /// The second case is equivalent to the following:
     ///   - (x1 - x2)^3 (x1 + x2 + x3) == (x1 - x2) (y1 - y2)^2
     ///   - (x1 - x2) (x1 - x3) (y1 - y2) == (y1 + y3) (x1 - x2)^2
-    ///   - is_equal(x1, x2) && !not_equal(y1, y2) && (x3 == 0) && (y3 == 0)
+    ///   - not_equal(x1, x2) || is_equal(y1, y2) || ((x3 == 0) && (y3 == 0))
     /// TODO: unfinished
     pub fn emulated_sw_ecc_add_gate<E: EmulationConfig<F>>(
         &mut self,
-        _a: &EmulatedPointVariable<E>,
-        _b: &EmulatedPointVariable<E>,
-        _c: &EmulatedPointVariable<E>,
+        _a: &EmulatedTEPointVariable<E>,
+        _b: &EmulatedTEPointVariable<E>,
+        _c: &EmulatedTEPointVariable<E>,
         _d: E,
     ) -> Result<(), CircuitError> {
         todo!()
@@ -47,10 +69,10 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Obtain a variable to the point addition result of `a` + `b`
     pub fn emulated_sw_ecc_add<E: EmulationConfig<F>>(
         &mut self,
-        a: &EmulatedPointVariable<E>,
-        b: &EmulatedPointVariable<E>,
+        a: &EmulatedTEPointVariable<E>,
+        b: &EmulatedTEPointVariable<E>,
         d: E,
-    ) -> Result<EmulatedPointVariable<E>, CircuitError> {
+    ) -> Result<EmulatedTEPointVariable<E>, CircuitError> {
         let x1 = self.emulated_witness(&a.0)?;
         let y1 = self.emulated_witness(&a.1)?;
         let x2 = self.emulated_witness(&b.0)?;
@@ -60,7 +82,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             if y1.is_zero() {
                 (E::zero(), E::zero())
             } else {
-                let s = (x1 * x1 * E::from(3u64) + d) / (y1 * E::from(2u64));
+                let s = (x1 * x1 * E::from(3u64) + d) / (y1 + y1);
                 let x3 = s * s - x1 - x2;
                 let y3 = s * (x1 - x3) - y1;
                 (x3, y3)
@@ -76,8 +98,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
                 (x3, y3)
             }
         };
-        let c = self.create_emulated_point_variable(Point(x3, y3))?;
-        self.emulated_sw_ecc_add_gate(a, b, &c, d)?;
+        let c = self.create_emulated_te_point_variable(TEPoint(x3, y3))?;
+        // self.emulated_sw_ecc_add_gate(a, b, &c, d)?;
         Ok(c)
     }
 }
@@ -86,7 +108,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 mod tests {
     use crate::{
         gadgets::{
-            ecc::{conversion::*, Point},
+            ecc::{conversion::*, TEPoint},
             EmulationConfig,
         },
         Circuit, PlonkCircuit,
@@ -98,7 +120,7 @@ mod tests {
         CurveGroup, Group,
     };
     use ark_ff::{MontFp, PrimeField};
-    use ark_std::UniformRand;
+    use ark_std::{UniformRand, Zero};
 
     #[test]
     fn test_emulated_sw_point_addition() {
@@ -115,24 +137,58 @@ mod tests {
         P: SWCurveConfig<BaseField = E>,
     {
         let mut rng = jf_utils::test_rng();
+        let neutral = Projective::<P>::zero().into_affine();
         let p1 = Projective::<P>::rand(&mut rng).into_affine();
         let p2 = Projective::<P>::rand(&mut rng).into_affine();
-        let p3: Point<E> = (p1 + p2).into_affine().into();
-        let fail_p3: Point<E> = (p1 + p2 + Projective::<P>::generator())
+        let expected: TEPoint<E> = (p1 + p2).into_affine().into();
+        let wrong_result: TEPoint<E> = (p1 + p2 + Projective::<P>::generator())
             .into_affine()
             .into();
 
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
-        let var_p1 = circuit.create_emulated_point_variable(p1.into()).unwrap();
-        let var_p2 = circuit.create_emulated_point_variable(p2.into()).unwrap();
-        let var_p3 = circuit.emulated_sw_ecc_add(&var_p1, &var_p2, d).unwrap();
-        assert_eq!(circuit.emulated_point_witness(&var_p3).unwrap(), p3);
+        let var_p1 = circuit
+            .create_emulated_te_point_variable(p1.into())
+            .unwrap();
+        let var_p2 = circuit
+            .create_emulated_te_point_variable(p2.into())
+            .unwrap();
+        let var_result = circuit.emulated_sw_ecc_add(&var_p1, &var_p2, d).unwrap();
+        assert_eq!(
+            circuit.emulated_te_point_witness(&var_result).unwrap(),
+            expected
+        );
+        let var_neutral = circuit
+            .create_emulated_te_point_variable(neutral.into())
+            .unwrap();
+        let var_neutral_result1 = circuit
+            .emulated_sw_ecc_add(&var_p1, &var_neutral, d)
+            .unwrap();
+        let var_neutral_result2 = circuit
+            .emulated_sw_ecc_add(&var_neutral, &var_p1, d)
+            .unwrap();
+        assert_eq!(
+            circuit
+                .emulated_te_point_witness(&var_neutral_result1)
+                .unwrap(),
+            p1.into()
+        );
+        assert_eq!(
+            circuit
+                .emulated_te_point_witness(&var_neutral_result2)
+                .unwrap(),
+            p2.into()
+        );
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
 
-        let var_fail_p3 = circuit.create_emulated_point_variable(fail_p3).unwrap();
+        // let var_p4 = circuit.emulated_sw_ecc_add(&wrong_result)
+
+        // fail path
+        let var_wrong_result = circuit
+            .create_emulated_te_point_variable(wrong_result)
+            .unwrap();
         circuit
-            .emulated_sw_ecc_add_gate(&var_p1, &var_p2, &var_fail_p3, d)
+            .emulated_sw_ecc_add_gate(&var_p1, &var_p2, &var_wrong_result, d)
             .unwrap();
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
     }

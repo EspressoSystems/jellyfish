@@ -19,7 +19,7 @@ use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
     errors::CircuitError,
-    gadgets::ecc::{Point, PointVariable},
+    gadgets::ecc::{PointVariable, TEPoint},
     Circuit, PlonkCircuit, Variable,
 };
 use jf_utils::compute_len_to_next_multiple;
@@ -224,7 +224,7 @@ where
     }
 
     fn create_enc_key_variable(&mut self, pk: &EncKey<P>) -> Result<EncKeyVars, CircuitError> {
-        let point = Point::from(pk.key.into_affine());
+        let point = TEPoint::from(pk.key.into_affine());
         let point_variable = self.create_point_variable(point)?;
         Ok(EncKeyVars(point_variable))
     }
@@ -234,7 +234,7 @@ where
         ctxts: &Ciphertext<P>,
     ) -> Result<ElGamalHybridCtxtVars, CircuitError> {
         let ephemeral =
-            self.create_point_variable(Point::from(ctxts.ephemeral.key.into_affine()))?;
+            self.create_point_variable(TEPoint::from(ctxts.ephemeral.key.into_affine()))?;
         let symm_ctxts = ctxts
             .data
             .iter()
@@ -264,7 +264,7 @@ mod tests {
     use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use ark_std::{vec, vec::Vec};
-    use jf_relation::{gadgets::ecc::Point, Circuit, PlonkCircuit, Variable};
+    use jf_relation::{gadgets::ecc::TEPoint, Circuit, PlonkCircuit, Variable};
     use jf_utils::fr_to_fq;
 
     #[test]
@@ -379,7 +379,7 @@ mod tests {
 
         // Check ciphertexts
         assert_eq!(
-            Point::from(ctxts.ephemeral.key.into_affine()),
+            TEPoint::from(ctxts.ephemeral.key.into_affine()),
             circuit.point_witness(&ctxts_vars.ephemeral).unwrap()
         );
 
@@ -433,7 +433,7 @@ mod tests {
         let ctxts_var = circuit.create_ciphertext_variable(&ctxts).unwrap();
         // Check ciphertexts
         assert_eq!(
-            Point::from(ctxts.ephemeral.key.into_affine()),
+            TEPoint::from(ctxts.ephemeral.key.into_affine()),
             circuit.point_witness(&ctxts_var.ephemeral).unwrap()
         );
         for (ctxt, ctxt_var) in ctxts.data.iter().zip(ctxts_var.symm_ctxts) {

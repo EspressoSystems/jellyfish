@@ -17,7 +17,7 @@ use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
     errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
-        ecc::{MultiScalarMultiplicationCircuit, Point, PointVariable, SWToTEConParam},
+        ecc::{MultiScalarMultiplicationCircuit, PointVariable, SWToTEConParam, TEPoint},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
     Circuit, PlonkCircuit, Variable,
@@ -65,12 +65,12 @@ impl<E: Pairing> VerifyingKeyVar<E> {
         let sigma_comms = verify_key
             .sigma_comms
             .iter()
-            .map(|comm| circuit.create_point_variable(Point::from(&comm.0)))
+            .map(|comm| circuit.create_point_variable(TEPoint::from(comm.0)))
             .collect::<Result<Vec<_>, CircuitError>>()?;
         let selector_comms = verify_key
             .selector_comms
             .iter()
-            .map(|comm| circuit.create_point_variable(Point::from(&comm.0)))
+            .map(|comm| circuit.create_point_variable(TEPoint::from(comm.0)))
             .collect::<Result<Vec<_>, CircuitError>>()?;
         Ok(Self {
             sigma_comms,
@@ -149,8 +149,8 @@ impl<E: Pairing> VerifyingKeyVar<E> {
     /// The public inputs are already in the form of FpElemVars.
     pub fn partial_verify_circuit<F, P>(
         circuit: &mut PlonkCircuit<F>,
-        beta_g: &Point<F>,
-        generator_g: &Point<F>,
+        beta_g: &TEPoint<F>,
+        generator_g: &TEPoint<F>,
         merged_vks: &[Self],
         shared_public_input_vars: &[FpElemVar<F>],
         batch_proof: &BatchProofVar<F>,
@@ -334,7 +334,7 @@ mod test {
     use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{
-        gadgets::{ecc::Point, test_utils::test_variable_independence_for_circuit},
+        gadgets::{ecc::TEPoint, test_utils::test_variable_independence_for_circuit},
         Circuit, MergeableCircuitType,
     };
     use jf_utils::{field_switching, test_rng};
@@ -445,11 +445,11 @@ mod test {
         P: SWParam<BaseField = F>,
     {
         for (comm_var, comm) in vk_var.sigma_comms.iter().zip(vk.sigma_comms.iter()) {
-            let expected_comm = Point::from(&comm.0);
+            let expected_comm = TEPoint::from(comm.0);
             assert_eq!(circuit.point_witness(comm_var).unwrap(), expected_comm);
         }
         for (comm_var, comm) in vk_var.selector_comms.iter().zip(vk.selector_comms.iter()) {
-            let expected_comm = Point::from(&comm.0);
+            let expected_comm = TEPoint::from(comm.0);
             assert_eq!(circuit.point_witness(comm_var).unwrap(), expected_comm);
         }
         assert_eq!(vk_var.is_merged, vk.is_merged);
@@ -555,11 +555,11 @@ mod test {
                 );
                 assert_eq!(
                     circuit.point_witness(&partial_verify_points.0)?,
-                    Point::<F>::from(&inner1.into_affine())
+                    TEPoint::<F>::from(inner1.into_affine())
                 );
                 assert_eq!(
                     circuit.point_witness(&partial_verify_points.1)?,
-                    Point::<F>::from(&inner2.into_affine())
+                    TEPoint::<F>::from(inner2.into_affine())
                 );
 
                 // ark_std::println!("#variables: {}", circuit.num_vars());
@@ -650,11 +650,11 @@ mod test {
                 );
                 assert_ne!(
                     circuit.point_witness(&partial_verify_points.0)?,
-                    Point::<F>::from(&inner1.into_affine())
+                    TEPoint::<F>::from(inner1.into_affine())
                 );
                 assert_ne!(
                     circuit.point_witness(&partial_verify_points.1)?,
-                    Point::<F>::from(&inner2.into_affine())
+                    TEPoint::<F>::from(inner2.into_affine())
                 );
 
                 // wrong shared input and circuit input
@@ -673,11 +673,11 @@ mod test {
                 );
                 assert_ne!(
                     circuit.point_witness(&partial_verify_points.0)?,
-                    Point::<F>::from(&inner1.into_affine())
+                    TEPoint::<F>::from(inner1.into_affine())
                 );
                 assert_ne!(
                     circuit.point_witness(&partial_verify_points.1)?,
-                    Point::<F>::from(&inner2.into_affine())
+                    TEPoint::<F>::from(inner2.into_affine())
                 );
             }
         }
@@ -719,8 +719,8 @@ mod test {
         // proof
         let batch_proof_vars = (*batch_proof).create_variables(&mut circuit, m, two_power_m)?;
 
-        let beta_g: Point<F> = beta_g_ref.into();
-        let generator_g = &generator_g.into();
+        let beta_g: TEPoint<F> = (*beta_g_ref).into();
+        let generator_g = &(*generator_g).into();
         let blinding_factor_var = circuit.create_variable(field_switching(blinding_factor))?;
 
         let partial_verify_points = VerifyingKeyVar::partial_verify_circuit(
