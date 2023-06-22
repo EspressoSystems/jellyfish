@@ -9,8 +9,8 @@
 use super::EmulatedTEPointVariable;
 use crate::{
     errors::CircuitError,
-    gadgets::{ecc::TEPoint, EmulationConfig},
-    PlonkCircuit,
+    gadgets::{ecc::TEPoint, EmulatedVariable, EmulationConfig},
+    BoolVar, Circuit, PlonkCircuit,
 };
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::PrimeField;
@@ -31,7 +31,110 @@ where
     }
 }
 
+/// The variable represents an SW point in the emulated field.
+#[derive(Debug, Clone)]
+pub struct EmulatedSWPointVariable<E: PrimeField>(
+    pub EmulatedVariable<E>,
+    pub EmulatedVariable<E>,
+    pub BoolVar,
+);
+
 impl<F: PrimeField> PlonkCircuit<F> {
+    /// Return the witness point
+    pub fn emulated_sw_point_witness<E: EmulationConfig<F>>(
+        &self,
+        point_var: &EmulatedSWPointVariable<E>,
+    ) -> Result<SWPoint<E>, CircuitError> {
+        let x = self.emulated_witness(&point_var.0)?;
+        let y = self.emulated_witness(&point_var.1)?;
+        let infinity = self.witness(point_var.2 .0)? == F::one();
+        Ok(SWPoint(x, y, infinity))
+    }
+
+    /// Add a new emulated EC point (as witness)
+    pub fn create_emulated_sw_point_variable<E: EmulationConfig<F>>(
+        &mut self,
+        point: SWPoint<E>,
+    ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
+        let x = self.create_emulated_variable(point.0)?;
+        let y = self.create_emulated_variable(point.1)?;
+        let infinity = self.create_boolean_variable(point.2)?;
+        Ok(EmulatedSWPointVariable(x, y, infinity))
+    }
+
+    /// Add a new constant emulated EC point
+    pub fn create_constant_emulated_sw_point_variable<E: EmulationConfig<F>>(
+        &mut self,
+        point: SWPoint<E>,
+    ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
+        let x = self.create_constant_emulated_variable(point.0)?;
+        let y = self.create_constant_emulated_variable(point.1)?;
+        let infinity =
+            self.create_boolean_variable_unchecked(if point.2 { F::one() } else { F::zero() })?;
+        Ok(EmulatedSWPointVariable(x, y, infinity))
+    }
+
+    /// Add a new public emulated EC point
+    pub fn create_public_emulated_sw_point_variable<E: EmulationConfig<F>>(
+        &mut self,
+        point: SWPoint<E>,
+    ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
+        let x = self.create_public_emulated_variable(point.0)?;
+        let y = self.create_public_emulated_variable(point.1)?;
+        let infinity =
+            self.create_boolean_variable_unchecked(if point.2 { F::one() } else { F::zero() })?;
+        Ok(EmulatedSWPointVariable(x, y, infinity))
+    }
+
+    /// Obtain an emulated point variable of the conditional selection from 2
+    /// emulated point variables. `b` is a boolean variable that indicates
+    /// selection of P_b from (P0, P1).
+    /// Return error if invalid input parameters are provided.
+    pub fn binary_emulated_sw_point_vars_select<E: EmulationConfig<F>>(
+        &mut self,
+        b: BoolVar,
+        point0: &EmulatedSWPointVariable<E>,
+        point1: &EmulatedSWPointVariable<E>,
+    ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
+        let select_x = self.conditional_select_emulated(b, &point0.0, &point1.0)?;
+        let select_y = self.conditional_select_emulated(b, &point0.1, &point1.1)?;
+        let select_infinity = BoolVar(self.conditional_select(b, point0.2 .0, point1.2 .0)?);
+
+        Ok(EmulatedSWPointVariable::<E>(
+            select_x,
+            select_y,
+            select_infinity,
+        ))
+    }
+
+    /// Constrain two emulated point variables to be the same.
+    /// Return error if the input point variables are invalid.
+    pub fn enforce_emulated_sw_point_equal<E: EmulationConfig<F>>(
+        &mut self,
+        point0: &EmulatedSWPointVariable<E>,
+        point1: &EmulatedSWPointVariable<E>,
+    ) -> Result<(), CircuitError> {
+        self.enforce_emulated_var_equal(&point0.0, &point1.0)?;
+        self.enforce_emulated_var_equal(&point0.1, &point1.1)?;
+        self.enforce_equal(point0.2 .0, point1.2 .0)?;
+        Ok(())
+    }
+
+    /// Obtain a bool variable representing whether two input emulated point
+    /// variables are equal. Return error if variables are invalid.
+    pub fn is_emulated_sw_point_equal<E: EmulationConfig<F>>(
+        &mut self,
+        point0: &EmulatedSWPointVariable<E>,
+        point1: &EmulatedSWPointVariable<E>,
+    ) -> Result<BoolVar, CircuitError> {
+        let mut r0 = self.is_emulated_var_equal(&point0.0, &point1.0)?;
+        let r1 = self.is_emulated_var_equal(&point0.1, &point1.1)?;
+        let r2 = self.is_equal(point0.2 .0, point1.2 .0)?;
+        r0.0 = self.mul(r0.0, r1.0)?;
+        r0.0 = self.mul(r0.0, r2.0)?;
+        Ok(r0)
+    }
+
     /// Constrain variable `c` to be the point addition of `a` and
     /// `b` over an elliptic curve.
     /// Let a = (x1, y1), b = (x2, y2), c = (x3, y3)

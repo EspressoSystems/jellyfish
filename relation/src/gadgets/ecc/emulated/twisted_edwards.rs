@@ -13,7 +13,7 @@ use crate::{
 };
 use ark_ff::PrimeField;
 
-/// The variable represents an EC point in the emulated field.
+/// The variable represents an TE point in the emulated field.
 #[derive(Debug, Clone)]
 pub struct EmulatedTEPointVariable<E: PrimeField>(pub EmulatedVariable<E>, pub EmulatedVariable<E>);
 
