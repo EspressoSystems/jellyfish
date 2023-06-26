@@ -14,7 +14,7 @@ use crate::{
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::vec::Vec;
+use ark_std::{vec, vec::Vec};
 
 /// An elliptic curve point in short Weierstrass affine form (x, y, infinity).
 #[derive(Debug, Eq, PartialEq, Copy, Clone, CanonicalSerialize, CanonicalDeserialize)]
@@ -92,12 +92,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
     pub fn binary_emulated_sw_point_vars_select<E: EmulationConfig<F>>(
         &mut self,
         b: BoolVar,
-        point0: &EmulatedSWPointVariable<E>,
-        point1: &EmulatedSWPointVariable<E>,
+        p0: &EmulatedSWPointVariable<E>,
+        p1: &EmulatedSWPointVariable<E>,
     ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
-        let select_x = self.conditional_select_emulated(b, &point0.0, &point1.0)?;
-        let select_y = self.conditional_select_emulated(b, &point0.1, &point1.1)?;
-        let select_infinity = BoolVar(self.conditional_select(b, point0.2 .0, point1.2 .0)?);
+        let select_x = self.conditional_select_emulated(b, &p0.0, &p1.0)?;
+        let select_y = self.conditional_select_emulated(b, &p0.1, &p1.1)?;
+        let select_infinity = BoolVar(self.conditional_select(b, p0.2 .0, p1.2 .0)?);
 
         Ok(EmulatedSWPointVariable::<E>(
             select_x,
@@ -110,12 +110,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Return error if the input point variables are invalid.
     pub fn enforce_emulated_sw_point_equal<E: EmulationConfig<F>>(
         &mut self,
-        point0: &EmulatedSWPointVariable<E>,
-        point1: &EmulatedSWPointVariable<E>,
+        p0: &EmulatedSWPointVariable<E>,
+        p1: &EmulatedSWPointVariable<E>,
     ) -> Result<(), CircuitError> {
-        self.enforce_emulated_var_equal(&point0.0, &point1.0)?;
-        self.enforce_emulated_var_equal(&point0.1, &point1.1)?;
-        self.enforce_equal(point0.2 .0, point1.2 .0)?;
+        self.enforce_emulated_var_equal(&p0.0, &p1.0)?;
+        self.enforce_emulated_var_equal(&p0.1, &p1.1)?;
+        self.enforce_equal(p0.2 .0, p1.2 .0)?;
         Ok(())
     }
 
@@ -123,54 +123,149 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// variables are equal. Return error if variables are invalid.
     pub fn is_emulated_sw_point_equal<E: EmulationConfig<F>>(
         &mut self,
-        point0: &EmulatedSWPointVariable<E>,
-        point1: &EmulatedSWPointVariable<E>,
+        p0: &EmulatedSWPointVariable<E>,
+        p1: &EmulatedSWPointVariable<E>,
     ) -> Result<BoolVar, CircuitError> {
-        let mut r0 = self.is_emulated_var_equal(&point0.0, &point1.0)?;
-        let r1 = self.is_emulated_var_equal(&point0.1, &point1.1)?;
-        let r2 = self.is_equal(point0.2 .0, point1.2 .0)?;
+        let mut r0 = self.is_emulated_var_equal(&p0.0, &p1.0)?;
+        let r1 = self.is_emulated_var_equal(&p0.1, &p1.1)?;
+        let r2 = self.is_equal(p0.2 .0, p1.2 .0)?;
         r0.0 = self.mul(r0.0, r1.0)?;
         r0.0 = self.mul(r0.0, r2.0)?;
         Ok(r0)
     }
 
-    /// Constrain variable `c` to be the point addition of `a` and
-    /// `b` over an elliptic curve.
-    /// Let a = (x0, y0), b = (x1, y1), c = (x2, y2)
+    /// Constrain variable `p2` to be the point addition of `p0` and
+    /// `p1` over an elliptic curve.
+    /// Let p0 = (x0, y0, inf0), p1 = (x1, y1, inf1), p2 = (x2, y2, inf2)
     /// The addition formula for affine points of sw curve is
-    ///   1. if a == b
-    ///     - if y0 == 0 then (x2, y2) = (0, 0)
+    ///   If either p0 or p1 is infinity, then p2 equals to another point.
+    ///   1. if p0 == p1
+    ///     - if y0 == 0 then inf2 = 1
     ///     - Calculate s = (3 * x0^2 + a) / (2 * y0)
     ///     - x2 = s^2 - 2 * x0
     ///     - y2 = s(x0 - x2) - y0
     ///   2. Otherwise
-    ///     - if x0 == x1 then (x2, y2) = (0, 0)
+    ///     - if x0 == x1 then inf2 = 1
     ///     - Calculate s = (y0 - y1) / (x0 - x1)
     ///     - x2 = s^2 - x0 - x1
     ///     - y2 = s(x0 - x2) - y0
     /// The first case is equivalent to the following:
-    ///   - (x2 + 2 * x0) * (y0 + y0) * y0 = (3* x_1^2 + d)^2 * y0
-    ///   - (y2 + y0) * 2 * y0 * y0 = (3* x_1^2 + d) (x0 - x2) * y0
-    ///   - not_equal(x0, x1) || not_equal(y0, y1) || not_zero(y0) || ((x2 == 0)
-    ///     && (y2 == 0))
+    /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 != y1 || y0 != 0 || inf2 == 0
+    /// - (x2 + 2 * x0) * (y0 + y0)^2 == (3 * x1^2 + a)^2
+    /// - (y2 + y0) * (y0 + y0) == (3 * x1^2 + a) (x0 - x2)
     /// The second case is equivalent to the following:
-    ///   - (x0 - x1)^3 (x0 + x1 + x2) == (x0 - x1) (y0 - y1)^2
-    ///   - (x0 - x1) (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)^2
-    ///   - not_equal(x0, x1) || is_equal(y0, y1) || ((x2 == 0) && (y2 == 0))
-    /// TODO: unfinished
+    /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 == y1 || inf2 == 0
+    /// - (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
+    /// - (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)
+    /// First check in both cases can be combined into the following:
+    /// inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 && y0 != 0)
+    /// For the rest equality checks,
+    ///   - Both LHS and RHS must be multiplied with an indicator variable
+    ///     (!inf0 && !inf1). So that if either p0 or p1 is infinity, those
+    ///     checks will trivially pass.
+    ///   - For the first case (point doubling), both LHS and RHS must be
+    ///     multiplied with an indicator variable (y0 != 0 && x0 == x1 && y1 ==
+    ///     y0). So that when y0 == 0 || x0 != x1 || y0 != y1, these checks will
+    ///     trivially pass.
+    ///   - For the second case, both LHS and RHS must be multiplied with (x0 -
+    ///     x1). So that when x0 == x1, these checks will trivially pass.
     pub fn emulated_sw_ecc_add_gate<E: EmulationConfig<F>>(
         &mut self,
         p0: &EmulatedSWPointVariable<E>,
         p1: &EmulatedSWPointVariable<E>,
         p2: &EmulatedSWPointVariable<E>,
-        _a: E,
+        a: E,
     ) -> Result<(), CircuitError> {
         let eq_p1_p2 = self.is_emulated_sw_point_equal(p1, p2)?;
         let eq_p0_p2 = self.is_emulated_sw_point_equal(p0, p2)?;
         // Case 1: either p0 or p1 is infinity
         self.enforce_equal(p0.2 .0, eq_p1_p2.0)?;
         self.enforce_equal(p1.2 .0, eq_p0_p2.0)?;
-        todo!()
+
+        // infinity_mark is 1 iff either p0 or p1 is infinity
+        let infinity_mark = self.logic_or(p0.2, p1.2)?;
+        // is 1 iff both p0 and p1 are not infinity
+        let non_infinity_mark = self.logic_neg(infinity_mark)?;
+
+        // Case 2: p2 is infinity, while p0 and p1 are not.
+        // inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 && y0 != 0)
+        let non_inf_p2 = self.logic_neg(p2.2)?;
+        let eq_x0_x1 = self.is_emulated_var_equal(&p0.0, &p1.0)?;
+        let neq_x0_x1 = self.logic_neg(eq_x0_x1)?;
+        let eq_y0_y1 = self.is_emulated_var_equal(&p0.1, &p1.1)?;
+        let is_y0_zero = self.is_emulated_var_zero(&p0.1)?;
+        let not_y0_zero = self.logic_neg(is_y0_zero)?;
+        let t = self.logic_and(eq_y0_y1, not_y0_zero)?;
+        let t = self.logic_or(neq_x0_x1, t)?;
+        let t = self.logic_or(non_inf_p2, t)?;
+        self.logic_or_gate(infinity_mark, t)?;
+
+        // Case 3: point doubling
+        // doubling mark is 1 iff x0 == x1 and y0 == y1
+        let doubling_mark = self.mul(eq_x0_x1.0, eq_y0_y1.0)?;
+        let doubling_coef = self.mul(doubling_mark, non_infinity_mark.0)?;
+        let doubling_coef = self.mul(doubling_coef, not_y0_zero.0)?;
+        // forcefully convert Variable into EmulatedVariable
+        // safe because it's boolean
+        let mut v = vec![self.zero(); E::NUM_LIMBS];
+        v[0] = doubling_coef;
+        let doubling_coef = EmulatedVariable::<E>(v, core::marker::PhantomData);
+
+        // first equality (x2 + 2 * x0) * (y0 + y0)^2 == (3 * x1^2 + a)^2
+        let y0_times_2 = self.emulated_add(&p0.1, &p0.1)?;
+        let x0_plus_x1 = self.emulated_add(&p0.0, &p1.0)?;
+        let x0_plus_x1_plus_x2 = self.emulated_add(&p2.0, &x0_plus_x1)?;
+        let lhs = self.emulated_mul(&x0_plus_x1_plus_x2, &y0_times_2)?;
+        let lhs = self.emulated_mul(&lhs, &y0_times_2)?;
+        // s = 3 * x1^2 + a
+        let s = self.emulated_mul(&p0.0, &p0.0)?;
+        let s = self.emulated_mul_constant(&s, E::from(3u64))?;
+        let s = self.emulated_add_constant(&s, a)?;
+        let rhs = self.emulated_mul(&s, &s)?;
+
+        let lhs = self.emulated_mul(&lhs, &doubling_coef)?;
+        let rhs = self.emulated_mul(&rhs, &doubling_coef)?;
+        self.enforce_emulated_var_equal(&lhs, &rhs)?;
+
+        // second equality (y2 + y0) * (y0 + y0) == (3 * x1^2 + a) (x0 - x2)
+        let y2_plus_y0 = self.emulated_add(&p2.1, &p0.1)?;
+        let lhs = self.emulated_mul(&y2_plus_y0, &y0_times_2)?;
+        let x0_minus_x2 = self.emulated_sub(&p0.0, &p2.0)?;
+        let rhs = self.emulated_mul(&s, &x0_minus_x2)?;
+
+        let lhs = self.emulated_mul(&lhs, &doubling_coef)?;
+        let rhs = self.emulated_mul(&rhs, &doubling_coef)?;
+        self.enforce_emulated_var_equal(&lhs, &rhs)?;
+
+        // Case 4: point addition
+        let coef = self.mul(non_infinity_mark.0, neq_x0_x1.0)?;
+        // forcefully convert Variable into EmulatedVariable
+        // safe because it's boolean
+        let mut v = vec![self.zero(); E::NUM_LIMBS];
+        v[0] = coef;
+        let coef = EmulatedVariable::<E>(v, core::marker::PhantomData);
+
+        // first equality (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
+        let x0_minus_x1 = self.emulated_sub(&p0.0, &p1.0)?;
+        let lhs = self.emulated_mul(&x0_minus_x1, &x0_minus_x1)?;
+        let lhs = self.emulated_mul(&lhs, &x0_plus_x1_plus_x2)?;
+        let y0_minus_y1 = self.emulated_sub(&p0.1, &p1.1)?;
+        let rhs = self.emulated_mul(&y0_minus_y1, &y0_minus_y1)?;
+
+        let lhs = self.emulated_mul(&lhs, &coef)?;
+        let rhs = self.emulated_mul(&rhs, &coef)?;
+        self.enforce_emulated_var_equal(&lhs, &rhs)?;
+
+        // second equality (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)
+        let lhs = self.emulated_mul(&x0_minus_x2, &y0_minus_y1)?;
+        let y0_plus_y2 = self.emulated_add(&p0.1, &p2.1)?;
+        let rhs = self.emulated_mul(&y0_plus_y2, &x0_minus_x1)?;
+
+        let lhs = self.emulated_mul(&lhs, &coef)?;
+        let rhs = self.emulated_mul(&rhs, &coef)?;
+        self.enforce_emulated_var_equal(&lhs, &rhs)?;
+
+        Ok(())
     }
 
     /// Obtain a variable to the point addition result of `p0` + `p1`
@@ -255,7 +350,7 @@ mod tests {
             .into_affine()
             .into();
 
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(20);
 
         let var_p1 = circuit
             .create_emulated_sw_point_variable(p1.into())
@@ -289,9 +384,15 @@ mod tests {
                 .unwrap(),
             p1.into()
         );
+        let double_p1 = (p1 + p1).into_affine().into();
+        let var_doubling_result = circuit.emulated_sw_ecc_add(&var_p1, &var_p1, a).unwrap();
+        assert_eq!(
+            circuit
+                .emulated_sw_point_witness(&var_doubling_result)
+                .unwrap(),
+            double_p1
+        );
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-
-        // let var_p4 = circuit.emulated_sw_ecc_add(&wrong_result)
 
         // fail path
         let var_wrong_result = circuit

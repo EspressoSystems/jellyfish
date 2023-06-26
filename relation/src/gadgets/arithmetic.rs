@@ -11,8 +11,8 @@ use crate::{
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
     errors::CircuitError,
     gates::{
-        ArithmeticGate, ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate,
-        LinCombGate, MulAddGate, QuadPolyGate,
+        ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate, LinCombGate, MulAddGate,
+        QuadPolyGate,
     },
     Circuit, PlonkCircuit, Variable,
 };
@@ -497,62 +497,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         Ok(())
-    }
-
-    /// Constrain a general arithmetic gate:
-    /// q1 * a + q2 * b + q3 * c + q4 * d  + mul1 * a * b + mul2 * c * d +
-    /// constant = y
-    pub fn general_arithmetic_gate(
-        &mut self,
-        wires: &[Variable; GATE_WIDTH + 1],
-        lc_coeffs: &[F; GATE_WIDTH],
-        mul_coeffs: &[F; N_MUL_SELECTORS],
-        constant: F,
-    ) -> Result<(), CircuitError> {
-        self.check_vars_bound(wires)?;
-
-        self.insert_gate(
-            wires,
-            Box::new(ArithmeticGate {
-                lc_coeffs: *lc_coeffs,
-                mul_coeffs: *mul_coeffs,
-                constant,
-            }),
-        )?;
-        Ok(())
-    }
-
-    /// Obtain a variable representing a general arithmetic formula.
-    /// Return error if variables are invalid.
-    pub fn general_arithmetic(
-        &mut self,
-        wires_in: &[Variable; GATE_WIDTH],
-        lc_coeffs: &[F; GATE_WIDTH],
-        mul_coeffs: &[F; N_MUL_SELECTORS],
-        constant: F,
-    ) -> Result<Variable, CircuitError> {
-        self.check_vars_bound(wires_in)?;
-
-        let vals_in: Vec<F> = wires_in
-            .iter()
-            .map(|&var| self.witness(var))
-            .collect::<Result<Vec<_>, CircuitError>>()?;
-
-        // calculate y as the linear combination of coeffs and vals_in
-        let mut y_val = vals_in
-            .iter()
-            .zip(lc_coeffs.iter())
-            .map(|(&val, &coeff)| val * coeff)
-            .sum();
-        y_val += mul_coeffs[0] * vals_in[0] * vals_in[1]
-            + mul_coeffs[1] * vals_in[2] * vals_in[3]
-            + constant;
-
-        let y = self.create_variable(y_val)?;
-
-        let wires = [wires_in[0], wires_in[1], wires_in[2], wires_in[3], y];
-        self.general_arithmetic_gate(&wires, lc_coeffs, mul_coeffs, constant)?;
-        Ok(y)
     }
 }
 

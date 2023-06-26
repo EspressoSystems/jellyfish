@@ -72,7 +72,7 @@ where
 
 /// The variable represents an element in the emulated field.
 #[derive(Debug, Clone)]
-pub struct EmulatedVariable<E: PrimeField>(pub(crate) Vec<Variable>, PhantomData<E>);
+pub struct EmulatedVariable<E: PrimeField>(pub(crate) Vec<Variable>, pub PhantomData<E>);
 
 impl<E: PrimeField> EmulatedVariable<E> {
     /// Return the list of variables that simulate the field element
@@ -188,10 +188,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // checking that the carry_out has at most [`E::B`] + 1 bits
         self.enforce_in_range(carry_out, E::B + 1)?;
         // enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
-        self.general_arithmetic_gate(
+        self.quad_poly_gate(
             &[a.0[0], b.0[0], k.0[0], carry_out, c.0[0]],
             &[F::zero(), F::zero(), neg_modulus[0], -b_pow],
             &[F::one(), F::zero()],
+            F::one(),
             F::zero(),
         )?;
 
@@ -235,7 +236,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             if i % 2 == 0 {
                 let t1 = stack.pop().unwrap();
                 let t2 = stack.pop().unwrap();
-                let t = self.general_arithmetic(
+                let t = self.gen_quad_poly(
                     &[a.0[i], b.0[0], t1.0, t2.0],
                     &[F::zero(), F::zero(), t1.1, t2.1],
                     &[F::one(), F::zero()],
@@ -271,10 +272,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let k_mod = self.mod_to_native_field(&k)?;
         let c_mod = self.mod_to_native_field(c)?;
         let e_mod_f = F::from(E::MODULUS.into());
-        self.general_arithmetic_gate(
+        self.quad_poly_gate(
             &[a_mod, b_mod, k_mod, self.zero(), c_mod],
             &[F::zero(), F::zero(), -e_mod_f, F::zero()],
             &[F::one(), F::zero()],
+            F::one(),
             F::zero(),
         )?;
 
@@ -741,38 +743,25 @@ mod tests {
         let var_x = circuit.create_public_emulated_variable(E::one()).unwrap();
         let overflow = E::from(E::MODULUS.into() - 1u64);
         let var_y = circuit.create_emulated_variable(overflow).unwrap();
-        let num_gates_0 = circuit.num_gates();
         let var_z = circuit.emulated_add(&var_x, &var_y).unwrap();
-        let num_gates_1 = circuit.num_gates();
-        ark_std::println!("Num gates for add: {}", num_gates_1 - num_gates_0);
         assert_eq!(circuit.emulated_witness(&var_x).unwrap(), E::one());
         assert_eq!(circuit.emulated_witness(&var_y).unwrap(), overflow);
         assert_eq!(circuit.emulated_witness(&var_z).unwrap(), E::zero());
 
         let var_z = circuit.emulated_add_constant(&var_z, overflow).unwrap();
-        let num_gates_2 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for constant addition: {}",
-            num_gates_2 - num_gates_1
-        );
         assert_eq!(circuit.emulated_witness(&var_z).unwrap(), overflow);
 
         let x = from_emulated_field(E::one());
         assert!(circuit.check_circuit_satisfiability(&x).is_ok());
 
         let var_z = circuit.create_emulated_variable(E::one()).unwrap();
-        let num_gates_3 = circuit.num_gates();
         circuit.emulated_add_gate(&var_x, &var_y, &var_z).unwrap();
-        let num_gates_4 = circuit.num_gates();
-        ark_std::println!("Num gates for addition gate: {}", num_gates_4 - num_gates_3);
         assert!(circuit.check_circuit_satisfiability(&x).is_err());
     }
 
     #[test]
     fn test_emulated_mul() {
-        ark_std::println!("Fq377 test");
         test_emulated_mul_helper::<Fq377, Fr254>();
-        ark_std::println!("Fq254 test");
         test_emulated_mul_helper::<Fq254, Fr254>();
 
         // test for issue (https://github.com/EspressoSystems/jellyfish/issues/306)
@@ -794,22 +783,9 @@ mod tests {
         let x = E::from(6732u64);
         let y = E::from(E::MODULUS.into() - 12387u64);
         let expected = x * y;
-        let num_gates = circuit.num_gates();
         let var_x = circuit.create_public_emulated_variable(x).unwrap();
-        let num_gates_0 = circuit.num_gates();
-        ark_std::println!("Num gates for public variable: {}", num_gates_0 - num_gates);
         let var_y = circuit.create_emulated_variable(y).unwrap();
-        let num_gates_1 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for emulated variable: {}",
-            num_gates_1 - num_gates_0
-        );
         let var_z = circuit.emulated_mul(&var_x, &var_y).unwrap();
-        let num_gates_2 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for multiplication: {}",
-            num_gates_2 - num_gates_1
-        );
         assert_eq!(circuit.emulated_witness(&var_x).unwrap(), x);
         assert_eq!(circuit.emulated_witness(&var_y).unwrap(), y);
         assert_eq!(circuit.emulated_witness(&var_z).unwrap(), expected);
@@ -818,22 +794,12 @@ mod tests {
             .is_ok());
 
         let var_y_z = circuit.emulated_mul(&var_y, &var_z).unwrap();
-        let num_gates_3 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for multiplication: {}",
-            num_gates_3 - num_gates_2
-        );
         assert_eq!(circuit.emulated_witness(&var_y_z).unwrap(), expected * y);
         assert!(circuit
             .check_circuit_satisfiability(&from_emulated_field(x))
             .is_ok());
 
         let var_z = circuit.emulated_mul_constant(&var_z, expected).unwrap();
-        let num_gates_4 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for constant multiplication: {}",
-            num_gates_4 - num_gates_3
-        );
         assert_eq!(
             circuit.emulated_witness(&var_z).unwrap(),
             expected * expected
@@ -843,17 +809,7 @@ mod tests {
             .is_ok());
 
         let var_z = circuit.create_emulated_variable(E::one()).unwrap();
-        let num_gates_5 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for emulated variable: {}",
-            num_gates_5 - num_gates_4
-        );
         circuit.emulated_mul_gate(&var_x, &var_y, &var_z).unwrap();
-        let num_gates_6 = circuit.num_gates();
-        ark_std::println!(
-            "Num gates for multiplication gate: {}",
-            num_gates_6 - num_gates_5
-        );
         assert!(circuit
             .check_circuit_satisfiability(&from_emulated_field(x))
             .is_err());
