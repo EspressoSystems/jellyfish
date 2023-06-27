@@ -555,7 +555,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(())
     }
 
-    /// Return an [`EmulatedVariable`] which equals to a+b.
+    /// Return an [`EmulatedVariable`] which equals to a + b where b is a
+    /// constant.
     pub fn emulated_add_constant<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -567,7 +568,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
-    /// Return an [`EmulatedVariable`] which equals to a+b.
+    /// Return an [`EmulatedVariable`] which equals to a - b where b is a
+    /// constant.
     pub fn emulated_sub_constant<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -605,12 +607,12 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Return error if the input variables are invalid.
     pub fn enforce_emulated_var_equal<E: EmulationConfig<F>>(
         &mut self,
-        p0: &EmulatedVariable<E>,
-        p1: &EmulatedVariable<E>,
+        a: &EmulatedVariable<E>,
+        b: &EmulatedVariable<E>,
     ) -> Result<(), CircuitError> {
-        self.check_vars_bound(&p0.0[..])?;
-        self.check_vars_bound(&p1.0[..])?;
-        for (&a, &b) in p0.0.iter().zip(p1.0.iter()) {
+        self.check_vars_bound(&a.0[..])?;
+        self.check_vars_bound(&b.0[..])?;
+        for (&a, &b) in a.0.iter().zip(b.0.iter()) {
             self.enforce_equal(a, b)?;
         }
         Ok(())
