@@ -7,6 +7,8 @@ Cargo.lock
 *.org
 .pre-commit-config.yaml
 .vscode
+**/*flamegraph*
+**/*.coz
 
 # Test coverage (grcov)
 default.profraw

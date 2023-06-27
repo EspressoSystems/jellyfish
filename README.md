@@ -137,10 +137,35 @@ where N is the number of threads you want to use (N = 1 for single-thread).
 
 A sample benchmark result is available under [`bench.md`](./bench.md).
 
-## Git Hooks
+### Profiling
 
-The pre-commit hooks are installed via the nix shell. To run them on all files use
+You could use `cargo flamegraph` (already installed in the nix-shell) as follows (more [documentations here](https://github.com/flamegraph-rs/flamegraph#examples)):
 
+``` bash
+# --root is necessary for Mac users
+cargo flamegraph --root --bench=plonk-benches --features test-srs
+
+# output to a specific file, targeting wasm
+cargo flamegraph --root -o path/to/wasm-flamegraph.svg --bench=plonk-benches --no-default-features --features test-srs
+
+# profile a specific test
+cargo flamegraph --root --unit-test -p jf-primitives -- pcs::univariate_kzg::tests::end_to_end_test
 ```
-pre-commit run --all-files
+
+You can also perform _causal profiling_ using [coz](https://github.com/plasma-umass/coz) only on Linux systems.
+
+``` bash
+# build the bench or example or binary that you want to profile
+cargo build --bench reed-solomon-coz --features profiling --release
+
+# you can find the binary inside ./target/<mode>/deps/<name>-<hash>
+coz run --- ./target/release/deps/reed_solomon_coz-db5107103a0e378c
+
+# plot your result
+coz plot
+
+# alternatively, view your profile.coz on https://plasma-umass.org/coz/
 ```
+
+As an example, you can view `./primitives/src/reed_solomon_code/mod.rs::read_solomon_erasure_decode()` for some sample usages of `coz` annotation for latency profiling; view `./primitives/benches/reed_solomon_coz.rs` for the benchmark code.
+You could also conduct throughput profiling, read more [here](https://github.com/plasma-umass/coz/tree/master/rust).

@@ -11,6 +11,8 @@ use ark_ff::{FftField, Field};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use core::borrow::Borrow;
+#[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
+use coz;
 
 /// Erasure-encode `data` into `data.len() + parity_size` shares.
 ///
@@ -97,6 +99,9 @@ where
         .clone()
         .map(|share| *share.borrow().0.borrow())
         .collect::<Vec<_>>();
+
+    #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
+    coz::begin!("computing l(X)");
     // Calculating l(x) = \prod (x - x_i)
     let mut l = vec![F::zero(); data_size + 1];
     l[0] = F::one();
@@ -106,6 +111,12 @@ where
             l[j] = l[j - 1] - x[i - 1] * l[j];
         }
         l[0] = -x[i - 1] * l[0];
+    }
+
+    #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
+    {
+        coz::end!("computing l(X)");
+        coz::begin!("computing barycentric weight w_i");
     }
     // Calculate the barycentric weight w_i
     let w = (0..data_size)
@@ -126,6 +137,11 @@ where
             Ok(ret)
         })
         .collect::<Result<Vec<_>, _>>()?;
+    #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
+    {
+        coz::end!("computing barycentric weight w_i");
+        coz::begin!("computing f(X)");
+    }
     // Calculate f(x) = \sum_i l_i(x)
     let mut f = vec![F::zero(); data_size];
     // for i in 0..shares.len() {
@@ -139,6 +155,10 @@ where
         for j in 0..data_size {
             f[j] += weight * li[j];
         }
+    }
+    #[cfg(all(debug_assertions, target_os = "linux", feature = "profiling"))]
+    {
+        coz::end!("computing f(X)");
     }
     Ok(f)
 }
