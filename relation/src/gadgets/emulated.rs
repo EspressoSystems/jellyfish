@@ -29,6 +29,12 @@ pub trait EmulationConfig<F: PrimeField>: PrimeField {
     const NUM_LIMBS: usize;
 }
 
+/// A struct that can be serialized into `Vec` of field elements.
+pub trait SerializableEmulatedStruct<F: PrimeField> {
+    /// Serialize into a `Vec` of field elements.
+    fn serialize_to_native_elements(&self) -> Vec<F>;
+}
+
 fn biguint_to_limbs<F: PrimeField>(val: &BigUint, b: usize, num_limbs: usize) -> Vec<F> {
     let mut result = vec![];
     let b_pow = BigUint::one() << b;
@@ -688,17 +694,13 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 impl EmulationConfig<ark_bn254::Fr> for ark_bls12_377::Fq {
     const T: usize = 500;
-
     const B: usize = 100;
-
     const NUM_LIMBS: usize = 5;
 }
 
 impl EmulationConfig<ark_bn254::Fr> for ark_bn254::Fq {
     const T: usize = 300;
-
     const B: usize = 100;
-
     const NUM_LIMBS: usize = 3;
 }
 

@@ -8,7 +8,7 @@
 
 use crate::{
     errors::CircuitError,
-    gadgets::{EmulatedVariable, EmulationConfig},
+    gadgets::{from_emulated_field, EmulatedVariable, EmulationConfig, SerializableEmulatedStruct},
     BoolVar, Circuit, PlonkCircuit,
 };
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
@@ -27,6 +27,19 @@ where
 {
     fn from(p: Affine<P>) -> Self {
         SWPoint(p.x, p.y, p.infinity)
+    }
+}
+
+impl<E, F> SerializableEmulatedStruct<F> for SWPoint<E>
+where
+    E: EmulationConfig<F>,
+    F: PrimeField,
+{
+    fn serialize_to_native_elements(&self) -> Vec<F> {
+        let mut result = from_emulated_field(self.0);
+        result.extend(from_emulated_field(self.1));
+        result.push(if self.2 { F::one() } else { F::zero() });
+        result
     }
 }
 
@@ -313,7 +326,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        gadgets::{ecc::conversion::*, EmulationConfig},
+        errors::CircuitError,
+        gadgets::{ecc::conversion::*, EmulationConfig, SerializableEmulatedStruct},
         Circuit, PlonkCircuit,
     };
     use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
@@ -325,12 +339,30 @@ mod tests {
     use ark_ff::{MontFp, PrimeField};
     use ark_std::{UniformRand, Zero};
 
+    use super::{EmulatedSWPointVariable, SWPoint};
+
     #[test]
     fn test_emulated_sw_point_addition() {
         let a: Fq377 = MontFp!("0");
         test_emulated_sw_point_addition_helper::<Fq377, Fr254, Param377>(a);
         let a: Fq254 = MontFp!("0");
         test_emulated_sw_point_addition_helper::<Fq254, Fr254, Param254>(a);
+    }
+
+    fn ecc_add_and_check<E, F>(
+        circuit: &mut PlonkCircuit<F>,
+        p0: &EmulatedSWPointVariable<E>,
+        p1: &EmulatedSWPointVariable<E>,
+        a: E,
+        expected: &SWPoint<E>,
+    ) -> Result<EmulatedSWPointVariable<E>, CircuitError>
+    where
+        E: EmulationConfig<F> + SWToTEConParam,
+        F: PrimeField,
+    {
+        let result = circuit.emulated_sw_ecc_add(p0, p1, a)?;
+        assert_eq!(circuit.emulated_sw_point_witness(&result)?, *expected);
+        Ok(result)
     }
 
     fn test_emulated_sw_point_addition_helper<E, F, P>(a: E)
@@ -351,46 +383,30 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(20);
 
         let var_p1 = circuit
-            .create_emulated_sw_point_variable(p1.into())
+            .create_public_emulated_sw_point_variable(p1.into())
             .unwrap();
         let var_p2 = circuit
             .create_emulated_sw_point_variable(p2.into())
             .unwrap();
-        let var_result = circuit.emulated_sw_ecc_add(&var_p1, &var_p2, a).unwrap();
-        assert_eq!(
-            circuit.emulated_sw_point_witness(&var_result).unwrap(),
-            expected
-        );
         let var_neutral = circuit
             .create_emulated_sw_point_variable(neutral.into())
             .unwrap();
-        let var_neutral_result1 = circuit
-            .emulated_sw_ecc_add(&var_p1, &var_neutral, a)
-            .unwrap();
-        let var_neutral_result2 = circuit
-            .emulated_sw_ecc_add(&var_neutral, &var_p1, a)
-            .unwrap();
-        assert_eq!(
-            circuit
-                .emulated_sw_point_witness(&var_neutral_result1)
-                .unwrap(),
-            p1.into()
-        );
-        assert_eq!(
-            circuit
-                .emulated_sw_point_witness(&var_neutral_result2)
-                .unwrap(),
-            p1.into()
-        );
+        ecc_add_and_check::<E, F>(&mut circuit, &var_p1, &var_p2, a, &expected).unwrap();
+        ecc_add_and_check::<E, F>(&mut circuit, &var_p1, &var_neutral, a, &p1.into()).unwrap();
+        ecc_add_and_check::<E, F>(&mut circuit, &var_neutral, &var_p2, a, &p2.into()).unwrap();
+
+        // test point doubling
         let double_p1 = (p1 + p1).into_affine().into();
-        let var_doubling_result = circuit.emulated_sw_ecc_add(&var_p1, &var_p1, a).unwrap();
-        assert_eq!(
-            circuit
-                .emulated_sw_point_witness(&var_doubling_result)
-                .unwrap(),
-            double_p1
-        );
-        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        ecc_add_and_check::<E, F>(&mut circuit, &var_p1, &var_p1, a, &double_p1).unwrap();
+        ecc_add_and_check::<E, F>(&mut circuit, &var_neutral, &var_neutral, a, &neutral.into())
+            .unwrap();
+
+        let public_inputs: SWPoint<E> = p1.into();
+        let public_inputs = public_inputs.serialize_to_native_elements();
+        let wrong_inputs: SWPoint<E> = neutral.into();
+        let wrong_inputs = wrong_inputs.serialize_to_native_elements();
+        assert!(circuit.check_circuit_satisfiability(&public_inputs).is_ok());
+        assert!(circuit.check_circuit_satisfiability(&wrong_inputs).is_err());
 
         // fail path
         let var_wrong_result = circuit
@@ -399,6 +415,8 @@ mod tests {
         circuit
             .emulated_sw_ecc_add_gate(&var_p1, &var_p2, &var_wrong_result, a)
             .unwrap();
-        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+        assert!(circuit
+            .check_circuit_satisfiability(&public_inputs)
+            .is_err());
     }
 }

@@ -7,6 +7,7 @@
 //! Elliptic curve related gates and gadgets. Including both native and
 //! non-native fields.
 
+use super::{from_emulated_field, EmulationConfig, SerializableEmulatedStruct};
 use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
@@ -92,6 +93,18 @@ where
     fn from(p: TEPoint<F>) -> Self {
         let affine_point: Affine<P> = p.into();
         affine_point.into_group()
+    }
+}
+
+impl<E, F> SerializableEmulatedStruct<F> for TEPoint<E>
+where
+    E: EmulationConfig<F>,
+    F: PrimeField,
+{
+    fn serialize_to_native_elements(&self) -> Vec<F> {
+        let mut result = from_emulated_field(self.0);
+        result.extend(from_emulated_field(self.1));
+        result
     }
 }
 
