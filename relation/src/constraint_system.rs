@@ -109,6 +109,13 @@ pub trait Circuit<F: Field> {
     /// Add a public input variable; return the index of the variable.
     fn create_public_variable(&mut self, val: F) -> Result<Variable, CircuitError>;
 
+    /// Add a public bool variable to the circuit; return the index of the variable.
+    fn create_public_boolean_variable(&mut self, val: bool) -> Result<BoolVar, CircuitError> {
+        let val_scalar = if val { F::one() } else { F::zero() };
+        let var = self.create_public_variable(val_scalar)?;
+        Ok(BoolVar(var))
+    }
+
     /// Set a variable to a public variable
     fn set_variable_public(&mut self, var: Variable) -> Result<(), CircuitError>;
 

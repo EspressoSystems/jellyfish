@@ -68,8 +68,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
         let x = self.create_constant_emulated_variable(point.0)?;
         let y = self.create_constant_emulated_variable(point.1)?;
-        let infinity =
-            self.create_boolean_variable_unchecked(if point.2 { F::one() } else { F::zero() })?;
+        let infinity = BoolVar(if point.2 { self.one() } else { self.zero() });
         Ok(EmulatedSWPointVariable(x, y, infinity))
     }
 
@@ -80,8 +79,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ) -> Result<EmulatedSWPointVariable<E>, CircuitError> {
         let x = self.create_public_emulated_variable(point.0)?;
         let y = self.create_public_emulated_variable(point.1)?;
-        let infinity =
-            self.create_boolean_variable_unchecked(if point.2 { F::one() } else { F::zero() })?;
+        let infinity = self.create_public_boolean_variable(point.2)?;
         Ok(EmulatedSWPointVariable(x, y, infinity))
     }
 
