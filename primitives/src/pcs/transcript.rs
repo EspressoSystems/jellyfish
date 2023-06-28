@@ -101,4 +101,26 @@ impl<F: PrimeField> IOPTranscript<F> {
         self.append_serializable_element(label, &challenge)?;
         Ok(challenge)
     }
+
+    /// Generate the challenge from the current transcript
+    /// and append it to the transcript.
+    ///
+    /// Without exposing the internal field `transcript`,
+    /// this is a wrapper around getting bytes as opposed to field elements.
+    pub fn get_and_append_byte_challenge(
+        &mut self,
+        label: &'static [u8],
+        dest: &mut [u8],
+    ) -> Result<(), TranscriptError> {
+        //  we need to reject when transcript is empty
+        if self.is_empty {
+            return Err(TranscriptError::InvalidTranscript(
+                "transcript is empty".to_string(),
+            ));
+        }
+
+        self.transcript.challenge_bytes(label, dest);
+        self.append_message(label, dest)?;
+        Ok(())
+    }
 }
