@@ -262,7 +262,7 @@ impl VerKey {
 // =====================================================
 
 /// Signature secret key pair used to sign messages
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Zeroize)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Zeroize, Debug)]
 #[zeroize(drop)]
 pub struct KeyPair {
     sk: SignKey,
