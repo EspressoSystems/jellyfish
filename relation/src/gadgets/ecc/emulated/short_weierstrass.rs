@@ -162,8 +162,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ///     - y2 = s(x0 - x2) - y0
     /// The first case is equivalent to the following:
     /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 != y1 || y0 != 0 || inf2 == 0
-    /// - (x2 + 2 * x0) * (y0 + y0)^2 == (3 * x1^2 + a)^2
-    /// - (y2 + y0) * (y0 + y0) == (3 * x1^2 + a) (x0 - x2)
+    /// - (x2 + 2 * x0) * (y0 + y0)^2 == (3 * x0^2 + a)^2
+    /// - (y2 + y0) * (y0 + y0) == (3 * x0^2 + a) (x0 - x2)
     /// The second case is equivalent to the following:
     /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 == y1 || inf2 == 0
     /// - (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
