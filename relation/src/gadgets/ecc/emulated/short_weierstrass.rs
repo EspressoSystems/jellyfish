@@ -153,7 +153,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ///   1. if p0 == p1
     ///     - if y0 == 0 then inf2 = 1
     ///     - Calculate s = (3 * x0^2 + a) / (2 * y0)
-    ///     - x2 = s^2 - 2 * x0
+    ///     - x2 = s^2 - x0 - x1
     ///     - y2 = s(x0 - x2) - y0
     ///   2. Otherwise
     ///     - if x0 == x1 then inf2 = 1
@@ -162,7 +162,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     ///     - y2 = s(x0 - x2) - y0
     /// The first case is equivalent to the following:
     /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 != y1 || y0 != 0 || inf2 == 0
-    /// - (x2 + 2 * x0) * (y0 + y0)^2 == (3 * x0^2 + a)^2
+    /// - (x0 + x1 + x2) * (y0 + y0)^2 == (3 * x0^2 + a)^2
     /// - (y2 + y0) * (y0 + y0) == (3 * x0^2 + a) (x0 - x2)
     /// The second case is equivalent to the following:
     /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 == y1 || inf2 == 0
@@ -222,7 +222,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         v[0] = doubling_coef;
         let doubling_coef = EmulatedVariable::<E>(v, core::marker::PhantomData);
 
-        // first equality (x2 + 2 * x0) * (y0 + y0)^2 == (3 * x1^2 + a)^2
+        // first equality (x0 + x1 + x2) * (y0 + y0)^2 == (3 * x1^2 + a)^2
         let y0_times_2 = self.emulated_add(&p0.1, &p0.1)?;
         let x0_plus_x1 = self.emulated_add(&p0.0, &p1.0)?;
         let x0_plus_x1_plus_x2 = self.emulated_add(&p2.0, &x0_plus_x1)?;
@@ -254,7 +254,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // safe because it's boolean
         let mut v = vec![self.zero(); E::NUM_LIMBS];
         v[0] = coef;
-        let coef = EmulatedVariable::<E>(v, core::marker::PhantomData);
+        let add_coef = EmulatedVariable::<E>(v, core::marker::PhantomData);
 
         // first equality (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
         let x0_minus_x1 = self.emulated_sub(&p0.0, &p1.0)?;
@@ -263,8 +263,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let y0_minus_y1 = self.emulated_sub(&p0.1, &p1.1)?;
         let rhs = self.emulated_mul(&y0_minus_y1, &y0_minus_y1)?;
 
-        let lhs = self.emulated_mul(&lhs, &coef)?;
-        let rhs = self.emulated_mul(&rhs, &coef)?;
+        let lhs = self.emulated_mul(&lhs, &add_coef)?;
+        let rhs = self.emulated_mul(&rhs, &add_coef)?;
         self.enforce_emulated_var_equal(&lhs, &rhs)?;
 
         // second equality (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)
@@ -272,8 +272,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let y0_plus_y2 = self.emulated_add(&p0.1, &p2.1)?;
         let rhs = self.emulated_mul(&y0_plus_y2, &x0_minus_x1)?;
 
-        let lhs = self.emulated_mul(&lhs, &coef)?;
-        let rhs = self.emulated_mul(&rhs, &coef)?;
+        let lhs = self.emulated_mul(&lhs, &add_coef)?;
+        let rhs = self.emulated_mul(&rhs, &add_coef)?;
         self.enforce_emulated_var_equal(&lhs, &rhs)?;
 
         Ok(())
