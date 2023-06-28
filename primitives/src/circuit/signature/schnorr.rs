@@ -21,7 +21,7 @@ use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
     errors::CircuitError,
-    gadgets::ecc::{Point, PointVariable},
+    gadgets::ecc::{PointVariable, TEPoint},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 use jf_utils::fr_to_fq;
@@ -123,13 +123,13 @@ where
     ) -> Result<SignatureVar, CircuitError> {
         let sig_var = SignatureVar {
             s: self.create_variable(fr_to_fq::<F, P>(&sig.s))?,
-            R: self.create_point_variable(Point::from(sig.R))?,
+            R: self.create_point_variable(TEPoint::from(sig.R))?,
         };
         Ok(sig_var)
     }
 
     fn create_signature_vk_variable(&mut self, vk: &VerKey<P>) -> Result<VerKeyVar, CircuitError> {
-        let vk_var = VerKeyVar(self.create_point_variable(Point::from(vk.0))?);
+        let vk_var = VerKeyVar(self.create_point_variable(TEPoint::from(vk.0))?);
         Ok(vk_var)
     }
 

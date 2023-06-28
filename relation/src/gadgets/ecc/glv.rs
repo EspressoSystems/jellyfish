@@ -17,7 +17,7 @@ use ark_ff::{PrimeField, Zero};
 use jf_utils::field_switching;
 use num_bigint::{BigInt, BigUint};
 
-use super::Point;
+use super::TEPoint;
 
 // phi(P) = lambda*P for all P
 // constants that are used to calculate phi(P)
@@ -128,7 +128,7 @@ where
 }
 
 /// Mapping a point G to phi(G):= lambda G where phi is the endomorphism
-fn endomorphism<F, P>(base: &Point<F>) -> Point<F>
+fn endomorphism<F, P>(base: &TEPoint<F>) -> TEPoint<F>
 where
     F: PrimeField,
     P: TECurveConfig<BaseField = F>,
@@ -571,7 +571,7 @@ fn get_bits(a: &[bool]) -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
+    use crate::{errors::CircuitError, gadgets::ecc::TEPoint, Circuit, PlonkCircuit};
     use ark_ec::{
         twisted_edwards::{Affine, TECurveConfig as Config},
         CurveConfig,
@@ -599,10 +599,10 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(Point::from(base))?;
+                let base_var = circuit.create_point_variable(TEPoint::from(base))?;
                 base = (base * s).into();
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
-                assert_eq!(Point::from(base), circuit.point_witness(&result)?);
+                assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
                 // ark_std::println!("Turbo Plonk: {} constraints", circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -613,10 +613,10 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(Point::from(base))?;
+                let base_var = circuit.create_point_variable(TEPoint::from(base))?;
                 base = (base * s).into();
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
-                assert_eq!(Point::from(base), circuit.point_witness(&result)?);
+                assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
                 // ark_std::println!("Ultra Plonk: {} constraints", circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -628,10 +628,10 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(Point::from(base))?;
+                let base_var = circuit.create_point_variable(TEPoint::from(base))?;
                 base = (base * s).into();
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
-                assert_eq!(Point::from(base), circuit.point_witness(&result)?);
+                assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
                 // ark_std::println!("Turbo Plonk GLV: {} constraints", circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -643,10 +643,10 @@ mod tests {
                 let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(16);
 
                 let s_var = circuit.create_variable(fr_to_fq::<F, P>(&s))?;
-                let base_var = circuit.create_point_variable(Point::from(base))?;
+                let base_var = circuit.create_point_variable(TEPoint::from(base))?;
                 base = (base * s).into();
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
-                assert_eq!(Point::from(base), circuit.point_witness(&result)?);
+                assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
                 // ark_std::println!("Ultra Plonk GLV: {} constraints", circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -671,8 +671,8 @@ mod tests {
                 "33370049900732270411777328808452912493896532385897059012214433666611661340894"
             ),
         );
-        let base_point: Point<Fq> = base_point.into();
-        let endo_point: Point<Fq> = endo_point.into();
+        let base_point: TEPoint<Fq> = base_point.into();
+        let endo_point: TEPoint<Fq> = endo_point.into();
 
         let t = endomorphism::<_, EdwardsConfig>(&base_point);
         assert_eq!(t, endo_point);

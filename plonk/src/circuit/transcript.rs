@@ -232,7 +232,7 @@ mod tests {
     };
     use ark_std::{format, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
-    use jf_relation::gadgets::ecc::Point;
+    use jf_relation::gadgets::ecc::TEPoint;
     use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
@@ -349,7 +349,7 @@ mod tests {
             let mut sigma_comms_vars: Vec<PointVariable> = Vec::new();
             for e in sigma_comms.iter() {
                 // convert point into TE form
-                let p: Point<F> = (&e.0).into();
+                let p: TEPoint<F> = e.0.into();
                 sigma_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
@@ -360,7 +360,7 @@ mod tests {
             let mut selector_comms_vars: Vec<PointVariable> = Vec::new();
             for e in selector_comms.iter() {
                 // convert point into TE form
-                let p: Point<F> = (&e.0).into();
+                let p: TEPoint<F> = e.0.into();
                 selector_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
