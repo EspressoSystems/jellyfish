@@ -195,16 +195,16 @@
 //! the other form is public. In practice a prover will convert all of the
 //! points to the TE form and work on the TE form inside the circuits.
 
-</span><span class="kw">use </span><span class="kw">super</span>::Point;
+</span><span class="kw">use </span><span class="kw">super</span>::TEPoint;
 <span class="kw">use </span>ark_ec::short_weierstrass::{Affine <span class="kw">as </span>SWAffine, SWCurveConfig <span class="kw">as </span>SWParam};
 <span class="kw">use </span>ark_ff::{BigInteger256, BigInteger384, BigInteger768, PrimeField};
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;<span class="kw-2">&amp;</span>SWAffine&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;SWAffine&lt;P&gt;&gt; <span class="kw">for </span>TEPoint&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField + SWToTEConParam,
     P: SWParam&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn </span>from(p: <span class="kw-2">&amp;</span>SWAffine&lt;P&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(p: SWAffine&lt;P&gt;) -&gt; <span class="self">Self </span>{
         <span class="comment">// this function is only correct for BLS12-377
         // (other curves does not impl an SW form)
 
@@ -233,7 +233,7 @@
         </span><span class="kw">let </span>edwards_x = beta * montgomery_x / montgomery_y;
         <span class="kw">let </span>edwards_y = (montgomery_x - F::one()) / (montgomery_x + F::one());
 
-        Point(edwards_x, edwards_y)
+        TEPoint(edwards_x, edwards_y)
     }
 }
 
@@ -321,7 +321,7 @@
 
     <span class="comment">// a helper function to check if a point is on the ed curve
     // of bls12-377 G1
-    </span><span class="kw">fn </span>is_on_bls12_377_ed_curve(p: <span class="kw-2">&amp;</span>Point&lt;Fq377&gt;) -&gt; bool {
+    </span><span class="kw">fn </span>is_on_bls12_377_ed_curve(p: <span class="kw-2">&amp;</span>TEPoint&lt;Fq377&gt;) -&gt; bool {
         <span class="comment">// Twisted Edwards curve 2: a * x² + y² = 1 + d * x² * y²
         </span><span class="kw">let </span>a = <span class="macro">MontFp!</span>(<span class="string">&quot;-1&quot;</span>);
         <span class="kw">let </span>d = <span class="macro">MontFp!</span>(<span class="string">&quot;122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179&quot;</span>);
@@ -341,20 +341,20 @@
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
 
         <span class="comment">// test generator
-        </span><span class="kw">let </span>g1 = <span class="kw-2">&amp;</span>G1Affine::generator();
-        <span class="kw">let </span>p: Point&lt;Fq377&gt; = g1.into();
+        </span><span class="kw">let </span>g1 = G1Affine::generator();
+        <span class="kw">let </span>p: TEPoint&lt;Fq377&gt; = g1.into();
         <span class="macro">assert!</span>(is_on_bls12_377_ed_curve(<span class="kw-2">&amp;</span>p));
 
         <span class="comment">// test zero point
-        </span><span class="kw">let </span>g1 = <span class="kw-2">&amp;</span>G1Affine::zero();
-        <span class="kw">let </span>p: Point&lt;Fq377&gt; = g1.into();
+        </span><span class="kw">let </span>g1 = G1Affine::zero();
+        <span class="kw">let </span>p: TEPoint&lt;Fq377&gt; = g1.into();
         <span class="macro">assert_eq!</span>(p.<span class="number">0</span>, Fq377::zero());
         <span class="macro">assert_eq!</span>(p.<span class="number">1</span>, Fq377::one());
         <span class="macro">assert!</span>(is_on_bls12_377_ed_curve(<span class="kw-2">&amp;</span>p));
 
         <span class="comment">// test a random group element
-        </span><span class="kw">let </span>g1 = <span class="kw-2">&amp;</span>G1Projective::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
-        <span class="kw">let </span>p: Point&lt;Fq377&gt; = g1.into();
+        </span><span class="kw">let </span>g1 = G1Projective::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
+        <span class="kw">let </span>p: TEPoint&lt;Fq377&gt; = g1.into();
         <span class="macro">assert!</span>(is_on_bls12_377_ed_curve(<span class="kw-2">&amp;</span>p));
     }
 }

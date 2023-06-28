@@ -848,7 +848,7 @@
 <span class="kw">use </span>jf_relation::{
     errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
-        ecc::{MultiScalarMultiplicationCircuit, Point, PointVariable, SWToTEConParam},
+        ecc::{MultiScalarMultiplicationCircuit, PointVariable, SWToTEConParam, TEPoint},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
     Circuit, PlonkCircuit, Variable,
@@ -896,12 +896,12 @@
         <span class="kw">let </span>sigma_comms = verify_key
             .sigma_comms
             .iter()
-            .map(|comm| circuit.create_point_variable(Point::from(<span class="kw-2">&amp;</span>comm.<span class="number">0</span>)))
+            .map(|comm| circuit.create_point_variable(TEPoint::from(comm.<span class="number">0</span>)))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
         <span class="kw">let </span>selector_comms = verify_key
             .selector_comms
             .iter()
-            .map(|comm| circuit.create_point_variable(Point::from(<span class="kw-2">&amp;</span>comm.<span class="number">0</span>)))
+            .map(|comm| circuit.create_point_variable(TEPoint::from(comm.<span class="number">0</span>)))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, CircuitError&gt;&gt;()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             sigma_comms,
@@ -980,8 +980,8 @@
     /// The public inputs are already in the form of FpElemVars.
     </span><span class="kw">pub fn </span>partial_verify_circuit&lt;F, P&gt;(
         circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
-        beta_g: <span class="kw-2">&amp;</span>Point&lt;F&gt;,
-        generator_g: <span class="kw-2">&amp;</span>Point&lt;F&gt;,
+        beta_g: <span class="kw-2">&amp;</span>TEPoint&lt;F&gt;,
+        generator_g: <span class="kw-2">&amp;</span>TEPoint&lt;F&gt;,
         merged_vks: <span class="kw-2">&amp;</span>[<span class="self">Self</span>],
         shared_public_input_vars: <span class="kw-2">&amp;</span>[FpElemVar&lt;F&gt;],
         batch_proof: <span class="kw-2">&amp;</span>BatchProofVar&lt;F&gt;,
@@ -1165,7 +1165,7 @@
     <span class="kw">use </span>ark_std::{vec, UniformRand};
     <span class="kw">use </span>jf_primitives::rescue::RescueParameter;
     <span class="kw">use </span>jf_relation::{
-        gadgets::{ecc::Point, test_utils::test_variable_independence_for_circuit},
+        gadgets::{ecc::TEPoint, test_utils::test_variable_independence_for_circuit},
         Circuit, MergeableCircuitType,
     };
     <span class="kw">use </span>jf_utils::{field_switching, test_rng};
@@ -1276,11 +1276,11 @@
         P: SWParam&lt;BaseField = F&gt;,
     {
         <span class="kw">for </span>(comm_var, comm) <span class="kw">in </span>vk_var.sigma_comms.iter().zip(vk.sigma_comms.iter()) {
-            <span class="kw">let </span>expected_comm = Point::from(<span class="kw-2">&amp;</span>comm.<span class="number">0</span>);
+            <span class="kw">let </span>expected_comm = TEPoint::from(comm.<span class="number">0</span>);
             <span class="macro">assert_eq!</span>(circuit.point_witness(comm_var).unwrap(), expected_comm);
         }
         <span class="kw">for </span>(comm_var, comm) <span class="kw">in </span>vk_var.selector_comms.iter().zip(vk.selector_comms.iter()) {
-            <span class="kw">let </span>expected_comm = Point::from(<span class="kw-2">&amp;</span>comm.<span class="number">0</span>);
+            <span class="kw">let </span>expected_comm = TEPoint::from(comm.<span class="number">0</span>);
             <span class="macro">assert_eq!</span>(circuit.point_witness(comm_var).unwrap(), expected_comm);
         }
         <span class="macro">assert_eq!</span>(vk_var.is_merged, vk.is_merged);
@@ -1386,11 +1386,11 @@
                 );
                 <span class="macro">assert_eq!</span>(
                     circuit.point_witness(<span class="kw-2">&amp;</span>partial_verify_points.<span class="number">0</span>)<span class="question-mark">?</span>,
-                    Point::&lt;F&gt;::from(<span class="kw-2">&amp;</span>inner1.into_affine())
+                    TEPoint::&lt;F&gt;::from(inner1.into_affine())
                 );
                 <span class="macro">assert_eq!</span>(
                     circuit.point_witness(<span class="kw-2">&amp;</span>partial_verify_points.<span class="number">1</span>)<span class="question-mark">?</span>,
-                    Point::&lt;F&gt;::from(<span class="kw-2">&amp;</span>inner2.into_affine())
+                    TEPoint::&lt;F&gt;::from(inner2.into_affine())
                 );
 
                 <span class="comment">// ark_std::println!(&quot;#variables: {}&quot;, circuit.num_vars());
@@ -1481,11 +1481,11 @@
                 );
                 <span class="macro">assert_ne!</span>(
                     circuit.point_witness(<span class="kw-2">&amp;</span>partial_verify_points.<span class="number">0</span>)<span class="question-mark">?</span>,
-                    Point::&lt;F&gt;::from(<span class="kw-2">&amp;</span>inner1.into_affine())
+                    TEPoint::&lt;F&gt;::from(inner1.into_affine())
                 );
                 <span class="macro">assert_ne!</span>(
                     circuit.point_witness(<span class="kw-2">&amp;</span>partial_verify_points.<span class="number">1</span>)<span class="question-mark">?</span>,
-                    Point::&lt;F&gt;::from(<span class="kw-2">&amp;</span>inner2.into_affine())
+                    TEPoint::&lt;F&gt;::from(inner2.into_affine())
                 );
 
                 <span class="comment">// wrong shared input and circuit input
@@ -1504,11 +1504,11 @@
                 );
                 <span class="macro">assert_ne!</span>(
                     circuit.point_witness(<span class="kw-2">&amp;</span>partial_verify_points.<span class="number">0</span>)<span class="question-mark">?</span>,
-                    Point::&lt;F&gt;::from(<span class="kw-2">&amp;</span>inner1.into_affine())
+                    TEPoint::&lt;F&gt;::from(inner1.into_affine())
                 );
                 <span class="macro">assert_ne!</span>(
                     circuit.point_witness(<span class="kw-2">&amp;</span>partial_verify_points.<span class="number">1</span>)<span class="question-mark">?</span>,
-                    Point::&lt;F&gt;::from(<span class="kw-2">&amp;</span>inner2.into_affine())
+                    TEPoint::&lt;F&gt;::from(inner2.into_affine())
                 );
             }
         }
@@ -1550,8 +1550,8 @@
         <span class="comment">// proof
         </span><span class="kw">let </span>batch_proof_vars = (<span class="kw-2">*</span>batch_proof).create_variables(<span class="kw-2">&amp;mut </span>circuit, m, two_power_m)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>beta_g: Point&lt;F&gt; = beta_g_ref.into();
-        <span class="kw">let </span>generator_g = <span class="kw-2">&amp;</span>generator_g.into();
+        <span class="kw">let </span>beta_g: TEPoint&lt;F&gt; = (<span class="kw-2">*</span>beta_g_ref).into();
+        <span class="kw">let </span>generator_g = <span class="kw-2">&amp;</span>(<span class="kw-2">*</span>generator_g).into();
         <span class="kw">let </span>blinding_factor_var = circuit.create_variable(field_switching(blinding_factor))<span class="question-mark">?</span>;
 
         <span class="kw">let </span>partial_verify_points = VerifyingKeyVar::partial_verify_circuit(

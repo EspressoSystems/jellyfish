@@ -995,7 +995,7 @@
 <span class="kw">use </span>jf_relation::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
     gadgets::{
-        ecc::{Point, SWToTEConParam},
+        ecc::{SWToTEConParam, TEPoint},
         ultraplonk::mod_arith::FpElemVar,
     },
     PlonkCircuit,
@@ -1314,14 +1314,14 @@
         <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.wires_poly_comms_vec.iter() {
             <span class="kw">let </span><span class="kw-2">mut </span>tmp = Vec::new();
             <span class="kw">for </span>f <span class="kw">in </span>e.iter() {
-                <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>f.<span class="number">0</span>).into();
+                <span class="kw">let </span>p: TEPoint&lt;F&gt; = f.<span class="number">0</span>.into();
                 tmp.push(circuit.create_point_variable(p)<span class="question-mark">?</span>);
             }
             wires_poly_comms_vec.push(tmp);
         }
         <span class="kw">let </span><span class="kw-2">mut </span>prod_perm_poly_comms_vec = Vec::new();
         <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.prod_perm_poly_comms_vec.iter() {
-            <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+            <span class="kw">let </span>p: TEPoint&lt;F&gt; = e.<span class="number">0</span>.into();
             prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)<span class="question-mark">?</span>);
         }
 
@@ -1333,14 +1333,14 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>split_quot_poly_comms = Vec::new();
         <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.split_quot_poly_comms.iter() {
-            <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+            <span class="kw">let </span>p: TEPoint&lt;F&gt; = e.<span class="number">0</span>.into();
             split_quot_poly_comms.push(circuit.create_point_variable(p)<span class="question-mark">?</span>);
         }
 
-        <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span><span class="self">self</span>.opening_proof.<span class="number">0</span>).into();
+        <span class="kw">let </span>p: TEPoint&lt;F&gt; = <span class="self">self</span>.opening_proof.<span class="number">0</span>.into();
         <span class="kw">let </span>opening_proof = circuit.create_point_variable(p)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span><span class="self">self</span>.shifted_opening_proof.<span class="number">0</span>).into();
+        <span class="kw">let </span>p: TEPoint&lt;F&gt; = <span class="self">self</span>.shifted_opening_proof.<span class="number">0</span>.into();
         <span class="kw">let </span>shifted_opening_proof = circuit.create_point_variable(p)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(BatchProofVar {
@@ -1684,12 +1684,12 @@
     </span><span class="kw">pub fn </span>convert_te_coordinates_to_scalars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="macro">vec!</span>[];
         <span class="kw">for </span>sigma_comm <span class="kw">in </span><span class="self">self</span>.sigma_comms.iter() {
-            <span class="kw">let </span>point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>sigma_comm.<span class="number">0</span>).into();
+            <span class="kw">let </span>point: TEPoint&lt;F&gt; = sigma_comm.<span class="number">0</span>.into();
             res.push(point.get_x());
             res.push(point.get_y());
         }
         <span class="kw">for </span>selector_comm <span class="kw">in </span><span class="self">self</span>.selector_comms.iter() {
-            <span class="kw">let </span>point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>selector_comm.<span class="number">0</span>).into();
+            <span class="kw">let </span>point: TEPoint&lt;F&gt; = selector_comm.<span class="number">0</span>.into();
             res.push(point.get_x());
             res.push(point.get_y());
         }

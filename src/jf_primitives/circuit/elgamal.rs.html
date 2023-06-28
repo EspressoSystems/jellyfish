@@ -464,7 +464,7 @@
 <span class="kw">use </span>ark_std::{vec, vec::Vec};
 <span class="kw">use </span>jf_relation::{
     errors::CircuitError,
-    gadgets::ecc::{Point, PointVariable},
+    gadgets::ecc::{PointVariable, TEPoint},
     Circuit, PlonkCircuit, Variable,
 };
 <span class="kw">use </span>jf_utils::compute_len_to_next_multiple;
@@ -669,7 +669,7 @@
     }
 
     <span class="kw">fn </span>create_enc_key_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pk: <span class="kw-2">&amp;</span>EncKey&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;EncKeyVars, CircuitError&gt; {
-        <span class="kw">let </span>point = Point::from(pk.key.into_affine());
+        <span class="kw">let </span>point = TEPoint::from(pk.key.into_affine());
         <span class="kw">let </span>point_variable = <span class="self">self</span>.create_point_variable(point)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(EncKeyVars(point_variable))
     }
@@ -679,7 +679,7 @@
         ctxts: <span class="kw-2">&amp;</span>Ciphertext&lt;P&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ElGamalHybridCtxtVars, CircuitError&gt; {
         <span class="kw">let </span>ephemeral =
-            <span class="self">self</span>.create_point_variable(Point::from(ctxts.ephemeral.key.into_affine()))<span class="question-mark">?</span>;
+            <span class="self">self</span>.create_point_variable(TEPoint::from(ctxts.ephemeral.key.into_affine()))<span class="question-mark">?</span>;
         <span class="kw">let </span>symm_ctxts = ctxts
             .data
             .iter()
@@ -709,7 +709,7 @@
     <span class="kw">use </span>ark_ed_on_bn254::{EdwardsConfig <span class="kw">as </span>ParamEd254, Fq <span class="kw">as </span>FqEd254};
     <span class="kw">use </span>ark_ff::UniformRand;
     <span class="kw">use </span>ark_std::{vec, vec::Vec};
-    <span class="kw">use </span>jf_relation::{gadgets::ecc::Point, Circuit, PlonkCircuit, Variable};
+    <span class="kw">use </span>jf_relation::{gadgets::ecc::TEPoint, Circuit, PlonkCircuit, Variable};
     <span class="kw">use </span>jf_utils::fr_to_fq;
 
     <span class="attr">#[test]
@@ -824,7 +824,7 @@
 
         <span class="comment">// Check ciphertexts
         </span><span class="macro">assert_eq!</span>(
-            Point::from(ctxts.ephemeral.key.into_affine()),
+            TEPoint::from(ctxts.ephemeral.key.into_affine()),
             circuit.point_witness(<span class="kw-2">&amp;</span>ctxts_vars.ephemeral).unwrap()
         );
 
@@ -878,7 +878,7 @@
         <span class="kw">let </span>ctxts_var = circuit.create_ciphertext_variable(<span class="kw-2">&amp;</span>ctxts).unwrap();
         <span class="comment">// Check ciphertexts
         </span><span class="macro">assert_eq!</span>(
-            Point::from(ctxts.ephemeral.key.into_affine()),
+            TEPoint::from(ctxts.ephemeral.key.into_affine()),
             circuit.point_witness(<span class="kw-2">&amp;</span>ctxts_var.ephemeral).unwrap()
         );
         <span class="kw">for </span>(ctxt, ctxt_var) <span class="kw">in </span>ctxts.data.iter().zip(ctxts_var.symm_ctxts) {

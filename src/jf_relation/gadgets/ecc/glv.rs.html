@@ -740,7 +740,7 @@
 <span class="kw">use </span>jf_utils::field_switching;
 <span class="kw">use </span>num_bigint::{BigInt, BigUint};
 
-<span class="kw">use </span><span class="kw">super</span>::Point;
+<span class="kw">use </span><span class="kw">super</span>::TEPoint;
 
 <span class="comment">// phi(P) = lambda*P for all P
 // constants that are used to calculate phi(P)
@@ -851,7 +851,7 @@
 }
 
 <span class="doccomment">/// Mapping a point G to phi(G):= lambda G where phi is the endomorphism
-</span><span class="kw">fn </span>endomorphism&lt;F, P&gt;(base: <span class="kw-2">&amp;</span>Point&lt;F&gt;) -&gt; Point&lt;F&gt;
+</span><span class="kw">fn </span>endomorphism&lt;F, P&gt;(base: <span class="kw-2">&amp;</span>TEPoint&lt;F&gt;) -&gt; TEPoint&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
     P: TECurveConfig&lt;BaseField = F&gt;,
@@ -1294,7 +1294,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{errors::CircuitError, gadgets::ecc::Point, Circuit, PlonkCircuit};
+    <span class="kw">use crate</span>::{errors::CircuitError, gadgets::ecc::TEPoint, Circuit, PlonkCircuit};
     <span class="kw">use </span>ark_ec::{
         twisted_edwards::{Affine, TECurveConfig <span class="kw">as </span>Config},
         CurveConfig,
@@ -1322,10 +1322,10 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
 
                 <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
-                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(TEPoint::from(base))<span class="question-mark">?</span>;
                 base = (base * s).into();
                 <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+                <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
                 <span class="comment">// ark_std::println!(&quot;Turbo Plonk: {} constraints&quot;, circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
@@ -1336,10 +1336,10 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">16</span>);
 
                 <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
-                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(TEPoint::from(base))<span class="question-mark">?</span>;
                 base = (base * s).into();
                 <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+                <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
                 <span class="comment">// ark_std::println!(&quot;Ultra Plonk: {} constraints&quot;, circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
@@ -1351,10 +1351,10 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
 
                 <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
-                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(TEPoint::from(base))<span class="question-mark">?</span>;
                 base = (base * s).into();
                 <span class="kw">let </span>result = circuit.glv_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+                <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
                 <span class="comment">// ark_std::println!(&quot;Turbo Plonk GLV: {} constraints&quot;, circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
@@ -1366,10 +1366,10 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_ultra_plonk(<span class="number">16</span>);
 
                 <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
-                <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_var = circuit.create_point_variable(TEPoint::from(base))<span class="question-mark">?</span>;
                 base = (base * s).into();
                 <span class="kw">let </span>result = circuit.glv_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+                <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
                 <span class="comment">// ark_std::println!(&quot;Ultra Plonk GLV: {} constraints&quot;, circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
@@ -1394,8 +1394,8 @@
                 <span class="string">&quot;33370049900732270411777328808452912493896532385897059012214433666611661340894&quot;
             </span>),
         );
-        <span class="kw">let </span>base_point: Point&lt;Fq&gt; = base_point.into();
-        <span class="kw">let </span>endo_point: Point&lt;Fq&gt; = endo_point.into();
+        <span class="kw">let </span>base_point: TEPoint&lt;Fq&gt; = base_point.into();
+        <span class="kw">let </span>endo_point: TEPoint&lt;Fq&gt; = endo_point.into();
 
         <span class="kw">let </span>t = endomorphism::&lt;<span class="kw">_</span>, EdwardsConfig&gt;(<span class="kw-2">&amp;</span>base_point);
         <span class="macro">assert_eq!</span>(t, endo_point);

@@ -212,7 +212,7 @@
     pcs::prelude::Commitment,
     rescue::{RescueParameter, STATE_SIZE},
 };
-<span class="kw">use </span>jf_relation::gadgets::ecc::{Point, SWToTEConParam};
+<span class="kw">use </span>jf_relation::gadgets::ecc::{SWToTEConParam, TEPoint};
 <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 <span class="doccomment">/// Transcript with rescue hash function.
@@ -267,14 +267,14 @@
         // selector commitments
         </span><span class="kw">for </span>com <span class="kw">in </span>vk.selector_comms.iter() {
             <span class="comment">// convert the SW form commitments into TE form
-            </span><span class="kw">let </span>te_point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>com.<span class="number">0</span>).into();
+            </span><span class="kw">let </span>te_point: TEPoint&lt;F&gt; = com.<span class="number">0</span>.into();
             <span class="self">self</span>.transcript.push(te_point.get_x());
             <span class="self">self</span>.transcript.push(te_point.get_y());
         }
         <span class="comment">// sigma commitments
         </span><span class="kw">for </span>com <span class="kw">in </span>vk.sigma_comms.iter() {
             <span class="comment">// convert the SW form commitments into TE form
-            </span><span class="kw">let </span>te_point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>com.<span class="number">0</span>).into();
+            </span><span class="kw">let </span>te_point: TEPoint&lt;F&gt; = com.<span class="number">0</span>.into();
             <span class="self">self</span>.transcript.push(te_point.get_x());
             <span class="self">self</span>.transcript.push(te_point.get_y());
         }
@@ -308,7 +308,7 @@
         P: SWParam&lt;BaseField = F&gt;,
     {
         <span class="comment">// convert the SW form commitments into TE form
-        </span><span class="kw">let </span>te_point: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>comm.<span class="number">0</span>).into();
+        </span><span class="kw">let </span>te_point: TEPoint&lt;F&gt; = comm.<span class="number">0</span>.into();
         <span class="comment">// push the x and y coordinate of comm (in twisted
         // edwards form) to the transcript
 

@@ -2409,6 +2409,14 @@
 <a href="#2409" id="2409">2409</a>
 <a href="#2410" id="2410">2410</a>
 <a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2519,6 +2527,14 @@
 
     <span class="doccomment">/// Add a public input variable; return the index of the variable.
     </span><span class="kw">fn </span>create_public_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: F) -&gt; <span class="prelude-ty">Result</span>&lt;Variable, CircuitError&gt;;
+
+    <span class="doccomment">/// Add a public bool variable to the circuit; return the index of the
+    /// variable.
+    </span><span class="kw">fn </span>create_public_boolean_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: bool) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="kw">let </span>val_scalar = <span class="kw">if </span>val { F::one() } <span class="kw">else </span>{ F::zero() };
+        <span class="kw">let </span>var = <span class="self">self</span>.create_public_variable(val_scalar)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(BoolVar(var))
+    }
 
     <span class="doccomment">/// Set a variable to a public variable
     </span><span class="kw">fn </span>set_variable_public(<span class="kw-2">&amp;mut </span><span class="self">self</span>, var: Variable) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt;;

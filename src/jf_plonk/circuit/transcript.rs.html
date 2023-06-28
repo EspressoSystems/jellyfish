@@ -642,7 +642,7 @@
     };
     <span class="kw">use </span>ark_std::{format, UniformRand};
     <span class="kw">use </span>jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
-    <span class="kw">use </span>jf_relation::gadgets::ecc::Point;
+    <span class="kw">use </span>jf_relation::gadgets::ecc::TEPoint;
     <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 
     <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
@@ -759,7 +759,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>sigma_comms_vars: Vec&lt;PointVariable&gt; = Vec::new();
             <span class="kw">for </span>e <span class="kw">in </span>sigma_comms.iter() {
                 <span class="comment">// convert point into TE form
-                </span><span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+                </span><span class="kw">let </span>p: TEPoint&lt;F&gt; = e.<span class="number">0</span>.into();
                 sigma_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
@@ -770,7 +770,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>selector_comms_vars: Vec&lt;PointVariable&gt; = Vec::new();
             <span class="kw">for </span>e <span class="kw">in </span>selector_comms.iter() {
                 <span class="comment">// convert point into TE form
-                </span><span class="kw">let </span>p: Point&lt;F&gt; = (<span class="kw-2">&amp;</span>e.<span class="number">0</span>).into();
+                </span><span class="kw">let </span>p: TEPoint&lt;F&gt; = e.<span class="number">0</span>.into();
                 selector_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 

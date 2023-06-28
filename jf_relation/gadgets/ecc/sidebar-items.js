@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["non_native"],"struct":["Point","PointVariable"],"trait":["MultiScalarMultiplicationCircuit","SWToTEConParam"]};
+window.SIDEBAR_ITEMS = {"mod":["emulated"],"struct":["PointVariable","TEPoint"],"trait":["MultiScalarMultiplicationCircuit","SWToTEConParam"]};

@@ -1287,6 +1287,9 @@
 <a href="#1287" id="1287">1287</a>
 <a href="#1288" id="1288">1288</a>
 <a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1296,9 +1299,9 @@
 </span><span class="doccomment">//! Elliptic curve related gates and gadgets. Including both native and
 //! non-native fields.
 
-</span><span class="kw">use crate</span>::{errors::CircuitError, gates::<span class="kw-2">*</span>, BoolVar, Circuit, PlonkCircuit, Variable};
+</span><span class="kw">use super</span>::{from_emulated_field, EmulationConfig, SerializableEmulatedStruct};
+<span class="kw">use crate</span>::{errors::CircuitError, gates::<span class="kw-2">*</span>, BoolVar, Circuit, PlonkCircuit, Variable};
 <span class="kw">use </span>ark_ec::{
-    short_weierstrass::{Affine <span class="kw">as </span>SWGroupAffine, SWCurveConfig},
     twisted_edwards::{Affine, Projective, TECurveConfig <span class="kw">as </span>Config},
     AffineRepr, CurveConfig, CurveGroup, ScalarMul,
 };
@@ -1307,17 +1310,17 @@
 <span class="kw">use </span>core::marker::PhantomData;
 
 <span class="kw">mod </span>conversion;
+<span class="kw">pub mod </span>emulated;
 <span class="kw">mod </span>glv;
 <span class="kw">mod </span>msm;
-<span class="kw">pub mod </span>non_native;
 <span class="kw">pub use </span>conversion::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>msm::<span class="kw-2">*</span>;
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 </span><span class="doccomment">/// An elliptic curve point in twisted Edwards affine form (x, y).
-</span><span class="kw">pub struct </span>Point&lt;F: PrimeField&gt;(F, F);
+</span><span class="kw">pub struct </span>TEPoint&lt;F: PrimeField&gt;(F, F);
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;Affine&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;Affine&lt;P&gt;&gt; <span class="kw">for </span>TEPoint&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
     P: Config&lt;BaseField = F&gt;,
@@ -1329,29 +1332,14 @@
             // `Point(0, 0)` which might lead to problems as seen in precedence:
             // https://cryptosubtlety.medium.com/00-8d4adcf4d255
             </span><span class="kw">let </span>inf = Affine::&lt;P&gt;::zero();
-            Point(inf.x, inf.y)
+            TEPoint(inf.x, inf.y)
         } <span class="kw">else </span>{
-            Point(p.x, p.y)
+            TEPoint(p.x, p.y)
         }
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;SWGroupAffine&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
-<span class="kw">where
-    </span>F: PrimeField,
-    P: SWCurveConfig&lt;BaseField = F&gt;,
-{
-    <span class="kw">fn </span>from(p: SWGroupAffine&lt;P&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">if </span>p.is_zero() {
-            <span class="kw">let </span>inf = SWGroupAffine::&lt;P&gt;::zero();
-            Point(inf.x, inf.y)
-        } <span class="kw">else </span>{
-            Point(p.x, p.y)
-        }
-    }
-}
-
-<span class="kw">impl</span>&lt;F: PrimeField&gt; Point&lt;F&gt; {
+<span class="kw">impl</span>&lt;F: PrimeField&gt; TEPoint&lt;F&gt; {
     <span class="doccomment">/// Get the x coordinate of the point.
     </span><span class="kw">pub fn </span>get_x(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; F {
         <span class="self">self</span>.<span class="number">0
@@ -1368,35 +1356,47 @@
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;Projective&lt;P&gt;&gt; <span class="kw">for </span>Point&lt;F&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;Projective&lt;P&gt;&gt; <span class="kw">for </span>TEPoint&lt;F&gt;
 <span class="kw">where
     </span>F: PrimeField,
     P: Config&lt;BaseField = F&gt;,
 {
     <span class="kw">fn </span>from(p: Projective&lt;P&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>affine_repr = p.into_affine();
-        Point(affine_repr.x, affine_repr.y)
+        TEPoint(affine_repr.x, affine_repr.y)
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;Point&lt;F&gt;&gt; <span class="kw">for </span>Affine&lt;P&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;TEPoint&lt;F&gt;&gt; <span class="kw">for </span>Affine&lt;P&gt;
 <span class="kw">where
     </span>F: PrimeField,
     P: Config&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn </span>from(p: Point&lt;F&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(p: TEPoint&lt;F&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(p.<span class="number">0</span>, p.<span class="number">1</span>)
     }
 }
 
-<span class="kw">impl</span>&lt;F, P&gt; From&lt;Point&lt;F&gt;&gt; <span class="kw">for </span>Projective&lt;P&gt;
+<span class="kw">impl</span>&lt;F, P&gt; From&lt;TEPoint&lt;F&gt;&gt; <span class="kw">for </span>Projective&lt;P&gt;
 <span class="kw">where
     </span>F: PrimeField,
     P: Config&lt;BaseField = F&gt;,
 {
-    <span class="kw">fn </span>from(p: Point&lt;F&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(p: TEPoint&lt;F&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>affine_point: Affine&lt;P&gt; = p.into();
         affine_point.into_group()
+    }
+}
+
+<span class="kw">impl</span>&lt;E, F&gt; SerializableEmulatedStruct&lt;F&gt; <span class="kw">for </span>TEPoint&lt;E&gt;
+<span class="kw">where
+    </span>E: EmulationConfig&lt;F&gt;,
+    F: PrimeField,
+{
+    <span class="kw">fn </span>serialize_to_native_elements(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = from_emulated_field(<span class="self">self</span>.<span class="number">0</span>);
+        result.extend(from_emulated_field(<span class="self">self</span>.<span class="number">1</span>));
+        result
     }
 }
 
@@ -1419,17 +1419,17 @@
 <span class="comment">// ECC related gates
 </span><span class="kw">impl</span>&lt;F: PrimeField&gt; PlonkCircuit&lt;F&gt; {
     <span class="doccomment">/// Return the witness point for the circuit
-    </span><span class="kw">pub fn </span>point_witness(<span class="kw-2">&amp;</span><span class="self">self</span>, point_var: <span class="kw-2">&amp;</span>PointVariable) -&gt; <span class="prelude-ty">Result</span>&lt;Point&lt;F&gt;, CircuitError&gt; {
+    </span><span class="kw">pub fn </span>point_witness(<span class="kw-2">&amp;</span><span class="self">self</span>, point_var: <span class="kw-2">&amp;</span>PointVariable) -&gt; <span class="prelude-ty">Result</span>&lt;TEPoint&lt;F&gt;, CircuitError&gt; {
         <span class="self">self</span>.check_point_var_bound(point_var)<span class="question-mark">?</span>;
         <span class="kw">let </span>x = <span class="self">self</span>.witness(point_var.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>y = <span class="self">self</span>.witness(point_var.<span class="number">1</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Point(x, y))
+        <span class="prelude-val">Ok</span>(TEPoint(x, y))
     }
 
     <span class="doccomment">/// Add a new EC point (as witness) to the circuit
     </span><span class="kw">pub fn </span>create_point_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        point: Point&lt;F&gt;,
+        point: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
         <span class="kw">let </span>x_var = <span class="self">self</span>.create_variable(point.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>y_var = <span class="self">self</span>.create_variable(point.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -1439,7 +1439,7 @@
     <span class="doccomment">/// Add a new EC point (as a constant) to the circuit
     </span><span class="kw">pub fn </span>create_constant_point_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        point: Point&lt;F&gt;,
+        point: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
         <span class="kw">let </span>x_var = <span class="self">self</span>.create_constant_variable(point.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>y_var = <span class="self">self</span>.create_constant_variable(point.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -1449,7 +1449,7 @@
     <span class="doccomment">/// Add a new EC point (as public input) to the circuit
     </span><span class="kw">pub fn </span>create_public_point_variable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        point: Point&lt;F&gt;,
+        point: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
         <span class="kw">let </span>x_var = <span class="self">self</span>.create_public_variable(point.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>y_var = <span class="self">self</span>.create_public_variable(point.<span class="number">1</span>)<span class="question-mark">?</span>;
@@ -1466,9 +1466,9 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         b0: BoolVar,
         b1: BoolVar,
-        point1: <span class="kw-2">&amp;</span>Point&lt;F&gt;,
-        point2: <span class="kw-2">&amp;</span>Point&lt;F&gt;,
-        point3: <span class="kw-2">&amp;</span>Point&lt;F&gt;,
+        point1: <span class="kw-2">&amp;</span>TEPoint&lt;F&gt;,
+        point2: <span class="kw-2">&amp;</span>TEPoint&lt;F&gt;,
+        point3: <span class="kw-2">&amp;</span>TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PointVariable, CircuitError&gt; {
         <span class="self">self</span>.check_var_bound(b0.into())<span class="question-mark">?</span>;
         <span class="self">self</span>.check_var_bound(b1.into())<span class="question-mark">?</span>;
@@ -1478,7 +1478,7 @@
                 <span class="self">self</span>.witness(b0.into())<span class="question-mark">? </span>== F::one(),
                 <span class="self">self</span>.witness(b1.into())<span class="question-mark">? </span>== F::one(),
             ) {
-                (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; Point::from(Affine::&lt;P&gt;::zero()),
+                (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; TEPoint::from(Affine::&lt;P&gt;::zero()),
                 (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; point1.to_owned(),
                 (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; point2.to_owned(),
                 (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; point3.to_owned(),
@@ -1607,7 +1607,7 @@
         <span class="self">self</span>.check_point_var_bound(point_var)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>b = {
-            <span class="kw">if </span><span class="self">self</span>.point_witness(point_var)<span class="question-mark">? </span>== Point::from(Affine::&lt;P&gt;::zero()) {
+            <span class="kw">if </span><span class="self">self</span>.point_witness(point_var)<span class="question-mark">? </span>== TEPoint::from(Affine::&lt;P&gt;::zero()) {
                 <span class="self">self</span>.create_boolean_variable(<span class="bool-val">true</span>)<span class="question-mark">?
             </span>} <span class="kw">else </span>{
                 <span class="self">self</span>.create_boolean_variable(<span class="bool-val">false</span>)<span class="question-mark">?
@@ -1696,7 +1696,7 @@
         <span class="kw">let </span>z = d * x_1 * y_1 * x_2 * y_2; <span class="comment">// temporary intermediate value
         </span><span class="kw">let </span>x_3 = (x_1 * y_2 + x_2 * y_1) / (F::one() + z);
         <span class="kw">let </span>y_3 = (-P::COEFF_A * x_1 * x_2 + y_2 * y_1) / (F::one() - z);
-        <span class="kw">let </span>point_c = <span class="self">self</span>.create_point_variable(Point(x_3, y_3))<span class="question-mark">?</span>;
+        <span class="kw">let </span>point_c = <span class="self">self</span>.create_point_variable(TEPoint(x_3, y_3))<span class="question-mark">?</span>;
         <span class="self">self</span>.ecc_add_gate::&lt;P&gt;(point_a, point_b, <span class="kw-2">&amp;</span>point_c)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(point_c)
@@ -1740,9 +1740,9 @@
             <span class="kw">let </span>selected = <span class="self">self</span>.quaternary_point_select::&lt;P&gt;(
                 <span class="kw-2">*</span>b0,
                 <span class="kw-2">*</span>b1,
-                <span class="kw-2">&amp;</span>Point::from(<span class="kw-2">*</span>p1),
-                <span class="kw-2">&amp;</span>Point::from(<span class="kw-2">*</span>p2),
-                <span class="kw-2">&amp;</span>Point::from(<span class="kw-2">*</span>p3),
+                <span class="kw-2">&amp;</span>TEPoint::from(<span class="kw-2">*</span>p1),
+                <span class="kw-2">&amp;</span>TEPoint::from(<span class="kw-2">*</span>p2),
+                <span class="kw-2">&amp;</span>TEPoint::from(<span class="kw-2">*</span>p3),
             )<span class="question-mark">?</span>;
             accum = <span class="self">self</span>.ecc_add::&lt;P&gt;(<span class="kw-2">&amp;</span>accum, <span class="kw-2">&amp;</span>selected)<span class="question-mark">?</span>;
         }
@@ -1908,8 +1908,8 @@
         P: Config&lt;BaseField = F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
-        <span class="kw">let </span>p1 = circuit.create_point_variable(Point(F::zero(), F::one()))<span class="question-mark">?</span>;
-        <span class="kw">let </span>p2 = circuit.create_point_variable(Point(F::from(<span class="number">2353u32</span>), F::one()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p1 = circuit.create_point_variable(TEPoint(F::zero(), F::one()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p2 = circuit.create_point_variable(TEPoint(F::from(<span class="number">2353u32</span>), F::one()))<span class="question-mark">?</span>;
         <span class="kw">let </span>p1_check = circuit.is_neutral_point::&lt;P&gt;(<span class="kw-2">&amp;</span>p1)<span class="question-mark">?</span>;
         <span class="kw">let </span>p2_check = circuit.is_neutral_point::&lt;P&gt;(<span class="kw-2">&amp;</span>p2)<span class="question-mark">?</span>;
 
@@ -1923,14 +1923,14 @@
             .is_neutral_point::&lt;P&gt;(<span class="kw-2">&amp;</span>PointVariable(circuit.num_vars(), circuit.num_vars() - <span class="number">1</span>))
             .is_err());
 
-        <span class="kw">let </span>circuit_1 = build_is_neutral_circuit::&lt;F, P&gt;(Point(F::zero(), F::one()))<span class="question-mark">?</span>;
-        <span class="kw">let </span>circuit_2 = build_is_neutral_circuit::&lt;F, P&gt;(Point(F::one(), F::zero()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_1 = build_is_neutral_circuit::&lt;F, P&gt;(TEPoint(F::zero(), F::one()))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_2 = build_is_neutral_circuit::&lt;F, P&gt;(TEPoint(F::one(), F::zero()))<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>build_is_neutral_circuit&lt;F, P&gt;(point: Point&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
+    <span class="kw">fn </span>build_is_neutral_circuit&lt;F, P&gt;(point: TEPoint&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
         P: Config&lt;BaseField = F&gt;,
@@ -1945,13 +1945,13 @@
     <span class="macro">macro_rules! </span>test_enforce_on_curve {
         (<span class="macro-nonterminal">$fq</span>:tt, <span class="macro-nonterminal">$param</span>:tt, <span class="macro-nonterminal">$pt</span>:tt) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;<span class="macro-nonterminal">$fq</span>&gt; = PlonkCircuit::new_turbo_plonk();
-            <span class="kw">let </span>p1 = circuit.create_point_variable(Point(<span class="macro-nonterminal">$fq::zero</span>(), <span class="macro-nonterminal">$fq::one</span>()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>p1 = circuit.create_point_variable(TEPoint(<span class="macro-nonterminal">$fq::zero</span>(), <span class="macro-nonterminal">$fq::one</span>()))<span class="question-mark">?</span>;
             circuit.enforce_on_curve::&lt;<span class="macro-nonterminal">$param</span>&gt;(<span class="kw-2">&amp;</span>p1)<span class="question-mark">?</span>;
             <span class="kw">let </span>p2 = circuit.create_point_variable(<span class="macro-nonterminal">$pt</span>)<span class="question-mark">?</span>;
             circuit.enforce_on_curve::&lt;<span class="macro-nonterminal">$param</span>&gt;(<span class="kw-2">&amp;</span>p2)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
-            <span class="kw">let </span>p3 = circuit.create_point_variable(Point(<span class="macro-nonterminal">$fq::one</span>(), <span class="macro-nonterminal">$fq::one</span>()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>p3 = circuit.create_point_variable(TEPoint(<span class="macro-nonterminal">$fq::one</span>(), <span class="macro-nonterminal">$fq::one</span>()))<span class="question-mark">?</span>;
             circuit.enforce_on_curve::&lt;<span class="macro-nonterminal">$param</span>&gt;(<span class="kw-2">&amp;</span>p3)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
             <span class="comment">// Check variable out of bound error.
@@ -1963,8 +1963,8 @@
                 .is_err());
 
             <span class="kw">let </span>circuit_1 =
-                build_enforce_on_curve_circuit::&lt;<span class="kw">_</span>, <span class="macro-nonterminal">$param</span>&gt;(Point(<span class="macro-nonterminal">$fq::zero</span>(), <span class="macro-nonterminal">$fq::one</span>()))<span class="question-mark">?</span>;
-            <span class="kw">let </span>circuit_2 = build_enforce_on_curve_circuit::&lt;<span class="kw">_</span>, <span class="macro-nonterminal">$param</span>&gt;(Point(
+                build_enforce_on_curve_circuit::&lt;<span class="kw">_</span>, <span class="macro-nonterminal">$param</span>&gt;(TEPoint(<span class="macro-nonterminal">$fq::zero</span>(), <span class="macro-nonterminal">$fq::one</span>()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>circuit_2 = build_enforce_on_curve_circuit::&lt;<span class="kw">_</span>, <span class="macro-nonterminal">$param</span>&gt;(TEPoint(
                 <span class="macro-nonterminal">$fq::from</span>(<span class="number">5u32</span>),
                 <span class="macro-nonterminal">$fq::from</span>(<span class="number">89u32</span>),
             ))<span class="question-mark">?</span>;
@@ -1975,7 +1975,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_enforce_on_curve() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
         <span class="comment">// generator for ed_on_bn254 curve
-        </span><span class="kw">let </span>ed_on_254_gen = Point(
+        </span><span class="kw">let </span>ed_on_254_gen = TEPoint(
             FqEd354::from_str(
                 <span class="string">&quot;19698561148652590122159747500897617769866003486955115824547446575314762165298&quot;</span>,
             )
@@ -1986,7 +1986,7 @@
             .unwrap(),
         );
         <span class="comment">// generator for ed_on_bls377 curve
-        </span><span class="kw">let </span>ed_on_377_gen = Point(
+        </span><span class="kw">let </span>ed_on_377_gen = TEPoint(
             FqEd377::from_str(
                 <span class="string">&quot;4497879464030519973909970603271755437257548612157028181994697785683032656389&quot;</span>,
             )
@@ -1997,7 +1997,7 @@
             .unwrap(),
         );
         <span class="comment">// generator for ed_on_bls381 curve
-        </span><span class="kw">let </span>ed_on_381_gen = Point(
+        </span><span class="kw">let </span>ed_on_381_gen = TEPoint(
             FqEd381::from_str(
                 <span class="string">&quot;8076246640662884909881801758704306714034609987455869804520522091855516602923&quot;</span>,
             )
@@ -2008,7 +2008,7 @@
             .unwrap(),
         );
         <span class="comment">// generator for ed_on_bls381_bandersnatch curve
-        </span><span class="kw">let </span>ed_on_381b_gen = Point(
+        </span><span class="kw">let </span>ed_on_381b_gen = TEPoint(
             FqEd381::from_str(
                 <span class="string">&quot;18886178867200960497001835917649091219057080094937609519140440539760939937304&quot;</span>,
             )
@@ -2019,7 +2019,7 @@
             .unwrap(),
         );
         <span class="comment">// generator for bls377 G1 curve
-        </span><span class="kw">let </span>bls377_gen = Point(
+        </span><span class="kw">let </span>bls377_gen = TEPoint(
             Fq377::from_str(
                 <span class="string">&quot;71222569531709137229370268896323705690285216175189308202338047559628438110820800641278662592954630774340654489393&quot;</span>,
             )
@@ -2039,7 +2039,7 @@
     }
 
     <span class="kw">fn </span>build_enforce_on_curve_circuit&lt;F, P&gt;(
-        point: Point&lt;F&gt;,
+        point: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
@@ -2072,8 +2072,8 @@
         <span class="kw">let </span>p3 = (p1 + p2).into_affine();
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
-        <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p1))<span class="question-mark">?</span>;
-        <span class="kw">let </span>p2_var = circuit.create_point_variable(Point::from(p2))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p1_var = circuit.create_point_variable(TEPoint::from(p1))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p2_var = circuit.create_point_variable(TEPoint::from(p2))<span class="question-mark">?</span>;
         <span class="kw">let </span>p3_var = circuit.ecc_add::&lt;P&gt;(<span class="kw-2">&amp;</span>p1_var, <span class="kw-2">&amp;</span>p2_var)<span class="question-mark">?</span>;
 
         <span class="macro">assert_eq!</span>(circuit.witness(p3_var.<span class="number">0</span>)<span class="question-mark">?</span>, p3.x);
@@ -2091,17 +2091,17 @@
         <span class="kw">let </span>p3 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>p4 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>circuit_1 =
-            build_curve_point_addition_circuit::&lt;F, P&gt;(Point::from(p1), Point::from(p2))<span class="question-mark">?</span>;
+            build_curve_point_addition_circuit::&lt;F, P&gt;(TEPoint::from(p1), TEPoint::from(p2))<span class="question-mark">?</span>;
         <span class="kw">let </span>circuit_2 =
-            build_curve_point_addition_circuit::&lt;F, P&gt;(Point::from(p3), Point::from(p4))<span class="question-mark">?</span>;
+            build_curve_point_addition_circuit::&lt;F, P&gt;(TEPoint::from(p3), TEPoint::from(p4))<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>build_curve_point_addition_circuit&lt;F, P&gt;(
-        p1: Point&lt;F&gt;,
-        p2: Point&lt;F&gt;,
+        p1: TEPoint&lt;F&gt;,
+        p2: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
@@ -2141,38 +2141,38 @@
         <span class="kw">let </span>select_p0 = circuit.quaternary_point_select::&lt;P&gt;(
             false_var,
             false_var,
-            <span class="kw-2">&amp;</span>Point::from(p1),
-            <span class="kw-2">&amp;</span>Point::from(p2),
-            <span class="kw-2">&amp;</span>Point::from(p3),
+            <span class="kw-2">&amp;</span>TEPoint::from(p1),
+            <span class="kw-2">&amp;</span>TEPoint::from(p2),
+            <span class="kw-2">&amp;</span>TEPoint::from(p3),
         )<span class="question-mark">?</span>;
         <span class="macro">assert_eq!</span>(
-            Point(F::zero(), F::one()),
-            Point(circuit.witness(select_p0.<span class="number">0</span>)<span class="question-mark">?</span>, circuit.witness(select_p0.<span class="number">1</span>)<span class="question-mark">?</span>)
+            TEPoint(F::zero(), F::one()),
+            TEPoint(circuit.witness(select_p0.<span class="number">0</span>)<span class="question-mark">?</span>, circuit.witness(select_p0.<span class="number">1</span>)<span class="question-mark">?</span>)
         );
         <span class="kw">let </span>select_p1 = circuit.quaternary_point_select::&lt;P&gt;(
             true_var,
             false_var,
-            <span class="kw-2">&amp;</span>Point::from(p1),
-            <span class="kw-2">&amp;</span>Point::from(p2),
-            <span class="kw-2">&amp;</span>Point::from(p3),
+            <span class="kw-2">&amp;</span>TEPoint::from(p1),
+            <span class="kw-2">&amp;</span>TEPoint::from(p2),
+            <span class="kw-2">&amp;</span>TEPoint::from(p3),
         )<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(Point::from(p1), circuit.point_witness(<span class="kw-2">&amp;</span>select_p1)<span class="question-mark">?</span>);
+        <span class="macro">assert_eq!</span>(TEPoint::from(p1), circuit.point_witness(<span class="kw-2">&amp;</span>select_p1)<span class="question-mark">?</span>);
         <span class="kw">let </span>select_p2 = circuit.quaternary_point_select::&lt;P&gt;(
             false_var,
             true_var,
-            <span class="kw-2">&amp;</span>Point::from(p1),
-            <span class="kw-2">&amp;</span>Point::from(p2),
-            <span class="kw-2">&amp;</span>Point::from(p3),
+            <span class="kw-2">&amp;</span>TEPoint::from(p1),
+            <span class="kw-2">&amp;</span>TEPoint::from(p2),
+            <span class="kw-2">&amp;</span>TEPoint::from(p3),
         )<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(Point::from(p2), circuit.point_witness(<span class="kw-2">&amp;</span>select_p2)<span class="question-mark">?</span>);
+        <span class="macro">assert_eq!</span>(TEPoint::from(p2), circuit.point_witness(<span class="kw-2">&amp;</span>select_p2)<span class="question-mark">?</span>);
         <span class="kw">let </span>select_p3 = circuit.quaternary_point_select::&lt;P&gt;(
             true_var,
             true_var,
-            <span class="kw-2">&amp;</span>Point::from(p1),
-            <span class="kw-2">&amp;</span>Point::from(p2),
-            <span class="kw-2">&amp;</span>Point::from(p3),
+            <span class="kw-2">&amp;</span>TEPoint::from(p1),
+            <span class="kw-2">&amp;</span>TEPoint::from(p2),
+            <span class="kw-2">&amp;</span>TEPoint::from(p3),
         )<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(Point::from(p3), circuit.point_witness(<span class="kw-2">&amp;</span>select_p3)<span class="question-mark">?</span>);
+        <span class="macro">assert_eq!</span>(TEPoint::from(p3), circuit.point_witness(<span class="kw-2">&amp;</span>select_p3)<span class="question-mark">?</span>);
 
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
@@ -2205,9 +2205,9 @@
         circuit.quaternary_point_select::&lt;P&gt;(
             b0_var,
             b1_var,
-            <span class="kw-2">&amp;</span>Point::from(p1),
-            <span class="kw-2">&amp;</span>Point::from(p2),
-            <span class="kw-2">&amp;</span>Point::from(p3),
+            <span class="kw-2">&amp;</span>TEPoint::from(p1),
+            <span class="kw-2">&amp;</span>TEPoint::from(p2),
+            <span class="kw-2">&amp;</span>TEPoint::from(p3),
         )<span class="question-mark">?</span>;
         circuit.finalize_for_arithmetization()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(circuit)
@@ -2231,8 +2231,8 @@
         <span class="kw">let </span>p = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
-        <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p))<span class="question-mark">?</span>;
-        <span class="kw">let </span>p2_var = circuit.create_point_variable(Point::from(p))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p1_var = circuit.create_point_variable(TEPoint::from(p))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p2_var = circuit.create_point_variable(TEPoint::from(p))<span class="question-mark">?</span>;
         circuit.enforce_point_equal(<span class="kw-2">&amp;</span>p1_var, <span class="kw-2">&amp;</span>p2_var)<span class="question-mark">?</span>;
 
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
@@ -2244,16 +2244,16 @@
             .is_err());
 
         <span class="kw">let </span>new_p = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>circuit_1 = build_point_equal_circuit(Point::from(p), Point::from(p))<span class="question-mark">?</span>;
-        <span class="kw">let </span>circuit_2 = build_point_equal_circuit(Point::from(new_p), Point::from(new_p))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_1 = build_point_equal_circuit(TEPoint::from(p), TEPoint::from(p))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_2 = build_point_equal_circuit(TEPoint::from(new_p), TEPoint::from(new_p))<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>build_point_equal_circuit&lt;F: PrimeField&gt;(
-        p1: Point&lt;F&gt;,
-        p2: Point&lt;F&gt;,
+        p1: TEPoint&lt;F&gt;,
+        p2: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p1_var = circuit.create_point_variable(p1)<span class="question-mark">?</span>;
@@ -2283,9 +2283,9 @@
         <span class="kw">let </span>p3 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
-        <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p1))<span class="question-mark">?</span>;
-        <span class="kw">let </span>p2_var = circuit.create_point_variable(Point::from(p2))<span class="question-mark">?</span>;
-        <span class="kw">let </span>p3_var = circuit.create_point_variable(Point::from(p3))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p1_var = circuit.create_point_variable(TEPoint::from(p1))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p2_var = circuit.create_point_variable(TEPoint::from(p2))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p3_var = circuit.create_point_variable(TEPoint::from(p3))<span class="question-mark">?</span>;
         <span class="kw">let </span>p1_p2_eq = circuit.is_point_equal(<span class="kw-2">&amp;</span>p1_var, <span class="kw-2">&amp;</span>p2_var)<span class="question-mark">?</span>;
         <span class="kw">let </span>p1_p3_eq = circuit.is_point_equal(<span class="kw-2">&amp;</span>p1_var, <span class="kw-2">&amp;</span>p3_var)<span class="question-mark">?</span>;
 
@@ -2300,18 +2300,18 @@
             .is_err());
 
         <span class="kw">let </span>circuit_1 =
-            build_is_equal_point_circuit(Point::from(p1), Point::from(p2), Point::from(p3))<span class="question-mark">?</span>;
+            build_is_equal_point_circuit(TEPoint::from(p1), TEPoint::from(p2), TEPoint::from(p3))<span class="question-mark">?</span>;
         <span class="kw">let </span>circuit_2 =
-            build_is_equal_point_circuit(Point::from(p3), Point::from(p3), Point::from(p1))<span class="question-mark">?</span>;
+            build_is_equal_point_circuit(TEPoint::from(p3), TEPoint::from(p3), TEPoint::from(p1))<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>build_is_equal_point_circuit&lt;F: PrimeField&gt;(
-        p1: Point&lt;F&gt;,
-        p2: Point&lt;F&gt;,
-        p3: Point&lt;F&gt;,
+        p1: TEPoint&lt;F&gt;,
+        p2: TEPoint&lt;F&gt;,
+        p3: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::new_turbo_plonk();
         <span class="kw">let </span>p1_var = circuit.create_point_variable(p1)<span class="question-mark">?</span>;
@@ -2403,7 +2403,7 @@
             <span class="kw">let </span>scalar = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
             <span class="kw">let </span>result = circuit.fixed_base_scalar_mul(scalar, <span class="kw-2">&amp;</span>base)<span class="question-mark">?</span>;
             base = (base * s).into();
-            <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+            <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
         }
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
@@ -2456,15 +2456,15 @@
         <span class="kw">let </span>p2 = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let </span><span class="kw-2">mut </span>circuit: PlonkCircuit&lt;F&gt; = PlonkCircuit::new_turbo_plonk();
-        <span class="kw">let </span>p0_var = circuit.create_point_variable(Point::from(p0))<span class="question-mark">?</span>;
-        <span class="kw">let </span>p1_var = circuit.create_point_variable(Point::from(p1))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p0_var = circuit.create_point_variable(TEPoint::from(p0))<span class="question-mark">?</span>;
+        <span class="kw">let </span>p1_var = circuit.create_point_variable(TEPoint::from(p1))<span class="question-mark">?</span>;
         <span class="kw">let </span>true_var = circuit.true_var();
         <span class="kw">let </span>false_var = circuit.false_var();
 
         <span class="kw">let </span>select_p0 = circuit.binary_point_vars_select(false_var, <span class="kw-2">&amp;</span>p0_var, <span class="kw-2">&amp;</span>p1_var)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(circuit.point_witness(<span class="kw-2">&amp;</span>select_p0)<span class="question-mark">?</span>, Point::from(p0));
+        <span class="macro">assert_eq!</span>(circuit.point_witness(<span class="kw-2">&amp;</span>select_p0)<span class="question-mark">?</span>, TEPoint::from(p0));
         <span class="kw">let </span>select_p1 = circuit.binary_point_vars_select(true_var, <span class="kw-2">&amp;</span>p0_var, <span class="kw-2">&amp;</span>p1_var)<span class="question-mark">?</span>;
-        <span class="macro">assert_eq!</span>(circuit.point_witness(<span class="kw-2">&amp;</span>select_p1)<span class="question-mark">?</span>, Point::from(p1));
+        <span class="macro">assert_eq!</span>(circuit.point_witness(<span class="kw-2">&amp;</span>select_p1)<span class="question-mark">?</span>, TEPoint::from(p1));
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
         <span class="comment">// wrong witness should fail
@@ -2478,10 +2478,16 @@
             )
             .is_err());
 
-        <span class="kw">let </span>circuit_1 =
-            build_binary_point_vars_select_circuit::&lt;F&gt;(<span class="bool-val">true</span>, Point::from(p0), Point::from(p1))<span class="question-mark">?</span>;
-        <span class="kw">let </span>circuit_2 =
-            build_binary_point_vars_select_circuit::&lt;F&gt;(<span class="bool-val">false</span>, Point::from(p1), Point::from(p2))<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_1 = build_binary_point_vars_select_circuit::&lt;F&gt;(
+            <span class="bool-val">true</span>,
+            TEPoint::from(p0),
+            TEPoint::from(p1),
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>circuit_2 = build_binary_point_vars_select_circuit::&lt;F&gt;(
+            <span class="bool-val">false</span>,
+            TEPoint::from(p1),
+            TEPoint::from(p2),
+        )<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -2489,8 +2495,8 @@
 
     <span class="kw">fn </span>build_binary_point_vars_select_circuit&lt;F&gt;(
         b: bool,
-        p0: Point&lt;F&gt;,
-        p1: Point&lt;F&gt;,
+        p0: TEPoint&lt;F&gt;,
+        p1: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,
@@ -2524,17 +2530,17 @@
             <span class="kw">let </span><span class="kw-2">mut </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
-            <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+            <span class="kw">let </span>base_var = circuit.create_point_variable(TEPoint::from(base))<span class="question-mark">?</span>;
             base = (base * s).into();
             <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
-            <span class="macro">assert_eq!</span>(Point::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
+            <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
         }
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
 
         <span class="kw">let </span>base = Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>s = P::ScalarField::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>s_var = circuit.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>s))<span class="question-mark">?</span>;
-        <span class="kw">let </span>base_var = circuit.create_point_variable(Point::from(base))<span class="question-mark">?</span>;
+        <span class="kw">let </span>base_var = circuit.create_point_variable(TEPoint::from(base))<span class="question-mark">?</span>;
         <span class="comment">// wrong witness should fail
         </span><span class="kw-2">*</span>circuit.witness_mut(<span class="number">2</span>) = F::rand(<span class="kw-2">&amp;mut </span>rng);
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
@@ -2550,10 +2556,10 @@
             .is_err());
 
         <span class="kw">let </span>circuit_1 =
-            build_variable_base_scalar_mul_circuit::&lt;F, P&gt;(F::zero(), Point::from(base))<span class="question-mark">?</span>;
+            build_variable_base_scalar_mul_circuit::&lt;F, P&gt;(F::zero(), TEPoint::from(base))<span class="question-mark">?</span>;
         <span class="kw">let </span>circuit_2 = build_variable_base_scalar_mul_circuit::&lt;F, P&gt;(
             F::from(<span class="number">314u32</span>),
-            Point::from(Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng)),
+            TEPoint::from(Affine::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng)),
         )<span class="question-mark">?</span>;
         test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;
 
@@ -2562,7 +2568,7 @@
 
     <span class="kw">fn </span>build_variable_base_scalar_mul_circuit&lt;F, P&gt;(
         scalar: F,
-        base: Point&lt;F&gt;,
+        base: TEPoint&lt;F&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PlonkCircuit&lt;F&gt;, CircuitError&gt;
     <span class="kw">where
         </span>F: PrimeField,

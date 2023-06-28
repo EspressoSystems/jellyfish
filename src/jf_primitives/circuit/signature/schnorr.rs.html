@@ -341,7 +341,7 @@
 <span class="kw">use </span>ark_std::{vec, vec::Vec};
 <span class="kw">use </span>jf_relation::{
     errors::CircuitError,
-    gadgets::ecc::{Point, PointVariable},
+    gadgets::ecc::{PointVariable, TEPoint},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
 <span class="kw">use </span>jf_utils::fr_to_fq;
@@ -443,13 +443,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SignatureVar, CircuitError&gt; {
         <span class="kw">let </span>sig_var = SignatureVar {
             s: <span class="self">self</span>.create_variable(fr_to_fq::&lt;F, P&gt;(<span class="kw-2">&amp;</span>sig.s))<span class="question-mark">?</span>,
-            R: <span class="self">self</span>.create_point_variable(Point::from(sig.R))<span class="question-mark">?</span>,
+            R: <span class="self">self</span>.create_point_variable(TEPoint::from(sig.R))<span class="question-mark">?</span>,
         };
         <span class="prelude-val">Ok</span>(sig_var)
     }
 
     <span class="kw">fn </span>create_signature_vk_variable(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vk: <span class="kw-2">&amp;</span>VerKey&lt;P&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;VerKeyVar, CircuitError&gt; {
-        <span class="kw">let </span>vk_var = VerKeyVar(<span class="self">self</span>.create_point_variable(Point::from(vk.<span class="number">0</span>))<span class="question-mark">?</span>);
+        <span class="kw">let </span>vk_var = VerKeyVar(<span class="self">self</span>.create_point_variable(TEPoint::from(vk.<span class="number">0</span>))<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(vk_var)
     }
 

@@ -486,7 +486,7 @@
 
 </span><span class="doccomment">//! This module implements multi-scalar-multiplication circuits.
 
-</span><span class="kw">use super</span>::{Point, PointVariable};
+</span><span class="kw">use super</span>::{PointVariable, TEPoint};
 <span class="kw">use crate</span>::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 <span class="kw">use </span>ark_ec::{
     twisted_edwards::{Projective, TECurveConfig <span class="kw">as </span>Config},
@@ -824,7 +824,7 @@
     circuit: <span class="kw-2">&amp;</span>PlonkCircuit&lt;F&gt;,
     scalar_var: Variable,
     base_var: <span class="kw-2">&amp;</span>PointVariable,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Point&lt;F&gt;, CircuitError&gt;
+) -&gt; <span class="prelude-ty">Result</span>&lt;TEPoint&lt;F&gt;, CircuitError&gt;
 <span class="kw">where
     </span>F: PrimeField,
     P: Config&lt;BaseField = F&gt;,
@@ -848,7 +848,7 @@
 </span><span class="kw">mod </span>tests {
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{gadgets::ecc::Point, Circuit, PlonkType};
+    <span class="kw">use crate</span>::{gadgets::ecc::TEPoint, Circuit, PlonkType};
     <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param377, Fq <span class="kw">as </span>Fq377};
     <span class="kw">use </span>ark_ec::{
         scalar_mul::variable_base::VariableBaseMSM,
@@ -902,10 +902,10 @@
             <span class="kw">let </span>scalar_reprs: Vec&lt;&lt;P::ScalarField <span class="kw">as </span>PrimeField&gt;::BigInt&gt; =
                 scalars.iter().map(|x| x.into_bigint()).collect();
             <span class="kw">let </span>res = Projective::&lt;P&gt;::msm_bigint(<span class="kw-2">&amp;</span>bases, <span class="kw-2">&amp;</span>scalar_reprs);
-            <span class="kw">let </span>res_point: Point&lt;F&gt; = res.into();
+            <span class="kw">let </span>res_point: TEPoint&lt;F&gt; = res.into();
 
             <span class="comment">// corresponding wires
-            </span><span class="kw">let </span>bases_point: Vec&lt;Point&lt;F&gt;&gt; = bases.iter().map(|x| (<span class="kw-2">*</span>x).into()).collect();
+            </span><span class="kw">let </span>bases_point: Vec&lt;TEPoint&lt;F&gt;&gt; = bases.iter().map(|x| (<span class="kw-2">*</span>x).into()).collect();
             <span class="kw">let </span>bases_vars: Vec&lt;PointVariable&gt; = bases_point
                 .iter()
                 .map(|x| circuit.create_point_variable(<span class="kw-2">*</span>x))

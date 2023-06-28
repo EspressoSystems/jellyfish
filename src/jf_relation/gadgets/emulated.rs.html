@@ -806,6 +806,66 @@
 <a href="#806" id="806">806</a>
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -835,6 +895,12 @@
     </span><span class="kw">const </span>B: usize;
     <span class="doccomment">/// `B * NUM_LIMBS` should equals to `T`.
     </span><span class="kw">const </span>NUM_LIMBS: usize;
+}
+
+<span class="doccomment">/// A struct that can be serialized into `Vec` of field elements.
+</span><span class="kw">pub trait </span>SerializableEmulatedStruct&lt;F: PrimeField&gt; {
+    <span class="doccomment">/// Serialize into a `Vec` of field elements.
+    </span><span class="kw">fn </span>serialize_to_native_elements(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;F&gt;;
 }
 
 <span class="kw">fn </span>biguint_to_limbs&lt;F: PrimeField&gt;(val: <span class="kw-2">&amp;</span>BigUint, b: usize, num_limbs: usize) -&gt; Vec&lt;F&gt; {
@@ -880,7 +946,7 @@
 
 <span class="doccomment">/// The variable represents an element in the emulated field.
 </span><span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">pub struct </span>EmulatedVariable&lt;E: PrimeField&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) Vec&lt;Variable&gt;, PhantomData&lt;E&gt;);
+</span><span class="kw">pub struct </span>EmulatedVariable&lt;E: PrimeField&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) Vec&lt;Variable&gt;, <span class="kw">pub </span>PhantomData&lt;E&gt;);
 
 <span class="kw">impl</span>&lt;E: PrimeField&gt; EmulatedVariable&lt;E&gt; {
     <span class="doccomment">/// Return the list of variables that simulate the field element
@@ -996,10 +1062,11 @@
         <span class="comment">// checking that the carry_out has at most [`E::B`] + 1 bits
         </span><span class="self">self</span>.enforce_in_range(carry_out, E::B + <span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="comment">// enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
-        </span><span class="self">self</span>.general_arithmetic_gate(
+        </span><span class="self">self</span>.quad_poly_gate(
             <span class="kw-2">&amp;</span>[a.<span class="number">0</span>[<span class="number">0</span>], b.<span class="number">0</span>[<span class="number">0</span>], k.<span class="number">0</span>[<span class="number">0</span>], carry_out, c.<span class="number">0</span>[<span class="number">0</span>]],
             <span class="kw-2">&amp;</span>[F::zero(), F::zero(), neg_modulus[<span class="number">0</span>], -b_pow],
             <span class="kw-2">&amp;</span>[F::one(), F::zero()],
+            F::one(),
             F::zero(),
         )<span class="question-mark">?</span>;
 
@@ -1043,7 +1110,7 @@
             </span><span class="kw">if </span>i % <span class="number">2 </span>== <span class="number">0 </span>{
                 <span class="kw">let </span>t1 = stack.pop().unwrap();
                 <span class="kw">let </span>t2 = stack.pop().unwrap();
-                <span class="kw">let </span>t = <span class="self">self</span>.general_arithmetic(
+                <span class="kw">let </span>t = <span class="self">self</span>.gen_quad_poly(
                     <span class="kw-2">&amp;</span>[a.<span class="number">0</span>[i], b.<span class="number">0</span>[<span class="number">0</span>], t1.<span class="number">0</span>, t2.<span class="number">0</span>],
                     <span class="kw-2">&amp;</span>[F::zero(), F::zero(), t1.<span class="number">1</span>, t2.<span class="number">1</span>],
                     <span class="kw-2">&amp;</span>[F::one(), F::zero()],
@@ -1079,10 +1146,11 @@
         <span class="kw">let </span>k_mod = <span class="self">self</span>.mod_to_native_field(<span class="kw-2">&amp;</span>k)<span class="question-mark">?</span>;
         <span class="kw">let </span>c_mod = <span class="self">self</span>.mod_to_native_field(c)<span class="question-mark">?</span>;
         <span class="kw">let </span>e_mod_f = F::from(E::MODULUS.into());
-        <span class="self">self</span>.general_arithmetic_gate(
+        <span class="self">self</span>.quad_poly_gate(
             <span class="kw-2">&amp;</span>[a_mod, b_mod, k_mod, <span class="self">self</span>.zero(), c_mod],
             <span class="kw-2">&amp;</span>[F::zero(), F::zero(), -e_mod_f, F::zero()],
             <span class="kw-2">&amp;</span>[F::one(), F::zero()],
+            F::one(),
             F::zero(),
         )<span class="question-mark">?</span>;
 
@@ -1290,6 +1358,18 @@
         <span class="prelude-val">Ok</span>(c)
     }
 
+    <span class="doccomment">/// Return an [`EmulatedVariable`] which equals to a-b.
+    </span><span class="kw">pub fn </span>emulated_sub&lt;E: EmulationConfig&lt;F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        b: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedVariable&lt;E&gt;, CircuitError&gt; {
+        <span class="kw">let </span>c = <span class="self">self</span>.emulated_witness(a)<span class="question-mark">? </span>- <span class="self">self</span>.emulated_witness(b)<span class="question-mark">?</span>;
+        <span class="kw">let </span>c = <span class="self">self</span>.create_emulated_variable(c)<span class="question-mark">?</span>;
+        <span class="self">self</span>.emulated_add_gate(<span class="kw-2">&amp;</span>c, b, a)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(c)
+    }
+
     <span class="doccomment">/// Constrain that a+b=c in the emulated field.
     /// This function doesn&#39;t perform emulated variable validaty check on the
     /// input a and c. We assume that they are already performed elsewhere.
@@ -1349,7 +1429,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Return an [`EmulatedVariable`] which equals to a+b.
+    <span class="doccomment">/// Return an [`EmulatedVariable`] which equals to a + b where b is a
+    /// constant.
     </span><span class="kw">pub fn </span>emulated_add_constant&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
@@ -1361,6 +1442,18 @@
         <span class="prelude-val">Ok</span>(c)
     }
 
+    <span class="doccomment">/// Return an [`EmulatedVariable`] which equals to a - b where b is a
+    /// constant.
+    </span><span class="kw">pub fn </span>emulated_sub_constant&lt;E: EmulationConfig&lt;F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        b: E,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedVariable&lt;E&gt;, CircuitError&gt; {
+        <span class="kw">let </span>c = <span class="self">self</span>.emulated_witness(a)<span class="question-mark">? </span>- b;
+        <span class="kw">let </span>c = <span class="self">self</span>.create_emulated_variable(c)<span class="question-mark">?</span>;
+        <span class="self">self</span>.emulated_add_constant_gate(<span class="kw-2">&amp;</span>c, b, a)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(c)
+    }
     <span class="doccomment">/// Obtain an emulated variable of the conditional selection from 2 emulated
     /// variables. `b` is a boolean variable that indicates selection of P_b
     /// from (P0, P1).
@@ -1388,15 +1481,46 @@
     /// Return error if the input variables are invalid.
     </span><span class="kw">pub fn </span>enforce_emulated_var_equal&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        p0: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
-        p1: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        b: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>[..])<span class="question-mark">?</span>;
-        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>p1.<span class="number">0</span>[..])<span class="question-mark">?</span>;
-        <span class="kw">for </span>(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b) <span class="kw">in </span>p0.<span class="number">0</span>.iter().zip(p1.<span class="number">0</span>.iter()) {
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>a.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>b.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="kw">for </span>(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b) <span class="kw">in </span>a.<span class="number">0</span>.iter().zip(b.<span class="number">0</span>.iter()) {
             <span class="self">self</span>.enforce_equal(a, b)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Obtain a bool variable representing whether two input emulated variables
+    /// are equal. Return error if variables are invalid.
+    </span><span class="kw">pub fn </span>is_emulated_var_equal&lt;E: EmulationConfig&lt;F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+        b: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>a.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>b.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="kw">let </span>c =
+            a.<span class="number">0</span>.iter()
+                .zip(b.<span class="number">0</span>.iter())
+                .map(|(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b)| <span class="self">self</span>.is_equal(a, b))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="self">self</span>.logic_and_all(<span class="kw-2">&amp;</span>c)
+    }
+
+    <span class="doccomment">/// Obtain a bool variable representing whether the input emulated variable
+    /// is zero. Return error if variables are invalid.
+    </span><span class="kw">pub fn </span>is_emulated_var_zero&lt;E: EmulationConfig&lt;F&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        a: <span class="kw-2">&amp;</span>EmulatedVariable&lt;E&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BoolVar, CircuitError&gt; {
+        <span class="self">self</span>.check_vars_bound(<span class="kw-2">&amp;</span>a.<span class="number">0</span>[..])<span class="question-mark">?</span>;
+        <span class="kw">let </span>c =
+            a.<span class="number">0</span>.iter()
+                .map(|<span class="kw-2">&amp;</span>a| <span class="self">self</span>.is_zero(a))
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="self">self</span>.logic_and_all(<span class="kw-2">&amp;</span>c)
     }
 
     <span class="doccomment">/// Given an emulated field element `a`, return `a mod F::MODULUS` in the
@@ -1438,17 +1562,13 @@
 
 <span class="kw">impl </span>EmulationConfig&lt;ark_bn254::Fr&gt; <span class="kw">for </span>ark_bls12_377::Fq {
     <span class="kw">const </span>T: usize = <span class="number">500</span>;
-
-    <span class="kw">const </span>B: usize = <span class="number">125</span>;
-
-    <span class="kw">const </span>NUM_LIMBS: usize = <span class="number">4</span>;
+    <span class="kw">const </span>B: usize = <span class="number">100</span>;
+    <span class="kw">const </span>NUM_LIMBS: usize = <span class="number">5</span>;
 }
 
 <span class="kw">impl </span>EmulationConfig&lt;ark_bn254::Fr&gt; <span class="kw">for </span>ark_bn254::Fq {
-    <span class="kw">const </span>T: usize = <span class="number">261</span>;
-
-    <span class="kw">const </span>B: usize = <span class="number">87</span>;
-
+    <span class="kw">const </span>T: usize = <span class="number">300</span>;
+    <span class="kw">const </span>B: usize = <span class="number">100</span>;
     <span class="kw">const </span>NUM_LIMBS: usize = <span class="number">3</span>;
 }
 
@@ -1531,7 +1651,7 @@
         </span>E: EmulationConfig&lt;F&gt;,
         F: PrimeField,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
+        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_ultra_plonk(<span class="number">20</span>);
         <span class="kw">let </span>x = E::from(<span class="number">6732u64</span>);
         <span class="kw">let </span>y = E::from(E::MODULUS.into() - <span class="number">12387u64</span>);
         <span class="kw">let </span>expected = x * y;
