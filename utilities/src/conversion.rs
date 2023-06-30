@@ -183,18 +183,16 @@ where
 /// length of the return `Vec<u8>` overflows `usize`.
 pub fn bytes_from_field_elements<T, F>(elems: T) -> Vec<u8>
 where
-    T: AsRef<[F]>,
+    T: Borrow<[F]>,
     F: Field,
 {
+    let elems = elems.borrow();
     let (primefield_bytes_len, _, field_bytes_len) = compile_time_checks::<F>();
-    if elems.as_ref().is_empty() {
+    if elems.is_empty() {
         return Vec::new();
     }
 
-    let (first_elem, elems) = elems
-        .as_ref()
-        .split_first()
-        .expect("elems should be non-empty");
+    let (first_elem, elems) = elems.split_first().expect("elems should be non-empty");
 
     // the first element encodes the number of bytes to return
     let result_len = usize::try_from(u64::from_le_bytes(
