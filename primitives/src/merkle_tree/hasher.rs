@@ -67,6 +67,46 @@ pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, U3>;
 pub type GenericHasherMerkleTree<H, E, I, Arity> =
     MerkleTree<E, HasherDigestAlgorithm, I, Arity, HasherNode<H>>;
 
+/// Convenience trait and blanket impl for downstream trait bounds.
+///
+/// TODO(Gus): better doctest that would fail without the trait bound.
+///
+/// Do this
+/// ```
+/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// fn example<H>()
+/// where
+///     H: HasherDigest,
+/// {
+/// }
+/// ```
+///
+/// Instead of this
+/// ```
+/// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
+/// # use ark_serialize::Write;
+/// fn example<H>()
+/// where
+///     H: Digest + Write,
+///     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+/// {
+/// }
+/// ```
+pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write {
+    /// Associated type needed to express trait bounds.
+    type Foo: ArrayLength<u8, ArrayType = Self::Bar>;
+    /// Associated type needed to express trait bounds.
+    type Bar: Copy;
+}
+impl<T> HasherDigest for T
+where
+    T: Digest + Write,
+    <T::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+{
+    type Foo = T::OutputSize;
+    type Bar = <<T as HasherDigest>::Foo as ArrayLength<u8>>::ArrayType;
+}
+
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
 pub struct HasherDigestAlgorithm;
 
@@ -74,8 +114,7 @@ impl<E, I, H> DigestAlgorithm<E, I, HasherNode<H>> for HasherDigestAlgorithm
 where
     E: Element + CanonicalSerialize,
     I: Index + CanonicalSerialize,
-    H: Digest + Write,
-    <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+    H: HasherDigest,
 {
     fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, PrimitivesError> {
         let mut hasher = H::new();
