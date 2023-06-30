@@ -7,6 +7,7 @@
 use ark_ec::CurveConfig;
 use ark_ff::{BigInteger, Field, PrimeField};
 use ark_std::{
+    borrow::Borrow,
     cmp::min,
     iter::{once, repeat},
     mem,
@@ -127,41 +128,37 @@ where
 /// If any of the above conditions holds then this function *always* panics.
 pub fn bytes_to_field_elements<B, F>(bytes: B) -> Vec<F>
 where
-    B: AsRef<[u8]>,
+    B: Borrow<[u8]>,
     F: Field,
 {
+    let bytes = bytes.borrow();
     let (primefield_bytes_len, extension_degree, field_bytes_len) = compile_time_checks::<F>();
-    if bytes.as_ref().is_empty() {
+    if bytes.is_empty() {
         return Vec::new();
     }
 
     // Result length is always less than `bytes` length for sufficiently large
     // `bytes`. Thus, the following should never panic.
     let result_len = (field_bytes_len
-        .checked_add(bytes.as_ref().len())
+        .checked_add(bytes.len())
         .expect("result len should fit into usize")
         - 1)
         / field_bytes_len
         + 1;
 
-    let result = once(F::from(bytes.as_ref().len() as u64)) // the first field element encodes the bytes length as u64
-        .chain(
-            bytes
-                .as_ref()
-                .chunks(field_bytes_len)
-                .map(|field_elem_bytes| {
-                    F::from_base_prime_field_elems(
-                        &field_elem_bytes.chunks(primefield_bytes_len)
+    let result = once(F::from(bytes.len() as u64)) // the first field element encodes the bytes length as u64
+        .chain(bytes.chunks(field_bytes_len).map(|field_elem_bytes| {
+            F::from_base_prime_field_elems(
+                &field_elem_bytes.chunks(primefield_bytes_len)
                 .map(F::BasePrimeField::from_le_bytes_mod_order)
                 // not enough prime field elems? fill remaining elems with zero
                 .chain(repeat(F::BasePrimeField::ZERO).take(
                     extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1)
                 )
                 .collect::<Vec<_>>(),
-                    )
-                    .expect("failed to construct field element")
-                }),
-        )
+            )
+            .expect("failed to construct field element")
+        }))
         .collect::<Vec<_>>();
 
     // sanity check
