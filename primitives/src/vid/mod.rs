@@ -1,27 +1,35 @@
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std as std; // needed for thiserror crate
-use ark_std::{fmt::Debug, string::String, vec::Vec};
+use ark_std::{error::Error, fmt::Debug, string::String, vec::Vec};
+use displaydoc::Display;
 
 pub mod advz;
 
 /// The error type for `VidScheme` methods.
-///
-/// # Use of both `thiserror` and `anyhow`
-/// This library is both a producer and consumer of errors.
-/// It provides a custom error `VidError` for consumers of this library, aided
-/// by `thiserror`. Moreover, it is a consumer of errors from lower-level
-/// libraries, aided by `anyhow`. We have yet to settle on a preferred error
-/// handling philosophy.
-#[derive(thiserror::Error, Debug)]
+#[derive(Display, Debug)]
 pub enum VidError {
-    /// Caller provided an invalid argument
-    #[error("invalid arguments: {0}")]
+    /// invalid args: {0}
     Argument(String),
-    /// Internal error
-    #[error(transparent)]
-    Internal(#[from] anyhow::Error),
+    /// internal error: {0}
+    Internal(anyhow::Error),
+}
+
+impl Error for VidError {}
+
+/// Convenience wrapper to convert any error into a [`VidError`].
+///
+/// Private fn so as not to expose error conversion API outside this crate
+/// as per [stackoverflow](https://stackoverflow.com/a/70057677).
+///
+/// # No-std support
+/// `no_std` mode requires `.map_err(vid)` to convert from a non-`anyhow` error
+/// as per [`anyhow` docs](https://docs.rs/anyhow/latest/anyhow/index.html#no-std-support),
+fn vid<E>(e: E) -> VidError
+where
+    E: ark_std::fmt::Display + Debug + Send + Sync + 'static,
+{
+    VidError::Internal(anyhow::anyhow!(e))
 }
 
 /// Convenience [`Result`] wrapper for [`VidError`].

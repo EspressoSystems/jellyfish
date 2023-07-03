@@ -2,7 +2,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{VidError, VidResult, VidScheme};
+use super::{vid, VidError, VidResult, VidScheme};
 use crate::{
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
     pcs::{
@@ -89,7 +89,7 @@ where
                 payload_chunk_size, num_storage_nodes
             )));
         }
-        let (ck, vk) = P::trim_fft_size(srs, payload_chunk_size)?;
+        let (ck, vk) = P::trim_fft_size(srs, payload_chunk_size).map_err(vid)?;
         Ok(Self {
             payload_chunk_size,
             num_storage_nodes,
@@ -166,8 +166,10 @@ where
         let elems = bytes_to_field_elements(payload);
         for coeffs in elems.chunks(self.payload_chunk_size) {
             let poly = DenseUVPolynomial::from_coefficients_slice(coeffs);
-            let commitment = P::commit(&self.ck, &poly)?;
-            commitment.serialize_uncompressed(&mut hasher)?;
+            let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
+            commitment
+                .serialize_uncompressed(&mut hasher)
+                .map_err(vid)?;
         }
 
         Ok(hasher.finalize())
@@ -202,7 +204,8 @@ where
             common.all_evals_digest,
             &V::Index::from(share.index as u64),
             &share.evals_proof,
-        )?
+        )
+        .map_err(vid)?
         .is_err()
         {
             return Ok(Err(()));
@@ -230,8 +233,8 @@ where
 
         // prepare eval point for aggregate proof
         // TODO(Gus) perf: don't re-compute domain elements: https://github.com/EspressoSystems/jellyfish/issues/313
-        let domain =
-            P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)?;
+        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
+            .map_err(vid)?;
         let point = domain.element(share.index);
 
         // verify aggregate proof
@@ -241,7 +244,8 @@ where
             &point,
             &aggregate_eval,
             &share.aggregate_proof,
-        )?
+        )
+        .map_err(vid)?
         .then_some(())
         .ok_or(()))
     }
@@ -279,8 +283,8 @@ where
         <Self as VidScheme>::StorageCommon,
     )> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
-        let domain =
-            P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)?;
+        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
+            .map_err(vid)?;
 
         // partition payload into polynomial coefficients
         let polys: Vec<P::Polynomial> = payload
@@ -294,7 +298,8 @@ where
                 vec![Vec::with_capacity(num_polys); self.num_storage_nodes];
 
             for poly in polys.iter() {
-                let poly_evals = P::multi_open_rou_evals(poly, self.num_storage_nodes, &domain)?;
+                let poly_evals =
+                    P::multi_open_rou_evals(poly, self.num_storage_nodes, &domain).map_err(vid)?;
 
                 for (storage_node_evals, poly_eval) in
                     all_storage_node_evals.iter_mut().zip(poly_evals)
@@ -327,14 +332,15 @@ where
             .try_into()
             .expect("num_storage_nodes log base arity should fit into usize");
         let height = height + 1; // avoid fully qualified syntax for try_into()
-        let all_evals_commit = V::from_elems(height, &all_storage_node_evals)?;
+        let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
 
         // common data
         let common = Common {
             poly_commits: polys
                 .iter()
                 .map(|poly| P::commit(&self.ck, poly))
-                .collect::<Result<_, _>>()?,
+                .collect::<Result<_, _>>()
+                .map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
         };
 
@@ -350,7 +356,8 @@ where
 
         // aggregate proofs
         let aggregate_proofs =
-            P::multi_open_rou_proofs(&self.ck, &aggregate_poly, self.num_storage_nodes, &domain)?;
+            P::multi_open_rou_proofs(&self.ck, &aggregate_poly, self.num_storage_nodes, &domain)
+                .map_err(vid)?;
 
         let shares = all_storage_node_evals
             .into_iter()
@@ -363,7 +370,8 @@ where
                     aggregate_proof,
                     evals_proof: all_evals_commit
                         .lookup(V::Index::from(index as u64))
-                        .expect_ok()?
+                        .expect_ok()
+                        .map_err(vid)?
                         .1,
                 })
             })
@@ -409,14 +417,15 @@ where
 
         let result_len = num_polys * self.payload_chunk_size;
         let mut result = Vec::with_capacity(result_len);
-        let domain =
-            P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)?;
+        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
+            .map_err(vid)?;
         for i in 0..num_polys {
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 shares.iter().map(|s| (s.index, s.evals[i])),
                 self.payload_chunk_size,
                 &domain,
-            )?;
+            )
+            .map_err(vid)?;
             result.append(&mut coeffs);
         }
         assert_eq!(result.len(), result_len);
@@ -428,11 +437,14 @@ where
     ) -> VidResult<P::Evaluation> {
         let mut hasher = H::new();
         for poly_commit in common.poly_commits.iter() {
-            poly_commit.serialize_uncompressed(&mut hasher)?;
+            poly_commit
+                .serialize_uncompressed(&mut hasher)
+                .map_err(vid)?;
         }
         common
             .all_evals_digest
-            .serialize_uncompressed(&mut hasher)?;
+            .serialize_uncompressed(&mut hasher)
+            .map_err(vid)?;
 
         // Notes on hash-to-field:
         // - Can't use `Field::from_random_bytes` because it's fallible (in what sense
@@ -446,7 +458,8 @@ where
         Ok(*hasher_to_field
             .hash_to_field(&hasher.finalize(), 1)
             .first()
-            .ok_or_else(|| anyhow!("hash_to_field output is empty"))?)
+            .ok_or_else(|| anyhow!("hash_to_field output is empty"))
+            .map_err(vid)?)
     }
 }
 
@@ -462,23 +475,23 @@ where
 // `anyhow::Error`. Unfortunately, I need to manually impl `From<E> for
 // VidError` for each `E`. Can't do a generic impl because it conflicts with
 // `impl<T> From<T> for T` in core.
-impl From<crate::errors::PrimitivesError> for VidError {
-    fn from(value: crate::errors::PrimitivesError) -> Self {
-        Self::Internal(value.into())
-    }
-}
+// impl From<crate::errors::PrimitivesError> for VidError {
+//     fn from(value: crate::errors::PrimitivesError) -> Self {
+//         Self::Internal(value.into())
+//     }
+// }
 
-impl From<crate::pcs::prelude::PCSError> for VidError {
-    fn from(value: crate::pcs::prelude::PCSError) -> Self {
-        Self::Internal(value.into())
-    }
-}
+// impl From<crate::pcs::prelude::PCSError> for VidError {
+//     fn from(value: crate::pcs::prelude::PCSError) -> Self {
+//         Self::Internal(value.into())
+//     }
+// }
 
-impl From<ark_serialize::SerializationError> for VidError {
-    fn from(value: ark_serialize::SerializationError) -> Self {
-        Self::Internal(value.into())
-    }
-}
+// impl From<ark_serialize::SerializationError> for VidError {
+//     fn from(value: ark_serialize::SerializationError) -> Self {
+//         Self::Internal(value.into())
+//     }
+// }
 
 /// Evaluate a generalized polynomial at a given point using Horner's method.
 ///

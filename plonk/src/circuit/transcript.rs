@@ -256,7 +256,7 @@ mod tests {
         for _ in 0..10 {
             for i in 0..10 {
                 let msg = format!("message {}", i);
-                let vals = bytes_to_field_elements(&msg);
+                let vals = bytes_to_field_elements(msg.as_bytes());
                 let message_vars: Vec<Variable> = vals
                     .iter()
                     .map(|x| circuit.create_variable(*x).unwrap())
