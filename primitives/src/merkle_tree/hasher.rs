@@ -69,27 +69,51 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 
 /// Convenience trait and blanket impl for downstream trait bounds.
 ///
-/// TODO(Gus): better doctest that would fail without the trait bound.
+/// Useful for downstream code that's generic ofer [`Digest`] hasher `H`.
 ///
-/// Do this
+/// # Example
+///
+/// Do this:
 /// ```
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
-/// fn example<H>()
+/// fn generic_over_hasher<H>()
 /// where
 ///     H: HasherDigest,
 /// {
+///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+///     let mt = HasherMerkleTree::<H, usize>::from_elems(2, &my_data).unwrap();
 /// }
 /// ```
 ///
-/// Instead of this
+/// Instead of this:
 /// ```
 /// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
 /// # use ark_serialize::Write;
-/// fn example<H>()
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// fn generic_over_hasher<H>()
 /// where
 ///     H: Digest + Write,
 ///     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 /// {
+///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+///     let mt = HasherMerkleTree::<H, usize>::from_elems(2, &my_data).unwrap();
+/// }
+/// ```
+///
+/// Note that the complex trait bound for [`Copy`] is necessary:
+/// ```compile_fail
+/// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
+/// # use ark_serialize::Write;
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// fn generic_over_hasher<H>()
+/// where
+///     H: Digest + Write,
+/// {
+///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+///     let mt = HasherMerkleTree::<H, usize>::from_elems(2, &my_data).unwrap();
 /// }
 /// ```
 pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write {
