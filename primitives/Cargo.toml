@@ -8,6 +8,7 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
+anyhow = "1.0"
 ark-bls12-377 = "0.4.0"
 ark-bls12-381 = "0.4.0"
 ark-bn254 = "0.4.0"
@@ -49,6 +50,7 @@ serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10.1", default-features = false }
 sha3 = { version = "0.10.5", default-features = false }
 tagged-base64 = "0.3.3"
+thiserror = "1.0"
 typenum = { version = "1.15.0", default-features = false, features = [
         "no_std",
 ] }
@@ -77,6 +79,10 @@ harness = false
 [[bench]]
 name = "reed-solomon"
 path = "benches/reed_solomon.rs"
+harness = false
+
+[[bench]]
+name = "advz"
 harness = false
 
 [features]
