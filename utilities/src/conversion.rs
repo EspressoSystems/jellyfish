@@ -350,7 +350,7 @@ mod tests {
                 bytes[len..].fill(0);
 
                 // round trip
-                let encoded_bytes: Vec<F> = bytes_to_field_elements(&bytes);
+                let encoded_bytes: Vec<F> = bytes_to_field_elements(bytes.as_ref());
                 let result = bytes_from_field_elements(encoded_bytes);
                 assert_eq!(result, bytes);
             }
@@ -359,7 +359,7 @@ mod tests {
             // with random field elements
             elems.resize(len, F::zero());
             elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
-            bytes_from_field_elements(&elems);
+            bytes_from_field_elements(elems.as_ref());
         }
     }
 
