@@ -1,5 +1,4 @@
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
-//!
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std as std; // needed for thiserror crate
@@ -11,9 +10,10 @@ pub mod advz;
 ///
 /// # Use of both `thiserror` and `anyhow`
 /// This library is both a producer and consumer of errors.
-/// It provides a custom error `VidError` for consumers of this library, aided by `thiserror`.
-/// Moreover, it is a consumer of errors from lower-level libraries, aided by `anyhow`.
-/// We have yet to settle on a preferred error handling philosophy.
+/// It provides a custom error `VidError` for consumers of this library, aided
+/// by `thiserror`. Moreover, it is a consumer of errors from lower-level
+/// libraries, aided by `anyhow`. We have yet to settle on a preferred error
+/// handling philosophy.
 #[derive(thiserror::Error, Debug)]
 pub enum VidError {
     /// Caller provided an invalid argument

@@ -48,11 +48,13 @@ pub type Advz<E, H> = GenericAdvz<
 /// Like [`Advz`] except with more abstraction.
 ///
 /// - `P` is a [`PolynomialCommitmentScheme`]
-/// - `T` is the group type underlying [`PolynomialCommitmentScheme::Commitment`]
+/// - `T` is the group type underlying
+///   [`PolynomialCommitmentScheme::Commitment`]
 /// - `H` is a [`Digest`]-compatible hash function.
 /// - `V` is a [`MerkleTreeScheme`], though any vector commitment would suffice
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+// #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq,
+// PartialOrd, Serialize)]
 pub struct GenericAdvz<P, T, H, V>
 where
     P: PolynomialCommitmentScheme,
@@ -74,7 +76,8 @@ where
     /// Return a new instance of `Self`.
     ///
     /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes < payload_chunk_size`.
+    /// Return [`VidError::Argument`] if `num_storage_nodes <
+    /// payload_chunk_size`.
     pub fn new(
         payload_chunk_size: usize,
         num_storage_nodes: usize,
@@ -108,7 +111,7 @@ pub struct Share<P, V>
 where
     P: PolynomialCommitmentScheme,
     V: MerkleTreeScheme,
-    V::MembershipProof: Sync + Debug, // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
 {
     index: usize,
     #[serde(with = "canonical")]
@@ -133,11 +136,11 @@ where
     all_evals_digest: V::NodeValue,
 }
 
-// We take great pains to maintain abstraction by relying only on traits and not concrete impls of those traits.
-// Explanation of trait bounds:
-// 1,2: `Polynomial` is univariate: domain (`Point`) same field as range (`Evaluation').
-// 3,4: `Commitment` is (convertible to/from) an elliptic curve group in affine form.
-// 5: `H` is a hasher
+// We take great pains to maintain abstraction by relying only on traits and not
+// concrete impls of those traits. Explanation of trait bounds:
+// 1,2: `Polynomial` is univariate: domain (`Point`) same field as range
+// (`Evaluation'). 3,4: `Commitment` is (convertible to/from) an elliptic curve
+// group in affine form. 5: `H` is a hasher
 impl<P, T, H, V> VidScheme for GenericAdvz<P, T, H, V>
 where
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
@@ -147,7 +150,7 @@ where
     T: AffineRepr<ScalarField = P::Evaluation>,      // 4
     H: Digest + DynDigest + Default + Clone + Write, // 5
     V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
-    V::MembershipProof: Sync + Debug, // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
     type Commitment = Output<H>;
@@ -158,7 +161,8 @@ where
         let mut hasher = H::new();
 
         // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
-        // We could avoid unnecessary mem copies if bytes_to_field_elements returned Vec<Vec<F>>
+        // We could avoid unnecessary mem copies if bytes_to_field_elements returned
+        // Vec<Vec<F>>
         let elems = bytes_to_field_elements(payload);
         for coeffs in elems.chunks(self.payload_chunk_size) {
             let poly = DenseUVPolynomial::from_coefficients_slice(coeffs);
@@ -208,8 +212,9 @@ where
 
         // Compute aggregate polynomial [commitment|evaluation]
         // as a pseudorandom linear combo of [commitments|evaluations]
-        // via evaluation of the polynomial whose coefficients are [commitments|evaluations]
-        // and whose input point is the pseudorandom scalar.
+        // via evaluation of the polynomial whose coefficients are
+        // [commitments|evaluations] and whose input point is the pseudorandom
+        // scalar.
         let aggregate_poly_commit = P::Commitment::from(
             polynomial_eval(
                 common
@@ -261,10 +266,11 @@ where
     T: AffineRepr<ScalarField = P::Evaluation>,
     H: Digest + DynDigest + Default + Clone + Write,
     V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
-    V::MembershipProof: Sync + Debug, // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    /// Same as [`VidScheme::dispersal_data`] except `payload` is a slice of field elements.
+    /// Same as [`VidScheme::dispersal_data`] except `payload` is a slice of
+    /// field elements.
     pub fn dispersal_data_from_elems(
         &self,
         payload: &[P::Evaluation],
@@ -366,7 +372,8 @@ where
         Ok((shares, common))
     }
 
-    /// Same as [`VidScheme::recover_payload`] except returns a [`Vec`] of field elements.
+    /// Same as [`VidScheme::recover_payload`] except returns a [`Vec`] of field
+    /// elements.
     pub fn recover_elems(
         &self,
         shares: &[<Self as VidScheme>::StorageShare],
@@ -428,10 +435,11 @@ where
             .serialize_uncompressed(&mut hasher)?;
 
         // Notes on hash-to-field:
-        // - Can't use `Field::from_random_bytes` because it's fallible
-        //   (in what sense is it from "random" bytes?!)
-        // - `HashToField` does not expose an incremental API (ie. `update`)
-        //   so use an ordinary hasher and pipe `hasher.finalize()` through `hash_to_field` (sheesh!)
+        // - Can't use `Field::from_random_bytes` because it's fallible (in what sense
+        //   is it from "random" bytes?!)
+        // - `HashToField` does not expose an incremental API (ie. `update`) so use an
+        //   ordinary hasher and pipe `hasher.finalize()` through `hash_to_field`
+        //   (sheesh!)
         const HASH_TO_FIELD_DOMAIN_SEP: &[u8; 4] = b"rick";
         let hasher_to_field =
             <DefaultFieldHasher<H> as HashToField<P::Evaluation>>::new(HASH_TO_FIELD_DOMAIN_SEP);
@@ -445,14 +453,15 @@ where
 // `From` impls for `VidError`
 //
 // # Goal
-// `anyhow::Error` has the property that `?` magically coerces the error into `anyhow::Error`.
-// I want the same property for `VidError`.
+// `anyhow::Error` has the property that `?` magically coerces the error into
+// `anyhow::Error`. I want the same property for `VidError`.
 // I don't know how to achieve this without the following boilerplate.
 //
 // # Boilerplate
-// I want to coerce any error `E` into `VidError::Internal` similar to `anyhow::Error`.
-// Unfortunately, I need to manually impl `From<E> for VidError` for each `E`.
-// Can't do a generic impl because it conflicts with `impl<T> From<T> for T` in core.
+// I want to coerce any error `E` into `VidError::Internal` similar to
+// `anyhow::Error`. Unfortunately, I need to manually impl `From<E> for
+// VidError` for each `E`. Can't do a generic impl because it conflicts with
+// `impl<T> From<T> for T` in core.
 impl From<crate::errors::PrimitivesError> for VidError {
     fn from(value: crate::errors::PrimitivesError) -> Self {
         Self::Internal(value.into())

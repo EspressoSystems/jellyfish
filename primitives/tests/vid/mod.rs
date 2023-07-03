@@ -70,7 +70,8 @@ pub fn round_trip<V, R>(
 
 /// Convenience wrapper to assert [`VidError::Argument`] return value.
 ///
-/// TODO: copied code from unit tests---how to reuse unit test code in integration tests?
+/// TODO: copied code from unit tests---how to reuse unit test code in
+/// integration tests?
 pub fn assert_arg_err<T>(res: VidResult<T>, msg: &str) {
     assert!(matches!(res, Err(VidError::Argument(_))), "{}", msg);
 }
