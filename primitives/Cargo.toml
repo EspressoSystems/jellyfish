@@ -8,6 +8,7 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
+anyhow = "1.0"
 ark-bls12-377 = "0.4.0"
 ark-bls12-381 = "0.4.0"
 ark-bn254 = "0.4.0"
@@ -77,6 +78,10 @@ harness = false
 [[bench]]
 name = "reed-solomon"
 path = "benches/reed_solomon.rs"
+harness = false
+
+[[bench]]
+name = "advz"
 harness = false
 
 [features]
