@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["HasherDigestAlgorithm","HasherNode"],"type":["GenericHasherMerkleTree","HasherMerkleTree"]};
+window.SIDEBAR_ITEMS = {"struct":["HasherDigestAlgorithm","HasherNode"],"trait":["HasherDigest"],"type":["GenericHasherMerkleTree","HasherMerkleTree"]};

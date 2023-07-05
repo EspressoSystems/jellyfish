@@ -806,7 +806,7 @@
     }
     <span class="kw">let </span><span class="kw-2">mut </span>transcript_var = RescueTranscriptVar::new(circuit);
     <span class="kw">if let </span><span class="prelude-val">Some</span>(msg) = extra_transcript_init_msg {
-        <span class="kw">let </span>msg_fs = bytes_to_field_elements::&lt;<span class="kw">_</span>, F&gt;(msg);
+        <span class="kw">let </span>msg_fs = bytes_to_field_elements::&lt;<span class="kw">_</span>, F&gt;(msg.as_ref());
         <span class="kw">let </span>msg_vars = msg_fs
             .iter()
             .map(|x| circuit.create_variable(<span class="kw-2">*</span>x))

@@ -171,6 +171,69 @@
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -240,6 +303,70 @@
 </span><span class="kw">pub type </span>GenericHasherMerkleTree&lt;H, E, I, Arity&gt; =
     MerkleTree&lt;E, HasherDigestAlgorithm, I, Arity, HasherNode&lt;H&gt;&gt;;
 
+<span class="doccomment">/// Convenience trait and blanket impl for downstream trait bounds.
+///
+/// Useful for downstream code that&#39;s generic ofer [`Digest`] hasher `H`.
+///
+/// # Example
+///
+/// Do this:
+/// ```
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// fn generic_over_hasher&lt;H&gt;()
+/// where
+///     H: HasherDigest,
+/// {
+///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(2, &amp;my_data).unwrap();
+/// }
+/// ```
+///
+/// Instead of this:
+/// ```
+/// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
+/// # use ark_serialize::Write;
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// fn generic_over_hasher&lt;H&gt;()
+/// where
+///     H: Digest + Write,
+///     &lt;&lt;H as OutputSizeUser&gt;::OutputSize as ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
+/// {
+///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(2, &amp;my_data).unwrap();
+/// }
+/// ```
+///
+/// Note that the complex trait bound for [`Copy`] is necessary:
+/// ```compile_fail
+/// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
+/// # use ark_serialize::Write;
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// fn generic_over_hasher&lt;H&gt;()
+/// where
+///     H: Digest + Write,
+/// {
+///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(2, &amp;my_data).unwrap();
+/// }
+/// ```
+</span><span class="kw">pub trait </span>HasherDigest: Digest&lt;OutputSize = <span class="self">Self</span>::Foo&gt; + Write {
+    <span class="doccomment">/// Associated type needed to express trait bounds.
+    </span><span class="kw">type </span>Foo: ArrayLength&lt;u8, ArrayType = <span class="self">Self</span>::Bar&gt;;
+    <span class="doccomment">/// Associated type needed to express trait bounds.
+    </span><span class="kw">type </span>Bar: Copy;
+}
+<span class="kw">impl</span>&lt;T&gt; HasherDigest <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: Digest + Write,
+    &lt;T::OutputSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
+{
+    <span class="kw">type </span>Foo = T::OutputSize;
+    <span class="kw">type </span>Bar = &lt;&lt;T <span class="kw">as </span>HasherDigest&gt;::Foo <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType;
+}
+
 <span class="doccomment">/// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
 </span><span class="kw">pub struct </span>HasherDigestAlgorithm;
 
@@ -247,8 +374,7 @@
 <span class="kw">where
     </span>E: Element + CanonicalSerialize,
     I: Index + CanonicalSerialize,
-    H: Digest + Write,
-    &lt;&lt;H <span class="kw">as </span>OutputSizeUser&gt;::OutputSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
+    H: HasherDigest,
 {
     <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[HasherNode&lt;H&gt;]) -&gt; <span class="prelude-ty">Result</span>&lt;HasherNode&lt;H&gt;, PrimitivesError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
