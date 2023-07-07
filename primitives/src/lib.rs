@@ -35,6 +35,7 @@ pub mod reed_solomon_code;
 pub mod rescue;
 pub mod signatures;
 pub mod toeplitz;
+pub mod vdf;
 pub mod vid;
 pub mod vrf;
 
