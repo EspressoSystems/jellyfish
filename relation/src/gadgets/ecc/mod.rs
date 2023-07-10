@@ -24,7 +24,7 @@ mod msm;
 pub use conversion::*;
 pub use msm::*;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
 /// An elliptic curve point in twisted Edwards affine form (x, y).
 pub struct TEPoint<F: PrimeField>(F, F);
 
