@@ -24,9 +24,15 @@ mod msm;
 pub use conversion::*;
 pub use msm::*;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 /// An elliptic curve point in twisted Edwards affine form (x, y).
 pub struct TEPoint<F: PrimeField>(F, F);
+
+impl<F: PrimeField> Default for TEPoint<F> {
+    fn default() -> Self {
+        Self(F::zero(), F::zero())
+    }
+}
 
 impl<F, P> From<Affine<P>> for TEPoint<F>
 where
