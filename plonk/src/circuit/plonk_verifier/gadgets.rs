@@ -207,7 +207,7 @@ where
     }
     let mut transcript_var = RescueTranscriptVar::new(circuit);
     if let Some(msg) = extra_transcript_init_msg {
-        let msg_fs = bytes_to_field_elements::<_, F>(msg);
+        let msg_fs = bytes_to_field_elements::<_, F>(msg.as_ref());
         let msg_vars = msg_fs
             .iter()
             .map(|x| circuit.create_variable(*x))
