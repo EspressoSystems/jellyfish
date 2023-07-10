@@ -1290,6 +1290,12 @@
 <a href="#1290" id="1290">1290</a>
 <a href="#1291" id="1291">1291</a>
 <a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1319,6 +1325,12 @@
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 </span><span class="doccomment">/// An elliptic curve point in twisted Edwards affine form (x, y).
 </span><span class="kw">pub struct </span>TEPoint&lt;F: PrimeField&gt;(F, F);
+
+<span class="kw">impl</span>&lt;F: PrimeField&gt; Default <span class="kw">for </span>TEPoint&lt;F&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(F::zero(), F::one())
+    }
+}
 
 <span class="kw">impl</span>&lt;F, P&gt; From&lt;Affine&lt;P&gt;&gt; <span class="kw">for </span>TEPoint&lt;F&gt;
 <span class="kw">where
