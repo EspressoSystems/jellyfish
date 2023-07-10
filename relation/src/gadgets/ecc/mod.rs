@@ -30,7 +30,7 @@ pub struct TEPoint<F: PrimeField>(F, F);
 
 impl<F: PrimeField> Default for TEPoint<F> {
     fn default() -> Self {
-        Self(F::zero(), F::zero())
+        Self(F::zero(), F::one())
     }
 }
 
