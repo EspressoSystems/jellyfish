@@ -82,7 +82,7 @@ pub struct EmulatedVariable<E: PrimeField>(pub(crate) Vec<Variable>, pub Phantom
 
 impl<E: PrimeField> EmulatedVariable<E> {
     /// Return the list of variables that simulate the field element
-    pub fn to_vec(&self) -> Vec<Variable> {
+    pub fn native_vars(&self) -> Vec<Variable> {
         self.0.clone()
     }
 }

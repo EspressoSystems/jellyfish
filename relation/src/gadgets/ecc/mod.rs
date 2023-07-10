@@ -28,6 +28,12 @@ pub use msm::*;
 /// An elliptic curve point in twisted Edwards affine form (x, y).
 pub struct TEPoint<F: PrimeField>(F, F);
 
+impl<F: PrimeField> Default for TEPoint<F> {
+    fn default() -> Self {
+        Self(F::zero(), F::one())
+    }
+}
+
 impl<F, P> From<Affine<P>> for TEPoint<F>
 where
     F: PrimeField,
