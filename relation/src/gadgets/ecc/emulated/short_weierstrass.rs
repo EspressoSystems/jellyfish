@@ -20,6 +20,12 @@ use ark_std::{vec, vec::Vec};
 #[derive(Debug, Eq, PartialEq, Copy, Clone, CanonicalSerialize, CanonicalDeserialize)]
 pub struct SWPoint<F: PrimeField>(pub F, pub F, pub bool);
 
+impl<F: PrimeField> Default for SWPoint<F> {
+    fn default() -> Self {
+        Self(F::zero(), F::zero(), true)
+    }
+}
+
 impl<F, P> From<Affine<P>> for SWPoint<F>
 where
     F: PrimeField,
