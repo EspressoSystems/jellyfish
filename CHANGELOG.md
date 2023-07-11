@@ -31,6 +31,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#309](https://github.com/EspressoSystems/jellyfish/pull/309) Reed-Solomon decoder accept FFT domain
 - [#320](https://github.com/EspressoSystems/jellyfish/pull/320) Non-native elliptic curve addition in short Weierstrass form
 - [#337](https://github.com/EspressoSystems/jellyfish/pull/337) Port VID from another repo
+- [#341](https://github.com/EspressoSystems/jellyfish/pull/341) Port VDF from another repo
 
 ### Changed
 

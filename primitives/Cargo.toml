@@ -21,6 +21,7 @@ ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
 ark-ff = "0.4.0"
+ark-pallas = "0.4.0"
 ark-poly = "0.4.0"
 ark-serialize = "0.4.0"
 ark-std = { version = "0.4.0", default-features = false }
@@ -82,6 +83,10 @@ harness = false
 
 [[bench]]
 name = "advz"
+harness = false
+
+[[bench]]
+name = "minroot"
 harness = false
 
 [features]
