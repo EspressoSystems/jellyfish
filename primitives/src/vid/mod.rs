@@ -1,3 +1,9 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
+
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};

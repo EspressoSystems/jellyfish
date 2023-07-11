@@ -1,3 +1,9 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
+
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
 //! Implementation of Verifiable Information Dispersal (VID) from <https://eprint.iacr.org/2021/1500>.
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
