@@ -26,7 +26,7 @@ mod errors {
     }
 }
 
-pub(crate) use errors::TranscriptError;
+pub use errors::TranscriptError;
 
 use ark_ff::PrimeField;
 use ark_serialize::CanonicalSerialize;
@@ -44,7 +44,7 @@ use merlin::Transcript;
 /// the verifier, in which case the prover should start its phase by receiving a
 /// `non-empty` transcript.
 #[derive(Clone)]
-pub(crate) struct IOPTranscript<F: PrimeField> {
+pub struct IOPTranscript<F: PrimeField> {
     transcript: Transcript,
     is_empty: bool,
     #[doc(hidden)]
@@ -63,7 +63,7 @@ impl<F: PrimeField> IOPTranscript<F> {
     }
 
     /// Append the message to the transcript.
-    pub(crate) fn append_message(
+    pub fn append_message(
         &mut self,
         label: &'static [u8],
         msg: &[u8],
@@ -74,7 +74,7 @@ impl<F: PrimeField> IOPTranscript<F> {
     }
 
     /// Append the message to the transcript.
-    pub(crate) fn append_serializable_element<S: CanonicalSerialize>(
+    pub fn append_serializable_element<S: CanonicalSerialize>(
         &mut self,
         label: &'static [u8],
         group_elem: &S,
@@ -87,10 +87,7 @@ impl<F: PrimeField> IOPTranscript<F> {
     ///
     /// The output field element is statistical uniform as long
     /// as the field has a size less than 2^384.
-    pub(crate) fn get_and_append_challenge(
-        &mut self,
-        label: &'static [u8],
-    ) -> Result<F, TranscriptError> {
+    pub fn get_and_append_challenge(&mut self, label: &'static [u8]) -> Result<F, TranscriptError> {
         //  we need to reject when transcript is empty
         if self.is_empty {
             return Err(TranscriptError::InvalidTranscript(
@@ -103,5 +100,27 @@ impl<F: PrimeField> IOPTranscript<F> {
         let challenge = F::from_le_bytes_mod_order(&buf);
         self.append_serializable_element(label, &challenge)?;
         Ok(challenge)
+    }
+
+    /// Generate the challenge from the current transcript
+    /// and append it to the transcript.
+    ///
+    /// Without exposing the internal field `transcript`,
+    /// this is a wrapper around getting bytes as opposed to field elements.
+    pub fn get_and_append_byte_challenge(
+        &mut self,
+        label: &'static [u8],
+        dest: &mut [u8],
+    ) -> Result<(), TranscriptError> {
+        //  we need to reject when transcript is empty
+        if self.is_empty {
+            return Err(TranscriptError::InvalidTranscript(
+                "transcript is empty".to_string(),
+            ));
+        }
+
+        self.transcript.challenge_bytes(label, dest);
+        self.append_message(label, dest)?;
+        Ok(())
     }
 }
