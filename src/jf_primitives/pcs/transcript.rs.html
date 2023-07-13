@@ -105,6 +105,25 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -133,7 +152,7 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>errors::TranscriptError;
+<span class="kw">pub use </span>errors::TranscriptError;
 
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_serialize::CanonicalSerialize;
@@ -151,7 +170,7 @@
 /// the verifier, in which case the prover should start its phase by receiving a
 /// `non-empty` transcript.
 </span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>IOPTranscript&lt;F: PrimeField&gt; {
+</span><span class="kw">pub struct </span>IOPTranscript&lt;F: PrimeField&gt; {
     transcript: Transcript,
     is_empty: bool,
     <span class="attr">#[doc(hidden)]
@@ -170,7 +189,7 @@
     }
 
     <span class="doccomment">/// Append the message to the transcript.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_message(
+    </span><span class="kw">pub fn </span>append_message(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
         msg: <span class="kw-2">&amp;</span>[u8],
@@ -181,7 +200,7 @@
     }
 
     <span class="doccomment">/// Append the message to the transcript.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_serializable_element&lt;S: CanonicalSerialize&gt;(
+    </span><span class="kw">pub fn </span>append_serializable_element&lt;S: CanonicalSerialize&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
         group_elem: <span class="kw-2">&amp;</span>S,
@@ -194,10 +213,7 @@
     ///
     /// The output field element is statistical uniform as long
     /// as the field has a size less than 2^384.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_and_append_challenge(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;F, TranscriptError&gt; {
+    </span><span class="kw">pub fn </span>get_and_append_challenge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;F, TranscriptError&gt; {
         <span class="comment">//  we need to reject when transcript is empty
         </span><span class="kw">if </span><span class="self">self</span>.is_empty {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TranscriptError::InvalidTranscript(
@@ -210,6 +226,28 @@
         <span class="kw">let </span>challenge = F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>buf);
         <span class="self">self</span>.append_serializable_element(label, <span class="kw-2">&amp;</span>challenge)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(challenge)
+    }
+
+    <span class="doccomment">/// Generate the challenge from the current transcript
+    /// and append it to the transcript.
+    ///
+    /// Without exposing the internal field `transcript`,
+    /// this is a wrapper around getting bytes as opposed to field elements.
+    </span><span class="kw">pub fn </span>get_and_append_byte_challenge(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8],
+        dest: <span class="kw-2">&amp;mut </span>[u8],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), TranscriptError&gt; {
+        <span class="comment">//  we need to reject when transcript is empty
+        </span><span class="kw">if </span><span class="self">self</span>.is_empty {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(TranscriptError::InvalidTranscript(
+                <span class="string">&quot;transcript is empty&quot;</span>.to_string(),
+            ));
+        }
+
+        <span class="self">self</span>.transcript.challenge_bytes(label, dest);
+        <span class="self">self</span>.append_message(label, dest)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>

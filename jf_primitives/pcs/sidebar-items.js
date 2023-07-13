@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["checked_fft_size"],"mod":["errors","prelude"],"trait":["PolynomialCommitmentScheme","StructuredReferenceString","UnivariatePCS"]};
+window.SIDEBAR_ITEMS = {"fn":["checked_fft_size"],"mod":["errors","prelude","transcript"],"trait":["PolynomialCommitmentScheme","StructuredReferenceString","UnivariatePCS"]};
