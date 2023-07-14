@@ -654,19 +654,26 @@ mod test_prp {
     }
 
     // printing vectors as hex bytes little endian
+    // use ark_ff::{BigInteger, PrimeField};
+    // use ark_std::{format, println, string::String, vec::Vec};
     // #[test]
-    // fn print(){
-    // let rescue_hash = RescueBls4::default();
-    // println!("KeySchedule:");
-    // let keys = rescue_hash.key_schedule(&RescueBls4Vector::zero());
-    // for key in keys {
-    // for elem in key.vec.iter() {
-    // let str: Vec<String> = elem.into_bigint().to_bytes_le().iter().map(|b|
-    // format!("0x{:02X},", b)) .collect();
-    // println!("{:?}", str.join(" "));
-    // }
-    // println!("],[");
-    // }
+    // fn print() {
+    //     let rescue_hash = PRP::<Fq254>::default();
+    //     println!("KeySchedule:");
+    //     let keys = rescue_hash.key_schedule(&RescueVector::zero());
+    //     println!("[");
+    //     for key in keys {
+    //         for elem in key.vec.iter() {
+    //             let str: Vec<String> = elem
+    //                 .into_bigint()
+    //                 .to_bytes_le()
+    //                 .iter()
+    //                 .map(|b| format!("0x{:02X},", b))
+    //                 .collect();
+    //             println!("&[{}],", str.join(" "));
+    //         }
+    //         println!("],[");
+    //     }
     // }
 }
 
@@ -677,6 +684,7 @@ mod test_permutation {
         Permutation, RescueParameter, RescueVector, PRP,
     };
     use ark_bls12_377::Fq as Fq377;
+    use ark_bn254::Fq as Fq254;
     use ark_ed_on_bls12_377::Fq as Fr377;
     use ark_ed_on_bls12_381::Fq as Fr381;
     use ark_ed_on_bn254::Fq as Fr254;
@@ -795,8 +803,34 @@ mod test_permutation {
         ],
     ];
 
+    // this value is cross checked with sage script
+    // rescue254.Sponge([0,0,0,0], 4)
+    const OUTPUTFQ254: [[u8; 32]; 4] = [
+        [
+            0xC9, 0xAC, 0x42, 0x08, 0x04, 0x18, 0xFC, 0x10, 0xA4, 0x41, 0xF4, 0xF9, 0x06, 0x2B,
+            0xE2, 0x87, 0xB7, 0x7A, 0xC4, 0x65, 0x8C, 0xE0, 0xE9, 0x78, 0xB0, 0x48, 0x39, 0xB6,
+            0x96, 0x9B, 0x60, 0x1B,
+        ],
+        [
+            0x00, 0xC2, 0xF9, 0x07, 0x54, 0x25, 0xF2, 0xC6, 0x75, 0x21, 0x01, 0x14, 0xF6, 0xD1,
+            0xAF, 0xE1, 0x0D, 0xD4, 0xFC, 0xEC, 0x15, 0xF3, 0x7D, 0x9A, 0x91, 0x26, 0x51, 0xDE,
+            0xC8, 0x8A, 0x19, 0x09,
+        ],
+        [
+            0x78, 0xDB, 0xB7, 0xEA, 0xD4, 0x35, 0x5E, 0xED, 0xAE, 0x14, 0xD6, 0xB1, 0xE8, 0x0D,
+            0xB4, 0xA7, 0x29, 0x9B, 0xBA, 0x6F, 0xBD, 0xA4, 0xEB, 0x52, 0x7D, 0xD5, 0x9B, 0x03,
+            0x17, 0x83, 0x06, 0x1D,
+        ],
+        [
+            0x72, 0xC6, 0xB8, 0xF9, 0x9E, 0xF3, 0xDA, 0x20, 0xED, 0x3D, 0xE4, 0x39, 0x87, 0x28,
+            0xE9, 0x25, 0x0D, 0x8D, 0x57, 0xCE, 0xEE, 0xCA, 0x35, 0xFB, 0x8E, 0x7E, 0xE3, 0x32,
+            0xDA, 0x03, 0x3F, 0x1B,
+        ],
+    ];
+
     #[test]
     fn test_sponge() {
+        test_sponge_helper::<Fq254>();
         test_sponge_helper::<Fr254>();
         test_sponge_helper::<Fr377>();
         test_sponge_helper::<Fr381>();
@@ -829,10 +863,22 @@ mod test_permutation {
 
     #[test]
     fn test_rescue_hash_on_0_vec() {
+        test_rescue_hash_on_0_vec_fq254();
         test_rescue_hash_on_0_vec_254();
         test_rescue_hash_on_0_vec_377();
         test_rescue_hash_on_0_vec_381();
         test_rescue_hash_on_0_vec_761()
+    }
+
+    fn test_rescue_hash_on_0_vec_fq254() {
+        let input = [Fr254::zero(); 3];
+        let expected = vec![
+            Fr254::from_le_bytes_mod_order(&OUTPUTFQ254[0]),
+            Fr254::from_le_bytes_mod_order(&OUTPUTFQ254[1]),
+            Fr254::from_le_bytes_mod_order(&OUTPUTFQ254[2]),
+        ];
+        let real_output = RescueCRHF::sponge_no_padding(&input, 3).unwrap();
+        assert_eq!(real_output, expected);
     }
 
     fn test_rescue_hash_on_0_vec_254() {
@@ -881,6 +927,7 @@ mod test_permutation {
 
     #[test]
     fn test_fsks_no_padding_errors() {
+        test_fsks_no_padding_errors_helper::<Fq254>();
         test_fsks_no_padding_errors_helper::<Fr254>();
         test_fsks_no_padding_errors_helper::<Fr377>();
         test_fsks_no_padding_errors_helper::<Fr381>();
@@ -915,6 +962,7 @@ mod test_permutation {
 
     #[test]
     fn test_variable_output_sponge_and_fsks() {
+        test_variable_output_sponge_and_fsks_helper::<Fq254>();
         test_variable_output_sponge_and_fsks_helper::<Fr254>();
         test_variable_output_sponge_and_fsks_helper::<Fr377>();
         test_variable_output_sponge_and_fsks_helper::<Fr381>();

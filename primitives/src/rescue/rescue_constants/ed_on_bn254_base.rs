@@ -11,7 +11,7 @@ use ark_ed_on_bn254::Fq;
 // https://github.com/EspressoSystems/Marvellous/blob/fcd4c41672f485ac2f62526bc87a16789d4d0459/rescue254.sage
 
 // q254 = 21888242871839275222246405745257275088548364400416034343698204186575808495617
-// rescue254 = Rescue(128, q377, 4, 5)
+// rescue254 = Rescue(128, q254, 4, 5)
 
 impl RescueParameter for Fq {
     // rescue254.alpha
