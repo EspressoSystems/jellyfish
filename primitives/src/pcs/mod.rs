@@ -10,7 +10,7 @@ mod multilinear_kzg;
 mod poly;
 pub mod prelude;
 mod structs;
-mod transcript;
+pub mod transcript;
 mod univariate_kzg;
 
 use ark_ff::{FftField, Field};
