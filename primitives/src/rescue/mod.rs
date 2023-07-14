@@ -579,8 +579,16 @@ mod test_prp {
         );
         let real_output = rescue.prp(&key, &input);
         let round_keys = rescue.key_schedule(&key);
+        for i in round_keys.iter() {
+            for j in i.vec.iter() {
+                ark_std::println!("permutation_round_key.append({})", j);
+            }
+        }
+
         let real_output_with_round_keys = rescue.prp_with_round_keys(&round_keys, &input);
         assert_eq!(real_output, real_output_with_round_keys);
+        ark_std::println!("rescue {}", real_output.vec[0]);
+        ark_std::println!("rescue {}", expected.vec[0]);
         assert_eq!(real_output, expected);
     }
 
@@ -871,11 +879,11 @@ mod test_permutation {
     }
 
     fn test_rescue_hash_on_0_vec_fq254() {
-        let input = [Fr254::zero(); 3];
+        let input = [Fq254::zero(); 3];
         let expected = vec![
-            Fr254::from_le_bytes_mod_order(&OUTPUTFQ254[0]),
-            Fr254::from_le_bytes_mod_order(&OUTPUTFQ254[1]),
-            Fr254::from_le_bytes_mod_order(&OUTPUTFQ254[2]),
+            Fq254::from_le_bytes_mod_order(&OUTPUTFQ254[0]),
+            Fq254::from_le_bytes_mod_order(&OUTPUTFQ254[1]),
+            Fq254::from_le_bytes_mod_order(&OUTPUTFQ254[2]),
         ];
         let real_output = RescueCRHF::sponge_no_padding(&input, 3).unwrap();
         assert_eq!(real_output, expected);
