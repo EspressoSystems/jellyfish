@@ -166,6 +166,7 @@ impl RescueParameter for Fq {
             0x86, 0xFA, 0x23, 0x08,
         ],
     ];
+
     // The following constants are from the output of
     // rescue254.constants_matrix
     // a.k.a., KEY_SCHED_MATRIX
@@ -205,7 +206,7 @@ impl RescueParameter for Fq {
     // where the INIT_VECTOR, KEY_SCHED_MATRIX and KEY_INJECTION are defined above
     // Those constants can be obtained via
     //   key_injection(init_vec_254, key_sched_matrix_254, key_sched_vec_254, q254)
-    // from rescue381.sage
+    // from rescue254.sage
     const KEY_INJECTION_LE: [[&'static [u8]; 4]; 2 * ROUNDS] = [
         [
             &[
