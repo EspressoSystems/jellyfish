@@ -579,16 +579,9 @@ mod test_prp {
         );
         let real_output = rescue.prp(&key, &input);
         let round_keys = rescue.key_schedule(&key);
-        for i in round_keys.iter() {
-            for j in i.vec.iter() {
-                ark_std::println!("permutation_round_key.append({})", j);
-            }
-        }
 
         let real_output_with_round_keys = rescue.prp_with_round_keys(&round_keys, &input);
         assert_eq!(real_output, real_output_with_round_keys);
-        ark_std::println!("rescue {}", real_output.vec[0]);
-        ark_std::println!("rescue {}", expected.vec[0]);
         assert_eq!(real_output, expected);
     }
 
@@ -701,6 +694,7 @@ mod test_permutation {
 
     #[test]
     fn test_round_keys() {
+        test_round_keys_helper::<Fq254>();
         test_round_keys_helper::<Fr254>();
         test_round_keys_helper::<Fr377>();
         test_round_keys_helper::<Fr381>();
@@ -717,7 +711,7 @@ mod test_permutation {
         // // in a sage friendly format
         // for e in keys2.iter() {
         //     for f in e.vec.iter() {
-        //         ark_std::println!("permutation_round_key.append(0x{})",
+        //         ark_std::println!("permutation_round_key.append({})",
         // f.into_bigint());     }
         // }
         // assert!(false);
