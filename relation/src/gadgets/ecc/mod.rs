@@ -348,7 +348,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.insert_gate(
             &wire_vars,
             Box::new(EdwardsCurveEquationGate::<P> {
-                _phantom: PhantomData::default(),
+                _phantom: PhantomData,
             }),
         )?;
         Ok(())
@@ -377,14 +377,14 @@ impl<F: PrimeField> PlonkCircuit<F> {
         self.insert_gate(
             &x_coordinate_wire_vars,
             Box::new(CurvePointXAdditionGate::<P> {
-                _phantom: PhantomData::default(),
+                _phantom: PhantomData,
             }),
         )?;
         let y_coordinate_wire_vars = [x_1, x_2, y_1, y_2, y_3];
         self.insert_gate(
             &y_coordinate_wire_vars,
             Box::new(CurvePointYAdditionGate::<P> {
-                _phantom: PhantomData::default(),
+                _phantom: PhantomData,
             }),
         )?;
         Ok(())
@@ -403,7 +403,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let (x_1, y_1) = (self.witness(point_a.0)?, self.witness(point_a.1)?);
         let (x_2, y_2) = (self.witness(point_b.0)?, self.witness(point_b.1)?);
         let eq_gate = EdwardsCurveEquationGate::<P> {
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         };
         let d: F = eq_gate.q_ecc();
 
