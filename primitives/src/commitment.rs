@@ -102,6 +102,7 @@ mod test {
         rescue::{sponge::RescueCRHF, CRHF_RATE},
     };
     use ark_bls12_377::Fq as Fq377;
+    use ark_bn254::Fq as Fq254;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
@@ -157,5 +158,6 @@ mod test {
         test_commit!(FqEd381);
         test_commit!(FqEd381b);
         test_commit!(Fq377);
+        test_commit!(Fq254);
     }
 }
