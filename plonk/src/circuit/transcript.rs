@@ -42,7 +42,7 @@ where
         Self {
             transcript_var: Vec::new(),
             state_var: [circuit.zero(); STATE_SIZE],
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
