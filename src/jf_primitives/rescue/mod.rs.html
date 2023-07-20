@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -954,6 +954,100 @@
 <a href="#954" id="954">954</a>
 <a href="#955" id="955">955</a>
 <a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1379,6 +1473,7 @@
 </span><span class="kw">mod </span>test_prp {
     <span class="kw">use </span><span class="kw">crate</span>::rescue::{RescueVector, PRP};
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_bn254::Fq <span class="kw">as </span>Fq254;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>Fr377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>Fr381;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>Fr254;
@@ -1488,12 +1583,56 @@
         ],
     ];
 
+    <span class="comment">// this value is cross checked with sage script
+    // rescue254.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUTFQ254: [[u8; <span class="number">32</span>]; <span class="number">4</span>] = [
+        [
+            <span class="number">0xC9</span>, <span class="number">0xAC</span>, <span class="number">0x42</span>, <span class="number">0x08</span>, <span class="number">0x04</span>, <span class="number">0x18</span>, <span class="number">0xFC</span>, <span class="number">0x10</span>, <span class="number">0xA4</span>, <span class="number">0x41</span>, <span class="number">0xF4</span>, <span class="number">0xF9</span>, <span class="number">0x06</span>, <span class="number">0x2B</span>,
+            <span class="number">0xE2</span>, <span class="number">0x87</span>, <span class="number">0xB7</span>, <span class="number">0x7A</span>, <span class="number">0xC4</span>, <span class="number">0x65</span>, <span class="number">0x8C</span>, <span class="number">0xE0</span>, <span class="number">0xE9</span>, <span class="number">0x78</span>, <span class="number">0xB0</span>, <span class="number">0x48</span>, <span class="number">0x39</span>, <span class="number">0xB6</span>,
+            <span class="number">0x96</span>, <span class="number">0x9B</span>, <span class="number">0x60</span>, <span class="number">0x1B</span>,
+        ],
+        [
+            <span class="number">0x00</span>, <span class="number">0xC2</span>, <span class="number">0xF9</span>, <span class="number">0x07</span>, <span class="number">0x54</span>, <span class="number">0x25</span>, <span class="number">0xF2</span>, <span class="number">0xC6</span>, <span class="number">0x75</span>, <span class="number">0x21</span>, <span class="number">0x01</span>, <span class="number">0x14</span>, <span class="number">0xF6</span>, <span class="number">0xD1</span>,
+            <span class="number">0xAF</span>, <span class="number">0xE1</span>, <span class="number">0x0D</span>, <span class="number">0xD4</span>, <span class="number">0xFC</span>, <span class="number">0xEC</span>, <span class="number">0x15</span>, <span class="number">0xF3</span>, <span class="number">0x7D</span>, <span class="number">0x9A</span>, <span class="number">0x91</span>, <span class="number">0x26</span>, <span class="number">0x51</span>, <span class="number">0xDE</span>,
+            <span class="number">0xC8</span>, <span class="number">0x8A</span>, <span class="number">0x19</span>, <span class="number">0x09</span>,
+        ],
+        [
+            <span class="number">0x78</span>, <span class="number">0xDB</span>, <span class="number">0xB7</span>, <span class="number">0xEA</span>, <span class="number">0xD4</span>, <span class="number">0x35</span>, <span class="number">0x5E</span>, <span class="number">0xED</span>, <span class="number">0xAE</span>, <span class="number">0x14</span>, <span class="number">0xD6</span>, <span class="number">0xB1</span>, <span class="number">0xE8</span>, <span class="number">0x0D</span>,
+            <span class="number">0xB4</span>, <span class="number">0xA7</span>, <span class="number">0x29</span>, <span class="number">0x9B</span>, <span class="number">0xBA</span>, <span class="number">0x6F</span>, <span class="number">0xBD</span>, <span class="number">0xA4</span>, <span class="number">0xEB</span>, <span class="number">0x52</span>, <span class="number">0x7D</span>, <span class="number">0xD5</span>, <span class="number">0x9B</span>, <span class="number">0x03</span>,
+            <span class="number">0x17</span>, <span class="number">0x83</span>, <span class="number">0x06</span>, <span class="number">0x1D</span>,
+        ],
+        [
+            <span class="number">0x72</span>, <span class="number">0xC6</span>, <span class="number">0xB8</span>, <span class="number">0xF9</span>, <span class="number">0x9E</span>, <span class="number">0xF3</span>, <span class="number">0xDA</span>, <span class="number">0x20</span>, <span class="number">0xED</span>, <span class="number">0x3D</span>, <span class="number">0xE4</span>, <span class="number">0x39</span>, <span class="number">0x87</span>, <span class="number">0x28</span>,
+            <span class="number">0xE9</span>, <span class="number">0x25</span>, <span class="number">0x0D</span>, <span class="number">0x8D</span>, <span class="number">0x57</span>, <span class="number">0xCE</span>, <span class="number">0xEE</span>, <span class="number">0xCA</span>, <span class="number">0x35</span>, <span class="number">0xFB</span>, <span class="number">0x8E</span>, <span class="number">0x7E</span>, <span class="number">0xE3</span>, <span class="number">0x32</span>,
+            <span class="number">0xDA</span>, <span class="number">0x03</span>, <span class="number">0x3F</span>, <span class="number">0x1B</span>,
+        ],
+    ];
+
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_rescue_perm_on_0_vec() {
+        test_rescue_perm_on_0_vec_fq254();
         test_rescue_perm_on_0_vec_254();
         test_rescue_perm_on_0_vec_377();
         test_rescue_perm_on_0_vec_381();
         test_rescue_perm_on_0_vec_761();
+    }
+
+    <span class="kw">fn </span>test_rescue_perm_on_0_vec_fq254() {
+        <span class="kw">let </span>rescue = PRP::&lt;Fq254&gt;::default();
+        <span class="kw">let </span>key = RescueVector::zero();
+        <span class="kw">let </span>input = RescueVector::zero();
+        <span class="kw">let </span>expected = RescueVector::from_elems_le_bytes(
+            <span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">0</span>],
+            <span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">1</span>],
+            <span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">2</span>],
+            <span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">3</span>],
+        );
+        <span class="kw">let </span>real_output = rescue.prp(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>input);
+        <span class="kw">let </span>round_keys = rescue.key_schedule(<span class="kw-2">&amp;</span>key);
+
+        <span class="kw">let </span>real_output_with_round_keys = rescue.prp_with_round_keys(<span class="kw-2">&amp;</span>round_keys, <span class="kw-2">&amp;</span>input);
+        <span class="macro">assert_eq!</span>(real_output, real_output_with_round_keys);
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
     <span class="kw">fn </span>test_rescue_perm_on_0_vec_254() {
@@ -1566,19 +1705,26 @@
     }
 
     <span class="comment">// printing vectors as hex bytes little endian
+    // use ark_ff::{BigInteger, PrimeField};
+    // use ark_std::{format, println, string::String, vec::Vec};
     // #[test]
-    // fn print(){
-    // let rescue_hash = RescueBls4::default();
-    // println!(&quot;KeySchedule:&quot;);
-    // let keys = rescue_hash.key_schedule(&amp;RescueBls4Vector::zero());
-    // for key in keys {
-    // for elem in key.vec.iter() {
-    // let str: Vec&lt;String&gt; = elem.into_bigint().to_bytes_le().iter().map(|b|
-    // format!(&quot;0x{:02X},&quot;, b)) .collect();
-    // println!(&quot;{:?}&quot;, str.join(&quot; &quot;));
-    // }
-    // println!(&quot;],[&quot;);
-    // }
+    // fn print() {
+    //     let rescue_hash = PRP::&lt;Fq254&gt;::default();
+    //     println!(&quot;KeySchedule:&quot;);
+    //     let keys = rescue_hash.key_schedule(&amp;RescueVector::zero());
+    //     println!(&quot;[&quot;);
+    //     for key in keys {
+    //         for elem in key.vec.iter() {
+    //             let str: Vec&lt;String&gt; = elem
+    //                 .into_bigint()
+    //                 .to_bytes_le()
+    //                 .iter()
+    //                 .map(|b| format!(&quot;0x{:02X},&quot;, b))
+    //                 .collect();
+    //             println!(&quot;&amp;[{}],&quot;, str.join(&quot; &quot;));
+    //         }
+    //         println!(&quot;],[&quot;);
+    //     }
     // }
 </span>}
 
@@ -1589,6 +1735,7 @@
         Permutation, RescueParameter, RescueVector, PRP,
     };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
+    <span class="kw">use </span>ark_bn254::Fq <span class="kw">as </span>Fq254;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>Fr377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>Fr381;
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>Fr254;
@@ -1597,6 +1744,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_round_keys() {
+        test_round_keys_helper::&lt;Fq254&gt;();
         test_round_keys_helper::&lt;Fr254&gt;();
         test_round_keys_helper::&lt;Fr377&gt;();
         test_round_keys_helper::&lt;Fr381&gt;();
@@ -1613,7 +1761,7 @@
         // // in a sage friendly format
         // for e in keys2.iter() {
         //     for f in e.vec.iter() {
-        //         ark_std::println!(&quot;permutation_round_key.append(0x{})&quot;,
+        //         ark_std::println!(&quot;permutation_round_key.append({})&quot;,
         // f.into_bigint());     }
         // }
         // assert!(false);
@@ -1707,8 +1855,34 @@
         ],
     ];
 
+    <span class="comment">// this value is cross checked with sage script
+    // rescue254.Sponge([0,0,0,0], 4)
+    </span><span class="kw">const </span>OUTPUTFQ254: [[u8; <span class="number">32</span>]; <span class="number">4</span>] = [
+        [
+            <span class="number">0xC9</span>, <span class="number">0xAC</span>, <span class="number">0x42</span>, <span class="number">0x08</span>, <span class="number">0x04</span>, <span class="number">0x18</span>, <span class="number">0xFC</span>, <span class="number">0x10</span>, <span class="number">0xA4</span>, <span class="number">0x41</span>, <span class="number">0xF4</span>, <span class="number">0xF9</span>, <span class="number">0x06</span>, <span class="number">0x2B</span>,
+            <span class="number">0xE2</span>, <span class="number">0x87</span>, <span class="number">0xB7</span>, <span class="number">0x7A</span>, <span class="number">0xC4</span>, <span class="number">0x65</span>, <span class="number">0x8C</span>, <span class="number">0xE0</span>, <span class="number">0xE9</span>, <span class="number">0x78</span>, <span class="number">0xB0</span>, <span class="number">0x48</span>, <span class="number">0x39</span>, <span class="number">0xB6</span>,
+            <span class="number">0x96</span>, <span class="number">0x9B</span>, <span class="number">0x60</span>, <span class="number">0x1B</span>,
+        ],
+        [
+            <span class="number">0x00</span>, <span class="number">0xC2</span>, <span class="number">0xF9</span>, <span class="number">0x07</span>, <span class="number">0x54</span>, <span class="number">0x25</span>, <span class="number">0xF2</span>, <span class="number">0xC6</span>, <span class="number">0x75</span>, <span class="number">0x21</span>, <span class="number">0x01</span>, <span class="number">0x14</span>, <span class="number">0xF6</span>, <span class="number">0xD1</span>,
+            <span class="number">0xAF</span>, <span class="number">0xE1</span>, <span class="number">0x0D</span>, <span class="number">0xD4</span>, <span class="number">0xFC</span>, <span class="number">0xEC</span>, <span class="number">0x15</span>, <span class="number">0xF3</span>, <span class="number">0x7D</span>, <span class="number">0x9A</span>, <span class="number">0x91</span>, <span class="number">0x26</span>, <span class="number">0x51</span>, <span class="number">0xDE</span>,
+            <span class="number">0xC8</span>, <span class="number">0x8A</span>, <span class="number">0x19</span>, <span class="number">0x09</span>,
+        ],
+        [
+            <span class="number">0x78</span>, <span class="number">0xDB</span>, <span class="number">0xB7</span>, <span class="number">0xEA</span>, <span class="number">0xD4</span>, <span class="number">0x35</span>, <span class="number">0x5E</span>, <span class="number">0xED</span>, <span class="number">0xAE</span>, <span class="number">0x14</span>, <span class="number">0xD6</span>, <span class="number">0xB1</span>, <span class="number">0xE8</span>, <span class="number">0x0D</span>,
+            <span class="number">0xB4</span>, <span class="number">0xA7</span>, <span class="number">0x29</span>, <span class="number">0x9B</span>, <span class="number">0xBA</span>, <span class="number">0x6F</span>, <span class="number">0xBD</span>, <span class="number">0xA4</span>, <span class="number">0xEB</span>, <span class="number">0x52</span>, <span class="number">0x7D</span>, <span class="number">0xD5</span>, <span class="number">0x9B</span>, <span class="number">0x03</span>,
+            <span class="number">0x17</span>, <span class="number">0x83</span>, <span class="number">0x06</span>, <span class="number">0x1D</span>,
+        ],
+        [
+            <span class="number">0x72</span>, <span class="number">0xC6</span>, <span class="number">0xB8</span>, <span class="number">0xF9</span>, <span class="number">0x9E</span>, <span class="number">0xF3</span>, <span class="number">0xDA</span>, <span class="number">0x20</span>, <span class="number">0xED</span>, <span class="number">0x3D</span>, <span class="number">0xE4</span>, <span class="number">0x39</span>, <span class="number">0x87</span>, <span class="number">0x28</span>,
+            <span class="number">0xE9</span>, <span class="number">0x25</span>, <span class="number">0x0D</span>, <span class="number">0x8D</span>, <span class="number">0x57</span>, <span class="number">0xCE</span>, <span class="number">0xEE</span>, <span class="number">0xCA</span>, <span class="number">0x35</span>, <span class="number">0xFB</span>, <span class="number">0x8E</span>, <span class="number">0x7E</span>, <span class="number">0xE3</span>, <span class="number">0x32</span>,
+            <span class="number">0xDA</span>, <span class="number">0x03</span>, <span class="number">0x3F</span>, <span class="number">0x1B</span>,
+        ],
+    ];
+
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_sponge() {
+        test_sponge_helper::&lt;Fq254&gt;();
         test_sponge_helper::&lt;Fr254&gt;();
         test_sponge_helper::&lt;Fr377&gt;();
         test_sponge_helper::&lt;Fr381&gt;();
@@ -1741,10 +1915,22 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_rescue_hash_on_0_vec() {
+        test_rescue_hash_on_0_vec_fq254();
         test_rescue_hash_on_0_vec_254();
         test_rescue_hash_on_0_vec_377();
         test_rescue_hash_on_0_vec_381();
         test_rescue_hash_on_0_vec_761()
+    }
+
+    <span class="kw">fn </span>test_rescue_hash_on_0_vec_fq254() {
+        <span class="kw">let </span>input = [Fq254::zero(); <span class="number">3</span>];
+        <span class="kw">let </span>expected = <span class="macro">vec!</span>[
+            Fq254::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">0</span>]),
+            Fq254::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">1</span>]),
+            Fq254::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>OUTPUTFQ254[<span class="number">2</span>]),
+        ];
+        <span class="kw">let </span>real_output = RescueCRHF::sponge_no_padding(<span class="kw-2">&amp;</span>input, <span class="number">3</span>).unwrap();
+        <span class="macro">assert_eq!</span>(real_output, expected);
     }
 
     <span class="kw">fn </span>test_rescue_hash_on_0_vec_254() {
@@ -1793,6 +1979,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_fsks_no_padding_errors() {
+        test_fsks_no_padding_errors_helper::&lt;Fq254&gt;();
         test_fsks_no_padding_errors_helper::&lt;Fr254&gt;();
         test_fsks_no_padding_errors_helper::&lt;Fr377&gt;();
         test_fsks_no_padding_errors_helper::&lt;Fr381&gt;();
@@ -1827,6 +2014,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_variable_output_sponge_and_fsks() {
+        test_variable_output_sponge_and_fsks_helper::&lt;Fq254&gt;();
         test_variable_output_sponge_and_fsks_helper::&lt;Fr254&gt;();
         test_variable_output_sponge_and_fsks_helper::&lt;Fr377&gt;();
         test_variable_output_sponge_and_fsks_helper::&lt;Fr381&gt;();
