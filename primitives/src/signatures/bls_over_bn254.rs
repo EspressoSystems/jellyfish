@@ -58,7 +58,6 @@ use ark_std::{
     One, UniformRand,
 };
 use digest::DynDigest;
-use jf_utils::to_bytes;
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
@@ -255,16 +254,6 @@ impl VerKey {
     /// Convert the verification key into the affine form.
     pub fn to_affine(&self) -> G2Affine {
         self.0.into_affine()
-    }
-}
-
-// Compactly represents a `VerKey` using a single base field element.
-impl From<VerKey> for ark_bn254::Fq {
-    fn from(vk: VerKey) -> Self {
-        <ark_bn254::Fq as CanonicalDeserialize>::deserialize_compressed_unchecked(
-            &to_bytes!(&vk.to_affine()).unwrap()[..],
-        )
-        .unwrap()
     }
 }
 
