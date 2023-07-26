@@ -1,8 +1,12 @@
 name: Conventional Commit Titles
 
 on:
-  pull_request:
-
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
 jobs:
   lint:
     runs-on: ubuntu-latest
