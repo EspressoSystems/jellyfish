@@ -1024,15 +1024,15 @@
 
     <span class="kw">fn </span>build_tree(leaves: <span class="kw-2">&amp;</span>[Leaf], build_type: BuildType) -&gt; TestNMT {
         <span class="kw">match </span>build_type {
-            BuildType::FromElems =&gt; TestNMT::from_elems(<span class="number">3</span>, leaves.clone()).unwrap(),
+            BuildType::FromElems =&gt; TestNMT::from_elems(<span class="number">3</span>, leaves).unwrap(),
             BuildType::Extend =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>nmt = TestNMT::from_elems(<span class="number">3</span>, <span class="kw-2">&amp;</span>[]).unwrap();
-                nmt.extend(leaves.clone()).unwrap();
+                nmt.extend(leaves).unwrap();
                 nmt
             },
             BuildType::Push =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>nmt = TestNMT::from_elems(<span class="number">3</span>, <span class="kw-2">&amp;</span>[]).unwrap();
-                <span class="kw">for </span>leaf <span class="kw">in </span>leaves.clone() {
+                <span class="kw">for </span>leaf <span class="kw">in </span>leaves {
                     nmt.push(leaf).unwrap();
                 }
                 nmt
