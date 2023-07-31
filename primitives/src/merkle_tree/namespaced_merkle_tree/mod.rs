@@ -436,15 +436,15 @@ mod nmt_tests {
 
     fn build_tree(leaves: &[Leaf], build_type: BuildType) -> TestNMT {
         match build_type {
-            BuildType::FromElems => TestNMT::from_elems(3, leaves.clone()).unwrap(),
+            BuildType::FromElems => TestNMT::from_elems(3, leaves).unwrap(),
             BuildType::Extend => {
                 let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
-                nmt.extend(leaves.clone()).unwrap();
+                nmt.extend(leaves).unwrap();
                 nmt
             },
             BuildType::Push => {
                 let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
-                for leaf in leaves.clone() {
+                for leaf in leaves {
                     nmt.push(leaf).unwrap();
                 }
                 nmt
