@@ -42,7 +42,7 @@ pub trait SignatureScheme {
         + Eq;
 
     /// Public Parameter
-    type PublicParameter: for<'a> Deserialize<'a> + Serialize;
+    type PublicParameter: Debug + PartialEq + for<'a> Deserialize<'a> + Serialize;
 
     /// Signature
     type Signature: Debug
