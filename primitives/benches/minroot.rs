@@ -1,3 +1,9 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
+
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
 #[macro_use]
 extern crate criterion;
 use ark_bls12_381::Fr as Fr381;
