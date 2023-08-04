@@ -265,8 +265,10 @@ impl VerKey {
 #[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Zeroize, Debug)]
 #[zeroize(drop)]
 pub struct KeyPair {
-    sk: SignKey,
-    vk: VerKey,
+    /// The secret key
+    pub sk: SignKey,
+    /// The public key
+    pub vk: VerKey,
 }
 
 // =====================================================
@@ -393,6 +395,12 @@ impl SignKey {
     }
 }
 
+// impl AsRef<[u8]> for SignKey {
+//     fn as_ref(&self) -> &[u8] {
+//         self.0.as_ref()
+//     }
+// }
+
 impl From<&SignKey> for VerKey {
     fn from(sk: &SignKey) -> Self {
         VerKey(G2Projective::generator() * sk.0)
@@ -423,6 +431,12 @@ impl VerKey {
         }
     }
 }
+
+// impl AsRef<[u8]> for VerKey {
+//     fn as_ref(&self) -> &[u8] {
+//         self.0.as_ref()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
