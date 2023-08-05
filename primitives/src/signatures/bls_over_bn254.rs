@@ -266,9 +266,9 @@ impl VerKey {
 #[zeroize(drop)]
 pub struct KeyPair {
     /// The secret key
-    pub sk: SignKey,
+    sk: SignKey,
     /// The public key
-    pub vk: VerKey,
+    vk: VerKey,
 }
 
 // =====================================================
