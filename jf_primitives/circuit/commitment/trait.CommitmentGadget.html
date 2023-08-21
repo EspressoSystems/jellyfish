@@ -2,15 +2,15 @@
     // Required method
     fn <a href="#tymethod.commit" class="fn">commit</a>(
         &amp;mut self,
-        input: &amp;[Variable],
-        blinding: Variable
-    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Variable, CircuitError&gt;;
+        input: &amp;[<a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>],
+        blinding: <a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>, <a class="enum" href="../../../jf_relation/errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;;
 }</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Circuit implementation of the commitment scheme.</p>
 </div></details><h2 id="required-methods" class="small-section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.commit" class="method"><a class="srclink rightside" href="../../../src/jf_primitives/circuit/commitment.rs.html#27">source</a><h4 class="code-header">fn <a href="#tymethod.commit" class="fn">commit</a>(
     &amp;mut self,
-    input: &amp;[Variable],
-    blinding: Variable
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Variable, CircuitError&gt;</h4></section></summary><div class="docblock"><p>Commitment function.</p>
+    input: &amp;[<a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>],
+    blinding: <a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>, <a class="enum" href="../../../jf_relation/errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;</h4></section></summary><div class="docblock"><p>Commitment function.</p>
 <ul>
 <li><code>input</code> - input variables,</li>
 <li><code>blinding</code> - blinding variable</li>
@@ -18,9 +18,9 @@
 The underlying the commitment instance is bound to a specific length.
 Hence input length must match it.</li>
 </ul>
-</div></details></div><h2 id="foreign-impls" class="small-section-header">Implementations on Foreign Types<a href="#foreign-impls" class="anchor">§</a></h2><details class="toggle implementors-toggle"><summary><section id="impl-CommitmentGadget-for-PlonkCircuit%3CF%3E" class="impl"><a class="srclink rightside" href="../../../src/jf_primitives/circuit/commitment.rs.html#30-40">source</a><a href="#impl-CommitmentGadget-for-PlonkCircuit%3CF%3E" class="anchor">§</a><h3 class="code-header">impl&lt;F&gt; <a class="trait" href="trait.CommitmentGadget.html" title="trait jf_primitives::circuit::commitment::CommitmentGadget">CommitmentGadget</a> for PlonkCircuit&lt;F&gt;<span class="where fmt-newline">where
+</div></details></div><h2 id="foreign-impls" class="small-section-header">Implementations on Foreign Types<a href="#foreign-impls" class="anchor">§</a></h2><details class="toggle implementors-toggle"><summary><section id="impl-CommitmentGadget-for-PlonkCircuit%3CF%3E" class="impl"><a class="srclink rightside" href="../../../src/jf_primitives/circuit/commitment.rs.html#30-40">source</a><a href="#impl-CommitmentGadget-for-PlonkCircuit%3CF%3E" class="anchor">§</a><h3 class="code-header">impl&lt;F&gt; <a class="trait" href="trait.CommitmentGadget.html" title="trait jf_primitives::circuit::commitment::CommitmentGadget">CommitmentGadget</a> for <a class="struct" href="../../../jf_relation/constraint_system/struct.PlonkCircuit.html" title="struct jf_relation::constraint_system::PlonkCircuit">PlonkCircuit</a>&lt;F&gt;<span class="where fmt-newline">where
     F: <a class="trait" href="../../rescue/trait.RescueParameter.html" title="trait jf_primitives::rescue::RescueParameter">RescueParameter</a>,</span></h3></section></summary><div class="impl-items"><section id="method.commit" class="method trait-impl"><a class="srclink rightside" href="../../../src/jf_primitives/circuit/commitment.rs.html#34-39">source</a><a href="#method.commit" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.commit" class="fn">commit</a>(
     &amp;mut self,
-    input: &amp;[Variable],
-    blinding: Variable
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Variable, CircuitError&gt;</h4></section></div></details><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"></div><script src="../../../implementors/jf_primitives/circuit/commitment/trait.CommitmentGadget.js" data-ignore-extern-crates="jf_relation" async></script></section></div></main></body></html>
+    input: &amp;[<a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>],
+    blinding: <a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.71.1/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>, <a class="enum" href="../../../jf_relation/errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;</h4></section></div></details><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"></div><script src="../../../implementors/jf_primitives/circuit/commitment/trait.CommitmentGadget.js" data-ignore-extern-crates="jf_relation" async></script></section></div></main></body></html>
