@@ -213,7 +213,7 @@ where
             let coeffs = self
                 .coeffs
                 .into_iter()
-                .zip_longest(rhs.coeffs.into_iter())
+                .zip_longest(rhs.coeffs)
                 .map(|pair| match pair {
                     Both(x, y) => x + y,
                     Left(x) | Right(x) => x,
