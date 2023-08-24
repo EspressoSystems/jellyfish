@@ -112,7 +112,7 @@ where
 #[derive(Derivative, Deserialize, Serialize)]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[derivative(Clone, Debug)]
+#[derivative(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Share<P, V>
 where
     P: PolynomialCommitmentScheme,
@@ -131,7 +131,7 @@ where
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[derivative(Clone, Debug, Default, Eq, PartialEq)]
+#[derivative(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Common<P, V>
 where
     P: PolynomialCommitmentScheme,

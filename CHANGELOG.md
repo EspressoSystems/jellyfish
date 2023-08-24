@@ -33,6 +33,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#337](https://github.com/EspressoSystems/jellyfish/pull/337) Port VID from another repo
 - [#341](https://github.com/EspressoSystems/jellyfish/pull/341) Port VDF from another repo
 - [#343](https://github.com/EspressoSystems/jellyfish/pull/343) Rescue parameter for `ark_bn254::Fq`
+- [#362](https://github.com/EspressoSystems/jellyfish/pull/362) Derive Eq, Hash at a bunch of places
 
 ### Changed
 

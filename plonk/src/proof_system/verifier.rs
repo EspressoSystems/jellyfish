@@ -606,7 +606,7 @@ where
             // Compute coefficients for selector polynomial commitments.
             // The order: q_lc, q_mul, q_hash, q_o, q_c, q_ecc
             // TODO(binyi): get the order from a function.
-            let mut q_scalars = vec![E::ScalarField::zero(); 2 * GATE_WIDTH + 5];
+            let mut q_scalars = [E::ScalarField::zero(); 2 * GATE_WIDTH + 5];
             q_scalars[0] = w_evals[0];
             q_scalars[1] = w_evals[1];
             q_scalars[2] = w_evals[2];
