@@ -122,7 +122,8 @@ impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Derivative, Debug, Clone, Serialize, Deserialize)]
+#[derivative(Eq, Hash, PartialEq)]
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
              I: CanonicalSerialize + CanonicalDeserialize,")]
 pub struct MerkleProof<E, I, T, Arity>

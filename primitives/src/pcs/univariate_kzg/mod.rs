@@ -46,7 +46,8 @@ pub struct UnivariateKzgPCS<E: Pairing> {
     phantom: PhantomData<E>,
 }
 
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derivative(Hash)]
 /// proof of opening
 pub struct UnivariateKzgProof<E: Pairing> {
     /// Evaluation of quotients
