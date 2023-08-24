@@ -41,7 +41,9 @@ pub struct UnivariateProverParam<E: Pairing> {
 
 /// `UnivariateVerifierParam` is used to check evaluation proofs for a given
 /// commitment.
-#[derive(Derivative, Clone, Copy, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
+#[derive(
+    Derivative, Clone, Copy, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq,
+)]
 #[derivative(Default)]
 pub struct UnivariateVerifierParam<E: Pairing> {
     /// The generator of G1.
