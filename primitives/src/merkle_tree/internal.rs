@@ -122,7 +122,8 @@ impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Derivative, Debug, Clone, Serialize, Deserialize)]
+#[derivative(Eq, Hash, PartialEq)]
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
              I: CanonicalSerialize + CanonicalDeserialize,")]
 pub struct MerkleProof<E, I, T, Arity>
@@ -831,27 +832,19 @@ where
                 .to_traversal_path(self.tree_height() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
-                .fold(
-                    Ok(init),
-                    |result, (branch, node)| -> Result<T, PrimitivesError> {
-                        match result {
-                            Ok(val) => match node {
-                                MerkleNode::Branch { value: _, children } => {
-                                    let mut data = children
-                                        .iter()
-                                        .map(|node| node.value())
-                                        .collect::<Vec<_>>();
-                                    data[*branch] = val;
-                                    H::digest(&data)
-                                },
-                                _ => Err(PrimitivesError::ParameterError(
-                                    "Incompatible proof for this merkle tree".to_string(),
-                                )),
-                            },
-                            Err(e) => Err(e),
-                        }
-                    },
-                )?;
+                .try_fold(init, |val, (branch, node)| -> Result<T, PrimitivesError> {
+                    match node {
+                        MerkleNode::Branch { value: _, children } => {
+                            let mut data =
+                                children.iter().map(|node| node.value()).collect::<Vec<_>>();
+                            data[*branch] = val;
+                            H::digest(&data)
+                        },
+                        _ => Err(PrimitivesError::ParameterError(
+                            "Incompatible proof for this merkle tree".to_string(),
+                        )),
+                    }
+                })?;
             if computed_root == *expected_root {
                 Ok(Ok(()))
             } else {
@@ -880,28 +873,20 @@ where
                 .to_traversal_path(self.tree_height() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
-                .fold(
-                    Ok(init),
-                    |result, (branch, node)| -> Result<T, PrimitivesError> {
-                        match result {
-                            Ok(val) => match node {
-                                MerkleNode::Branch { value: _, children } => {
-                                    let mut data = children
-                                        .iter()
-                                        .map(|node| node.value())
-                                        .collect::<Vec<_>>();
-                                    data[*branch] = val;
-                                    H::digest(&data)
-                                },
-                                MerkleNode::Empty => Ok(init),
-                                _ => Err(PrimitivesError::ParameterError(
-                                    "Incompatible proof for this merkle tree".to_string(),
-                                )),
-                            },
-                            Err(e) => Err(e),
-                        }
-                    },
-                )?;
+                .try_fold(init, |val, (branch, node)| -> Result<T, PrimitivesError> {
+                    match node {
+                        MerkleNode::Branch { value: _, children } => {
+                            let mut data =
+                                children.iter().map(|node| node.value()).collect::<Vec<_>>();
+                            data[*branch] = val;
+                            H::digest(&data)
+                        },
+                        MerkleNode::Empty => Ok(init),
+                        _ => Err(PrimitivesError::ParameterError(
+                            "Incompatible proof for this merkle tree".to_string(),
+                        )),
+                    }
+                })?;
             Ok(computed_root == *expected_root)
         } else {
             Err(PrimitivesError::ParameterError(

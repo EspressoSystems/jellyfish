@@ -51,7 +51,8 @@ pub struct MultilinearKzgPCS<E: Pairing> {
     phantom: PhantomData<E>,
 }
 
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derivative(Hash)]
 /// proof of opening
 pub struct MultilinearKzgProof<E: Pairing> {
     /// Evaluation of quotients

@@ -22,7 +22,7 @@ use sha3::{Digest, Sha3_256};
 use typenum::U3;
 
 /// Element type for interval merkle tree
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct Interval<F: Field>(pub F, pub F);
 // impl<F: Field> Element for Interval<F> {}
 

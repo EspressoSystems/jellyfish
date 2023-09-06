@@ -39,11 +39,17 @@ pub trait PolynomialCommitmentScheme {
     /// Polynomial Evaluation
     type Evaluation: Field;
     /// Commitments
-    type Commitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
+    type Commitment: Clone
+        + CanonicalSerialize
+        + CanonicalDeserialize
+        + Debug
+        + PartialEq
+        + Eq
+        + Hash;
     /// Batch commitments
     type BatchCommitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Proofs
-    type Proof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
+    type Proof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq + Hash;
     /// Batch proofs
     type BatchProof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
 

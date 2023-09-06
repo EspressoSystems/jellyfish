@@ -140,13 +140,13 @@ where
         if matches!(&proof.proof[0], MerkleNode::Empty) {
             let empty_value = T::default();
             let mut path_values = vec![empty_value];
-            traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
-                Ok(empty_value),
-                |result: Result<T, PrimitivesError>,
-                 (branch, node)|
-                 -> Result<T, PrimitivesError> {
-                    match result {
-                        Ok(val) => match node {
+            traversal_path
+                .iter()
+                .zip(proof.proof.iter().skip(1))
+                .try_fold(
+                    empty_value,
+                    |val: T, (branch, node)| -> Result<T, PrimitivesError> {
+                        match node {
                             MerkleNode::Branch { value: _, children } => {
                                 let mut data: Vec<_> =
                                     children.iter().map(|node| node.value()).collect();
@@ -162,11 +162,9 @@ where
                             _ => Err(PrimitivesError::ParameterError(
                                 "Incompatible proof for this merkle tree".to_string(),
                             )),
-                        },
-                        Err(e) => Err(e),
-                    }
-                },
-            )?;
+                        }
+                    },
+                )?;
             self.root.remember_internal::<H, Arity>(
                 self.height,
                 &traversal_path,

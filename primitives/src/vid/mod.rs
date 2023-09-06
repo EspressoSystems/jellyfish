@@ -47,7 +47,7 @@ pub trait VidScheme {
     type Commitment: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
-    type StorageShare: Clone + Debug + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type StorageShare: Clone + Debug + Eq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
     type StorageCommon: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
