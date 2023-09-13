@@ -56,7 +56,7 @@ pub trait VidScheme {
     fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
-    fn dispersal_data(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>>;
+    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>

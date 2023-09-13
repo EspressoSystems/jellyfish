@@ -181,8 +181,8 @@ where
         Ok(hasher.finalize())
     }
 
-    fn dispersal_data(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>> {
-        self.dispersal_data_from_elems(&bytes_to_field_elements(payload))
+    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>> {
+        self.disperse_from_elems(&bytes_to_field_elements(payload))
     }
 
     fn verify_share(
@@ -274,10 +274,7 @@ where
 {
     /// Same as [`VidScheme::dispersal_data`] except `payload` is a slice of
     /// field elements.
-    pub fn dispersal_data_from_elems(
-        &self,
-        payload: &[P::Evaluation],
-    ) -> VidResult<VidDisperse<Self>> {
+    pub fn disperse_from_elems(&self, payload: &[P::Evaluation]) -> VidResult<VidDisperse<Self>> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
@@ -564,7 +561,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
         for (i, share) in shares.iter().enumerate() {
@@ -630,7 +627,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
         // missing commit
@@ -675,7 +672,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
         let (mut shares, mut common) = (disperse.shares, disperse.common);
 
         common.poly_commits.pop();
@@ -694,7 +691,7 @@ mod tests {
     #[test]
     fn sad_path_recover_payload_corrupt_shares() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
         {

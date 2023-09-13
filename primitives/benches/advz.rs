@@ -78,7 +78,7 @@ where
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
                 |b, _| {
-                    b.iter(|| advz.dispersal_data(&payload_bytes).unwrap());
+                    b.iter(|| advz.disperse(&payload_bytes).unwrap());
                 },
             );
         }
@@ -89,7 +89,7 @@ where
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
             let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
-            let disperse = advz.dispersal_data(&payload_bytes).unwrap();
+            let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common) = (disperse.shares, disperse.common);
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
@@ -107,7 +107,7 @@ where
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
             let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
-            let disperse = advz.dispersal_data(&payload_bytes).unwrap();
+            let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common) = (disperse.shares, disperse.common);
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),

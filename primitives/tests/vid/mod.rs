@@ -32,7 +32,7 @@ pub fn round_trip<V, R>(
             let mut bytes_random = vec![0u8; len];
             rng.fill_bytes(&mut bytes_random);
 
-            let disperse = vid.dispersal_data(&bytes_random).unwrap();
+            let disperse = vid.disperse(&bytes_random).unwrap();
             let (mut shares, common) = (disperse.shares, disperse.common);
             assert_eq!(shares.len(), num_storage_nodes);
 
