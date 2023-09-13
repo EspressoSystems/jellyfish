@@ -160,7 +160,7 @@ where
     V::Index: From<u64>,
 {
     type Commit = Output<H>;
-    type StorageShare = Share<P, V>;
+    type Share = Share<P, V>;
     type StorageCommon = Common<P, V>;
 
     fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commit> {
@@ -184,13 +184,13 @@ where
     fn dispersal_data(
         &self,
         payload: &[u8],
-    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon, Self::Commit)> {
+    ) -> VidResult<(Vec<Self::Share>, Self::StorageCommon, Self::Commit)> {
         self.dispersal_data_from_elems(&bytes_to_field_elements(payload))
     }
 
     fn verify_share(
         &self,
-        share: &Self::StorageShare,
+        share: &Self::Share,
         common: &Self::StorageCommon,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
@@ -258,7 +258,7 @@ where
 
     fn recover_payload(
         &self,
-        shares: &[Self::StorageShare],
+        shares: &[Self::Share],
         common: &Self::StorageCommon,
     ) -> VidResult<Vec<u8>> {
         Ok(bytes_from_field_elements(
@@ -285,7 +285,7 @@ where
         &self,
         payload: &[P::Evaluation],
     ) -> VidResult<(
-        Vec<<Self as VidScheme>::StorageShare>,
+        Vec<<Self as VidScheme>::Share>,
         <Self as VidScheme>::StorageCommon,
         <Self as VidScheme>::Commit,
     )> {
@@ -391,7 +391,7 @@ where
     /// elements.
     pub fn recover_elems(
         &self,
-        shares: &[<Self as VidScheme>::StorageShare],
+        shares: &[<Self as VidScheme>::Share],
         _common: &<Self as VidScheme>::StorageCommon,
     ) -> VidResult<Vec<P::Evaluation>> {
         if shares.len() < self.payload_chunk_size {

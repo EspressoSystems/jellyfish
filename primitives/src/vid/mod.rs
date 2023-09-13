@@ -47,7 +47,7 @@ pub trait VidScheme {
     type Commit: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
-    type StorageShare: Clone + Debug + Eq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Share: Clone + Debug + Eq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
     type StorageCommon: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
@@ -59,7 +59,7 @@ pub trait VidScheme {
     fn dispersal_data(
         &self,
         payload: &[u8],
-    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon, Self::Commit)>;
+    ) -> VidResult<(Vec<Self::Share>, Self::StorageCommon, Self::Commit)>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>
@@ -69,7 +69,7 @@ pub trait VidScheme {
     /// - VidResult::Ok(Result::Ok) if verification succeeds
     fn verify_share(
         &self,
-        share: &Self::StorageShare,
+        share: &Self::Share,
         common: &Self::StorageCommon,
     ) -> VidResult<Result<(), ()>>;
 
@@ -77,7 +77,7 @@ pub trait VidScheme {
     /// Do not verify shares or check recovered payload against anything.
     fn recover_payload(
         &self,
-        shares: &[Self::StorageShare],
+        shares: &[Self::Share],
         common: &Self::StorageCommon,
     ) -> VidResult<Vec<u8>>;
 }
