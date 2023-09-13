@@ -108,7 +108,7 @@ where
     }
 }
 
-/// The [`VidScheme::StorageShare`] type for [`Advz`].
+/// The [`VidScheme::Share`] type for [`Advz`].
 #[derive(Derivative, Deserialize, Serialize)]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -127,7 +127,7 @@ where
     evals_proof: V::MembershipProof,
 }
 
-/// The [`VidScheme::StorageCommon`] type for [`Advz`].
+/// The [`VidScheme::Common`] type for [`Advz`].
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -272,7 +272,7 @@ where
     V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    /// Same as [`VidScheme::dispersal_data`] except `payload` is a slice of
+    /// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
     pub fn disperse_from_elems(&self, payload: &[P::Evaluation]) -> VidResult<VidDisperse<Self>> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
