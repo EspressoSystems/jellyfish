@@ -89,7 +89,7 @@ where
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
             let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
-            let (shares, common) = advz.dispersal_data(&payload_bytes).unwrap();
+            let (shares, common, _commit) = advz.dispersal_data(&payload_bytes).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -106,7 +106,7 @@ where
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
             let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
-            let (shares, common) = advz.dispersal_data(&payload_bytes).unwrap();
+            let (shares, common, _commit) = advz.dispersal_data(&payload_bytes).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,

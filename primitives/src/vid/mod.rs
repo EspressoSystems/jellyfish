@@ -59,7 +59,11 @@ pub trait VidScheme {
     fn dispersal_data(
         &self,
         payload: &[u8],
-    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon)>;
+    ) -> VidResult<(
+        Vec<Self::StorageShare>,
+        Self::StorageCommon,
+        Self::Commitment,
+    )>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>
