@@ -74,7 +74,7 @@ pub trait VidScheme {
 
 /// Convenience struct to aggregate disperse data.
 ///
-/// Return type for [`VidScheme::dispersal_data`].
+/// Return type for [`VidScheme::disperse`].
 ///
 /// # Why the `?Sized` bound?
 /// Rust hates you: <https://stackoverflow.com/a/54465962>
