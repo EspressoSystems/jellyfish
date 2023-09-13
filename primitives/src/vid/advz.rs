@@ -161,7 +161,7 @@ where
 {
     type Commit = Output<H>;
     type Share = Share<P, V>;
-    type StorageCommon = Common<P, V>;
+    type Common = Common<P, V>;
 
     fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commit> {
         let mut hasher = H::new();
@@ -184,14 +184,14 @@ where
     fn dispersal_data(
         &self,
         payload: &[u8],
-    ) -> VidResult<(Vec<Self::Share>, Self::StorageCommon, Self::Commit)> {
+    ) -> VidResult<(Vec<Self::Share>, Self::Common, Self::Commit)> {
         self.dispersal_data_from_elems(&bytes_to_field_elements(payload))
     }
 
     fn verify_share(
         &self,
         share: &Self::Share,
-        common: &Self::StorageCommon,
+        common: &Self::Common,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
         if share.evals.len() != common.poly_commits.len() {
@@ -256,11 +256,7 @@ where
         .ok_or(()))
     }
 
-    fn recover_payload(
-        &self,
-        shares: &[Self::Share],
-        common: &Self::StorageCommon,
-    ) -> VidResult<Vec<u8>> {
+    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
         Ok(bytes_from_field_elements(
             self.recover_elems(shares, common)?,
         ))
@@ -286,7 +282,7 @@ where
         payload: &[P::Evaluation],
     ) -> VidResult<(
         Vec<<Self as VidScheme>::Share>,
-        <Self as VidScheme>::StorageCommon,
+        <Self as VidScheme>::Common,
         <Self as VidScheme>::Commit,
     )> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
@@ -392,7 +388,7 @@ where
     pub fn recover_elems(
         &self,
         shares: &[<Self as VidScheme>::Share],
-        _common: &<Self as VidScheme>::StorageCommon,
+        _common: &<Self as VidScheme>::Common,
     ) -> VidResult<Vec<P::Evaluation>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
@@ -439,9 +435,7 @@ where
         Ok(result)
     }
 
-    fn pseudorandom_scalar(
-        common: &<Self as VidScheme>::StorageCommon,
-    ) -> VidResult<P::Evaluation> {
+    fn pseudorandom_scalar(common: &<Self as VidScheme>::Common) -> VidResult<P::Evaluation> {
         let mut hasher = H::new();
         for poly_commit in common.poly_commits.iter() {
             poly_commit
