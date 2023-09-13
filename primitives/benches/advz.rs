@@ -63,7 +63,7 @@ where
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
                 |b, _| {
-                    b.iter(|| advz.commitment_only(&payload_bytes).unwrap());
+                    b.iter(|| advz.commit_only(&payload_bytes).unwrap());
                 },
             );
         }

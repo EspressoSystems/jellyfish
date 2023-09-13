@@ -53,7 +53,7 @@ pub trait VidScheme {
     type Common: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment.
-    fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
+    fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
     fn dispersal_data(
