@@ -56,10 +56,7 @@ pub trait VidScheme {
     fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
-    fn dispersal_data(
-        &self,
-        payload: &[u8],
-    ) -> VidResult<(Vec<Self::Share>, Self::Common, Self::Commit)>;
+    fn dispersal_data(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>
@@ -73,4 +70,19 @@ pub trait VidScheme {
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
+}
+
+/// Convenience struct to aggregate disperse data.
+///
+/// Return type for [`VidScheme::dispersal_data`].
+///
+/// # Why the `?Sized` bound?
+/// Rust hates you: <https://stackoverflow.com/a/54465962>
+pub struct VidDisperse<V: VidScheme + ?Sized> {
+    /// VID disperse shares to send to the storage nodes.
+    pub shares: Vec<V::Share>,
+    /// VID common data to send to all storage nodes.
+    pub common: V::Common,
+    /// VID payload commitment.
+    pub commit: V::Commit,
 }

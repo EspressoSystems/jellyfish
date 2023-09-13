@@ -8,7 +8,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{vid, VidError, VidResult, VidScheme};
+use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
     pcs::{
@@ -181,10 +181,7 @@ where
         Ok(hasher.finalize())
     }
 
-    fn dispersal_data(
-        &self,
-        payload: &[u8],
-    ) -> VidResult<(Vec<Self::Share>, Self::Common, Self::Commit)> {
+    fn dispersal_data(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>> {
         self.dispersal_data_from_elems(&bytes_to_field_elements(payload))
     }
 
@@ -280,11 +277,7 @@ where
     pub fn dispersal_data_from_elems(
         &self,
         payload: &[P::Evaluation],
-    ) -> VidResult<(
-        Vec<<Self as VidScheme>::Share>,
-        <Self as VidScheme>::Common,
-        <Self as VidScheme>::Commit,
-    )> {
+    ) -> VidResult<VidDisperse<Self>> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
@@ -380,7 +373,12 @@ where
             })
             .collect::<Result<_, VidError>>()?;
 
-        Ok((shares, common, H::new().finalize()))
+        // Ok((shares, common, H::new().finalize()))
+        Ok(VidDisperse {
+            shares,
+            common,
+            commit: H::new().finalize(),
+        })
     }
 
     /// Same as [`VidScheme::recover_payload`] except returns a [`Vec`] of field
@@ -566,7 +564,8 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
-        let (shares, common, _commit) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let (shares, common) = (disperse.shares, disperse.common);
 
         for (i, share) in shares.iter().enumerate() {
             // missing share eval
@@ -631,7 +630,8 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
-        let (shares, common, _commit) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let (shares, common) = (disperse.shares, disperse.common);
 
         // missing commit
         let common_missing_item = Common {
@@ -675,7 +675,8 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
-        let (mut shares, mut common, _commit) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let (mut shares, mut common) = (disperse.shares, disperse.common);
 
         common.poly_commits.pop();
         shares[0].evals.pop();
@@ -693,7 +694,8 @@ mod tests {
     #[test]
     fn sad_path_recover_payload_corrupt_shares() {
         let (advz, bytes_random) = avdz_init();
-        let (shares, common, _commit) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.dispersal_data(&bytes_random).unwrap();
+        let (shares, common) = (disperse.shares, disperse.common);
 
         {
             // unequal share eval lengths
