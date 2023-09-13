@@ -163,7 +163,7 @@ where
     type StorageShare = Share<P, V>;
     type StorageCommon = Common<P, V>;
 
-    fn commit(&self, payload: &[u8]) -> VidResult<Self::Commitment> {
+    fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commitment> {
         let mut hasher = H::new();
 
         // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
