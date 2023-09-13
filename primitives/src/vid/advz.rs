@@ -159,11 +159,11 @@ where
     V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    type Commitment = Output<H>;
+    type Commit = Output<H>;
     type StorageShare = Share<P, V>;
     type StorageCommon = Common<P, V>;
 
-    fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commitment> {
+    fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commit> {
         let mut hasher = H::new();
 
         // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
@@ -184,11 +184,7 @@ where
     fn dispersal_data(
         &self,
         payload: &[u8],
-    ) -> VidResult<(
-        Vec<Self::StorageShare>,
-        Self::StorageCommon,
-        Self::Commitment,
-    )> {
+    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon, Self::Commit)> {
         self.dispersal_data_from_elems(&bytes_to_field_elements(payload))
     }
 
@@ -291,7 +287,7 @@ where
     ) -> VidResult<(
         Vec<<Self as VidScheme>::StorageShare>,
         <Self as VidScheme>::StorageCommon,
-        <Self as VidScheme>::Commitment,
+        <Self as VidScheme>::Commit,
     )> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)

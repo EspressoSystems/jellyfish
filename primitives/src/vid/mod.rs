@@ -44,7 +44,7 @@ pub type VidResult<T> = Result<T, VidError>;
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
     /// Payload commitment.
-    type Commitment: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Commit: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
     type StorageShare: Clone + Debug + Eq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
@@ -53,17 +53,13 @@ pub trait VidScheme {
     type StorageCommon: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment.
-    fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commitment>;
+    fn commitment_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
     fn dispersal_data(
         &self,
         payload: &[u8],
-    ) -> VidResult<(
-        Vec<Self::StorageShare>,
-        Self::StorageCommon,
-        Self::Commitment,
-    )>;
+    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon, Self::Commit)>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>
