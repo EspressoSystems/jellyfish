@@ -33,8 +33,9 @@ pub fn round_trip<V, R>(
             rng.fill_bytes(&mut bytes_random);
 
             let disperse = vid.disperse(&bytes_random).unwrap();
-            let (mut shares, common) = (disperse.shares, disperse.common);
+            let (mut shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
             assert_eq!(shares.len(), num_storage_nodes);
+            assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
 
             for share in shares.iter() {
                 vid.verify_share(share, &common).unwrap().unwrap();

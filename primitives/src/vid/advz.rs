@@ -327,7 +327,6 @@ where
         let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
 
-        // common data
         let common = Common {
             poly_commits: polys
                 .iter()
@@ -337,7 +336,17 @@ where
             all_evals_digest: all_evals_commit.commitment().digest(),
         };
 
-        // pseudorandom scalar
+        let commit = {
+            let mut hasher = H::new();
+            for poly_commit in common.poly_commits.iter() {
+                // TODO compiler bug? `as` should not be needed here!
+                (poly_commit as &P::Commitment)
+                    .serialize_uncompressed(&mut hasher)
+                    .map_err(vid)?;
+            }
+            hasher.finalize()
+        };
+
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common)?;
 
         // Compute aggregate polynomial
@@ -347,7 +356,6 @@ where
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
-        // aggregate proofs
         let aggregate_proofs =
             P::multi_open_rou_proofs(&self.ck, &aggregate_poly, self.num_storage_nodes, &domain)
                 .map_err(vid)?;
@@ -370,11 +378,10 @@ where
             })
             .collect::<Result<_, VidError>>()?;
 
-        // Ok((shares, common, H::new().finalize()))
         Ok(VidDisperse {
             shares,
             common,
-            commit: H::new().finalize(),
+            commit,
         })
     }
 
