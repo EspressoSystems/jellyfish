@@ -17,7 +17,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain a variable to be within the [0, 2^`bit_len`) range
     /// Return error if the variable is invalid.
     pub fn enforce_in_range(&mut self, a: Variable, bit_len: usize) -> Result<(), CircuitError> {
-        if self.support_lookup() && bit_len % self.range_bit_len()? == 0 {
+        if self.support_lookup() {
             self.range_gate_with_lookup(a, bit_len)?;
         } else {
             self.range_gate_internal(a, bit_len)?;
@@ -95,7 +95,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 /// Private helper function for range gate
 impl<F: PrimeField> PlonkCircuit<F> {
     // internal of a range check gate
-    fn range_gate_internal(
+    pub(crate) fn range_gate_internal(
         &mut self,
         a: Variable,
         bit_len: usize,

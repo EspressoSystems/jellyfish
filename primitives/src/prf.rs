@@ -83,6 +83,7 @@ mod tests {
         rescue::sponge::RescuePRFCore,
     };
     use ark_bls12_377::Fq as Fq377;
+    use ark_bn254::Fq as Fq254;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
@@ -111,5 +112,6 @@ mod tests {
         test_prf!(FqEd377);
         test_prf!(FqEd381);
         test_prf!(Fq377);
+        test_prf!(Fq254);
     }
 }

@@ -94,7 +94,7 @@ where
     fn universal_lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
+    ) -> LookupResult<&Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
         match self.root.lookup_internal(self.height, &traversal_path) {
@@ -140,13 +140,13 @@ where
         if matches!(&proof.proof[0], MerkleNode::Empty) {
             let empty_value = T::default();
             let mut path_values = vec![empty_value];
-            traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
-                Ok(empty_value),
-                |result: Result<T, PrimitivesError>,
-                 (branch, node)|
-                 -> Result<T, PrimitivesError> {
-                    match result {
-                        Ok(val) => match node {
+            traversal_path
+                .iter()
+                .zip(proof.proof.iter().skip(1))
+                .try_fold(
+                    empty_value,
+                    |val: T, (branch, node)| -> Result<T, PrimitivesError> {
+                        match node {
                             MerkleNode::Branch { value: _, children } => {
                                 let mut data: Vec<_> =
                                     children.iter().map(|node| node.value()).collect();
@@ -162,11 +162,9 @@ where
                             _ => Err(PrimitivesError::ParameterError(
                                 "Incompatible proof for this merkle tree".to_string(),
                             )),
-                        },
-                        Err(e) => Err(e),
-                    }
-                },
-            )?;
+                        }
+                    },
+                )?;
             self.root.remember_internal::<H, Arity>(
                 self.height,
                 &traversal_path,
@@ -277,8 +275,8 @@ mod mt_tests {
         }
         for i in 0..2 {
             let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();
-            assert_eq!(val, F::from(i as u64));
-            assert_eq!(*proof.elem().unwrap(), val);
+            assert_eq!(val, &F::from(i as u64));
+            assert_eq!(proof.elem().unwrap(), val);
             assert!(RescueSparseMerkleTree::<F, F>::verify(
                 &mt.root.value(),
                 F::from(i as u64),
@@ -312,6 +310,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(0u64))
             .expect_ok()
             .unwrap();
+        let lookup_elem = lookup_elem.clone();
         let (elem, mem_proof) = mt.universal_forget(0u64.into()).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_mem_proof, mem_proof);
@@ -347,7 +346,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(2u64))
             .expect_ok()
             .unwrap();
-        assert_eq!(elem, 3u64.into());
+        assert_eq!(elem, &3u64.into());
         assert!(
             RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
                 .unwrap()
@@ -392,7 +391,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(2u64))
             .expect_ok()
             .unwrap();
-        assert_eq!(elem, 3u64.into());
+        assert_eq!(elem, &3u64.into());
         assert!(
             RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
                 .unwrap()
@@ -461,7 +460,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(0u64))
             .expect_ok()
             .unwrap();
-        assert_eq!(elem, 1u64.into());
+        assert_eq!(elem, &1u64.into());
         assert!(
             RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(0u64), &proof)
                 .unwrap()

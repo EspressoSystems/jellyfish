@@ -11,7 +11,7 @@ use ark_ed_on_bn254::Fq;
 // https://github.com/EspressoSystems/Marvellous/blob/fcd4c41672f485ac2f62526bc87a16789d4d0459/rescue254.sage
 
 // q254 = 21888242871839275222246405745257275088548364400416034343698204186575808495617
-// rescue254 = Rescue(128, q377, 4, 5)
+// rescue254 = Rescue(128, q254, 4, 5)
 
 impl RescueParameter for Fq {
     // rescue254.alpha
@@ -166,6 +166,7 @@ impl RescueParameter for Fq {
             0x86, 0xFA, 0x23, 0x08,
         ],
     ];
+
     // The following constants are from the output of
     // rescue254.constants_matrix
     // a.k.a., KEY_SCHED_MATRIX
@@ -200,12 +201,12 @@ impl RescueParameter for Fq {
     // The key injection constants are precomputed computed as
     // 1. KEY_INJECTION[-1] = INIT_VECTOR
     // 2. for i in [0 .. 2 * ROUNDS]
-    // 3.   KEY_INJECTION[i] = KEY_SCHED_MATRIX * KEY_INJECTION[ i - 1] +
+    // 3. KEY_INJECTION[i] = KEY_SCHED_MATRIX * KEY_INJECTION[ i - 1] +
     // KEY_SCHED_VEC
     // where the INIT_VECTOR, KEY_SCHED_MATRIX and KEY_INJECTION are defined above
     // Those constants can be obtained via
     //   key_injection(init_vec_254, key_sched_matrix_254, key_sched_vec_254, q254)
-    // from rescue381.sage
+    // from rescue254.sage
     const KEY_INJECTION_LE: [[&'static [u8]; 4]; 2 * ROUNDS] = [
         [
             &[

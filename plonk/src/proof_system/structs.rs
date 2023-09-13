@@ -39,7 +39,7 @@ use jf_primitives::{
 use jf_relation::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
     gadgets::{
-        ecc::{Point, SWToTEConParam},
+        ecc::{SWToTEConParam, TEPoint},
         ultraplonk::mod_arith::FpElemVar,
     },
     PlonkCircuit,
@@ -358,14 +358,14 @@ impl<E: Pairing> BatchProof<E> {
         for e in self.wires_poly_comms_vec.iter() {
             let mut tmp = Vec::new();
             for f in e.iter() {
-                let p: Point<F> = (&f.0).into();
+                let p: TEPoint<F> = f.0.into();
                 tmp.push(circuit.create_point_variable(p)?);
             }
             wires_poly_comms_vec.push(tmp);
         }
         let mut prod_perm_poly_comms_vec = Vec::new();
         for e in self.prod_perm_poly_comms_vec.iter() {
-            let p: Point<F> = (&e.0).into();
+            let p: TEPoint<F> = e.0.into();
             prod_perm_poly_comms_vec.push(circuit.create_point_variable(p)?);
         }
 
@@ -377,14 +377,14 @@ impl<E: Pairing> BatchProof<E> {
 
         let mut split_quot_poly_comms = Vec::new();
         for e in self.split_quot_poly_comms.iter() {
-            let p: Point<F> = (&e.0).into();
+            let p: TEPoint<F> = e.0.into();
             split_quot_poly_comms.push(circuit.create_point_variable(p)?);
         }
 
-        let p: Point<F> = (&self.opening_proof.0).into();
+        let p: TEPoint<F> = self.opening_proof.0.into();
         let opening_proof = circuit.create_point_variable(p)?;
 
-        let p: Point<F> = (&self.shifted_opening_proof.0).into();
+        let p: TEPoint<F> = self.shifted_opening_proof.0.into();
         let shifted_opening_proof = circuit.create_point_variable(p)?;
 
         Ok(BatchProofVar {
@@ -728,12 +728,12 @@ where
     pub fn convert_te_coordinates_to_scalars(&self) -> Vec<F> {
         let mut res = vec![];
         for sigma_comm in self.sigma_comms.iter() {
-            let point: Point<F> = (&sigma_comm.0).into();
+            let point: TEPoint<F> = sigma_comm.0.into();
             res.push(point.get_x());
             res.push(point.get_y());
         }
         for selector_comm in self.selector_comms.iter() {
-            let point: Point<F> = (&selector_comm.0).into();
+            let point: TEPoint<F> = selector_comm.0.into();
             res.push(point.get_x());
             res.push(point.get_y());
         }

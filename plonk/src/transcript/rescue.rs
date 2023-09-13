@@ -20,7 +20,7 @@ use jf_primitives::{
     pcs::prelude::Commitment,
     rescue::{RescueParameter, STATE_SIZE},
 };
-use jf_relation::gadgets::ecc::{Point, SWToTEConParam};
+use jf_relation::gadgets::ecc::{SWToTEConParam, TEPoint};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 /// Transcript with rescue hash function.
@@ -75,14 +75,14 @@ where
         // selector commitments
         for com in vk.selector_comms.iter() {
             // convert the SW form commitments into TE form
-            let te_point: Point<F> = (&com.0).into();
+            let te_point: TEPoint<F> = com.0.into();
             self.transcript.push(te_point.get_x());
             self.transcript.push(te_point.get_y());
         }
         // sigma commitments
         for com in vk.sigma_comms.iter() {
             // convert the SW form commitments into TE form
-            let te_point: Point<F> = (&com.0).into();
+            let te_point: TEPoint<F> = com.0.into();
             self.transcript.push(te_point.get_x());
             self.transcript.push(te_point.get_y());
         }
@@ -116,7 +116,7 @@ where
         P: SWParam<BaseField = F>,
     {
         // convert the SW form commitments into TE form
-        let te_point: Point<F> = (&comm.0).into();
+        let te_point: TEPoint<F> = comm.0.into();
         // push the x and y coordinate of comm (in twisted
         // edwards form) to the transcript
 

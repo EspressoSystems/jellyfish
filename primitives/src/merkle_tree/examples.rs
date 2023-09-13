@@ -22,7 +22,7 @@ use sha3::{Digest, Sha3_256};
 use typenum::U3;
 
 /// Element type for interval merkle tree
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct Interval<F: Field>(pub F, pub F);
 // impl<F: Field> Element for Interval<F> {}
 
@@ -84,6 +84,7 @@ impl Valid for Sha3Node {
 }
 
 /// Wrapper for SHA3_512 hash function
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Sha3Digest();
 
 impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {

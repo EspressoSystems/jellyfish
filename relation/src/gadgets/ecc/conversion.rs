@@ -15,16 +15,16 @@
 //! the other form is public. In practice a prover will convert all of the
 //! points to the TE form and work on the TE form inside the circuits.
 
-use super::Point;
+use super::TEPoint;
 use ark_ec::short_weierstrass::{Affine as SWAffine, SWCurveConfig as SWParam};
 use ark_ff::{BigInteger256, BigInteger384, BigInteger768, PrimeField};
 
-impl<F, P> From<&SWAffine<P>> for Point<F>
+impl<F, P> From<SWAffine<P>> for TEPoint<F>
 where
     F: PrimeField + SWToTEConParam,
     P: SWParam<BaseField = F>,
 {
-    fn from(p: &SWAffine<P>) -> Self {
+    fn from(p: SWAffine<P>) -> Self {
         // this function is only correct for BLS12-377
         // (other curves does not impl an SW form)
 
@@ -53,7 +53,7 @@ where
         let edwards_x = beta * montgomery_x / montgomery_y;
         let edwards_y = (montgomery_x - F::one()) / (montgomery_x + F::one());
 
-        Point(edwards_x, edwards_y)
+        TEPoint(edwards_x, edwards_y)
     }
 }
 
@@ -141,7 +141,7 @@ mod test {
 
     // a helper function to check if a point is on the ed curve
     // of bls12-377 G1
-    fn is_on_bls12_377_ed_curve(p: &Point<Fq377>) -> bool {
+    fn is_on_bls12_377_ed_curve(p: &TEPoint<Fq377>) -> bool {
         // Twisted Edwards curve 2: a * x² + y² = 1 + d * x² * y²
         let a = MontFp!("-1");
         let d = MontFp!("122268283598675559488486339158635529096981886914877139579534153582033676785385790730042363341236035746924960903179");
@@ -161,20 +161,20 @@ mod test {
         let mut rng = test_rng();
 
         // test generator
-        let g1 = &G1Affine::generator();
-        let p: Point<Fq377> = g1.into();
+        let g1 = G1Affine::generator();
+        let p: TEPoint<Fq377> = g1.into();
         assert!(is_on_bls12_377_ed_curve(&p));
 
         // test zero point
-        let g1 = &G1Affine::zero();
-        let p: Point<Fq377> = g1.into();
+        let g1 = G1Affine::zero();
+        let p: TEPoint<Fq377> = g1.into();
         assert_eq!(p.0, Fq377::zero());
         assert_eq!(p.1, Fq377::one());
         assert!(is_on_bls12_377_ed_curve(&p));
 
         // test a random group element
-        let g1 = &G1Projective::rand(&mut rng).into_affine();
-        let p: Point<Fq377> = g1.into();
+        let g1 = G1Projective::rand(&mut rng).into_affine();
+        let p: TEPoint<Fq377> = g1.into();
         assert!(is_on_bls12_377_ed_curve(&p));
     }
 }

@@ -6,7 +6,7 @@
 
 //! This module implements multi-scalar-multiplication circuits.
 
-use super::{Point, PointVariable};
+use super::{PointVariable, TEPoint};
 use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 use ark_ec::{
     twisted_edwards::{Projective, TECurveConfig as Config},
@@ -344,7 +344,7 @@ fn compute_scalar_mul_value<F, P>(
     circuit: &PlonkCircuit<F>,
     scalar_var: Variable,
     base_var: &PointVariable,
-) -> Result<Point<F>, CircuitError>
+) -> Result<TEPoint<F>, CircuitError>
 where
     F: PrimeField,
     P: Config<BaseField = F>,
@@ -368,7 +368,7 @@ fn ln_without_floats(a: usize) -> usize {
 mod tests {
 
     use super::*;
-    use crate::{gadgets::ecc::Point, Circuit, PlonkType};
+    use crate::{gadgets::ecc::TEPoint, Circuit, PlonkType};
     use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
     use ark_ec::{
         scalar_mul::variable_base::VariableBaseMSM,
@@ -422,10 +422,10 @@ mod tests {
             let scalar_reprs: Vec<<P::ScalarField as PrimeField>::BigInt> =
                 scalars.iter().map(|x| x.into_bigint()).collect();
             let res = Projective::<P>::msm_bigint(&bases, &scalar_reprs);
-            let res_point: Point<F> = res.into();
+            let res_point: TEPoint<F> = res.into();
 
             // corresponding wires
-            let bases_point: Vec<Point<F>> = bases.iter().map(|x| (*x).into()).collect();
+            let bases_point: Vec<TEPoint<F>> = bases.iter().map(|x| (*x).into()).collect();
             let bases_vars: Vec<PointVariable> = bases_point
                 .iter()
                 .map(|x| circuit.create_point_variable(*x))

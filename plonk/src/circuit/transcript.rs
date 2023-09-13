@@ -42,7 +42,7 @@ where
         Self {
             transcript_var: Vec::new(),
             state_var: [circuit.zero(); STATE_SIZE],
-            _phantom: PhantomData::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -232,7 +232,7 @@ mod tests {
     };
     use ark_std::{format, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
-    use jf_relation::gadgets::ecc::Point;
+    use jf_relation::gadgets::ecc::TEPoint;
     use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
@@ -256,7 +256,7 @@ mod tests {
         for _ in 0..10 {
             for i in 0..10 {
                 let msg = format!("message {}", i);
-                let vals = bytes_to_field_elements(&msg);
+                let vals = bytes_to_field_elements(msg.as_bytes());
                 let message_vars: Vec<Variable> = vals
                     .iter()
                     .map(|x| circuit.create_variable(*x).unwrap())
@@ -349,7 +349,7 @@ mod tests {
             let mut sigma_comms_vars: Vec<PointVariable> = Vec::new();
             for e in sigma_comms.iter() {
                 // convert point into TE form
-                let p: Point<F> = (&e.0).into();
+                let p: TEPoint<F> = e.0.into();
                 sigma_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 
@@ -360,7 +360,7 @@ mod tests {
             let mut selector_comms_vars: Vec<PointVariable> = Vec::new();
             for e in selector_comms.iter() {
                 // convert point into TE form
-                let p: Point<F> = (&e.0).into();
+                let p: TEPoint<F> = e.0.into();
                 selector_comms_vars.push(circuit.create_point_variable(p).unwrap());
             }
 

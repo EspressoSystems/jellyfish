@@ -25,7 +25,7 @@ use jf_plonk::{
     proof_system::{PlonkKzgSnark, UniversalSNARK},
     transcript::StandardTranscript,
 };
-use jf_relation::{gadgets::ecc::Point, Arithmetization, Circuit, PlonkCircuit};
+use jf_relation::{gadgets::ecc::TEPoint, Arithmetization, Circuit, PlonkCircuit};
 use jf_utils::fr_to_fq;
 use rand_chacha::ChaCha20Rng;
 
@@ -124,11 +124,11 @@ where
 
     // The next variable is a public constant: generator `G`.
     // We need to convert the point to Jellyfish's own `Point` struct.
-    let G_jf: Point<EmbedCurve::BaseField> = G.into();
+    let G_jf: TEPoint<EmbedCurve::BaseField> = G.into();
     let G_var = circuit.create_constant_point_variable(G_jf)?;
 
     // The last variable is a public variable `X`.
-    let X_jf: Point<EmbedCurve::BaseField> = X.into();
+    let X_jf: TEPoint<EmbedCurve::BaseField> = X.into();
     let X_var = circuit.create_public_point_variable(X_jf)?;
 
     // Step 3:

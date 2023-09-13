@@ -10,7 +10,7 @@ mod multilinear_kzg;
 mod poly;
 pub mod prelude;
 mod structs;
-mod transcript;
+pub mod transcript;
 mod univariate_kzg;
 
 use ark_ff::{FftField, Field};
@@ -39,11 +39,17 @@ pub trait PolynomialCommitmentScheme {
     /// Polynomial Evaluation
     type Evaluation: Field;
     /// Commitments
-    type Commitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
+    type Commitment: Clone
+        + CanonicalSerialize
+        + CanonicalDeserialize
+        + Debug
+        + PartialEq
+        + Eq
+        + Hash;
     /// Batch commitments
     type BatchCommitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Proofs
-    type Proof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
+    type Proof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq + Hash;
     /// Batch proofs
     type BatchProof: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
 
@@ -299,9 +305,9 @@ where
     ) -> Result<Vec<Self::Evaluation>, PCSError>;
 }
 
-// compute the fft size (i.e. `num_coeffs`) given a degree.
+/// compute the fft size (i.e. `num_coeffs`) given a degree.
 #[inline]
-fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
+pub fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
     let err = || {
         PCSError::InvalidParameters(ark_std::format!(
             "Next power of two overflows! Got: {}",

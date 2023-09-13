@@ -81,7 +81,7 @@ impl<F: PrimeField> Gate<F> for RescueAffineGate<F> {
 }
 
 /// Gate for the following computation:
-/// 1. x = (var1^5, var2^5, var3^5, var4^5)  
+/// 1. x = (var1^5, var2^5, var3^5, var4^5)
 /// 2. f = <matrix_vector, x>
 /// 3. var_output = f + constant
 #[derive(Debug, Clone)]

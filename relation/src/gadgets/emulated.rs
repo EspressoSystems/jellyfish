@@ -12,7 +12,7 @@
 //! componenet, with modulus 2^T, will be divided into limbs each with B bits
 //! where 2^{2B} < p.
 
-use crate::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec, vec::Vec, One, Zero};
 use core::marker::PhantomData;
@@ -27,6 +27,12 @@ pub trait EmulationConfig<F: PrimeField>: PrimeField {
     const B: usize;
     /// `B * NUM_LIMBS` should equals to `T`.
     const NUM_LIMBS: usize;
+}
+
+/// A struct that can be serialized into `Vec` of field elements.
+pub trait SerializableEmulatedStruct<F: PrimeField> {
+    /// Serialize into a `Vec` of field elements.
+    fn serialize_to_native_elements(&self) -> Vec<F>;
 }
 
 fn biguint_to_limbs<F: PrimeField>(val: &BigUint, b: usize, num_limbs: usize) -> Vec<F> {
@@ -71,7 +77,15 @@ where
 }
 
 /// The variable represents an element in the emulated field.
-pub struct EmulatedVariable<E: PrimeField>(pub(crate) Vec<Variable>, PhantomData<E>);
+#[derive(Debug, Clone)]
+pub struct EmulatedVariable<E: PrimeField>(pub(crate) Vec<Variable>, pub PhantomData<E>);
+
+impl<E: PrimeField> EmulatedVariable<E> {
+    /// Return the list of variables that simulate the field element
+    pub fn native_vars(&self) -> Vec<Variable> {
+        self.0.clone()
+    }
+}
 
 impl<F: PrimeField> PlonkCircuit<F> {
     /// Return the witness point for the circuit
@@ -142,6 +156,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Constrain that a*b=c in the emulated field.
     /// Checking that a * b - k * E::MODULUS = c.
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a, b and c. We assume that they are already performed elsewhere.
     pub fn emulated_mul_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -178,10 +194,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // checking that the carry_out has at most [`E::B`] + 1 bits
         self.enforce_in_range(carry_out, E::B + 1)?;
         // enforcing that a0 * b0 - k0 * modulus[0] - carry_out * 2^E::B = c0
-        self.general_arithmetic_gate(
+        self.quad_poly_gate(
             &[a.0[0], b.0[0], k.0[0], carry_out, c.0[0]],
             &[F::zero(), F::zero(), neg_modulus[0], -b_pow],
             &[F::one(), F::zero()],
+            F::one(),
             F::zero(),
         )?;
 
@@ -225,7 +242,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
             if i % 2 == 0 {
                 let t1 = stack.pop().unwrap();
                 let t2 = stack.pop().unwrap();
-                let t = self.general_arithmetic(
+                let t = self.gen_quad_poly(
                     &[a.0[i], b.0[0], t1.0, t2.0],
                     &[F::zero(), F::zero(), t1.1, t2.1],
                     &[F::one(), F::zero()],
@@ -261,10 +278,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let k_mod = self.mod_to_native_field(&k)?;
         let c_mod = self.mod_to_native_field(c)?;
         let e_mod_f = F::from(E::MODULUS.into());
-        self.general_arithmetic_gate(
+        self.quad_poly_gate(
             &[a_mod, b_mod, k_mod, self.zero(), c_mod],
             &[F::zero(), F::zero(), -e_mod_f, F::zero()],
             &[F::one(), F::zero()],
+            F::one(),
             F::zero(),
         )?;
 
@@ -284,6 +302,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
     }
 
     /// Constrain that a*b=c in the emulated field for a constant b.
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a and c. We assume that they are already performed elsewhere.
     pub fn emulated_mul_constant_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -309,11 +329,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
             E::B,
             E::NUM_LIMBS,
         );
-
-        // range checking for output c
-        c.0.iter()
-            .map(|v| self.enforce_in_range(*v, E::B))
-            .collect::<Result<Vec<_>, CircuitError>>()?;
 
         // enforcing a * b - k * E::MODULUS = c mod 2^t
 
@@ -405,6 +420,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
     /// Constrain that a+b=c in the emulated field.
     /// Checking whether a + b = k * E::MODULUS + c
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a, b and c. We assume that they are already performed elsewhere.
     pub fn emulated_add_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -473,7 +490,21 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(c)
     }
 
+    /// Return an [`EmulatedVariable`] which equals to a-b.
+    pub fn emulated_sub<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+        b: &EmulatedVariable<E>,
+    ) -> Result<EmulatedVariable<E>, CircuitError> {
+        let c = self.emulated_witness(a)? - self.emulated_witness(b)?;
+        let c = self.create_emulated_variable(c)?;
+        self.emulated_add_gate(&c, b, a)?;
+        Ok(c)
+    }
+
     /// Constrain that a+b=c in the emulated field.
+    /// This function doesn't perform emulated variable validaty check on the
+    /// input a and c. We assume that they are already performed elsewhere.
     pub fn emulated_add_constant_gate<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -530,7 +561,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         Ok(())
     }
 
-    /// Return an [`EmulatedVariable`] which equals to a+b.
+    /// Return an [`EmulatedVariable`] which equals to a + b where b is a
+    /// constant.
     pub fn emulated_add_constant<E: EmulationConfig<F>>(
         &mut self,
         a: &EmulatedVariable<E>,
@@ -540,6 +572,87 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let c = self.create_emulated_variable(c)?;
         self.emulated_add_constant_gate(a, b, &c)?;
         Ok(c)
+    }
+
+    /// Return an [`EmulatedVariable`] which equals to a - b where b is a
+    /// constant.
+    pub fn emulated_sub_constant<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+        b: E,
+    ) -> Result<EmulatedVariable<E>, CircuitError> {
+        let c = self.emulated_witness(a)? - b;
+        let c = self.create_emulated_variable(c)?;
+        self.emulated_add_constant_gate(&c, b, a)?;
+        Ok(c)
+    }
+    /// Obtain an emulated variable of the conditional selection from 2 emulated
+    /// variables. `b` is a boolean variable that indicates selection of P_b
+    /// from (P0, P1).
+    /// Return error if invalid input parameters are provided.
+    pub fn conditional_select_emulated<E: EmulationConfig<F>>(
+        &mut self,
+        b: BoolVar,
+        p0: &EmulatedVariable<E>,
+        p1: &EmulatedVariable<E>,
+    ) -> Result<EmulatedVariable<E>, CircuitError> {
+        self.check_var_bound(b.into())?;
+        self.check_vars_bound(&p0.0[..])?;
+        self.check_vars_bound(&p1.0[..])?;
+
+        let mut vals = vec![];
+        for (&x_0, &x_1) in p0.0.iter().zip(p1.0.iter()) {
+            let selected = self.conditional_select(b, x_0, x_1)?;
+            vals.push(selected);
+        }
+
+        Ok(EmulatedVariable::<E>(vals, PhantomData::<E>))
+    }
+
+    /// Constrain two emulated variables to be the same.
+    /// Return error if the input variables are invalid.
+    pub fn enforce_emulated_var_equal<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+        b: &EmulatedVariable<E>,
+    ) -> Result<(), CircuitError> {
+        self.check_vars_bound(&a.0[..])?;
+        self.check_vars_bound(&b.0[..])?;
+        for (&a, &b) in a.0.iter().zip(b.0.iter()) {
+            self.enforce_equal(a, b)?;
+        }
+        Ok(())
+    }
+
+    /// Obtain a bool variable representing whether two input emulated variables
+    /// are equal. Return error if variables are invalid.
+    pub fn is_emulated_var_equal<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+        b: &EmulatedVariable<E>,
+    ) -> Result<BoolVar, CircuitError> {
+        self.check_vars_bound(&a.0[..])?;
+        self.check_vars_bound(&b.0[..])?;
+        let c =
+            a.0.iter()
+                .zip(b.0.iter())
+                .map(|(&a, &b)| self.is_equal(a, b))
+                .collect::<Result<Vec<_>, _>>()?;
+        self.logic_and_all(&c)
+    }
+
+    /// Obtain a bool variable representing whether the input emulated variable
+    /// is zero. Return error if variables are invalid.
+    pub fn is_emulated_var_zero<E: EmulationConfig<F>>(
+        &mut self,
+        a: &EmulatedVariable<E>,
+    ) -> Result<BoolVar, CircuitError> {
+        self.check_vars_bound(&a.0[..])?;
+        let c =
+            a.0.iter()
+                .map(|&a| self.is_zero(a))
+                .collect::<Result<Vec<_>, _>>()?;
+        self.logic_and_all(&c)
     }
 
     /// Given an emulated field element `a`, return `a mod F::MODULUS` in the
@@ -581,17 +694,13 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 impl EmulationConfig<ark_bn254::Fr> for ark_bls12_377::Fq {
     const T: usize = 500;
-
-    const B: usize = 125;
-
-    const NUM_LIMBS: usize = 4;
+    const B: usize = 100;
+    const NUM_LIMBS: usize = 5;
 }
 
 impl EmulationConfig<ark_bn254::Fr> for ark_bn254::Fq {
-    const T: usize = 261;
-
-    const B: usize = 87;
-
+    const T: usize = 300;
+    const B: usize = 100;
     const NUM_LIMBS: usize = 3;
 }
 
@@ -674,7 +783,7 @@ mod tests {
         E: EmulationConfig<F>,
         F: PrimeField,
     {
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(20);
         let x = E::from(6732u64);
         let y = E::from(E::MODULUS.into() - 12387u64);
         let expected = x * y;
@@ -708,5 +817,52 @@ mod tests {
         assert!(circuit
             .check_circuit_satisfiability(&from_emulated_field(x))
             .is_err());
+    }
+
+    #[test]
+    fn test_select() {
+        test_select_helper::<Fq377, Fr254>();
+        test_select_helper::<Fq254, Fr254>();
+    }
+
+    fn test_select_helper<E, F>()
+    where
+        E: EmulationConfig<F>,
+        F: PrimeField,
+    {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        let overflow = E::from(E::MODULUS.into() - 1u64);
+        let var_y = circuit.create_emulated_variable(overflow).unwrap();
+        let b = circuit.create_boolean_variable(true).unwrap();
+        let var_z = circuit
+            .conditional_select_emulated(b, &var_x, &var_y)
+            .unwrap();
+        assert_eq!(circuit.emulated_witness(&var_z).unwrap(), overflow);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        *circuit.witness_mut(var_z.0[0]) = F::zero();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+    }
+
+    #[test]
+    fn test_enforce_equal() {
+        test_enforce_equal_helper::<Fq377, Fr254>();
+        test_enforce_equal_helper::<Fq254, Fr254>();
+    }
+
+    fn test_enforce_equal_helper<E, F>()
+    where
+        E: EmulationConfig<F>,
+        F: PrimeField,
+    {
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let var_x = circuit.create_emulated_variable(E::one()).unwrap();
+        let overflow = E::from(E::MODULUS.into() - 1u64);
+        let var_y = circuit.create_emulated_variable(overflow).unwrap();
+        let var_z = circuit.create_emulated_variable(overflow).unwrap();
+        circuit.enforce_emulated_var_equal(&var_y, &var_z).unwrap();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        circuit.enforce_emulated_var_equal(&var_x, &var_y).unwrap();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
     }
 }

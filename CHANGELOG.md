@@ -29,6 +29,11 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregateable signatures
 - [#291](https://github.com/EspressoSystems/jellyfish/pull/291) Non-native field operations and elliptic curve addition
 - [#309](https://github.com/EspressoSystems/jellyfish/pull/309) Reed-Solomon decoder accept FFT domain
+- [#320](https://github.com/EspressoSystems/jellyfish/pull/320) Non-native elliptic curve addition in short Weierstrass form
+- [#337](https://github.com/EspressoSystems/jellyfish/pull/337) Port VID from another repo
+- [#341](https://github.com/EspressoSystems/jellyfish/pull/341) Port VDF from another repo
+- [#343](https://github.com/EspressoSystems/jellyfish/pull/343) Rescue parameter for `ark_bn254::Fq`
+- [#362](https://github.com/EspressoSystems/jellyfish/pull/362) Derive Eq, Hash at a bunch of places
 
 ### Changed
 
@@ -37,6 +42,8 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#251](https://github.com/EspressoSystems/jellyfish/pull/251) add sign_key_ref api for BLSKeyPair
 - [#297](https://github.com/EspressoSystems/jellyfish/pull/297) Updated `tagged-base64` dependency to the `crates.io` package
 - [#299](https://github.com/EspressoSystems/jellyfish/pull/299) For Merkle tree, `DigestAlgorithm` now returns a `Result` type.
+- [#302](https://github.com/EspressoSystems/jellyfish/pull/302) Followup APIs for non-native ECC circuit support.
+- [#323](https://github.com/EspressoSystems/jellyfish/pull/323) Improve performance of range gate in ultra plonk.
 
 ### Removed
 
