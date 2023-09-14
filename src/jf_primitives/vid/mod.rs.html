@@ -81,6 +81,11 @@
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -127,22 +132,19 @@
 <span class="doccomment">/// VID: Verifiable Information Dispersal
 </span><span class="kw">pub trait </span>VidScheme {
     <span class="doccomment">/// Payload commitment.
-    </span><span class="kw">type </span>Commitment: Clone + Debug + Eq + PartialEq + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    </span><span class="kw">type </span>Commit: Clone + Debug + Eq + PartialEq + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     </span><span class="doccomment">/// Share-specific data sent to a storage node.
-    </span><span class="kw">type </span>StorageShare: Clone + Debug + Eq + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    </span><span class="kw">type </span>Share: Clone + Debug + Eq + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     </span><span class="doccomment">/// Common data sent to all storage nodes.
-    </span><span class="kw">type </span>StorageCommon: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    </span><span class="kw">type </span>Common: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     </span><span class="doccomment">/// Compute a payload commitment.
-    </span><span class="kw">fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;<span class="self">Self</span>::Commitment&gt;;
+    </span><span class="kw">fn </span>commit_only(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt;;
 
     <span class="doccomment">/// Compute shares to send to the storage nodes
-    </span><span class="kw">fn </span>dispersal_data(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        payload: <span class="kw-2">&amp;</span>[u8],
-    ) -&gt; VidResult&lt;(Vec&lt;<span class="self">Self</span>::StorageShare&gt;, <span class="self">Self</span>::StorageCommon)&gt;;
+    </span><span class="kw">fn </span>disperse(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt;;
 
     <span class="doccomment">/// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See &lt;https://sled.rs/errors&gt;
@@ -150,18 +152,26 @@
     /// - VidResult::Err in case of actual error
     /// - VidResult::Ok(Result::Err) if verification fails
     /// - VidResult::Ok(Result::Ok) if verification succeeds
-    </span><span class="kw">fn </span>verify_share(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        share: <span class="kw-2">&amp;</span><span class="self">Self</span>::StorageShare,
-        common: <span class="kw-2">&amp;</span><span class="self">Self</span>::StorageCommon,
-    ) -&gt; VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt;;
+    </span><span class="kw">fn </span>verify_share(<span class="kw-2">&amp;</span><span class="self">self</span>, share: <span class="kw-2">&amp;</span><span class="self">Self</span>::Share, common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common)
+        -&gt; VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt;;
 
     <span class="doccomment">/// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
-    </span><span class="kw">fn </span>recover_payload(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::StorageShare],
-        common: <span class="kw-2">&amp;</span><span class="self">Self</span>::StorageCommon,
-    ) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt;;
+    </span><span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt;;
+}
+
+<span class="doccomment">/// Convenience struct to aggregate disperse data.
+///
+/// Return type for [`VidScheme::disperse`].
+///
+/// # Why the `?Sized` bound?
+/// Rust hates you: &lt;https://stackoverflow.com/a/54465962&gt;
+</span><span class="kw">pub struct </span>VidDisperse&lt;V: VidScheme + <span class="question-mark">?</span>Sized&gt; {
+    <span class="doccomment">/// VID disperse shares to send to the storage nodes.
+    </span><span class="kw">pub </span>shares: Vec&lt;V::Share&gt;,
+    <span class="doccomment">/// VID common data to send to all storage nodes.
+    </span><span class="kw">pub </span>common: V::Common,
+    <span class="doccomment">/// VID payload commitment.
+    </span><span class="kw">pub </span>commit: V::Commit,
 }
 </code></pre></div></section></main></body></html>

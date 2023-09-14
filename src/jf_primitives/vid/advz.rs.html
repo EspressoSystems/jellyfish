@@ -776,6 +776,7 @@
 <a href="#776" id="776">776</a>
 <a href="#777" id="777">777</a>
 <a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -786,7 +787,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-</span><span class="kw">use super</span>::{vid, VidError, VidResult, VidScheme};
+</span><span class="kw">use super</span>::{vid, VidDisperse, VidError, VidResult, VidScheme};
 <span class="kw">use crate</span>::{
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
     pcs::{
@@ -886,7 +887,7 @@
     }
 }
 
-<span class="doccomment">/// The [`VidScheme::StorageShare`] type for [`Advz`].
+<span class="doccomment">/// The [`VidScheme::Share`] type for [`Advz`].
 </span><span class="attr">#[derive(Derivative, Deserialize, Serialize)]
 </span><span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -905,7 +906,7 @@
     evals_proof: V::MembershipProof,
 }
 
-<span class="doccomment">/// The [`VidScheme::StorageCommon`] type for [`Advz`].
+<span class="doccomment">/// The [`VidScheme::Common`] type for [`Advz`].
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
 </span><span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -937,11 +938,11 @@
     V::MembershipProof: Sync + Debug, <span class="comment">/* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     </span>V::Index: From&lt;u64&gt;,
 {
-    <span class="kw">type </span>Commitment = Output&lt;H&gt;;
-    <span class="kw">type </span>StorageShare = Share&lt;P, V&gt;;
-    <span class="kw">type </span>StorageCommon = Common&lt;P, V&gt;;
+    <span class="kw">type </span>Commit = Output&lt;H&gt;;
+    <span class="kw">type </span>Share = Share&lt;P, V&gt;;
+    <span class="kw">type </span>Common = Common&lt;P, V&gt;;
 
-    <span class="kw">fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;<span class="self">Self</span>::Commitment&gt; {
+    <span class="kw">fn </span>commit_only(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
 
         <span class="comment">// TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
@@ -959,17 +960,14 @@
         <span class="prelude-val">Ok</span>(hasher.finalize())
     }
 
-    <span class="kw">fn </span>dispersal_data(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        payload: <span class="kw-2">&amp;</span>[u8],
-    ) -&gt; VidResult&lt;(Vec&lt;<span class="self">Self</span>::StorageShare&gt;, <span class="self">Self</span>::StorageCommon)&gt; {
-        <span class="self">self</span>.dispersal_data_from_elems(<span class="kw-2">&amp;</span>bytes_to_field_elements(payload))
+    <span class="kw">fn </span>disperse(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt; {
+        <span class="self">self</span>.disperse_from_elems(<span class="kw-2">&amp;</span>bytes_to_field_elements(payload))
     }
 
     <span class="kw">fn </span>verify_share(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        share: <span class="kw-2">&amp;</span><span class="self">Self</span>::StorageShare,
-        common: <span class="kw-2">&amp;</span><span class="self">Self</span>::StorageCommon,
+        share: <span class="kw-2">&amp;</span><span class="self">Self</span>::Share,
+        common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common,
     ) -&gt; VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt; {
         <span class="comment">// check arguments
         </span><span class="kw">if </span>share.evals.len() != common.poly_commits.len() {
@@ -1034,11 +1032,7 @@
         .ok_or(()))
     }
 
-    <span class="kw">fn </span>recover_payload(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::StorageShare],
-        common: <span class="kw-2">&amp;</span><span class="self">Self</span>::StorageCommon,
-    ) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
         <span class="prelude-val">Ok</span>(bytes_from_field_elements(
             <span class="self">self</span>.recover_elems(shares, common)<span class="question-mark">?</span>,
         ))
@@ -1057,15 +1051,9 @@
     V::MembershipProof: Sync + Debug, <span class="comment">/* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     </span>V::Index: From&lt;u64&gt;,
 {
-    <span class="doccomment">/// Same as [`VidScheme::dispersal_data`] except `payload` is a slice of
+    <span class="doccomment">/// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
-    </span><span class="kw">pub fn </span>dispersal_data_from_elems(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        payload: <span class="kw-2">&amp;</span>[P::Evaluation],
-    ) -&gt; VidResult&lt;(
-        Vec&lt;&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::StorageShare&gt;,
-        &lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::StorageCommon,
-    )&gt; {
+    </span><span class="kw">pub fn </span>disperse_from_elems(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[P::Evaluation]) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt; {
         <span class="kw">let </span>num_polys = (payload.len() - <span class="number">1</span>) / <span class="self">self</span>.payload_chunk_size + <span class="number">1</span>;
         <span class="kw">let </span>domain = P::multi_open_rou_eval_domain(<span class="self">self</span>.payload_chunk_size, <span class="self">self</span>.num_storage_nodes)
             .map_err(vid)<span class="question-mark">?</span>;
@@ -1118,8 +1106,7 @@
         <span class="kw">let </span>height = height + <span class="number">1</span>; <span class="comment">// avoid fully qualified syntax for try_into()
         </span><span class="kw">let </span>all_evals_commit = V::from_elems(height, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
 
-        <span class="comment">// common data
-        </span><span class="kw">let </span>common = Common {
+        <span class="kw">let </span>common = Common {
             poly_commits: polys
                 .iter()
                 .map(|poly| P::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, poly))
@@ -1128,8 +1115,18 @@
             all_evals_digest: all_evals_commit.commitment().digest(),
         };
 
-        <span class="comment">// pseudorandom scalar
-        </span><span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common)<span class="question-mark">?</span>;
+        <span class="kw">let </span>commit = {
+            <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
+            <span class="kw">for </span>poly_commit <span class="kw">in </span>common.poly_commits.iter() {
+                <span class="comment">// TODO compiler bug? `as` should not be needed here!
+                </span>(poly_commit <span class="kw">as </span><span class="kw-2">&amp;</span>P::Commitment)
+                    .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
+                    .map_err(vid)<span class="question-mark">?</span>;
+            }
+            hasher.finalize()
+        };
+
+        <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common)<span class="question-mark">?</span>;
 
         <span class="comment">// Compute aggregate polynomial
         // as a pseudorandom linear combo of polynomials
@@ -1138,8 +1135,7 @@
         </span><span class="kw">let </span>aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
-        <span class="comment">// aggregate proofs
-        </span><span class="kw">let </span>aggregate_proofs =
+        <span class="kw">let </span>aggregate_proofs =
             P::multi_open_rou_proofs(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>aggregate_poly, <span class="self">self</span>.num_storage_nodes, <span class="kw-2">&amp;</span>domain)
                 .map_err(vid)<span class="question-mark">?</span>;
 
@@ -1161,15 +1157,19 @@
             })
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, VidError&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>((shares, common))
+        <span class="prelude-val">Ok</span>(VidDisperse {
+            shares,
+            common,
+            commit,
+        })
     }
 
     <span class="doccomment">/// Same as [`VidScheme::recover_payload`] except returns a [`Vec`] of field
     /// elements.
     </span><span class="kw">pub fn </span>recover_elems(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        shares: <span class="kw-2">&amp;</span>[&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::StorageShare],
-        _common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::StorageCommon,
+        shares: <span class="kw-2">&amp;</span>[&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Share],
+        _common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
     ) -&gt; VidResult&lt;Vec&lt;P::Evaluation&gt;&gt; {
         <span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.payload_chunk_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
@@ -1216,9 +1216,7 @@
         <span class="prelude-val">Ok</span>(result)
     }
 
-    <span class="kw">fn </span>pseudorandom_scalar(
-        common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::StorageCommon,
-    ) -&gt; VidResult&lt;P::Evaluation&gt; {
+    <span class="kw">fn </span>pseudorandom_scalar(common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common) -&gt; VidResult&lt;P::Evaluation&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
         <span class="kw">for </span>poly_commit <span class="kw">in </span>common.poly_commits.iter() {
             poly_commit
@@ -1349,7 +1347,8 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_verify_share_corrupt_share() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>(shares, common) = advz.dispersal_data(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>(shares, common) = (disperse.shares, disperse.common);
 
         <span class="kw">for </span>(i, share) <span class="kw">in </span>shares.iter().enumerate() {
             <span class="comment">// missing share eval
@@ -1414,7 +1413,8 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_verify_share_corrupt_commit() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>(shares, common) = advz.dispersal_data(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>(shares, common) = (disperse.shares, disperse.common);
 
         <span class="comment">// missing commit
         </span><span class="kw">let </span>common_missing_item = Common {
@@ -1458,7 +1458,8 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_verify_share_corrupt_share_and_commit() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>(<span class="kw-2">mut </span>shares, <span class="kw-2">mut </span>common) = advz.dispersal_data(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>(<span class="kw-2">mut </span>shares, <span class="kw-2">mut </span>common) = (disperse.shares, disperse.common);
 
         common.poly_commits.pop();
         shares[<span class="number">0</span>].evals.pop();
@@ -1476,7 +1477,8 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_recover_payload_corrupt_shares() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>(shares, common) = advz.dispersal_data(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>(shares, common) = (disperse.shares, disperse.common);
 
         {
             <span class="comment">// unequal share eval lengths
