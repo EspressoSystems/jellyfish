@@ -603,7 +603,7 @@
 <span class="kw">use </span>zeroize::Zeroize;
 
 <span class="doccomment">/// BLS signature scheme.
-</span><span class="attr">#[derive(Serialize, Deserialize, Debug, PartialEq)]
+</span><span class="attr">#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 </span><span class="kw">pub struct </span>BLSOverBN254CurveSignatureScheme;
 
 <span class="kw">impl </span>SignatureScheme <span class="kw">for </span>BLSOverBN254CurveSignatureScheme {

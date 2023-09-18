@@ -600,6 +600,7 @@
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -637,6 +638,7 @@
 <span class="kw">use </span>zeroize::Zeroize;
 
 <span class="doccomment">/// Schnorr signature scheme.
+</span><span class="attr">#[derive(Debug, PartialEq, Clone)]
 </span><span class="kw">pub struct </span>SchnorrSignatureScheme&lt;P&gt; {
     curve_param: PhantomData&lt;P&gt;,
 }
@@ -644,7 +646,7 @@
 <span class="kw">impl</span>&lt;F, P&gt; SignatureScheme <span class="kw">for </span>SchnorrSignatureScheme&lt;P&gt;
 <span class="kw">where
     </span>F: RescueParameter,
-    P: Config&lt;BaseField = F&gt;,
+    P: Config&lt;BaseField = F&gt; + Clone,
 {
     <span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = CS_ID_SCHNORR;
 

@@ -190,6 +190,8 @@
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Module for signature primitives.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
@@ -208,7 +210,7 @@
 </span><span class="comment">// A signature scheme is associated with a hash function H that is
 // to be used for challenge generation.
 // FIXME: update H bound once hash-api is merged.
-</span><span class="kw">pub trait </span>SignatureScheme {
+</span><span class="kw">pub trait </span>SignatureScheme: Clone + Send + Sync + <span class="lifetime">&#39;static </span>{
     <span class="doccomment">/// Ciphersuite Identifier
     </span><span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
 
@@ -284,8 +286,10 @@
 
 <span class="doccomment">/// Trait for aggregatable signatures.
 /// TODO: generic over hash functions
+</span><span class="comment">// NOTE: we +Debug here instead of on `SignatureSchemes` because `schnorr &lt;P:
+// CurveConfig&gt;` doesn&#39;t impl Debug
 </span><span class="kw">pub trait </span>AggregateableSignatureSchemes:
-    SignatureScheme + Serialize + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt;
+    SignatureScheme + Serialize + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt; + Debug
 {
     <span class="doccomment">/// Aggregate multiple signatures into a single signature
     /// The list of public keys is also in the input as some aggregate signature

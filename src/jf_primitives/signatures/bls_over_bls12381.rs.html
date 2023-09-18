@@ -471,6 +471,7 @@
 <a href="#471" id="471">471</a>
 <a href="#472" id="472">472</a>
 <a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -796,6 +797,7 @@
 
 <span class="doccomment">/// BLS signature scheme. Wrapping around structs from the `blst` crate.
 /// See [module-level documentation](self) for example usage.
+</span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>BLSSignatureScheme;
 
 <span class="kw">impl </span>SignatureScheme <span class="kw">for </span>BLSSignatureScheme {
