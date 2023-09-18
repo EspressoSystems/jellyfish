@@ -323,6 +323,7 @@ impl Valid for BLSSignature {
 
 /// BLS signature scheme. Wrapping around structs from the `blst` crate.
 /// See [module-level documentation](self) for example usage.
+#[derive(Clone, Debug)]
 pub struct BLSSignatureScheme;
 
 impl SignatureScheme for BLSSignatureScheme {
