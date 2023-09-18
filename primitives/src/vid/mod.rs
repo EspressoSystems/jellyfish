@@ -44,22 +44,19 @@ pub type VidResult<T> = Result<T, VidError>;
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
     /// Payload commitment.
-    type Commitment: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Commit: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
-    type StorageShare: Clone + Debug + Eq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Share: Clone + Debug + Eq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
-    type StorageCommon: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Common: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment.
-    fn commit(&self, payload: &[u8]) -> VidResult<Self::Commitment>;
+    fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
-    fn dispersal_data(
-        &self,
-        payload: &[u8],
-    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon)>;
+    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>
@@ -67,17 +64,25 @@ pub trait VidScheme {
     /// - VidResult::Err in case of actual error
     /// - VidResult::Ok(Result::Err) if verification fails
     /// - VidResult::Ok(Result::Ok) if verification succeeds
-    fn verify_share(
-        &self,
-        share: &Self::StorageShare,
-        common: &Self::StorageCommon,
-    ) -> VidResult<Result<(), ()>>;
+    fn verify_share(&self, share: &Self::Share, common: &Self::Common)
+        -> VidResult<Result<(), ()>>;
 
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
-    fn recover_payload(
-        &self,
-        shares: &[Self::StorageShare],
-        common: &Self::StorageCommon,
-    ) -> VidResult<Vec<u8>>;
+    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
+}
+
+/// Convenience struct to aggregate disperse data.
+///
+/// Return type for [`VidScheme::disperse`].
+///
+/// # Why the `?Sized` bound?
+/// Rust hates you: <https://stackoverflow.com/a/54465962>
+pub struct VidDisperse<V: VidScheme + ?Sized> {
+    /// VID disperse shares to send to the storage nodes.
+    pub shares: Vec<V::Share>,
+    /// VID common data to send to all storage nodes.
+    pub common: V::Common,
+    /// VID payload commitment.
+    pub commit: V::Commit,
 }
