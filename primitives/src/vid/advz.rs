@@ -8,7 +8,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{vid, VidError, VidResult, VidScheme};
+use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
     pcs::{
@@ -108,7 +108,7 @@ where
     }
 }
 
-/// The [`VidScheme::StorageShare`] type for [`Advz`].
+/// The [`VidScheme::Share`] type for [`Advz`].
 #[derive(Derivative, Deserialize, Serialize)]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -127,7 +127,7 @@ where
     evals_proof: V::MembershipProof,
 }
 
-/// The [`VidScheme::StorageCommon`] type for [`Advz`].
+/// The [`VidScheme::Common`] type for [`Advz`].
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -159,11 +159,11 @@ where
     V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    type Commitment = Output<H>;
-    type StorageShare = Share<P, V>;
-    type StorageCommon = Common<P, V>;
+    type Commit = Output<H>;
+    type Share = Share<P, V>;
+    type Common = Common<P, V>;
 
-    fn commit(&self, payload: &[u8]) -> VidResult<Self::Commitment> {
+    fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit> {
         let mut hasher = H::new();
 
         // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
@@ -181,17 +181,14 @@ where
         Ok(hasher.finalize())
     }
 
-    fn dispersal_data(
-        &self,
-        payload: &[u8],
-    ) -> VidResult<(Vec<Self::StorageShare>, Self::StorageCommon)> {
-        self.dispersal_data_from_elems(&bytes_to_field_elements(payload))
+    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>> {
+        self.disperse_from_elems(&bytes_to_field_elements(payload))
     }
 
     fn verify_share(
         &self,
-        share: &Self::StorageShare,
-        common: &Self::StorageCommon,
+        share: &Self::Share,
+        common: &Self::Common,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
         if share.evals.len() != common.poly_commits.len() {
@@ -256,11 +253,7 @@ where
         .ok_or(()))
     }
 
-    fn recover_payload(
-        &self,
-        shares: &[Self::StorageShare],
-        common: &Self::StorageCommon,
-    ) -> VidResult<Vec<u8>> {
+    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
         Ok(bytes_from_field_elements(
             self.recover_elems(shares, common)?,
         ))
@@ -279,15 +272,9 @@ where
     V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    /// Same as [`VidScheme::dispersal_data`] except `payload` is a slice of
+    /// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
-    pub fn dispersal_data_from_elems(
-        &self,
-        payload: &[P::Evaluation],
-    ) -> VidResult<(
-        Vec<<Self as VidScheme>::StorageShare>,
-        <Self as VidScheme>::StorageCommon,
-    )> {
+    pub fn disperse_from_elems(&self, payload: &[P::Evaluation]) -> VidResult<VidDisperse<Self>> {
         let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
@@ -340,7 +327,6 @@ where
         let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
 
-        // common data
         let common = Common {
             poly_commits: polys
                 .iter()
@@ -350,7 +336,17 @@ where
             all_evals_digest: all_evals_commit.commitment().digest(),
         };
 
-        // pseudorandom scalar
+        let commit = {
+            let mut hasher = H::new();
+            for poly_commit in common.poly_commits.iter() {
+                // TODO compiler bug? `as` should not be needed here!
+                (poly_commit as &P::Commitment)
+                    .serialize_uncompressed(&mut hasher)
+                    .map_err(vid)?;
+            }
+            hasher.finalize()
+        };
+
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common)?;
 
         // Compute aggregate polynomial
@@ -360,7 +356,6 @@ where
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
-        // aggregate proofs
         let aggregate_proofs =
             P::multi_open_rou_proofs(&self.ck, &aggregate_poly, self.num_storage_nodes, &domain)
                 .map_err(vid)?;
@@ -383,15 +378,19 @@ where
             })
             .collect::<Result<_, VidError>>()?;
 
-        Ok((shares, common))
+        Ok(VidDisperse {
+            shares,
+            common,
+            commit,
+        })
     }
 
     /// Same as [`VidScheme::recover_payload`] except returns a [`Vec`] of field
     /// elements.
     pub fn recover_elems(
         &self,
-        shares: &[<Self as VidScheme>::StorageShare],
-        _common: &<Self as VidScheme>::StorageCommon,
+        shares: &[<Self as VidScheme>::Share],
+        _common: &<Self as VidScheme>::Common,
     ) -> VidResult<Vec<P::Evaluation>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
@@ -438,9 +437,7 @@ where
         Ok(result)
     }
 
-    fn pseudorandom_scalar(
-        common: &<Self as VidScheme>::StorageCommon,
-    ) -> VidResult<P::Evaluation> {
+    fn pseudorandom_scalar(common: &<Self as VidScheme>::Common) -> VidResult<P::Evaluation> {
         let mut hasher = H::new();
         for poly_commit in common.poly_commits.iter() {
             poly_commit
@@ -571,7 +568,8 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
-        let (shares, common) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
+        let (shares, common) = (disperse.shares, disperse.common);
 
         for (i, share) in shares.iter().enumerate() {
             // missing share eval
@@ -636,7 +634,8 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
-        let (shares, common) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
+        let (shares, common) = (disperse.shares, disperse.common);
 
         // missing commit
         let common_missing_item = Common {
@@ -680,7 +679,8 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
-        let (mut shares, mut common) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
+        let (mut shares, mut common) = (disperse.shares, disperse.common);
 
         common.poly_commits.pop();
         shares[0].evals.pop();
@@ -698,7 +698,8 @@ mod tests {
     #[test]
     fn sad_path_recover_payload_corrupt_shares() {
         let (advz, bytes_random) = avdz_init();
-        let (shares, common) = advz.dispersal_data(&bytes_random).unwrap();
+        let disperse = advz.disperse(&bytes_random).unwrap();
+        let (shares, common) = (disperse.shares, disperse.common);
 
         {
             // unequal share eval lengths
