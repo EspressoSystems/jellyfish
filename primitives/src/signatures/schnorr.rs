@@ -35,6 +35,7 @@ use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// Schnorr signature scheme.
+#[derive(Debug, PartialEq, Clone)]
 pub struct SchnorrSignatureScheme<P> {
     curve_param: PhantomData<P>,
 }
@@ -42,7 +43,7 @@ pub struct SchnorrSignatureScheme<P> {
 impl<F, P> SignatureScheme for SchnorrSignatureScheme<P>
 where
     F: RescueParameter,
-    P: Config<BaseField = F>,
+    P: Config<BaseField = F> + Clone,
 {
     const CS_ID: &'static str = CS_ID_SCHNORR;
 
