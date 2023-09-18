@@ -68,7 +68,7 @@ use tagged_base64::tagged;
 use zeroize::Zeroize;
 
 /// BLS signature scheme.
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct BLSOverBN254CurveSignatureScheme;
 
 impl SignatureScheme for BLSOverBN254CurveSignatureScheme {

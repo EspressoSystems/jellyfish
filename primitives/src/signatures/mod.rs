@@ -16,7 +16,7 @@ use zeroize::Zeroize;
 // A signature scheme is associated with a hash function H that is
 // to be used for challenge generation.
 // FIXME: update H bound once hash-api is merged.
-pub trait SignatureScheme {
+pub trait SignatureScheme: Clone + Send + Sync + 'static {
     /// Ciphersuite Identifier
     const CS_ID: &'static str;
 
@@ -92,8 +92,10 @@ pub trait SignatureScheme {
 
 /// Trait for aggregatable signatures.
 /// TODO: generic over hash functions
+// NOTE: we +Debug here instead of on `SignatureSchemes` because `schnorr <P:
+// CurveConfig>` doesn't impl Debug
 pub trait AggregateableSignatureSchemes:
-    SignatureScheme + Serialize + for<'a> Deserialize<'a>
+    SignatureScheme + Serialize + for<'a> Deserialize<'a> + Debug
 {
     /// Aggregate multiple signatures into a single signature
     /// The list of public keys is also in the input as some aggregate signature
