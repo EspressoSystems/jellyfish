@@ -65,7 +65,8 @@ ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381-bandersnatch = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
 bincode = "1.3"
-criterion = "0.4.0"
+criterion = "0.5.1"
+hashbrown = "0.13.1"
 sha2 = { version = "0.10.1" }
 
 [[bench]]
