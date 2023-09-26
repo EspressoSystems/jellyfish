@@ -275,7 +275,11 @@ where
     /// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
     pub fn disperse_from_elems(&self, payload: &[P::Evaluation]) -> VidResult<VidDisperse<Self>> {
-        let num_polys = (payload.len() - 1) / self.payload_chunk_size + 1;
+        let num_polys = if payload.is_empty() {
+            0
+        } else {
+            (payload.len() - 1) / self.payload_chunk_size + 1
+        };
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
 
