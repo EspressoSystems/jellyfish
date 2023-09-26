@@ -11,7 +11,7 @@ rust-version = { workspace = true }
 
 [dependencies]
 ark-ec = "0.4.0"
-ark-ff = { version = "0.4.0", features = [ "asm" ] }
+ark-ff = { version = "0.4.0", features = ["asm"] }
 ark-poly = "0.4.0"
 ark-serialize = "0.4.0"
 ark-std = { version = "0.4.0", default-features = false }
@@ -21,7 +21,7 @@ downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
 hashbrown = "0.13.2"
-itertools = { version = "0.10.1", default-features = false }
+itertools = { workspace = true }
 jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
 jf-utils = { path = "../utilities" }
@@ -52,14 +52,30 @@ harness = false
 [features]
 default = ["parallel"]
 std = [
-    "ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", "ark-poly/std",
-    "downcast-rs/std", "itertools/use_std", "jf-primitives/std", "jf-relation/std",
-    "jf-utils/std", "num-bigint/std", "rand_chacha/std", "sha3/std"
+    "ark-std/std",
+    "ark-serialize/std",
+    "ark-ff/std",
+    "ark-ec/std",
+    "ark-poly/std",
+    "downcast-rs/std",
+    "itertools/use_std",
+    "jf-primitives/std",
+    "jf-relation/std",
+    "jf-utils/std",
+    "num-bigint/std",
+    "rand_chacha/std",
+    "sha3/std",
 ]
 test_apis = [] # exposing apis for testing purpose
-parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
-            "jf-utils/parallel", "jf-relation/parallel", "jf-primitives/parallel",
-            "dep:rayon" ]
+parallel = [
+    "ark-ff/parallel",
+    "ark-ec/parallel",
+    "ark-poly/parallel",
+    "jf-utils/parallel",
+    "jf-relation/parallel",
+    "jf-primitives/parallel",
+    "dep:rayon",
+]
 test-srs = []
 
 [[example]]
