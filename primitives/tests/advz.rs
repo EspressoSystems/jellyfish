@@ -13,7 +13,7 @@ mod vid;
 fn round_trip() {
     // play with these items
     let vid_sizes = [(2, 3), (5, 9)];
-    let byte_lens = [2, 16, 32, 47, 48, 49, 64, 100, 400];
+    let byte_lens = [0, 1, 2, 16, 32, 47, 48, 49, 64, 100, 400];
 
     // more items as a function of the above
     let supported_degree = vid_sizes.iter().max_by_key(|v| v.0).unwrap().0;
