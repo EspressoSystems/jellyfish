@@ -594,6 +594,8 @@
 <a href="#594" id="594">594</a>
 <a href="#595" id="595">595</a>
 <a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -949,12 +951,14 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;GeneralDensePolynomial&lt;E::G1, F&gt;, PCSError&gt; {
         <span class="comment">// First, pad to power_of_two, since Toeplitz mul only works for 2^k
         </span><span class="kw">let </span><span class="kw-2">mut </span>padded_coeffs: Vec&lt;F&gt; = poly_coeffs.to_vec();
-        <span class="kw">let </span>padded_degree = (padded_coeffs.len() - <span class="number">1</span>)
+        <span class="kw">let </span>padded_degree = padded_coeffs
+            .len()
+            .saturating_sub(<span class="number">1</span>)
             .checked_next_power_of_two()
             .ok_or_else(|| {
                 PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
                     <span class="string">&quot;Next power of two overflows! Got: {}&quot;</span>,
-                    (padded_coeffs.len() - <span class="number">1</span>)
+                    padded_coeffs.len().saturating_sub(<span class="number">1</span>)
                 ))
             })<span class="question-mark">?</span>;
         <span class="kw">let </span>padded_len = padded_degree + <span class="number">1</span>;
