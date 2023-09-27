@@ -18,6 +18,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 ### Fixed
 
 - [#243](https://github.com/EspressoSystems/jellyfish/pull/243) fixes bug in MerkleTreeGadget implementation for SparseRescueMerkleTree.
+- [#377](https://github.com/EspressoSystems/jellyfish/pull/377) fix: VID ADVZ allow zero-length payload
 
 ### Added
 

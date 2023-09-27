@@ -353,12 +353,14 @@ where
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
         // First, pad to power_of_two, since Toeplitz mul only works for 2^k
         let mut padded_coeffs: Vec<F> = poly_coeffs.to_vec();
-        let padded_degree = (padded_coeffs.len() - 1)
+        let padded_degree = padded_coeffs
+            .len()
+            .saturating_sub(1)
             .checked_next_power_of_two()
             .ok_or_else(|| {
                 PCSError::InvalidParameters(ark_std::format!(
                     "Next power of two overflows! Got: {}",
-                    (padded_coeffs.len() - 1)
+                    padded_coeffs.len().saturating_sub(1)
                 ))
             })?;
         let padded_len = padded_degree + 1;
