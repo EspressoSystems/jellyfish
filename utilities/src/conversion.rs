@@ -10,9 +10,11 @@ use ark_std::{
     borrow::Borrow,
     cmp::min,
     iter::{once, repeat},
+    marker::PhantomData,
     mem,
     vec::Vec,
 };
+use itertools::{Chunks, IntoChunks, Itertools};
 use sha2::{Digest, Sha512};
 
 /// Convert a scalar field element to a base field element.
@@ -287,6 +289,41 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
         .checked_mul(extension_degree)
         .expect("field element byte len should fit into usize");
     (primefield_bytes_len, extension_degree, field_bytes_len)
+}
+
+// pub fn bytes_to_field_elements<B, F>(bytes: B) -> impl Iterator<Item = F>
+// where
+//     F: Field,
+//     B: IntoIterator,
+//     B::Item: Borrow<u8>,
+// {
+// }
+
+pub struct FieldElems<'a, I: Iterator, F> {
+    into_chunks_iter: IntoChunks<I>,
+    chunks_iter: Chunks<'a, I>,
+    final_byte_len: Option<usize>,
+    _phantom: PhantomData<F>,
+    primefield_bytes_len: usize,
+    extension_degree: usize,
+    field_bytes_len: usize,
+}
+
+impl<I: Iterator, F: Field> FieldElems<'_, I, F> {
+    pub(crate) fn new(iter: I) -> Self {
+        let (primefield_bytes_len, extension_degree, field_bytes_len) = compile_time_checks::<F>();
+        let into_chunks_iter = iter.chunks(field_bytes_len);
+        let chunks_iter = into_chunks_iter.into_iter();
+        Self {
+            into_chunks_iter,
+            chunks_iter,
+            final_byte_len: None,
+            _phantom: PhantomData,
+            primefield_bytes_len,
+            extension_degree,
+            field_bytes_len,
+        }
+    }
 }
 
 #[cfg(test)]
