@@ -6,4 +6,5 @@
 
 //! This module implements the BLS signature over the BN254 curve.
 
+pub mod min_pk;
 pub mod min_sig;
