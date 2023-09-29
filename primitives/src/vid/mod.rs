@@ -9,6 +9,7 @@
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{error::Error, fmt::Debug, string::String, vec::Vec};
 use displaydoc::Display;
+use serde::{Deserialize, Serialize};
 
 pub mod advz;
 
@@ -78,6 +79,10 @@ pub trait VidScheme {
 ///
 /// # Why the `?Sized` bound?
 /// Rust hates you: <https://stackoverflow.com/a/54465962>
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
+#[serde(bound = "V::Share: Serialize + for<'a> Deserialize<'a>,
+     V::Common: Serialize + for<'a> Deserialize<'a>,
+     V::Commit: Serialize + for<'a> Deserialize<'a>,")]
 pub struct VidDisperse<V: VidScheme + ?Sized> {
     /// VID disperse shares to send to the storage nodes.
     pub shares: Vec<V::Share>,
