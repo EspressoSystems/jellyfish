@@ -11,8 +11,7 @@ use ark_ec::pairing::Pairing;
 use ark_serialize::Write;
 use ark_std::rand::RngCore;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use digest::{Digest, DynDigest, OutputSizeUser};
-use generic_array::ArrayLength;
+use digest::{crypto_common::generic_array::ArrayLength, Digest, DynDigest, OutputSizeUser};
 use jf_primitives::{
     pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
     vid::{advz::Advz, VidScheme},
