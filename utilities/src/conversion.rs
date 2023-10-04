@@ -293,7 +293,8 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
 pub fn bytes_to_field2<I, F>(bytes: I) -> impl Iterator<Item = F>
 where
     F: PrimeField,
-    I: IntoIterator<Item = u8>,
+    I: IntoIterator,
+    I::Item: Borrow<u8>,
 {
     BytesToField::new(bytes.into_iter())
 }
@@ -327,7 +328,12 @@ impl<I, F: Field> BytesToField<I, F> {
     }
 }
 
-impl<I: Iterator<Item = u8>, F: PrimeField> Iterator for BytesToField<I, F> {
+impl<I, F> Iterator for BytesToField<I, F>
+where
+    I: Iterator,
+    I::Item: Borrow<u8>,
+    F: PrimeField,
+{
     type Item = F;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -346,7 +352,7 @@ impl<I: Iterator<Item = u8>, F: PrimeField> Iterator for BytesToField<I, F> {
         let mut field_elem_bytes = vec![0u8; self.primefield_bytes_len]; // TODO const generics
         for (i, b) in field_elem_bytes.iter_mut().enumerate() {
             if let Some(byte) = self.iter.next() {
-                *b = byte;
+                *b = *byte.borrow();
             } else {
                 self.final_byte_len = Some(i);
                 break;
@@ -592,11 +598,15 @@ mod tests {
                 // let result: Vec<_> = bytes_from_field2(encoded).collect();
                 // println!("result:  {:?}", result);
 
-                // round trip
-                let result: Vec<_> =
+                // round trip: bytes as Iterator<Item = u8>
+                let result_clone: Vec<_> =
                     bytes_from_field2::<_, F>(bytes_to_field2(bytes.clone())).collect();
-                // TODO make the iterators over Borrow<u8>
-                assert_eq!(result, bytes);
+                assert_eq!(result_clone, bytes);
+
+                // round trip: bytes as Iterator<Item = &u8>
+                let result_borrow: Vec<_> =
+                    bytes_from_field2::<_, F>(bytes_to_field2(bytes.iter())).collect();
+                assert_eq!(result_borrow, bytes);
             }
 
             // test infallibility of bytes_from_field_elements
