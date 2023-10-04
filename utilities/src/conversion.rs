@@ -11,7 +11,7 @@ use ark_std::{
     cmp::min,
     iter::{once, repeat, Take},
     marker::PhantomData,
-    mem, println, vec,
+    mem, vec,
     vec::{IntoIter, Vec},
 };
 use sha2::{Digest, Sha512};
@@ -392,7 +392,6 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
         use FieldToBytesState::{Final, New, Typical};
         match &mut self.state {
             New => {
-                // println!("state: New");
                 let cur_elem = if let Some(elem) = self.elems_iter.next() {
                     elem
                 } else {
@@ -446,8 +445,6 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 next_elem,
                 next_next_elem,
             } => {
-                // println!("state: Typical");
-
                 let ret = bytes_iter.next();
                 if ret.is_some() {
                     return ret;
@@ -487,7 +484,6 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 return ret;
             },
             Final { bytes_iter } => {
-                // println!("state: Final");
                 return bytes_iter.next();
             },
         }
@@ -572,7 +568,7 @@ mod tests {
     fn bytes_field_elems2<F: PrimeField>() {
         // copied from bytes_field_elems()
 
-        let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200];
+        let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200, 5000];
         let trailing_zeros_lengths = [0, 1, 2, 5, 50];
 
         let max_len = *lengths.iter().max().unwrap();
@@ -588,18 +584,17 @@ mod tests {
                 rng.fill_bytes(&mut bytes[..len]);
                 bytes[len..].fill(0);
 
-                println!("byte_len: {}, trailing_zeros: {}", len, trailing_zeros_len);
-
                 // debug
-                println!("bytes:   {:?}", bytes);
-                let encoded: Vec<F> = bytes_to_field2(bytes.clone()).collect();
-                println!("encoded: {:?}", encoded);
-                let result: Vec<_> = bytes_from_field2(encoded).collect();
-                println!("result:  {:?}", result);
+                // println!("byte_len: {}, trailing_zeros: {}", len, trailing_zeros_len);
+                // println!("bytes:   {:?}", bytes);
+                // let encoded: Vec<F> = bytes_to_field2(bytes.clone()).collect();
+                // println!("encoded: {:?}", encoded);
+                // let result: Vec<_> = bytes_from_field2(encoded).collect();
+                // println!("result:  {:?}", result);
 
                 // round trip
-                // let result: Vec<_> =
-                //     bytes_from_field2::<_, F>(bytes_to_field2(bytes.clone())).collect();
+                let result: Vec<_> =
+                    bytes_from_field2::<_, F>(bytes_to_field2(bytes.clone())).collect();
                 // TODO make the iterators over Borrow<u8>
                 assert_eq!(result, bytes);
             }
@@ -620,7 +615,12 @@ mod tests {
         bytes_field_elems::<Fq12_381>();
         bytes_field_elems::<Fq12_377>();
         bytes_field_elems::<Fq12_254>();
+    }
 
+    #[test]
+    fn test_bytes_field_elems2() {
         bytes_field_elems2::<Fr254>();
+        bytes_field_elems2::<Fr377>();
+        bytes_field_elems2::<Fr381>();
     }
 }
