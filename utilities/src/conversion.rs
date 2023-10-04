@@ -446,6 +446,10 @@ impl<I, F: PrimeField> FieldToBytes<I, F> {
         ))
         .expect("result len conversion from u64 to usize should succeed")
     }
+
+    fn elem_to_bytes_iter(elem: F) -> IntoIter<u8> {
+        elem.into_bigint().to_bytes_le().into_iter()
+    }
 }
 
 impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
@@ -458,20 +462,21 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 let cur_elem = if let Some(elem) = self.elems_iter.next() {
                     elem
                 } else {
-                    // length-0 iterator. move to Final state with an empty iterator
+                    // length-0 iterator
+                    // move to `Final` state with an empty iterator
                     self.state = Final {
                         bytes_iter: Vec::new().into_iter().take(0),
                     };
                     return None;
                 };
 
-                let bytes_iter = cur_elem.into_bigint().to_bytes_le().into_iter();
+                let bytes_iter = Self::elem_to_bytes_iter(cur_elem);
 
                 let next_elem = if let Some(elem) = self.elems_iter.next() {
                     elem
                 } else {
-                    // length-1 iterator: we never produced this. just return all the bytes of the
-                    // sole elem (minus 1)
+                    // length-1 iterator: we never produced this
+                    // move to `Final` state with primefield_bytes_len bytes from the sole elem
                     let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
                     let ret = bytes_iter.next();
                     self.state = Final { bytes_iter };
@@ -482,7 +487,6 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     elem
                 } else {
                     // length-2 iterator
-                    // TODO refactor repeated code
                     let final_byte_len = Self::elem_to_usize(next_elem);
                     let mut bytes_iter = bytes_iter.take(final_byte_len);
                     let ret = bytes_iter.next();
@@ -490,6 +494,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     return ret;
                 };
 
+                // length >2 iterator
                 let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
                 let ret = bytes_iter.next();
                 self.state = Typical {
@@ -509,13 +514,11 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     return ret;
                 }
 
+                let bytes_iter = Self::elem_to_bytes_iter(*next_elem);
+
                 if let Some(elem) = self.elems_iter.next() {
                     // advance to the next field element
-                    let mut bytes_iter = next_elem
-                        .into_bigint()
-                        .to_bytes_le()
-                        .into_iter()
-                        .take(self.primefield_bytes_len);
+                    let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
                     let ret = bytes_iter.next();
                     self.state = Typical {
                         bytes_iter,
@@ -527,11 +530,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
 
                 // done
                 let final_byte_len = Self::elem_to_usize(*next_next_elem);
-                let mut bytes_iter = next_elem
-                    .into_bigint()
-                    .to_bytes_le()
-                    .into_iter()
-                    .take(final_byte_len);
+                let mut bytes_iter = bytes_iter.take(final_byte_len);
                 let ret = bytes_iter.next();
                 self.state = Final { bytes_iter };
                 ret
