@@ -336,7 +336,8 @@ where
 pub fn bytes_from_field<I, F>(elems: I) -> impl Iterator<Item = u8>
 where
     F: PrimeField,
-    I: IntoIterator<Item = F>,
+    I: IntoIterator,
+    I::Item: Borrow<F>,
 {
     FieldToBytes::new(elems.into_iter())
 }
@@ -452,7 +453,12 @@ impl<I, F: PrimeField> FieldToBytes<I, F> {
     }
 }
 
-impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
+impl<I, F> Iterator for FieldToBytes<I, F>
+where
+    I: Iterator,
+    I::Item: Borrow<F>,
+    F: PrimeField,
+{
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -460,7 +466,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
         match &mut self.state {
             New => {
                 let cur_elem = if let Some(elem) = self.elems_iter.next() {
-                    elem
+                    *elem.borrow()
                 } else {
                     // length-0 iterator
                     // move to `Final` state with an empty iterator
@@ -473,7 +479,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 let bytes_iter = Self::elem_to_bytes_iter(cur_elem);
 
                 let next_elem = if let Some(elem) = self.elems_iter.next() {
-                    elem
+                    *elem.borrow()
                 } else {
                     // length-1 iterator: we never produced this
                     // move to `Final` state with primefield_bytes_len bytes from the sole elem
@@ -484,7 +490,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 };
 
                 let next_next_elem = if let Some(elem) = self.elems_iter.next() {
-                    elem
+                    *elem.borrow()
                 } else {
                     // length-2 iterator
                     let final_byte_len = Self::elem_to_usize(next_elem);
@@ -523,7 +529,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     self.state = Typical {
                         bytes_iter,
                         next_elem: *next_next_elem,
-                        next_next_elem: elem,
+                        next_next_elem: *elem.borrow(),
                     };
                     return ret;
                 }
@@ -644,12 +650,12 @@ mod tests {
 
                 // round trip: bytes as Iterator<Item = u8>
                 let result_clone: Vec<_> =
-                    bytes_from_field::<_, F>(bytes_to_field(bytes.clone())).collect();
+                    bytes_from_field(bytes_to_field::<_, F>(bytes.clone())).collect();
                 assert_eq!(result_clone, bytes);
 
                 // round trip: bytes as Iterator<Item = &u8>
                 let result_borrow: Vec<_> =
-                    bytes_from_field::<_, F>(bytes_to_field(bytes.iter())).collect();
+                    bytes_from_field(bytes_to_field::<_, F>(bytes.iter())).collect();
                 assert_eq!(result_borrow, bytes);
             }
 
