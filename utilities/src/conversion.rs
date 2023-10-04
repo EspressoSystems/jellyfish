@@ -646,6 +646,16 @@ mod tests {
             elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
             bytes_from_field_elements(elems.as_ref());
         }
+
+        // empty iterator
+        let bytes = Vec::new();
+        assert!(bytes.iter().next().is_none());
+        let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
+        assert_eq!(elems_iter.next().unwrap(), F::ZERO);
+        assert_eq!(elems_iter.next().unwrap(), F::ZERO);
+        assert!(elems_iter.next().is_none());
+        // let result: Vec<_> = bytes_from_field::<_, F>(elems_iter).collect();
+        // assert_eq!(result, bytes);
     }
 
     #[test]
