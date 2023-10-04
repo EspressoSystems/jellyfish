@@ -397,7 +397,7 @@ where
         }
 
         // TODO const generics: use [u8; primefield_bytes_len]
-        let mut field_elem_bytes = vec![0u8; self.primefield_bytes_len]; // TODO const generics
+        let mut field_elem_bytes = vec![0u8; self.primefield_bytes_len];
         for (i, b) in field_elem_bytes.iter_mut().enumerate() {
             if let Some(byte) = self.bytes_iter.next() {
                 *b = *byte.borrow();
@@ -428,7 +428,7 @@ enum FieldToBytesState<F> {
     },
 }
 
-impl<I, F: Field> FieldToBytes<I, F> {
+impl<I, F: PrimeField> FieldToBytes<I, F> {
     fn new(elems_iter: I) -> Self {
         let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
@@ -436,6 +436,15 @@ impl<I, F: Field> FieldToBytes<I, F> {
             state: FieldToBytesState::New,
             primefield_bytes_len,
         }
+    }
+
+    fn elem_to_usize(elem: F) -> usize {
+        usize::try_from(u64::from_le_bytes(
+            elem.into_bigint().to_bytes_le()[..mem::size_of::<u64>()]
+                .try_into()
+                .expect("conversion from [u8] to u64 should succeed"),
+        ))
+        .expect("result len conversion from u64 to usize should succeed")
     }
 }
 
@@ -474,12 +483,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 } else {
                     // length-2 iterator
                     // TODO refactor repeated code
-                    let final_byte_len = usize::try_from(u64::from_le_bytes(
-                        next_elem.into_bigint().to_bytes_le()[..mem::size_of::<u64>()]
-                            .try_into()
-                            .expect("conversion from [u8] to u64 should succeed"),
-                    ))
-                    .expect("result len conversion from u64 to usize should succeed");
+                    let final_byte_len = Self::elem_to_usize(next_elem);
                     let mut bytes_iter = bytes_iter.take(final_byte_len);
                     let ret = bytes_iter.next();
                     self.state = Final { bytes_iter };
@@ -522,13 +526,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 }
 
                 // done
-                let final_byte_len = usize::try_from(u64::from_le_bytes(
-                    next_next_elem.into_bigint().to_bytes_le()[..mem::size_of::<u64>()]
-                        .try_into()
-                        .expect("conversion from [u8] to u64 should succeed"),
-                ))
-                .expect("result len conversion from u64 to usize should succeed");
-
+                let final_byte_len = Self::elem_to_usize(*next_next_elem);
                 let mut bytes_iter = next_elem
                     .into_bigint()
                     .to_bytes_le()
