@@ -290,6 +290,32 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
     (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
+/// Deterministic, infallible, invertible iterator adaptor to convert from
+/// arbitrary bytes to field elements.
+///
+/// # TODO doctest example
+///
+/// # How it works
+///
+/// Returns an iterator over [`PrimeField`] items defined as follows:
+/// - For each call to `next()`:
+///   - Consume P-1 items from `bytes` where P is the field characteristic byte
+///     length. (Consume all remaining B items from `bytes` if B < P-1.)
+///   - Convert the consumed bytes into a [`PrimeField`] via
+///     [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic
+///     is guaranteed not to occur because we consumed at most P-1 bytes.
+///   - Return the resulting [`PrimeField`] item.
+/// - The returned iterator has an additional item that encodes the number of
+///   input items consumed in order to produce the final output item.
+///
+/// # Panics
+///
+/// Panics only under conditions that should be checkable at compile time:
+///
+/// - The [`PrimeField`] modulus bit length is too small to hold a `u64`.
+/// - The [`PrimeField`] byte length is too large to fit inside a `usize`.
+///
+/// If any of the above conditions holds then this function *always* panics.
 pub fn bytes_to_field<I, F>(bytes: I) -> impl Iterator<Item = F>
 where
     F: PrimeField,
@@ -299,6 +325,13 @@ where
     BytesToField::new(bytes.into_iter())
 }
 
+/// Deterministic, infallible inverse of [`bytes_to_field`].
+///
+/// This function is not invertible because [`bytes_to_field`] is not onto.
+///
+/// ## Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field`].
 pub fn bytes_from_field<I, F>(elems: I) -> impl Iterator<Item = u8>
 where
     F: PrimeField,
@@ -401,14 +434,13 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 let cur_elem = if let Some(elem) = self.elems_iter.next() {
                     elem
                 } else {
-                    // length-0 iterator. move to LengthOne state with an empty iterator
+                    // length-0 iterator. move to Final state with an empty iterator
                     self.state = Final {
                         bytes_iter: Vec::new().into_iter().take(0),
                     };
                     return None;
                 };
 
-                // TODO did I forget to drop the last byte?
                 let bytes_iter = cur_elem.into_bigint().to_bytes_le().into_iter();
 
                 let next_elem = if let Some(elem) = self.elems_iter.next() {
@@ -592,9 +624,9 @@ mod tests {
                 // debug
                 // println!("byte_len: {}, trailing_zeros: {}", len, trailing_zeros_len);
                 // println!("bytes:   {:?}", bytes);
-                // let encoded: Vec<F> = bytes_to_field2(bytes.clone()).collect();
+                // let encoded: Vec<F> = bytes_to_field(bytes.iter()).collect();
                 // println!("encoded: {:?}", encoded);
-                // let result: Vec<_> = bytes_from_field2(encoded).collect();
+                // let result: Vec<_> = bytes_from_field(encoded).collect();
                 // println!("result:  {:?}", result);
 
                 // round trip: bytes as Iterator<Item = u8>
