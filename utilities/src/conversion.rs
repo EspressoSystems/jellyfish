@@ -648,14 +648,14 @@ mod tests {
                 // let result: Vec<_> = bytes_from_field(encoded).collect();
                 // println!("result:  {:?}", result);
 
-                // round trip: bytes as Iterator<Item = u8>
+                // round trip: bytes as Iterator<Item = u8>, elems as Iterator<Item = F>
                 let result_clone: Vec<_> =
                     bytes_from_field(bytes_to_field::<_, F>(bytes.clone())).collect();
                 assert_eq!(result_clone, bytes);
 
-                // round trip: bytes as Iterator<Item = &u8>
-                let result_borrow: Vec<_> =
-                    bytes_from_field(bytes_to_field::<_, F>(bytes.iter())).collect();
+                // round trip: bytes as Iterator<Item = &u8>, elems as Iterator<Item = &F>
+                let encoded: Vec<_> = bytes_to_field::<_, F>(bytes.iter()).collect();
+                let result_borrow: Vec<_> = bytes_from_field::<_, F>(encoded.iter()).collect();
                 assert_eq!(result_borrow, bytes);
             }
 
