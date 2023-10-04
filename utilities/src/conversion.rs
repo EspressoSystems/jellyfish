@@ -290,7 +290,7 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
     (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
-pub fn bytes_to_field2<I, F>(bytes: I) -> impl Iterator<Item = F>
+pub fn bytes_to_field<I, F>(bytes: I) -> impl Iterator<Item = F>
 where
     F: PrimeField,
     I: IntoIterator,
@@ -299,7 +299,7 @@ where
     BytesToField::new(bytes.into_iter())
 }
 
-pub fn bytes_from_field2<I, F>(elems: I) -> impl Iterator<Item = u8>
+pub fn bytes_from_field<I, F>(elems: I) -> impl Iterator<Item = u8>
 where
     F: PrimeField,
     I: IntoIterator<Item = F>,
@@ -571,7 +571,7 @@ mod tests {
         }
     }
 
-    fn bytes_field_elems2<F: PrimeField>() {
+    fn bytes_field_elems_iter<F: PrimeField>() {
         // copied from bytes_field_elems()
 
         let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200, 5000];
@@ -600,12 +600,12 @@ mod tests {
 
                 // round trip: bytes as Iterator<Item = u8>
                 let result_clone: Vec<_> =
-                    bytes_from_field2::<_, F>(bytes_to_field2(bytes.clone())).collect();
+                    bytes_from_field::<_, F>(bytes_to_field(bytes.clone())).collect();
                 assert_eq!(result_clone, bytes);
 
                 // round trip: bytes as Iterator<Item = &u8>
                 let result_borrow: Vec<_> =
-                    bytes_from_field2::<_, F>(bytes_to_field2(bytes.iter())).collect();
+                    bytes_from_field::<_, F>(bytes_to_field(bytes.iter())).collect();
                 assert_eq!(result_borrow, bytes);
             }
 
@@ -628,9 +628,9 @@ mod tests {
     }
 
     #[test]
-    fn test_bytes_field_elems2() {
-        bytes_field_elems2::<Fr254>();
-        bytes_field_elems2::<Fr377>();
-        bytes_field_elems2::<Fr381>();
+    fn test_bytes_field_elems_iter() {
+        bytes_field_elems_iter::<Fr254>();
+        bytes_field_elems_iter::<Fr377>();
+        bytes_field_elems_iter::<Fr381>();
     }
 }
