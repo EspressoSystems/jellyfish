@@ -9,7 +9,7 @@ use ark_ff::{BigInteger, Field, PrimeField};
 use ark_std::{
     borrow::Borrow,
     cmp::min,
-    iter::{once, repeat, Take},
+    iter::{once, repeat, Peekable, Take},
     marker::PhantomData,
     mem, vec,
     vec::{IntoIter, Vec},
@@ -307,6 +307,7 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
 ///   - Return the resulting [`PrimeField`] item.
 /// - The returned iterator has an additional item that encodes the number of
 ///   input items consumed in order to produce the final output item.
+/// - If `bytes` is empty then result is empty.
 ///
 /// # Panics
 ///
@@ -340,21 +341,29 @@ where
     FieldToBytes::new(elems.into_iter())
 }
 
-struct BytesToField<I, F> {
-    iter: I,
+struct BytesToField<I, F>
+where
+    I: Iterator,
+{
+    bytes_iter: Peekable<I>,
     final_byte_len: Option<usize>,
     done: bool,
+    new: bool,
     _phantom: PhantomData<F>,
     primefield_bytes_len: usize,
 }
 
-impl<I, F: Field> BytesToField<I, F> {
+impl<I, F: Field> BytesToField<I, F>
+where
+    I: Iterator,
+{
     fn new(iter: I) -> Self {
         let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
-            iter,
+            bytes_iter: iter.peekable(),
             final_byte_len: None,
             done: false,
+            new: true,
             _phantom: PhantomData,
             primefield_bytes_len,
         }
@@ -381,10 +390,16 @@ where
             return Some(F::from(len as u64));
         }
 
+        if self.new && self.bytes_iter.peek().is_none() {
+            // zero-length iterator
+            self.done = true;
+            return None;
+        }
+
         // TODO const generics: use [u8; primefield_bytes_len]
         let mut field_elem_bytes = vec![0u8; self.primefield_bytes_len]; // TODO const generics
         for (i, b) in field_elem_bytes.iter_mut().enumerate() {
-            if let Some(byte) = self.iter.next() {
+            if let Some(byte) = self.bytes_iter.next() {
                 *b = *byte.borrow();
             } else {
                 self.final_byte_len = Some(i);
@@ -458,6 +473,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     elem
                 } else {
                     // length-2 iterator
+                    // TODO refactor repeated code
                     let final_byte_len = usize::try_from(u64::from_le_bytes(
                         next_elem.into_bigint().to_bytes_le()[..mem::size_of::<u64>()]
                             .try_into()
@@ -647,15 +663,18 @@ mod tests {
             bytes_from_field_elements(elems.as_ref());
         }
 
-        // empty iterator
+        // empty input -> empty output
         let bytes = Vec::new();
         assert!(bytes.iter().next().is_none());
         let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
-        assert_eq!(elems_iter.next().unwrap(), F::ZERO);
-        assert_eq!(elems_iter.next().unwrap(), F::ZERO);
         assert!(elems_iter.next().is_none());
-        // let result: Vec<_> = bytes_from_field::<_, F>(elems_iter).collect();
-        // assert_eq!(result, bytes);
+
+        // smallest non-empty input -> 2-item output
+        let bytes = [42u8; 1];
+        let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
+        assert_eq!(elems_iter.next().unwrap(), F::from(42u64));
+        assert_eq!(elems_iter.next().unwrap(), F::from(1u64));
+        assert!(elems_iter.next().is_none());
     }
 
     #[test]
