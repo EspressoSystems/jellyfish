@@ -317,7 +317,7 @@ struct BytesToField<I, F> {
 
 impl<I, F: Field> BytesToField<I, F> {
     fn new(iter: I) -> Self {
-        let (primefield_bytes_len, _, _) = compile_time_checks::<F>();
+        let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
             iter,
             final_byte_len: None,
@@ -382,7 +382,7 @@ enum FieldToBytesState<F> {
 
 impl<I, F: Field> FieldToBytes<I, F> {
     fn new(elems_iter: I) -> Self {
-        let (primefield_bytes_len, _, _) = compile_time_checks::<F>();
+        let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
             elems_iter,
             state: FieldToBytesState::New,
@@ -414,7 +414,8 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                 let next_elem = if let Some(elem) = self.elems_iter.next() {
                     elem
                 } else {
-                    // length-1 iterator: we never produced this. just return all the bytes of the sole elem (minus 1)
+                    // length-1 iterator: we never produced this. just return all the bytes of the
+                    // sole elem (minus 1)
                     let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
                     let ret = bytes_iter.next();
                     self.state = Final { bytes_iter };
@@ -444,7 +445,7 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     next_elem,
                     next_next_elem,
                 };
-                return ret;
+                ret
             },
             Typical {
                 bytes_iter,
@@ -487,11 +488,9 @@ impl<I: Iterator<Item = F>, F: PrimeField> Iterator for FieldToBytes<I, F> {
                     .take(final_byte_len);
                 let ret = bytes_iter.next();
                 self.state = Final { bytes_iter };
-                return ret;
+                ret
             },
-            Final { bytes_iter } => {
-                return bytes_iter.next();
-            },
+            Final { bytes_iter } => bytes_iter.next(),
         }
     }
 }
