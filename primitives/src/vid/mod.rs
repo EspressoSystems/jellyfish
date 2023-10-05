@@ -7,7 +7,7 @@
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
+use ark_std::{borrow::Borrow, error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
 use displaydoc::Display;
 use serde::{Deserialize, Serialize};
 
@@ -57,7 +57,10 @@ pub trait VidScheme {
     fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
-    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>>;
+    fn disperse<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<u8>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>

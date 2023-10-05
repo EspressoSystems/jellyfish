@@ -21,7 +21,7 @@ use anyhow::anyhow;
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::{
     fields::field_hashers::{DefaultFieldHasher, HashToField},
-    FftField, Field,
+    FftField, Field, PrimeField,
 };
 use ark_poly::{DenseUVPolynomial, EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
@@ -37,7 +37,7 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
-use jf_utils::{bytes_from_field_elements, bytes_to_field_elements, canonical};
+use jf_utils::{bytes_from_field_elements, bytes_to_field, bytes_to_field_elements, canonical};
 use serde::{Deserialize, Serialize};
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -147,10 +147,13 @@ where
 // 1,2: `Polynomial` is univariate: domain (`Point`) same field as range
 // (`Evaluation'). 3,4: `Commitment` is (convertible to/from) an elliptic curve
 // group in affine form. 5: `H` is a hasher
+//
+// `PrimeField` needed only because `bytes_to_field` needs it.
+// Otherwise we could relax to `FftField`.
 impl<P, T, H, V> VidScheme for GenericAdvz<P, T, H, V>
 where
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: FftField,
+    P::Evaluation: PrimeField,
     P::Polynomial: DenseUVPolynomial<P::Evaluation>, // 2
     P::Commitment: From<T> + AsRef<T>,               // 3
     T: AffineRepr<ScalarField = P::Evaluation>,      // 4
@@ -181,8 +184,12 @@ where
         Ok(hasher.finalize())
     }
 
-    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>> {
-        self.disperse_from_elems(&bytes_to_field_elements(payload))
+    fn disperse<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<u8>,
+    {
+        self.disperse_from_elems(bytes_to_field::<_, P::Evaluation>(payload))
     }
 
     fn verify_share(
@@ -263,7 +270,7 @@ where
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
 where
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: FftField,
+    P::Evaluation: PrimeField,
     P::Polynomial: DenseUVPolynomial<P::Evaluation>,
     P::Commitment: From<T> + AsRef<T>,
     T: AffineRepr<ScalarField = P::Evaluation>,
@@ -274,14 +281,22 @@ where
 {
     /// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
-    pub fn disperse_from_elems(&self, payload: &[P::Evaluation]) -> VidResult<VidDisperse<Self>> {
+    pub fn disperse_from_elems<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<P::Evaluation>,
+    {
+        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
+            .map_err(vid)?;
+
+        // TODO is it possible to avoid collect() here?
+        let payload: Vec<_> = payload.into_iter().map(|elem| *elem.borrow()).collect();
+
         let num_polys = if payload.is_empty() {
             0
         } else {
             (payload.len() - 1) / self.payload_chunk_size + 1
         };
-        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
-            .map_err(vid)?;
 
         // partition payload into polynomial coefficients
         let polys: Vec<P::Polynomial> = payload
