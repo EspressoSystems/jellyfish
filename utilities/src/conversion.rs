@@ -659,11 +659,11 @@ mod tests {
                 assert_eq!(result_borrow, bytes);
             }
 
-            // test infallibility of bytes_from_field_elements
+            // test infallibility of bytes_from_field
             // with random field elements
             elems.resize(len, F::zero());
             elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
-            bytes_from_field_elements(elems.as_ref());
+            let _: Vec<u8> = bytes_from_field::<_, F>(elems.iter()).collect();
         }
 
         // empty input -> empty output
