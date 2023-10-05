@@ -35,6 +35,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#341](https://github.com/EspressoSystems/jellyfish/pull/341) Port VDF from another repo
 - [#343](https://github.com/EspressoSystems/jellyfish/pull/343) Rescue parameter for `ark_bn254::Fq`
 - [#362](https://github.com/EspressoSystems/jellyfish/pull/362) Derive Eq, Hash at a bunch of places
+- [#381](https://github.com/EspressoSystems/jellyfish/pull/381) VID take iterator instead of slice
 
 ### Changed
 
