@@ -37,7 +37,7 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
-use jf_utils::{bytes_from_field_invertible, bytes_to_field_invertible, canonical};
+use jf_utils::{bytes_to_field, canonical, field_to_bytes};
 use serde::{Deserialize, Serialize};
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -175,7 +175,7 @@ where
         let mut hasher = H::new();
 
         // TODO perf: is it possible to avoid collect() here?
-        let elems: Vec<_> = bytes_to_field_invertible::<_, P::Evaluation>(payload).collect();
+        let elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(payload).collect();
 
         for coeffs in elems.chunks(self.payload_chunk_size) {
             // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
@@ -197,7 +197,7 @@ where
         I: IntoIterator,
         I::Item: Borrow<u8>,
     {
-        self.disperse_from_elems(bytes_to_field_invertible::<_, P::Evaluation>(payload))
+        self.disperse_from_elems(bytes_to_field::<_, P::Evaluation>(payload))
     }
 
     fn verify_share(
@@ -270,7 +270,7 @@ where
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
         // TODO can we avoid collect() here?
-        Ok(bytes_from_field_invertible(self.recover_elems(shares, common)?).collect())
+        Ok(field_to_bytes(self.recover_elems(shares, common)?).collect())
     }
 }
 

@@ -293,8 +293,7 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
 /// Deterministic, infallible, invertible iterator adaptor to convert from
 /// arbitrary bytes to field elements.
 ///
-/// # Example
-///
+/// # TODO doc test
 ///
 /// # How it works
 ///
@@ -318,13 +317,13 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
 /// - The [`PrimeField`] byte length is too large to fit inside a `usize`.
 ///
 /// If any of the above conditions holds then this function *always* panics.
-pub fn bytes_to_field_invertible<I, F>(bytes: I) -> impl Iterator<Item = F>
+pub fn bytes_to_field<I, F>(bytes: I) -> impl Iterator<Item = F>
 where
     F: PrimeField,
     I: IntoIterator,
     I::Item: Borrow<u8>,
 {
-    BytesToFieldInvertible::new(bytes.into_iter())
+    BytesToField::new(bytes.into_iter())
 }
 
 /// Deterministic, infallible inverse of [`bytes_to_field`].
@@ -334,16 +333,16 @@ where
 /// ## Panics
 ///
 /// Panics under the conditions listed at [`bytes_to_field`].
-pub fn bytes_from_field_invertible<I, F>(elems: I) -> impl Iterator<Item = u8>
+pub fn field_to_bytes<I, F>(elems: I) -> impl Iterator<Item = u8>
 where
     F: PrimeField,
     I: IntoIterator,
     I::Item: Borrow<F>,
 {
-    FieldToBytesInvertible::new(elems.into_iter())
+    FieldToBytes::new(elems.into_iter())
 }
 
-struct BytesToFieldInvertible<I, F>
+struct BytesToField<I, F>
 where
     I: Iterator,
 {
@@ -355,7 +354,7 @@ where
     primefield_bytes_len: usize,
 }
 
-impl<I, F: Field> BytesToFieldInvertible<I, F>
+impl<I, F: Field> BytesToField<I, F>
 where
     I: Iterator,
 {
@@ -372,7 +371,7 @@ where
     }
 }
 
-impl<I, F> Iterator for BytesToFieldInvertible<I, F>
+impl<I, F> Iterator for BytesToField<I, F>
 where
     I: Iterator,
     I::Item: Borrow<u8>,
@@ -412,13 +411,13 @@ where
     }
 }
 
-struct FieldToBytesInvertible<I, F> {
+struct FieldToBytes<I, F> {
     elems_iter: I,
-    state: FieldToBytesInvertibleState<F>,
+    state: FieldToBytesState<F>,
     primefield_bytes_len: usize,
 }
 
-enum FieldToBytesInvertibleState<F> {
+enum FieldToBytesState<F> {
     New,
     Typical {
         bytes_iter: Take<IntoIter<u8>>,
@@ -430,12 +429,12 @@ enum FieldToBytesInvertibleState<F> {
     },
 }
 
-impl<I, F: PrimeField> FieldToBytesInvertible<I, F> {
+impl<I, F: PrimeField> FieldToBytes<I, F> {
     fn new(elems_iter: I) -> Self {
         let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
             elems_iter,
-            state: FieldToBytesInvertibleState::New,
+            state: FieldToBytesState::New,
             primefield_bytes_len,
         }
     }
@@ -454,7 +453,7 @@ impl<I, F: PrimeField> FieldToBytesInvertible<I, F> {
     }
 }
 
-impl<I, F> Iterator for FieldToBytesInvertible<I, F>
+impl<I, F> Iterator for FieldToBytes<I, F>
 where
     I: Iterator,
     I::Item: Borrow<F>,
@@ -463,7 +462,7 @@ where
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        use FieldToBytesInvertibleState::{Final, New, Typical};
+        use FieldToBytesState::{Final, New, Typical};
         match &mut self.state {
             New => {
                 let cur_elem = if let Some(elem) = self.elems_iter.next() {
@@ -622,7 +621,7 @@ mod tests {
         }
     }
 
-    fn bytes_field_elems_iter_invertible<F: PrimeField>() {
+    fn bytes_field_elems_iter<F: PrimeField>() {
         // copied from bytes_field_elems()
 
         let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200, 5000];
@@ -651,14 +650,12 @@ mod tests {
 
                 // round trip: bytes as Iterator<Item = u8>, elems as Iterator<Item = F>
                 let result_clone: Vec<_> =
-                    bytes_from_field_invertible(bytes_to_field_invertible::<_, F>(bytes.clone()))
-                        .collect();
+                    field_to_bytes(bytes_to_field::<_, F>(bytes.clone())).collect();
                 assert_eq!(result_clone, bytes);
 
                 // round trip: bytes as Iterator<Item = &u8>, elems as Iterator<Item = &F>
-                let encoded: Vec<_> = bytes_to_field_invertible::<_, F>(bytes.iter()).collect();
-                let result_borrow: Vec<_> =
-                    bytes_from_field_invertible::<_, F>(encoded.iter()).collect();
+                let encoded: Vec<_> = bytes_to_field::<_, F>(bytes.iter()).collect();
+                let result_borrow: Vec<_> = field_to_bytes::<_, F>(encoded.iter()).collect();
                 assert_eq!(result_borrow, bytes);
             }
 
@@ -666,18 +663,18 @@ mod tests {
             // with random field elements
             elems.resize(len, F::zero());
             elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
-            let _: Vec<u8> = bytes_from_field_invertible::<_, F>(elems.iter()).collect();
+            let _: Vec<u8> = field_to_bytes::<_, F>(elems.iter()).collect();
         }
 
         // empty input -> empty output
         let bytes = Vec::new();
         assert!(bytes.iter().next().is_none());
-        let mut elems_iter = bytes_to_field_invertible::<_, F>(bytes.iter());
+        let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
         assert!(elems_iter.next().is_none());
 
         // smallest non-empty input -> 2-item output
         let bytes = [42u8; 1];
-        let mut elems_iter = bytes_to_field_invertible::<_, F>(bytes.iter());
+        let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
         assert_eq!(elems_iter.next().unwrap(), F::from(42u64));
         assert_eq!(elems_iter.next().unwrap(), F::from(1u64));
         assert!(elems_iter.next().is_none());
@@ -694,9 +691,9 @@ mod tests {
     }
 
     #[test]
-    fn test_bytes_field_elems_iter_invertible() {
-        bytes_field_elems_iter_invertible::<Fr254>();
-        bytes_field_elems_iter_invertible::<Fr377>();
-        bytes_field_elems_iter_invertible::<Fr381>();
+    fn test_bytes_field_elems_iter() {
+        bytes_field_elems_iter::<Fr254>();
+        bytes_field_elems_iter::<Fr377>();
+        bytes_field_elems_iter::<Fr381>();
     }
 }
