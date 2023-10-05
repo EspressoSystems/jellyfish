@@ -37,7 +37,7 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
-use jf_utils::{bytes_from_field_elements, bytes_to_field, canonical};
+use jf_utils::{bytes_from_field, bytes_to_field, canonical};
 use serde::{Deserialize, Serialize};
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -268,9 +268,8 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
-        Ok(bytes_from_field_elements(
-            self.recover_elems(shares, common)?,
-        ))
+        // TODO can we avoid collect() here?
+        Ok(bytes_from_field(self.recover_elems(shares, common)?).collect())
     }
 }
 
