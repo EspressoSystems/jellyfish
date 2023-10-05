@@ -53,8 +53,11 @@ pub trait VidScheme {
     /// Common data sent to all storage nodes.
     type Common: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
-    /// Compute a payload commitment.
-    fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit>;
+    /// Compute a payload commitment
+    fn commit_only<I>(&self, payload: I) -> VidResult<Self::Commit>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<u8>;
 
     /// Compute shares to send to the storage nodes
     fn disperse<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>

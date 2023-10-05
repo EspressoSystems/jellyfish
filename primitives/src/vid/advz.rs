@@ -37,7 +37,7 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
-use jf_utils::{bytes_from_field_elements, bytes_to_field, bytes_to_field_elements, canonical};
+use jf_utils::{bytes_from_field_elements, bytes_to_field, canonical};
 use serde::{Deserialize, Serialize};
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -166,15 +166,22 @@ where
     type Share = Share<P, V>;
     type Common = Common<P, V>;
 
-    fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit> {
+    fn commit_only<I>(&self, payload: I) -> VidResult<Self::Commit>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<u8>,
+    {
         let mut hasher = H::new();
 
-        // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
-        // We could avoid unnecessary mem copies if bytes_to_field_elements returned
-        // Vec<Vec<F>>
-        let elems = bytes_to_field_elements(payload);
+        // TODO perf: is it possible to avoid collect() here?
+        let elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(payload).collect();
+
         for coeffs in elems.chunks(self.payload_chunk_size) {
+            // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
+            // We could avoid unnecessary mem copies if bytes_to_field_elements returned
+            // Vec<Vec<F>>
             let poly = DenseUVPolynomial::from_coefficients_slice(coeffs);
+
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
@@ -289,7 +296,7 @@ where
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
 
-        // TODO is it possible to avoid collect() here?
+        // TODO perf: is it possible to avoid collect() here?
         let payload: Vec<_> = payload.into_iter().map(|elem| *elem.borrow()).collect();
 
         let num_polys = if payload.is_empty() {
