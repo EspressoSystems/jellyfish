@@ -140,6 +140,7 @@ where
     #[serde(with = "canonical")]
     poly_commits: Vec<P::Commitment>,
     all_evals_digest: V::NodeValue,
+    elems_len: usize,
 }
 
 // We take great pains to maintain abstraction by relying only on traits and not
@@ -297,6 +298,7 @@ where
 
         // TODO perf: is it possible to avoid collect() here?
         let payload: Vec<_> = payload.into_iter().map(|elem| *elem.borrow()).collect();
+        let elems_len = payload.len();
 
         let num_polys = if payload.is_empty() {
             0
@@ -359,6 +361,7 @@ where
                 .collect::<Result<_, _>>()
                 .map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
+            elems_len,
         };
 
         let commit = {
@@ -415,7 +418,7 @@ where
     pub fn recover_elems(
         &self,
         shares: &[<Self as VidScheme>::Share],
-        _common: &<Self as VidScheme>::Common,
+        common: &<Self as VidScheme>::Common,
     ) -> VidResult<Vec<P::Evaluation>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
@@ -459,6 +462,7 @@ where
             result.append(&mut coeffs);
         }
         assert_eq!(result.len(), result_len);
+        result.truncate(common.elems_len);
         Ok(result)
     }
 
