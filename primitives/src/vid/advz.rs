@@ -37,6 +37,7 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
+use itertools::Itertools;
 use jf_utils::{bytes_to_field, canonical, field_to_bytes};
 use serde::{Deserialize, Serialize};
 
@@ -173,22 +174,14 @@ where
         I::Item: Borrow<u8>,
     {
         let mut hasher = H::new();
-
-        // TODO perf: is it possible to avoid collect() here?
-        let elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(payload).collect();
-
-        for coeffs in elems.chunks(self.payload_chunk_size) {
-            // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
-            // We could avoid unnecessary mem copies if bytes_to_field_elements returned
-            // Vec<Vec<F>>
-            let poly = DenseUVPolynomial::from_coefficients_slice(coeffs);
-
+        let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
+        for coeffs in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            let poly = DenseUVPolynomial::from_coefficients_vec(coeffs.collect());
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
-
         Ok(hasher.finalize())
     }
 
