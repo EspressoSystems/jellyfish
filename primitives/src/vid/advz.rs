@@ -289,26 +289,21 @@ where
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
 
-        // TODO perf: is it possible to avoid collect() here?
-        let payload: Vec<_> = payload.into_iter().map(|elem| *elem.borrow()).collect();
-        let elems_len = payload.len();
-
-        let num_polys = if payload.is_empty() {
-            0
-        } else {
-            (payload.len() - 1) / self.payload_chunk_size + 1
-        };
-
         // partition payload into polynomial coefficients
-        let polys: Vec<P::Polynomial> = payload
-            .chunks(self.payload_chunk_size)
-            .map(DenseUVPolynomial::from_coefficients_slice)
-            .collect();
+        // and count `elems_len` for later
+        let elems_iter = payload.into_iter().map(|elem| *elem.borrow());
+        let mut elems_len = 0;
+        let mut polys = Vec::new();
+        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            let coeffs: Vec<_> = coeffs_iter.collect();
+            elems_len += coeffs.len();
+            polys.push(DenseUVPolynomial::from_coefficients_vec(coeffs));
+        }
 
         // evaluate polynomials
         let all_storage_node_evals = {
             let mut all_storage_node_evals =
-                vec![Vec::with_capacity(num_polys); self.num_storage_nodes];
+                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
 
             for poly in polys.iter() {
                 let poly_evals =
@@ -324,7 +319,7 @@ where
             // sanity checks
             assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes);
             for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), num_polys);
+                assert_eq!(storage_node_evals.len(), polys.len());
             }
 
             all_storage_node_evals
