@@ -177,7 +177,7 @@ where
     }
     // ensure all the buffer has been consumed
     if v_and_uv_basis.next().is_some() {
-        return Err(PlonkError::IteratorOutOfRange)?;
+        Err(PlonkError::IteratorOutOfRange)?;
     }
     Ok(result)
 }

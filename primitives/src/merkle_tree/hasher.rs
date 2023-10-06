@@ -35,6 +35,10 @@
 //! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `Arity`
 //! and node [`Index`] types.
 
+// clippy is freaking out about `HasherNode` and this is the only thing I
+// could do to stop it
+#![allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
+
 use crate::errors::PrimitivesError;
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
