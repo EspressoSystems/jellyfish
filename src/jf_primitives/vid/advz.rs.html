@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz.rs`."><title>advz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.1 (d5c2e9c34 2023-09-13)" data-channel="1.72.1" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz.rs`."><title>advz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../jf_primitives/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -781,6 +781,19 @@
 <a href="#781" id="781">781</a>
 <a href="#782" id="782">782</a>
 <a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -804,7 +817,7 @@
 <span class="kw">use </span>ark_ec::{pairing::Pairing, AffineRepr};
 <span class="kw">use </span>ark_ff::{
     fields::field_hashers::{DefaultFieldHasher, HashToField},
-    FftField, Field,
+    FftField, Field, PrimeField,
 };
 <span class="kw">use </span>ark_poly::{DenseUVPolynomial, EvaluationDomain};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
@@ -820,7 +833,8 @@
 };
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>digest::{crypto_common::Output, Digest, DynDigest};
-<span class="kw">use </span>jf_utils::{bytes_from_field_elements, bytes_to_field_elements, canonical};
+<span class="kw">use </span>itertools::Itertools;
+<span class="kw">use </span>jf_utils::{bytes_to_field, canonical, field_to_bytes};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="doccomment">/// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -923,6 +937,7 @@
     <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
     </span>poly_commits: Vec&lt;P::Commitment&gt;,
     all_evals_digest: V::NodeValue,
+    elems_len: usize,
 }
 
 <span class="comment">// We take great pains to maintain abstraction by relying only on traits and not
@@ -930,10 +945,13 @@
 // 1,2: `Polynomial` is univariate: domain (`Point`) same field as range
 // (`Evaluation&#39;). 3,4: `Commitment` is (convertible to/from) an elliptic curve
 // group in affine form. 5: `H` is a hasher
+//
+// `PrimeField` needed only because `bytes_to_field` needs it.
+// Otherwise we could relax to `FftField`.
 </span><span class="kw">impl</span>&lt;P, T, H, V&gt; VidScheme <span class="kw">for </span>GenericAdvz&lt;P, T, H, V&gt;
 <span class="kw">where
     </span>P: UnivariatePCS&lt;Point = &lt;P <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation&gt;,
-    P::Evaluation: FftField,
+    P::Evaluation: PrimeField,
     P::Polynomial: DenseUVPolynomial&lt;P::Evaluation&gt;, <span class="comment">// 2
     </span>P::Commitment: From&lt;T&gt; + AsRef&lt;T&gt;,               <span class="comment">// 3
     </span>T: AffineRepr&lt;ScalarField = P::Evaluation&gt;,      <span class="comment">// 4
@@ -946,26 +964,29 @@
     <span class="kw">type </span>Share = Share&lt;P, V&gt;;
     <span class="kw">type </span>Common = Common&lt;P, V&gt;;
 
-    <span class="kw">fn </span>commit_only(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt; {
+    <span class="kw">fn </span>commit_only&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: I) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt;
+    <span class="kw">where
+        </span>I: IntoIterator,
+        I::Item: Borrow&lt;u8&gt;,
+    {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
-
-        <span class="comment">// TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
-        // We could avoid unnecessary mem copies if bytes_to_field_elements returned
-        // Vec&lt;Vec&lt;F&gt;&gt;
-        </span><span class="kw">let </span>elems = bytes_to_field_elements(payload);
-        <span class="kw">for </span>coeffs <span class="kw">in </span>elems.chunks(<span class="self">self</span>.payload_chunk_size) {
-            <span class="kw">let </span>poly = DenseUVPolynomial::from_coefficients_slice(coeffs);
+        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, P::Evaluation&gt;(payload);
+        <span class="kw">for </span>coeffs <span class="kw">in </span>elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter() {
+            <span class="kw">let </span>poly = DenseUVPolynomial::from_coefficients_vec(coeffs.collect());
             <span class="kw">let </span>commitment = P::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
             commitment
                 .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
                 .map_err(vid)<span class="question-mark">?</span>;
         }
-
         <span class="prelude-val">Ok</span>(hasher.finalize())
     }
 
-    <span class="kw">fn </span>disperse(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt; {
-        <span class="self">self</span>.disperse_from_elems(<span class="kw-2">&amp;</span>bytes_to_field_elements(payload))
+    <span class="kw">fn </span>disperse&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: I) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt;
+    <span class="kw">where
+        </span>I: IntoIterator,
+        I::Item: Borrow&lt;u8&gt;,
+    {
+        <span class="self">self</span>.disperse_from_elems(bytes_to_field::&lt;<span class="kw">_</span>, P::Evaluation&gt;(payload))
     }
 
     <span class="kw">fn </span>verify_share(
@@ -1037,16 +1058,15 @@
     }
 
     <span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
-        <span class="prelude-val">Ok</span>(bytes_from_field_elements(
-            <span class="self">self</span>.recover_elems(shares, common)<span class="question-mark">?</span>,
-        ))
+        <span class="comment">// TODO can we avoid collect() here?
+        </span><span class="prelude-val">Ok</span>(field_to_bytes(<span class="self">self</span>.recover_elems(shares, common)<span class="question-mark">?</span>).collect())
     }
 }
 
 <span class="kw">impl</span>&lt;P, T, H, V&gt; GenericAdvz&lt;P, T, H, V&gt;
 <span class="kw">where
     </span>P: UnivariatePCS&lt;Point = &lt;P <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation&gt;,
-    P::Evaluation: FftField,
+    P::Evaluation: PrimeField,
     P::Polynomial: DenseUVPolynomial&lt;P::Evaluation&gt;,
     P::Commitment: From&lt;T&gt; + AsRef&lt;T&gt;,
     T: AffineRepr&lt;ScalarField = P::Evaluation&gt;,
@@ -1057,25 +1077,29 @@
 {
     <span class="doccomment">/// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
-    </span><span class="kw">pub fn </span>disperse_from_elems(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[P::Evaluation]) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt; {
-        <span class="kw">let </span>num_polys = <span class="kw">if </span>payload.is_empty() {
-            <span class="number">0
-        </span>} <span class="kw">else </span>{
-            (payload.len() - <span class="number">1</span>) / <span class="self">self</span>.payload_chunk_size + <span class="number">1
-        </span>};
+    </span><span class="kw">pub fn </span>disperse_from_elems&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: I) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt;
+    <span class="kw">where
+        </span>I: IntoIterator,
+        I::Item: Borrow&lt;P::Evaluation&gt;,
+    {
         <span class="kw">let </span>domain = P::multi_open_rou_eval_domain(<span class="self">self</span>.payload_chunk_size, <span class="self">self</span>.num_storage_nodes)
             .map_err(vid)<span class="question-mark">?</span>;
 
         <span class="comment">// partition payload into polynomial coefficients
-        </span><span class="kw">let </span>polys: Vec&lt;P::Polynomial&gt; = payload
-            .chunks(<span class="self">self</span>.payload_chunk_size)
-            .map(DenseUVPolynomial::from_coefficients_slice)
-            .collect();
+        // and count `elems_len` for later
+        </span><span class="kw">let </span>elems_iter = payload.into_iter().map(|elem| <span class="kw-2">*</span>elem.borrow());
+        <span class="kw">let </span><span class="kw-2">mut </span>elems_len = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>polys = Vec::new();
+        <span class="kw">for </span>coeffs_iter <span class="kw">in </span>elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter() {
+            <span class="kw">let </span>coeffs: Vec&lt;<span class="kw">_</span>&gt; = coeffs_iter.collect();
+            elems_len += coeffs.len();
+            polys.push(DenseUVPolynomial::from_coefficients_vec(coeffs));
+        }
 
         <span class="comment">// evaluate polynomials
         </span><span class="kw">let </span>all_storage_node_evals = {
             <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals =
-                <span class="macro">vec!</span>[Vec::with_capacity(num_polys); <span class="self">self</span>.num_storage_nodes];
+                <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); <span class="self">self</span>.num_storage_nodes];
 
             <span class="kw">for </span>poly <span class="kw">in </span>polys.iter() {
                 <span class="kw">let </span>poly_evals =
@@ -1091,7 +1115,7 @@
             <span class="comment">// sanity checks
             </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), <span class="self">self</span>.num_storage_nodes);
             <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
-                <span class="macro">assert_eq!</span>(storage_node_evals.len(), num_polys);
+                <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
             }
 
             all_storage_node_evals
@@ -1121,6 +1145,7 @@
                 .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()
                 .map_err(vid)<span class="question-mark">?</span>,
             all_evals_digest: all_evals_commit.commitment().digest(),
+            elems_len,
         };
 
         <span class="kw">let </span>commit = {
@@ -1177,7 +1202,7 @@
     </span><span class="kw">pub fn </span>recover_elems(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         shares: <span class="kw-2">&amp;</span>[&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Share],
-        _common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
+        common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
     ) -&gt; VidResult&lt;Vec&lt;P::Evaluation&gt;&gt; {
         <span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.payload_chunk_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
@@ -1221,6 +1246,7 @@
             result.append(<span class="kw-2">&amp;mut </span>coeffs);
         }
         <span class="macro">assert_eq!</span>(result.len(), result_len);
+        result.truncate(common.elems_len);
         <span class="prelude-val">Ok</span>(result)
     }
 
