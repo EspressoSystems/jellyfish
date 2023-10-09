@@ -70,7 +70,7 @@
           buildInputs = [
             argbash
             openssl
-            pkgconfig
+            pkg-config
             git
 
             stableToolchain

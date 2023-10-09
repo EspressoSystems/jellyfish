@@ -21,7 +21,7 @@ use anyhow::anyhow;
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::{
     fields::field_hashers::{DefaultFieldHasher, HashToField},
-    FftField, Field,
+    FftField, Field, PrimeField,
 };
 use ark_poly::{DenseUVPolynomial, EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
@@ -37,7 +37,8 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
-use jf_utils::{bytes_from_field_elements, bytes_to_field_elements, canonical};
+use itertools::Itertools;
+use jf_utils::{bytes_to_field, canonical, field_to_bytes};
 use serde::{Deserialize, Serialize};
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -140,6 +141,7 @@ where
     #[serde(with = "canonical")]
     poly_commits: Vec<P::Commitment>,
     all_evals_digest: V::NodeValue,
+    elems_len: usize,
 }
 
 // We take great pains to maintain abstraction by relying only on traits and not
@@ -147,10 +149,13 @@ where
 // 1,2: `Polynomial` is univariate: domain (`Point`) same field as range
 // (`Evaluation'). 3,4: `Commitment` is (convertible to/from) an elliptic curve
 // group in affine form. 5: `H` is a hasher
+//
+// `PrimeField` needed only because `bytes_to_field` needs it.
+// Otherwise we could relax to `FftField`.
 impl<P, T, H, V> VidScheme for GenericAdvz<P, T, H, V>
 where
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: FftField,
+    P::Evaluation: PrimeField,
     P::Polynomial: DenseUVPolynomial<P::Evaluation>, // 2
     P::Commitment: From<T> + AsRef<T>,               // 3
     T: AffineRepr<ScalarField = P::Evaluation>,      // 4
@@ -163,26 +168,29 @@ where
     type Share = Share<P, V>;
     type Common = Common<P, V>;
 
-    fn commit_only(&self, payload: &[u8]) -> VidResult<Self::Commit> {
+    fn commit_only<I>(&self, payload: I) -> VidResult<Self::Commit>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<u8>,
+    {
         let mut hasher = H::new();
-
-        // TODO perf: DenseUVPolynomial::from_coefficients_slice copies the slice.
-        // We could avoid unnecessary mem copies if bytes_to_field_elements returned
-        // Vec<Vec<F>>
-        let elems = bytes_to_field_elements(payload);
-        for coeffs in elems.chunks(self.payload_chunk_size) {
-            let poly = DenseUVPolynomial::from_coefficients_slice(coeffs);
+        let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
+        for coeffs in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            let poly = DenseUVPolynomial::from_coefficients_vec(coeffs.collect());
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
-
         Ok(hasher.finalize())
     }
 
-    fn disperse(&self, payload: &[u8]) -> VidResult<VidDisperse<Self>> {
-        self.disperse_from_elems(&bytes_to_field_elements(payload))
+    fn disperse<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<u8>,
+    {
+        self.disperse_from_elems(bytes_to_field::<_, P::Evaluation>(payload))
     }
 
     fn verify_share(
@@ -254,16 +262,15 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
-        Ok(bytes_from_field_elements(
-            self.recover_elems(shares, common)?,
-        ))
+        // TODO can we avoid collect() here?
+        Ok(field_to_bytes(self.recover_elems(shares, common)?).collect())
     }
 }
 
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
 where
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: FftField,
+    P::Evaluation: PrimeField,
     P::Polynomial: DenseUVPolynomial<P::Evaluation>,
     P::Commitment: From<T> + AsRef<T>,
     T: AffineRepr<ScalarField = P::Evaluation>,
@@ -274,25 +281,29 @@ where
 {
     /// Same as [`VidScheme::disperse`] except `payload` is a slice of
     /// field elements.
-    pub fn disperse_from_elems(&self, payload: &[P::Evaluation]) -> VidResult<VidDisperse<Self>> {
-        let num_polys = if payload.is_empty() {
-            0
-        } else {
-            (payload.len() - 1) / self.payload_chunk_size + 1
-        };
+    pub fn disperse_from_elems<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
+    where
+        I: IntoIterator,
+        I::Item: Borrow<P::Evaluation>,
+    {
         let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
             .map_err(vid)?;
 
         // partition payload into polynomial coefficients
-        let polys: Vec<P::Polynomial> = payload
-            .chunks(self.payload_chunk_size)
-            .map(DenseUVPolynomial::from_coefficients_slice)
-            .collect();
+        // and count `elems_len` for later
+        let elems_iter = payload.into_iter().map(|elem| *elem.borrow());
+        let mut elems_len = 0;
+        let mut polys = Vec::new();
+        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            let coeffs: Vec<_> = coeffs_iter.collect();
+            elems_len += coeffs.len();
+            polys.push(DenseUVPolynomial::from_coefficients_vec(coeffs));
+        }
 
         // evaluate polynomials
         let all_storage_node_evals = {
             let mut all_storage_node_evals =
-                vec![Vec::with_capacity(num_polys); self.num_storage_nodes];
+                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
 
             for poly in polys.iter() {
                 let poly_evals =
@@ -308,7 +319,7 @@ where
             // sanity checks
             assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes);
             for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), num_polys);
+                assert_eq!(storage_node_evals.len(), polys.len());
             }
 
             all_storage_node_evals
@@ -338,6 +349,7 @@ where
                 .collect::<Result<_, _>>()
                 .map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
+            elems_len,
         };
 
         let commit = {
@@ -394,7 +406,7 @@ where
     pub fn recover_elems(
         &self,
         shares: &[<Self as VidScheme>::Share],
-        _common: &<Self as VidScheme>::Common,
+        common: &<Self as VidScheme>::Common,
     ) -> VidResult<Vec<P::Evaluation>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
@@ -438,6 +450,7 @@ where
             result.append(&mut coeffs);
         }
         assert_eq!(result.len(), result_len);
+        result.truncate(common.elems_len);
         Ok(result)
     }
 

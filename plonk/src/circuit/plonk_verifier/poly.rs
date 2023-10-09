@@ -340,7 +340,7 @@ where
     let pi = public_inputs[0];
     for &pi_i in public_inputs.iter().skip(1) {
         if pi != pi_i {
-            return Err(PlonkError::PublicInputsDoNotMatch)?;
+            Err(PlonkError::PublicInputsDoNotMatch)?;
         }
     }
 
@@ -462,7 +462,7 @@ where
     }
     // ensure all the buffer has been consumed
     if alpha_bases_elem_var.next().is_some() {
-        return Err(PlonkError::IteratorOutOfRange)?;
+        Err(PlonkError::IteratorOutOfRange)?;
     }
     // =====================================================
     // second statement
@@ -690,7 +690,7 @@ where
 
     // ensure all the buffer has been consumed
     if alpha_bases_elem_var.next().is_some() {
-        return Err(PlonkError::IteratorOutOfRange)?;
+        Err(PlonkError::IteratorOutOfRange)?;
     }
     // ============================================
     // Add splitted quotient commitments

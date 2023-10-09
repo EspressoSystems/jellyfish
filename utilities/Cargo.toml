@@ -9,7 +9,7 @@ rust-version = { workspace = true }
 
 [dependencies]
 ark-ec = { version = "0.4.0", default-features = false }
-ark-ff = { version = "0.4.0", default-features = false, features = [ "asm" ] }
+ark-ff = { version = "0.4.0", default-features = false, features = ["asm"] }
 ark-serialize = { version = "0.4.0", default-features = false }
 ark-std = { version = "0.4.0", default-features = false }
 digest = { version = "0.10.1", default-features = false }
@@ -28,5 +28,18 @@ ark-ed-on-bn254 = "0.4.0"
 
 [features]
 default = []
-std = ["ark-ff/std", "ark-std/std", "ark-ec/std", "ark-serialize/std", "digest/std", "serde/std", "sha2/std"]
-parallel = ["ark-ff/parallel", "ark-std/parallel", "ark-ec/parallel", "dep:rayon"]
+std = [
+    "ark-ff/std",
+    "ark-std/std",
+    "ark-ec/std",
+    "ark-serialize/std",
+    "digest/std",
+    "serde/std",
+    "sha2/std",
+]
+parallel = [
+    "ark-ff/parallel",
+    "ark-std/parallel",
+    "ark-ec/parallel",
+    "dep:rayon",
+]
