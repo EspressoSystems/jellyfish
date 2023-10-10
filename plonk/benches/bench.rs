@@ -141,7 +141,7 @@ macro_rules! plonk_batch_verify_bench {
                 .unwrap();
 
         let vks = vec![&vk; $num_proofs];
-        let pub_input = vec![];
+        let pub_input = [];
         let public_inputs_ref = vec![&pub_input[..]; $num_proofs];
         let proofs_ref = vec![&proof; $num_proofs];
 

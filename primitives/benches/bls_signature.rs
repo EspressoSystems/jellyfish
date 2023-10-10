@@ -48,6 +48,7 @@ fn bench_aggregate<S: AggregateableSignatureSchemes, T: criterion::measurement::
     );
 }
 
+#[allow(clippy::let_unit_value)]
 fn bench_bls12381(c: &mut Criterion) {
     let mut benchmark_group = c.benchmark_group("BLS Over BLS12-381");
     benchmark_group.sample_size(500);
@@ -70,6 +71,7 @@ fn bench_bls12381(c: &mut Criterion) {
     benchmark_group.finish();
 }
 
+#[allow(clippy::let_unit_value)]
 fn bench_bn254(c: &mut Criterion) {
     let mut benchmark_group = c.benchmark_group("BLS Over Bn254");
     benchmark_group.sample_size(100);
@@ -79,13 +81,13 @@ fn bench_bn254(c: &mut Criterion) {
     let (sk, vk) = BLSOverBN254CurveSignatureScheme::key_gen(&pp, rng).unwrap();
     let msg = vec![12u8; 1000];
     let msgs = vec![msg.as_slice(); 1000];
-    let sig = BLSOverBN254CurveSignatureScheme::sign(&pp, &sk, &msgs[0], rng).unwrap();
+    let sig = BLSOverBN254CurveSignatureScheme::sign(&pp, &sk, msgs[0], rng).unwrap();
 
     benchmark_group.bench_function("Sign", |b| {
-        b.iter(|| BLSOverBN254CurveSignatureScheme::sign(&pp, &sk, &msgs[0], rng).unwrap())
+        b.iter(|| BLSOverBN254CurveSignatureScheme::sign(&pp, &sk, msgs[0], rng).unwrap())
     });
     benchmark_group.bench_function("Verification", |b| {
-        b.iter(|| BLSOverBN254CurveSignatureScheme::verify(&pp, &vk, &msgs[0], &sig).unwrap())
+        b.iter(|| BLSOverBN254CurveSignatureScheme::verify(&pp, &vk, msgs[0], &sig).unwrap())
     });
 
     bench_aggregate::<BLSOverBN254CurveSignatureScheme, _>(

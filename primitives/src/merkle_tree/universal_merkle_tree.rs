@@ -310,7 +310,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(0u64))
             .expect_ok()
             .unwrap();
-        let lookup_elem = lookup_elem.clone();
+        let lookup_elem = *lookup_elem;
         let (elem, mem_proof) = mt.universal_forget(0u64.into()).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_mem_proof, mem_proof);

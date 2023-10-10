@@ -700,7 +700,7 @@ pub mod test {
         for i in a0..(a0 + 4 * m) {
             a.push(cs.create_variable(F::from(i as u64))?);
         }
-        let b = vec![
+        let b = [
             cs.create_public_variable(F::from(m as u64 * 2))?,
             cs.create_public_variable(F::from(a0 as u64 * 2 + m as u64 * 4 - 1))?,
         ];
@@ -1733,7 +1733,7 @@ pub mod test {
         for i in a0..(a0 + 4 * m) {
             a.push(cs.create_variable(F::from(i as u64))?);
         }
-        let b = vec![
+        let b = [
             cs.create_public_variable(F::from(m as u64 * 2))?,
             cs.create_public_variable(F::from(a0 as u64 * 2 + m as u64 * 4 - 1))?,
         ];

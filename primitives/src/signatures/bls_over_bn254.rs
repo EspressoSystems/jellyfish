@@ -490,10 +490,10 @@ mod tests {
 
     #[test]
     fn test_agg_sig_trait() {
-        let m1 = vec![87u8, 32u8];
-        let m2 = vec![12u8, 2u8, 7u8];
-        let m3 = vec![3u8, 6u8];
-        let m4 = vec![72u8];
+        let m1 = [87u8, 32u8];
+        let m2 = [12u8, 2u8, 7u8];
+        let m3 = [3u8, 6u8];
+        let m4 = [72u8];
         let messages = vec![&m1[..], &m2[..], &m3[..], &m4[..]];
         let wrong_message = vec![255u8];
         agg_sign_and_verify::<BLSOverBN254CurveSignatureScheme>(

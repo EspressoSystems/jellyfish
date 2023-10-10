@@ -13,7 +13,6 @@
 
 use ark_bls12_381::Bls12_381;
 use ark_ec::{
-    pairing::Pairing,
     twisted_edwards::{Affine as TEAffine, TECurveConfig},
     AffineRepr, CurveConfig, CurveGroup,
 };
@@ -44,7 +43,7 @@ fn main() -> Result<(), PlonkError> {
     // - public group element `X := xG`
     // This circuit does not need to have real inputs.
     // We can simply use a dummy data set.
-    let circuit = proof_of_exponent_circuit::<EdwardsConfig, Bls12_381>(x, X)?;
+    let circuit = proof_of_exponent_circuit::<EdwardsConfig>(x, X)?;
 
     // Knowing the circuit size, we are able to simulate the universal
     // setup and obtain the structured reference string (SRS).
@@ -95,14 +94,13 @@ fn main() -> Result<(), PlonkError> {
 // - a pairing engine
 // - the native field F for the prove system
 #[allow(non_snake_case)]
-fn proof_of_exponent_circuit<EmbedCurve, PairingCurve>(
+fn proof_of_exponent_circuit<EmbedCurve>(
     x: EmbedCurve::ScalarField,
     X: TEAffine<EmbedCurve>,
 ) -> Result<PlonkCircuit<EmbedCurve::BaseField>, PlonkError>
 where
     EmbedCurve: TECurveConfig,
     <EmbedCurve as CurveConfig>::BaseField: PrimeField,
-    PairingCurve: Pairing,
 {
     // Let's check that the inputs are indeed correct before we build a circuit.
     let G = TEAffine::<EmbedCurve>::generator();

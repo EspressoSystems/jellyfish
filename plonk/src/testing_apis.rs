@@ -253,19 +253,17 @@ where
     ) -> Result<E::ScalarField, PlonkError> {
         let tmp: verifier::Verifier<E> = (*self).clone().into();
         let challenges: structs::Challenges<E::ScalarField> = (*challenges).into();
-        Ok(tmp
-            .compute_lin_poly_constant_term(
-                &challenges,
-                verify_keys,
-                public_inputs,
-                batch_proof,
-                vanish_eval,
-                lagrange_1_eval,
-                lagrange_n_eval,
-                alpha_powers,
-                alpha_bases,
-            )?
-            .into())
+        tmp.compute_lin_poly_constant_term(
+            &challenges,
+            verify_keys,
+            public_inputs,
+            batch_proof,
+            vanish_eval,
+            lagrange_1_eval,
+            lagrange_n_eval,
+            alpha_powers,
+            alpha_bases,
+        )
     }
 
     /// Aggregate polynomial commitments into a single commitment (in the

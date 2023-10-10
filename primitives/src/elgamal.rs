@@ -408,7 +408,7 @@ mod test {
         ($param: tt, $base_field:tt, $scalar_field: tt) => {
             let mut rng = jf_utils::test_rng();
             let keypair = KeyPair::<$param>::generate(&mut rng);
-            let msg = vec![$base_field::rand(&mut rng)];
+            let msg = [$base_field::rand(&mut rng)];
             let ct = keypair.enc_key().encrypt(&mut rng, &msg[..]);
 
             let mut ser_bytes: Vec<u8> = Vec::new();

@@ -651,7 +651,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
         // missing commit
@@ -696,7 +696,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (mut shares, mut common) = (disperse.shares, disperse.common);
 
         common.poly_commits.pop();

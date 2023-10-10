@@ -434,6 +434,7 @@ mod nmt_tests {
         Extend,
     }
 
+    #[allow(clippy::needless_borrow)]
     fn build_tree(leaves: &[Leaf], build_type: BuildType) -> TestNMT {
         match build_type {
             BuildType::FromElems => TestNMT::from_elems(3, leaves).unwrap(),

@@ -668,7 +668,7 @@ mod tests {
 
         // empty input -> empty output
         let bytes = Vec::new();
-        assert!(bytes.iter().next().is_none());
+        assert!(bytes.first().is_none());
         let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
         assert!(elems_iter.next().is_none());
 
