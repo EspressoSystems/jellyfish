@@ -23,7 +23,7 @@ use ark_ff::{
     fields::field_hashers::{DefaultFieldHasher, HashToField},
     FftField, Field, PrimeField,
 };
-use ark_poly::{DenseUVPolynomial, EvaluationDomain};
+use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
 use ark_std::{
     borrow::Borrow,
@@ -65,11 +65,13 @@ pub type Advz<E, H> = GenericAdvz<
 pub struct GenericAdvz<P, T, H, V>
 where
     P: PolynomialCommitmentScheme,
+    P::Evaluation: FftField,
 {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
     ck: <P::SRS as StructuredReferenceString>::ProverParam,
     vk: <P::SRS as StructuredReferenceString>::VerifierParam,
+    multi_open_domain: Radix2EvaluationDomain<P::Evaluation>,
     _pd: (PhantomData<T>, PhantomData<H>, PhantomData<V>),
 }
 
@@ -95,11 +97,15 @@ where
             )));
         }
         let (ck, vk) = P::trim_fft_size(srs, payload_chunk_size).map_err(vid)?;
+        let multi_open_domain =
+            P::multi_open_rou_eval_domain(payload_chunk_size - 1, num_storage_nodes)
+                .map_err(vid)?;
         Ok(Self {
             payload_chunk_size,
             num_storage_nodes,
             ck,
             vk,
+            multi_open_domain,
             _pd: Default::default(),
         })
     }
@@ -238,18 +244,11 @@ where
         let aggregate_eval =
             polynomial_eval(share.evals.iter().map(FieldMultiplier), pseudorandom_scalar);
 
-        // prepare eval point for aggregate proof
-        // TODO(Gus) perf: don't re-compute domain elements: https://github.com/EspressoSystems/jellyfish/issues/313
-        let domain =
-            P::multi_open_rou_eval_domain(self.payload_chunk_size - 1, self.num_storage_nodes)
-                .map_err(vid)?;
-        let point = domain.element(share.index);
-
         // verify aggregate proof
         Ok(P::verify(
             &self.vk,
             &aggregate_poly_commit,
-            &point,
+            &self.multi_open_domain.element(share.index),
             &aggregate_eval,
             &share.aggregate_proof,
         )
@@ -283,10 +282,6 @@ where
         I: IntoIterator,
         I::Item: Borrow<P::Evaluation>,
     {
-        let domain =
-            P::multi_open_rou_eval_domain(self.payload_chunk_size - 1, self.num_storage_nodes)
-                .map_err(vid)?;
-
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
         let elems_iter = payload.into_iter().map(|elem| *elem.borrow());
@@ -305,7 +300,8 @@ where
 
             for poly in polys.iter() {
                 let poly_evals =
-                    P::multi_open_rou_evals(poly, self.num_storage_nodes, &domain).map_err(vid)?;
+                    P::multi_open_rou_evals(poly, self.num_storage_nodes, &self.multi_open_domain)
+                        .map_err(vid)?;
 
                 for (storage_node_evals, poly_eval) in
                     all_storage_node_evals.iter_mut().zip(poly_evals)
@@ -370,9 +366,13 @@ where
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
-        let aggregate_proofs =
-            P::multi_open_rou_proofs(&self.ck, &aggregate_poly, self.num_storage_nodes, &domain)
-                .map_err(vid)?;
+        let aggregate_proofs = P::multi_open_rou_proofs(
+            &self.ck,
+            &aggregate_poly,
+            self.num_storage_nodes,
+            &self.multi_open_domain,
+        )
+        .map_err(vid)?;
 
         let shares = all_storage_node_evals
             .into_iter()
@@ -436,14 +436,11 @@ where
 
         let result_len = num_polys * self.payload_chunk_size;
         let mut result = Vec::with_capacity(result_len);
-        let domain =
-            P::multi_open_rou_eval_domain(self.payload_chunk_size - 1, self.num_storage_nodes)
-                .map_err(vid)?;
         for i in 0..num_polys {
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 shares.iter().map(|s| (s.index, s.evals[i])),
                 self.payload_chunk_size,
-                &domain,
+                &self.multi_open_domain,
             )
             .map_err(vid)?;
             result.append(&mut coeffs);
@@ -754,13 +751,8 @@ mod tests {
         // corrupted index, out of bounds
         {
             let mut shares_bad_indices = shares;
-            let domain = UnivariateKzgPCS::<Bls12_381>::multi_open_rou_eval_domain(
-                advz.payload_chunk_size - 1,
-                advz.num_storage_nodes,
-            )
-            .unwrap();
             for i in 0..shares_bad_indices.len() {
-                shares_bad_indices[i].index += domain.size();
+                shares_bad_indices[i].index += advz.multi_open_domain.size();
                 advz.recover_payload(&shares_bad_indices, &common)
                     .expect_err("recover_payload should fail when indices are out of bounds");
             }
