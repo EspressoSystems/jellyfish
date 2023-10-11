@@ -70,9 +70,7 @@ where
     num_storage_nodes: usize,
     ck: <P::SRS as StructuredReferenceString>::ProverParam,
     vk: <P::SRS as StructuredReferenceString>::VerifierParam,
-    _phantom_t: PhantomData<T>, // needed for trait bounds
-    _phantom_h: PhantomData<H>, // needed for trait bounds
-    _phantom_v: PhantomData<V>, // needed for trait bounds
+    _pd: (PhantomData<T>, PhantomData<H>, PhantomData<V>),
 }
 
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
@@ -102,9 +100,7 @@ where
             num_storage_nodes,
             ck,
             vk,
-            _phantom_t: PhantomData,
-            _phantom_h: PhantomData,
-            _phantom_v: PhantomData,
+            _pd: Default::default(),
         })
     }
 }
