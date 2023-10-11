@@ -240,8 +240,9 @@ where
 
         // prepare eval point for aggregate proof
         // TODO(Gus) perf: don't re-compute domain elements: https://github.com/EspressoSystems/jellyfish/issues/313
-        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
-            .map_err(vid)?;
+        let domain =
+            P::multi_open_rou_eval_domain(self.payload_chunk_size - 1, self.num_storage_nodes)
+                .map_err(vid)?;
         let point = domain.element(share.index);
 
         // verify aggregate proof
@@ -282,8 +283,9 @@ where
         I: IntoIterator,
         I::Item: Borrow<P::Evaluation>,
     {
-        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
-            .map_err(vid)?;
+        let domain =
+            P::multi_open_rou_eval_domain(self.payload_chunk_size - 1, self.num_storage_nodes)
+                .map_err(vid)?;
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
@@ -434,8 +436,9 @@ where
 
         let result_len = num_polys * self.payload_chunk_size;
         let mut result = Vec::with_capacity(result_len);
-        let domain = P::multi_open_rou_eval_domain(self.payload_chunk_size, self.num_storage_nodes)
-            .map_err(vid)?;
+        let domain =
+            P::multi_open_rou_eval_domain(self.payload_chunk_size - 1, self.num_storage_nodes)
+                .map_err(vid)?;
         for i in 0..num_polys {
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 shares.iter().map(|s| (s.index, s.evals[i])),
@@ -752,7 +755,7 @@ mod tests {
         {
             let mut shares_bad_indices = shares;
             let domain = UnivariateKzgPCS::<Bls12_381>::multi_open_rou_eval_domain(
-                advz.payload_chunk_size,
+                advz.payload_chunk_size - 1,
                 advz.num_storage_nodes,
             )
             .unwrap();
