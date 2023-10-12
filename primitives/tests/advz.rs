@@ -16,7 +16,7 @@ fn round_trip() {
     let byte_lens = [0, 1, 2, 16, 32, 47, 48, 49, 64, 100, 400];
 
     // more items as a function of the above
-    let supported_degree = vid_sizes.iter().max_by_key(|v| v.0).unwrap().0;
+    let supported_degree = vid_sizes.iter().max_by_key(|v| v.0).unwrap().0 - 1;
     let mut rng = jf_utils::test_rng();
     let srs = UnivariateKzgPCS::<Bls12_381>::gen_srs_for_testing(
         &mut rng,

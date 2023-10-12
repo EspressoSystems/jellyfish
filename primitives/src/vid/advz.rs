@@ -102,7 +102,7 @@ where
                 payload_chunk_size, num_storage_nodes
             )));
         }
-        let (ck, vk) = P::trim_fft_size(srs, payload_chunk_size).map_err(vid)?;
+        let (ck, vk) = P::trim_fft_size(srs, payload_chunk_size - 1).map_err(vid)?;
         let multi_open_domain =
             P::multi_open_rou_eval_domain(payload_chunk_size - 1, num_storage_nodes)
                 .map_err(vid)?;
@@ -619,9 +619,16 @@ where
 mod tests {
     use super::{VidError::Argument, *};
 
-    use crate::{merkle_tree::hasher::HasherNode, pcs::checked_fft_size};
+    use crate::{
+        merkle_tree::hasher::HasherNode,
+        pcs::{checked_fft_size, prelude::UnivariateUniversalParams},
+    };
     use ark_bls12_381::Bls12_381;
-    use ark_std::{rand::RngCore, vec};
+    use ark_std::{
+        rand::{CryptoRng, RngCore},
+        vec,
+    };
+    use digest::{generic_array::ArrayLength, OutputSizeUser};
     use sha2::Sha256;
 
     #[test]
@@ -805,6 +812,62 @@ mod tests {
         }
     }
 
+    fn prove_polys_and_elements_generic<E, H>()
+    where
+        E: Pairing,
+        H: Digest + DynDigest + Default + Clone + Write,
+        <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+    {
+        // play with these items
+        let (payload_chunk_size, num_storage_nodes) = (4, 6);
+        let num_polys = 4;
+
+        // more items as a function of the above
+        let payload_elems_len = num_polys * payload_chunk_size;
+        let payload_bytes_len = payload_elems_len * modulus_byte_len::<E>();
+        let mut rng = jf_utils::test_rng();
+        let payload_bytes = init_random_bytes(payload_bytes_len, &mut rng);
+        let srs = init_srs(payload_elems_len, &mut rng);
+
+        let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let d = advz.disperse(&payload_bytes).unwrap();
+
+        // BEGIN TEST 1: verify "namespaces" (each namespace is a polynomial)
+        // encode payload as field elements, partition into polynomials, compute
+        // commitments, compare against VID common data
+        let elems_iter = bytes_to_field::<_, E::ScalarField>(payload_bytes);
+        for (coeffs_iter, poly_commit) in elems_iter
+            .chunks(payload_chunk_size)
+            .into_iter()
+            .zip(d.common.poly_commits.iter())
+        {
+            let mut coeffs: Vec<_> = coeffs_iter.collect();
+            advz.eval_domain.fft_in_place(&mut coeffs);
+
+            let poly = <UnivariateKzgPCS::<E> as PolynomialCommitmentScheme>::Polynomial::from_coefficients_vec(coeffs);
+            let my_poly_commit = UnivariateKzgPCS::<E>::commit(&advz.ck, &poly).unwrap();
+            assert_eq!(my_poly_commit, *poly_commit);
+        }
+
+        // compute payload commitment
+        let commit = {
+            let mut hasher = H::new();
+            for poly_commit in d.common.poly_commits.iter() {
+                // TODO compiler bug? `as` should not be needed here!
+                (poly_commit as &<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment)
+                    .serialize_uncompressed(&mut hasher)
+                    .unwrap();
+            }
+            hasher.finalize()
+        };
+        assert_eq!(commit, d.commit);
+    }
+
+    #[test]
+    fn prove_polys_and_elements() {
+        prove_polys_and_elements_generic::<Bls12_381, Sha256>();
+    }
+
     /// Routine initialization tasks.
     ///
     /// Returns the following tuple:
@@ -829,5 +892,31 @@ mod tests {
     /// Convenience wrapper to assert [`VidError::Argument`] return value.
     fn assert_arg_err<T>(res: VidResult<T>, msg: &str) {
         assert!(matches!(res, Err(Argument(_))), "{}", msg);
+    }
+
+    fn init_random_bytes<R>(len: usize, rng: &mut R) -> Vec<u8>
+    where
+        R: RngCore + CryptoRng,
+    {
+        let mut bytes_random = vec![0u8; len];
+        rng.fill_bytes(&mut bytes_random);
+        bytes_random
+    }
+
+    fn init_srs<E, R>(num_coeffs: usize, rng: &mut R) -> UnivariateUniversalParams<E>
+    where
+        E: Pairing,
+        R: RngCore + CryptoRng,
+    {
+        UnivariateKzgPCS::gen_srs_for_testing(rng, checked_fft_size(num_coeffs - 1).unwrap())
+            .unwrap()
+    }
+
+    fn modulus_byte_len<E>() -> usize
+    where
+        E: Pairing,
+    {
+        usize::try_from((<<UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::Evaluation as Field>::BasePrimeField
+        ::MODULUS_BIT_SIZE - 7)/8 + 1).unwrap()
     }
 }
