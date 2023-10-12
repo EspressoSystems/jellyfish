@@ -72,6 +72,12 @@ where
     ck: <P::SRS as StructuredReferenceString>::ProverParam,
     vk: <P::SRS as StructuredReferenceString>::VerifierParam,
     multi_open_domain: Radix2EvaluationDomain<P::Evaluation>,
+
+    // TODO might be able to eliminate this field and instead use
+    // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
+    // but that method consumes `other` and its doc is unclear.
+    eval_domain: Radix2EvaluationDomain<P::Evaluation>,
+
     _pd: (PhantomData<T>, PhantomData<H>, PhantomData<V>),
 }
 
@@ -100,12 +106,31 @@ where
         let multi_open_domain =
             P::multi_open_rou_eval_domain(payload_chunk_size - 1, num_storage_nodes)
                 .map_err(vid)?;
+        let eval_domain = Radix2EvaluationDomain::new(payload_chunk_size).ok_or_else(|| {
+            VidError::Internal(anyhow::anyhow!(
+                "fail to construct doman of size {}",
+                payload_chunk_size
+            ))
+        })?;
+
+        // TODO TEMPORARY: enforce power-of-2 chunk size
+        // Remove this restriction after we get KZG in eval form
+        // https://github.com/EspressoSystems/jellyfish/issues/339
+        if payload_chunk_size != eval_domain.size() {
+            return Err(VidError::Argument(format!(
+                "payload_chunk_size {} currently unsupported, round to {} instead",
+                payload_chunk_size,
+                eval_domain.size()
+            )));
+        }
+
         Ok(Self {
             payload_chunk_size,
             num_storage_nodes,
             ck,
             vk,
             multi_open_domain,
+            eval_domain,
             _pd: Default::default(),
         })
     }
@@ -177,8 +202,14 @@ where
     {
         let mut hasher = H::new();
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
-        for coeffs in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            let poly = DenseUVPolynomial::from_coefficients_vec(coeffs.collect());
+        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            // TODO TEMPORARY: use FFT to encode polynomials in eval form
+            // Remove these FFTs after we get KZG in eval form
+            // https://github.com/EspressoSystems/jellyfish/issues/339
+            let mut coeffs: Vec<_> = coeffs_iter.collect();
+            self.eval_domain.fft_in_place(&mut coeffs);
+
+            let poly = DenseUVPolynomial::from_coefficients_vec(coeffs);
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
@@ -275,7 +306,7 @@ where
     V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    /// Same as [`VidScheme::disperse`] except `payload` is a slice of
+    /// Same as [`VidScheme::disperse`] except `payload` iterates over
     /// field elements.
     pub fn disperse_from_elems<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
     where
@@ -288,8 +319,17 @@ where
         let mut elems_len = 0;
         let mut polys = Vec::new();
         for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            let coeffs: Vec<_> = coeffs_iter.collect();
-            elems_len += coeffs.len();
+            // TODO TEMPORARY: use FFT to encode polynomials in eval form
+            // Remove these FFTs after we get KZG in eval form
+            // https://github.com/EspressoSystems/jellyfish/issues/339
+            let mut coeffs: Vec<_> = coeffs_iter.collect();
+            let pre_fft_len = coeffs.len();
+            self.eval_domain.fft_in_place(&mut coeffs);
+            if pre_fft_len == self.payload_chunk_size {
+                assert_eq!(coeffs.len(), pre_fft_len); // sanity
+            }
+
+            elems_len += pre_fft_len;
             polys.push(DenseUVPolynomial::from_coefficients_vec(coeffs));
         }
 
@@ -443,6 +483,12 @@ where
                 &self.multi_open_domain,
             )
             .map_err(vid)?;
+
+            // TODO TEMPORARY: use FFT to encode polynomials in eval form
+            // Remove these FFTs after we get KZG in eval form
+            // https://github.com/EspressoSystems/jellyfish/issues/339
+            self.eval_domain.ifft_in_place(&mut coeffs);
+
             result.append(&mut coeffs);
         }
         assert_eq!(result.len(), result_len);
@@ -765,7 +811,7 @@ mod tests {
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
     fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
-        let (payload_chunk_size, num_storage_nodes) = (3, 5);
+        let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = UnivariateKzgPCS::<Bls12_381>::gen_srs_for_testing(
             &mut rng,

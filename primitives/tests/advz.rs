@@ -12,7 +12,7 @@ mod vid;
 #[test]
 fn round_trip() {
     // play with these items
-    let vid_sizes = [(2, 3), (5, 9)];
+    let vid_sizes = [(2, 3), (8, 11)];
     let byte_lens = [0, 1, 2, 16, 32, 47, 48, 49, 64, 100, 400];
 
     // more items as a function of the above
