@@ -812,7 +812,7 @@ mod tests {
         }
     }
 
-    fn prove_polys_and_elements_generic<E, H>()
+    fn prove_namespace_generic<E, H>()
     where
         E: Pairing,
         H: Digest + DynDigest + Default + Clone + Write,
@@ -832,7 +832,10 @@ mod tests {
         let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         let d = advz.disperse(&payload_bytes).unwrap();
 
-        // BEGIN TEST 1: verify "namespaces" (each namespace is a polynomial)
+        // TEST: verify "namespaces" (each namespace is a polynomial)
+        // This test is currently trivial: we simply repeat the commit computation.
+        // In the future there will be a proper API that can be tested meaningfully.
+
         // encode payload as field elements, partition into polynomials, compute
         // commitments, compare against VID common data
         let elems_iter = bytes_to_field::<_, E::ScalarField>(payload_bytes);
@@ -849,7 +852,7 @@ mod tests {
             assert_eq!(my_poly_commit, *poly_commit);
         }
 
-        // compute payload commitment
+        // compute payload commitment and verify
         let commit = {
             let mut hasher = H::new();
             for poly_commit in d.common.poly_commits.iter() {
@@ -864,8 +867,8 @@ mod tests {
     }
 
     #[test]
-    fn prove_polys_and_elements() {
-        prove_polys_and_elements_generic::<Bls12_381, Sha256>();
+    fn prove_namespace() {
+        prove_namespace_generic::<Bls12_381, Sha256>();
     }
 
     /// Routine initialization tasks.
@@ -876,16 +879,9 @@ mod tests {
     fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
-        let srs = UnivariateKzgPCS::<Bls12_381>::gen_srs_for_testing(
-            &mut rng,
-            checked_fft_size(payload_chunk_size).unwrap(),
-        )
-        .unwrap();
+        let srs = init_srs(payload_chunk_size, &mut rng);
         let advz = Advz::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
-
-        let mut bytes_random = vec![0u8; 4000];
-        rng.fill_bytes(&mut bytes_random);
-
+        let bytes_random = init_random_bytes(4000, &mut rng);
         (advz, bytes_random)
     }
 
