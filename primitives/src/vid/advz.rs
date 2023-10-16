@@ -325,8 +325,13 @@ where
             let mut coeffs: Vec<_> = coeffs_iter.collect();
             let pre_fft_len = coeffs.len();
             self.eval_domain.fft_in_place(&mut coeffs);
+
+            // sanity check: the fft did not resize coeffs.
+            // If pre_fft_len != self.payload_chunk_size then we must be in the final chunk.
+            // In that case coeffs.len() could be anything, so there's nothing to sanity
+            // check.
             if pre_fft_len == self.payload_chunk_size {
-                assert_eq!(coeffs.len(), pre_fft_len); // sanity
+                assert_eq!(coeffs.len(), pre_fft_len);
             }
 
             elems_len += pre_fft_len;
