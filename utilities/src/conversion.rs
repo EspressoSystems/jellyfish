@@ -9,9 +9,10 @@ use ark_ff::{BigInteger, Field, PrimeField};
 use ark_std::{
     borrow::Borrow,
     cmp::min,
-    iter::{once, repeat},
-    mem,
-    vec::Vec,
+    iter::{once, repeat, Peekable, Take},
+    marker::PhantomData,
+    mem, vec,
+    vec::{IntoIter, Vec},
 };
 use sha2::{Digest, Sha512};
 
@@ -289,6 +290,262 @@ fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
     (primefield_bytes_len, extension_degree, field_bytes_len)
 }
 
+/// Deterministic, infallible, invertible iterator adaptor to convert from
+/// arbitrary bytes to field elements.
+///
+/// # TODO doc test
+///
+/// # How it works
+///
+/// Returns an iterator over [`PrimeField`] items defined as follows:
+/// - For each call to `next()`:
+///   - Consume P-1 items from `bytes` where P is the field characteristic byte
+///     length. (Consume all remaining B items from `bytes` if B < P-1.)
+///   - Convert the consumed bytes into a [`PrimeField`] via
+///     [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic
+///     is guaranteed not to occur because we consumed at most P-1 bytes.
+///   - Return the resulting [`PrimeField`] item.
+/// - The returned iterator has an additional item that encodes the number of
+///   input items consumed in order to produce the final output item.
+/// - If `bytes` is empty then result is empty.
+///
+/// # Panics
+///
+/// Panics only under conditions that should be checkable at compile time:
+///
+/// - The [`PrimeField`] modulus bit length is too small to hold a `u64`.
+/// - The [`PrimeField`] byte length is too large to fit inside a `usize`.
+///
+/// If any of the above conditions holds then this function *always* panics.
+pub fn bytes_to_field<I, F>(bytes: I) -> impl Iterator<Item = F>
+where
+    F: PrimeField,
+    I: IntoIterator,
+    I::Item: Borrow<u8>,
+{
+    BytesToField::new(bytes.into_iter())
+}
+
+/// Deterministic, infallible inverse of [`bytes_to_field`].
+///
+/// This function is not invertible because [`bytes_to_field`] is not onto.
+///
+/// ## Panics
+///
+/// Panics under the conditions listed at [`bytes_to_field`].
+pub fn field_to_bytes<I, F>(elems: I) -> impl Iterator<Item = u8>
+where
+    F: PrimeField,
+    I: IntoIterator,
+    I::Item: Borrow<F>,
+{
+    FieldToBytes::new(elems.into_iter())
+}
+
+struct BytesToField<I, F>
+where
+    I: Iterator,
+{
+    bytes_iter: Peekable<I>,
+    final_byte_len: Option<usize>,
+    done: bool,
+    new: bool,
+    _phantom: PhantomData<F>,
+    primefield_bytes_len: usize,
+}
+
+impl<I, F: Field> BytesToField<I, F>
+where
+    I: Iterator,
+{
+    fn new(iter: I) -> Self {
+        let (primefield_bytes_len, ..) = compile_time_checks::<F>();
+        Self {
+            bytes_iter: iter.peekable(),
+            final_byte_len: None,
+            done: false,
+            new: true,
+            _phantom: PhantomData,
+            primefield_bytes_len,
+        }
+    }
+}
+
+impl<I, F> Iterator for BytesToField<I, F>
+where
+    I: Iterator,
+    I::Item: Borrow<u8>,
+    F: PrimeField,
+{
+    type Item = F;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            // we don't support iterators that return `Some` after returning `None`
+            return None;
+        }
+
+        if let Some(len) = self.final_byte_len {
+            // iterator is done. final field elem encodes length.
+            self.done = true;
+            return Some(F::from(len as u64));
+        }
+
+        if self.new && self.bytes_iter.peek().is_none() {
+            // zero-length iterator
+            self.done = true;
+            return None;
+        }
+
+        // TODO const generics: use [u8; primefield_bytes_len]
+        let mut field_elem_bytes = vec![0u8; self.primefield_bytes_len];
+        for (i, b) in field_elem_bytes.iter_mut().enumerate() {
+            if let Some(byte) = self.bytes_iter.next() {
+                *b = *byte.borrow();
+            } else {
+                self.final_byte_len = Some(i);
+                break;
+            }
+        }
+        Some(F::from_le_bytes_mod_order(&field_elem_bytes))
+    }
+}
+
+struct FieldToBytes<I, F> {
+    elems_iter: I,
+    state: FieldToBytesState<F>,
+    primefield_bytes_len: usize,
+}
+
+enum FieldToBytesState<F> {
+    New,
+    Typical {
+        bytes_iter: Take<IntoIter<u8>>,
+        next_elem: F,
+        next_next_elem: F,
+    },
+    Final {
+        bytes_iter: Take<IntoIter<u8>>,
+    },
+}
+
+impl<I, F: PrimeField> FieldToBytes<I, F> {
+    fn new(elems_iter: I) -> Self {
+        let (primefield_bytes_len, ..) = compile_time_checks::<F>();
+        Self {
+            elems_iter,
+            state: FieldToBytesState::New,
+            primefield_bytes_len,
+        }
+    }
+
+    fn elem_to_usize(elem: F) -> usize {
+        usize::try_from(u64::from_le_bytes(
+            elem.into_bigint().to_bytes_le()[..mem::size_of::<u64>()]
+                .try_into()
+                .expect("conversion from [u8] to u64 should succeed"),
+        ))
+        .expect("result len conversion from u64 to usize should succeed")
+    }
+
+    fn elem_to_bytes_iter(elem: F) -> IntoIter<u8> {
+        elem.into_bigint().to_bytes_le().into_iter()
+    }
+}
+
+impl<I, F> Iterator for FieldToBytes<I, F>
+where
+    I: Iterator,
+    I::Item: Borrow<F>,
+    F: PrimeField,
+{
+    type Item = u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        use FieldToBytesState::{Final, New, Typical};
+        match &mut self.state {
+            New => {
+                let cur_elem = if let Some(elem) = self.elems_iter.next() {
+                    *elem.borrow()
+                } else {
+                    // length-0 iterator
+                    // move to `Final` state with an empty iterator
+                    self.state = Final {
+                        bytes_iter: Vec::new().into_iter().take(0),
+                    };
+                    return None;
+                };
+
+                let bytes_iter = Self::elem_to_bytes_iter(cur_elem);
+
+                let next_elem = if let Some(elem) = self.elems_iter.next() {
+                    *elem.borrow()
+                } else {
+                    // length-1 iterator: we never produced this
+                    // move to `Final` state with primefield_bytes_len bytes from the sole elem
+                    let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
+                    let ret = bytes_iter.next();
+                    self.state = Final { bytes_iter };
+                    return ret;
+                };
+
+                let next_next_elem = if let Some(elem) = self.elems_iter.next() {
+                    *elem.borrow()
+                } else {
+                    // length-2 iterator
+                    let final_byte_len = Self::elem_to_usize(next_elem);
+                    let mut bytes_iter = bytes_iter.take(final_byte_len);
+                    let ret = bytes_iter.next();
+                    self.state = Final { bytes_iter };
+                    return ret;
+                };
+
+                // length >2 iterator
+                let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
+                let ret = bytes_iter.next();
+                self.state = Typical {
+                    bytes_iter,
+                    next_elem,
+                    next_next_elem,
+                };
+                ret
+            },
+            Typical {
+                bytes_iter,
+                next_elem,
+                next_next_elem,
+            } => {
+                let ret = bytes_iter.next();
+                if ret.is_some() {
+                    return ret;
+                }
+
+                let bytes_iter = Self::elem_to_bytes_iter(*next_elem);
+
+                if let Some(elem) = self.elems_iter.next() {
+                    // advance to the next field element
+                    let mut bytes_iter = bytes_iter.take(self.primefield_bytes_len);
+                    let ret = bytes_iter.next();
+                    self.state = Typical {
+                        bytes_iter,
+                        next_elem: *next_next_elem,
+                        next_next_elem: *elem.borrow(),
+                    };
+                    return ret;
+                }
+
+                // done
+                let final_byte_len = Self::elem_to_usize(*next_next_elem);
+                let mut bytes_iter = bytes_iter.take(final_byte_len);
+                let ret = bytes_iter.next();
+                self.state = Final { bytes_iter };
+                ret
+            },
+            Final { bytes_iter } => bytes_iter.next(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::test_rng;
@@ -300,6 +557,7 @@ mod tests {
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
+    use ark_ff::{Field, PrimeField};
     use ark_std::{rand::RngCore, UniformRand};
 
     #[test]
@@ -363,6 +621,65 @@ mod tests {
         }
     }
 
+    fn bytes_field_elems_iter<F: PrimeField>() {
+        // copied from bytes_field_elems()
+
+        let lengths = [0, 1, 2, 16, 31, 32, 33, 48, 65, 100, 200, 5000];
+        let trailing_zeros_lengths = [0, 1, 2, 5, 50];
+
+        let max_len = *lengths.iter().max().unwrap();
+        let max_trailing_zeros_len = *trailing_zeros_lengths.iter().max().unwrap();
+        let mut bytes = Vec::with_capacity(max_len + max_trailing_zeros_len);
+        let mut elems: Vec<F> = Vec::with_capacity(max_len);
+        let mut rng = test_rng();
+
+        for len in lengths {
+            for trailing_zeros_len in trailing_zeros_lengths {
+                // fill bytes with random bytes and trailing zeros
+                bytes.resize(len + trailing_zeros_len, 0);
+                rng.fill_bytes(&mut bytes[..len]);
+                bytes[len..].fill(0);
+
+                // debug
+                // println!("byte_len: {}, trailing_zeros: {}", len, trailing_zeros_len);
+                // println!("bytes:   {:?}", bytes);
+                // let encoded: Vec<F> = bytes_to_field(bytes.iter()).collect();
+                // println!("encoded: {:?}", encoded);
+                // let result: Vec<_> = bytes_from_field(encoded).collect();
+                // println!("result:  {:?}", result);
+
+                // round trip: bytes as Iterator<Item = u8>, elems as Iterator<Item = F>
+                let result_clone: Vec<_> =
+                    field_to_bytes(bytes_to_field::<_, F>(bytes.clone())).collect();
+                assert_eq!(result_clone, bytes);
+
+                // round trip: bytes as Iterator<Item = &u8>, elems as Iterator<Item = &F>
+                let encoded: Vec<_> = bytes_to_field::<_, F>(bytes.iter()).collect();
+                let result_borrow: Vec<_> = field_to_bytes::<_, F>(encoded.iter()).collect();
+                assert_eq!(result_borrow, bytes);
+            }
+
+            // test infallibility of bytes_from_field
+            // with random field elements
+            elems.resize(len, F::zero());
+            elems.iter_mut().for_each(|e| *e = F::rand(&mut rng));
+            let _: Vec<u8> = field_to_bytes::<_, F>(elems.iter()).collect();
+        }
+
+        // empty input -> empty output
+        let bytes = Vec::new();
+        assert!(bytes.iter().next().is_none());
+        let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
+        assert!(elems_iter.next().is_none());
+
+        // smallest non-empty input -> 2-item output
+        let bytes = [42u8; 1];
+        let mut elems_iter = bytes_to_field::<_, F>(bytes.iter());
+        assert_eq!(elems_iter.next().unwrap(), F::from(42u64));
+        assert_eq!(elems_iter.next().unwrap(), F::from(1u64));
+        assert!(elems_iter.next().is_none());
+    }
+
     #[test]
     fn test_bytes_field_elems() {
         bytes_field_elems::<Fr381>();
@@ -371,5 +688,12 @@ mod tests {
         bytes_field_elems::<Fq12_381>();
         bytes_field_elems::<Fq12_377>();
         bytes_field_elems::<Fq12_254>();
+    }
+
+    #[test]
+    fn test_bytes_field_elems_iter() {
+        bytes_field_elems_iter::<Fr254>();
+        bytes_field_elems_iter::<Fr377>();
+        bytes_field_elems_iter::<Fr381>();
     }
 }
