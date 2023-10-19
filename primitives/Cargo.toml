@@ -92,6 +92,10 @@ name = "bls-signature"
 path = "benches/bls_signature.rs"
 harness = false
 
+[[bench]]
+name = "hcs"
+harness = false
+
 [features]
 default = ["parallel"]
 std = [
