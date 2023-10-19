@@ -34,7 +34,6 @@ pub fn bench_pcs_method<E: Pairing>(
     let mut rng = &mut test_rng();
 
     for num_vars in range {
-        // TODO if this takes too long and key trimming works, we might want to pull this out from the loop
         let pp = MultilinearKzgPCS::<E>::gen_srs_for_testing(&mut rng, num_vars).unwrap();
 
         group.bench_with_input(
@@ -54,7 +53,6 @@ pub fn commit<E: Pairing>(
     pp: &<MultilinearKzgPCS<E> as PolynomialCommitmentScheme>::SRS,
     num_vars: usize,
 ) -> Duration {
-    // TODO create or pass? depends on the cost
     let rng = &mut test_rng();
 
     let (ml_ck, _ml_vk) = pp.0.trim(num_vars).unwrap();
@@ -111,8 +109,6 @@ pub fn verify<E: Pairing>(
     start.elapsed()
 }
 
-/*************** Instantiating target functions ***************/
-
 fn kzg_254(c: &mut Criterion) {
     bench_pcs_method::<Bn254>(
         c,
@@ -133,8 +129,6 @@ fn kzg_254(c: &mut Criterion) {
         verify::<Bn254>,
     );
 }
-
-/*************** Benchmark configuration ***************/
 
 criterion_group! {
     name = pcs_benches;
