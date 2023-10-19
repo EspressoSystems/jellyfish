@@ -125,7 +125,7 @@ fn kzg_254(c: &mut Criterion) {
         c,
         (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
         "verify_kzg_range_BN_254",
-        open::<Bn254>,
+        verify::<Bn254>,
     );
 }
 
