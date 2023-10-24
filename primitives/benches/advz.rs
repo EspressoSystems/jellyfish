@@ -23,7 +23,10 @@ mod feature_gated {
     use digest::{crypto_common::generic_array::ArrayLength, Digest, DynDigest, OutputSizeUser};
     use jf_primitives::{
         pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-        vid::{advz::Advz, VidScheme},
+        vid::{
+            advz::{payload::Payload, Advz},
+            VidScheme,
+        },
     };
     use sha2::Sha256;
 
@@ -63,6 +66,7 @@ mod feature_gated {
             // random payload data
             let mut payload_bytes = vec![0u8; len];
             rng.fill_bytes(&mut payload_bytes);
+            let payload_bytes = Payload::from_vec(payload_bytes);
 
             let benchmark_group_name =
                 |op_name| format!("advz_{}_{}_{}KB", pairing_name, op_name, len / KB);

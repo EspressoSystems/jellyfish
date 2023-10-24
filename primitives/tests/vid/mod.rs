@@ -13,6 +13,7 @@ use ark_std::{
 /// <https://doc.rust-lang.org/book/ch11-03-test-organization.html#submodules-in-integration-tests>
 pub fn round_trip<V, R>(
     vid_factory: impl Fn(usize, usize) -> V,
+    payload_factory: impl Fn(Vec<u8>) -> V::Payload,
     vid_sizes: &[(usize, usize)],
     payload_byte_lens: &[usize],
     rng: &mut R,
@@ -31,6 +32,7 @@ pub fn round_trip<V, R>(
 
             let mut bytes_random = vec![0u8; len];
             rng.fill_bytes(&mut bytes_random);
+            let bytes_random = payload_factory(bytes_random);
 
             let disperse = vid.disperse(&bytes_random).unwrap();
             let (mut shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);

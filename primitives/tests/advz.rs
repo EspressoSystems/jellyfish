@@ -3,7 +3,7 @@ use ark_bls12_381::Bls12_381;
 use ark_ff::{Field, PrimeField};
 use jf_primitives::{
     pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-    vid::advz::Advz,
+    vid::advz::{payload::Payload, Advz},
 };
 use sha2::Sha256;
 
@@ -13,7 +13,7 @@ mod vid;
 fn round_trip() {
     // play with these items
     let vid_sizes = [(2, 3), (8, 11)];
-    let byte_lens = [0, 1, 2, 16, 32, 47, 48, 49, 64, 100, 400];
+    let payload_byte_lens = [0, 1, 2, 16, 32, 47, 48, 49, 64, 100, 400];
 
     // more items as a function of the above
     let supported_degree = vid_sizes.iter().max_by_key(|v| v.0).unwrap().0 - 1;
@@ -34,8 +34,9 @@ fn round_trip() {
         |payload_chunk_size, num_storage_nodes| {
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, &srs).unwrap()
         },
+        |bytes| Payload::from_vec(bytes),
         &vid_sizes,
-        &byte_lens,
+        &payload_byte_lens,
         &mut rng,
     );
 }

@@ -7,7 +7,7 @@
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
+use ark_std::{error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
 use displaydoc::Display;
 use serde::{Deserialize, Serialize};
 
@@ -44,6 +44,9 @@ pub type VidResult<T> = Result<T, VidError>;
 
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
+    /// Payload
+    type Payload: Debug + PartialEq; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+
     /// Payload commitment.
     type Commit: Clone + Debug + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
@@ -54,16 +57,10 @@ pub trait VidScheme {
     type Common: CanonicalSerialize + CanonicalDeserialize + Clone + Eq + PartialEq + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment
-    fn commit_only<I>(&self, payload: I) -> VidResult<Self::Commit>
-    where
-        I: IntoIterator,
-        I::Item: Borrow<u8>;
+    fn commit_only(&self, payload: &Self::Payload) -> VidResult<Self::Commit>;
 
     /// Compute shares to send to the storage nodes
-    fn disperse<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
-    where
-        I: IntoIterator,
-        I::Item: Borrow<u8>;
+    fn disperse(&self, payload: &Self::Payload) -> VidResult<VidDisperse<Self>>;
 
     /// Verify a share. Used by both storage node and retrieval client.
     /// Why is return type a nested `Result`? See <https://sled.rs/errors>
@@ -76,7 +73,13 @@ pub trait VidScheme {
 
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
-    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
+    ///
+    /// TODO: return type [`Payload`]?
+    fn recover_payload(
+        &self,
+        shares: &[Self::Share],
+        common: &Self::Common,
+    ) -> VidResult<Self::Payload>;
 }
 
 /// Convenience struct to aggregate disperse data.
