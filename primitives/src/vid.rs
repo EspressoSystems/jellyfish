@@ -11,37 +11,6 @@ use ark_std::{error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
 use displaydoc::Display;
 use serde::{Deserialize, Serialize};
 
-pub mod advz;
-
-/// The error type for `VidScheme` methods.
-#[derive(Display, Debug)]
-pub enum VidError {
-    /// invalid args: {0}
-    Argument(String),
-    /// internal error: {0}
-    Internal(anyhow::Error),
-}
-
-impl Error for VidError {}
-
-/// Convenience wrapper to convert any error into a [`VidError`].
-///
-/// Private fn so as not to expose error conversion API outside this crate
-/// as per [stackoverflow](https://stackoverflow.com/a/70057677).
-///
-/// # No-std support
-/// `no_std` mode requires `.map_err(vid)` to convert from a non-`anyhow` error
-/// as per [`anyhow` docs](https://docs.rs/anyhow/latest/anyhow/index.html#no-std-support),
-fn vid<E>(e: E) -> VidError
-where
-    E: ark_std::fmt::Display + Debug + Send + Sync + 'static,
-{
-    VidError::Internal(anyhow::anyhow!(e))
-}
-
-/// Convenience [`Result`] wrapper for [`VidError`].
-pub type VidResult<T> = Result<T, VidError>;
-
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
     /// Payload
@@ -108,3 +77,36 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     /// VID payload commitment.
     pub commit: V::Commit,
 }
+
+pub mod advz; // instantiation of `VidScheme`
+
+// BOILERPLATE: error handling
+
+/// The error type for `VidScheme` methods.
+#[derive(Display, Debug)]
+pub enum VidError {
+    /// invalid args: {0}
+    Argument(String),
+    /// internal error: {0}
+    Internal(anyhow::Error),
+}
+
+impl Error for VidError {}
+
+/// Convenience wrapper to convert any error into a [`VidError`].
+///
+/// Private fn so as not to expose error conversion API outside this crate
+/// as per [stackoverflow](https://stackoverflow.com/a/70057677).
+///
+/// # No-std support
+/// `no_std` mode requires `.map_err(vid)` to convert from a non-`anyhow` error
+/// as per [`anyhow` docs](https://docs.rs/anyhow/latest/anyhow/index.html#no-std-support),
+fn vid<E>(e: E) -> VidError
+where
+    E: ark_std::fmt::Display + Debug + Send + Sync + 'static,
+{
+    VidError::Internal(anyhow::anyhow!(e))
+}
+
+/// Convenience [`Result`] wrapper for [`VidError`].
+pub type VidResult<T> = Result<T, VidError>;
