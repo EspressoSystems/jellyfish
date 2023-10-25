@@ -123,4 +123,45 @@ where
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::vid::{
+        advz::{tests::*, *},
+        namespace::Namespacer,
+    };
+    use ark_bls12_381::Bls12_381;
+    use digest::{generic_array::ArrayLength, OutputSizeUser};
+    use sha2::Sha256;
+
+    fn prove_namespace_generic<E, H>()
+    where
+        E: Pairing,
+        H: Digest + DynDigest + Default + Clone + Write,
+        <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+    {
+        // play with these items
+        let (payload_chunk_size, num_storage_nodes) = (4, 6);
+        let num_polys = 4;
+
+        // more items as a function of the above
+        let payload_elems_len = num_polys * payload_chunk_size;
+        let payload_bytes_len = payload_elems_len * modulus_byte_len::<E>();
+        let mut rng = jf_utils::test_rng();
+        let payload = init_random_payload(payload_bytes_len, &mut rng);
+        let srs = init_srs(payload_elems_len, &mut rng);
+
+        let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let d = advz.disperse(&payload).unwrap();
+
+        // TEST: verify "namespaces" (each namespace is a polynomial)
+        for namespace_index in 0..d.common.poly_commits.len() {
+            advz.namespace_verify(&payload, namespace_index, &d.commit, &d.common)
+                .unwrap()
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn prove_namespace() {
+        prove_namespace_generic::<Bls12_381, Sha256>();
+    }
+}
