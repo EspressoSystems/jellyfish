@@ -78,6 +78,8 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     pub commit: V::Commit,
 }
 
+pub mod namespace;
+
 pub mod advz; // instantiation of `VidScheme`
 
 // BOILERPLATE: error handling

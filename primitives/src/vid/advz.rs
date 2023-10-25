@@ -42,6 +42,7 @@ use itertools::Itertools;
 use jf_utils::{bytes_to_field, canonical, field_to_bytes};
 use serde::{Deserialize, Serialize};
 
+pub mod namespace;
 pub mod payload;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
