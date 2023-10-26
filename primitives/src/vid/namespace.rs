@@ -13,8 +13,7 @@ pub trait Namespacer: VidScheme {
     /// data proof
     type DataProof;
 
-    /// Compute a proof for `payload` for data index range `start` to `start +
-    /// len`.
+    /// Compute a proof for `payload` for data index range `start..start+len`.
     fn data_proof(
         &self,
         payload: &Self::Payload,
@@ -22,14 +21,13 @@ pub trait Namespacer: VidScheme {
         len: usize,
     ) -> VidResult<Self::DataProof>;
 
-    /// Verify a proof for `payload` for data index range `start` to `start +
-    /// len`.
+    /// Verify a proof for `payload` for data index range `start..start+len`.
     fn data_verify(
         &self,
         payload: &Self::Payload,
         start: usize,
         len: usize,
-        proof: Self::DataProof,
+        proof: &Self::DataProof,
     ) -> VidResult<Result<(), ()>>;
 
     /// Verify the `payload` namespace indexed by `namespace_index` against

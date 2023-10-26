@@ -33,15 +33,89 @@ where
     V::MembershipProof: Sync + Debug,
     V::Index: From<u64>,
 {
-    type DataProof = ();
+    // TODO should be P::Proof, not Vec<P::Proof>
+    // https://github.com/EspressoSystems/jellyfish/issues/387
+    type DataProof = Vec<P::Proof>;
 
     fn data_proof(
         &self,
-        _payload: &Self::Payload,
-        _start: usize,
-        _len: usize,
+        payload: &Self::Payload,
+        start: usize,
+        len: usize,
     ) -> crate::vid::VidResult<Self::DataProof> {
-        todo!()
+        // check args: `len` must be positive
+        // if len == 0 {
+        //     return Err(VidError::Argument(
+        //         "request for zero-length data proof".to_string(),
+        //     ));
+        // }
+
+        // check args: `start`, `len` in bounds for `payload`
+        if start + len >= payload.as_slice().len() {
+            return Err(VidError::Argument(format!(
+                "start {} + len {} out of bounds for payload {}",
+                start,
+                len,
+                payload.as_slice().len()
+            )));
+        }
+
+        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
+        let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
+        let start_namespace_byte = self.index_poly_to_byte(start_namespace);
+
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if len_namespace != 1 {
+            return Err(VidError::Argument(format!(
+                "request spans {} polynomials, expect 1",
+                len_namespace
+            )));
+        }
+
+        // grab the `start_namespace`th polynomial
+        // TODO refactor copied code
+        let polynomial = {
+            let elems_iter = bytes_to_field::<_, P::Evaluation>(
+                payload.as_slice()[start_namespace_byte..].iter(),
+            )
+            .map(|elem| *elem.borrow())
+            .take(self.payload_chunk_size);
+
+            // TODO TEMPORARY: use FFT to encode polynomials in eval form
+            // Remove these FFTs after we get KZG in eval form
+            // https://github.com/EspressoSystems/jellyfish/issues/339
+            let mut coeffs: Vec<_> = elems_iter.collect();
+            self.eval_domain.fft_in_place(&mut coeffs);
+
+            P::Polynomial::from_coefficients_vec(coeffs)
+        };
+
+        // prepare the list of input points
+        let points: Vec<_> = {
+            let offset = start_elem - self.index_byte_to_elem(start_namespace_byte);
+            self.eval_domain
+                .elements()
+                .skip(offset)
+                .take(len_elem)
+                .collect()
+        };
+
+        let (proofs, evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
+
+        // sanity check: evals == data
+        // TODO move this to a test?
+        {
+            let start_elem_byte = self.index_elem_to_byte(start_elem);
+            let data_elems: Vec<_> =
+                bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_elem_byte..].iter())
+                    .map(|elem| *elem.borrow())
+                    .take(len_elem)
+                    .collect();
+            assert_eq!(data_elems, evals);
+        }
+
+        Ok(proofs)
     }
 
     fn data_verify(
@@ -49,7 +123,7 @@ where
         _payload: &Self::Payload,
         _start: usize,
         _len: usize,
-        _proof: Self::DataProof,
+        _proof: &Self::DataProof,
     ) -> crate::vid::VidResult<Result<(), ()>> {
         todo!()
     }
@@ -70,8 +144,7 @@ where
             )));
         }
 
-        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
-        let start = namespace_index * self.payload_chunk_size * primefield_bytes_len;
+        let start = self.index_poly_to_byte(namespace_index);
 
         // check args: `namespace_index` in bounds for `payload`.
         if start >= payload.as_slice().len() {
@@ -119,6 +192,52 @@ where
         }
 
         Ok(Ok(()))
+    }
+}
+
+impl<P, T, H, V> GenericAdvz<P, T, H, V>
+where
+    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
+    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
+    P::Evaluation: PrimeField,
+    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
+    P::Commitment: From<T> + AsRef<T>,
+    T: AffineRepr<ScalarField = P::Evaluation>,
+    H: Digest + DynDigest + Default + Clone + Write,
+    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
+    V::MembershipProof: Sync + Debug,
+    V::Index: From<u64>,
+{
+    // lots of index manipulation.
+    // with infinite dev time we should implement type-safe indices to preclude
+    // index-misuse bugs. fn index_byte_to_poly(&self, index: usize) -> usize {
+    //     self.index_poly_to_byte(self.index_elem_to_poly(self.
+    // index_byte_to_elem(index))) }
+    fn range_byte_to_elem(&self, start: usize, len: usize) -> (usize, usize) {
+        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
+        let elem_start = start / primefield_bytes_len;
+        let elem_end = (start + len - 1) / primefield_bytes_len;
+        (elem_start, elem_end - elem_start + 1)
+    }
+    fn range_elem_to_poly(&self, start: usize, len: usize) -> (usize, usize) {
+        let poly_start = start / self.payload_chunk_size;
+        let poly_end = (start + len - 1) / self.payload_chunk_size;
+        (poly_start, poly_end - poly_start + 1)
+    }
+    fn index_byte_to_elem(&self, index: usize) -> usize {
+        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
+        index / primefield_bytes_len // round down
+    }
+    fn index_elem_to_byte(&self, index: usize) -> usize {
+        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
+        index * primefield_bytes_len
+    }
+    // fn index_elem_to_poly(&self, index: usize) -> usize {
+    //     index / self.payload_chunk_size // round down
+    // }
+    fn index_poly_to_byte(&self, index: usize) -> usize {
+        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
+        index * self.payload_chunk_size * primefield_bytes_len
     }
 }
 

@@ -10,7 +10,7 @@ use ark_std::{
 /// payload
 #[derive(Debug, PartialEq)]
 pub struct Payload {
-    // TODO store as Vec<F> instead?
+    // TODO store as Vec<F> instead? Or Vec<polynomial>?
     payload: Vec<u8>,
 }
 
