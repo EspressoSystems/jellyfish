@@ -272,7 +272,8 @@ mod tests {
         let d = advz.disperse(&payload).unwrap();
 
         // TEST: verify "namespaces" (each namespace is a polynomial)
-        for namespace_index in 0..d.common.poly_commits.len() {
+        assert_eq!(num_polys, d.common.poly_commits.len());
+        for namespace_index in 0..num_polys {
             advz.namespace_verify(&payload, namespace_index, &d.commit, &d.common)
                 .unwrap()
                 .unwrap();

@@ -839,7 +839,9 @@ mod tests {
     where
         E: Pairing,
     {
+        // TODO should equal compile_time_checks.0
+        // refactor copied code
         usize::try_from((<<UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::Evaluation as Field>::BasePrimeField
-        ::MODULUS_BIT_SIZE - 7)/8 + 1).unwrap()
+        ::MODULUS_BIT_SIZE - 1)/8 ).unwrap()
     }
 }
