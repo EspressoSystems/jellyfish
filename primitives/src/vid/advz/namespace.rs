@@ -51,7 +51,7 @@ where
         // }
 
         // check args: `start`, `len` in bounds for `payload`
-        if start + len >= payload.as_slice().len() {
+        if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
                 "start {} + len {} out of bounds for payload {}",
                 start,
@@ -66,7 +66,7 @@ where
 
         // check args:
         // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if len_namespace != 1 {
+        if len_namespace > 1 {
             return Err(VidError::Argument(format!(
                 "request spans {} polynomials, expect 1",
                 len_namespace
@@ -214,15 +214,10 @@ where
     //     self.index_poly_to_byte(self.index_elem_to_poly(self.
     // index_byte_to_elem(index))) }
     fn range_byte_to_elem(&self, start: usize, len: usize) -> (usize, usize) {
-        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
-        let elem_start = start / primefield_bytes_len;
-        let elem_end = (start + len - 1) / primefield_bytes_len;
-        (elem_start, elem_end - elem_start + 1)
+        range_conversion(start, len, compile_time_checks::<P::Evaluation>().0)
     }
     fn range_elem_to_poly(&self, start: usize, len: usize) -> (usize, usize) {
-        let poly_start = start / self.payload_chunk_size;
-        let poly_end = (start + len - 1) / self.payload_chunk_size;
-        (poly_start, poly_end - poly_start + 1)
+        range_conversion(start, len, self.payload_chunk_size)
     }
     fn index_byte_to_elem(&self, index: usize) -> usize {
         let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
@@ -241,6 +236,18 @@ where
     }
 }
 
+fn range_conversion(start: usize, len: usize, denominator: usize) -> (usize, usize) {
+    let new_start = start / denominator;
+
+    // underflow occurs if len is 0, so handle this case separately
+    if len == 0 {
+        return (new_start, 0);
+    }
+
+    let new_end = (start + len - 1) / denominator;
+    (new_start, new_end - new_start + 1)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::vid::{
@@ -248,6 +255,7 @@ mod tests {
         namespace::Namespacer,
     };
     use ark_bls12_381::Bls12_381;
+    use ark_std::rand::Rng;
     use digest::{generic_array::ArrayLength, OutputSizeUser};
     use sha2::Sha256;
 
@@ -279,10 +287,67 @@ mod tests {
                 .unwrap();
         }
 
-        // TEST: prove a data range
-        let start = ((num_polys / 2) * payload_chunk_size) * modulus_byte_len::<E>() + 13;
-        let len = 21;
-        let _ = advz.data_proof(&payload, start, len).unwrap();
+        // TEST: prove data ranges for this paylaod
+        let namespace_bytes_len = payload_chunk_size * modulus_byte_len::<E>();
+        let edge_cases = {
+            let mut edge_cases = Vec::new();
+            for namespace in 0..num_polys {
+                let random_offset = rng.gen_range(0..namespace_bytes_len);
+                let random_start = random_offset + (namespace * namespace_bytes_len);
+
+                // len edge cases
+                edge_cases.push((namespace, random_start, 0));
+                edge_cases.push((namespace, random_start, 1));
+                edge_cases.push((
+                    namespace,
+                    random_start,
+                    namespace_bytes_len - random_offset - 1,
+                ));
+                edge_cases.push((namespace, random_start, namespace_bytes_len - random_offset));
+
+                // start edge cases
+                edge_cases.push((namespace, 0, rng.gen_range(0..namespace_bytes_len)));
+                edge_cases.push((namespace, 1, rng.gen_range(0..namespace_bytes_len - 1)));
+                edge_cases.push((namespace, namespace_bytes_len - 2, rng.gen_range(0..1)));
+                edge_cases.push((namespace, namespace_bytes_len - 1, 0));
+            }
+            edge_cases
+        };
+        let random_cases = {
+            let num_cases = edge_cases.len();
+            let mut random_cases = Vec::with_capacity(num_cases);
+            for _ in 0..num_cases {
+                let namespace = rng.gen_range(0..num_polys);
+                let offset = rng.gen_range(0..namespace_bytes_len);
+                let start = offset + (namespace * namespace_bytes_len);
+                let len = rng.gen_range(0..namespace_bytes_len - offset);
+                random_cases.push((namespace, start, len));
+            }
+            random_cases
+        };
+
+        for (i, range) in edge_cases.iter().enumerate() {
+            println!(
+                "{}/{} edge case: namespace {}, start {}, len {}",
+                i,
+                edge_cases.len(),
+                range.0,
+                range.1,
+                range.2
+            );
+            let _ = advz.data_proof(&payload, range.1, range.2).unwrap();
+        }
+        for (i, range) in random_cases.iter().enumerate() {
+            println!(
+                "{}/{} random case: namespace {}, start {}, len {}",
+                i,
+                random_cases.len(),
+                range.0,
+                range.1,
+                range.2
+            );
+            let _ = advz.data_proof(&payload, range.1, range.2).unwrap();
+        }
     }
 
     #[test]
