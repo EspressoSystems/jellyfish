@@ -18,7 +18,7 @@ use crate::{
     alloc::string::ToString,
     vid::{namespace::Namespacer, vid, VidError},
 };
-use ark_std::{borrow::Borrow, format, println};
+use ark_std::{borrow::Borrow, format};
 
 impl<P, T, H, V> Namespacer for GenericAdvz<P, T, H, V>
 where
@@ -64,11 +64,6 @@ where
         let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
         let start_namespace_byte = self.index_poly_to_byte(start_namespace);
 
-        // println!("(start, len): ({}, {})\n(start_elem, len_elem): ({}, {})\n(start_namespace, len_namespace): ({}, {})", start, len, start_elem, len_elem, start_namespace, len_namespace);
-        // let payload_elems: Vec<_> =
-        //     bytes_to_field::<_, P::Evaluation>(payload.as_slice().iter()).collect();
-        // println!("payload {} elems: {:?}", payload_elems.len(), payload_elems);
-
         // check args:
         // TODO TEMPORARY: forbid requests that span multiple polynomials
         if len_namespace != 1 {
@@ -95,26 +90,10 @@ where
             P::Polynomial::from_coefficients_vec(coeffs)
         };
 
-        // debug
-        // {
-        //     let points: Vec<_> = self
-        //         .eval_domain
-        //         .elements()
-        //         .take(self.payload_chunk_size)
-        //         .collect();
-        //     let (_proofs, evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
-        //     println!(
-        //         "all {} evals (should equal namespace elems): {:?}",
-        //         evals.len(),
-        //         evals
-        //     );
-        // }
-
         // prepare the list of input points
         // TODO perf: can't avoid use of `skip`
         let points: Vec<_> = {
             let offset = start_elem - self.index_byte_to_elem(start_namespace_byte);
-            println!("points offset {}", offset);
             self.eval_domain
                 .elements()
                 .skip(offset)
@@ -126,10 +105,8 @@ where
 
         // sanity check: evals == data
         // TODO move this to a test?
-        println!("evals: {:?}", evals);
         {
             let start_elem_byte = self.index_elem_to_byte(start_elem);
-            println!("start_elem_byte {}", start_elem_byte);
             let data_elems: Vec<_> =
                 bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_elem_byte..].iter())
                     .map(|elem| *elem.borrow())
@@ -271,10 +248,7 @@ mod tests {
         namespace::Namespacer,
     };
     use ark_bls12_381::Bls12_381;
-    use ark_poly::Polynomial;
-    use ark_std::UniformRand;
     use digest::{generic_array::ArrayLength, OutputSizeUser};
-    use jf_utils::test_rng;
     use sha2::Sha256;
 
     fn namespace_generic<E, H>()
@@ -313,36 +287,5 @@ mod tests {
     #[test]
     fn namespace() {
         namespace_generic::<Bls12_381, Sha256>();
-    }
-
-    #[test]
-    fn polynomial_debug() {
-        let mut rng = test_rng();
-        let srs = init_srs(4, &mut rng);
-        let (ck, _vk) =
-            <UnivariateKzgPCS<Bls12_381> as UnivariatePCS>::trim_fft_size(srs, 3).unwrap();
-
-        let payload = vec![<Bls12_381 as Pairing>::ScalarField::rand(&mut rng); 4];
-        // println!("payload {:?}", payload);
-
-        let eval_domain =
-            Radix2EvaluationDomain::<<Bls12_381 as Pairing>::ScalarField>::new(4).unwrap();
-        let coeffs = eval_domain.ifft(&payload);
-        let polynomial = <UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::Polynomial::from_coefficients_vec(coeffs);
-
-        let points: Vec<_> = eval_domain.elements().collect();
-
-        let manual_evals: Vec<_> = points.iter().map(|p| polynomial.evaluate(p)).collect();
-        assert_eq!(manual_evals, payload);
-
-        let (_proofs, evals) =
-            <UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::multi_open(
-                &ck,
-                &polynomial,
-                &points,
-            )
-            .unwrap();
-
-        assert_eq!(evals, payload);
     }
 }
