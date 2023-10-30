@@ -842,14 +842,4 @@ mod tests {
         UnivariateKzgPCS::gen_srs_for_testing(rng, checked_fft_size(num_coeffs - 1).unwrap())
             .unwrap()
     }
-
-    pub(super) fn modulus_byte_len<E>() -> usize
-    where
-        E: Pairing,
-    {
-        // TODO should equal compile_time_checks.0
-        // refactor copied code
-        usize::try_from((<<UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::Evaluation as Field>::BasePrimeField
-        ::MODULUS_BIT_SIZE - 1)/8 ).unwrap()
-    }
 }

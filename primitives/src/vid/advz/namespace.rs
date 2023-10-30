@@ -275,6 +275,7 @@ mod tests {
     use ark_bls12_381::Bls12_381;
     use ark_std::rand::Rng;
     use digest::{generic_array::ArrayLength, OutputSizeUser};
+    use jf_utils::compile_time_checks;
     use sha2::Sha256;
 
     fn namespace_generic<E, H>()
@@ -289,7 +290,7 @@ mod tests {
 
         // more items as a function of the above
         let payload_elems_len = num_polys * payload_chunk_size;
-        let payload_bytes_len = payload_elems_len * modulus_byte_len::<E>();
+        let payload_bytes_len = payload_elems_len * compile_time_checks::<E::ScalarField>().0;
         let mut rng = jf_utils::test_rng();
         let payload = init_random_payload(payload_bytes_len, &mut rng);
         let srs = init_srs(payload_elems_len, &mut rng);
@@ -308,7 +309,7 @@ mod tests {
         // TEST: prove data ranges for this paylaod
         // it takes too long to test all combos of (namespace, start, len)
         // so do some edge cases and random cases
-        let namespace_bytes_len = payload_chunk_size * modulus_byte_len::<E>();
+        let namespace_bytes_len = payload_chunk_size * compile_time_checks::<E::ScalarField>().0;
         let edge_cases = {
             let mut edge_cases = Vec::new();
             for namespace in 0..num_polys {
