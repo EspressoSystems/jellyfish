@@ -201,6 +201,10 @@ where
     type Payload = Payload;
 
     fn commit_only(&self, payload: &Self::Payload) -> VidResult<Self::Commit> {
+        // Can't use `Self::poly_commits_hash()`` here because `P::commit()`` returns
+        // `Result<P::Commitment,_>`` instead of `P::Commitment`.
+        // There's probably an idiomatic way to do this using eg.
+        // itertools::process_results() but the code is unreadable.
         let mut hasher = H::new();
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
         for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
@@ -277,17 +281,7 @@ where
             bytes_len,
         };
 
-        let commit = {
-            let mut hasher = H::new();
-            for poly_commit in common.poly_commits.iter() {
-                // TODO compiler bug? `as` should not be needed here!
-                (poly_commit as &P::Commitment)
-                    .serialize_uncompressed(&mut hasher)
-                    .map_err(vid)?;
-            }
-            hasher.finalize()
-        };
-
+        let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common)?;
 
         // Compute aggregate polynomial
@@ -464,11 +458,9 @@ where
 {
     fn pseudorandom_scalar(common: &<Self as VidScheme>::Common) -> VidResult<P::Evaluation> {
         let mut hasher = H::new();
-        for poly_commit in common.poly_commits.iter() {
-            poly_commit
-                .serialize_uncompressed(&mut hasher)
-                .map_err(vid)?;
-        }
+        Self::poly_commits_hash(common.poly_commits.iter())?
+            .serialize_uncompressed(&mut hasher)
+            .map_err(vid)?;
         common
             .all_evals_digest
             .serialize_uncompressed(&mut hasher)
@@ -510,6 +502,21 @@ where
         }
 
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+    }
+
+    fn poly_commits_hash<I>(poly_commits: I) -> VidResult<<Self as VidScheme>::Commit>
+    where
+        I: Iterator,
+        I::Item: Borrow<P::Commitment>,
+    {
+        let mut hasher = H::new();
+        for poly_commit in poly_commits {
+            poly_commit
+                .borrow()
+                .serialize_uncompressed(&mut hasher)
+                .map_err(vid)?;
+        }
+        Ok(hasher.finalize())
     }
 }
 

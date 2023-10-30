@@ -7,7 +7,6 @@
 //! Implementation of [`Namespacer`] for [`Advz`].
 
 use ark_poly::EvaluationDomain;
-use ark_serialize::CanonicalSerialize;
 use jf_utils::{bytes_to_field, compile_time_checks};
 
 use super::{
@@ -68,7 +67,6 @@ where
         }
 
         // grab the `start_namespace`th polynomial
-        // TODO refactor copied code
         let polynomial = self.polynomial(
             bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size),
@@ -109,18 +107,7 @@ where
         }
 
         // check args: `common` consistent with `commit`
-        // TODO refactor copied code
-        let rebuilt_commit = {
-            let mut hasher = H::new();
-            for poly_commit in common.poly_commits.iter() {
-                // TODO compiler bug? `as` should not be needed here!
-                (poly_commit as &P::Commitment)
-                    .serialize_uncompressed(&mut hasher)
-                    .map_err(vid)?;
-            }
-            hasher.finalize()
-        };
-        if rebuilt_commit != *commit {
+        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
             return Err(VidError::Argument(
                 "common inconsistent with commit".to_string(),
             ));
@@ -197,17 +184,7 @@ where
         }
 
         // check args: `common` consistent with `commit`
-        let rebuilt_commit = {
-            let mut hasher = H::new();
-            for poly_commit in common.poly_commits.iter() {
-                // TODO compiler bug? `as` should not be needed here!
-                (poly_commit as &P::Commitment)
-                    .serialize_uncompressed(&mut hasher)
-                    .map_err(vid)?;
-            }
-            hasher.finalize()
-        };
-        if rebuilt_commit != *commit {
+        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
             return Err(VidError::Argument(
                 "common inconsistent with commit".to_string(),
             ));
