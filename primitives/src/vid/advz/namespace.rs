@@ -18,7 +18,7 @@ use crate::{
     alloc::string::ToString,
     vid::{namespace::Namespacer, vid, VidError},
 };
-use ark_std::{borrow::Borrow, format};
+use ark_std::format;
 
 impl<P, T, H, V> Namespacer for GenericAdvz<P, T, H, V>
 where
@@ -43,13 +43,6 @@ where
         start: usize,
         len: usize,
     ) -> crate::vid::VidResult<Self::DataProof> {
-        // check args: `len` must be positive
-        // if len == 0 {
-        //     return Err(VidError::Argument(
-        //         "request for zero-length data proof".to_string(),
-        //     ));
-        // }
-
         // check args: `start`, `len` in bounds for `payload`
         if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
@@ -76,20 +69,10 @@ where
 
         // grab the `start_namespace`th polynomial
         // TODO refactor copied code
-        let polynomial = {
-            let mut coeffs: Vec<_> = bytes_to_field::<_, P::Evaluation>(
-                payload.as_slice()[start_namespace_byte..].iter(),
-            )
-            .take(self.payload_chunk_size)
-            .collect();
-
-            // TODO TEMPORARY: use FFT to encode polynomials in eval form
-            // Remove these FFTs after we get KZG in eval form
-            // https://github.com/EspressoSystems/jellyfish/issues/339
-            self.eval_domain.ifft_in_place(&mut coeffs);
-
-            P::Polynomial::from_coefficients_vec(coeffs)
-        };
+        let polynomial = self.polynomial(
+            bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size),
+        );
 
         // prepare the list of input points
         // TODO perf: can't avoid use of `skip`
@@ -232,17 +215,10 @@ where
 
         // rebuild the `namespace_index`th poly commit, check against `common`
         let poly_commit = {
-            let elems_iter = bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start..].iter())
-                .map(|elem| *elem.borrow())
-                .take(self.payload_chunk_size);
-
-            // TODO TEMPORARY: use FFT to encode polynomials in eval form
-            // Remove these FFTs after we get KZG in eval form
-            // https://github.com/EspressoSystems/jellyfish/issues/339
-            let mut coeffs: Vec<_> = elems_iter.collect();
-            self.eval_domain.ifft_in_place(&mut coeffs);
-
-            let poly = P::Polynomial::from_coefficients_vec(coeffs);
+            let poly = self.polynomial(
+                bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start..].iter())
+                    .take(self.payload_chunk_size),
+            );
             P::commit(&self.ck, &poly).map_err(vid)?
         };
         if poly_commit != common.poly_commits[namespace_index] {

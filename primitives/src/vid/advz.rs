@@ -204,13 +204,7 @@ where
         let mut hasher = H::new();
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
         for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            // TODO TEMPORARY: use FFT to encode polynomials in eval form
-            // Remove these FFTs after we get KZG in eval form
-            // https://github.com/EspressoSystems/jellyfish/issues/339
-            let mut coeffs: Vec<_> = coeffs_iter.collect();
-            self.eval_domain.ifft_in_place(&mut coeffs);
-
-            let poly = DenseUVPolynomial::from_coefficients_vec(coeffs);
+            let poly = self.polynomial(coeffs_iter);
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
@@ -227,22 +221,7 @@ where
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload).map(|elem| *elem.borrow());
         let mut polys = Vec::new();
         for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            // TODO TEMPORARY: use FFT to encode polynomials in eval form
-            // Remove these FFTs after we get KZG in eval form
-            // https://github.com/EspressoSystems/jellyfish/issues/339
-            let mut coeffs: Vec<_> = coeffs_iter.collect();
-            let pre_fft_len = coeffs.len();
-            self.eval_domain.ifft_in_place(&mut coeffs);
-
-            // sanity check: the fft did not resize coeffs.
-            // If pre_fft_len != self.payload_chunk_size then we must be in the final chunk.
-            // In that case coeffs.len() could be anything, so there's nothing to sanity
-            // check.
-            if pre_fft_len == self.payload_chunk_size {
-                assert_eq!(coeffs.len(), pre_fft_len);
-            }
-
-            polys.push(DenseUVPolynomial::from_coefficients_vec(coeffs));
+            polys.push(self.polynomial(coeffs_iter));
         }
 
         // evaluate polynomials
@@ -509,6 +488,28 @@ where
             .first()
             .ok_or_else(|| anyhow!("hash_to_field output is empty"))
             .map_err(vid)?)
+    }
+
+    fn polynomial<I>(&self, coeffs: I) -> P::Polynomial
+    where
+        I: Iterator<Item = P::Evaluation>,
+    {
+        // TODO TEMPORARY: use FFT to encode polynomials in eval form
+        // Remove these FFTs after we get KZG in eval form
+        // https://github.com/EspressoSystems/jellyfish/issues/339
+        let mut coeffs_vec: Vec<_> = coeffs.collect();
+        let pre_fft_len = coeffs_vec.len();
+        self.eval_domain.ifft_in_place(&mut coeffs_vec);
+
+        // sanity check: the fft did not resize coeffs.
+        // If pre_fft_len != self.payload_chunk_size then we were not given the correct
+        // number of coeffs. In that case coeffs.len() could be anything, so
+        // there's nothing to sanity check.
+        if pre_fft_len == self.payload_chunk_size {
+            assert_eq!(coeffs_vec.len(), pre_fft_len);
+        }
+
+        DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
     }
 }
 
