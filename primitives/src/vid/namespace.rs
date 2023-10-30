@@ -13,7 +13,9 @@ pub trait Namespacer: VidScheme {
     /// data proof
     type DataProof;
 
-    /// Compute a proof for `payload` for data index range `start..start+len`.
+    /// Compute a proof for `payload` for data index range `start..start+len-1`.
+    ///
+    /// See TODO in [`namespace_verify`] on `payload`.
     fn data_proof(
         &self,
         payload: &Self::Payload,
@@ -21,20 +23,26 @@ pub trait Namespacer: VidScheme {
         len: usize,
     ) -> VidResult<Self::DataProof>;
 
-    /// Verify a proof for `payload` for data index range `start..start+len`.
+    /// Verify a proof for `payload` for data index range `start..start+len-1`.
+    ///
+    /// See TODO in [`namespace_verify`] on `payload`.
     fn data_verify(
         &self,
         payload: &Self::Payload,
         start: usize,
         len: usize,
+        commit: &Self::Commit,
+        common: &Self::Common,
         proof: &Self::DataProof,
     ) -> VidResult<Result<(), ()>>;
 
     /// Verify the `payload` namespace indexed by `namespace_index` against
     /// `commit`, `common`.
     ///
-    /// TODO: Seems ugly to include `common` in this API but [`advz`] impl needs
-    /// it.
+    /// TODO: We prefer not to include the whole `payload`. But the namespace
+    /// proof needs a few payload bytes from outside the namespace. In the
+    /// future `payload` should be replaced by a payload subset that includes
+    /// only the bytes needed to verify a namespace.
     fn namespace_verify(
         &self,
         payload: &Self::Payload,

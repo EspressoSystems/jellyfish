@@ -60,6 +60,7 @@ where
             )));
         }
 
+        // index conversion
         let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
         let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
         let start_namespace_byte = self.index_poly_to_byte(start_namespace);
@@ -101,31 +102,88 @@ where
                 .collect()
         };
 
-        let (proofs, evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
-
-        // sanity check: evals == data
-        // TODO move this to a test?
-        {
-            let start_elem_byte = self.index_elem_to_byte(start_elem);
-            let data_elems: Vec<_> =
-                bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_elem_byte..].iter())
-                    .map(|elem| *elem.borrow())
-                    .take(len_elem)
-                    .collect();
-            assert_eq!(data_elems, evals);
-        }
-
+        let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
         Ok(proofs)
     }
 
     fn data_verify(
         &self,
-        _payload: &Self::Payload,
-        _start: usize,
-        _len: usize,
-        _proof: &Self::DataProof,
+        payload: &Self::Payload,
+        start: usize,
+        len: usize,
+        commit: &Self::Commit,
+        common: &Self::Common,
+        proof: &Self::DataProof,
     ) -> crate::vid::VidResult<Result<(), ()>> {
-        todo!()
+        // check args: `start`, `len` in bounds for `payload`
+        if start + len > payload.as_slice().len() {
+            return Err(VidError::Argument(format!(
+                "start {} + len {} out of bounds for payload {}",
+                start,
+                len,
+                payload.as_slice().len()
+            )));
+        }
+
+        // check args: `common` consistent with `commit`
+        // TODO refactor copied code
+        let rebuilt_commit = {
+            let mut hasher = H::new();
+            for poly_commit in common.poly_commits.iter() {
+                // TODO compiler bug? `as` should not be needed here!
+                (poly_commit as &P::Commitment)
+                    .serialize_uncompressed(&mut hasher)
+                    .map_err(vid)?;
+            }
+            hasher.finalize()
+        };
+        if rebuilt_commit != *commit {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+
+        // index conversion
+        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
+        let (start_namespace, _len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
+        let start_namespace_byte = self.index_poly_to_byte(start_namespace);
+
+        // prepare list of data elems
+        let start_elem_byte = self.index_elem_to_byte(start_elem);
+        let data_elems: Vec<_> =
+            bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_elem_byte..].iter())
+                .take(len_elem)
+                .collect();
+
+        // prepare list of input points
+        // TODO perf: can't avoid use of `skip`
+        let points: Vec<_> = {
+            let offset = start_elem - self.index_byte_to_elem(start_namespace_byte);
+            self.eval_domain
+                .elements()
+                .skip(offset)
+                .take(len_elem)
+                .collect()
+        };
+
+        // verify proof
+        // TODO naive verify for multi_open
+        // https://github.com/EspressoSystems/jellyfish/issues/387
+        if data_elems.len() != proof.len() {
+            return Err(VidError::Argument(format!(
+                "data len {} differs from proof len {}",
+                data_elems.len(),
+                proof.len()
+            )));
+        }
+        assert_eq!(data_elems.len(), points.len()); // sanity
+        let poly_commit = &common.poly_commits[start_namespace];
+        for (point, (elem, pf)) in points.iter().zip(data_elems.iter().zip(proof.iter())) {
+            if !P::verify(&self.vk, poly_commit, point, elem, pf).map_err(vid)? {
+                return Ok(Err(()));
+            }
+        }
+        Ok(Ok(()))
     }
 
     fn namespace_verify(
@@ -182,7 +240,7 @@ where
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
             let mut coeffs: Vec<_> = elems_iter.collect();
-            self.eval_domain.fft_in_place(&mut coeffs);
+            self.eval_domain.ifft_in_place(&mut coeffs);
 
             let poly = P::Polynomial::from_coefficients_vec(coeffs);
             P::commit(&self.ck, &poly).map_err(vid)?
@@ -214,10 +272,13 @@ where
     //     self.index_poly_to_byte(self.index_elem_to_poly(self.
     // index_byte_to_elem(index))) }
     fn range_byte_to_elem(&self, start: usize, len: usize) -> (usize, usize) {
-        range_conversion(start, len, compile_time_checks::<P::Evaluation>().0)
+        range_coarsen(start, len, compile_time_checks::<P::Evaluation>().0)
+    }
+    fn _range_elem_to_byte(&self, start: usize, len: usize) -> (usize, usize) {
+        _range_refine(start, len, compile_time_checks::<P::Evaluation>().0)
     }
     fn range_elem_to_poly(&self, start: usize, len: usize) -> (usize, usize) {
-        range_conversion(start, len, self.payload_chunk_size)
+        range_coarsen(start, len, self.payload_chunk_size)
     }
     fn index_byte_to_elem(&self, index: usize) -> usize {
         let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
@@ -236,7 +297,7 @@ where
     }
 }
 
-fn range_conversion(start: usize, len: usize, denominator: usize) -> (usize, usize) {
+fn range_coarsen(start: usize, len: usize, denominator: usize) -> (usize, usize) {
     let new_start = start / denominator;
 
     // underflow occurs if len is 0, so handle this case separately
@@ -246,6 +307,10 @@ fn range_conversion(start: usize, len: usize, denominator: usize) -> (usize, usi
 
     let new_end = (start + len - 1) / denominator;
     (new_start, new_end - new_start + 1)
+}
+
+fn _range_refine(start: usize, len: usize, multiplier: usize) -> (usize, usize) {
+    (start * multiplier, len * multiplier)
 }
 
 #[cfg(test)]
@@ -288,6 +353,8 @@ mod tests {
         }
 
         // TEST: prove data ranges for this paylaod
+        // it takes too long to test all combos of (namespace, start, len)
+        // so do some edge cases and random cases
         let namespace_bytes_len = payload_chunk_size * modulus_byte_len::<E>();
         let edge_cases = {
             let mut edge_cases = Vec::new();
@@ -326,27 +393,19 @@ mod tests {
             random_cases
         };
 
-        for (i, range) in edge_cases.iter().enumerate() {
+        for (i, range) in edge_cases.iter().chain(random_cases.iter()).enumerate() {
             println!(
-                "{}/{} edge case: namespace {}, start {}, len {}",
+                "case {}/{}: namespace {}, start {}, len {}",
                 i,
-                edge_cases.len(),
+                edge_cases.len() + random_cases.len(),
                 range.0,
                 range.1,
                 range.2
             );
-            let _ = advz.data_proof(&payload, range.1, range.2).unwrap();
-        }
-        for (i, range) in random_cases.iter().enumerate() {
-            println!(
-                "{}/{} random case: namespace {}, start {}, len {}",
-                i,
-                random_cases.len(),
-                range.0,
-                range.1,
-                range.2
-            );
-            let _ = advz.data_proof(&payload, range.1, range.2).unwrap();
+            let proof = advz.data_proof(&payload, range.1, range.2).unwrap();
+            advz.data_verify(&payload, range.1, range.2, &d.commit, &d.common, &proof)
+                .unwrap()
+                .unwrap();
         }
     }
 

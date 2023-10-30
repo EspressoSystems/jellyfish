@@ -208,7 +208,7 @@ where
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
             let mut coeffs: Vec<_> = coeffs_iter.collect();
-            self.eval_domain.fft_in_place(&mut coeffs);
+            self.eval_domain.ifft_in_place(&mut coeffs);
 
             let poly = DenseUVPolynomial::from_coefficients_vec(coeffs);
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
@@ -232,7 +232,7 @@ where
             // https://github.com/EspressoSystems/jellyfish/issues/339
             let mut coeffs: Vec<_> = coeffs_iter.collect();
             let pre_fft_len = coeffs.len();
-            self.eval_domain.fft_in_place(&mut coeffs);
+            self.eval_domain.ifft_in_place(&mut coeffs);
 
             // sanity check: the fft did not resize coeffs.
             // If pre_fft_len != self.payload_chunk_size then we must be in the final chunk.
@@ -459,7 +459,7 @@ where
             // TODO TEMPORARY: use FFT to encode polynomials in eval form
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
-            self.eval_domain.ifft_in_place(&mut coeffs);
+            self.eval_domain.fft_in_place(&mut coeffs);
 
             result.append(&mut coeffs);
         }
