@@ -221,32 +221,21 @@ where
 {
     // lots of index manipulation.
     // with infinite dev time we should implement type-safe indices to preclude
-    // index-misuse bugs. fn index_byte_to_poly(&self, index: usize) -> usize {
-    //     self.index_poly_to_byte(self.index_elem_to_poly(self.
-    // index_byte_to_elem(index))) }
+    // index-misuse bugs.
     fn range_byte_to_elem(&self, start: usize, len: usize) -> (usize, usize) {
         range_coarsen(start, len, compile_time_checks::<P::Evaluation>().0)
-    }
-    fn _range_elem_to_byte(&self, start: usize, len: usize) -> (usize, usize) {
-        _range_refine(start, len, compile_time_checks::<P::Evaluation>().0)
     }
     fn range_elem_to_poly(&self, start: usize, len: usize) -> (usize, usize) {
         range_coarsen(start, len, self.payload_chunk_size)
     }
     fn index_byte_to_elem(&self, index: usize) -> usize {
-        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
-        index / primefield_bytes_len // round down
+        index / compile_time_checks::<P::Evaluation>().0 // round down
     }
     fn index_elem_to_byte(&self, index: usize) -> usize {
-        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
-        index * primefield_bytes_len
+        index * compile_time_checks::<P::Evaluation>().0
     }
-    // fn index_elem_to_poly(&self, index: usize) -> usize {
-    //     index / self.payload_chunk_size // round down
-    // }
     fn index_poly_to_byte(&self, index: usize) -> usize {
-        let (primefield_bytes_len, ..) = compile_time_checks::<P::Evaluation>();
-        index * self.payload_chunk_size * primefield_bytes_len
+        index * self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0
     }
 }
 
@@ -260,10 +249,6 @@ fn range_coarsen(start: usize, len: usize, denominator: usize) -> (usize, usize)
 
     let new_end = (start + len - 1) / denominator;
     (new_start, new_end - new_start + 1)
-}
-
-fn _range_refine(start: usize, len: usize, multiplier: usize) -> (usize, usize) {
-    (start * multiplier, len * multiplier)
 }
 
 #[cfg(test)]
