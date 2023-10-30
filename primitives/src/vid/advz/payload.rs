@@ -1,8 +1,6 @@
 //! paylod module doc
 
-// use ark_ff::PrimeField;
 use ark_std::{
-    // borrow::Borrow,
     slice::Iter,
     vec::{IntoIter, Vec},
 };
@@ -15,17 +13,6 @@ pub struct Payload {
 }
 
 impl Payload {
-    /// from_iter
-    // pub fn from_iter<I>(payload: I) -> Self
-    // where
-    //     I: IntoIterator,
-    //     I::Item: Borrow<u8>,
-    // {
-    //     Self {
-    //         payload: payload.into_iter().map(|b| *b.borrow()).collect(),
-    //     }
-    // }
-
     /// from_vec
     pub fn from_vec(payload: Vec<u8>) -> Self {
         Self { payload }
@@ -40,13 +27,6 @@ impl Payload {
     pub fn iter(&self) -> Iter<'_, u8> {
         self.payload.iter()
     }
-
-    // fn field_iter<F>(&self) -> impl Iterator<Item = F>
-    // where
-    //     F: PrimeField,
-    // {
-    //     todo!()
-    // }
 }
 
 // delegation boilerplate
