@@ -43,7 +43,7 @@ pub trait VidScheme {
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
     ///
-    /// TODO: return type [`Payload`]?
+    /// TODO: return type `Payload`?
     fn recover_payload(
         &self,
         shares: &[Self::Share],

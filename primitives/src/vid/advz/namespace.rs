@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Implementation of [`Namespacer`] for [`Advz`].
+//! Implementation of [`Namespacer`] for `Advz`.
 
 use ark_poly::EvaluationDomain;
 use jf_utils::{bytes_to_field, compile_time_checks};

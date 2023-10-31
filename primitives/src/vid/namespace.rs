@@ -15,7 +15,7 @@ pub trait Namespacer: VidScheme {
 
     /// Compute a proof for `payload` for data index range `start..start+len-1`.
     ///
-    /// See TODO in [`namespace_verify`] on `payload`.
+    /// See TODO in `namespace_verify` on `payload`.
     fn data_proof(
         &self,
         payload: &Self::Payload,
@@ -25,7 +25,7 @@ pub trait Namespacer: VidScheme {
 
     /// Verify a proof for `payload` for data index range `start..start+len-1`.
     ///
-    /// See TODO in [`namespace_verify`] on `payload`.
+    /// See TODO in `namespace_verify` on `payload`.
     fn data_verify(
         &self,
         payload: &Self::Payload,
