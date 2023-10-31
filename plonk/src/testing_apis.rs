@@ -222,6 +222,24 @@ where
         .into())
     }
 
+    /// Compute some intermediate polynomial evaluations used to further compute
+    /// `PcsInfo`.
+    ///
+    /// Returns:
+    /// `(vanish_eval, lagrange_1_eval, pi_eval)` on challenge point `zeta`.
+    pub fn compute_poly_evals_for_pcs_info(
+        &self,
+        zeta: &E::ScalarField,
+        public_input: &[E::ScalarField],
+    ) -> Result<(E::ScalarField, E::ScalarField, E::ScalarField), PlonkError> {
+        let verifier: verifier::Verifier<E> = (*self).clone().into();
+
+        let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
+        let (lagrange_1_eval, _) = verifier.evaluate_lagrange_1_and_n(zeta, &vanish_eval);
+        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
+        Ok((vanish_eval, lagrange_1_eval, pi_eval))
+    }
+
     /// Compute the constant term of the linearization polynomial:
     /// For each instance j:
     ///
