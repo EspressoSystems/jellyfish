@@ -258,7 +258,7 @@ mod tests {
         namespace::Namespacer,
     };
     use ark_bls12_381::Bls12_381;
-    use ark_std::rand::Rng;
+    use ark_std::{println, rand::Rng};
     use digest::{generic_array::ArrayLength, OutputSizeUser};
     use jf_utils::compile_time_checks;
     use sha2::Sha256;
