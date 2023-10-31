@@ -36,6 +36,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#343](https://github.com/EspressoSystems/jellyfish/pull/343) Rescue parameter for `ark_bn254::Fq`
 - [#362](https://github.com/EspressoSystems/jellyfish/pull/362) Derive Eq, Hash at a bunch of places
 - [#381](https://github.com/EspressoSystems/jellyfish/pull/381) VID take iterator instead of slice
+- [#389](https://github.com/EspressoSystems/jellyfish/pull/389) Hello-world namespace support for ADVZ VID scheme
 
 ### Changed
 
