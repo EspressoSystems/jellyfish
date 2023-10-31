@@ -47,6 +47,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#302](https://github.com/EspressoSystems/jellyfish/pull/302) Followup APIs for non-native ECC circuit support.
 - [#323](https://github.com/EspressoSystems/jellyfish/pull/323) Improve performance of range gate in ultra plonk.
 - [#371](https://github.com/EspressoSystems/jellyfish/pull/371) VID disperse also return payload commitment
+- [#385](https://github.com/EspressoSystems/jellyfish/pull/385) Use FFT to encode polynomials in eval form.
 
 ### Removed
 
