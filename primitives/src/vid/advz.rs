@@ -28,11 +28,12 @@ use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
 use ark_std::{
     borrow::Borrow,
+    end_timer,
     fmt::Debug,
     format,
     marker::PhantomData,
     ops::{Add, Mul},
-    vec,
+    start_timer, vec,
     vec::Vec,
     Zero,
 };
@@ -218,17 +219,28 @@ where
     }
 
     fn disperse(&self, payload: &Self::Payload) -> VidResult<VidDisperse<Self>> {
+        let disperse_time = start_timer!(|| format!(
+            "VID disperse {} chunks to {} nodes",
+            self.payload_chunk_size, self.num_storage_nodes
+        ));
         let bytes_len = payload.as_slice().len();
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
+        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload).map(|elem| *elem.borrow());
         let mut polys = Vec::new();
         for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
             polys.push(self.polynomial(coeffs_iter));
         }
+        end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials
+        let all_storage_node_evals_timer = start_timer!(|| format!(
+            "compute all storage node evals for {} polynomials of degree {}",
+            polys.len(),
+            self.payload_chunk_size
+        ));
         let all_storage_node_evals = {
             let mut all_storage_node_evals =
                 vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
@@ -253,9 +265,12 @@ where
 
             all_storage_node_evals
         };
+        end_timer!(all_storage_node_evals_timer);
 
         // vector commitment to polynomial evaluations
         // TODO why do I need to compute the height of the merkle tree?
+        let all_evals_commit_timer =
+            start_timer!(|| "compute merkle root of all storage node evals");
         let height: usize = all_storage_node_evals
             .len()
             .checked_ilog(V::ARITY)
@@ -270,7 +285,9 @@ where
             .expect("num_storage_nodes log base arity should fit into usize");
         let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
+        end_timer!(all_evals_commit_timer);
 
+        let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
         let common = Common {
             poly_commits: polys
                 .iter()
@@ -280,7 +297,11 @@ where
             all_evals_digest: all_evals_commit.commitment().digest(),
             bytes_len,
         };
+        end_timer!(common_timer);
 
+        let misc_timer = start_timer!(|| {
+            "should be fast: compute polynomial commitments hash, pseudorandom scalar, aggregate polynomial"
+        });
         let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common)?;
 
@@ -290,7 +311,12 @@ where
         // and whose input point is the pseudorandom scalar.
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
+        end_timer!(misc_timer);
 
+        let agg_proofs_timer = start_timer!(|| format!(
+            "compute aggregate proofs for {} storage nodes",
+            self.num_storage_nodes
+        ));
         let aggregate_proofs = P::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
@@ -298,7 +324,9 @@ where
             &self.multi_open_domain,
         )
         .map_err(vid)?;
+        end_timer!(agg_proofs_timer);
 
+        let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
         let shares = all_storage_node_evals
             .into_iter()
             .zip(aggregate_proofs)
@@ -316,7 +344,9 @@ where
                 })
             })
             .collect::<Result<_, VidError>>()?;
+        end_timer!(assemblage_timer);
 
+        end_timer!(disperse_time);
         Ok(VidDisperse {
             shares,
             common,
@@ -624,6 +654,19 @@ mod tests {
         vec,
     };
     use sha2::Sha256;
+
+    #[test]
+    fn disperse_timer() {
+        // run with 'print-trace' feature to see timer output
+        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(payload_chunk_size, &mut rng);
+        let advz =
+            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let payload_random = init_random_payload(1 << 20, &mut rng);
+
+        let _ = advz.disperse(&payload_random);
+    }
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
