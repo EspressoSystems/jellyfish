@@ -39,7 +39,7 @@ mod feature_gated {
     {
         // play with these items
         const RATE: usize = 4; // ratio of num_storage_nodes : polynomial_degree
-        let storage_node_counts = [600, 700, 800, 900, 1000];
+        let storage_node_counts = [512, 1024];
         let payload_byte_lens = [1 * MB];
 
         // more items as a function of the above
