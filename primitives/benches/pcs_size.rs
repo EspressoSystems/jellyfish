@@ -48,7 +48,6 @@ pub fn proof_size<E: Pairing>(num_vars: usize) -> usize {
 }
 
 fn main() {
-
     println!("\nKZG on BN-254: Commitment size");
     for num_vars in (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2) {
         println!(
