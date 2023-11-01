@@ -12,12 +12,13 @@
 #![allow(missing_docs)]
 
 use crate::{
+    constants::KECCAK256_STATE_SIZE,
     errors::PlonkError,
     proof_system::{
         structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
         verifier,
     },
-    transcript::PlonkTranscript,
+    transcript::{PlonkTranscript, SolidityTranscript},
 };
 use ark_ec::{
     pairing::Pairing,
@@ -363,5 +364,18 @@ where
             plookup_proofs_vec,
             buffer_v_and_uv_basis,
         )
+    }
+}
+
+/// exposing the internal states for testing purposes
+impl SolidityTranscript {
+    /// Create a new transcript from specific internal states.
+    pub fn from_internal(transcript: Vec<u8>, state: [u8; KECCAK256_STATE_SIZE]) -> Self {
+        Self { transcript, state }
+    }
+
+    /// Returns the internal states
+    pub fn internal(&self) -> (Vec<u8>, [u8; KECCAK256_STATE_SIZE]) {
+        (self.transcript.clone(), self.state.clone())
     }
 }
