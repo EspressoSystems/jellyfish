@@ -8,8 +8,8 @@
 
 use std::time::{Duration, Instant};
 
-use ark_bn254::Bn254;
 use ark_bls12_381::Bls12_381;
+use ark_bn254::Bn254;
 use ark_ec::pairing::Pairing;
 use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
@@ -152,14 +152,12 @@ fn kzg_381(c: &mut Criterion) {
     );
 }
 
-
-
 criterion_group! {
     name = pcs_benches;
     config = Criterion::default();
     targets =
         kzg_254,
-        kzg_381   
+        kzg_381
 }
 
 criterion_main!(pcs_benches);

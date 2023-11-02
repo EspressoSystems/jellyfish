@@ -65,4 +65,22 @@ fn main() {
             proof_size::<Bn254>(num_vars)
         );
     }
+
+    println!("\nKZG on BLS-381: Commitment size");
+    for num_vars in (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2) {
+        println!(
+            "\tnum_vars: {}, size: {} B",
+            num_vars,
+            commitment_size::<Bls12_381>(num_vars)
+        );
+    }
+
+    println!("\nKZG on BLS-381: Proof size");
+    for num_vars in (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2) {
+        println!(
+            "\tnum_vars: {}, size: {} B",
+            num_vars,
+            proof_size::<Bls12_381>(num_vars)
+        );
+    }
 }
