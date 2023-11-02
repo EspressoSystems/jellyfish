@@ -26,7 +26,7 @@ const MAX_NUM_VARS: usize = 20;
 /// Measure the time cost of {commit/open/verify} across a range of num_vars
 pub fn bench_pcs_method<E: Pairing>(
     c: &mut Criterion,
-    range: Vec<usize>,
+    range: impl Iterator<Item = usize>,
     msg: &str,
     method: impl Fn(&<MultilinearKzgPCS<E> as PolynomialCommitmentScheme>::SRS, usize) -> Duration,
 ) {
@@ -113,19 +113,19 @@ pub fn verify<E: Pairing>(
 fn kzg_254(c: &mut Criterion) {
     bench_pcs_method::<Bn254>(
         c,
-        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2),
         "commit_kzg_range_BN_254",
         commit::<Bn254>,
     );
     bench_pcs_method::<Bn254>(
         c,
-        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2),
         "open_kzg_range_BN_254",
         open::<Bn254>,
     );
     bench_pcs_method::<Bn254>(
         c,
-        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2),
         "verify_kzg_range_BN_254",
         verify::<Bn254>,
     );
@@ -134,19 +134,19 @@ fn kzg_254(c: &mut Criterion) {
 fn kzg_381(c: &mut Criterion) {
     bench_pcs_method::<Bls12_381>(
         c,
-        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2),
         "commit_kzg_range_BLS_381",
         commit::<Bls12_381>,
     );
     bench_pcs_method::<Bls12_381>(
         c,
-        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2),
         "open_kzg_range_BLS_381",
         open::<Bls12_381>,
     );
     bench_pcs_method::<Bls12_381>(
         c,
-        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2),
         "verify_kzg_range_BLS_381",
         verify::<Bls12_381>,
     );
