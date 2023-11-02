@@ -9,6 +9,18 @@
 //! TODO should this trait even exist? It's very implementation-dependent.
 
 use super::{VidResult, VidScheme};
+use ark_std::ops::Range;
+
+// pub trait Namespacer2<P>: VidScheme {
+
+//     fn data_proof(
+//         &self,
+//         payload: &[u8],
+//         start: usize,
+//         len: usize,
+//     ) -> VidResult<Self::DataProof>;
+
+// }
 
 /// Namespace functionality for [`VidScheme`].
 pub trait Namespacer: VidScheme {
@@ -17,6 +29,9 @@ pub trait Namespacer: VidScheme {
 
     /// chunk proof
     type ChunkProof;
+
+    /// doc
+    type ChunkProof2;
 
     /// Compute a proof for `payload` for data index range `start..start+len-1`.
     ///
@@ -48,6 +63,22 @@ pub trait Namespacer: VidScheme {
         start: usize,
         len: usize,
     ) -> VidResult<Self::ChunkProof>;
+
+    /// doc
+    fn chunk_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::ChunkProof2>
+    where
+        B: AsRef<[u8]>;
+
+    /// doc
+    fn chunk_verify2<B>(
+        &self,
+        chunk: B,
+        commit: &Self::Commit,
+        common: &Self::Common,
+        proof: &Self::ChunkProof2,
+    ) -> VidResult<Result<(), ()>>
+    where
+        B: AsRef<[u8]>;
 
     /// Verify the `payload` namespace indexed by `namespace_index` against
     /// `commit`, `common`.

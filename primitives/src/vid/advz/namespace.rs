@@ -11,13 +11,13 @@ use jf_utils::{bytes_to_field, compile_time_checks};
 
 use super::{
     AffineRepr, Debug, DenseUVPolynomial, Digest, DynDigest, GenericAdvz, MerkleTreeScheme,
-    PolynomialCommitmentScheme, PrimeField, UnivariatePCS, Vec, Write,
+    PolynomialCommitmentScheme, PrimeField, UnivariatePCS, Vec, VidResult, Write,
 };
 use crate::{
     alloc::string::ToString,
     vid::{namespace::Namespacer, vid, VidError},
 };
-use ark_std::format;
+use ark_std::{format, ops::Range};
 
 impl<P, T, H, V> Namespacer for GenericAdvz<P, T, H, V>
 where
@@ -37,13 +37,14 @@ where
     type DataProof = Vec<P::Proof>;
 
     type ChunkProof = ChunkProof<P::Evaluation>;
+    type ChunkProof2 = ChunkProof2<P::Evaluation>;
 
     fn data_proof(
         &self,
         payload: &Self::Payload,
         start: usize,
         len: usize,
-    ) -> crate::vid::VidResult<Self::DataProof> {
+    ) -> VidResult<Self::DataProof> {
         // check args: `start`, `len` in bounds for `payload`
         if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
@@ -97,7 +98,7 @@ where
         commit: &Self::Commit,
         common: &Self::Common,
         proof: &Self::DataProof,
-    ) -> crate::vid::VidResult<Result<(), ()>> {
+    ) -> VidResult<Result<(), ()>> {
         // check args: `start`, `len` in bounds for `payload`
         if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
@@ -163,7 +164,7 @@ where
         payload: &Self::Payload,
         start: usize,
         len: usize,
-    ) -> crate::vid::VidResult<Self::ChunkProof> {
+    ) -> VidResult<Self::ChunkProof> {
         // check args: `start`, `len` in bounds for `payload`
         if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
@@ -199,6 +200,32 @@ where
         Ok(ChunkProof { prefix, suffix })
     }
 
+    fn chunk_proof2<B>(&self, _payload: B, _range: Range<usize>) -> VidResult<Self::ChunkProof2>
+    where
+        B: AsRef<[u8]>,
+    {
+        Ok(ChunkProof2 {
+            _prefix_elems: Vec::new(),
+            _suffix_elems: Vec::new(),
+            _prefix_bytes: Vec::new(),
+            _suffix_bytes: Vec::new(),
+        })
+    }
+
+    fn chunk_verify2<B>(
+        &self,
+        _chunk: B,
+        _commit: &Self::Commit,
+        _common: &Self::Common,
+        proof: &Self::ChunkProof2,
+    ) -> VidResult<Result<(), ()>>
+    where
+        B: AsRef<[u8]>,
+    {
+        let _ = proof;
+        Ok(Ok(()))
+    }
+
     fn chunk_verify(
         &self,
         payload: &Self::Payload,
@@ -207,7 +234,7 @@ where
         commit: &Self::Commit,
         common: &Self::Common,
         proof: &Self::ChunkProof,
-    ) -> crate::vid::VidResult<Result<(), ()>> {
+    ) -> VidResult<Result<(), ()>> {
         // check args: `start`, `len` in bounds for `payload`
         if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
@@ -271,6 +298,14 @@ pub struct ChunkProof<F> {
     suffix: Vec<F>,
 }
 
+/// doc
+pub struct ChunkProof2<F> {
+    _prefix_elems: Vec<F>,
+    _suffix_elems: Vec<F>,
+    _prefix_bytes: Vec<u8>,
+    _suffix_bytes: Vec<u8>,
+}
+
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
@@ -293,6 +328,9 @@ where
     fn range_elem_to_poly(&self, start: usize, len: usize) -> (usize, usize) {
         range_coarsen(start, len, self.payload_chunk_size)
     }
+    // fn range_elem_to_byte(&self, start: usize, len: usize) -> (usize, usize) {
+    //     range_refine(start, len, compile_time_checks::<P::Evaluation>().0)
+    // }
     fn index_byte_to_elem(&self, index: usize) -> usize {
         index / compile_time_checks::<P::Evaluation>().0 // round down
     }
@@ -315,6 +353,10 @@ fn range_coarsen(start: usize, len: usize, denominator: usize) -> (usize, usize)
     let new_end = (start + len - 1) / denominator;
     (new_start, new_end - new_start + 1)
 }
+
+// fn range_refine(start: usize, len: usize, multiplier: usize) -> (usize, usize) {
+//     (start * multiplier, len * multiplier)
+// }
 
 #[cfg(test)]
 mod tests {
