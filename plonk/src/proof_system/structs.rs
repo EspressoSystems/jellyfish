@@ -655,29 +655,29 @@ impl<E: Pairing> ProvingKey<E> {
 #[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct VerifyingKey<E: Pairing> {
     /// The size of the evaluation domain. Should be a power of two.
-    pub(crate) domain_size: usize,
+    pub domain_size: usize,
 
     /// The number of public inputs.
-    pub(crate) num_inputs: usize,
+    pub num_inputs: usize,
 
     /// The permutation polynomial commitments. The commitments are not hiding.
-    pub(crate) sigma_comms: Vec<Commitment<E>>,
+    pub sigma_comms: Vec<Commitment<E>>,
 
     /// The selector polynomial commitments. The commitments are not hiding.
-    pub(crate) selector_comms: Vec<Commitment<E>>,
+    pub selector_comms: Vec<Commitment<E>>,
 
     /// The constants K0, ..., K_num_wire_types that ensure wire subsets are
     /// disjoint.
-    pub(crate) k: Vec<E::ScalarField>,
+    pub k: Vec<E::ScalarField>,
 
     /// KZG PCS opening key.
     pub open_key: OpenKey<E>,
 
     /// A flag indicating whether the key is a merged key.
-    pub(crate) is_merged: bool,
+    pub is_merged: bool,
 
     /// Plookup verifying key, None if not support lookup.
-    pub(crate) plookup_vk: Option<PlookupVerifyingKey<E>>,
+    pub plookup_vk: Option<PlookupVerifyingKey<E>>,
 }
 
 impl<E, F, P1, P2> From<VerifyingKey<E>> for Vec<E::BaseField>
