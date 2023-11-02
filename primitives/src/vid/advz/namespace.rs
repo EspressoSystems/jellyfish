@@ -36,6 +36,8 @@ where
     // https://github.com/EspressoSystems/jellyfish/issues/387
     type DataProof = Vec<P::Proof>;
 
+    type ChunkProof = ChunkProof<P::Evaluation>;
+
     fn data_proof(
         &self,
         payload: &Self::Payload,
@@ -156,30 +158,78 @@ where
         Ok(Ok(()))
     }
 
-    fn namespace_verify(
+    fn chunk_proof(
         &self,
         payload: &Self::Payload,
-        namespace_index: usize,
-        commit: &Self::Commit,
-        common: &Self::Common,
-    ) -> crate::vid::VidResult<Result<(), ()>> {
-        // check args: `namespace_index`` in bounds for `common`.
-        if namespace_index >= common.poly_commits.len() {
+        start: usize,
+        len: usize,
+    ) -> crate::vid::VidResult<Self::ChunkProof> {
+        // check args: `start`, `len` in bounds for `payload`
+        if start + len > payload.as_slice().len() {
             return Err(VidError::Argument(format!(
-                "namespace_index {} out of bounds for common.poly_commits {}",
-                namespace_index,
-                common.poly_commits.len()
+                "start {} + len {} out of bounds for payload {}",
+                start,
+                len,
+                payload.as_slice().len()
             )));
         }
 
-        let start = self.index_poly_to_byte(namespace_index);
+        // index conversion
+        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
+        let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
+        let start_namespace_byte = self.index_poly_to_byte(start_namespace);
+        let offset_elem = start_elem - self.index_byte_to_elem(start_namespace_byte);
 
-        // check args: `namespace_index` in bounds for `payload`.
-        if start >= payload.as_slice().len() {
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if len_namespace > 1 {
             return Err(VidError::Argument(format!(
-                "namespace_index {} out of bounds for payload {}",
-                namespace_index,
+                "request spans {} polynomials, expect 1",
+                len_namespace
+            )));
+        }
+
+        // return the prefix and suffix elems
+        let mut elems_iter =
+            bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size);
+        let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
+        let suffix: Vec<_> = elems_iter.skip(len_elem).collect();
+
+        Ok(ChunkProof { prefix, suffix })
+    }
+
+    fn chunk_verify(
+        &self,
+        payload: &Self::Payload,
+        start: usize,
+        len: usize,
+        commit: &Self::Commit,
+        common: &Self::Common,
+        proof: &Self::ChunkProof,
+    ) -> crate::vid::VidResult<Result<(), ()>> {
+        // check args: `start`, `len` in bounds for `payload`
+        if start + len > payload.as_slice().len() {
+            return Err(VidError::Argument(format!(
+                "start {} + len {} out of bounds for payload {}",
+                start,
+                len,
                 payload.as_slice().len()
+            )));
+        }
+
+        // index conversion
+        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
+        let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
+        let start_elem_byte = self.index_elem_to_byte(start_elem);
+        // let offset_elem = start_elem - self.index_byte_to_elem(start_namespace_byte);
+
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if len_namespace > 1 {
+            return Err(VidError::Argument(format!(
+                "request spans {} polynomials, expect 1",
+                len_namespace
             )));
         }
 
@@ -193,17 +243,32 @@ where
         // rebuild the `namespace_index`th poly commit, check against `common`
         let poly_commit = {
             let poly = self.polynomial(
-                bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start..].iter())
-                    .take(self.payload_chunk_size),
+                proof
+                    .prefix
+                    .iter()
+                    .cloned()
+                    .chain(
+                        bytes_to_field::<_, P::Evaluation>(
+                            payload.as_slice()[start_elem_byte..].iter(),
+                        )
+                        .take(self.payload_chunk_size),
+                    )
+                    .chain(proof.suffix.iter().cloned()),
             );
             P::commit(&self.ck, &poly).map_err(vid)?
         };
-        if poly_commit != common.poly_commits[namespace_index] {
+        if poly_commit != common.poly_commits[start_namespace] {
             return Ok(Err(()));
         }
 
         Ok(Ok(()))
     }
+}
+
+/// doc
+pub struct ChunkProof<F> {
+    prefix: Vec<F>,
+    suffix: Vec<F>,
 }
 
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
@@ -283,14 +348,6 @@ mod tests {
         let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         let d = advz.disperse(&payload).unwrap();
 
-        // TEST: verify "namespaces" (each namespace is a polynomial)
-        assert_eq!(num_polys, d.common.poly_commits.len());
-        for namespace_index in 0..num_polys {
-            advz.namespace_verify(&payload, namespace_index, &d.commit, &d.common)
-                .unwrap()
-                .unwrap();
-        }
-
         // TEST: prove data ranges for this paylaod
         // it takes too long to test all combos of (namespace, start, len)
         // so do some edge cases and random cases
@@ -341,10 +398,29 @@ mod tests {
                 range.1,
                 range.2
             );
-            let proof = advz.data_proof(&payload, range.1, range.2).unwrap();
-            advz.data_verify(&payload, range.1, range.2, &d.commit, &d.common, &proof)
-                .unwrap()
-                .unwrap();
+            let data_proof = advz.data_proof(&payload, range.1, range.2).unwrap();
+            advz.data_verify(
+                &payload,
+                range.1,
+                range.2,
+                &d.commit,
+                &d.common,
+                &data_proof,
+            )
+            .unwrap()
+            .unwrap();
+
+            let chunk_proof = advz.chunk_proof(&payload, range.1, range.2).unwrap();
+            advz.chunk_verify(
+                &payload,
+                range.1,
+                range.2,
+                &d.commit,
+                &d.common,
+                &chunk_proof,
+            )
+            .unwrap()
+            .unwrap();
         }
     }
 

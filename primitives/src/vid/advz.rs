@@ -514,12 +514,13 @@ where
 
     fn polynomial<I>(&self, coeffs: I) -> P::Polynomial
     where
-        I: Iterator<Item = P::Evaluation>,
+        I: Iterator,
+        I::Item: Borrow<P::Evaluation>,
     {
         // TODO TEMPORARY: use FFT to encode polynomials in eval form
         // Remove these FFTs after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        let mut coeffs_vec: Vec<_> = coeffs.collect();
+        let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
         let pre_fft_len = coeffs_vec.len();
         self.eval_domain.ifft_in_place(&mut coeffs_vec);
 

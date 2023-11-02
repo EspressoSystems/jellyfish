@@ -5,6 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Trait for namespace functionality in Verifiable Information Retrieval (VID).
+//!
+//! TODO should this trait even exist? It's very implementation-dependent.
 
 use super::{VidResult, VidScheme};
 
@@ -13,9 +15,12 @@ pub trait Namespacer: VidScheme {
     /// data proof
     type DataProof;
 
+    /// chunk proof
+    type ChunkProof;
+
     /// Compute a proof for `payload` for data index range `start..start+len-1`.
     ///
-    /// See TODO in `namespace_verify` on `payload`.
+    /// TODO explain how this differs from `chunk_proof`
     fn data_proof(
         &self,
         payload: &Self::Payload,
@@ -36,6 +41,14 @@ pub trait Namespacer: VidScheme {
         proof: &Self::DataProof,
     ) -> VidResult<Result<(), ()>>;
 
+    /// Compute a proof for `payload` for data index range `start..start+len-1`.
+    fn chunk_proof(
+        &self,
+        payload: &Self::Payload,
+        start: usize,
+        len: usize,
+    ) -> VidResult<Self::ChunkProof>;
+
     /// Verify the `payload` namespace indexed by `namespace_index` against
     /// `commit`, `common`.
     ///
@@ -43,11 +56,13 @@ pub trait Namespacer: VidScheme {
     /// proof needs a few payload bytes from outside the namespace. In the
     /// future `payload` should be replaced by a payload subset that includes
     /// only the bytes needed to verify a namespace.
-    fn namespace_verify(
+    fn chunk_verify(
         &self,
         payload: &Self::Payload,
-        namespace_index: usize,
+        start: usize,
+        len: usize,
         commit: &Self::Commit,
         common: &Self::Common,
+        proof: &Self::ChunkProof,
     ) -> VidResult<Result<(), ()>>;
 }

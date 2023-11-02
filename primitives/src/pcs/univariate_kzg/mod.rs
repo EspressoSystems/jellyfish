@@ -93,7 +93,8 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     ) -> Result<Self::Commitment, PCSError> {
         let prover_param = prover_param.borrow();
         // let commit_time =
-        //     start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
+        //     start_timer!(|| format!("Committing to polynomial of degree {} ",
+        // poly.degree()));
 
         if poly.degree() > prover_param.powers_of_g.len() {
             return Err(PCSError::InvalidParameters(format!(
@@ -105,7 +106,8 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
         let (num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
-        // let msm_time = start_timer!(|| "MSM to compute commitment to plaintext poly");
+        // let msm_time = start_timer!(|| "MSM to compute commitment to plaintext
+        // poly");
         let commitment = E::G1::msm_bigint(
             &prover_param.powers_of_g[num_leading_zeros..],
             &plain_coeffs,
@@ -405,7 +407,8 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial
 }
 
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
-    // let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to bigints");
+    // let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to
+    // bigints");
     let coeffs = p.iter().map(|s| s.into_bigint()).collect::<Vec<_>>();
     // end_timer!(to_bigint_time);
     coeffs
