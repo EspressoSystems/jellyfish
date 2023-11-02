@@ -9,6 +9,7 @@
 use std::time::{Duration, Instant};
 
 use ark_bn254::Bn254;
+use ark_bls12_381::Bls12_381;
 use ark_ec::pairing::Pairing;
 use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
@@ -130,10 +131,35 @@ fn kzg_254(c: &mut Criterion) {
     );
 }
 
+fn kzg_381(c: &mut Criterion) {
+    bench_pcs_method::<Bls12_381>(
+        c,
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        "commit_kzg_range_BLS_381",
+        commit::<Bls12_381>,
+    );
+    bench_pcs_method::<Bls12_381>(
+        c,
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        "open_kzg_range_BLS_381",
+        open::<Bls12_381>,
+    );
+    bench_pcs_method::<Bls12_381>(
+        c,
+        (MIN_NUM_VARS..MAX_NUM_VARS).step_by(2).collect(),
+        "verify_kzg_range_BLS_381",
+        verify::<Bls12_381>,
+    );
+}
+
+
+
 criterion_group! {
     name = pcs_benches;
     config = Criterion::default();
-    targets = kzg_254
+    targets =
+        kzg_254,
+        kzg_381   
 }
 
 criterion_main!(pcs_benches);
