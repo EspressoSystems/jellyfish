@@ -216,7 +216,7 @@ where
         let payload = payload.as_ref();
 
         // check args: `range` in bounds for `payload`
-        if range.start >= payload.len() || range.end > payload.len() {
+        if range.end > payload.len() {
             return Err(VidError::Argument(format!(
                 "range ({}..{}) out of bounds for payload len {}",
                 range.start,
@@ -234,7 +234,7 @@ where
 
         // check args:
         // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if range_poly.len() > 1 {
+        if range_poly.len() != 1 {
             return Err(VidError::Argument(format!(
                 "request spans {} polynomials, expect 1",
                 range_poly.len()
@@ -254,7 +254,7 @@ where
             "proof:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
             &payload[range_elem_byte.start..range.start],
             &payload[range.start..range.end],
-            &payload[range.end..ark_std::cmp::max(range.end, range_elem_byte.end)]
+            &payload[range.end..range_elem_byte.end]
         );
         println!(
             "proof poly elems:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
@@ -273,8 +273,7 @@ where
             prefix_elems: prefix,
             suffix_elems: suffix,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
-            suffix_bytes: payload[range.end..ark_std::cmp::max(range.end, range_elem_byte.end)]
-                .to_vec(),
+            suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
             chunk_range: range,
         })
     }
@@ -291,6 +290,11 @@ where
     {
         let chunk = chunk.as_ref();
 
+        // check args: `chunk` nonempty
+        if chunk.is_empty() {
+            return Err(VidError::Argument("empty chunk".to_string()));
+        }
+
         // check args: `chunk` len consistent with `proof`
         if chunk.len() != proof.chunk_range.len() {
             return Err(VidError::Argument(format!(
@@ -306,7 +310,7 @@ where
 
         // check args:
         // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if range_poly.len() > 1 {
+        if range_poly.len() != 1 {
             return Err(VidError::Argument(format!(
                 "request spans {} polynomials, expect 1",
                 range_poly.len()
@@ -358,16 +362,13 @@ where
                     .prefix_elems
                     .iter()
                     .cloned()
-                    .chain(
-                        bytes_to_field::<_, P::Evaluation>(
-                            proof
-                                .prefix_bytes
-                                .iter()
-                                .chain(chunk)
-                                .chain(proof.suffix_bytes.iter()),
-                        )
-                        .take(self.payload_chunk_size), // TODO delete this
-                    )
+                    .chain(bytes_to_field::<_, P::Evaluation>(
+                        proof
+                            .prefix_bytes
+                            .iter()
+                            .chain(chunk)
+                            .chain(proof.suffix_bytes.iter()),
+                    ))
                     .chain(proof.suffix_elems.iter().cloned()),
             );
             P::commit(&self.ck, &poly).map_err(vid)?
@@ -515,28 +516,18 @@ where
 }
 
 fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
-    let new_start = index_coarsen(range.start, denominator);
-    let new_end = if range.end <= range.start {
-        new_start
-    } else {
-        index_coarsen(range.end - 1, denominator) + 1
-    };
+    assert!(!range.is_empty(), "{:?}", range);
     Range {
-        start: new_start,
-        end: new_end,
+        start: index_coarsen(range.start, denominator),
+        end: index_coarsen(range.end - 1, denominator) + 1,
     }
 }
 
 fn range_refine2(range: &Range<usize>, multiplier: usize) -> Range<usize> {
-    let new_start = index_refine(range.start, multiplier);
-    let new_end = if range.end <= range.start {
-        new_start
-    } else {
-        index_refine(range.end, multiplier)
-    };
+    assert!(!range.is_empty(), "{:?}", range);
     Range {
-        start: new_start,
-        end: new_end,
+        start: index_refine(range.start, multiplier),
+        end: index_refine(range.end, multiplier),
     }
 }
 
