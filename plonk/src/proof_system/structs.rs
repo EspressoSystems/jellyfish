@@ -60,26 +60,26 @@ pub type OpenKey<E> = UnivariateVerifierParam<E>;
 #[derivative(PartialEq, Hash(bound = "E:Pairing"))]
 pub struct Proof<E: Pairing> {
     /// Wire witness polynomials commitments.
-    pub(crate) wires_poly_comms: Vec<Commitment<E>>,
+    pub wires_poly_comms: Vec<Commitment<E>>,
 
     /// The polynomial commitment for the wire permutation argument.
-    pub(crate) prod_perm_poly_comm: Commitment<E>,
+    pub prod_perm_poly_comm: Commitment<E>,
 
     /// Splitted quotient polynomial commitments.
-    pub(crate) split_quot_poly_comms: Vec<Commitment<E>>,
+    pub split_quot_poly_comms: Vec<Commitment<E>>,
 
     /// (Aggregated) proof of evaluations at challenge point `zeta`.
-    pub(crate) opening_proof: Commitment<E>,
+    pub opening_proof: Commitment<E>,
 
     /// (Aggregated) proof of evaluation at challenge point `zeta * g` where `g`
     /// is the root of unity.
-    pub(crate) shifted_opening_proof: Commitment<E>,
+    pub shifted_opening_proof: Commitment<E>,
 
     /// Polynomial evaluations.
-    pub(crate) poly_evals: ProofEvaluations<E::ScalarField>,
+    pub poly_evals: ProofEvaluations<E::ScalarField>,
 
     /// The partial proof for Plookup argument
-    pub(crate) plookup_proof: Option<PlookupProof<E>>,
+    pub plookup_proof: Option<PlookupProof<E>>,
 }
 
 impl<E, P> TryFrom<Vec<E::BaseField>> for Proof<E>
@@ -402,14 +402,14 @@ impl<E: Pairing> BatchProof<E> {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, CanonicalSerialize, CanonicalDeserialize)]
 pub struct ProofEvaluations<F: Field> {
     /// Wire witness polynomials evaluations at point `zeta`.
-    pub(crate) wires_evals: Vec<F>,
+    pub wires_evals: Vec<F>,
 
     /// Extended permutation (sigma) polynomials evaluations at point `zeta`.
     /// We do not include the last sigma polynomial evaluation.
-    pub(crate) wire_sigma_evals: Vec<F>,
+    pub wire_sigma_evals: Vec<F>,
 
     /// Permutation product polynomial evaluation at point `zeta * g`.
-    pub(crate) perm_next_eval: F,
+    pub perm_next_eval: F,
 }
 
 impl<F: Field> TryFrom<Vec<F>> for ProofEvaluations<F> {
