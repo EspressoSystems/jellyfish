@@ -17,7 +17,7 @@ use crate::{
     alloc::string::ToString,
     vid::{namespace::Namespacer, vid, VidError},
 };
-use ark_std::println;
+// use ark_std::println;
 use ark_std::{format, ops::Range};
 
 impl<P, T, H, V> Namespacer for GenericAdvz<P, T, H, V>
@@ -241,33 +241,12 @@ where
             )));
         }
 
-        // return the prefix and suffix elems
+        // compute the prefix and suffix elems
         let mut elems_iter =
             bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size);
         let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
-        let _elems: Vec<_> = elems_iter.by_ref().take(range_elem.len()).collect();
-        // let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
-        let suffix: Vec<_> = elems_iter.collect();
-
-        println!(
-            "proof:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
-            &payload[range_elem_byte.start..range.start],
-            &payload[range.start..range.end],
-            &payload[range.end..range_elem_byte.end]
-        );
-        println!(
-            "proof poly elems:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
-            prefix, _elems, suffix
-        );
-        let poly_elems: Vec<_> =
-            bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
-                .take(self.payload_chunk_size)
-                .collect();
-        println!(
-            "proof  poly elems direct from payload bytes {:?}",
-            poly_elems
-        );
+        let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
 
         Ok(ChunkProof2 {
             prefix_elems: prefix,
@@ -305,8 +284,7 @@ where
         }
 
         // index conversion
-        let range_elem = self.range_byte_to_elem2(&proof.chunk_range);
-        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let range_poly = self.range_byte_to_poly2(&proof.chunk_range);
 
         // check args:
         // TODO TEMPORARY: forbid requests that span multiple polynomials
@@ -323,37 +301,6 @@ where
                 "common inconsistent with commit".to_string(),
             ));
         }
-
-        println!(
-            "verify:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
-            proof.prefix_bytes, chunk, proof.suffix_bytes
-        );
-        let _elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
-            proof
-                .prefix_bytes
-                .iter()
-                .chain(chunk)
-                .chain(proof.suffix_bytes.iter()),
-        )
-        .collect();
-        println!(
-            "verify poly elems:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
-            proof.prefix_elems, _elems, proof.suffix_elems
-        );
-        let poly_elems: Vec<_> = proof
-            .prefix_elems
-            .iter()
-            .cloned()
-            .chain(bytes_to_field::<_, P::Evaluation>(
-                proof
-                    .prefix_bytes
-                    .iter()
-                    .chain(chunk)
-                    .chain(proof.suffix_bytes.iter()),
-            ))
-            .chain(proof.suffix_elems.iter().cloned())
-            .collect();
-        println!("verify poly elems chained {:?}", poly_elems);
 
         // rebuild the poly commit, check against `common`
         let poly_commit = {
@@ -513,6 +460,12 @@ where
     fn range_elem_to_poly2(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen2(range, self.payload_chunk_size)
     }
+    fn range_byte_to_poly2(&self, range: &Range<usize>) -> Range<usize> {
+        range_coarsen2(
+            range,
+            self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
+        )
+    }
 }
 
 fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
@@ -580,6 +533,7 @@ mod tests {
         // more items as a function of the above
         let payload_elems_len = num_polys * payload_chunk_size;
         let payload_bytes_len = payload_elems_len * compile_time_checks::<E::ScalarField>().0;
+        let poly_bytes_len = payload_chunk_size * compile_time_checks::<E::ScalarField>().0;
         let mut rng = jf_utils::test_rng();
         let payload = init_random_payload(payload_bytes_len, &mut rng);
         let srs = init_srs(payload_elems_len, &mut rng);
@@ -588,96 +542,105 @@ mod tests {
         let d = advz.disperse(&payload).unwrap();
 
         // TEST: prove data ranges for this paylaod
-        // it takes too long to test all combos of (namespace, start, len)
+        // it takes too long to test all combos of (polynomial, start, len)
         // so do some edge cases and random cases
-        let namespace_bytes_len = payload_chunk_size * compile_time_checks::<E::ScalarField>().0;
-        let edge_cases = {
-            let mut edge_cases = Vec::new();
-            for namespace in 0..num_polys {
-                let random_offset = rng.gen_range(0..namespace_bytes_len);
-                let random_start = random_offset + (namespace * namespace_bytes_len);
-
-                // len edge cases
-                edge_cases.push((namespace, random_start, 1));
-                edge_cases.push((
-                    namespace,
-                    random_start,
-                    namespace_bytes_len - random_offset - 1,
-                ));
-                edge_cases.push((namespace, random_start, namespace_bytes_len - random_offset));
-
-                // start edge cases
-                edge_cases.push((namespace, 0, rng.gen_range(0..namespace_bytes_len)));
-                edge_cases.push((namespace, 1, rng.gen_range(0..namespace_bytes_len - 1)));
-                edge_cases.push((namespace, namespace_bytes_len - 2, 1));
-                edge_cases.push((namespace, namespace_bytes_len - 1, 1));
-            }
-            edge_cases
-        };
+        let edge_cases = vec![
+            Range { start: 0, end: 1 },
+            Range { start: 0, end: 2 },
+            Range {
+                start: 0,
+                end: poly_bytes_len - 1,
+            },
+            Range {
+                start: 0,
+                end: poly_bytes_len,
+            },
+            Range { start: 1, end: 2 },
+            Range { start: 1, end: 3 },
+            Range {
+                start: 1,
+                end: poly_bytes_len - 1,
+            },
+            Range {
+                start: 1,
+                end: poly_bytes_len,
+            },
+            Range {
+                start: poly_bytes_len - 2,
+                end: poly_bytes_len - 1,
+            },
+            Range {
+                start: poly_bytes_len - 2,
+                end: poly_bytes_len,
+            },
+            Range {
+                start: poly_bytes_len - 1,
+                end: poly_bytes_len,
+            },
+        ];
         let random_cases = {
             let num_cases = edge_cases.len();
             let mut random_cases = Vec::with_capacity(num_cases);
             for _ in 0..num_cases {
-                let namespace = rng.gen_range(0..num_polys);
-                let offset = rng.gen_range(0..namespace_bytes_len);
-                let start = offset + (namespace * namespace_bytes_len);
-                let len = rng.gen_range(1..namespace_bytes_len - offset);
-                random_cases.push((namespace, start, len));
+                let start = rng.gen_range(0..poly_bytes_len - 1);
+                let end = rng.gen_range(start + 1..poly_bytes_len);
+                random_cases.push(Range { start, end });
             }
             random_cases
         };
+        let all_cases = [(edge_cases, "edge"), (random_cases, "random")];
 
-        for (i, range) in edge_cases.iter().chain(random_cases.iter()).enumerate() {
-            println!(
-                "case {}/{}: namespace {}, start {}, len {}",
-                i,
-                edge_cases.len() + random_cases.len(),
-                range.0,
-                range.1,
-                range.2
-            );
-            let data_proof = advz.data_proof(&payload, range.1, range.2).unwrap();
-            advz.data_verify(
-                &payload,
-                range.1,
-                range.2,
-                &d.commit,
-                &d.common,
-                &data_proof,
-            )
-            .unwrap()
-            .unwrap();
+        for poly in 0..num_polys {
+            let poly_offset = poly * poly_bytes_len;
 
-            let chunk_proof = advz.chunk_proof(&payload, range.1, range.2).unwrap();
-            let chunk_proof2 = advz
-                .chunk_proof2(
-                    payload.as_slice(),
-                    Range {
-                        start: range.1,
-                        end: range.1 + range.2,
-                    },
-                )
-                .unwrap();
-            assert_eq!(chunk_proof.prefix, chunk_proof2.prefix_elems);
-            assert_eq!(chunk_proof.suffix, chunk_proof2.suffix_elems);
-            advz.chunk_verify(
-                &payload,
-                range.1,
-                range.2,
-                &d.commit,
-                &d.common,
-                &chunk_proof,
-            )
-            .unwrap()
-            .unwrap();
-            advz.chunk_verify2(
-                &payload.as_slice()[range.1..range.1 + range.2],
-                &d.commit,
-                &d.common,
-                &chunk_proof2,
-            )
-            .unwrap()
-            .unwrap();
+            for cases in all_cases.iter() {
+                for range in cases.0.iter() {
+                    let range = Range {
+                        start: range.start + poly_offset,
+                        end: range.end + poly_offset,
+                    };
+                    println!("{} case: {:?}", cases.1, range);
+
+                    let data_proof = advz.data_proof(&payload, range.start, range.len()).unwrap();
+                    advz.data_verify(
+                        &payload,
+                        range.start,
+                        range.len(),
+                        &d.commit,
+                        &d.common,
+                        &data_proof,
+                    )
+                    .unwrap()
+                    .unwrap();
+
+                    let chunk_proof = advz
+                        .chunk_proof(&payload, range.start, range.len())
+                        .unwrap();
+                    let chunk_proof2 = advz
+                        .chunk_proof2(payload.as_slice(), range.clone())
+                        .unwrap();
+                    assert_eq!(chunk_proof.prefix, chunk_proof2.prefix_elems);
+                    assert_eq!(chunk_proof.suffix, chunk_proof2.suffix_elems);
+                    advz.chunk_verify(
+                        &payload,
+                        range.start,
+                        range.len(),
+                        &d.commit,
+                        &d.common,
+                        &chunk_proof,
+                    )
+                    .unwrap()
+                    .unwrap();
+                    advz.chunk_verify2(
+                        &payload.as_slice()[range.clone()],
+                        &d.commit,
+                        &d.common,
+                        &chunk_proof2,
+                    )
+                    .unwrap()
+                    .unwrap();
+                }
+            }
         }
     }
 
