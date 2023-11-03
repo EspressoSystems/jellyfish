@@ -17,6 +17,7 @@ use crate::{
     alloc::string::ToString,
     vid::{namespace::Namespacer, vid, VidError},
 };
+use ark_std::println;
 use ark_std::{format, ops::Range};
 
 impl<P, T, H, V> Namespacer for GenericAdvz<P, T, H, V>
@@ -204,6 +205,14 @@ where
     where
         B: AsRef<[u8]>,
     {
+        // check args: `range` nonempty
+        if range.is_empty() {
+            return Err(VidError::Argument(format!(
+                "empty range ({}..{})",
+                range.start, range.end
+            )));
+        }
+
         let payload = payload.as_ref();
 
         // check args: `range` in bounds for `payload`
@@ -221,6 +230,7 @@ where
         let range_poly = self.range_elem_to_poly2(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
+        let range_elem_byte = self.range_elem_to_byte2(&range_elem);
 
         // check args:
         // TODO TEMPORARY: forbid requests that span multiple polynomials
@@ -236,25 +246,136 @@ where
             bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size);
         let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
-        let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
+        let _elems: Vec<_> = elems_iter.by_ref().take(range_elem.len()).collect();
+        // let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
+        let suffix: Vec<_> = elems_iter.collect();
+
+        println!(
+            "proof:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
+            &payload[range_elem_byte.start..range.start],
+            &payload[range.start..range.end],
+            &payload[range.end..ark_std::cmp::max(range.end, range_elem_byte.end)]
+        );
+        println!(
+            "proof poly elems:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
+            prefix, _elems, suffix
+        );
+        let poly_elems: Vec<_> =
+            bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size)
+                .collect();
+        println!(
+            "proof  poly elems direct from payload bytes {:?}",
+            poly_elems
+        );
 
         Ok(ChunkProof2 {
-            _prefix_elems: prefix,
-            _suffix_elems: suffix,
+            prefix_elems: prefix,
+            suffix_elems: suffix,
+            prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
+            suffix_bytes: payload[range.end..ark_std::cmp::max(range.end, range_elem_byte.end)]
+                .to_vec(),
+            chunk_range: range,
         })
     }
 
     fn chunk_verify2<B>(
         &self,
-        _chunk: B,
-        _commit: &Self::Commit,
-        _common: &Self::Common,
+        chunk: B,
+        commit: &Self::Commit,
+        common: &Self::Common,
         proof: &Self::ChunkProof2,
     ) -> VidResult<Result<(), ()>>
     where
         B: AsRef<[u8]>,
     {
-        let _ = proof;
+        let chunk = chunk.as_ref();
+
+        // check args: `chunk` len consistent with `proof`
+        if chunk.len() != proof.chunk_range.len() {
+            return Err(VidError::Argument(format!(
+                "chunk length {} inconsistent with proof length {}",
+                chunk.len(),
+                proof.chunk_range.len()
+            )));
+        }
+
+        // index conversion
+        let range_elem = self.range_byte_to_elem2(&proof.chunk_range);
+        let range_poly = self.range_elem_to_poly2(&range_elem);
+
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if range_poly.len() > 1 {
+            return Err(VidError::Argument(format!(
+                "request spans {} polynomials, expect 1",
+                range_poly.len()
+            )));
+        }
+
+        // check args: `common` consistent with `commit`
+        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+
+        println!(
+            "verify:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
+            proof.prefix_bytes, chunk, proof.suffix_bytes
+        );
+        let _elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
+            proof
+                .prefix_bytes
+                .iter()
+                .chain(chunk)
+                .chain(proof.suffix_bytes.iter()),
+        )
+        .collect();
+        println!(
+            "verify poly elems:\n\tprefix {:?}\n\tchunk {:?}\n\tsuffix {:?}",
+            proof.prefix_elems, _elems, proof.suffix_elems
+        );
+        let poly_elems: Vec<_> = proof
+            .prefix_elems
+            .iter()
+            .cloned()
+            .chain(bytes_to_field::<_, P::Evaluation>(
+                proof
+                    .prefix_bytes
+                    .iter()
+                    .chain(chunk)
+                    .chain(proof.suffix_bytes.iter()),
+            ))
+            .chain(proof.suffix_elems.iter().cloned())
+            .collect();
+        println!("verify poly elems chained {:?}", poly_elems);
+
+        // rebuild the poly commit, check against `common`
+        let poly_commit = {
+            let poly = self.polynomial(
+                proof
+                    .prefix_elems
+                    .iter()
+                    .cloned()
+                    .chain(
+                        bytes_to_field::<_, P::Evaluation>(
+                            proof
+                                .prefix_bytes
+                                .iter()
+                                .chain(chunk)
+                                .chain(proof.suffix_bytes.iter()),
+                        )
+                        .take(self.payload_chunk_size), // TODO delete this
+                    )
+                    .chain(proof.suffix_elems.iter().cloned()),
+            );
+            P::commit(&self.ck, &poly).map_err(vid)?
+        };
+        if poly_commit != common.poly_commits[range_poly.start] {
+            return Ok(Err(()));
+        }
+
         Ok(Ok(()))
     }
 
@@ -332,10 +453,11 @@ pub struct ChunkProof<F> {
 
 /// doc
 pub struct ChunkProof2<F> {
-    _prefix_elems: Vec<F>,
-    _suffix_elems: Vec<F>,
-    // _prefix_bytes: Vec<u8>,
-    // _suffix_bytes: Vec<u8>,
+    prefix_elems: Vec<F>,
+    suffix_elems: Vec<F>,
+    prefix_bytes: Vec<u8>,
+    suffix_bytes: Vec<u8>,
+    chunk_range: Range<usize>,
 }
 
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
@@ -378,6 +500,15 @@ where
     fn range_byte_to_elem2(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen2(range, compile_time_checks::<P::Evaluation>().0)
     }
+    fn range_elem_to_byte2(&self, range: &Range<usize>) -> Range<usize> {
+        range_refine2(range, compile_time_checks::<P::Evaluation>().0)
+    }
+    // fn range_poly_to_byte2(&self, range: &Range<usize>) -> Range<usize> {
+    //     range_refine2(
+    //         range,
+    //         self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
+    //     )
+    // }
     fn range_elem_to_poly2(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen2(range, self.payload_chunk_size)
     }
@@ -386,9 +517,22 @@ where
 fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
     let new_start = index_coarsen(range.start, denominator);
     let new_end = if range.end <= range.start {
-        0
+        new_start
     } else {
         index_coarsen(range.end - 1, denominator) + 1
+    };
+    Range {
+        start: new_start,
+        end: new_end,
+    }
+}
+
+fn range_refine2(range: &Range<usize>, multiplier: usize) -> Range<usize> {
+    let new_start = index_refine(range.start, multiplier);
+    let new_end = if range.end <= range.start {
+        new_start
+    } else {
+        index_refine(range.end, multiplier)
     };
     Range {
         start: new_start,
@@ -463,7 +607,6 @@ mod tests {
                 let random_start = random_offset + (namespace * namespace_bytes_len);
 
                 // len edge cases
-                edge_cases.push((namespace, random_start, 0));
                 edge_cases.push((namespace, random_start, 1));
                 edge_cases.push((
                     namespace,
@@ -475,8 +618,8 @@ mod tests {
                 // start edge cases
                 edge_cases.push((namespace, 0, rng.gen_range(0..namespace_bytes_len)));
                 edge_cases.push((namespace, 1, rng.gen_range(0..namespace_bytes_len - 1)));
-                edge_cases.push((namespace, namespace_bytes_len - 2, rng.gen_range(0..1)));
-                edge_cases.push((namespace, namespace_bytes_len - 1, 0));
+                edge_cases.push((namespace, namespace_bytes_len - 2, 1));
+                edge_cases.push((namespace, namespace_bytes_len - 1, 1));
             }
             edge_cases
         };
@@ -487,7 +630,7 @@ mod tests {
                 let namespace = rng.gen_range(0..num_polys);
                 let offset = rng.gen_range(0..namespace_bytes_len);
                 let start = offset + (namespace * namespace_bytes_len);
-                let len = rng.gen_range(0..namespace_bytes_len - offset);
+                let len = rng.gen_range(1..namespace_bytes_len - offset);
                 random_cases.push((namespace, start, len));
             }
             random_cases
@@ -524,8 +667,8 @@ mod tests {
                     },
                 )
                 .unwrap();
-            assert_eq!(chunk_proof.prefix, chunk_proof2._prefix_elems);
-            assert_eq!(chunk_proof.suffix, chunk_proof2._suffix_elems);
+            assert_eq!(chunk_proof.prefix, chunk_proof2.prefix_elems);
+            assert_eq!(chunk_proof.suffix, chunk_proof2.suffix_elems);
             advz.chunk_verify(
                 &payload,
                 range.1,
@@ -533,6 +676,14 @@ mod tests {
                 &d.commit,
                 &d.common,
                 &chunk_proof,
+            )
+            .unwrap()
+            .unwrap();
+            advz.chunk_verify2(
+                &payload.as_slice()[range.1..range.1 + range.2],
+                &d.commit,
+                &d.common,
+                &chunk_proof2,
             )
             .unwrap()
             .unwrap();
