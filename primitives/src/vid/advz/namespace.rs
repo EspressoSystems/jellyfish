@@ -200,15 +200,47 @@ where
         Ok(ChunkProof { prefix, suffix })
     }
 
-    fn chunk_proof2<B>(&self, _payload: B, _range: Range<usize>) -> VidResult<Self::ChunkProof2>
+    fn chunk_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::ChunkProof2>
     where
         B: AsRef<[u8]>,
     {
+        let payload = payload.as_ref();
+
+        // check args: `range` in bounds for `payload`
+        if range.start >= payload.len() || range.end > payload.len() {
+            return Err(VidError::Argument(format!(
+                "range ({}..{}) out of bounds for payload len {}",
+                range.start,
+                range.end,
+                payload.len()
+            )));
+        }
+
+        // index conversion
+        let range_elem = self.range_byte_to_elem2(&range);
+        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
+        let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
+
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if range_poly.len() > 1 {
+            return Err(VidError::Argument(format!(
+                "request spans {} polynomials, expect 1",
+                range_poly.len()
+            )));
+        }
+
+        // return the prefix and suffix elems
+        let mut elems_iter =
+            bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size);
+        let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
+        let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
+
         Ok(ChunkProof2 {
-            _prefix_elems: Vec::new(),
-            _suffix_elems: Vec::new(),
-            _prefix_bytes: Vec::new(),
-            _suffix_bytes: Vec::new(),
+            _prefix_elems: prefix,
+            _suffix_elems: suffix,
         })
     }
 
@@ -302,8 +334,8 @@ pub struct ChunkProof<F> {
 pub struct ChunkProof2<F> {
     _prefix_elems: Vec<F>,
     _suffix_elems: Vec<F>,
-    _prefix_bytes: Vec<u8>,
-    _suffix_bytes: Vec<u8>,
+    // _prefix_bytes: Vec<u8>,
+    // _suffix_bytes: Vec<u8>,
 }
 
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
@@ -332,14 +364,44 @@ where
     //     range_refine(start, len, compile_time_checks::<P::Evaluation>().0)
     // }
     fn index_byte_to_elem(&self, index: usize) -> usize {
-        index / compile_time_checks::<P::Evaluation>().0 // round down
+        index_coarsen(index, compile_time_checks::<P::Evaluation>().0)
     }
     fn index_elem_to_byte(&self, index: usize) -> usize {
-        index * compile_time_checks::<P::Evaluation>().0
+        index_refine(index, compile_time_checks::<P::Evaluation>().0)
     }
     fn index_poly_to_byte(&self, index: usize) -> usize {
-        index * self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0
+        index_refine(
+            index,
+            self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
+        )
     }
+    fn range_byte_to_elem2(&self, range: &Range<usize>) -> Range<usize> {
+        range_coarsen2(range, compile_time_checks::<P::Evaluation>().0)
+    }
+    fn range_elem_to_poly2(&self, range: &Range<usize>) -> Range<usize> {
+        range_coarsen2(range, self.payload_chunk_size)
+    }
+}
+
+fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
+    let new_start = index_coarsen(range.start, denominator);
+    let new_end = if range.end <= range.start {
+        0
+    } else {
+        index_coarsen(range.end - 1, denominator) + 1
+    };
+    Range {
+        start: new_start,
+        end: new_end,
+    }
+}
+
+fn index_coarsen(index: usize, denominator: usize) -> usize {
+    index / denominator
+}
+
+fn index_refine(index: usize, multiplier: usize) -> usize {
+    index * multiplier
 }
 
 fn range_coarsen(start: usize, len: usize, denominator: usize) -> (usize, usize) {
@@ -365,7 +427,7 @@ mod tests {
         namespace::Namespacer,
     };
     use ark_bls12_381::Bls12_381;
-    use ark_std::{println, rand::Rng};
+    use ark_std::{ops::Range, println, rand::Rng};
     use digest::{generic_array::ArrayLength, OutputSizeUser};
     use jf_utils::compile_time_checks;
     use sha2::Sha256;
@@ -453,6 +515,17 @@ mod tests {
             .unwrap();
 
             let chunk_proof = advz.chunk_proof(&payload, range.1, range.2).unwrap();
+            let chunk_proof2 = advz
+                .chunk_proof2(
+                    payload.as_slice(),
+                    Range {
+                        start: range.1,
+                        end: range.1 + range.2,
+                    },
+                )
+                .unwrap();
+            assert_eq!(chunk_proof.prefix, chunk_proof2._prefix_elems);
+            assert_eq!(chunk_proof.suffix, chunk_proof2._suffix_elems);
             advz.chunk_verify(
                 &payload,
                 range.1,
