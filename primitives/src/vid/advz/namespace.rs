@@ -36,6 +36,7 @@ where
     // TODO should be P::Proof, not Vec<P::Proof>
     // https://github.com/EspressoSystems/jellyfish/issues/387
     type DataProof = Vec<P::Proof>;
+    type DataProof2 = DataProof2<P::Proof>;
 
     type ChunkProof = ChunkProof<P::Evaluation>;
     type ChunkProof2 = ChunkProof2<P::Evaluation>;
@@ -89,6 +90,175 @@ where
 
         let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
         Ok(proofs)
+    }
+
+    fn data_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::DataProof2>
+    where
+        B: AsRef<[u8]>,
+    {
+        // TODO refactor copied arg check code
+
+        // check args: `range` nonempty
+        if range.is_empty() {
+            return Err(VidError::Argument(format!(
+                "empty range ({}..{})",
+                range.start, range.end
+            )));
+        }
+
+        let payload = payload.as_ref();
+
+        // check args: `range` in bounds for `payload`
+        if range.end > payload.len() {
+            return Err(VidError::Argument(format!(
+                "range ({}..{}) out of bounds for payload len {}",
+                range.start,
+                range.end,
+                payload.len()
+            )));
+        }
+
+        // index conversion
+        let range_elem = self.range_byte_to_elem2(&range);
+        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
+        let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
+        let range_elem_byte = self.range_elem_to_byte2(&range_elem);
+
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if range_poly.len() != 1 {
+            return Err(VidError::Argument(format!(
+                "request spans {} polynomials, expect 1",
+                range_poly.len()
+            )));
+        }
+
+        // grab the `start_namespace`th polynomial
+        let polynomial = self.polynomial(
+            bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size),
+        );
+
+        // prepare the list of input points
+        // TODO perf: can't avoid use of `skip`
+        let points: Vec<_> = {
+            self.eval_domain
+                .elements()
+                .skip(offset_elem)
+                .take(range_elem.len())
+                .collect()
+        };
+
+        let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
+
+        Ok(DataProof2 {
+            proofs,
+            // TODO refactor copied code for prefix/suffix bytes
+            prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
+            suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
+            chunk_range: range,
+        })
+    }
+
+    fn data_verify2<B>(
+        &self,
+        chunk: B,
+        commit: &Self::Commit,
+        common: &Self::Common,
+        proof: &Self::DataProof2,
+    ) -> VidResult<Result<(), ()>>
+    where
+        B: AsRef<[u8]>,
+    {
+        let chunk = chunk.as_ref();
+
+        // TODO refactor copied arg check code
+
+        // check args: `chunk` nonempty
+        if chunk.is_empty() {
+            return Err(VidError::Argument("empty chunk".to_string()));
+        }
+
+        // check args: `chunk` len consistent with `proof`
+        if chunk.len() != proof.chunk_range.len() {
+            return Err(VidError::Argument(format!(
+                "chunk length {} inconsistent with proof length {}",
+                chunk.len(),
+                proof.chunk_range.len()
+            )));
+        }
+
+        // index conversion
+
+        // let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
+        // let (start_namespace, _len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
+        // let start_namespace_byte = self.index_poly_to_byte(start_namespace);
+
+        let range_elem = self.range_byte_to_elem2(&proof.chunk_range);
+        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
+        let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
+
+        // check args:
+        // TODO TEMPORARY: forbid requests that span multiple polynomials
+        if range_poly.len() != 1 {
+            return Err(VidError::Argument(format!(
+                "request spans {} polynomials, expect 1",
+                range_poly.len()
+            )));
+        }
+
+        // check args: `common` consistent with `commit`
+        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+
+        // prepare list of data elems
+        // TODO refactor copied code
+        let data_elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
+            proof
+                .prefix_bytes
+                .iter()
+                .chain(chunk)
+                .chain(proof.suffix_bytes.iter()),
+        )
+        .collect();
+
+        // prepare list of input points
+        // TODO perf: can't avoid use of `skip`
+        // TODO refactor copied code
+        let points: Vec<_> = {
+            self.eval_domain
+                .elements()
+                .skip(offset_elem)
+                .take(range_elem.len())
+                .collect()
+        };
+
+        // verify proof
+        // TODO naive verify for multi_open
+        // https://github.com/EspressoSystems/jellyfish/issues/387
+        if data_elems.len() != proof.proofs.len() {
+            return Err(VidError::Argument(format!(
+                "data len {} differs from proof len {}",
+                data_elems.len(),
+                proof.proofs.len()
+            )));
+        }
+        assert_eq!(data_elems.len(), points.len()); // sanity
+        let poly_commit = &common.poly_commits[range_poly.start];
+        for (point, (elem, pf)) in points
+            .iter()
+            .zip(data_elems.iter().zip(proof.proofs.iter()))
+        {
+            if !P::verify(&self.vk, poly_commit, point, elem, pf).map_err(vid)? {
+                return Ok(Err(()));
+            }
+        }
+        Ok(Ok(()))
     }
 
     fn data_verify(
@@ -391,6 +561,14 @@ where
 
         Ok(Ok(()))
     }
+}
+
+///doc
+pub struct DataProof2<P> {
+    proofs: Vec<P>,
+    prefix_bytes: Vec<u8>,
+    suffix_bytes: Vec<u8>,
+    chunk_range: Range<usize>,
 }
 
 /// doc

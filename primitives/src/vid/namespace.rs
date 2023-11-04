@@ -27,6 +27,9 @@ pub trait Namespacer: VidScheme {
     /// data proof
     type DataProof;
 
+    ///doc
+    type DataProof2;
+
     /// chunk proof
     type ChunkProof;
 
@@ -42,6 +45,22 @@ pub trait Namespacer: VidScheme {
         start: usize,
         len: usize,
     ) -> VidResult<Self::DataProof>;
+
+    ///doc
+    fn data_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::DataProof2>
+    where
+        B: AsRef<[u8]>;
+
+    /// doc
+    fn data_verify2<B>(
+        &self,
+        chunk: B,
+        commit: &Self::Commit,
+        common: &Self::Common,
+        proof: &Self::DataProof2,
+    ) -> VidResult<Result<(), ()>>
+    where
+        B: AsRef<[u8]>;
 
     /// Verify a proof for `payload` for data index range `start..start+len-1`.
     ///
