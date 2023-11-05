@@ -15,7 +15,7 @@ use super::{
 };
 use crate::{
     alloc::string::ToString,
-    vid::{namespace::PayloadProver, vid, VidError},
+    vid::{payload_prover::PayloadProver, vid, VidError},
 };
 // use ark_std::println;
 use ark_std::{format, ops::Range};
@@ -443,11 +443,11 @@ fn index_refine(index: usize, multiplier: usize) -> usize {
 mod tests {
     use crate::vid::{
         advz::{
-            namespace::{CommitRecovery, Proof},
+            payload_prover::{CommitRecovery, Proof},
             tests::*,
             *,
         },
-        namespace::PayloadProver,
+        payload_prover::PayloadProver,
     };
     use ark_bls12_381::Bls12_381;
     use ark_std::{ops::Range, println, rand::Rng};

@@ -73,7 +73,7 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     pub commit: V::Commit,
 }
 
-pub mod namespace;
+pub mod payload_prover;
 
 pub mod advz; // instantiation of `VidScheme`
 
