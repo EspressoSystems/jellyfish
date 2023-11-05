@@ -766,7 +766,7 @@ mod tests {
             }
             random_cases
         };
-        let all_cases = [(edge_cases, "edge"), (random_cases, "random")];
+        let all_cases = [(edge_cases, "edge"), (random_cases, "rand")];
 
         for poly in 0..num_polys {
             let poly_offset = poly * poly_bytes_len;
@@ -777,7 +777,7 @@ mod tests {
                         start: range.start + poly_offset,
                         end: range.end + poly_offset,
                     };
-                    println!("{} case: {:?}", cases.1, range);
+                    println!("poly {} {} case: {:?}", poly, cases.1, range);
 
                     let data_proof = advz.data_proof(&payload, range.start, range.len()).unwrap();
                     advz.data_verify(
@@ -787,6 +787,16 @@ mod tests {
                         &d.commit,
                         &d.common,
                         &data_proof,
+                    )
+                    .unwrap()
+                    .unwrap();
+
+                    let data_proof2 = advz.data_proof2(payload.as_slice(), range.clone()).unwrap();
+                    advz.data_verify2(
+                        &payload.as_slice()[range.clone()],
+                        &d.commit,
+                        &d.common,
+                        &data_proof2,
                     )
                     .unwrap()
                     .unwrap();
