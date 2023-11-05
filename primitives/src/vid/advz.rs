@@ -8,7 +8,6 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use self::payload::Payload;
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
@@ -44,7 +43,6 @@ use jf_utils::{bytes_to_field, canonical, field_to_bytes};
 use serde::{Deserialize, Serialize};
 
 pub mod namespace;
-pub mod payload;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
@@ -199,9 +197,13 @@ where
     type Commit = Output<H>;
     type Share = Share<P, V>;
     type Common = Common<P, V>;
-    type Payload = Payload;
 
-    fn commit_only(&self, payload: &Self::Payload) -> VidResult<Self::Commit> {
+    fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
+    where
+        B: AsRef<[u8]>,
+    {
+        let payload = payload.as_ref();
+
         // Can't use `Self::poly_commits_hash()`` here because `P::commit()`` returns
         // `Result<P::Commitment,_>`` instead of `P::Commitment`.
         // There's probably an idiomatic way to do this using eg.
@@ -218,17 +220,21 @@ where
         Ok(hasher.finalize())
     }
 
-    fn disperse(&self, payload: &Self::Payload) -> VidResult<VidDisperse<Self>> {
+    fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
+    where
+        B: AsRef<[u8]>,
+    {
+        let payload = payload.as_ref();
+        let payload_len = payload.len();
         let disperse_time = start_timer!(|| format!(
-            "VID disperse {} chunks to {} nodes",
-            self.payload_chunk_size, self.num_storage_nodes
+            "VID disperse {} payload bytes to {} nodes",
+            payload_len, self.num_storage_nodes
         ));
-        let bytes_len = payload.as_slice().len();
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let elems_iter = bytes_to_field::<_, P::Evaluation>(payload).map(|elem| *elem.borrow());
+        let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
         let mut polys = Vec::new();
         for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
             polys.push(self.polynomial(coeffs_iter));
@@ -295,7 +301,7 @@ where
                 .collect::<Result<_, _>>()
                 .map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
-            bytes_len,
+            bytes_len: payload_len,
         };
         end_timer!(common_timer);
 
@@ -416,11 +422,7 @@ where
         .ok_or(()))
     }
 
-    fn recover_payload(
-        &self,
-        shares: &[Self::Share],
-        common: &Self::Common,
-    ) -> VidResult<Self::Payload> {
+    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
@@ -449,8 +451,8 @@ where
             )));
         }
 
-        let result_len = num_polys * self.payload_chunk_size;
-        let mut result = Vec::with_capacity(result_len);
+        let elems_capacity = num_polys * self.payload_chunk_size;
+        let mut elems = Vec::with_capacity(elems_capacity);
         for i in 0..num_polys {
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 shares.iter().map(|s| (s.index, s.evals[i])),
@@ -464,13 +466,13 @@ where
             // https://github.com/EspressoSystems/jellyfish/issues/339
             self.eval_domain.fft_in_place(&mut coeffs);
 
-            result.append(&mut coeffs);
+            elems.append(&mut coeffs);
         }
-        assert_eq!(result.len(), result_len);
+        assert_eq!(elems.len(), elems_capacity);
 
-        let mut result_bytes: Vec<_> = field_to_bytes(result).collect();
-        result_bytes.truncate(common.bytes_len);
-        Ok(Payload::from_vec(result_bytes))
+        let mut payload: Vec<_> = field_to_bytes(elems).collect();
+        payload.truncate(common.bytes_len);
+        Ok(payload)
     }
 }
 
@@ -855,7 +857,7 @@ mod tests {
     /// Returns the following tuple:
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
-    pub(super) fn avdz_init() -> (Advz<Bls12_381, Sha256>, Payload) {
+    pub(super) fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
@@ -869,13 +871,13 @@ mod tests {
         assert!(matches!(res, Err(Argument(_))), "{}", msg);
     }
 
-    pub(super) fn init_random_payload<R>(len: usize, rng: &mut R) -> Payload
+    pub(super) fn init_random_payload<R>(len: usize, rng: &mut R) -> Vec<u8>
     where
         R: RngCore + CryptoRng,
     {
         let mut bytes_random = vec![0u8; len];
         rng.fill_bytes(&mut bytes_random);
-        Payload::from_vec(bytes_random)
+        bytes_random
     }
 
     pub(super) fn init_srs<E, R>(num_coeffs: usize, rng: &mut R) -> UnivariateUniversalParams<E>

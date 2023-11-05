@@ -3,7 +3,7 @@ use ark_bls12_381::Bls12_381;
 use ark_ff::{Field, PrimeField};
 use jf_primitives::{
     pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-    vid::advz::{payload::Payload, Advz},
+    vid::advz::Advz,
 };
 use sha2::Sha256;
 
@@ -34,7 +34,6 @@ fn round_trip() {
         |payload_chunk_size, num_storage_nodes| {
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, &srs).unwrap()
         },
-        |bytes| Payload::from_vec(bytes),
         &vid_sizes,
         &payload_byte_lens,
         &mut rng,
