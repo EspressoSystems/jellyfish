@@ -11,53 +11,19 @@
 use super::{VidResult, VidScheme};
 use ark_std::ops::Range;
 
-// pub trait Namespacer2<P>: VidScheme {
-
-//     fn data_proof(
-//         &self,
-//         payload: &[u8],
-//         start: usize,
-//         len: usize,
-//     ) -> VidResult<Self::DataProof>;
-
-// }
-
-/// Namespace functionality for [`VidScheme`].
-pub trait Namespacer: VidScheme {
+/// Payload proof functionality for [`VidScheme`].
+pub trait PayloadProver<PROOF>: VidScheme {
     ///doc
-    type DataProof2;
-
-    /// doc
-    type ChunkProof2;
-
-    ///doc
-    fn data_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::DataProof2>
+    fn payload_proof<B>(&self, payload: B, range: Range<usize>) -> VidResult<PROOF>
     where
         B: AsRef<[u8]>;
-
     /// doc
-    fn data_verify2<B>(
+    fn payload_verify<B>(
         &self,
         chunk: B,
         commit: &Self::Commit,
         common: &Self::Common,
-        proof: &Self::DataProof2,
-    ) -> VidResult<Result<(), ()>>
-    where
-        B: AsRef<[u8]>;
-
-    /// doc
-    fn chunk_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::ChunkProof2>
-    where
-        B: AsRef<[u8]>;
-
-    /// doc
-    fn chunk_verify2<B>(
-        &self,
-        chunk: B,
-        commit: &Self::Commit,
-        common: &Self::Common,
-        proof: &Self::ChunkProof2,
+        proof: &PROOF,
     ) -> VidResult<Result<(), ()>>
     where
         B: AsRef<[u8]>;

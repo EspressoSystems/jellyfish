@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Implementation of [`Namespacer`] for `Advz`.
+//! Implementations of [`PayloadProver`] for `Advz`.
 
 use ark_poly::EvaluationDomain;
 use jf_utils::{bytes_to_field, compile_time_checks};
@@ -15,12 +15,12 @@ use super::{
 };
 use crate::{
     alloc::string::ToString,
-    vid::{namespace::Namespacer, vid, VidError},
+    vid::{namespace::PayloadProver, vid, VidError},
 };
 // use ark_std::println;
 use ark_std::{format, ops::Range};
 
-impl<P, T, H, V> Namespacer for GenericAdvz<P, T, H, V>
+impl<P, T, H, V> PayloadProver<Proof<P::Proof>> for GenericAdvz<P, T, H, V>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
@@ -33,13 +33,7 @@ where
     V::MembershipProof: Sync + Debug,
     V::Index: From<u64>,
 {
-    // TODO should be P::Proof, not Vec<P::Proof>
-    // https://github.com/EspressoSystems/jellyfish/issues/387
-    type DataProof2 = DataProof2<P::Proof>;
-
-    type ChunkProof2 = ChunkProof2<P::Evaluation>;
-
-    fn data_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::DataProof2>
+    fn payload_proof<B>(&self, payload: B, range: Range<usize>) -> VidResult<Proof<P::Proof>>
     where
         B: AsRef<[u8]>,
     {
@@ -99,7 +93,7 @@ where
 
         let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
 
-        Ok(DataProof2 {
+        Ok(Proof {
             proofs,
             // TODO refactor copied code for prefix/suffix bytes
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
@@ -108,12 +102,12 @@ where
         })
     }
 
-    fn data_verify2<B>(
+    fn payload_verify<B>(
         &self,
         chunk: B,
         commit: &Self::Commit,
         common: &Self::Common,
-        proof: &Self::DataProof2,
+        proof: &Proof<P::Proof>,
     ) -> VidResult<Result<(), ()>>
     where
         B: AsRef<[u8]>,
@@ -207,8 +201,34 @@ where
         }
         Ok(Ok(()))
     }
+}
 
-    fn chunk_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::ChunkProof2>
+/// KZG batch proofs and accompanying metadata.
+pub struct Proof<P> {
+    proofs: Vec<P>,
+    prefix_bytes: Vec<u8>,
+    suffix_bytes: Vec<u8>,
+    chunk_range: Range<usize>,
+}
+
+impl<P, T, H, V> PayloadProver<CommitRecovery<P::Evaluation>> for GenericAdvz<P, T, H, V>
+where
+    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
+    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
+    P::Evaluation: PrimeField,
+    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
+    P::Commitment: From<T> + AsRef<T>,
+    T: AffineRepr<ScalarField = P::Evaluation>,
+    H: Digest + DynDigest + Default + Clone + Write,
+    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
+    V::MembershipProof: Sync + Debug,
+    V::Index: From<u64>,
+{
+    fn payload_proof<B>(
+        &self,
+        payload: B,
+        range: Range<usize>,
+    ) -> VidResult<CommitRecovery<P::Evaluation>>
     where
         B: AsRef<[u8]>,
     {
@@ -255,7 +275,7 @@ where
         let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
         let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
 
-        Ok(ChunkProof2 {
+        Ok(CommitRecovery {
             prefix_elems: prefix,
             suffix_elems: suffix,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
@@ -264,12 +284,12 @@ where
         })
     }
 
-    fn chunk_verify2<B>(
+    fn payload_verify<B>(
         &self,
         chunk: B,
         commit: &Self::Commit,
         common: &Self::Common,
-        proof: &Self::ChunkProof2,
+        proof: &CommitRecovery<P::Evaluation>,
     ) -> VidResult<Result<(), ()>>
     where
         B: AsRef<[u8]>,
@@ -335,16 +355,8 @@ where
     }
 }
 
-///doc
-pub struct DataProof2<P> {
-    proofs: Vec<P>,
-    prefix_bytes: Vec<u8>,
-    suffix_bytes: Vec<u8>,
-    chunk_range: Range<usize>,
-}
-
-/// doc
-pub struct ChunkProof2<F> {
+/// Metadata needed to recover a KZG commitment
+pub struct CommitRecovery<F> {
     prefix_elems: Vec<F>,
     suffix_elems: Vec<F>,
     prefix_bytes: Vec<u8>,
@@ -430,8 +442,12 @@ fn index_refine(index: usize, multiplier: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use crate::vid::{
-        advz::{tests::*, *},
-        namespace::Namespacer,
+        advz::{
+            namespace::{CommitRecovery, Proof},
+            tests::*,
+            *,
+        },
+        namespace::PayloadProver,
     };
     use ark_bls12_381::Bls12_381;
     use ark_std::{ops::Range, println, rand::Rng};
@@ -520,9 +536,10 @@ mod tests {
                     };
                     println!("poly {} {} case: {:?}", poly, cases.1, range);
 
-                    let data_proof2 = advz.data_proof2(payload.as_slice(), range.clone()).unwrap();
-                    advz.data_verify2(
-                        &payload.as_slice()[range.clone()],
+                    let data_proof2: Proof<_> =
+                        advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(
+                        &payload[range.clone()],
                         &d.commit,
                         &d.common,
                         &data_proof2,
@@ -530,11 +547,10 @@ mod tests {
                     .unwrap()
                     .unwrap();
 
-                    let chunk_proof2 = advz
-                        .chunk_proof2(payload.as_slice(), range.clone())
-                        .unwrap();
-                    advz.chunk_verify2(
-                        &payload.as_slice()[range.clone()],
+                    let chunk_proof2: CommitRecovery<_> =
+                        advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(
+                        &payload[range.clone()],
                         &d.commit,
                         &d.common,
                         &chunk_proof2,
