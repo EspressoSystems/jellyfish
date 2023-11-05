@@ -35,62 +35,9 @@ where
 {
     // TODO should be P::Proof, not Vec<P::Proof>
     // https://github.com/EspressoSystems/jellyfish/issues/387
-    type DataProof = Vec<P::Proof>;
     type DataProof2 = DataProof2<P::Proof>;
 
-    type ChunkProof = ChunkProof<P::Evaluation>;
     type ChunkProof2 = ChunkProof2<P::Evaluation>;
-
-    fn data_proof(
-        &self,
-        payload: &Self::Payload,
-        start: usize,
-        len: usize,
-    ) -> VidResult<Self::DataProof> {
-        // check args: `start`, `len` in bounds for `payload`
-        if start + len > payload.as_slice().len() {
-            return Err(VidError::Argument(format!(
-                "start {} + len {} out of bounds for payload {}",
-                start,
-                len,
-                payload.as_slice().len()
-            )));
-        }
-
-        // index conversion
-        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
-        let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
-        let start_namespace_byte = self.index_poly_to_byte(start_namespace);
-
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if len_namespace > 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                len_namespace
-            )));
-        }
-
-        // grab the `start_namespace`th polynomial
-        let polynomial = self.polynomial(
-            bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_namespace_byte..].iter())
-                .take(self.payload_chunk_size),
-        );
-
-        // prepare the list of input points
-        // TODO perf: can't avoid use of `skip`
-        let points: Vec<_> = {
-            let offset = start_elem - self.index_byte_to_elem(start_namespace_byte);
-            self.eval_domain
-                .elements()
-                .skip(offset)
-                .take(len_elem)
-                .collect()
-        };
-
-        let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
-        Ok(proofs)
-    }
 
     fn data_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::DataProof2>
     where
@@ -261,116 +208,6 @@ where
         Ok(Ok(()))
     }
 
-    fn data_verify(
-        &self,
-        payload: &Self::Payload,
-        start: usize,
-        len: usize,
-        commit: &Self::Commit,
-        common: &Self::Common,
-        proof: &Self::DataProof,
-    ) -> VidResult<Result<(), ()>> {
-        // check args: `start`, `len` in bounds for `payload`
-        if start + len > payload.as_slice().len() {
-            return Err(VidError::Argument(format!(
-                "start {} + len {} out of bounds for payload {}",
-                start,
-                len,
-                payload.as_slice().len()
-            )));
-        }
-
-        // check args: `common` consistent with `commit`
-        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
-
-        // index conversion
-        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
-        let (start_namespace, _len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
-        let start_namespace_byte = self.index_poly_to_byte(start_namespace);
-
-        // prepare list of data elems
-        let start_elem_byte = self.index_elem_to_byte(start_elem);
-        let data_elems: Vec<_> =
-            bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_elem_byte..].iter())
-                .take(len_elem)
-                .collect();
-
-        // prepare list of input points
-        // TODO perf: can't avoid use of `skip`
-        let points: Vec<_> = {
-            let offset = start_elem - self.index_byte_to_elem(start_namespace_byte);
-            self.eval_domain
-                .elements()
-                .skip(offset)
-                .take(len_elem)
-                .collect()
-        };
-
-        // verify proof
-        // TODO naive verify for multi_open
-        // https://github.com/EspressoSystems/jellyfish/issues/387
-        if data_elems.len() != proof.len() {
-            return Err(VidError::Argument(format!(
-                "data len {} differs from proof len {}",
-                data_elems.len(),
-                proof.len()
-            )));
-        }
-        assert_eq!(data_elems.len(), points.len()); // sanity
-        let poly_commit = &common.poly_commits[start_namespace];
-        for (point, (elem, pf)) in points.iter().zip(data_elems.iter().zip(proof.iter())) {
-            if !P::verify(&self.vk, poly_commit, point, elem, pf).map_err(vid)? {
-                return Ok(Err(()));
-            }
-        }
-        Ok(Ok(()))
-    }
-
-    fn chunk_proof(
-        &self,
-        payload: &Self::Payload,
-        start: usize,
-        len: usize,
-    ) -> VidResult<Self::ChunkProof> {
-        // check args: `start`, `len` in bounds for `payload`
-        if start + len > payload.as_slice().len() {
-            return Err(VidError::Argument(format!(
-                "start {} + len {} out of bounds for payload {}",
-                start,
-                len,
-                payload.as_slice().len()
-            )));
-        }
-
-        // index conversion
-        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
-        let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
-        let start_namespace_byte = self.index_poly_to_byte(start_namespace);
-        let offset_elem = start_elem - self.index_byte_to_elem(start_namespace_byte);
-
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if len_namespace > 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                len_namespace
-            )));
-        }
-
-        // return the prefix and suffix elems
-        let mut elems_iter =
-            bytes_to_field::<_, P::Evaluation>(payload.as_slice()[start_namespace_byte..].iter())
-                .take(self.payload_chunk_size);
-        let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
-        let suffix: Vec<_> = elems_iter.skip(len_elem).collect();
-
-        Ok(ChunkProof { prefix, suffix })
-    }
-
     fn chunk_proof2<B>(&self, payload: B, range: Range<usize>) -> VidResult<Self::ChunkProof2>
     where
         B: AsRef<[u8]>,
@@ -496,71 +333,6 @@ where
 
         Ok(Ok(()))
     }
-
-    fn chunk_verify(
-        &self,
-        payload: &Self::Payload,
-        start: usize,
-        len: usize,
-        commit: &Self::Commit,
-        common: &Self::Common,
-        proof: &Self::ChunkProof,
-    ) -> VidResult<Result<(), ()>> {
-        // check args: `start`, `len` in bounds for `payload`
-        if start + len > payload.as_slice().len() {
-            return Err(VidError::Argument(format!(
-                "start {} + len {} out of bounds for payload {}",
-                start,
-                len,
-                payload.as_slice().len()
-            )));
-        }
-
-        // index conversion
-        let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
-        let (start_namespace, len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
-        let start_elem_byte = self.index_elem_to_byte(start_elem);
-        // let offset_elem = start_elem - self.index_byte_to_elem(start_namespace_byte);
-
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if len_namespace > 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                len_namespace
-            )));
-        }
-
-        // check args: `common` consistent with `commit`
-        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
-
-        // rebuild the `namespace_index`th poly commit, check against `common`
-        let poly_commit = {
-            let poly = self.polynomial(
-                proof
-                    .prefix
-                    .iter()
-                    .cloned()
-                    .chain(
-                        bytes_to_field::<_, P::Evaluation>(
-                            payload.as_slice()[start_elem_byte..].iter(),
-                        )
-                        .take(self.payload_chunk_size),
-                    )
-                    .chain(proof.suffix.iter().cloned()),
-            );
-            P::commit(&self.ck, &poly).map_err(vid)?
-        };
-        if poly_commit != common.poly_commits[start_namespace] {
-            return Ok(Err(()));
-        }
-
-        Ok(Ok(()))
-    }
 }
 
 ///doc
@@ -569,12 +341,6 @@ pub struct DataProof2<P> {
     prefix_bytes: Vec<u8>,
     suffix_bytes: Vec<u8>,
     chunk_range: Range<usize>,
-}
-
-/// doc
-pub struct ChunkProof<F> {
-    prefix: Vec<F>,
-    suffix: Vec<F>,
 }
 
 /// doc
@@ -602,19 +368,10 @@ where
     // lots of index manipulation.
     // with infinite dev time we should implement type-safe indices to preclude
     // index-misuse bugs.
-    fn range_byte_to_elem(&self, start: usize, len: usize) -> (usize, usize) {
-        range_coarsen(start, len, compile_time_checks::<P::Evaluation>().0)
-    }
-    fn range_elem_to_poly(&self, start: usize, len: usize) -> (usize, usize) {
-        range_coarsen(start, len, self.payload_chunk_size)
-    }
-    // fn range_elem_to_byte(&self, start: usize, len: usize) -> (usize, usize) {
-    //     range_refine(start, len, compile_time_checks::<P::Evaluation>().0)
-    // }
     fn index_byte_to_elem(&self, index: usize) -> usize {
         index_coarsen(index, compile_time_checks::<P::Evaluation>().0)
     }
-    fn index_elem_to_byte(&self, index: usize) -> usize {
+    fn _index_elem_to_byte(&self, index: usize) -> usize {
         index_refine(index, compile_time_checks::<P::Evaluation>().0)
     }
     fn index_poly_to_byte(&self, index: usize) -> usize {
@@ -669,22 +426,6 @@ fn index_coarsen(index: usize, denominator: usize) -> usize {
 fn index_refine(index: usize, multiplier: usize) -> usize {
     index * multiplier
 }
-
-fn range_coarsen(start: usize, len: usize, denominator: usize) -> (usize, usize) {
-    let new_start = start / denominator;
-
-    // underflow occurs if len is 0, so handle this case separately
-    if len == 0 {
-        return (new_start, 0);
-    }
-
-    let new_end = (start + len - 1) / denominator;
-    (new_start, new_end - new_start + 1)
-}
-
-// fn range_refine(start: usize, len: usize, multiplier: usize) -> (usize, usize) {
-//     (start * multiplier, len * multiplier)
-// }
 
 #[cfg(test)]
 mod tests {
@@ -779,18 +520,6 @@ mod tests {
                     };
                     println!("poly {} {} case: {:?}", poly, cases.1, range);
 
-                    let data_proof = advz.data_proof(&payload, range.start, range.len()).unwrap();
-                    advz.data_verify(
-                        &payload,
-                        range.start,
-                        range.len(),
-                        &d.commit,
-                        &d.common,
-                        &data_proof,
-                    )
-                    .unwrap()
-                    .unwrap();
-
                     let data_proof2 = advz.data_proof2(payload.as_slice(), range.clone()).unwrap();
                     advz.data_verify2(
                         &payload.as_slice()[range.clone()],
@@ -801,24 +530,9 @@ mod tests {
                     .unwrap()
                     .unwrap();
 
-                    let chunk_proof = advz
-                        .chunk_proof(&payload, range.start, range.len())
-                        .unwrap();
                     let chunk_proof2 = advz
                         .chunk_proof2(payload.as_slice(), range.clone())
                         .unwrap();
-                    assert_eq!(chunk_proof.prefix, chunk_proof2.prefix_elems);
-                    assert_eq!(chunk_proof.suffix, chunk_proof2.suffix_elems);
-                    advz.chunk_verify(
-                        &payload,
-                        range.start,
-                        range.len(),
-                        &d.commit,
-                        &d.common,
-                        &chunk_proof,
-                    )
-                    .unwrap()
-                    .unwrap();
                     advz.chunk_verify2(
                         &payload.as_slice()[range.clone()],
                         &d.commit,
