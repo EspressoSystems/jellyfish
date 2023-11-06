@@ -309,7 +309,7 @@ where
             "should be fast: compute polynomial commitments hash, pseudorandom scalar, aggregate polynomial"
         });
         let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
-        let pseudorandom_scalar = Self::pseudorandom_scalar(&common)?;
+        let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
         // Compute aggregate polynomial
         // as a pseudorandom linear combo of polynomials
@@ -389,7 +389,8 @@ where
             return Ok(Err(()));
         }
 
-        let pseudorandom_scalar = Self::pseudorandom_scalar(common)?;
+        let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
+        let pseudorandom_scalar = Self::pseudorandom_scalar(common, &commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
         // as a pseudorandom linear combo of [commitments|evaluations]
@@ -488,11 +489,12 @@ where
     V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
     V::Index: From<u64>,
 {
-    fn pseudorandom_scalar(common: &<Self as VidScheme>::Common) -> VidResult<P::Evaluation> {
+    fn pseudorandom_scalar(
+        common: &<Self as VidScheme>::Common,
+        commit: &<Self as VidScheme>::Commit,
+    ) -> VidResult<P::Evaluation> {
         let mut hasher = H::new();
-        Self::poly_commits_hash(common.poly_commits.iter())?
-            .serialize_uncompressed(&mut hasher)
-            .map_err(vid)?;
+        commit.serialize_uncompressed(&mut hasher).map_err(vid)?;
         common
             .all_evals_digest
             .serialize_uncompressed(&mut hasher)
