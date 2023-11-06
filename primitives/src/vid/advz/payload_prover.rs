@@ -150,7 +150,7 @@ where
 
 /// KZG batch proofs and accompanying metadata.
 ///
-/// TODO use batch proof instead of `Vec<P>` https://github.com/EspressoSystems/jellyfish/issues/387
+/// TODO use batch proof instead of `Vec<P>` <https://github.com/EspressoSystems/jellyfish/issues/387>
 pub struct Proof<P> {
     proofs: Vec<P>,
     prefix_bytes: Vec<u8>,
