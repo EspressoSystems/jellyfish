@@ -38,8 +38,12 @@ pub trait VidScheme {
     /// - VidResult::Err in case of actual error
     /// - VidResult::Ok(Result::Err) if verification fails
     /// - VidResult::Ok(Result::Ok) if verification succeeds
-    fn verify_share(&self, share: &Self::Share, common: &Self::Common)
-        -> VidResult<Result<(), ()>>;
+    fn verify_share(
+        &self,
+        share: &Self::Share,
+        common: &Self::Common,
+        commit: &Self::Commit,
+    ) -> VidResult<Result<(), ()>>;
 
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.

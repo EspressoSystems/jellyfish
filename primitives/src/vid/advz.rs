@@ -10,6 +10,7 @@
 
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
+    alloc::string::ToString,
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
     pcs::{
         prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
@@ -364,6 +365,7 @@ where
         &self,
         share: &Self::Share,
         common: &Self::Common,
+        commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
         if share.evals.len() != common.poly_commits.len() {
@@ -375,6 +377,14 @@ where
         }
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
+        }
+
+        // check `common` against `commit`
+        let commit_rebuilt = Self::poly_commits_hash(common.poly_commits.iter())?;
+        if commit_rebuilt != *commit {
+            return Err(VidError::Argument(
+                "commit inconsistent with common".to_string(),
+            ));
         }
 
         // verify eval proof
@@ -389,7 +399,6 @@ where
             return Ok(Err(()));
         }
 
-        let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(common, &commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
@@ -677,7 +686,7 @@ mod tests {
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
-        let (shares, common) = (disperse.shares, disperse.common);
+        let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         for (i, share) in shares.iter().enumerate() {
             // missing share eval
@@ -687,7 +696,7 @@ mod tests {
                     ..share.clone()
                 };
                 assert_arg_err(
-                    advz.verify_share(&share_missing_eval, &common),
+                    advz.verify_share(&share_missing_eval, &common, &commit),
                     "1 missing share should be arg error",
                 );
             }
@@ -696,7 +705,7 @@ mod tests {
             {
                 let mut share_bad_eval = share.clone();
                 share_bad_eval.evals[0].double_in_place();
-                advz.verify_share(&share_bad_eval, &common)
+                advz.verify_share(&share_bad_eval, &common, &commit)
                     .unwrap()
                     .expect_err("bad share value should fail verification");
             }
@@ -707,7 +716,7 @@ mod tests {
                     index: (share.index + 1) % advz.num_storage_nodes,
                     ..share.clone()
                 };
-                advz.verify_share(&share_bad_index, &common)
+                advz.verify_share(&share_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -718,7 +727,7 @@ mod tests {
                     index: share.index + advz.num_storage_nodes,
                     ..share.clone()
                 };
-                advz.verify_share(&share_bad_index, &common)
+                advz.verify_share(&share_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -732,7 +741,7 @@ mod tests {
                     evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
                     ..share.clone()
                 };
-                advz.verify_share(&share_bad_evals_proof, &common)
+                advz.verify_share(&share_bad_evals_proof, &common, &commit)
                     .unwrap()
                     .expect_err("bad share evals proof should fail verification");
             }
@@ -743,7 +752,7 @@ mod tests {
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
-        let (shares, common) = (disperse.shares, disperse.common);
+        let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         // missing commit
         let common_missing_item = Common {
@@ -751,7 +760,7 @@ mod tests {
             ..common.clone()
         };
         assert_arg_err(
-            advz.verify_share(&shares[0], &common_missing_item),
+            advz.verify_share(&shares[0], &common_missing_item, &commit),
             "1 missing commit should be arg error",
         );
 
@@ -761,9 +770,10 @@ mod tests {
             corrupted.poly_commits[0] = <Bls12_381 as Pairing>::G1Affine::zero().into();
             corrupted
         };
-        advz.verify_share(&shares[0], &common_1_poly_corruption)
-            .unwrap()
-            .expect_err("1 corrupt poly_commit should fail verification");
+        assert_arg_err(
+            advz.verify_share(&shares[0], &common_1_poly_corruption, &commit),
+            "corrupted commit should be arg error",
+        );
 
         // 1 corrupt commit, all_evals_digest
         let common_1_digest_corruption = {
@@ -779,7 +789,7 @@ mod tests {
                     .expect("digest deserialization should succeed");
             corrupted
         };
-        advz.verify_share(&shares[0], &common_1_digest_corruption)
+        advz.verify_share(&shares[0], &common_1_digest_corruption, &commit)
             .unwrap()
             .expect_err("1 corrupt all_evals_digest should fail verification");
     }
@@ -788,19 +798,25 @@ mod tests {
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
-        let (mut shares, mut common) = (disperse.shares, disperse.common);
+        let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();
         shares[0].evals.pop();
 
         // equal nonzero lengths for common, share
-        advz.verify_share(&shares[0], &common).unwrap().unwrap_err();
+        assert_arg_err(
+            advz.verify_share(&shares[0], &common, &commit),
+            "common inconsistent with commit should be arg error",
+        );
 
         common.poly_commits.clear();
         shares[0].evals.clear();
 
         // zero length for common, share
-        advz.verify_share(&shares[0], &common).unwrap().unwrap_err();
+        assert_arg_err(
+            advz.verify_share(&shares[0], &common, &commit),
+            "expect arg error for common inconsistent with commit",
+        );
     }
 
     #[test]

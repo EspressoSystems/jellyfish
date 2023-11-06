@@ -41,7 +41,7 @@ pub fn round_trip<V, R>(
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
 
             for share in shares.iter() {
-                vid.verify_share(share, &common).unwrap().unwrap();
+                vid.verify_share(share, &common, &commit).unwrap().unwrap();
             }
 
             // sample a random subset of shares with size payload_chunk_size
