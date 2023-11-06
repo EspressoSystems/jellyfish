@@ -106,13 +106,17 @@ mod feature_gated {
             for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
                 let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
                 let disperse = advz.disperse(&payload_bytes).unwrap();
-                let (shares, common) = (disperse.shares, disperse.common);
+                let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
                 grp.bench_with_input(
                     BenchmarkId::from_parameter(num_storage_nodes),
                     &num_storage_nodes,
                     |b, _| {
                         // verify only the 0th share
-                        b.iter(|| advz.verify_share(&shares[0], &common).unwrap().unwrap());
+                        b.iter(|| {
+                            advz.verify_share(&shares[0], &common, &commit)
+                                .unwrap()
+                                .unwrap()
+                        });
                     },
                 );
             }
