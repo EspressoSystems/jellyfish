@@ -53,6 +53,7 @@ where
         check_range_poly(&range_poly)?;
 
         // grab the polynomial that contains `range`
+        // TODO allow precomputation: https://github.com/EspressoSystems/jellyfish/issues/397
         let polynomial = self.polynomial(
             bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size),
