@@ -15,7 +15,7 @@ use super::{
 };
 use crate::{
     alloc::string::ToString,
-    vid::{payload_prover::PayloadProver, vid, VidError},
+    vid::{payload_prover::PayloadProver, vid, VidError, VidScheme},
 };
 // use ark_std::println;
 use ark_std::{format, ops::Range};
@@ -37,27 +37,8 @@ where
     where
         B: AsRef<[u8]>,
     {
-        // TODO refactor copied arg check code
-
-        // check args: `range` nonempty
-        if range.is_empty() {
-            return Err(VidError::Argument(format!(
-                "empty range ({}..{})",
-                range.start, range.end
-            )));
-        }
-
         let payload = payload.as_ref();
-
-        // check args: `range` in bounds for `payload`
-        if range.end > payload.len() {
-            return Err(VidError::Argument(format!(
-                "range ({}..{}) out of bounds for payload len {}",
-                range.start,
-                range.end,
-                payload.len()
-            )));
-        }
+        check_range_nonempty_and_inside_payload(payload, &range)?;
 
         // index conversion
         let range_elem = self.range_byte_to_elem2(&range);
@@ -66,14 +47,7 @@ where
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
         let range_elem_byte = self.range_elem_to_byte2(&range_elem);
 
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if range_poly.len() != 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                range_poly.len()
-            )));
-        }
+        check_range_poly(&range_poly)?;
 
         // grab the `start_namespace`th polynomial
         let polynomial = self.polynomial(
@@ -82,7 +56,7 @@ where
         );
 
         // prepare the list of input points
-        // TODO perf: can't avoid use of `skip`
+        // perf: can't avoid use of `skip`
         let points: Vec<_> = {
             self.eval_domain
                 .elements()
@@ -95,7 +69,6 @@ where
 
         Ok(Proof {
             proofs,
-            // TODO refactor copied code for prefix/suffix bytes
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
             suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
             chunk_range: range,
@@ -113,49 +86,16 @@ where
         B: AsRef<[u8]>,
     {
         let chunk = chunk.as_ref();
-
-        // TODO refactor copied arg check code
-
-        // check args: `chunk` nonempty
-        if chunk.is_empty() {
-            return Err(VidError::Argument("empty chunk".to_string()));
-        }
-
-        // check args: `chunk` len consistent with `proof`
-        if chunk.len() != proof.chunk_range.len() {
-            return Err(VidError::Argument(format!(
-                "chunk length {} inconsistent with proof length {}",
-                chunk.len(),
-                proof.chunk_range.len()
-            )));
-        }
+        check_chunk_proof_consistency(&chunk, proof.chunk_range.len())?;
 
         // index conversion
-
-        // let (start_elem, len_elem) = self.range_byte_to_elem(start, len);
-        // let (start_namespace, _len_namespace) = self.range_elem_to_poly(start_elem, len_elem);
-        // let start_namespace_byte = self.index_poly_to_byte(start_namespace);
-
         let range_elem = self.range_byte_to_elem2(&proof.chunk_range);
         let range_poly = self.range_elem_to_poly2(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
 
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if range_poly.len() != 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                range_poly.len()
-            )));
-        }
-
-        // check args: `common` consistent with `commit`
-        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
+        check_range_poly(&range_poly)?;
+        Self::check_common_commit_consistency(&common, &commit)?;
 
         // prepare list of data elems
         // TODO refactor copied code
@@ -232,25 +172,8 @@ where
     where
         B: AsRef<[u8]>,
     {
-        // check args: `range` nonempty
-        if range.is_empty() {
-            return Err(VidError::Argument(format!(
-                "empty range ({}..{})",
-                range.start, range.end
-            )));
-        }
-
         let payload = payload.as_ref();
-
-        // check args: `range` in bounds for `payload`
-        if range.end > payload.len() {
-            return Err(VidError::Argument(format!(
-                "range ({}..{}) out of bounds for payload len {}",
-                range.start,
-                range.end,
-                payload.len()
-            )));
-        }
+        check_range_nonempty_and_inside_payload(payload, &range)?;
 
         // index conversion
         let range_elem = self.range_byte_to_elem2(&range);
@@ -259,14 +182,7 @@ where
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
         let range_elem_byte = self.range_elem_to_byte2(&range_elem);
 
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if range_poly.len() != 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                range_poly.len()
-            )));
-        }
+        check_range_poly(&range_poly)?;
 
         // compute the prefix and suffix elems
         let mut elems_iter =
@@ -295,39 +211,13 @@ where
         B: AsRef<[u8]>,
     {
         let chunk = chunk.as_ref();
-
-        // check args: `chunk` nonempty
-        if chunk.is_empty() {
-            return Err(VidError::Argument("empty chunk".to_string()));
-        }
-
-        // check args: `chunk` len consistent with `proof`
-        if chunk.len() != proof.chunk_range.len() {
-            return Err(VidError::Argument(format!(
-                "chunk length {} inconsistent with proof length {}",
-                chunk.len(),
-                proof.chunk_range.len()
-            )));
-        }
+        check_chunk_proof_consistency(&chunk, proof.chunk_range.len())?;
 
         // index conversion
         let range_poly = self.range_byte_to_poly2(&proof.chunk_range);
 
-        // check args:
-        // TODO TEMPORARY: forbid requests that span multiple polynomials
-        if range_poly.len() != 1 {
-            return Err(VidError::Argument(format!(
-                "request spans {} polynomials, expect 1",
-                range_poly.len()
-            )));
-        }
-
-        // check args: `common` consistent with `commit`
-        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
+        check_range_poly(&range_poly)?;
+        Self::check_common_commit_consistency(&common, &commit)?;
 
         // rebuild the poly commit, check against `common`
         let poly_commit = {
@@ -413,6 +303,18 @@ where
             self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
         )
     }
+
+    fn check_common_commit_consistency(
+        common: &<Self as VidScheme>::Common,
+        commit: &<Self as VidScheme>::Commit,
+    ) -> VidResult<()> {
+        if *commit != Self::poly_commits_hash(common.poly_commits.iter())? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
+    }
 }
 
 fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
@@ -437,6 +339,50 @@ fn index_coarsen(index: usize, denominator: usize) -> usize {
 
 fn index_refine(index: usize, multiplier: usize) -> usize {
     index * multiplier
+}
+
+fn check_range_nonempty_and_inside_payload(payload: &[u8], range: &Range<usize>) -> VidResult<()> {
+    if range.is_empty() {
+        return Err(VidError::Argument(format!(
+            "empty range ({}..{})",
+            range.start, range.end
+        )));
+    }
+    if range.end > payload.len() {
+        return Err(VidError::Argument(format!(
+            "range ({}..{}) out of bounds for payload len {}",
+            range.start,
+            range.end,
+            payload.len()
+        )));
+    }
+    Ok(())
+}
+
+fn check_range_poly(range_poly: &Range<usize>) -> VidResult<()> {
+    // TODO TEMPORARY: forbid requests that span multiple polynomials
+    if range_poly.len() != 1 {
+        return Err(VidError::Argument(format!(
+            "request spans {} polynomials, expect 1",
+            range_poly.len()
+        )));
+    }
+    Ok(())
+}
+
+fn check_chunk_proof_consistency(chunk: &[u8], proof_chunk_len: usize) -> VidResult<()> {
+    if chunk.is_empty() {
+        return Err(VidError::Argument("empty chunk".to_string()));
+    }
+
+    if chunk.len() != proof_chunk_len {
+        return Err(VidError::Argument(format!(
+            "chunk length {} inconsistent with proof length {}",
+            chunk.len(),
+            proof_chunk_len
+        )));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
