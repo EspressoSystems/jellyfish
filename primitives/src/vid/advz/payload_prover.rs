@@ -15,11 +15,11 @@
 //!    Snark-friendly because it does not require a pairing.
 
 use ark_poly::EvaluationDomain;
-use jf_utils::{bytes_to_field, compile_time_checks};
+use jf_utils::compile_time_checks;
 
 use super::{
-    AffineRepr, Debug, DenseUVPolynomial, Digest, DynDigest, GenericAdvz, MerkleTreeScheme,
-    PolynomialCommitmentScheme, PrimeField, UnivariatePCS, Vec, VidResult, Write,
+    bytes_to_field, AffineRepr, Debug, DenseUVPolynomial, Digest, DynDigest, GenericAdvz,
+    MerkleTreeScheme, PolynomialCommitmentScheme, PrimeField, UnivariatePCS, Vec, VidResult, Write,
 };
 use crate::{
     alloc::string::ToString,

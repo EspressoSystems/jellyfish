@@ -37,12 +37,14 @@ use ark_std::{
     vec::Vec,
     Zero,
 };
+use bytes_to_field::{bytes_to_field, field_to_bytes};
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
 use itertools::Itertools;
-use jf_utils::{bytes_to_field, canonical, field_to_bytes};
+use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
 
+mod bytes_to_field;
 pub mod payload_prover;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
