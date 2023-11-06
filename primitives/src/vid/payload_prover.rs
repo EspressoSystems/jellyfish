@@ -4,7 +4,9 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Trait for additional functionality in Verifiable Information Retrieval (VID) to make and verify a proof of correctness of an arbitrary sub-slice of data from a payload.
+//! Trait for additional functionality in Verifiable Information Retrieval (VID)
+//! to make and verify a proof of correctness of an arbitrary sub-slice of data
+//! from a payload.
 
 use super::{VidResult, VidScheme};
 use ark_std::ops::Range;

@@ -399,7 +399,7 @@ where
             return Ok(Err(()));
         }
 
-        let pseudorandom_scalar = Self::pseudorandom_scalar(common, &commit)?;
+        let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
         // as a pseudorandom linear combo of [commitments|evaluations]

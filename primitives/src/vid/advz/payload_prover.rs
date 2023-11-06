@@ -7,8 +7,12 @@
 //! Implementations of [`PayloadProver`] for `Advz`.
 //!
 //! Two implementations:
-//! 1. `PROOF = `[`Proof`]: KZG batch proof for the data. Useful for small sub-slices of `payload` such as an individual transaction within a block. Not snark-friendly because it requires a pairing.
-//! 2. `PROOF = `[`CommitRecovery`]: Rebuild the KZG commitment. Useful for larger sub-slices of `payload` such as a complete namespace. Snark-friendly because it does not require a pairing.
+//! 1. `PROOF = `[`Proof`]: KZG batch proof for the data. Useful for small
+//!    sub-slices of `payload` such as an individual transaction within a block.
+//!    Not snark-friendly because it requires a pairing.
+//! 2. `PROOF = `[`CommitRecovery`]: Rebuild the KZG commitment. Useful for
+//!    larger sub-slices of `payload` such as a complete namespace.
+//!    Snark-friendly because it does not require a pairing.
 
 use ark_poly::EvaluationDomain;
 use jf_utils::{bytes_to_field, compile_time_checks};
@@ -90,7 +94,7 @@ where
         B: AsRef<[u8]>,
     {
         let chunk = chunk.as_ref();
-        check_chunk_proof_consistency(&chunk, proof.chunk_range.len())?;
+        check_chunk_proof_consistency(chunk, proof.chunk_range.len())?;
 
         // index conversion
         let range_elem = self.range_byte_to_elem(&proof.chunk_range);
@@ -99,7 +103,7 @@ where
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
 
         check_range_poly(&range_poly)?;
-        Self::check_common_commit_consistency(&common, &commit)?;
+        Self::check_common_commit_consistency(common, commit)?;
 
         // prepare list of data elems
         let data_elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
@@ -214,13 +218,13 @@ where
         B: AsRef<[u8]>,
     {
         let chunk = chunk.as_ref();
-        check_chunk_proof_consistency(&chunk, proof.chunk_range.len())?;
+        check_chunk_proof_consistency(chunk, proof.chunk_range.len())?;
 
         // index conversion
         let range_poly = self.range_byte_to_poly(&proof.chunk_range);
 
         check_range_poly(&range_poly)?;
-        Self::check_common_commit_consistency(&common, &commit)?;
+        Self::check_common_commit_consistency(common, commit)?;
 
         // rebuild the poly commit, check against `common`
         let poly_commit = {
